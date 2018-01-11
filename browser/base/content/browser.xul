@@ -599,7 +599,7 @@
 <deck flex="1" id="tab-view-deck">
 <vbox flex="1" id="browser-panel">
 
-  <toolbox id="navigator-toolbox" mode="icons">
+  <toolbox id="navigator-toolbox">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              mode="icons" iconsize="small"
@@ -977,8 +977,6 @@
                        oncommand="BrowserTryToCloseWindow();"/>
       </hbox>
     </toolbar>
-
-    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
     <toolbar id="PersonalToolbar"
              mode="icons" iconsize="small"

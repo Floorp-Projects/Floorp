@@ -5319,13 +5319,6 @@ nsBrowserAccess.prototype = {
   },
 };
 
-function getTogglableToolbars() {
-  let toolbarNodes = Array.slice(gNavToolbox.childNodes);
-  toolbarNodes = toolbarNodes.concat(gNavToolbox.externalToolbars);
-  toolbarNodes = toolbarNodes.filter(node => node.getAttribute("toolbarname"));
-  return toolbarNodes;
-}
-
 function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   var popup = aEvent.target;
   if (popup != aEvent.currentTarget)
@@ -5340,9 +5333,13 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   var firstMenuItem = aInsertPoint || popup.firstChild;
 
-  let toolbarNodes = getTogglableToolbars();
+  let toolbarNodes = gNavToolbox.childNodes;
 
   for (let toolbar of toolbarNodes) {
+    if (!toolbar.hasAttribute("toolbarname")) {
+      continue;
+    }
+
     let menuItem = document.createElement("menuitem");
     let hidingAttribute = toolbar.getAttribute("type") == "menubar" ?
                           "autohide" : "collapsed";

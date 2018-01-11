@@ -3,31 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  // If we can't get the profiler component then assume gecko was
-  // built without it and pass all the tests
-  var profilerCc = Cc["@mozilla.org/tools/profiler;1"];
-  if (!profilerCc)
+  if (!AppConstants.MOZ_GECKO_PROFILER) {
     return;
+  }
 
-  var profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-  if (!profiler)
-    return;
+  Assert.ok(!Services.profiler.IsActive());
 
-  Assert.ok(!profiler.IsActive());
+  Services.profiler.StartProfiler(1000, 10, [], 0);
 
-  profiler.StartProfiler(1000, 10, [], 0);
-
-  Assert.ok(profiler.IsActive());
+  Assert.ok(Services.profiler.IsActive());
 
   do_test_pending();
 
   do_timeout(1000, function wait() {
     // Check text profile format
-    var profileStr = profiler.GetProfile();
+    var profileStr = Services.profiler.GetProfile();
     Assert.ok(profileStr.length > 10);
 
     // check json profile format
-    var profileObj = profiler.getProfileData();
+    var profileObj = Services.profiler.getProfileData();
     Assert.notEqual(profileObj, null);
     Assert.notEqual(profileObj.threads, null);
     Assert.ok(profileObj.threads.length >= 1);
@@ -35,8 +29,8 @@ function run_test() {
     // NOTE: The number of samples will be empty since we
     //       don't have any labels in the xpcshell code
 
-    profiler.StopProfiler();
-    Assert.ok(!profiler.IsActive());
+    Services.profiler.StopProfiler();
+    Assert.ok(!Services.profiler.IsActive());
     do_test_finished();
   });
 

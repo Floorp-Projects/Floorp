@@ -67,10 +67,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 using mozilla::dom::SystemFontListEntry;
 
-#if (MOZ_WIDGET_GTK == 2)
-static cairo_user_data_key_t cairo_gdk_drawable_key;
-#endif
-
 gfxPlatformGtk::gfxPlatformGtk()
 {
     if (!gfxPlatform::IsHeadless()) {
@@ -531,51 +527,6 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 #endif
 }
 
-
-#if (MOZ_WIDGET_GTK == 2)
-void
-gfxPlatformGtk::SetGdkDrawable(cairo_surface_t *target,
-                               GdkDrawable *drawable)
-{
-    if (cairo_surface_status(target))
-        return;
-
-    g_object_ref(drawable);
-
-    cairo_surface_set_user_data (target,
-                                 &cairo_gdk_drawable_key,
-                                 drawable,
-                                 g_object_unref);
-}
-
-GdkDrawable *
-gfxPlatformGtk::GetGdkDrawable(cairo_surface_t *target)
-{
-    if (cairo_surface_status(target))
-        return nullptr;
-
-    GdkDrawable *result;
-
-    result = (GdkDrawable*) cairo_surface_get_user_data (target,
-                                                         &cairo_gdk_drawable_key);
-    if (result)
-        return result;
-
-#ifdef MOZ_X11
-    if (cairo_surface_get_type(target) != CAIRO_SURFACE_TYPE_XLIB)
-        return nullptr;
-
-    // try looking it up in gdk's table
-    result = (GdkDrawable*) gdk_xid_table_lookup(cairo_xlib_surface_get_drawable(target));
-    if (result) {
-        SetGdkDrawable(target, result);
-        return result;
-    }
-#endif
-
-    return nullptr;
-}
-#endif
 
 #ifdef GL_PROVIDER_GLX
 

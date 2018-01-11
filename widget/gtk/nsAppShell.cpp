@@ -56,7 +56,7 @@ PollWrapper(GPollFD *ufds, guint nfsd, gint timeout_)
     return result;
 }
 
-#if MOZ_WIDGET_GTK == 3
+#ifdef MOZ_WIDGET_GTK
 // For bug 726483.
 static decltype(GtkContainerClass::check_resize) sReal_gtk_window_check_resize;
 
@@ -117,7 +117,7 @@ WrapGdkFrameClockDispose(GObject* object)
 #endif
 
 /*static*/ gboolean
-nsAppShell::EventProcessorCallback(GIOChannel *source, 
+nsAppShell::EventProcessorCallback(GIOChannel *source,
                                    GIOCondition condition,
                                    gpointer data)
 {
@@ -189,7 +189,7 @@ nsAppShell::Init()
         }
     }
 
-#if MOZ_WIDGET_GTK == 3
+#ifdef MOZ_WIDGET_GTK
     if (!sReal_gtk_window_check_resize &&
         gtk_check_version(3,8,0) != nullptr) { // GTK 3.0 to GTK 3.6.
         // GtkWindow is a static class and so will leak anyway but this ref

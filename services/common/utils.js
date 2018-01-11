@@ -213,7 +213,15 @@ this.CommonUtils = {
   },
 
   bytesAsHex: function bytesAsHex(bytes) {
-    return Array.prototype.slice.call(bytes).map(c => ("0" + c.charCodeAt(0).toString(16)).slice(-2)).join("");
+    let s = "";
+    for (let i = 0, len = bytes.length; i < len; i++) {
+      let c = (bytes[i].charCodeAt(0) & 0xff).toString(16);
+      if (c.length == 1) {
+        c = "0" + c;
+      }
+      s += c;
+    }
+    return s;
   },
 
   stringAsHex: function stringAsHex(str) {
