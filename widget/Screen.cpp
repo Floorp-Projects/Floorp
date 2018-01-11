@@ -70,10 +70,7 @@ Screen::GetRect(int32_t* aOutLeft,
                 int32_t* aOutWidth,
                 int32_t* aOutHeight)
 {
-  *aOutLeft = mRect.x;
-  *aOutTop = mRect.y;
-  *aOutWidth = mRect.width;
-  *aOutHeight = mRect.height;
+  mRect.GetRect(aOutLeft, aOutTop, aOutWidth, aOutHeight);
   return NS_OK;
 }
 
@@ -83,10 +80,7 @@ Screen::GetRectDisplayPix(int32_t* aOutLeft,
                           int32_t* aOutWidth,
                           int32_t* aOutHeight)
 {
-  *aOutLeft = mRectDisplayPix.x;
-  *aOutTop = mRectDisplayPix.y;
-  *aOutWidth = mRectDisplayPix.width;
-  *aOutHeight = mRectDisplayPix.height;
+  mRectDisplayPix.GetRect(aOutLeft, aOutTop, aOutWidth, aOutHeight);
   return NS_OK;
 }
 
@@ -96,10 +90,7 @@ Screen::GetAvailRect(int32_t* aOutLeft,
                      int32_t* aOutWidth,
                      int32_t* aOutHeight)
 {
-  *aOutLeft = mAvailRect.x;
-  *aOutTop = mAvailRect.y;
-  *aOutWidth = mAvailRect.width;
-  *aOutHeight = mAvailRect.height;
+  mAvailRect.GetRect(aOutLeft, aOutTop, aOutWidth, aOutHeight);
   return NS_OK;
 }
 
@@ -109,10 +100,7 @@ Screen::GetAvailRectDisplayPix(int32_t* aOutLeft,
                                int32_t* aOutWidth,
                                int32_t* aOutHeight)
 {
-  *aOutLeft = mAvailRectDisplayPix.x;
-  *aOutTop = mAvailRectDisplayPix.y;
-  *aOutWidth = mAvailRectDisplayPix.width;
-  *aOutHeight = mAvailRectDisplayPix.height;
+  mAvailRectDisplayPix.GetRect(aOutLeft, aOutTop, aOutWidth, aOutHeight);
   return NS_OK;
 }
 

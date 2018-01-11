@@ -57,6 +57,10 @@ public:
   {
     return sPrivacyResistFingerprinting;
   }
+  static bool IsTimerPrecisionReductionEnabled()
+  {
+    return sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled();
+  }
 
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsMSecs(double aTime);
@@ -83,10 +87,12 @@ private:
 
   ~nsRFPService() {}
 
-  void UpdatePref();
+  void UpdateTimers();
+  void UpdateRFPPref();
   void StartShutdown();
 
   static Atomic<bool, ReleaseAcquire> sPrivacyResistFingerprinting;
+  static Atomic<bool, ReleaseAcquire> sPrivacyTimerPrecisionReduction;
 
   nsCString mInitialTZValue;
 };

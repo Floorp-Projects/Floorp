@@ -338,8 +338,8 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
 
   this.curBrowser.executeWhenReady(() => {
     if (this.curBrowser.curFrameId) {
-      let target = `Marionette:${name}${this.curBrowser.curFrameId}`;
-      this.mm.broadcastAsyncMessage(target, payload);
+      let target = `Marionette:${name}`;
+      this.curBrowser.messageManager.sendAsyncMessage(target, payload);
     } else {
       throw new NoSuchWindowError(
           "No such content frame; perhaps the listener was not registered?");
@@ -521,7 +521,6 @@ GeckoDriver.prototype.getVisibleText = function(el, lines) {
  * their type they are either accepted or ignored.
  */
 GeckoDriver.prototype.registerBrowser = function(id, be) {
-  let nullPrevious = this.curBrowser.curFrameId === null;
   let listenerWindow = Services.wm.getOuterWindowWithId(id);
 
   // We want to ignore frames that are XUL browsers that aren't in the "main"
@@ -536,10 +535,6 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
   }
 
   this.wins.set(id, listenerWindow);
-  if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession");
-  }
-
   return id;
 };
 
@@ -547,10 +542,9 @@ GeckoDriver.prototype.registerPromise = function() {
   const li = "Marionette:Register";
 
   return new Promise(resolve => {
-    let cb = msg => {
-      let wid = msg.json.value;
-      let be = msg.target;
-      let outerWindowID = this.registerBrowser(wid, be);
+    let cb = ({json, target}) => {
+      let {outerWindowID} = json;
+      this.registerBrowser(outerWindowID, target);
 
       if (this.curBrowser.frameRegsPending > 0) {
         this.curBrowser.frameRegsPending--;
@@ -561,8 +555,7 @@ GeckoDriver.prototype.registerPromise = function() {
         resolve();
       }
 
-      // this is a sync message and listeners expect the ID back
-      return outerWindowID;
+      return {outerWindowID};
     };
     this.mm.addMessageListener(li, cb);
   });
@@ -1056,9 +1049,8 @@ GeckoDriver.prototype.get = async function(cmd) {
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
-    this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
-        parameters);
+    this.curBrowser.messageManager.sendAsyncMessage(
+        "Marionette:waitForPageLoaded", parameters);
   });
 
   await get;
@@ -1176,9 +1168,8 @@ GeckoDriver.prototype.goBack = async function() {
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
-    this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
-        parameters);
+    this.curBrowser.messageManager.sendAsyncMessage(
+        "Marionette:waitForPageLoaded", parameters);
   });
 
   await goBack;
@@ -1220,9 +1211,8 @@ GeckoDriver.prototype.goForward = async function() {
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
-    this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
-        parameters);
+    this.curBrowser.messageManager.sendAsyncMessage(
+        "Marionette:waitForPageLoaded", parameters);
   });
 
   await goForward;
@@ -1257,9 +1247,8 @@ GeckoDriver.prototype.refresh = async function() {
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
-    this.mm.broadcastAsyncMessage(
-        "Marionette:waitForPageLoaded" + this.curBrowser.curFrameId,
-        parameters);
+    this.curBrowser.messageManager.sendAsyncMessage(
+        "Marionette:waitForPageLoaded", parameters);
   });
 
   await refresh;
@@ -2135,9 +2124,8 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
           pageTimeout: this.timeouts.pageLoad,
           startTime: new Date().getTime(),
         };
-        this.mm.broadcastAsyncMessage(
-            `Marionette:waitForPageLoaded${this.curBrowser.curFrameId}`,
-            parameters);
+        this.curBrowser.messageManager.sendAsyncMessage(
+            "Marionette:waitForPageLoaded", parameters);
       });
 
       await click;
@@ -2779,13 +2767,12 @@ GeckoDriver.prototype.deleteSession = function() {
     // frame scripts can be safely reused
     Preferences.set(CONTENT_LISTENER_PREF, false);
 
-    // delete session in each frame in each browser
+    // clean up state in each frame in each browser
     for (let win in this.browsers) {
       let browser = this.browsers[win];
-      for (let i in browser.knownFrames) {
-        globalMessageManager.broadcastAsyncMessage(
-            "Marionette:deleteSession" + browser.knownFrames[i], {});
-      }
+      browser.knownFrames.forEach(() => {
+        globalMessageManager.broadcastAsyncMessage("Marionette:Deregister");
+      });
     }
 
     for (let win of this.windows) {
@@ -3338,9 +3325,8 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       break;
 
     case "Marionette:Register":
-      let wid = message.json.value;
-      let be = message.target;
-      let outerWindowID = this.registerBrowser(wid, be);
+      let {outerWindowID} = message.json;
+      this.registerBrowser(outerWindowID, message.target);
       return {outerWindowID};
 
     case "Marionette:ListenersAttached":

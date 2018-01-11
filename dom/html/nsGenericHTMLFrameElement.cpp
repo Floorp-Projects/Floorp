@@ -245,7 +245,9 @@ nsGenericHTMLFrameElement::LoadSrc()
     return NS_OK;
   }
 
-  nsresult rv = mFrameLoader->LoadFrame();
+  bool origSrc = !mSrcLoadHappened;
+  mSrcLoadHappened = true;
+  nsresult rv = mFrameLoader->LoadFrame(origSrc);
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to load URL");

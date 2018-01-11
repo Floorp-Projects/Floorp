@@ -72,7 +72,7 @@ class HistoryObserver extends Observer {
   // Empty functions to make xpconnect happy
   onBeginUpdateBatch() {}
   onEndUpdateBatch() {}
-  onVisit() {}
+  onVisits() {}
   onTitleChanged() {}
   onFrecencyChanged() {}
   onManyFrecenciesChanged() {}

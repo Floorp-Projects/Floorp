@@ -1,26 +1,22 @@
 # This software may be used and distributed according to the terms of the
 # GNU General Public License version 2 or any later version.
 
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "lint", "eslint"))
-from hook_helper import is_lintable, runESLint
+OBSOLETE = """
+ERROR: the eslintvalidate hook is obsolete. This commit went
+through, but ESlint didn't run. You can lint your changes
+after the fact by running:
+
+    $ mach lint --outgoing
+
+Please remove this hook and upgrade by following these
+instructions:
+https://firefox-source-docs.mozilla.org/tools/lint/usage.html#using-a-vcs-hook
+""".lstrip()
 
 
 def eslinthook(ui, repo, node=None, **opts):
-    ctx = repo[node]
-    if len(ctx.parents()) > 1:
-        return 0
-
-    deleted = repo.status(ctx.p1().node(), ctx.node()).deleted
-    files = [f for f in ctx.files() if f not in deleted and is_lintable(f)]
-
-    if len(files) == 0:
-        return
-
-    if not runESLint(ui.warn, files):
-        ui.warn("Note: ESLint failed, but the commit will still happen. "
-                "Please fix before pushing.\n")
+    ui.warn(OBSOLETE)
+    return False
 
 
 def reposetup(ui, repo):

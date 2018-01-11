@@ -192,10 +192,10 @@ public:
   DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
                          CGFloat aBackingScale)
   {
-    return NSMakeRect((CGFloat)aRect.x / aBackingScale,
-                      (CGFloat)aRect.y / aBackingScale,
-                      (CGFloat)aRect.width / aBackingScale,
-                      (CGFloat)aRect.height / aBackingScale);
+    return NSMakeRect((CGFloat)aRect.X() / aBackingScale,
+                      (CGFloat)aRect.Y() / aBackingScale,
+                      (CGFloat)aRect.Width() / aBackingScale,
+                      (CGFloat)aRect.Height() / aBackingScale);
   }
 
   // Returns the given y coordinate, which must be in screen coordinates,

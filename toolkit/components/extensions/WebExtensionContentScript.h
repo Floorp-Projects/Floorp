@@ -50,6 +50,7 @@ public:
   const URLInfo& PrincipalURL() const;
 
   bool IsTopLevel() const;
+  bool ShouldMatchActiveTabPermission() const;
 
   uint64_t FrameID() const;
 
@@ -68,6 +69,7 @@ private:
   mutable Maybe<const URLInfo> mPrincipalURL;
 
   mutable Maybe<bool> mIsTopLevel;
+
   mutable Maybe<nsCOMPtr<nsIPrincipal>> mPrincipal;
   mutable Maybe<uint64_t> mFrameID;
 
@@ -157,6 +159,8 @@ protected:
 
 private:
   RefPtr<WebExtensionPolicy> mExtension;
+
+  bool mHasActiveTabPermission;
 
   RefPtr<MatchPatternSet> mMatches;
   RefPtr<MatchPatternSet> mExcludeMatches;

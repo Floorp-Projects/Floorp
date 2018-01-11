@@ -1,0 +1,45 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1427009",
+    title: "Test mid longer than 16 characters fails"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    options = options || { };
+    options.bundle = false;
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             [{audio: true}, {video: true}]);
+
+    test.chain.replaceAfter("PC_LOCAL_CREATE_OFFER",
+      [
+        function PC_LOCAL_MUNGE_OFFER_SDP(test) {
+          test.originalOffer.sdp =
+            test.originalOffer.sdp.replace(/a=mid:.*\r\n/g,
+                                           "a=mid:really_long_mid_over_16_chars\r\n");
+        },
+        function PC_LOCAL_EXPECT_SET_LOCAL_DESCRIPTION_FAIL(test) {
+          return test.setLocalDescription(test.pcLocal,
+                                          test.originalOffer,
+                                          HAVE_LOCAL_OFFER)
+           .then(() => ok(false, "setLocalDescription must fail"),
+                 e => is(e.name, "InvalidSessionDescriptionError",
+                         "setLocalDescription must fail and did"));
+        }
+      ], 0 // first occurance
+    );
+
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
