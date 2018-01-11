@@ -893,41 +893,37 @@ InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::SetContentState(nsIDOMElement* aElement,
-                            EventStates::InternalType aState,
-                            bool* aRetVal)
+/* static */ bool
+InspectorUtils::SetContentState(GlobalObject& aGlobalObject,
+                                Element& aElement,
+                                uint64_t aState,
+                                ErrorResult& aRv)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   RefPtr<EventStateManager> esm =
     inLayoutUtils::GetEventStateManagerFor(aElement);
-  NS_ENSURE_TRUE(esm, NS_ERROR_INVALID_ARG);
+  if (!esm) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return false;
+  }
 
-  nsCOMPtr<nsIContent> content;
-  content = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(content, NS_ERROR_INVALID_ARG);
-
-  *aRetVal = esm->SetContentState(content, EventStates(aState));
-  return NS_OK;
+  return esm->SetContentState(&aElement, EventStates(aState));
 }
 
-NS_IMETHODIMP
-inDOMUtils::RemoveContentState(nsIDOMElement* aElement,
-                               EventStates::InternalType aState,
-                               bool aClearActiveDocument,
-                               bool* aRetVal)
+/* static */ bool
+InspectorUtils::RemoveContentState(GlobalObject& aGlobalObject,
+                                   Element& aElement,
+                                   uint64_t aState,
+                                   bool aClearActiveDocument,
+                                   ErrorResult& aRv)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
   RefPtr<EventStateManager> esm =
     inLayoutUtils::GetEventStateManagerFor(aElement);
-  NS_ENSURE_TRUE(esm, NS_ERROR_INVALID_ARG);
+  if (!esm) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return false;
+  }
 
-  *aRetVal = esm->SetContentState(nullptr, EventStates(aState));
+  bool result = esm->SetContentState(nullptr, EventStates(aState));
 
   if (aClearActiveDocument && EventStates(aState) == NS_EVENT_STATE_ACTIVE) {
     EventStateManager* activeESM = static_cast<EventStateManager*>(
@@ -937,25 +933,17 @@ inDOMUtils::RemoveContentState(nsIDOMElement* aElement,
     }
   }
 
-  return NS_OK;
+  return result;
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetContentState(nsIDOMElement* aElement,
-                            EventStates::InternalType* aState)
+/* static */ uint64_t
+InspectorUtils::GetContentState(GlobalObject& aGlobalObject,
+                                Element& aElement)
 {
-  *aState = 0;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(content);
-
   // NOTE: if this method is removed,
   // please remove GetInternalValue from EventStates
-  *aState = content->AsElement()->State().GetInternalValue();
-  return NS_OK;
+  return aElement.State().GetInternalValue();
 }
-
-namespace mozilla {
-namespace dom {
 
 /* static */ already_AddRefed<nsStyleContext>
 InspectorUtils::GetCleanStyleContextForElement(dom::Element* aElement,

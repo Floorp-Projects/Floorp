@@ -22,10 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462787
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
 function do_test() {
-  const INVALID_POINTER = SpecialPowers.Cr.NS_ERROR_INVALID_POINTER;
-
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
   try {
     InspectorUtils.getCSSStyleRules(null);
     ok(false, "expected an exception"); 
@@ -59,30 +55,27 @@ function do_test() {
   }
 
   try {
-    utils.getBindingURLs(null); 
+    InspectorUtils.getBindingURLs(null); 
     ok(false, "expected an exception"); 
   }
   catch(e) {
-    e = SpecialPowers.wrap(e);
     is(e.name, "TypeError", "got the expected exception");
   }
 
   try {
-    utils.getContentState(null); 
+    InspectorUtils.getContentState(null); 
     ok(false, "expected an exception"); 
   }
   catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, INVALID_POINTER, "got the expected exception");
+    is(e.name, "TypeError", "got the expected exception");
   }
 
   try {
-    utils.setContentState(null, false); 
+    InspectorUtils.setContentState(null, false); 
     ok(false, "expected an exception"); 
   }
   catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, INVALID_POINTER, "got the expected exception");
+    is(e.name, "TypeError", "got the expected exception");
   }
 
   SimpleTest.finish();
