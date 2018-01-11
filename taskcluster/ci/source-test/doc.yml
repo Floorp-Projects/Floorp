@@ -19,8 +19,14 @@ generate:
             cd /builds/worker/checkouts/gecko &&
             ./mach doc --outdir docs-out --no-open --archive
         sparse-profile: sphinx-docs
-    optimization:
-        skip-unless-schedules: [docs]
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.rst'
+            - '**/*.md'
+            - 'tools/docs/**'
+            - '**/*.js'
+            - '**/*.jsm'
 
 upload:
     description: Generate and upload the Sphinx documentation
@@ -41,5 +47,8 @@ upload:
         sparse-profile: sphinx-docs
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
-    optimization:
-        skip-unless-schedules: [docs]
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.rst'
+            - 'tools/docs/**'

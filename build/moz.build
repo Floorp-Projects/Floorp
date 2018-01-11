@@ -10,9 +10,6 @@ with Files('**'):
 # This cannot be named "build" because of bug 922191.
 SPHINX_TREES['buildsystem'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['win32']
     if CONFIG['WIN64_CARGO_LINKER']:

@@ -93,7 +93,4 @@ if CONFIG['NIGHTLY_BUILD'] or CONFIG['MOZ_DEBUG']:
 
 SPHINX_TREES['url-classifier'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 include('/ipc/chromium/chromium-config.mozbuild')
