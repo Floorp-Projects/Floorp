@@ -65,7 +65,7 @@ function generateCssProperties() {
       values.unshift("COLOR");
     }
 
-    let subproperties = DOMUtils.getSubpropertiesForCSSProperty(name);
+    let subproperties = InspectorUtils.getSubpropertiesForCSSProperty(name);
 
     properties[name] = {
       isInherited: InspectorUtils.isInheritedProperty(name),
