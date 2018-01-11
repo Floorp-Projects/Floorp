@@ -60,7 +60,6 @@ interface nsIDOMHTMLHeadElement;
 interface nsIDOMCSSValue;
 interface nsIDOMCSSPrimitiveValue;
 interface nsIDOMCSSStyleDeclaration;
-interface nsIDOMCounter;
 interface nsIDOMRect;
 
 // Range

@@ -476,23 +476,15 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
 }
 
 void
+nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
 nsROCSSPrimitiveValue::GetStringValue(nsString& aString, ErrorResult& aRv)
 {
   aRv = GetStringValue(aString);
-}
-
-
-NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetCounterValue(nsIDOMCounter** aReturn)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-already_AddRefed<nsIDOMCounter>
-nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
-  return nullptr;
 }
 
 nsDOMCSSRect*
