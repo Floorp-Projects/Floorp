@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMCounter.idl',
-    'nsIDOMCSSCounterStyleRule.idl',
     'nsIDOMCSSFontFaceRule.idl',
     'nsIDOMCSSFontFeatureValuesRule.idl',
     'nsIDOMCSSImportRule.idl',
