@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsStyleSet.h"
 #include "nsTArray.h"
-#include "nsIDOMCSSStyleSheet.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
@@ -435,7 +434,7 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 
 // QueryInterface implementation for CSSStyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSStyleSheet)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheet)
   if (aIID.Equals(NS_GET_IID(CSSStyleSheet)))
     foundInterface = reinterpret_cast<nsISupports*>(this);
   else

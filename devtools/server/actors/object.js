@@ -1739,7 +1739,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 
   function ObjectWithURL({obj, hooks}, grip, rawObj) {
     if (isWorker || !rawObj || !(obj.class == "CSSImportRule" ||
-                                 rawObj instanceof Ci.nsIDOMCSSStyleSheet ||
+                                 obj.class == "CSSStyleSheet" ||
                                  obj.class == "Location" ||
                                  rawObj instanceof Ci.nsIDOMWindow)) {
       return false;

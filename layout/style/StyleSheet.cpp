@@ -136,7 +136,7 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   StyleSheet* childSheet = GetFirstChild();
   while (childSheet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
-    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMStyleSheet*, childSheet));
     childSheet = childSheet->mNext;
   }
 }
@@ -146,7 +146,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StyleSheet)
@@ -383,34 +382,6 @@ StyleSheet::GetMedia(nsIDOMMediaList** aMedia)
 {
   NS_ADDREF(*aMedia = Media());
   return NS_OK;
-}
-
-NS_IMETHODIMP
-StyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
-{
-  ErrorResult rv;
-  nsCOMPtr<nsIDOMCSSRuleList> rules =
-    GetCssRules(*nsContentUtils::SubjectPrincipal(), rv);
-  rules.forget(aCssRules);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-StyleSheet::InsertRule(const nsAString& aRule, uint32_t aIndex,
-                       uint32_t* aReturn)
-{
-  ErrorResult rv;
-  *aReturn =
-    InsertRule(aRule, aIndex, *nsContentUtils::SubjectPrincipal(), rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-StyleSheet::DeleteRule(uint32_t aIndex)
-{
-  ErrorResult rv;
-  DeleteRule(aIndex, *nsContentUtils::SubjectPrincipal(), rv);
-  return rv.StealNSResult();
 }
 
 void

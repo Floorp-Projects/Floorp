@@ -45,10 +45,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoImportRule,
   // Note the child sheet twice, since the Servo rule also holds a strong
   // reference to it.
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mChildSheet");
-  cb.NoteXPCOMChild(static_cast<nsIDOMCSSStyleSheet*>(tmp->mChildSheet));
+  cb.NoteXPCOMChild(static_cast<nsIDOMStyleSheet*>(tmp->mChildSheet));
   MOZ_ASSERT_IF(tmp->mRawRule,
                 Servo_ImportRule_GetSheet(tmp->mRawRule) == tmp->mChildSheet);
-  cb.NoteXPCOMChild(static_cast<nsIDOMCSSStyleSheet*>(tmp->mChildSheet));
+  cb.NoteXPCOMChild(static_cast<nsIDOMStyleSheet*>(tmp->mChildSheet));
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRule.stylesheet");
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
