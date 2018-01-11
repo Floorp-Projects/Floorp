@@ -2463,7 +2463,7 @@ gfxPlatform::InitCompositorAccelerationPrefs()
 /*static*/ bool
 gfxPlatform::WebRenderPrefEnabled()
 {
-  return Preferences::GetBool("gfx.webrender.enabled", false);
+  return gfxPrefs::WebRenderAll() || gfxPrefs::WebRenderEnabledDoNotUseDirectly();
 }
 
 /*static*/ bool

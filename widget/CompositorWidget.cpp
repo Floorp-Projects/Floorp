@@ -53,7 +53,7 @@ CompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
     target->SetTransform(gfx::Matrix());
     if (!aClearRect.IsEmpty()) {
       gfx::IntRect clearRect = aClearRect.ToUnknownRect() - aRect.ToUnknownRect().TopLeft();
-      target->ClearRect(gfx::Rect(clearRect.x, clearRect.y, clearRect.width, clearRect.height));
+      target->ClearRect(gfx::Rect(clearRect.X(), clearRect.Y(), clearRect.Width(), clearRect.Height()));
     }
   } else {
     target = aScreenTarget->CreateSimilarDrawTarget(size, format);

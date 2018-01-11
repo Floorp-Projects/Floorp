@@ -179,6 +179,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
   , mInShow(false)
   , mHideCalled(false)
   , mNetworkCreated(aNetworkCreated)
+  , mLoadingOriginalSrc(false)
   , mRemoteBrowserShown(false)
   , mRemoteFrame(false)
   , mClipSubdocument(true)
@@ -234,16 +235,16 @@ nsFrameLoader::Create(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetwor
 }
 
 void
-nsFrameLoader::LoadFrame(ErrorResult& aRv)
+nsFrameLoader::LoadFrame(bool aOriginalSrc, ErrorResult& aRv)
 {
-  nsresult rv = LoadFrame();
+  nsresult rv = LoadFrame(aOriginalSrc);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
 NS_IMETHODIMP
-nsFrameLoader::LoadFrame()
+nsFrameLoader::LoadFrame(bool aOriginalSrc)
 {
   NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
 
@@ -296,7 +297,7 @@ nsFrameLoader::LoadFrame()
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = LoadURI(uri, principal);
+    rv = LoadURI(uri, principal, aOriginalSrc);
   }
 
   if (NS_FAILED(rv)) {
@@ -322,26 +323,29 @@ nsFrameLoader::FireErrorEvent()
 }
 
 void
-nsFrameLoader::LoadURI(nsIURI* aURI, ErrorResult& aRv)
+nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc, ErrorResult& aRv)
 {
-  nsresult rv = LoadURI(aURI);
+  nsresult rv = LoadURI(aURI, aOriginalSrc);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
   }
 }
 
 NS_IMETHODIMP
-nsFrameLoader::LoadURI(nsIURI* aURI)
+nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc)
 {
-  return LoadURI(aURI, nullptr);
+  return LoadURI(aURI, nullptr, aOriginalSrc);
 }
 
 nsresult
-nsFrameLoader::LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal)
+nsFrameLoader::LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
+                       bool aOriginalSrc)
 {
   if (!aURI)
     return NS_ERROR_INVALID_POINTER;
   NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
+
+  mLoadingOriginalSrc = aOriginalSrc;
 
   nsCOMPtr<nsIDocument> doc = mOwnerContent->OwnerDoc();
 
@@ -922,6 +926,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  loadInfo->SetOriginalFrameSrc(mLoadingOriginalSrc);
+  mLoadingOriginalSrc = false;
 
   // If this frame is sandboxed with respect to origin we will set it up with
   // a null principal later in nsDocShell::DoURILoad.

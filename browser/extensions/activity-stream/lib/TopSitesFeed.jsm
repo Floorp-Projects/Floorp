@@ -94,10 +94,11 @@ this.TopSitesFeed = class TopSitesFeed {
 
       // Copy all properties from a frecent link and add more
       const finder = other => other.url === link.url;
-      const copy = Object.assign({}, frecent.find(finder) || {}, link, {
-        hostname: shortURL(link),
-        isDefault: !!notBlockedDefaultSites.find(finder)
-      });
+
+      // If the link is a frecent site, do not copy over 'isDefault', else check
+      // if the site is a default site
+      const copy = Object.assign({}, frecent.find(finder) ||
+        {isDefault: !!notBlockedDefaultSites.find(finder)}, link, {hostname: shortURL(link)});
 
       // Add in favicons if we don't already have it
       if (!copy.favicon) {

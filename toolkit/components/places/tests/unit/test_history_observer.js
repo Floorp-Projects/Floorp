@@ -10,7 +10,7 @@ function NavHistoryObserver() {
 NavHistoryObserver.prototype = {
   onBeginUpdateBatch() { },
   onEndUpdateBatch() { },
-  onVisit() { },
+  onVisits() { },
   onTitleChanged() { },
   onDeleteURI() { },
   onClearHistory() { },
@@ -50,21 +50,19 @@ async function task_add_visit(uri, timestamp, transition) {
   return [uri, timestamp];
 }
 
-add_task(async function test_onVisit() {
-  let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
-                                                aSessionID, aReferringID,
-                                                aTransitionType, aGUID,
-                                                aHidden, aVisitCount, aTyped) {
-    Assert.ok(aURI.equals(testuri));
-    Assert.ok(aVisitID > 0);
-    Assert.equal(aTime, testtime);
-    Assert.equal(aSessionID, 0);
-    Assert.equal(aReferringID, 0);
-    Assert.equal(aTransitionType, TRANSITION_TYPED);
-    do_check_guid_for_uri(aURI, aGUID);
-    Assert.ok(!aHidden);
-    Assert.equal(aVisitCount, 1);
-    Assert.equal(aTyped, 1);
+add_task(async function test_onVisits() {
+  let promiseNotify = onNotify(function onVisits(aVisits) {
+    Assert.equal(aVisits.length, 1, "Right number of visits notified");
+    let visit = aVisits[0];
+    Assert.ok(visit.uri.equals(testuri));
+    Assert.ok(visit.visitId > 0);
+    Assert.equal(visit.time, testtime);
+    Assert.equal(visit.referrerId, 0);
+    Assert.equal(visit.transitionType, TRANSITION_TYPED);
+    do_check_guid_for_uri(visit.uri, visit.guid);
+    Assert.ok(!visit.hidden);
+    Assert.equal(visit.visitCount, 1);
+    Assert.equal(visit.typed, 1);
   });
   let testuri = NetUtil.newURI("http://firefox.com/");
   let testtime = Date.now() * 1000;
@@ -72,21 +70,19 @@ add_task(async function test_onVisit() {
   await promiseNotify;
 });
 
-add_task(async function test_onVisit() {
-  let promiseNotify = onNotify(function onVisit(aURI, aVisitID, aTime,
-                                                aSessionID, aReferringID,
-                                                aTransitionType, aGUID,
-                                                aHidden, aVisitCount, aTyped) {
-    Assert.ok(aURI.equals(testuri));
-    Assert.ok(aVisitID > 0);
-    Assert.equal(aTime, testtime);
-    Assert.equal(aSessionID, 0);
-    Assert.equal(aReferringID, 0);
-    Assert.equal(aTransitionType, TRANSITION_FRAMED_LINK);
-    do_check_guid_for_uri(aURI, aGUID);
-    Assert.ok(aHidden);
-    Assert.equal(aVisitCount, 1);
-    Assert.equal(aTyped, 0);
+add_task(async function test_onVisits() {
+  let promiseNotify = onNotify(function onVisits(aVisits) {
+    Assert.equal(aVisits.length, 1, "Right number of visits notified");
+    let visit = aVisits[0];
+    Assert.ok(visit.uri.equals(testuri));
+    Assert.ok(visit.visitId > 0);
+    Assert.equal(visit.time, testtime);
+    Assert.equal(visit.referrerId, 0);
+    Assert.equal(visit.transitionType, TRANSITION_FRAMED_LINK);
+    do_check_guid_for_uri(visit.uri, visit.guid);
+    Assert.ok(visit.hidden);
+    Assert.equal(visit.visitCount, 1);
+    Assert.equal(visit.typed, 0);
   });
   let testuri = NetUtil.newURI("http://hidden.firefox.com/");
   let testtime = Date.now() * 1000;
@@ -98,39 +94,41 @@ add_task(async function test_multiple_onVisit() {
   let testuri = NetUtil.newURI("http://self.firefox.com/");
   let promiseNotifications = new Promise(resolve => {
     let observer = {
-      _c: 0,
       __proto__: NavHistoryObserver.prototype,
-      onVisit(uri, id, time, unused, referrerId, transition, guid,
-              hidden, visitCount, typed) {
-        Assert.ok(testuri.equals(uri));
-        Assert.ok(id > 0);
-        Assert.ok(time > 0);
-        Assert.ok(!hidden);
-        do_check_guid_for_uri(uri, guid);
-        switch (++this._c) {
-          case 1:
-            Assert.equal(referrerId, 0);
-            Assert.equal(transition, TRANSITION_LINK);
-            Assert.equal(visitCount, 1);
-            Assert.equal(typed, 0);
-            break;
-          case 2:
-            Assert.ok(referrerId > 0);
-            Assert.equal(transition, TRANSITION_LINK);
-            Assert.equal(visitCount, 2);
-            Assert.equal(typed, 0);
-            break;
-          case 3:
-            Assert.equal(referrerId, 0);
-            Assert.equal(transition, TRANSITION_TYPED);
-            Assert.equal(visitCount, 3);
-            Assert.equal(typed, 1);
+      onVisits(aVisits) {
+        Assert.equal(aVisits.length, 3, "Right number of visits notified");
+        for (let i = 0; i < aVisits.length; i++) {
+          let visit = aVisits[i];
+          Assert.ok(testuri.equals(visit.uri));
+          Assert.ok(visit.visitId > 0);
+          Assert.ok(visit.time > 0);
+          Assert.ok(!visit.hidden);
+          do_check_guid_for_uri(visit.uri, visit.guid);
+          switch (i) {
+            case 0:
+              Assert.equal(visit.referrerId, 0);
+              Assert.equal(visit.transitionType, TRANSITION_LINK);
+              Assert.equal(visit.visitCount, 1);
+              Assert.equal(visit.typed, 0);
+              break;
+            case 1:
+              Assert.ok(visit.referrerId > 0);
+              Assert.equal(visit.transitionType, TRANSITION_LINK);
+              Assert.equal(visit.visitCount, 2);
+              Assert.equal(visit.typed, 0);
+              break;
+            case 2:
+              Assert.equal(visit.referrerId, 0);
+              Assert.equal(visit.transitionType, TRANSITION_TYPED);
+              Assert.equal(visit.visitCount, 3);
+              Assert.equal(visit.typed, 1);
 
-            PlacesUtils.history.removeObserver(observer, false);
-            resolve();
-            break;
+              PlacesUtils.history.removeObserver(observer, false);
+              resolve();
+              break;
+          }
         }
-      }
+      },
     };
     PlacesUtils.history.addObserver(observer);
   });

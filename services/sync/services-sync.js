@@ -30,7 +30,7 @@ pref("services.sync.engine.history", true);
 pref("services.sync.engine.passwords", true);
 pref("services.sync.engine.prefs", true);
 pref("services.sync.engine.tabs", true);
-pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|resource:.*|chrome:.*|wyciwyg:.*|file:.*|blob:.*)$");
+pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|resource:.*|chrome:.*|wyciwyg:.*|file:.*|blob:.*|moz-extension:.*)$");
 
 // The addresses and CC engines might not actually be available at all.
 pref("services.sync.engine.addresses.available", false);

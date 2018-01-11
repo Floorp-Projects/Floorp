@@ -44,13 +44,13 @@ public:
   explicit GetRectText(const LayoutDeviceIntRect& aRect)
   {
     AssignLiteral("{ x=");
-    AppendInt(aRect.x);
+    AppendInt(aRect.X());
     AppendLiteral(", y=");
-    AppendInt(aRect.y);
+    AppendInt(aRect.Y());
     AppendLiteral(", width=");
-    AppendInt(aRect.width);
+    AppendInt(aRect.Width());
     AppendLiteral(", height=");
-    AppendInt(aRect.height);
+    AppendInt(aRect.Height());
     AppendLiteral(" }");
   }
   virtual ~GetRectText() {}
@@ -293,11 +293,11 @@ ContentCacheInChild::QueryCharRect(nsIWidget* aWidget,
   aCharRect = textRect.mReply.mRect;
 
   // Guarantee the rect is not empty.
-  if (NS_WARN_IF(!aCharRect.height)) {
-    aCharRect.height = 1;
+  if (NS_WARN_IF(!aCharRect.Height())) {
+    aCharRect.SetHeight(1);
   }
-  if (NS_WARN_IF(!aCharRect.width)) {
-    aCharRect.width = 1;
+  if (NS_WARN_IF(!aCharRect.Width())) {
+    aCharRect.SetWidth(1);
   }
   return true;
 }
@@ -1081,10 +1081,10 @@ ContentCacheInParent::GetCaretRect(uint32_t aOffset,
     }
 
     if (mSelection.mWritingMode.IsVertical()) {
-      aCaretRect.y = aCaretRect.YMost();
+      aCaretRect.MoveToY(aCaretRect.YMost());
     } else {
       // XXX bidi-unaware.
-      aCaretRect.x = aCaretRect.XMost();
+      aCaretRect.MoveToX(aCaretRect.XMost());
     }
   }
 
@@ -1092,9 +1092,9 @@ ContentCacheInParent::GetCaretRect(uint32_t aOffset,
   //     direction.  However, this is usually used by IME, so, assuming the
   //     character is in LRT context must not cause any problem.
   if (mSelection.mWritingMode.IsVertical()) {
-    aCaretRect.height = mCaret.IsValid() ? mCaret.mRect.height : 1;
+    aCaretRect.SetHeight(mCaret.IsValid() ? mCaret.mRect.Height() : 1);
   } else {
-    aCaretRect.width = mCaret.IsValid() ? mCaret.mRect.width : 1;
+    aCaretRect.SetWidth(mCaret.IsValid() ? mCaret.mRect.Width() : 1);
   }
   return true;
 }

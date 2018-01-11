@@ -40,6 +40,7 @@ protected:
   bool mInheritPrincipal;
   bool mPrincipalIsExplicit;
   bool mForceAllowDataURI;
+  bool mOriginalFrameSrc;
   bool mSendReferrer;
   nsDocShellInfoReferrerPolicy mReferrerPolicy;
   nsDocShellInfoLoadType mLoadType;

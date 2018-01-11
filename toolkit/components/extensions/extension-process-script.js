@@ -43,6 +43,7 @@ function parseScriptOptions(options) {
     matchAboutBlank: options.match_about_blank,
     frameID: options.frame_id,
     runAt: options.run_at,
+    hasActiveTabPermission: options.hasActiveTabPermission,
 
     matches: new MatchPatternSet(options.matches),
     excludeMatches: new MatchPatternSet(options.exclude_matches || []),
