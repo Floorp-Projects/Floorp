@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIDOMCSSRule.idl',
     'nsIDOMCSSRuleList.idl',
     'nsIDOMCSSStyleDeclaration.idl',
-    'nsIDOMCSSStyleRule.idl',
     'nsIDOMCSSStyleSheet.idl',
     'nsIDOMCSSValue.idl',
     'nsIDOMCSSValueList.idl',
