@@ -75,6 +75,14 @@ void Accumulate(HistogramID id, const nsTArray<uint32_t>& samples);
 void Accumulate(HistogramID id, const nsCString& key, uint32_t sample = 1);
 
 /**
+ * Adds an array of samples to a histogram defined in TelemetryHistograms.h
+ * @param id - histogram id
+ * @param samples - values to record.
+ * @param key - the string key
+ */
+void Accumulate(HistogramID id, const nsCString& key, const nsTArray<uint32_t>& samples);
+
+/**
  * Adds a sample to a histogram defined in TelemetryHistogramEnums.h.
  * This function is here to support telemetry measurements from Java,
  * where we have only names and not numeric IDs.  You should almost
