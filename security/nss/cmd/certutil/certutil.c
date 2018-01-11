@@ -1054,6 +1054,18 @@ ListModules(void)
 }
 
 static void
+PrintBuildFlags()
+{
+#ifdef NSS_FIPS_DISABLED
+    PR_fprintf(PR_STDOUT, "NSS_FIPS_DISABLED\n");
+#endif
+#ifdef NSS_NO_INIT_SUPPORT
+    PR_fprintf(PR_STDOUT, "NSS_NO_INIT_SUPPORT\n");
+#endif
+    exit(0);
+}
+
+static void
 PrintSyntax(char *progName)
 {
 #define FPS fprintf(stderr,
@@ -1100,6 +1112,7 @@ PrintSyntax(char *progName)
     FPS "\t%s -L [-n cert-name] [-h token-name] [--email email-address]\n",
         progName);
     FPS "\t\t [-X] [-r] [-a] [--dump-ext-val OID] [-d certdir] [-P dbprefix]\n");
+    FPS "\t%s --build-flags\n", progName);
     FPS "\t%s -M -n cert-name -t trustargs [-d certdir] [-P dbprefix]\n",
         progName);
     FPS "\t%s -O -n cert-name [-X] [-d certdir] [-a] [-P dbprefix]\n", progName);
@@ -1813,6 +1826,18 @@ luS(enum usage_level ul, const char *command)
 }
 
 static void
+luBuildFlags(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "build-flags"));
+    if (ul == usage_all || !command || is_my_command)
+    FPS "%-15s Print enabled build flags relevant for NSS test execution\n",
+        "--build-flags");
+    if (ul == usage_selected && !is_my_command)
+        return;
+    FPS "\n");
+}
+
+static void
 LongUsage(char *progName, enum usage_level ul, const char *command)
 {
     luA(ul, command);
@@ -1826,6 +1851,7 @@ LongUsage(char *progName, enum usage_level ul, const char *command)
     luU(ul, command);
     luK(ul, command);
     luL(ul, command);
+    luBuildFlags(ul, command);
     luM(ul, command);
     luN(ul, command);
     luT(ul, command);
@@ -2401,6 +2427,7 @@ enum {
     cmd_Merge,
     cmd_UpgradeMerge, /* test only */
     cmd_Rename,
+    cmd_BuildFlags,
     max_cmd
 };
 
@@ -2503,7 +2530,9 @@ static const secuCommandFlag commands_init[] =
       { /* cmd_UpgradeMerge        */ 0, PR_FALSE, 0, PR_FALSE,
         "upgrade-merge" },
       { /* cmd_Rename              */ 0, PR_FALSE, 0, PR_FALSE,
-        "rename" }
+        "rename" },
+      { /* cmd_BuildFlags          */ 0, PR_FALSE, 0, PR_FALSE,
+        "build-flags" }
     };
 #define NUM_COMMANDS ((sizeof commands_init) / (sizeof commands_init[0]))
 
@@ -2688,6 +2717,10 @@ certutil_main(int argc, char **argv, PRBool initialize)
         }
         LongUsage(progName, (command ? usage_selected : usage_all), command);
         exit(1);
+    }
+
+    if (certutil.commands[cmd_BuildFlags].activated) {
+        PrintBuildFlags();
     }
 
     if (certutil.options[opt_PasswordFile].arg) {
@@ -3138,7 +3171,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
         certutil.commands[cmd_CreateAndAddCert].activated ||
         certutil.commands[cmd_AddCert].activated ||
         certutil.commands[cmd_AddEmailCert].activated) {
-        if (PK11_NeedUserInit(slot)) {
+        if (PK11_NeedLogin(slot) && PK11_NeedUserInit(slot)) {
             char *password = NULL;
             /* fetch the password from the command line or the file
              * if no password is supplied, initialize the password to NULL */

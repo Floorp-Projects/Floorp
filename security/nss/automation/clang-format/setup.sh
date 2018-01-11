@@ -17,8 +17,8 @@ apt_packages+=('locales')
 apt-get install -y --no-install-recommends ${apt_packages[@]}
 
 # Download clang.
-curl -L http://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz -o clang.tar.xz
-curl -L http://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz.sig -o clang.tar.xz.sig
+curl -L https://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz -o clang.tar.xz
+curl -L https://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz.sig -o clang.tar.xz.sig
 # Verify the signature.
 gpg --keyserver pool.sks-keyservers.net --recv-keys B6C8F98282B944E3B0D5C2530FC3042E345AD05D
 gpg --verify clang.tar.xz.sig
