@@ -9,18 +9,21 @@
 
 class nsIDocument;
 class nsIDOMDocument;
-class nsIDOMElement;
 class nsIDOMNode;
+class nsINode;
 
 namespace mozilla {
 class EventStateManager;
+namespace dom {
+class Element;
+} // namespace dom
 } // namespace mozilla
 
 class inLayoutUtils
 {
 public:
-  static mozilla::EventStateManager*
-           GetEventStateManagerFor(nsIDOMElement *aElement);
+  static mozilla::EventStateManager* GetEventStateManagerFor(
+      mozilla::dom::Element& aElement);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
   static nsINode* GetContainerFor(const nsIDocument& aDoc);
 };

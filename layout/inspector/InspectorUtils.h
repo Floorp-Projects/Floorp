@@ -194,6 +194,29 @@ public:
                              Element& aElement,
                              nsTArray<nsString>& aResult);
 
+  /**
+   * Setting and removing content state on an element. Both these functions
+   * call EventStateManager::SetContentState internally; the difference is
+   * that for the remove case we simply pass in nullptr for the element.
+   * Use them accordingly.
+   *
+   * When removing the active state, you may optionally also clear the active
+   * document as well by setting aClearActiveDocument
+   *
+   * @return Returns true if the state was set successfully. See more details
+   * in EventStateManager.h SetContentState.
+   */
+  static bool SetContentState(GlobalObject& aGlobal,
+                              Element& aElement,
+                              uint64_t aState,
+                              ErrorResult& aRv);
+  static bool RemoveContentState(GlobalObject& aGlobal,
+                                 Element& aElement,
+                                 uint64_t aState,
+                                 bool aClearActiveDocument,
+                                 ErrorResult& aRv);
+  static uint64_t GetContentState(GlobalObject& aGlobal, Element& aElement);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

@@ -22,11 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462789
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
 function do_test() {
-  const ERROR_INVALID_ARG = 0x80070057;
   const DOCUMENT_NODE_TYPE = 9;
-
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
 
   var iframe = document.getElementById("bug462789_iframe");
   var docElement = iframe.contentDocument.documentElement;
@@ -70,19 +66,10 @@ function do_test() {
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    utils.getContentState(docElement);
+    InspectorUtils.getContentState(docElement);
     ok(true, "Should not throw"); 
   }
   catch(e) { ok(false, "Got an exception: " + e); }
-
-  try {
-    utils.setContentState(docElement, false);
-    ok(false, "expected an exception"); 
-  }
-  catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, ERROR_INVALID_ARG, "got the expected exception");
-  }
 
   SimpleTest.finish();
 }
