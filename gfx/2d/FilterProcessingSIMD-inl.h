@@ -17,9 +17,13 @@ inline already_AddRefed<DataSourceSurface>
 ConvertToB8G8R8A8_SIMD(SourceSurface* aSurface)
 {
   IntSize size = aSurface->GetSize();
-  RefPtr<DataSourceSurface> input = aSurface->GetDataSurface();
   RefPtr<DataSourceSurface> output =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+  if (!output) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> input = aSurface->GetDataSurface();
   DataSourceSurface::ScopedMap inputMap(input, DataSourceSurface::READ);
   DataSourceSurface::ScopedMap outputMap(output, DataSourceSurface::READ_WRITE);
   uint8_t *inputData = inputMap.GetData();

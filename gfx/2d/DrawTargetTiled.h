@@ -203,6 +203,10 @@ public:
   virtual already_AddRefed<DataSourceSurface> GetDataSurface()
   {
     RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(GetSize(), GetFormat());
+    if (!surf) {
+      gfxCriticalError() << "DrawTargetTiled::GetDataSurface failed to allocate surface";
+      return nullptr;
+    }
 
     DataSourceSurface::MappedSurface mappedSurf;
     if (!surf->Map(DataSourceSurface::MapType::WRITE, &mappedSurf)) {
