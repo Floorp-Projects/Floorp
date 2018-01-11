@@ -1,7 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
+
+/* globals InspectorUtils */
 
 /*
  * This is an xpcshell script that runs to generate a static list of CSS properties
@@ -10,6 +13,8 @@
  */
 var {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 var {generateCssProperties} = require("devtools/server/actors/css-properties");
+
+Components.utils.importGlobalProperties(["InspectorUtils"]);
 
 // xpcshell can output extra information, so place some delimiter text between
 // the output of the css properties database.
@@ -48,8 +53,5 @@ function cssProperties() {
  * The list of all CSS Pseudo Elements.
  */
 function pseudoElements() {
-  const {classes: Cc, interfaces: Ci} = Components;
-  const domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(Ci.inIDOMUtils);
-  return domUtils.getCSSPseudoElementNames();
+  return InspectorUtils.getCSSPseudoElementNames();
 }
