@@ -185,11 +185,20 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       bool aIsBackfaceVisible)
 {
   MOZ_ASSERT(aContainer->IsAsync());
+
+  if (mPipelineId.isSome() && mContainer != aContainer) {
+    // In this case, we need to remove the existed pipeline and create new one
+    // because the ImageContainer is changed.
+    WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
+    mPipelineId.reset();
+  }
+
   if (!mPipelineId) {
     // Alloc async image pipeline id.
     mPipelineId = Some(WrBridge()->GetCompositorBridgeChild()->GetNextPipelineId());
     WrBridge()->AddPipelineIdForAsyncCompositable(mPipelineId.ref(),
                                                   aContainer->GetAsyncContainerHandle());
+    mContainer = aContainer;
   }
   MOZ_ASSERT(!mImageClient);
   MOZ_ASSERT(!mExternalImageId);
