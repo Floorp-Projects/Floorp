@@ -9,11 +9,8 @@ if CONFIG['ENABLE_TESTS']:
     MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 XPIDL_SOURCES += [
-    'inICSSValueSearch.idl',
     'inIDeepTreeWalker.idl',
     'inIDOMView.idl',
-    'inISearchObserver.idl',
-    'inISearchProcess.idl',
 ]
 
 XPIDL_MODULE = 'inspector'
@@ -28,7 +25,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'inCSSValueSearch.cpp',
     'inDeepTreeWalker.cpp',
     'inLayoutUtils.cpp',
     'InspectorFontFace.cpp',
