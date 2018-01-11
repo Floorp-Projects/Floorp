@@ -315,11 +315,3 @@ NSS_SecureMemcmpZero;
 ;+    local:
 ;+       *;
 ;+};
-;-NSSUTIL_3.35 {         # NSS Utilities 3.35 release
-;-    global:
-;-# private exports for softoken
-_NSSUTIL_UTF8ToWide;-
-_NSSUTIL_Access;-
-;-    local:
-;-       *;
-;-};

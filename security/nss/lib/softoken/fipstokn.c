@@ -540,10 +540,7 @@ FC_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 
     crv = NSC_GetTokenInfo(slotID, pInfo);
     if (crv == CKR_OK) {
-        /* use the global database to figure out if we are running in 
-         * FIPS 140 Level 1 or Level 2 */
-        if (slotID == FIPS_SLOT_ID &&
-            (pInfo->flags & CKF_LOGIN_REQUIRED) == 0) {
+        if ((pInfo->flags & CKF_LOGIN_REQUIRED) == 0) {
             isLevel2 = PR_FALSE;
         }
     }
@@ -619,8 +616,7 @@ FC_InitPIN(CK_SESSION_HANDLE hSession,
      * we need to make sure the pin meets FIPS requirements */
     if ((ulPinLen == 0) || ((rv = sftk_newPinCheck(pPin, ulPinLen)) == CKR_OK)) {
         rv = NSC_InitPIN(hSession, pPin, ulPinLen);
-        if ((rv == CKR_OK) &&
-            (sftk_SlotIDFromSessionHandle(hSession) == FIPS_SLOT_ID)) {
+        if (rv == CKR_OK) {
             isLevel2 = (ulPinLen > 0) ? PR_TRUE : PR_FALSE;
         }
     }
@@ -648,8 +644,7 @@ FC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     if ((rv = sftk_fipsCheck()) == CKR_OK &&
         (rv = sftk_newPinCheck(pNewPin, usNewLen)) == CKR_OK) {
         rv = NSC_SetPIN(hSession, pOldPin, usOldLen, pNewPin, usNewLen);
-        if ((rv == CKR_OK) &&
-            (sftk_SlotIDFromSessionHandle(hSession) == FIPS_SLOT_ID)) {
+        if (rv == CKR_OK) {
             /* if we set the password in level1 we now go
              * to level2. NOTE: we don't allow the user to
              * go from level2 to level1 */
@@ -710,23 +705,11 @@ FC_GetSessionInfo(CK_SESSION_HANDLE hSession,
 
     rv = NSC_GetSessionInfo(hSession, pInfo);
     if (rv == CKR_OK) {
-        /* handle the case where the auxilary slot doesn't require login.
-         * piggy back on the main token's login state */
-        if (isLoggedIn &&
-            ((pInfo->state == CKS_RO_PUBLIC_SESSION) ||
-             (pInfo->state == CKS_RW_PUBLIC_SESSION))) {
-            CK_RV crv;
-            CK_TOKEN_INFO tInfo;
-            crv = NSC_GetTokenInfo(sftk_SlotIDFromSessionHandle(hSession),
-                                   &tInfo);
-            /* if the token doesn't login, use our global login state */
-            if ((crv == CKR_OK) && ((tInfo.flags & CKF_LOGIN_REQUIRED) == 0)) {
-                if (pInfo->state == CKS_RO_PUBLIC_SESSION) {
-                    pInfo->state = CKS_RO_USER_FUNCTIONS;
-                } else {
-                    pInfo->state = CKS_RW_USER_FUNCTIONS;
-                }
-            }
+        if ((isLoggedIn) && (pInfo->state == CKS_RO_PUBLIC_SESSION)) {
+            pInfo->state = CKS_RO_USER_FUNCTIONS;
+        }
+        if ((isLoggedIn) && (pInfo->state == CKS_RW_PUBLIC_SESSION)) {
+            pInfo->state = CKS_RW_USER_FUNCTIONS;
         }
     }
     return rv;

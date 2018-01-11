@@ -50,7 +50,6 @@ static const uint16_t kManyExtensions[] = {
     ssl_supported_groups_xtn,
     ssl_ec_point_formats_xtn,
     ssl_signature_algorithms_xtn,
-    ssl_signature_algorithms_cert_xtn,
     ssl_use_srtp_xtn,
     ssl_app_layer_protocol_xtn,
     ssl_signed_cert_timestamp_xtn,

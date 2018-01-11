@@ -1,8 +1,4 @@
 #include <cstdlib>
-#if defined(_WIN32)
-#include <windows.h>
-#include <codecvt>
-#endif
 
 #include "cert.h"
 #include "certdb.h"
@@ -38,7 +34,6 @@ class ScopedUniqueDirectory {
   ~ScopedUniqueDirectory() { assert(rmdir(mPath.c_str()) == 0); }
 
   const std::string &GetPath() { return mPath; }
-  const std::string &GetUTF8Path() { return mUTF8Path; }
 
  private:
   static const int RETRY_LIMIT = 5;
@@ -46,7 +41,6 @@ class ScopedUniqueDirectory {
   static bool TryMakingDirectory(/*in/out*/ std::string &prefix);
 
   std::string mPath;
-  std::string mUTF8Path;
 };
 
 ScopedUniqueDirectory::ScopedUniqueDirectory(const std::string &prefix) {
@@ -66,18 +60,6 @@ ScopedUniqueDirectory::ScopedUniqueDirectory(const std::string &prefix) {
     }
   }
   assert(mPath.length() > 0);
-#if defined(_WIN32)
-  // sqldb always uses UTF-8 regardless of the current system locale.
-  DWORD len =
-      MultiByteToWideChar(CP_ACP, 0, mPath.data(), mPath.size(), nullptr, 0);
-  std::vector<wchar_t> buf(len, L'\0');
-  MultiByteToWideChar(CP_ACP, 0, mPath.data(), mPath.size(), buf.data(),
-                      buf.size());
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  mUTF8Path = converter.to_bytes(std::wstring(buf.begin(), buf.end()));
-#else
-  mUTF8Path = mPath;
-#endif
 }
 
 void ScopedUniqueDirectory::GenerateRandomName(std::string &prefix) {
@@ -102,11 +84,10 @@ bool ScopedUniqueDirectory::TryMakingDirectory(std::string &prefix) {
 class SoftokenTest : public ::testing::Test {
  protected:
   SoftokenTest() : mNSSDBDir("SoftokenTest.d-") {}
-  SoftokenTest(const std::string &prefix) : mNSSDBDir(prefix) {}
 
   virtual void SetUp() {
     std::string nssInitArg("sql:");
-    nssInitArg.append(mNSSDBDir.GetUTF8Path());
+    nssInitArg.append(mNSSDBDir.GetPath());
     ASSERT_EQ(SECSuccess, NSS_Initialize(nssInitArg.c_str(), "", "", SECMOD_DB,
                                          NSS_INIT_NOROOTINIT));
   }
@@ -219,19 +200,6 @@ TEST_F(SoftokenTest, CreateObjectChangeToEmptyPassword) {
   // Because there's no password we can't logout and the operation should have
   // succeeded.
   EXPECT_NE(nullptr, obj);
-}
-
-class SoftokenNonAsciiTest : public SoftokenTest {
- protected:
-  SoftokenNonAsciiTest() : SoftokenTest("SoftokenTest.\xF7-") {}
-};
-
-TEST_F(SoftokenNonAsciiTest, NonAsciiPathWorking) {
-  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
-  ASSERT_TRUE(slot);
-  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, nullptr));
-  EXPECT_EQ(SECSuccess, PK11_ResetToken(slot.get(), nullptr));
-  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, nullptr));
 }
 
 // This is just any X509 certificate. Its contents don't matter.
