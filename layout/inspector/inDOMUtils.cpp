@@ -54,6 +54,7 @@
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoCSSParser.h"
+#include "mozilla/dom/InspectorUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -74,29 +75,26 @@ NS_IMPL_ISUPPORTS(inDOMUtils, inIDOMUtils)
 ///////////////////////////////////////////////////////////////////////////////
 // inIDOMUtils
 
-NS_IMETHODIMP
-inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
-                              nsISupports ***aSheets)
+namespace mozilla {
+namespace dom {
+
+/* static */ void
+InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
+                                  nsIDocument& aDocument,
+                                  nsTArray<RefPtr<StyleSheet>>& aResult)
 {
-  NS_ENSURE_ARG_POINTER(aDocument);
-
-  nsTArray<RefPtr<StyleSheet>> sheets;
-
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
-  MOZ_ASSERT(document);
-
   // Get the agent, then user and finally xbl sheets in the style set.
-  nsIPresShell* presShell = document->GetShell();
+  nsIPresShell* presShell = aDocument.GetShell();
 
   if (presShell) {
     StyleSetHandle styleSet = presShell->StyleSet();
     SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-      sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+      aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
     sheetType = SheetType::User;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
-      sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
+      aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
 
     AutoTArray<StyleSheet*, 32> xblSheetArray;
@@ -107,28 +105,19 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     for (StyleSheet* sheet : xblSheetArray) {
       if (!sheetSet.Contains(sheet)) {
         sheetSet.PutEntry(sheet);
-        sheets.AppendElement(sheet);
+        aResult.AppendElement(sheet);
       }
     }
   }
 
   // Get the document sheets.
-  for (size_t i = 0; i < document->SheetCount(); i++) {
-    sheets.AppendElement(document->SheetAt(i));
+  for (size_t i = 0; i < aDocument.SheetCount(); i++) {
+    aResult.AppendElement(aDocument.SheetAt(i));
   }
-
-  nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(sheets.Length() *
-                                                 sizeof(nsISupports*)));
-
-  for (size_t i = 0; i < sheets.Length(); i++) {
-    NS_ADDREF(ret[i] = NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, sheets[i]));
-  }
-
-  *aLength = sheets.Length();
-  *aSheets = ret;
-
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,

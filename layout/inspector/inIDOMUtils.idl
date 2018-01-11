@@ -20,10 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // CSS utilities
-  void getAllStyleSheets (in nsIDOMDocument aDoc,
-                          [optional] out unsigned long aLength,
-                          [array, size_is (aLength), retval] out nsISupports aSheets);
   nsIArrayExtensions getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
 
   /**

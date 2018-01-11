@@ -16,6 +16,7 @@ const {mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {
   addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
+const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic");
 loader.lazyRequireGetter(this, "addPseudoClassLock",
@@ -805,7 +806,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       doc.styleSheetChangeEventsEnabled = true;
 
       let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
+      let styleSheets =
+        isChrome ? InspectorUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         let sheet = styleSheets[i];
