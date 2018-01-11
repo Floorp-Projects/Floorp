@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
 XPIDL_SOURCES += [
-    'nsIDOMCSSPrimitiveValue.idl',
     'nsIDOMCSSStyleDeclaration.idl',
     'nsIDOMCSSValue.idl',
 ]

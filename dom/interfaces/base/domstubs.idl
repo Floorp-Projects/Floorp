@@ -58,7 +58,6 @@ interface nsIDOMHTMLHeadElement;
 
 // CSS
 interface nsIDOMCSSValue;
-interface nsIDOMCSSPrimitiveValue;
 interface nsIDOMCSSStyleDeclaration;
 
 // Range
