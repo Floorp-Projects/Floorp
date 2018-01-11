@@ -19,7 +19,6 @@ NS_IMPL_RELEASE_INHERITED(CSSMediaRule, css::ConditionRule)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSMediaRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
 NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
 
 // nsIDOMCSSGroupingRule methods
@@ -40,15 +39,6 @@ NS_IMETHODIMP
 CSSMediaRule::DeleteRule(uint32_t aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
-}
-
-// nsIDOMCSSMediaRule methods
-NS_IMETHODIMP
-CSSMediaRule::GetMedia(nsIDOMMediaList* *aMedia)
-{
-  NS_ENSURE_ARG_POINTER(aMedia);
-  NS_IF_ADDREF(*aMedia = Media());
-  return NS_OK;
 }
 
 void
