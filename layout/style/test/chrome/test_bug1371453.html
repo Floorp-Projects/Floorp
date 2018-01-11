@@ -9,8 +9,6 @@
 <script>
 SimpleTest.waitForExplicitFinish();
 
-let DOMUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-               .getService(SpecialPowers.Ci.inIDOMUtils);
 const Cu = SpecialPowers.Components.utils;
 const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 document.styleSheetChangeEventsEnabled = true;

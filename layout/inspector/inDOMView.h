@@ -8,7 +8,6 @@
 #define __inDOMView_h__
 
 #include "inIDOMView.h"
-#include "inIDOMUtils.h"
 
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
@@ -45,7 +44,6 @@ protected:
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
-  nsCOMPtr<inIDOMUtils> mDOMUtils;
 
   bool mShowAnonymous;
   bool mShowSubDocuments;

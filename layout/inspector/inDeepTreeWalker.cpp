@@ -12,7 +12,6 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
-#include "inIDOMUtils.h"
 #include "nsIContent.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/Element.h"
@@ -97,8 +96,7 @@ inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
   mCurrentNode = aRoot;
   mWhatToShow = aWhatToShow;
 
-  mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
-  return mDOMUtils ? NS_OK : NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////

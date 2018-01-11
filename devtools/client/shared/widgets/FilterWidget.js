@@ -10,7 +10,6 @@
   */
 
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const { Cc, Ci } = require("chrome");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -20,10 +19,6 @@ const L10N = new LocalizationHelper(STRINGS_URI);
 const {cssTokenizer} = require("devtools/shared/css/parsing-utils");
 
 const asyncStorage = require("devtools/shared/async-storage");
-
-loader.lazyGetter(this, "DOMUtils", () => {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
 
 const DEFAULT_FILTER_TYPE = "length";
 const UNIT_MAPPING = {

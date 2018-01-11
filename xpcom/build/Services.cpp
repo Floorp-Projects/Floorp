@@ -19,7 +19,6 @@
 #include "nsIXULOverlayProvider.h"
 #include "IHistory.h"
 #include "nsIXPConnect.h"
-#include "inIDOMUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsICacheStorageService.h"
