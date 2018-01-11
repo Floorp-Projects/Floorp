@@ -50,8 +50,5 @@ TEST_HARNESS_FILES.mozbase += [
 
 SPHINX_TREES['/mozbase'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 with Files('**'):
     BUG_COMPONENT = ('Testing', 'Mozbase')

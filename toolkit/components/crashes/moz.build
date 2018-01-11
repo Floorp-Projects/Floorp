@@ -6,9 +6,6 @@
 
 SPHINX_TREES['crash-manager'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 XPIDL_MODULE = 'toolkit_crashservice'
 
 XPIDL_SOURCES += [

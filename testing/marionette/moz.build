@@ -18,6 +18,3 @@ with Files("harness/**"):
     SCHEDULES.exclusive = ["marionette", "firefox-ui"]
 
 SPHINX_TREES["marionette"] = "doc"
-
-with Files('doc/**'):
-    SCHEDULES.exclusive = ['docs']
