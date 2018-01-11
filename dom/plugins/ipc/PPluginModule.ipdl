@@ -7,7 +7,6 @@ include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PContent;
 include protocol PProfiler;
-include protocol PFunctionBroker;
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";
@@ -15,6 +14,9 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using class mac_plugin_interposing::NSCursorInfo from "mozilla/plugins/PluginMessageUtils.h";
 using struct nsID from "nsID.h";
 using struct mozilla::plugins::NPAudioDeviceChangeDetailsIPC from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::plugins::GetFileNameFunc from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::plugins::OpenFileNameIPC from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::plugins::OpenFileNameRetIPC from "mozilla/plugins/PluginMessageUtils.h";
 
 namespace mozilla {
 namespace plugins {
@@ -96,8 +98,6 @@ child:
 
   async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
 
-  async InitPluginFunctionBroker(Endpoint<PFunctionBrokerChild> endpoint);
-
 parent:
   /**
    * This message is only used on X11 platforms.
@@ -145,8 +145,17 @@ parent:
 
   async ReturnSitesWithData(nsCString[] aSites, uint64_t aCallbackId);
 
+  intr GetKeyState(int32_t aVirtKey)
+    returns (int16_t aState);
+
   intr NPN_SetValue_NPPVpluginRequiresAudioDeviceChanges(bool shouldRegister)
     returns (NPError result);
+
+  // Used to broker the GetOpenFileName/GetSaveFileName file pickers on Windows.
+  intr GetFileName(GetFileNameFunc aFunc, OpenFileNameIPC aOfnIn)
+    returns (OpenFileNameRetIPC aOfnOut, bool aResult);
+
+  intr SetCursorPos(int x, int y) returns (bool aResult);
 };
 
 } // namespace plugins
