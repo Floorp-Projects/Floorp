@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface Counter;
-
 interface CSSPrimitiveValue : CSSValue {
 
   // UnitTypes
@@ -48,7 +46,7 @@ interface CSSPrimitiveValue : CSSValue {
   [Throws]
   DOMString          getStringValue();
   [Throws]
-  Counter            getCounterValue();
+  void               getCounterValue();  // always throws
   [Throws]
   Rect               getRectValue();
   [Throws]

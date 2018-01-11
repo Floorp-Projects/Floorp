@@ -72,7 +72,7 @@ public:
   void GetStringValue(nsString& aString, mozilla::ErrorResult& aRv);
   void SetStringValue(uint16_t aUnitType, const nsAString& aString,
                       mozilla::ErrorResult& aRv);
-  already_AddRefed<nsIDOMCounter> GetCounterValue(mozilla::ErrorResult& aRv);
+  void GetCounterValue(mozilla::ErrorResult& aRv);
   nsDOMCSSRect* GetRectValue(mozilla::ErrorResult& aRv);
   nsDOMCSSRGBColor *GetRGBColorValue(mozilla::ErrorResult& aRv);
 
