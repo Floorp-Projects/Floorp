@@ -19,6 +19,7 @@ Test that css-logic calculates CSS specificity properly
     const {CssLogic, CssSelector} = require("devtools/server/css-logic");
     const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                        .getService(Ci.inIDOMUtils);
+    const InspectorUtils = SpecialPowers.InspectorUtils;
 
     const TEST_DATA = [
       {text: "*", expected: 0},
@@ -67,8 +68,8 @@ Test that css-logic calculates CSS specificity properly
 
       let selector = new CssSelector(cssRule, selectorText, i);
       let expected = getExpectedSpecificity(selectorText);
-      let specificity = DOMUtils.getSpecificity(selector.cssRule,
-                                                selector.selectorIndex);
+      let specificity = InspectorUtils.getSpecificity(selector.cssRule,
+                                                      selector.selectorIndex);
       is(specificity, expected,
         'Selector "' + selectorText + '" has a specificity of ' + expected);
     }

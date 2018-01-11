@@ -679,8 +679,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
             CssLogic.getBindingElementAndPseudo(element);
         entry.matchedSelectors = [];
         for (let i = 0; i < selectors.length; i++) {
-          if (DOMUtils.selectorMatchesElement(bindingElement, domRule, i,
-                                              pseudo)) {
+          if (InspectorUtils.selectorMatchesElement(bindingElement, domRule, i,
+                                                    pseudo)) {
             entry.matchedSelectors.push(selectors[i]);
           }
         }

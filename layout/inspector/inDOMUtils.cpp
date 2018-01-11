@@ -305,33 +305,6 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
-
-static already_AddRefed<BindingStyleRule>
-GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
-{
-  nsCOMPtr<nsICSSStyleRuleDOMWrapper> rule = do_QueryInterface(aRule);
-  if (!rule) {
-    rv.Throw(NS_ERROR_INVALID_POINTER);
-    return nullptr;
-  }
-
-  RefPtr<BindingStyleRule> cssrule;
-  rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
-  if (rv.Failed()) {
-    return nullptr;
-  }
-
-  if (!cssrule) {
-    rv.Throw(NS_ERROR_FAILURE);
-  }
-  return cssrule.forget();
-}
-
-namespace mozilla {
-namespace dom {
-
 /* static */ uint32_t
 InspectorUtils::GetRuleLine(GlobalObject& aGlobal, css::Rule& aRule)
 {
@@ -369,68 +342,50 @@ InspectorUtils::GetCSSLexer(GlobalObject& aGlobal, const nsAString& aText)
   return new CSSLexer(aText);
 }
 
+/* static */ uint32_t
+InspectorUtils::GetSelectorCount(GlobalObject& aGlobal,
+                                 BindingStyleRule& aRule)
+{
+  return aRule.GetSelectorCount();
+}
+
+/* static */ void
+InspectorUtils::GetSelectorText(GlobalObject& aGlobal,
+                                BindingStyleRule& aRule,
+                                uint32_t aSelectorIndex,
+                                nsString& aText,
+                                ErrorResult& aRv)
+{
+  aRv = aRule.GetSelectorText(aSelectorIndex, aText);
+}
+
+/* static */ uint64_t
+InspectorUtils::GetSpecificity(GlobalObject& aGlobal,
+                               BindingStyleRule& aRule,
+                               uint32_t aSelectorIndex,
+                               ErrorResult& aRv)
+{
+  uint64_t s;
+  aRv = aRule.GetSpecificity(aSelectorIndex, &s);
+  return s;
+}
+
+/* static */ bool
+InspectorUtils::SelectorMatchesElement(GlobalObject& aGlobalObject,
+                                       Element& aElement,
+                                       BindingStyleRule& aRule,
+                                       uint32_t aSelectorIndex,
+                                       const nsAString& aPseudo,
+                                       ErrorResult& aRv)
+{
+  bool result = false;
+  aRv = aRule.SelectorMatchesElement(&aElement, aSelectorIndex, aPseudo,
+                                     &result);
+  return result;
+}
+
 } // namespace dom
 } // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
-{
-  ErrorResult rv;
-  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  *aCount = rule->GetSelectorCount();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMUtils::GetSelectorText(nsIDOMCSSStyleRule* aRule,
-                            uint32_t aSelectorIndex,
-                            nsAString& aText)
-{
-  ErrorResult rv;
-  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  MOZ_ASSERT(!rv.Failed(), "How could we get a selector but not a rule?");
-
-  return rule->GetSelectorText(aSelectorIndex, aText);
-}
-
-NS_IMETHODIMP
-inDOMUtils::GetSpecificity(nsIDOMCSSStyleRule* aRule,
-                           uint32_t aSelectorIndex,
-                           uint64_t* aSpecificity)
-{
-  ErrorResult rv;
-  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  return rule->GetSpecificity(aSelectorIndex, aSpecificity);
-}
-
-NS_IMETHODIMP
-inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
-                                   nsIDOMCSSStyleRule* aRule,
-                                   uint32_t aSelectorIndex,
-                                   const nsAString& aPseudo,
-                                   bool* aMatches)
-{
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  ErrorResult rv;
-  RefPtr<BindingStyleRule> rule = GetRuleFromDOMRule(aRule, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  return rule->SelectorMatchesElement(element, aSelectorIndex, aPseudo,
-                                      aMatches);
-}
 
 NS_IMETHODIMP
 inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
