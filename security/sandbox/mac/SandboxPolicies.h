@@ -230,24 +230,17 @@ static const char contentSandboxRules[] = R"(
   (allow file-read-data (literal "/Library/Preferences/.GlobalPreferences.plist"))
 
   (allow file-read*
-      (subpath "/Library/Fonts")
       (subpath "/Library/Audio/Plug-Ins")
       (subpath "/Library/Spelling")
       (literal "/")
       (literal "/private/tmp")
       (literal "/private/var/tmp")
-
       (home-literal "/.CFUserTextEncoding")
       (home-literal "/Library/Preferences/com.apple.DownloadAssessment.plist")
       (home-subpath "/Library/Colors")
-      (home-subpath "/Library/Fonts")
-      (home-subpath "/Library/FontCollections")
       (home-subpath "/Library/Keyboard Layouts")
       (home-subpath "/Library/Input Methods")
       (home-subpath "/Library/Spelling")
-      (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
-      (home-subpath "/Library/Application Support/FontAgent")
-
       (literal appPath)
       (literal appBinaryPath))
 
@@ -362,26 +355,17 @@ static const char contentSandboxRules[] = R"(
       (subpath appTempDir)
       (vnode-type REGULAR-FILE)))
 
-  ; bug 1382260
-  ; We may need to load fonts from outside of the standard
-  ; font directories whitelisted above. This is typically caused
-  ; by a font manager. For now, whitelist any file with a
-  ; font extension. Limit this to the common font types:
-  ; files ending in .otf, .ttf, .ttc, .otc, and .dfont.
+  ; Fonts
   (allow file-read*
-    (regex #"\.[oO][tT][fF]$"           ; otf
-           #"\.[tT][tT][fF]$"           ; ttf
-           #"\.[tT][tT][cC]$"           ; ttc
-           #"\.[oO][tT][cC]$"           ; otc
-           #"\.[dD][fF][oO][nN][tT]$")) ; dfont
-
-  ; bug 1404919
-  ; Read access (recursively) within directories ending in .fontvault
-  (allow file-read* (regex #"\.fontvault/"))
-
-  ; bug 1429133
-  ; Read access to the default FontExplorer font directory
-  (allow file-read* (home-subpath "/FontExplorer X/Font Library"))
+    (subpath "/Library/Fonts")
+    (subpath "/Library/Application Support/Apple/Fonts")
+    (home-subpath "/Library/Fonts")
+    ; Allow read access to paths allowed via sandbox extensions.
+    ; This is needed for fonts in non-standard locations normally
+    ; due to third party font managers. The extensions are
+    ; automatically issued by the font server in response to font
+    ; API calls.
+    (extension "com.apple.app-sandbox.read"))
 )";
 
 static const char fileContentProcessAddend[] = R"(
