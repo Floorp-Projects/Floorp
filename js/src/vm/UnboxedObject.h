@@ -40,7 +40,7 @@ UnboxedTypeNeedsPreBarrier(JSValueType type)
 static inline bool
 UnboxedTypeNeedsPostBarrier(JSValueType type)
 {
-    return type == JSVAL_TYPE_STRING || type == JSVAL_TYPE_OBJECT;
+    return type == JSVAL_TYPE_OBJECT;
 }
 
 // Class tracking information specific to unboxed objects.

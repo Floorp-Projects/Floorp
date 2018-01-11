@@ -224,7 +224,6 @@ GetSelectorRuntime(const CompilationSelector& selector)
     {
         JSRuntime* match(JSScript* script)    { return script->runtimeFromActiveCooperatingThread(); }
         JSRuntime* match(JSCompartment* comp) { return comp->runtimeFromActiveCooperatingThread(); }
-        JSRuntime* match(Zone* zone)          { return zone->runtimeFromActiveCooperatingThread(); }
         JSRuntime* match(ZonesInState zbs)    { return zbs.runtime; }
         JSRuntime* match(JSRuntime* runtime)  { return runtime; }
         JSRuntime* match(AllCompilations all) { return nullptr; }
@@ -241,7 +240,6 @@ JitDataStructuresExist(const CompilationSelector& selector)
     {
         bool match(JSScript* script)    { return !!script->compartment()->jitCompartment(); }
         bool match(JSCompartment* comp) { return !!comp->jitCompartment(); }
-        bool match(Zone* zone)          { return !!zone->jitZone(); }
         bool match(ZonesInState zbs)    { return zbs.runtime->hasJitRuntime(); }
         bool match(JSRuntime* runtime)  { return runtime->hasJitRuntime(); }
         bool match(AllCompilations all) { return true; }
@@ -260,7 +258,6 @@ IonBuilderMatches(const CompilationSelector& selector, jit::IonBuilder* builder)
 
         bool match(JSScript* script)    { return script == builder_->script(); }
         bool match(JSCompartment* comp) { return comp == builder_->script()->compartment(); }
-        bool match(Zone* zone)          { return zone == builder_->script()->zone(); }
         bool match(JSRuntime* runtime)  { return runtime == builder_->script()->runtimeFromAnyThread(); }
         bool match(AllCompilations all) { return true; }
         bool match(ZonesInState zbs)    {

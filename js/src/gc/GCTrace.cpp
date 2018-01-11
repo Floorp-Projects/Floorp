@@ -134,13 +134,6 @@ js::gc::TraceNurseryAlloc(Cell* thing, size_t size)
 }
 
 void
-js::gc::TraceNurseryAlloc(Cell* thing, AllocKind kind)
-{
-    if (thing)
-        TraceEvent(TraceEventNurseryAlloc, uint64_t(thing), kind);
-}
-
-void
 js::gc::TraceTenuredAlloc(Cell* thing, AllocKind kind)
 {
     if (thing)

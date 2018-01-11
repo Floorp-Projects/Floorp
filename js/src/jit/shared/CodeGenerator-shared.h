@@ -147,10 +147,6 @@ class CodeGeneratorShared : public LElementVisitor
         return gen->isProfilerInstrumentationEnabled();
     }
 
-    bool stringsCanBeInNursery() const {
-        return gen->stringsCanBeInNursery();
-    }
-
     js::Vector<NativeToTrackedOptimizations, 0, SystemAllocPolicy> trackedOptimizations_;
     uint8_t* trackedOptimizationsMap_;
     uint32_t trackedOptimizationsMapSize_;

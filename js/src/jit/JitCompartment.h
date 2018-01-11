@@ -610,13 +610,6 @@ class JitCompartment
         return stringConcatStub_;
     }
 
-    void discardStubs() {
-        stringConcatStub_ = nullptr;
-        regExpMatcherStub_ = nullptr;
-        regExpSearcherStub_ = nullptr;
-        regExpTesterStub_ = nullptr;
-    }
-
     JitCode* regExpMatcherStubNoBarrier() const {
         return regExpMatcherStub_;
     }
@@ -651,8 +644,6 @@ class JitCompartment
     }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
-    bool stringsCanBeInNursery;
 };
 
 // Called from JSCompartment::discardJitCode().

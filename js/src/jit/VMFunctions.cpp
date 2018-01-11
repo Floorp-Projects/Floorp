@@ -1335,7 +1335,6 @@ AssertValidObjectPtr(JSContext* cx, JSObject* obj)
     // Check what we can, so that we'll hopefully assert/crash if we get a
     // bogus object (pointer).
     MOZ_ASSERT(obj->compartment() == cx->compartment());
-    MOZ_ASSERT(obj->zoneFromAnyThread() == cx->zone());
     MOZ_ASSERT(obj->runtimeFromActiveCooperatingThread() == cx->runtime());
 
     MOZ_ASSERT_IF(!obj->hasLazyGroup() && obj->maybeShape(),
@@ -1345,6 +1344,7 @@ AssertValidObjectPtr(JSContext* cx, JSObject* obj)
         MOZ_ASSERT(obj->isAligned());
         gc::AllocKind kind = obj->asTenured().getAllocKind();
         MOZ_ASSERT(gc::IsObjectAllocKind(kind));
+        MOZ_ASSERT(obj->asTenured().zone() == cx->zone());
     }
 #endif
 }

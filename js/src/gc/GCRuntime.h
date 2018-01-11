@@ -796,8 +796,6 @@ class GCRuntime
     void traceRuntime(JSTracer* trc, AutoLockForExclusiveAccess& lock);
     void traceRuntimeForMinorGC(JSTracer* trc, AutoLockForExclusiveAccess& lock);
 
-    void purgeRuntimeForMinorGC();
-
     void shrinkBuffers();
     void onOutOfMallocMemory();
     void onOutOfMallocMemory(const AutoLockGC& lock);
@@ -1000,8 +998,6 @@ class GCRuntime
                                          size_t nDynamicSlots);
     template <typename T, AllowGC allowGC>
     static T* tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize);
-    template <AllowGC allowGC>
-    JSString* tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind);
     static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
     void bufferGrayRoots();
@@ -1502,9 +1498,6 @@ class GCRuntime
     }
     const void* addressOfNurseryCurrentEnd() {
         return nursery_.refNoCheck().addressOfCurrentEnd();
-    }
-    const void* addressOfStringNurseryCurrentEnd() {
-        return nursery_.refNoCheck().addressOfCurrentStringEnd();
     }
 
     void minorGC(JS::gcreason::Reason reason,

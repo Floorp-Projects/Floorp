@@ -2494,8 +2494,23 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 // Branch functions
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    branchValueIsNurseryObjectImpl(cond, address, temp, label);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
                                            Register temp, Label* label)
+{
+    branchValueIsNurseryObjectImpl(cond, value, temp, label);
+}
+
+template <typename T>
+void
+MacroAssembler::branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp,
+                                               Label* label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
@@ -2503,40 +2518,6 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value,
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
 
     extractObject(value, SecondScratchReg);
-    orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
-    branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
-             Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
-
-    bind(&done);
-}
-
-void
-MacroAssembler::branchValueIsNurseryCell(Condition cond, const Address& address, Register temp,
-                                         Label* label)
-{
-    branchValueIsNurseryCellImpl(cond, address, temp, label);
-}
-
-void
-MacroAssembler::branchValueIsNurseryCell(Condition cond, ValueOperand value,
-                                         Register temp, Label* label)
-{
-    branchValueIsNurseryCellImpl(cond, value, temp, label);
-}
-
-template <typename T>
-void
-MacroAssembler::branchValueIsNurseryCellImpl(Condition cond, const T& value, Register temp,
-                                             Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-
-    Label done, checkAddress;
-    branchTestObject(Assembler::Equal, value, &checkAddress);
-    branchTestString(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-
-    bind(&checkAddress);
-    extractCell(value, SecondScratchReg);
     orPtr(Imm32(gc::ChunkMask), SecondScratchReg);
     branch32(cond, Address(SecondScratchReg, gc::ChunkLocationOffsetFromLastByte),
              Imm32(int32_t(gc::ChunkLocation::Nursery)), label);
