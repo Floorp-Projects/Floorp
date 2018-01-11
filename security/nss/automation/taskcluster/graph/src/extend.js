@@ -82,8 +82,8 @@ queue.filter(task => {
   }
 
   if (task.group == "Test") {
-    // Don't run test builds on old make platforms, and not for fips gyp.
-    if (task.collection == "make" || task.collection == "fips") {
+    // Don't run test builds on old make platforms
+    if (task.collection == "make") {
       return false;
     }
   }
@@ -195,12 +195,6 @@ export default async function main() {
     image: LINUX_IMAGE,
     features: ["allowPtrace"],
   }, "--ubsan --asan");
-
-  await scheduleLinux("Linux 64 (FIPS opt)", {
-    platform: "linux64",
-    collection: "fips",
-    image: LINUX_IMAGE,
-  }, "--enable-fips --opt");
 
   await scheduleWindows("Windows 2012 64 (debug, make)", {
     platform: "windows2012-64",
@@ -374,6 +368,7 @@ async function scheduleLinux(name, base, args = "") {
       parent: extra_build,
       symbol: "Certs-F",
       group: "FIPS",
+      env: { NSS_TEST_ENABLE_FIPS: "1" }
     }));
 
     // Schedule FIPS tests.
@@ -816,6 +811,7 @@ async function scheduleWindows(name, base, build_script) {
       parent: extra_build,
       symbol: "Certs-F",
       group: "FIPS",
+      env: { NSS_TEST_ENABLE_FIPS: "1" }
     }));
 
     // Schedule FIPS tests.
