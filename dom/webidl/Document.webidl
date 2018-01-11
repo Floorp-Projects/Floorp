@@ -445,6 +445,13 @@ partial interface Document {
   [ChromeOnly] readonly attribute boolean userHasInteracted;
 };
 
+// Extension to give chrome JS the ability to simulate activate the docuement
+// by user gesture.
+partial interface Document {
+  [ChromeOnly]
+  void notifyUserActivation();
+};
+
 // Extension to give chrome and XBL JS the ability to determine whether
 // the document is sandboxed without permission to run scripts
 // and whether inline scripts are blocked by the document's CSP.
