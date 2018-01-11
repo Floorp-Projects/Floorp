@@ -20,8 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  nsIDOMFontFaceList getUsedFontFaces(in nsIDOMRange aRange);
-
   /**
    * Get the names of all the supported pseudo-elements.
    * Pseudo-elements which are only accepted in UA style sheets are
