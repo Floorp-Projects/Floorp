@@ -9,12 +9,11 @@
 #ifndef nsDOMCSSValueList_h___
 #define nsDOMCSSValueList_h___
 
-#include "nsIDOMCSSValueList.h"
 #include "CSSValue.h"
 #include "nsTArray.h"
 
-class nsDOMCSSValueList final : public mozilla::dom::CSSValue,
-                                public nsIDOMCSSValueList
+class nsDOMCSSValueList final : public mozilla::dom::CSSValue
+                              , public nsIDOMCSSValue
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

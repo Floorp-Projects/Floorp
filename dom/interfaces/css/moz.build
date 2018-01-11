@@ -11,7 +11,6 @@ XPIDL_SOURCES += [
     'nsIDOMCSSPrimitiveValue.idl',
     'nsIDOMCSSStyleDeclaration.idl',
     'nsIDOMCSSValue.idl',
-    'nsIDOMCSSValueList.idl',
 ]
 
 XPIDL_MODULE = 'dom_css'
