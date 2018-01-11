@@ -1194,14 +1194,6 @@ StyleRule::Style()
   return mDOMDeclaration.get();
 }
 
-NS_IMETHODIMP
-StyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
-{
-  *aResult = this;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
 StyleRule::StyleRule(nsCSSSelectorList* aSelector,
                      Declaration* aDeclaration,
                      uint32_t aLineNumber,
@@ -1247,7 +1239,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleRule)
     return NS_OK;
   }
   else
-  NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
