@@ -67,6 +67,8 @@ public:
    */
   static uint32_t GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
 
+  static CSSLexer* GetCSSLexer(GlobalObject& aGlobal, const nsAString& aText);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
