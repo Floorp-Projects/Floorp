@@ -26,7 +26,6 @@
 #include "mozilla/dom/CSSValue.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
-#include "nsIDOMCSSValue.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 
@@ -81,18 +80,6 @@ public:
   virtual already_AddRefed<mozilla::dom::CSSValue>
     GetPropertyCSSValue(const nsAString& aPropertyName,
                         mozilla::ErrorResult& aRv) = 0;
-  NS_IMETHOD GetPropertyCSSValue(const nsAString& aProp, nsIDOMCSSValue** aVal) override
-  {
-    mozilla::ErrorResult error;
-    RefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
-    if (error.Failed()) {
-      return error.StealNSResult();
-    }
-
-    nsCOMPtr<nsIDOMCSSValue> xpVal = do_QueryInterface(val);
-    xpVal.forget(aVal);
-    return NS_OK;
-  }
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
                             nsAString& aReturn) override = 0;
   NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,

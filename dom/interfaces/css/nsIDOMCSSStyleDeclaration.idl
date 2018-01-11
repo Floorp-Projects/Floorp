@@ -33,7 +33,6 @@ interface nsIDOMCSSStyleDeclaration : nsISupports
   %}
 
   DOMString          getPropertyValue(in DOMString propertyName);
-  nsIDOMCSSValue     getPropertyCSSValue(in DOMString propertyName);
   DOMString          removeProperty(in DOMString propertyName)
                                         raises(DOMException);
   DOMString          getPropertyPriority(in DOMString propertyName);
