@@ -12,6 +12,7 @@
 
 #include "nsArray.h"
 #include "nsAutoPtr.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -118,40 +119,25 @@ InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
-                                  bool *aReturn)
+bool
+InspectorUtils::IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode)
 {
-  NS_PRECONDITION(aReturn, "Must have an out parameter");
-
-  NS_ENSURE_ARG_POINTER(aDataNode);
-
-  *aReturn = false;
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDataNode);
-  NS_ASSERTION(content, "Does not implement nsIContent!");
-
-  if (!content->TextIsOnlyWhitespace()) {
-    return NS_OK;
+  if (!aDataNode.TextIsOnlyWhitespace()) {
+    return false;
   }
 
   // Okay.  We have only white space.  Let's check the white-space
   // property now and make sure that this isn't preformatted text...
-  nsIFrame* frame = content->GetPrimaryFrame();
-  if (frame) {
-    const nsStyleText* text = frame->StyleText();
-    *aReturn = !text->WhiteSpaceIsSignificant();
-  }
-  else {
-    // empty inter-tag text node without frame, e.g., in between <table>\n<tr>
-    *aReturn = true;
+  if (nsIFrame* frame = aDataNode.GetPrimaryFrame()) {
+    return !frame->StyleText()->WhiteSpaceIsSignificant();
   }
 
-  return NS_OK;
+  // empty inter-tag text node without frame, e.g., in between <table>\n<tr>
+  return true;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::GetParentForNode(nsIDOMNode* aNode,

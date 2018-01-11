@@ -49,7 +49,7 @@ function do_test() {
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.isIgnorableWhitespace(text);
+    var res = InspectorUtils.isIgnorableWhitespace(text);
     is(res, false, "isIgnorableWhitespace");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }

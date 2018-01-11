@@ -51,6 +51,8 @@ namespace InspectorUtils {
   const unsigned long TYPE_IMAGE_RECT = 9;
   const unsigned long TYPE_NUMBER = 10;
   [Throws] boolean cssPropertySupportsType(DOMString property, unsigned long type);
+
+  boolean isIgnorableWhitespace(CharacterData dataNode);
 };
 
 dictionary PropertyNamesOptions {
