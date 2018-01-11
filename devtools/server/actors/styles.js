@@ -165,8 +165,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   },
 
   /**
-   * Return or create a StyleSheetActor for the given nsIDOMCSSStyleSheet.
-   * @param  {DOMStyleSheet} sheet
+   * Return or create a StyleSheetActor for the given CSSStyleSheet.
+   * @param  {CSSStyleSheet} sheet
    *         The style sheet to create an actor for.
    * @return {StyleSheetActor}
    *         The actor for this style sheet
@@ -947,11 +947,11 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     this._parentSheet = null;
     this._onStyleApplied = this._onStyleApplied.bind(this);
 
-    if (item instanceof (Ci.nsIDOMCSSRule)) {
+    if (CSSRule.isInstance(item)) {
       this.type = item.type;
       this.rawRule = item;
-      if ((this.type === Ci.nsIDOMCSSRule.STYLE_RULE ||
-           this.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) &&
+      if ((this.type === CSSRule.STYLE_RULE ||
+           this.type === CSSRule.KEYFRAME_RULE) &&
           this.rawRule.parentStyleSheet) {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
@@ -1054,7 +1054,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // of MEDIA_RULEs. We need to check the parentRule to check if a rule is
       // a media rule so we do this here instead of in the switch statement
       // below.
-      if (this.rawRule.parentRule.type === Ci.nsIDOMCSSRule.MEDIA_RULE) {
+      if (this.rawRule.parentRule.type === CSSRule.MEDIA_RULE) {
         form.media = [];
         for (let i = 0, n = this.rawRule.parentRule.media.length; i < n; i++) {
           form.media.push(this.rawRule.parentRule.media.item(i));
@@ -1074,7 +1074,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     form.authoredText = this.authoredText;
 
     switch (this.type) {
-      case Ci.nsIDOMCSSRule.STYLE_RULE:
+      case CSSRule.STYLE_RULE:
         form.selectors = CssLogic.getSelectors(this.rawRule);
         form.cssText = this.rawStyle.cssText || "";
         break;
@@ -1087,17 +1087,17 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         form.cssText = this.rawStyle.cssText || "";
         form.authoredText = this.rawNode.getAttribute("style");
         break;
-      case Ci.nsIDOMCSSRule.CHARSET_RULE:
+      case CSSRule.CHARSET_RULE:
         form.encoding = this.rawRule.encoding;
         break;
-      case Ci.nsIDOMCSSRule.IMPORT_RULE:
+      case CSSRule.IMPORT_RULE:
         form.href = this.rawRule.href;
         break;
-      case Ci.nsIDOMCSSRule.KEYFRAMES_RULE:
+      case CSSRule.KEYFRAMES_RULE:
         form.cssText = this.rawRule.cssText;
         form.name = this.rawRule.name;
         break;
-      case Ci.nsIDOMCSSRule.KEYFRAME_RULE:
+      case CSSRule.KEYFRAME_RULE:
         form.cssText = this.rawStyle.cssText || "";
         form.keyText = this.rawRule.keyText || "";
         break;
@@ -1235,8 +1235,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
    */
   getAuthoredCssText: function () {
     if (!this.canSetRuleText ||
-        (this.type !== Ci.nsIDOMCSSRule.STYLE_RULE &&
-         this.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE)) {
+        (this.type !== CSSRule.STYLE_RULE &&
+         this.type !== CSSRule.KEYFRAME_RULE)) {
       return promise.resolve("");
     }
 
@@ -1314,8 +1314,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       document = this.rawNode.ownerDocument;
     } else {
       let parentStyleSheet = this._parentSheet;
-      while (parentStyleSheet.ownerRule &&
-          parentStyleSheet.ownerRule instanceof Ci.nsIDOMCSSImportRule) {
+      while (parentStyleSheet.ownerRule) {
         parentStyleSheet = parentStyleSheet.ownerRule.parentStyleSheet;
       }
 

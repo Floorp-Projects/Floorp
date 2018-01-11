@@ -379,6 +379,17 @@ public:
   virtual bool IsValid() const { return true; }
 
   /**
+   * This returns true if it is the same underlying surface data, even if
+   * the objects are different (e.g. indirection due to
+   * DataSourceSurfaceWrapper).
+   */
+  virtual bool Equals(SourceSurface* aOther, bool aSymmetric = true)
+  {
+    return this == aOther ||
+           (aSymmetric && aOther && aOther->Equals(this, false));
+  }
+
+  /**
    * This function will return true if the surface type matches that of a
    * DataSourceSurface and if GetDataSurface will return the same object.
    */

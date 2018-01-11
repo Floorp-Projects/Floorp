@@ -28,7 +28,7 @@ class ServoPageRuleDeclaration final : public nsDOMCSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final;
+  css::Rule* GetParentRule() final;
   nsINode* GetParentObject() final;
   DocGroup* GetDocGroup() const final;
 

@@ -28,116 +28,88 @@ var uceFault = function (i) {
 var global_arr;
 function escape(arr) { global_arr = arr; }
 
-// Check Array length defined by the literal.
-function array0Length(i) {
-    var a = [];
+function checkCOW() {
+    assertEq(hasCopyOnWriteElements([1, 2, 3, 4]), false);
+    // If this fails, we should probably update the tests below!
+    assertEq(hasCopyOnWriteElements([1, 2, 3, 4, 5, 6, 7]), true);
+}
+checkCOW();
+
+function arrayLength(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
-function array0LengthBail(i) {
-    var a = [];
+function arrayLengthBail(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     resumeHere(i);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
-function array1Length(i) {
-    var a = [1];
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-
-function array1LengthBail(i) {
-    var a = [1];
-    resumeHere(i);
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-
-function array2Length(i) {
-    var a = [1, 2];
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-
-function array2LengthBail(i) {
-    var a = [1, 2];
-    resumeHere(i);
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-
-
-// Check Array content
-function array1Content(i) {
-    var a = [42];
-    assertEq(a[0], 42);
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-function array1ContentBail0(i) {
-    var a = [42];
-    resumeHere(i);
-    assertEq(a[0], 42);
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-function array1ContentBail1(i) {
-    var a = [42];
-    assertEq(a[0], 42);
-    resumeHere(i);
-    assertRecoveredOnBailout(a, true);
-    return a.length;
-}
-
-function array2Content(i) {
-    var a = [1, 2];
+function arrayContent(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     assertEq(a[0], 1);
     assertEq(a[1], 2);
+    assertEq(a[6], 7);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
-function array2ContentBail0(i) {
-    var a = [1, 2];
+function arrayContentBail0(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     resumeHere(i);
     assertEq(a[0], 1);
     assertEq(a[1], 2);
+    assertEq(a[6], 7);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
-function array2ContentBail1(i) {
-    var a = [1, 2];
+function arrayContentBail1(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     assertEq(a[0], 1);
     resumeHere(i);
     assertEq(a[1], 2);
+    assertEq(a[6], 7);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
-function array2ContentBail2(i) {
-    var a = [1, 2];
+function arrayContentBail2(i) {
+    var a = [1, 2, 3, 4, 5, 6, 7];
     assertEq(a[0], 1);
     assertEq(a[1], 2);
+    assertEq(a[6], 7);
+    resumeHere(i);
+    assertRecoveredOnBailout(a, true);
+    return a.length;
+}
+
+function arrayContentBail3(i) {
+    var a = ["a1", "a2", "a3", "a4", "a5", "a6", "a7"];
+    assertEq(a[0], "a1");
+    assertEq(a[1], "a2");
+    assertEq(a[6], "a7");
     resumeHere(i);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
 function arrayWrite1(i) {
-    var a = [1, 2];
+    var a = [1, 2, 3, 4, 5, 6, 7];
     a[0] = 42;
     assertEq(a[0], 42);
     assertEq(a[1], 2);
+    assertEq(a[5], 6);
     assertRecoveredOnBailout(a, true);
     return a.length;
 }
 
 // We don't handle length sets yet.
 function arrayWrite2(i) {
-    var a = [1, 2];
+    var a = [1, 2, 3, 4, 5, 6, 7];
     a.length = 1;
     assertEq(a[0], 1);
     assertEq(a[1], undefined);
@@ -146,7 +118,7 @@ function arrayWrite2(i) {
 }
 
 function arrayWrite3(i) {
-    var a = [1, 2, 0];
+    var a = [1, 2, 0, 9, 8, 7, 6];
     if (i % 2 === 1)
 	a[0] = 2;
     assertEq(a[0], 1 + (i % 2));
@@ -158,7 +130,7 @@ function arrayWrite3(i) {
 }
 
 function arrayWrite4(i) {
-    var a = [1, 2, 0];
+    var a = [1, 2, 0, 9, 8, 7, 6];
     for (var x = 0; x < 2; x++) {
 	if (x % 2 === 1)
 	    bailout();
@@ -172,7 +144,7 @@ function arrayWrite4(i) {
 }
 
 function arrayWriteDoubles(i) {
-    var a = [0, 0, 0];
+    var a = [0, 0, 0, 0, 0, 0, 0];
     a[0] = 3.14;
     // MConvertElementsToDoubles is only used for loads inside a loop.
     for (var x = 0; x < 2; x++) {
@@ -185,7 +157,7 @@ function arrayWriteDoubles(i) {
 
 // Check escape analysis in case of holes.
 function arrayHole0(i) {
-    var a = [1,,3];
+    var a = [1,,3,4,5,6,7];
     assertEq(a[0], 1);
     assertEq(a[1], undefined);
     assertEq(a[2], 3);
@@ -197,7 +169,7 @@ function arrayHole0(i) {
 // Same test as the previous one, but the Array.prototype is changed to return
 // "100" when we request for the element "1".
 function arrayHole1(i) {
-    var a = [1,,3];
+    var a = [1,,3,4,5,6,7];
     assertEq(a[0], 1);
     assertEq(a[1], 100);
     assertEq(a[2], 3);
@@ -209,7 +181,7 @@ function arrayHole1(i) {
 function build(l) { var arr = []; for (var i = 0; i < l; i++) arr.push(i); return arr }
 var uceFault_arrayAlloc3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc3'));
 function arrayAlloc(i) {
-    var a = [0,1,2,3];
+    var a = [0,1,2,3,4,5,6];
     if (uceFault_arrayAlloc3(i) || uceFault_arrayAlloc3(i)) {
         assertEq(a[0], 0);
         assertEq(a[3], 3);
@@ -223,19 +195,13 @@ function arrayAlloc(i) {
 eval(uneval(resumeHere));
 
 for (var i = 0; i < 100; i++) {
-    array0Length(i);
-    array0LengthBail(i);
-    array1Length(i);
-    array1LengthBail(i);
-    array2Length(i);
-    array2LengthBail(i);
-    array1Content(i);
-    array1ContentBail0(i);
-    array1ContentBail1(i);
-    array2Content(i);
-    array2ContentBail0(i);
-    array2ContentBail1(i);
-    array2ContentBail2(i);
+    arrayLength(i);
+    arrayLengthBail(i);
+    arrayContent(i);
+    arrayContentBail0(i);
+    arrayContentBail1(i);
+    arrayContentBail2(i);
+    arrayContentBail3(i);
     arrayWrite1(i);
     arrayWrite2(i);
     arrayWrite3(i);

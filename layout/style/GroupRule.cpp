@@ -344,26 +344,10 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText) const
   aCssText.Append('}');
 }
 
-// nsIDOMCSSMediaRule or nsIDOMCSSMozDocumentRule methods
-nsresult
-GroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
-{
-  NS_ADDREF(*aRuleList = CssRules());
-  return NS_OK;
-}
-
 CSSRuleList*
 GroupRule::CssRules()
 {
   return CALL_INNER(mInner, CssRules(this));
-}
-
-nsresult
-GroupRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
-{
-  ErrorResult rv;
-  *_retval = InsertRule(aRule, aIndex, rv);
-  return rv.StealNSResult();
 }
 
 uint32_t
@@ -389,14 +373,6 @@ GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
     return 0;
   }
   return aIndex;
-}
-
-nsresult
-GroupRule::DeleteRule(uint32_t aIndex)
-{
-  ErrorResult rv;
-  DeleteRule(aIndex, rv);
-  return rv.StealNSResult();
 }
 
 void

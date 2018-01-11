@@ -8,38 +8,27 @@
 #define mozilla_dom_CSSKeyframesRule_h
 
 #include "mozilla/css/GroupRule.h"
-#include "nsIDOMCSSKeyframesRule.h"
-
 #include "mozilla/dom/CSSKeyframeRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSKeyframesRule : public css::GroupRule
-                       , public nsIDOMCSSKeyframesRule
 {
 protected:
   using css::GroupRule::GroupRule;
   virtual ~CSSKeyframesRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   int32_t GetType() const final { return Rule::KEYFRAMES_RULE; }
-  using Rule::GetType;
-
-  // nsIDOMCSSKeyframesRule interface
-  NS_IMETHOD GetCssRules(nsIDOMCSSRuleList** aRuleList) final;
-  NS_IMETHOD FindRule(const nsAString& aKey,
-                      nsIDOMCSSKeyframeRule** aResult) final;
 
   // WebIDL interface
-  uint16_t Type() const final { return nsIDOMCSSRule::KEYFRAMES_RULE; }
-  // The XPCOM GetName is OK
-  // The XPCOM SetName is OK
+  uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
+  virtual void GetName(nsAString& aName) const = 0;
+  virtual void SetName(const nsAString& aName) = 0;
   virtual CSSRuleList* CssRules() = 0;
-  // The XPCOM appendRule is OK, since it never throws
-  using nsIDOMCSSKeyframesRule::DeleteRule;
+  virtual void AppendRule(const nsAString& aRule) = 0;
+  virtual void DeleteRule(const nsAString& aKey) = 0;
   virtual CSSKeyframeRule* FindRule(const nsAString& aKey) = 0;
 
   bool UseForPresentation(nsPresContext* aPresContext,

@@ -8,32 +8,24 @@
 #define mozilla_dom_CSSKeyframeRule_h
 
 #include "mozilla/css/Rule.h"
-#include "nsIDOMCSSKeyframeRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSKeyframeRule : public css::Rule
-                      , public nsIDOMCSSKeyframeRule
 {
 protected:
   using css::Rule::Rule;
   virtual ~CSSKeyframeRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   int32_t GetType() const final { return Rule::KEYFRAME_RULE; }
-  using Rule::GetType;
   bool IsCCLeaf() const override { return Rule::IsCCLeaf(); }
 
-  // nsIDOMCSSKeyframeRule
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) final;
-
   // WebIDL interface
-  uint16_t Type() const final { return nsIDOMCSSRule::KEYFRAME_RULE; }
-  // The XPCOM GetKeyText is fine.
-  // The XPCOM SetKeyText is fine.
+  uint16_t Type() const final { return CSSRuleBinding::KEYFRAME_RULE; }
+  virtual void GetKeyText(nsAString& aKey) = 0;
+  virtual void SetKeyText(const nsAString& aKey) = 0;
   virtual nsICSSDeclaration* Style() = 0;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;

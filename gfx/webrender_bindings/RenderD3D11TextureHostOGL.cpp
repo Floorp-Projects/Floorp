@@ -159,7 +159,7 @@ RenderDXGITextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   }
 
   if (!EnsureLockable()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return InvalidToWrExternalImage();
   }
 
   if (!mLocked) {
@@ -167,7 +167,7 @@ RenderDXGITextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
       HRESULT hr = mKeyedMutex->AcquireSync(0, 100);
       if (hr != S_OK) {
         gfxCriticalError() << "RenderDXGITextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
-        return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+        return InvalidToWrExternalImage();
       }
     }
     mLocked = true;
@@ -342,7 +342,7 @@ RenderDXGIYCbCrTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   }
 
   if (!EnsureLockable()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return InvalidToWrExternalImage();
   }
 
   if (!mLocked) {
@@ -351,7 +351,7 @@ RenderDXGIYCbCrTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
         HRESULT hr = mutex->AcquireSync(0, 100);
         if (hr != S_OK) {
           gfxCriticalError() << "RenderDXGIYCbCrTextureHostOGL AcquireSync timeout, hr=" << gfx::hexa(hr);
-          return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+          return InvalidToWrExternalImage();
         }
       }
     }

@@ -249,7 +249,7 @@ static void
 CommitPages(void* addr, size_t bytes, ProtectionSetting protection)
 {
     if (!VirtualAlloc(addr, bytes, MEM_COMMIT, ProtectionSettingToFlags(protection)))
-        MOZ_CRASH("CommitPages failed");
+        MOZ_CRASH_UNSAFE_PRINTF("CommitPages failed! Error code: %lu", GetLastError());
 }
 
 static void

@@ -35,12 +35,10 @@ public:
 
   RawServoKeyframe* Raw() const { return mRaw; }
 
-  // nsIDOMCSSKeyframeRule interface
-  NS_IMETHOD GetKeyText(nsAString& aKeyText) final;
-  NS_IMETHOD SetKeyText(const nsAString& aKeyText) final;
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetKeyText(nsAString& aKeyText) final;
+  void SetKeyText(const nsAString& aKeyText) final;
   nsICSSDeclaration* Style() final;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
