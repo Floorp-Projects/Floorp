@@ -259,6 +259,12 @@ public:
                               const nsAString& aInput,
                               ErrorResult& aRv);
 
+  /**
+   * Scroll an element completely into view, if possible.
+   * This is similar to ensureElementIsVisible but for all ancestors.
+   */
+  static void ScrollElementIntoView(GlobalObject& aGlobal, Element& aElement);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
