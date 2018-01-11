@@ -4431,8 +4431,6 @@ else
   # because the unpacked file will be under the lib/ subdirectory and will
   # need to be executed from that path.
   MOZ_CHILD_PROCESS_NAME="libplugin-container.so"
-  MOZ_CHILD_PROCESS_NAME_PIE="libplugin-container-pie.so"
-  AC_SUBST(MOZ_CHILD_PROCESS_NAME_PIE)
 fi
 MOZ_CHILD_PROCESS_BUNDLE="plugin-container.app/Contents/MacOS/"
 MOZ_CHILD_PROCESS_BUNDLENAME="${MOZ_APP_DISPLAYNAME}CP"
