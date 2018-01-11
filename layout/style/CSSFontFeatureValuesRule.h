@@ -10,33 +10,25 @@
 #include "mozilla/css/Rule.h"
 
 #include "nsICSSDeclaration.h"
-#include "nsIDOMCSSFontFeatureValuesRule.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSFontFeatureValuesRule : public css::Rule
-                               , public nsIDOMCSSFontFeatureValuesRule
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   virtual bool IsCCLeaf() const override;
 
   int32_t GetType() const final { return Rule::FONT_FEATURE_VALUES_RULE; }
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override = 0;
 
-  using nsIDOMCSSFontFeatureValuesRule::SetFontFamily;
-  using nsIDOMCSSFontFeatureValuesRule::SetValueText;
   // WebIDL interfaces
-  uint16_t Type() const final { return nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
   virtual void GetCssTextImpl(nsAString& aCssText) const override = 0;
-  // The XPCOM GetFontFamily is fine
-  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);
-  // The XPCOM GetValueText is fine
-  void SetValueText(const nsAString& aFamily, mozilla::ErrorResult& aRv);
+  virtual void GetFontFamily(nsAString& aFamily) = 0;
+  virtual void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) = 0;
+  virtual void GetValueText(nsAString& aValueText) = 0;
+  virtual void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) = 0;
 
   virtual size_t
   SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;

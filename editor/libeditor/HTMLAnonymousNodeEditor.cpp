@@ -5,6 +5,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
@@ -16,9 +17,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
-#include "nsIDOMCSSPrimitiveValue.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMCSSValue.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMHTMLElement.h"
@@ -42,6 +40,7 @@
 #include "nsUnicharUtils.h"
 #include "nscore.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
+#include "nsROCSSPrimitiveValue.h"
 
 class nsIDOMEventListener;
 class nsISelection;
@@ -51,36 +50,40 @@ namespace mozilla {
 using namespace dom;
 
 // retrieve an integer stored into a CSS computed float value
-static int32_t GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
-                                const nsAString & aProperty)
+static int32_t GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
+                                const nsAString& aProperty)
 {
-  MOZ_ASSERT(aDecl);
+  MOZ_ASSERT(aComputedStyle);
 
-  nsCOMPtr<nsIDOMCSSValue> value;
   // get the computed CSSValue of the property
-  nsresult rv = aDecl->GetPropertyCSSValue(aProperty, getter_AddRefs(value));
-  if (NS_FAILED(rv) || !value) {
+  ErrorResult rv;
+  RefPtr<CSSValue> value = aComputedStyle->GetPropertyCSSValue(aProperty, rv);
+  if (rv.Failed() || !value) {
     return 0;
   }
 
   // check the type of the returned CSSValue; we handle here only
   // pixel and enum types
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> val = do_QueryInterface(value);
-  uint16_t type;
-  val->GetPrimitiveType(&type);
+  RefPtr<nsROCSSPrimitiveValue> val = value->AsPrimitiveValue();
+  uint16_t type = val->PrimitiveType();
 
   float f = 0;
   switch (type) {
-    case nsIDOMCSSPrimitiveValue::CSS_PX:
+    case CSSPrimitiveValueBinding::CSS_PX:
       // the value is in pixels, just get it
-      rv = val->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_PX, &f);
-      NS_ENSURE_SUCCESS(rv, 0);
+      f = val->GetFloatValue(CSSPrimitiveValueBinding::CSS_PX, rv);
+      if (rv.Failed()) {
+        return 0;
+      }
       break;
-    case nsIDOMCSSPrimitiveValue::CSS_IDENT: {
+    case CSSPrimitiveValueBinding::CSS_IDENT: {
       // the value is keyword, we have to map these keywords into
       // numeric values
       nsAutoString str;
-      val->GetStringValue(str);
+      val->GetStringValue(str, rv);
+      if (rv.Failed()) {
+        return 0;
+      }
       if (str.EqualsLiteral("thin")) {
         f = 1;
       } else if (str.EqualsLiteral("medium")) {

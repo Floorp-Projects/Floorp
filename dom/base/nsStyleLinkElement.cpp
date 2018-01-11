@@ -25,7 +25,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMStyleSheet.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsXPCOMCIDInternal.h"

@@ -13,42 +13,6 @@ using namespace mozilla::css;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
-NS_IMPL_RELEASE_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
-
-// QueryInterface implementation for CSSSupportsRule
-NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
-NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
-
-// nsIDOMCSSGroupingRule methods
-NS_IMETHODIMP
-CSSSupportsRule::GetCssRules(nsIDOMCSSRuleList** aRuleList)
-{
-  return GroupRule::GetCssRules(aRuleList);
-}
-
-NS_IMETHODIMP
-CSSSupportsRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
-{
-  return GroupRule::InsertRule(aRule, aIndex, _retval);
-}
-
-NS_IMETHODIMP
-CSSSupportsRule::DeleteRule(uint32_t aIndex)
-{
-  return GroupRule::DeleteRule(aIndex);
-}
-
-void
-CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
-                                  ErrorResult& aRv)
-{
-  aRv = SetConditionText(aConditionText);
-}
-
 /* virtual */ JSObject*
 CSSSupportsRule::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)

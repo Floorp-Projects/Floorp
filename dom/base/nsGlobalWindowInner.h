@@ -1241,7 +1241,7 @@ protected:
   nsresult GetComputedStyleHelper(nsIDOMElement* aElt,
                                   const nsAString& aPseudoElt,
                                   bool aDefaultStylesOnly,
-                                  nsIDOMCSSStyleDeclaration** aReturn);
+                                  nsICSSDeclaration** aReturn);
 
   nsGlobalWindowInner* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 

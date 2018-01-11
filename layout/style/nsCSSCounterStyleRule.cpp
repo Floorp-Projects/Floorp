@@ -46,15 +46,8 @@ nsCSSCounterStyleRule::kGetters[] = {
 #undef CSS_COUNTER_DESC
 };
 
-NS_IMPL_ADDREF_INHERITED(nsCSSCounterStyleRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSCounterStyleRule, mozilla::css::Rule)
-
-// QueryInterface implementation for nsCSSCounterStyleRule
-// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
+// If this class gets its own cycle-collection bits, reevaluate our IsCCLeaf
 // implementation.
-NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
-NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 bool
 nsCSSCounterStyleRule::IsCCLeaf() const
@@ -91,7 +84,7 @@ nsCSSCounterStyleRule::GetType() const
 uint16_t
 nsCSSCounterStyleRule::Type() const
 {
-  return nsIDOMCSSRule::COUNTER_STYLE_RULE;
+  return CSSRuleBinding::COUNTER_STYLE_RULE;
 }
 
 void
@@ -120,17 +113,15 @@ nsCSSCounterStyleRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.AppendLiteral(u"}");
 }
 
-// nsIDOMCSSCounterStyleRule methods
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetName(nsAString& aName)
 {
   aName.Truncate();
   nsDependentAtomString name(mName);
   nsStyleUtil::AppendEscapedCSSIdent(name, aName);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
   RefPtr<nsAtom> name;
@@ -152,7 +143,6 @@ nsCSSCounterStyleRule::SetName(const nsAString& aName)
       sheet->RuleChanged(this);
     }
   }
-  return NS_OK;
 }
 
 int32_t
@@ -195,13 +185,13 @@ nsCSSCounterStyleRule::SetDesc(nsCSSCounterDesc aDescID, const nsCSSValue& aValu
   }
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetSystem(nsAString& aSystem)
 {
   const nsCSSValue& value = GetDesc(eCSSCounterDesc_System);
   if (value.GetUnit() == eCSSUnit_Null) {
     aSystem.Truncate();
-    return NS_OK;
+    return;
   }
 
   aSystem = NS_ConvertASCIItoUTF16(nsCSSProps::ValueToKeyword(
@@ -210,10 +200,9 @@ nsCSSCounterStyleRule::GetSystem(nsAString& aSystem)
     aSystem.Append(' ');
     GetSystemArgument().AppendToString(eCSSProperty_UNKNOWN, aSystem);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetSymbols(nsAString& aSymbols)
 {
   const nsCSSValue& value = GetDesc(eCSSCounterDesc_Symbols);
@@ -228,10 +217,9 @@ nsCSSCounterStyleRule::GetSymbols(nsAString& aSymbols)
       }
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetAdditiveSymbols(nsAString& aSymbols)
 {
   const nsCSSValue& value = GetDesc(eCSSCounterDesc_AdditiveSymbols);
@@ -248,10 +236,9 @@ nsCSSCounterStyleRule::GetAdditiveSymbols(nsAString& aSymbols)
       }
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetRange(nsAString& aRange)
 {
   const nsCSSValue& value = GetDesc(eCSSCounterDesc_Range);
@@ -293,10 +280,9 @@ nsCSSCounterStyleRule::GetRange(nsAString& aRange)
     default:
       aRange.Truncate();
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSCounterStyleRule::GetSpeakAs(nsAString& aSpeakAs)
 {
   const nsCSSValue& value = GetDesc(eCSSCounterDesc_SpeakAs);
@@ -335,10 +321,9 @@ nsCSSCounterStyleRule::GetSpeakAs(nsAString& aSpeakAs)
       NS_NOTREACHED("Unknown speech synthesis");
       aSpeakAs.Truncate();
   }
-  return NS_OK;
 }
 
-nsresult
+void
 nsCSSCounterStyleRule::GetDescriptor(nsCSSCounterDesc aDescID,
                                      nsAString& aValue)
 {
@@ -353,14 +338,13 @@ nsCSSCounterStyleRule::GetDescriptor(nsCSSCounterDesc aDescID,
   if (value.GetUnit() != eCSSUnit_Null) {
     value.AppendToString(eCSSProperty_UNKNOWN, aValue);
   }
-  return NS_OK;
 }
 
 #define CSS_COUNTER_DESC_GETTER(name_)                    \
-NS_IMETHODIMP                                             \
+void                                                      \
 nsCSSCounterStyleRule::Get##name_(nsAString& a##name_)    \
 {                                                         \
-  return GetDescriptor(eCSSCounterDesc_##name_, a##name_);\
+  GetDescriptor(eCSSCounterDesc_##name_, a##name_);       \
 }
 CSS_COUNTER_DESC_GETTER(Negative)
 CSS_COUNTER_DESC_GETTER(Prefix)
@@ -408,7 +392,7 @@ nsCSSCounterStyleRule::CheckDescValue(int32_t aSystem,
   }
 }
 
-nsresult
+void
 nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
                                      const nsAString& aValue)
 {
@@ -438,15 +422,13 @@ nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
   if (ok && CheckDescValue(GetSystem(), aDescID, value)) {
     SetDesc(aDescID, value);
   }
-
-  return NS_OK;
 }
 
 #define CSS_COUNTER_DESC_SETTER(name_)                        \
-NS_IMETHODIMP                                                 \
+void                                                          \
 nsCSSCounterStyleRule::Set##name_(const nsAString& a##name_)  \
 {                                                             \
-  return SetDescriptor(eCSSCounterDesc_##name_, a##name_);    \
+  SetDescriptor(eCSSCounterDesc_##name_, a##name_);           \
 }
 CSS_COUNTER_DESC_SETTER(System)
 CSS_COUNTER_DESC_SETTER(Symbols)

@@ -23,9 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   is(Ci.nsIXMLHttpRequest.HEADERS_RECEIVED, XMLHttpRequest.HEADERS_RECEIVED);
   is(Ci.nsIDOMDOMException.DATA_CLONE_ERR, DOMException.DATA_CLONE_ERR);
   is(Ci.nsIDOMNode.DOCUMENT_NODE, Node.DOCUMENT_NODE);
-  is(Ci.nsIDOMCSSPrimitiveValue.CSS_PX, CSSPrimitiveValue.CSS_PX);
-  is(Ci.nsIDOMCSSRule.NAMESPACE_RULE, CSSRule.NAMESPACE_RULE);
-  is(Ci.nsIDOMCSSValue.CSS_PRIMITIVE_VALUE, CSSValue.CSS_PRIMITIVE_VALUE);
   is(Ci.nsIDOMEvent.FOCUS, Event.FOCUS);
   is(Ci.nsIDOMNSEvent.CLICK, Event.CLICK);
   is(Ci.nsIDOMKeyEvent, KeyEvent);
@@ -41,13 +38,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   is(Ci.nsIDOMSVGLength, SVGLength);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathResult, XPathResult);
-
-  // Test for Bug 895231
-  for (var k of Object.keys(Components.interfaces)) {
-    ok(SpecialPowers.Ci.hasOwnProperty(k),
-       k + " should be removed from the Components shim");
-  }
-
   </script>
 </head>
 <body>

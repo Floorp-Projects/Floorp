@@ -9,10 +9,8 @@
 
 #include "mozilla/css/Rule.h"
 #include "nsCSSValue.h"
-#include "nsIDOMCSSCounterStyleRule.h"
 
-class nsCSSCounterStyleRule final : public mozilla::css::Rule,
-                                    public nsIDOMCSSCounterStyleRule
+class nsCSSCounterStyleRule final : public mozilla::css::Rule
 {
 public:
   explicit nsCSSCounterStyleRule(nsAtom* aName,
@@ -29,44 +27,39 @@ private:
   ~nsCSSCounterStyleRule();
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSCounterStyleRule
-  NS_DECL_NSIDOMCSSCOUNTERSTYLERULE
 
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetName is OK
-  // The XPCOM SetName is OK
-  // The XPCOM GetSystem is OK
-  // The XPCOM SetSystem is OK
-  // The XPCOM GetSymbols is OK
-  // The XPCOM SetSymbols is OK
-  // The XPCOM GetAdditiveSymbols is OK
-  // The XPCOM SetAdditiveSymbols is OK
-  // The XPCOM GetNegative is OK
-  // The XPCOM SetNegative is OK
-  // The XPCOM GetPrefix is OK
-  // The XPCOM SetPrefix is OK
-  // The XPCOM GetSuffix is OK
-  // The XPCOM SetSuffix is OK
-  // The XPCOM GetRange is OK
-  // The XPCOM SetRange is OK
-  // The XPCOM GetPad is OK
-  // The XPCOM SetPad is OK
-  // The XPCOM GetSpeakAs is OK
-  // The XPCOM SetSpeakAs is OK
-  // The XPCOM GetFallback is OK
-  // The XPCOM SetFallback is OK
+  void GetName(nsAString& aName);
+  void SetName(const nsAString& aName);
+  void GetSystem(nsAString& aSystem);
+  void SetSystem(const nsAString& aSystem);
+  void GetSymbols(nsAString& aSymbols);
+  void SetSymbols(const nsAString& aSymbols);
+  void GetAdditiveSymbols(nsAString& aAdditiveSymbols);
+  void SetAdditiveSymbols(const nsAString& aAdditiveSymbols);
+  void GetNegative(nsAString& aNegative);
+  void SetNegative(const nsAString& aNegative);
+  void GetPrefix(nsAString& aPrefix);
+  void SetPrefix(const nsAString& aPrefix);
+  void GetSuffix(nsAString& aSuffix);
+  void SetSuffix(const nsAString& aSuffix);
+  void GetRange(nsAString& aRange);
+  void SetRange(const nsAString& aRange);
+  void GetPad(nsAString& aPad);
+  void SetPad(const nsAString& aPad);
+  void GetSpeakAs(nsAString& aSpeakAs);
+  void SetSpeakAs(const nsAString& aSpeakAs);
+  void GetFallback(nsAString& aFallback);
+  void SetFallback(const nsAString& aFallback);
 
   // This function is only used to check whether a non-empty value, which has
   // been accepted by parser, is valid for the given system and descriptor.
@@ -99,8 +92,8 @@ private:
   typedef decltype(&nsCSSCounterStyleRule::GetSymbols) Getter;
   static const Getter kGetters[];
 
-  nsresult GetDescriptor(nsCSSCounterDesc aDescID, nsAString& aValue);
-  nsresult SetDescriptor(nsCSSCounterDesc aDescID, const nsAString& aValue);
+  void GetDescriptor(nsCSSCounterDesc aDescID, nsAString& aValue);
+  void SetDescriptor(nsCSSCounterDesc aDescID, const nsAString& aValue);
 
   RefPtr<nsAtom> mName;
   nsCSSValue mValues[eCSSCounterDesc_COUNT];

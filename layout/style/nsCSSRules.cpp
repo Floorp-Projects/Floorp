@@ -23,7 +23,6 @@
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMCSSStyleSheet.h"
 #include "nsMediaList.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "nsIDocument.h"
@@ -184,11 +183,10 @@ ImportRule::GetStyleSheet() const
   return mChildSheet;
 }
 
-NS_IMETHODIMP
-ImportRule::GetHref(nsAString & aHref)
+void
+ImportRule::GetHref(nsAString& aHref) const
 {
   aHref = mURLSpec;
-  return NS_OK;
 }
 
 /* virtual */ size_t
@@ -323,29 +321,23 @@ MediaRule::GetCssTextImpl(nsAString& aCssText) const
   GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 MediaRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Truncate(0);
   AppendConditionText(aConditionText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MediaRule::SetConditionText(const nsAString& aConditionText)
+void
+MediaRule::SetConditionText(const nsAString& aConditionText,
+                            ErrorResult& aRv)
 {
   if (!mMedia) {
-    RefPtr<nsMediaList> media = new nsMediaList();
-    media->SetStyleSheet(GetStyleSheet());
-    nsresult rv = media->SetMediaText(aConditionText);
-    if (NS_SUCCEEDED(rv)) {
-      mMedia = media;
-    }
-    return rv;
+    mMedia = new nsMediaList();
+    mMedia->SetStyleSheet(GetStyleSheet());
   }
 
-  return mMedia->SetMediaText(aConditionText);
+  mMedia->SetMediaText(aConditionText);
 }
 
 // GroupRule interface
@@ -460,19 +452,18 @@ DocumentRule::GetCssTextImpl(nsAString& aCssText) const
   GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 DocumentRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Truncate(0);
   AppendConditionText(aConditionText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentRule::SetConditionText(const nsAString& aConditionText)
+void
+DocumentRule::SetConditionText(const nsAString& aConditionText,
+                               ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 // GroupRule interface
@@ -655,15 +646,6 @@ nsCSSFontFeatureValuesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
-
-// QueryInterface implementation for nsCSSFontFeatureValuesRule
-// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
-// implementation.
-NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSFontFeatureValuesRule)
-
 static void
 FeatureValuesToString(
   const nsTArray<gfxFontFeatureValueSet::FeatureValues>& aFeatureValues,
@@ -746,30 +728,30 @@ nsCSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
+void
 nsCSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
 {
   nsStyleUtil::AppendEscapedCSSFontFamilyList(mFamilyList, aFamilyListStr);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFeatureValuesRule::GetValueText(nsAString& aValueText)
 {
   FeatureValuesToString(mFeatureValues, aValueText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily)
+void
+nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
+                                          ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText)
+void
+nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
+                                         ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 void
@@ -880,13 +862,10 @@ nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment(
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
 
-NS_IMETHODIMP
-nsCSSKeyframeStyleDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
+css::Rule*
+nsCSSKeyframeStyleDeclaration::GetParentRule()
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  NS_IF_ADDREF(*aParent = mRule);
-  return NS_OK;
+  return mRule;
 }
 
 nsresult
@@ -1007,11 +986,10 @@ nsCSSKeyframeRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.AppendLiteral(" }");
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframeRule::GetKeyText(nsAString& aKeyText)
 {
   DoGetKeyText(aKeyText);
-  return NS_OK;
 }
 
 void
@@ -1030,7 +1008,7 @@ nsCSSKeyframeRule::DoGetKeyText(nsAString& aKeyText) const
   }
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
 {
   nsCSSParser parser;
@@ -1039,7 +1017,7 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   // FIXME: pass filename and line number
   if (!parser.ParseKeyframeSelectorString(aKeyText, nullptr, 0, newSelectors)) {
     // for now, we don't do anything if the parse fails
-    return NS_OK;
+    return;
   }
 
   nsIDocument* doc = GetDocument();
@@ -1050,8 +1028,6 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
-
-  return NS_OK;
 }
 
 nsICSSDeclaration*
@@ -1119,13 +1095,6 @@ nsCSSKeyframesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSKeyframesRule, dom::CSSKeyframesRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, dom::CSSKeyframesRule)
-
-// QueryInterface implementation for nsCSSKeyframesRule
-NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSKeyframesRule)
-
 #ifdef DEBUG
 void
 nsCSSKeyframesRule::List(FILE* out, int32_t aIndent) const
@@ -1159,18 +1128,17 @@ nsCSSKeyframesRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.Append('}');
 }
 
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetName(nsAString& aName)
+void
+nsCSSKeyframesRule::GetName(nsAString& aName) const
 {
   mName->ToString(aName);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::SetName(const nsAString& aName)
 {
   if (mName->Equals(aName)) {
-    return NS_OK;
+    return;
   }
 
   nsIDocument* doc = GetDocument();
@@ -1181,11 +1149,9 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
 {
   // The spec is confusing, and I think we should just append the rule,
@@ -1206,8 +1172,6 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
       sheet->RuleChanged(this);
     }
   }
-
-  return NS_OK;
 }
 
 static const uint32_t RULE_NOT_FOUND = uint32_t(-1);
@@ -1236,7 +1200,7 @@ nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
   return RULE_NOT_FOUND;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
 {
   uint32_t index = FindRuleIndexForKey(aKey);
@@ -1250,7 +1214,6 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
       sheet->RuleChanged(this);
     }
   }
-  return NS_OK;
 }
 
 nsCSSKeyframeRule*
@@ -1323,13 +1286,10 @@ nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment(
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
 
-NS_IMETHODIMP
-nsCSSPageStyleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
+css::Rule*
+nsCSSPageStyleDeclaration::GetParentRule()
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  NS_IF_ADDREF(*aParent = mRule);
-  return NS_OK;
+  return mRule;
 }
 
 nsresult
@@ -1546,18 +1506,17 @@ CSSSupportsRule::GetCssTextImpl(nsAString& aCssText) const
   css::GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 CSSSupportsRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Assign(mCondition);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-CSSSupportsRule::SetConditionText(const nsAString& aConditionText)
+void
+CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
+                                  ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 /* virtual */ size_t
