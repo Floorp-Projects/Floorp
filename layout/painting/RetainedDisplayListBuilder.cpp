@@ -102,21 +102,25 @@ SelectAGRForFrame(nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR)
 // TODO: We currently descend into all children even if we don't have an AGR
 // to mark, as child stacking contexts might. It would be nice if we could
 // jump into those immediately rather than walking the entire thing.
-void
+bool
 RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
                                                   AnimatedGeometryRoot* aAGR)
 {
+  bool modified = false;
   nsDisplayList saved;
   while (nsDisplayItem* i = aList->RemoveBottom()) {
     if (i->HasDeletedFrame() || !i->CanBeReused()) {
       i->Destroy(&mBuilder);
+      modified = true;
       continue;
     }
 
     nsIFrame* f = i->Frame();
 
     if (i->GetChildren()) {
-      PreProcessDisplayList(i->GetChildren(), SelectAGRForFrame(f, aAGR));
+      if (PreProcessDisplayList(i->GetChildren(), SelectAGRForFrame(f, aAGR))) {
+        modified = true;
+      }
     }
 
     // TODO: We should be able to check the clipped bounds relative
@@ -124,6 +128,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
     // frame) and determine if they can ever intersect.
     if (aAGR && i->GetAnimatedGeometryRoot()->GetAsyncAGR() != aAGR) {
       mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
+      modified = true;
     }
 
     // TODO: This is here because we sometimes reuse the previous display list
@@ -135,6 +140,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(nsDisplayList* aList,
   }
   aList->AppendToTop(&saved);
   aList->RestoreState();
+  return modified;
 }
 
 bool IsSameItem(nsDisplayItem* aFirst, nsDisplayItem* aSecond)
@@ -386,12 +392,14 @@ void UpdateASR(nsDisplayItem* aItem,
  *
  * Merged List: C, A, B
  */
-void
+bool
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               nsDisplayList* aOldList,
                                               nsDisplayList* aOutList,
                                               Maybe<const ActiveScrolledRoot*>& aOutContainerASR)
 {
+  bool modified = aNewList->IsEmpty() ? false : true;
+
   nsDisplayList merged;
   const auto UseItem = [&](nsDisplayItem* aItem) {
     const ActiveScrolledRoot* itemClipASR =
@@ -535,8 +543,10 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         nsDisplayList empty;
         Maybe<const ActiveScrolledRoot*> containerASRForChildren;
 
-        MergeDisplayLists(&empty, old->GetChildren(),
-                          old->GetChildren(), containerASRForChildren);
+        if (MergeDisplayLists(&empty, old->GetChildren(),
+                              old->GetChildren(), containerASRForChildren)) {
+          modified = true;
+        }
         UpdateASR(old, containerASRForChildren);
         old->UpdateBounds(&mBuilder);
       }
@@ -546,10 +556,12 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
       ReuseItem(old);
     } else {
       old->Destroy(&mBuilder);
+      modified = true;
     }
   }
 
   aOutList->AppendToTop(&merged);
+  return modified;
 }
 
 static void
@@ -1013,8 +1025,8 @@ RetainedDisplayListBuilder::ClearFramesWithProps()
   GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames.Frames(), &framesWithProps.Frames());
 }
 
-bool
-RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
+auto
+RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop) -> PartialUpdateResult
 {
   mBuilder.RemoveModifiedWindowDraggingRegion();
   if (mBuilder.ShouldSyncDecodeImages()) {
@@ -1056,12 +1068,17 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
       !ComputeRebuildRegion(modifiedFrames.Frames(), &modifiedDirty,
                            &modifiedAGR, framesWithProps.Frames())) {
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), &mList);
-    return false;
+    return PartialUpdateResult::Failed;
   }
 
   modifiedDirty.IntersectRect(modifiedDirty, mBuilder.RootReferenceFrame()->GetVisualOverflowRectRelativeToSelf());
 
-  PreProcessDisplayList(&mList, modifiedAGR);
+  PartialUpdateResult result = PartialUpdateResult::NoChange;
+  if (PreProcessDisplayList(&mList, modifiedAGR) ||
+      !modifiedDirty.IsEmpty() ||
+      !framesWithProps.IsEmpty()) {
+    result = PartialUpdateResult::Updated;
+  }
 
   nsDisplayList modifiedDL;
   if (!modifiedDirty.IsEmpty() || !framesWithProps.IsEmpty()) {
@@ -1090,12 +1107,18 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
   // are not visible anymore) from the old list.
   // TODO: Optimization opportunity. In this case, MergeDisplayLists()
   // unnecessarily creates a hashtable of the old items.
+  // TODO: Ideally we could skip this if result is NoChange, but currently when
+  // we call RestoreState on nsDisplayWrapList it resets the clip to the base
+  // clip, and we need the UpdateBounds call (within MergeDisplayLists) to
+  // move it to the correct inner clip.
   Maybe<const ActiveScrolledRoot*> dummy;
-  MergeDisplayLists(&modifiedDL, &mList, &mList, dummy);
+  if (MergeDisplayLists(&modifiedDL, &mList, &mList, dummy)) {
+    result = PartialUpdateResult::Updated;
+  }
 
   //printf_stderr("Painting --- Merged list:\n");
   //nsFrame::PrintDisplayList(&mBuilder, mList);
 
   mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), &mList);
-  return true;
+  return result;
 }
