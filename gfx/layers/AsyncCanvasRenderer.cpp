@@ -161,6 +161,9 @@ AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
   {
     uint32_t stride = gfx::GetAlignedStride<8>(size.width, BytesPerPixel(format));
     mSurfaceForBasic = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
+    if (!mSurfaceForBasic) {
+      return;
+    }
   }
 
   MappedTextureData mapped;
@@ -244,6 +247,9 @@ AsyncCanvasRenderer::GetSurface()
       gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
                                                       mSurfaceForBasic->GetFormat(),
                                                       srcMap.GetStride());
+    if (NS_WARN_IF(!result)) {
+      return nullptr;
+    }
 
     gfx::DataSourceSurface::ScopedMap dstMap(result, gfx::DataSourceSurface::WRITE);
 

@@ -111,5 +111,5 @@ fuzzy-if(skiaContent,4,2) == underline-select-1.html underline-select-1-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
 == emphasis-style-dynamic.html emphasis-style-dynamic-ref.html
 == vertical-mode-decorations-1.html vertical-mode-decorations-1-ref.html
-== vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
+fuzzy-if(Android,238,36) == vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
 != 1415214.html 1415214-notref.html

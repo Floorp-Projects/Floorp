@@ -20,7 +20,6 @@ namespace dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -88,49 +87,38 @@ MediaList::Create(
   return mediaList.forget();
 }
 
-NS_IMETHODIMP
+void
 MediaList::GetMediaText(nsAString& aMediaText)
 {
   GetText(aMediaText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 MediaList::SetMediaText(const nsAString& aMediaText)
 {
-  return DoMediaChange([&]() {
+  DoMediaChange([&]() {
     SetText(aMediaText);
     return NS_OK;
   });
 }
 
-NS_IMETHODIMP
-MediaList::GetLength(uint32_t* aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 MediaList::Item(uint32_t aIndex, nsAString& aReturn)
 {
   bool dummy;
   IndexedGetter(aIndex, dummy, aReturn);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MediaList::DeleteMedium(const nsAString& aOldMedium)
+void
+MediaList::DeleteMedium(const nsAString& aOldMedium, ErrorResult& aRv)
 {
-  return DoMediaChange([&]() { return Delete(aOldMedium); });
+  aRv = DoMediaChange([&]() { return Delete(aOldMedium); });
 }
 
-NS_IMETHODIMP
-MediaList::AppendMedium(const nsAString& aNewMedium)
+void
+MediaList::AppendMedium(const nsAString& aNewMedium, ErrorResult& aRv)
 {
-  return DoMediaChange([&]() { return Append(aNewMedium); });
+  aRv = DoMediaChange([&]() { return Append(aNewMedium); });
 }
 
 } // namespace dom

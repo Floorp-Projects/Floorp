@@ -56,8 +56,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
       // FontFaceRule / CounterStyleRule in Servo owns a Gecko
       // nsCSSFontFaceRule / nsCSSCounterStyleRule object.
       auto type = aRule->Type();
-      if (type == nsIDOMCSSRule::FONT_FACE_RULE ||
-          type == nsIDOMCSSRule::COUNTER_STYLE_RULE) {
+      if (type == CSSRuleBinding::FONT_FACE_RULE ||
+          type == CSSRuleBinding::COUNTER_STYLE_RULE) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRawRules[i]");
         cb.NoteXPCOMChild(aRule);
       }
@@ -91,7 +91,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
     RefPtr<css::Rule> ruleObj = nullptr;
     switch (rule) {
 #define CASE_RULE(const_, name_)                                            \
-      case nsIDOMCSSRule::const_##_RULE: {                                  \
+      case CSSRuleBinding::const_##_RULE: {                                 \
         uint32_t line = 0, column = 0;                                      \
         RefPtr<RawServo##name_##Rule> rule =                                \
           Servo_CssRules_Get##name_##RuleAt(                                \
@@ -115,15 +115,15 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
       // a borrowed Gecko rule object directly, so we don't need to
       // create anything here. But we still need to have the style sheet
       // and parent rule set properly.
-      case nsIDOMCSSRule::FONT_FACE_RULE: {
+      case CSSRuleBinding::FONT_FACE_RULE: {
         ruleObj = Servo_CssRules_GetFontFaceRuleAt(mRawRules, aIndex);
         break;
       }
-      case nsIDOMCSSRule::COUNTER_STYLE_RULE: {
+      case CSSRuleBinding::COUNTER_STYLE_RULE: {
         ruleObj = Servo_CssRules_GetCounterStyleRuleAt(mRawRules, aIndex);
         break;
       }
-      case nsIDOMCSSRule::KEYFRAME_RULE:
+      case CSSRuleBinding::KEYFRAME_RULE:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         return nullptr;
       default:

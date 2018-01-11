@@ -15,7 +15,7 @@
 class nsComputedDOMStyle;
 class nsAtom;
 class nsIContent;
-class nsIDOMCSSStyleDeclaration;
+class nsICSSDeclaration;
 class nsIDOMNode;
 class nsINode;
 
@@ -324,7 +324,7 @@ public:
    * @param aLength         [OUT] The number of declarations in aCssDecl.
    */
   nsresult GetInlineStyles(dom::Element* aElement,
-                           nsIDOMCSSStyleDeclaration** aCssDecl,
+                           nsICSSDeclaration** aCssDecl,
                            uint32_t* aLength);
 
 public:

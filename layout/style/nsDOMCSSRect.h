@@ -10,13 +10,12 @@
 #define nsDOMCSSRect_h_
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMRect.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRect final : public nsIDOMRect,
+class nsDOMCSSRect final : public nsISupports,
                            public nsWrapperCache
 {
 public:
@@ -26,8 +25,6 @@ public:
                nsROCSSPrimitiveValue* aLeft);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMRECT
-
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCSSRect)
 
   nsROCSSPrimitiveValue* Top() const { return mTop; }

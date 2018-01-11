@@ -423,6 +423,7 @@ opaque-types = [
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
+    "nsCSSCounterStyleRule_Getter", # thiscall function pointer
 ]
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::ServoUnsafeCell", servo = "::std::cell::UnsafeCell" },

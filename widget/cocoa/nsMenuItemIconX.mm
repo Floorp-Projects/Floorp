@@ -28,10 +28,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
-#include "nsICSSDeclaration.h"
-#include "nsIDOMCSSValue.h"
-#include "nsIDOMCSSPrimitiveValue.h"
-#include "nsIDOMRect.h"
 #include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsNetUtil.h"
@@ -43,14 +39,13 @@
 #include "nsCocoaUtils.h"
 #include "nsContentUtils.h"
 #include "nsIContentPolicy.h"
+#include "nsComputedDOMStyle.h"
 
 using mozilla::dom::Element;
 using mozilla::gfx::SourceSurface;
 
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
-
-typedef decltype(&nsIDOMRect::GetBottom) GetRectSideMethod;
 
 NS_IMPL_ISUPPORTS(nsMenuItemIconX, imgINotificationObserver)
 
@@ -120,28 +115,6 @@ nsMenuItemIconX::SetupIcon()
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-static int32_t
-GetDOMRectSide(nsIDOMRect* aRect, GetRectSideMethod aMethod)
-{
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> dimensionValue;
-  (aRect->*aMethod)(getter_AddRefs(dimensionValue));
-  if (!dimensionValue)
-    return -1;
-
-  uint16_t primitiveType;
-  nsresult rv = dimensionValue->GetPrimitiveType(&primitiveType);
-  if (NS_FAILED(rv) || primitiveType != nsIDOMCSSPrimitiveValue::CSS_PX)
-    return -1;
-
-  float dimension = 0;
-  rv = dimensionValue->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_PX,
-                                     &dimension);
-  if (NS_FAILED(rv))
-    return -1;
-
-  return NSToIntRound(dimension);
-}
-
 nsresult
 nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 {
@@ -172,52 +145,37 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
                                    imageURIString);
 
   nsresult rv;
-  nsCOMPtr<nsIDOMCSSValue> cssValue;
-  nsCOMPtr<nsICSSDeclaration> cssStyleDecl;
-  nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
-  uint16_t primitiveType;
+  RefPtr<nsStyleContext> sc;
+  nsCOMPtr<nsIURI> iconURI;
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
     // "list-style-image" property from CSS.
     nsCOMPtr<nsIDocument> document = mContent->GetComposedDoc();
-    if (!document)
+    if (!document || !mContent->IsElement()) {
       return NS_ERROR_FAILURE;
+    }
 
-    nsCOMPtr<nsPIDOMWindowInner> window = document->GetInnerWindow();
-    if (!window)
+    sc = nsComputedDOMStyle::GetStyleContext(mContent->AsElement(), nullptr,
+                                             document->GetShell());
+    if (!sc) {
       return NS_ERROR_FAILURE;
+    }
 
-    nsCOMPtr<Element> domElement = do_QueryInterface(mContent);
-    if (!domElement)
+    iconURI = sc->StyleList()->GetListStyleImageURI();
+    if (!iconURI) {
       return NS_ERROR_FAILURE;
-
-    ErrorResult dummy;
-    cssStyleDecl = window->GetComputedStyle(*domElement, EmptyString(), dummy);
-    dummy.SuppressException();
-    if (!cssStyleDecl)
-      return NS_ERROR_FAILURE;
-
-    NS_NAMED_LITERAL_STRING(listStyleImage, "list-style-image");
-    rv = cssStyleDecl->GetPropertyCSSValue(listStyleImage,
-                                           getter_AddRefs(cssValue));
-    if (NS_FAILED(rv)) return rv;
-
-    primitiveValue = do_QueryInterface(cssValue);
-    if (!primitiveValue) return NS_ERROR_FAILURE;
-
-    rv = primitiveValue->GetPrimitiveType(&primitiveType);
-    if (NS_FAILED(rv)) return rv;
-    if (primitiveType != nsIDOMCSSPrimitiveValue::CSS_URI)
-      return NS_ERROR_FAILURE;
-
-    rv = primitiveValue->GetStringValue(imageURIString);
-    if (NS_FAILED(rv)) return rv;
+    }
   } else {
     uint64_t dummy = 0;
     nsContentUtils::GetContentPolicyTypeForUIImageLoading(mContent,
                                                           getter_AddRefs(mTriggeringPrincipal),
                                                           mContentType,
                                                           &dummy);
+
+    // If this menu item shouldn't have an icon, the string will be empty,
+    // and NS_NewURI will fail.
+    rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // Empty the mImageRegionRect initially as the image region CSS could
@@ -225,50 +183,20 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   // last GetIconURI call.
   mImageRegionRect.SetEmpty();
 
-  // If this menu item shouldn't have an icon, the string will be empty,
-  // and NS_NewURI will fail.
-  nsCOMPtr<nsIURI> iconURI;
-  rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
-  if (NS_FAILED(rv)) return rv;
-
-  *aIconURI = iconURI;
-  NS_ADDREF(*aIconURI);
+  iconURI.forget(aIconURI);
 
   if (!hasImageAttr) {
     // Check if the icon has a specified image region so that it can be
     // cropped appropriately before being displayed.
-    NS_NAMED_LITERAL_STRING(imageRegion, "-moz-image-region");
-    rv = cssStyleDecl->GetPropertyCSSValue(imageRegion,
-                                           getter_AddRefs(cssValue));
-    // Just return NS_OK if there if there is a failure due to no
-    // moz-image region specified so the whole icon will be drawn anyway.
-    if (NS_FAILED(rv)) return NS_OK;
+    const nsRect& r = sc->StyleList()->mImageRegion;
 
-    primitiveValue = do_QueryInterface(cssValue);
-    if (!primitiveValue) return NS_OK;
-
-    rv = primitiveValue->GetPrimitiveType(&primitiveType);
-    if (NS_FAILED(rv)) return NS_OK;
-    if (primitiveType != nsIDOMCSSPrimitiveValue::CSS_RECT)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMRect> imageRegionRect;
-    rv = primitiveValue->GetRectValue(getter_AddRefs(imageRegionRect));
-    if (NS_FAILED(rv)) return NS_OK;
-
-    if (imageRegionRect) {
-      // Return NS_ERROR_FAILURE if the image region is invalid so the image
-      // is not drawn, and behavior is similar to XUL menus.
-      int32_t bottom = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetBottom);
-      int32_t right = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetRight);
-      int32_t top = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetTop);
-      int32_t left = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetLeft);
-
-      if (top < 0 || left < 0 || bottom <= top || right <= left)
-        return NS_ERROR_FAILURE;
-
-      mImageRegionRect.SetRect(left, top, right - left, bottom - top);
+    // Return NS_ERROR_FAILURE if the image region is invalid so the image
+    // is not drawn, and behavior is similar to XUL menus.
+    if (r.X() < 0 || r.Y() < 0 || r.IsEmpty()) {
+      return NS_ERROR_FAILURE;
     }
+
+    mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
   }
 
   return NS_OK;
