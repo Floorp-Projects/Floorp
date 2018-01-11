@@ -1716,7 +1716,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSMediaRule({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSMediaRule)) {
+    if (isWorker || !rawObj || obj.class != "CSSMediaRule") {
       return false;
     }
     grip.preview = {
