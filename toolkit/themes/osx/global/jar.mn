@@ -11,7 +11,6 @@ toolkit.jar:
   skin/classic/global/checkbox.css
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
-  skin/classic/global/customizeToolbar.css
   skin/classic/global/dialog.css
   skin/classic/global/dropmarker.css
   skin/classic/global/filefield.css
