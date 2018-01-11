@@ -87,7 +87,7 @@ WasmHandleExecutionInterrupt()
 
     // If CheckForInterrupt succeeded, then execution can proceed and the
     // interrupt is over.
-    void* resumePC = activation->wasmInterruptResumePC();
+    void* resumePC = activation->wasmResumePC();
     activation->finishWasmInterrupt();
     return resumePC;
 }
@@ -225,7 +225,6 @@ wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter)
     }
 
     MOZ_ASSERT(!cx->activation()->asJit()->isWasmInterrupted(), "unwinding clears the interrupt");
-    MOZ_ASSERT(!cx->activation()->asJit()->isWasmTrapping(), "unwinding clears the trapping state");
 
     return iter.unwoundAddressOfReturnAddress();
 }
@@ -287,13 +286,6 @@ WasmOldReportTrap(int32_t trapIndex)
     }
 
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
-}
-
-static void
-WasmReportTrap()
-{
-    Trap trap = TlsContext.get()->runtime()->wasmTrapData().trap;
-    WasmOldReportTrap(int32_t(trap));
 }
 
 static void
@@ -452,9 +444,6 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::HandleThrow:
         *abiType = Args_General0;
         return FuncCast(WasmHandleThrow, *abiType);
-      case SymbolicAddress::ReportTrap:
-        *abiType = Args_General0;
-        return FuncCast(WasmReportTrap, *abiType);
       case SymbolicAddress::OldReportTrap:
         *abiType = Args_General1;
         return FuncCast(WasmOldReportTrap, *abiType);
@@ -611,7 +600,6 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
-      case SymbolicAddress::ReportTrap:               // GenerateTrapExit
       case SymbolicAddress::OldReportTrap:            // GenerateOldTrapExit
       case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
       case SymbolicAddress::ReportUnalignedAccess:    // GeneratesUnalignedExit
@@ -908,7 +896,6 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.callSites().empty());
     MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
-    MOZ_ASSERT(masm.trapSites().empty());
     MOZ_ASSERT(masm.oldTrapSites().empty());
     MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
