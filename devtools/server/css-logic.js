@@ -552,9 +552,9 @@ CssLogic.prototype = {
       }
 
       // getCSSStyleRules can return null with a shadow DOM element.
-      let numDomRules = domRules ? domRules.Count() : 0;
+      let numDomRules = domRules ? domRules.length : 0;
       for (let i = 0; i < numDomRules; i++) {
-        let domRule = domRules.GetElementAt(i);
+        let domRule = domRules[i];
         if (domRule.type !== CSSRule.STYLE_RULE) {
           continue;
         }

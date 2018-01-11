@@ -10,6 +10,9 @@
 [ChromeOnly]
 namespace InspectorUtils {
   sequence<StyleSheet> getAllStyleSheets(Document document);
+  sequence<CSSRule> getCSSStyleRules(
+    Element element,
+    [TreatNullAs=EmptyString] optional DOMString pseudo = "");
 };
 
 dictionary InspectorRGBTriple {
