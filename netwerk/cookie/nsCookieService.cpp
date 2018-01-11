@@ -4449,8 +4449,9 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
   for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
     nsCookieEntry* entry = iter.Get();
 
-    const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
-    for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ) {
+    const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
+    auto length = cookies.Length();
+    for (nsCookieEntry::IndexType i = 0; i < length; ) {
       nsListIter iter(entry, i);
       nsCookie* cookie = cookies[i];
 
@@ -4459,9 +4460,12 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
         removedList->AppendElement(cookie);
         COOKIE_LOGEVICTED(cookie, "Cookie expired");
 
-        // remove from list; do not increment our iterator
+        // remove from list; do not increment our iterator unless we're the last
+        // in the list already.
         gCookieService->RemoveCookieFromList(iter, paramsArray);
-
+        if (i == --length) {
+          break;
+        }
       } else {
         // check if the cookie is over the age limit
         if (cookie->LastAccessed() <= purgeTime) {
@@ -4474,6 +4478,7 @@ nsCookieService::PurgeCookies(int64_t aCurrentTimeInUsec)
 
         ++i;
       }
+      MOZ_ASSERT(length == cookies.Length());
     }
   }
 
