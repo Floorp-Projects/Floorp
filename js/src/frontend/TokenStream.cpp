@@ -1122,10 +1122,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirectives(bool isMultiline,
            getSourceMappingURL(isMultiline, shouldWarnDeprecated);
 }
 
-template<class AnyCharsAccess>
+template<>
 MOZ_MUST_USE bool
-TokenStreamChars<char16_t, AnyCharsAccess>::copyTokenbufTo(JSContext* cx,
-                                                           UniquePtr<char16_t[], JS::FreePolicy>* destination)
+TokenStreamCharsBase<char16_t>::copyTokenbufTo(JSContext* cx,
+                                               UniquePtr<char16_t[], JS::FreePolicy>* destination)
 {
     size_t length = tokenbuf.length();
 
