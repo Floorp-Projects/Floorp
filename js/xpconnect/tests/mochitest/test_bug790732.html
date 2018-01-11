@@ -38,13 +38,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   is(Ci.nsIDOMSVGLength, SVGLength);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathResult, XPathResult);
-
-  // Test for Bug 895231
-  for (var k of Object.keys(Components.interfaces)) {
-    ok(SpecialPowers.Ci.hasOwnProperty(k),
-       k + " should be removed from the Components shim");
-  }
-
   </script>
 </head>
 <body>
