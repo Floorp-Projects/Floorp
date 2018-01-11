@@ -7051,6 +7051,27 @@
     "n_buckets": 10,
     "description": "Time to fetch LocalStorage data before we can expose them as session only data (ms)"
   },
+  "LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "bug_numbers": [1422671],
+    "n_values": 3,
+    "description": "Login reputation login whitelist result (0=UNSPECIFIED, 1=SAFE, 2=ERROR)"
+  },
+  "LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "bug_numbers": [1422671],
+    "high": 5000,
+    "n_buckets": 30,
+    "description": "Time spent per login reputation service lookup local whitelist (ms)"
+  },
   "RANGE_CHECKSUM_ERRORS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
