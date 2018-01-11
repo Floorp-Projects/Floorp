@@ -12,6 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877690
 
 /** Test for Bug 877690 **/
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 // Returns true if values contains all and only the expected values. False otherwise.
 function testValues(values, expected) {
   values.sort();
@@ -30,16 +32,9 @@ function testValues(values, expected) {
 }
 
 function do_test() {
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-    .getService(SpecialPowers.Ci.inIDOMUtils);
-
-  var getCSSValuesForProperty = function(prop) {
-    return Array.from(utils.getCSSValuesForProperty(prop));
-  }
-
   // test a property with keywords and colors
   var prop = "color";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
       "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood",
       "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor",
@@ -65,7 +60,7 @@ function do_test() {
 
   // test a shorthand property
   var prop = "background";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
       "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue",
       "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor", "cyan", "darkblue",
@@ -94,7 +89,7 @@ function do_test() {
   ok(testValues(values, expected), "Shorthand property values.");
 
   var prop = "border";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "unset", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
@@ -123,7 +118,7 @@ function do_test() {
 
   // test keywords only
   var prop = "border-top";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
       "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
       "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
@@ -150,13 +145,13 @@ function do_test() {
 
   // tests no keywords or colors
   var prop = "padding-bottom";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "calc" ];
   ok(testValues(values, expected), "property padding-bottom's values.");
 
   // test proprety
   var prop = "display";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "none", "inline", "block", "inline-block", "list-item",
       "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row",
       "table-column-group", "table-column", "table-cell", "table-caption", "-moz-box", "-moz-inline-box",
@@ -171,25 +166,25 @@ function do_test() {
 
   // test property
   var prop = "float";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "none", "left", "right", "inline-start", "inline-end" ];
   ok(testValues(values, expected), "property float's values.");
 
   // Test property with "auto"
   var prop = "margin";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "unset", "auto", "calc", "inherit" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"
   var prop = "font-style";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "italic", "normal", "oblique" ];
   ok(testValues(values, expected), "property font-style's values.");
 
   // Test property with "cubic-bezier" and "step".
   var prop = "-moz-transition";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
                    "ease-out", "inherit", "linear", "none", "step-end", "step-start",
                    "steps" ];
@@ -198,7 +193,7 @@ function do_test() {
   // test invalid property
   var prop = "invalidProperty";
   try {
-    getCSSValuesForProperty(prop);
+    InspectorUtils.getCSSValuesForProperty(prop);
     ok(false, "invalid property should throw an exception");
   }
   catch(e) {
@@ -207,12 +202,12 @@ function do_test() {
 
   // test border-image property, for bug 973345
   var prop = "border-image";
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "inherit", "initial", "unset", "repeat", "stretch", "-moz-element", "-moz-image-rect", "url",             "linear-gradient", "radial-gradient", "repeating-linear-gradient", "repeating-radial-gradient", "-moz-linear-gradient", "-moz-radial-gradient", "-moz-repeating-linear-gradient", "-moz-repeating-radial-gradient", "fill", "none", "round", "space" ];
   ok(testValues(values, expected), "property border-image's values.");
 
   var prop = "background-size"
-  var values = getCSSValuesForProperty(prop);
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "inherit", "initial", "unset", "contain", "cover" ];
   ok(testValues(values, expected), "property background-size's values.");
 

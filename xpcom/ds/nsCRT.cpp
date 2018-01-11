@@ -111,35 +111,6 @@ nsCRT::strcmp(const char16_t* aStr1, const char16_t* aStr2)
   return 0;
 }
 
-/**
- * Compare unichar string ptrs, stopping at the 1st null or nth char.
- * NOTE: If either is null, we return 0.
- * NOTE: We DO NOT terminate the search upon encountering nullptr's before N
- *
- * @update  gess 11/10/99
- * @param   s1 and s2 both point to unichar strings
- * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
- */
-int32_t
-nsCRT::strncmp(const char16_t* aStr1, const char16_t* aStr2, uint32_t aNum)
-{
-  if (aStr1 && aStr2) {
-    if (aNum != 0) {
-      do {
-        char16_t c1 = *aStr1++;
-        char16_t c2 = *aStr2++;
-        if (c1 != c2) {
-          if (c1 < c2) {
-            return -1;
-          }
-          return 1;
-        }
-      } while (--aNum != 0);
-    }
-  }
-  return 0;
-}
-
 const char*
 nsCRT::memmem(const char* aHaystack, uint32_t aHaystackLen,
               const char* aNeedle, uint32_t aNeedleLen)

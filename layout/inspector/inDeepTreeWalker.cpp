@@ -12,10 +12,10 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
-#include "inIDOMUtils.h"
 #include "nsIContent.h"
 #include "ChildIterator.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/InspectorUtils.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.
@@ -96,8 +96,7 @@ inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
   mCurrentNode = aRoot;
   mWhatToShow = aWhatToShow;
 
-  mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
-  return mDOMUtils ? NS_OK : NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////
@@ -135,28 +134,33 @@ inDeepTreeWalker::GetCurrentNode(nsIDOMNode** aCurrentNode)
 already_AddRefed<nsIDOMNode>
 inDeepTreeWalker::GetParent()
 {
+  MOZ_ASSERT(mCurrentNode);
+
   if (mCurrentNode == mRoot) {
     return nullptr;
   }
 
+  nsCOMPtr<nsINode> currentNode = do_QueryInterface(mCurrentNode);
+  nsCOMPtr<nsINode> root = do_QueryInterface(mRoot);
+
   nsCOMPtr<nsIDOMNode> parent;
-  MOZ_ASSERT(mDOMUtils, "mDOMUtils should have been initiated already in Init");
-  mDOMUtils->GetParentForNode(mCurrentNode, mShowAnonymousContent,
-                              getter_AddRefs(parent));
+  nsINode* parentNode =
+    InspectorUtils::GetParentForNode(*currentNode, mShowAnonymousContent);
 
   uint16_t nodeType = 0;
-  if (parent) {
-    parent->GetNodeType(&nodeType);
+  if (parentNode) {
+    nodeType = parentNode->NodeType();
   }
   // For compatibility reasons by default we skip the document nodes
   // from the walk.
   if (!mShowDocumentsAsNodes &&
       nodeType == nsIDOMNode::DOCUMENT_NODE &&
-      parent != mRoot) {
-    mDOMUtils->GetParentForNode(parent, mShowAnonymousContent,
-                                getter_AddRefs(parent));
+      parentNode != root) {
+    parentNode =
+      InspectorUtils::GetParentForNode(*parentNode, mShowAnonymousContent);
   }
 
+  parent = do_QueryInterface(parentNode);
   return parent.forget();
 }
 

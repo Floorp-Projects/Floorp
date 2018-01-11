@@ -10842,7 +10842,12 @@ IonBuilder::getPropTryModuleNamespace(bool* emitted, MDefinition* obj, PropertyN
     MConstant* envConst = constant(ObjectValue(*env));
     uint32_t slot = shape->slot();
     uint32_t nfixed = env->numFixedSlots();
-    MOZ_TRY(loadSlot(envConst, slot, nfixed, types->getKnownMIRType(), barrier, types));
+
+    MIRType rvalType = types->getKnownMIRType();
+    if (barrier != BarrierKind::NoBarrier || IsNullOrUndefined(rvalType))
+        rvalType = MIRType::Value;
+
+    MOZ_TRY(loadSlot(envConst, slot, nfixed, rvalType, barrier, types));
 
     trackOptimizationSuccess();
     *emitted = true;

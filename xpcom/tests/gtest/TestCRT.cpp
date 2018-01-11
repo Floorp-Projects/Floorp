@@ -48,15 +48,9 @@ static void Check(const char* s1, const char* s2, size_t n)
   const char16_t* us2 = t2.get();
 
   int u2, u2_n;
-  // nsCRT::strncmp will cause buffer overrun
-  // if the string buffer is shorter than |n|.
-  if (!longerThanN) {
-    u2 = nsCRT::strcmp(us1, us2);
-    u2_n = nsCRT::strncmp(us1, us2, n);
+  u2 = nsCRT::strcmp(us1, us2);
 
-    EXPECT_EQ(sign(clib), sign(u2));
-    EXPECT_EQ(sign(clib_n), sign(u2_n));
-  }
+  EXPECT_EQ(sign(clib), sign(u2));
 
   u2 = NS_strcmp(us1, us2);
   u2_n = NS_strncmp(us1, us2, n);

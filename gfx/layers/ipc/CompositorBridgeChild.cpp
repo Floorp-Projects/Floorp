@@ -1193,20 +1193,28 @@ CompositorBridgeChild::FlushAsyncPaints()
   }
 }
 
-void
-CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction()
+bool
+CompositorBridgeChild::NotifyBeginAsyncEndLayerTransaction(SyncObjectClient* aSyncObject)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MonitorAutoLock lock(mPaintLock);
 
   MOZ_ASSERT(!mOutstandingAsyncEndTransaction);
   mOutstandingAsyncEndTransaction = true;
+  mOutstandingAsyncSyncObject = aSyncObject;
+  return mOutstandingAsyncPaints == 0;
 }
 
 void
 CompositorBridgeChild::NotifyFinishedAsyncEndLayerTransaction()
 {
   MOZ_ASSERT(PaintThread::IsOnPaintThread());
+
+  if (mOutstandingAsyncSyncObject) {
+    mOutstandingAsyncSyncObject->Synchronize();
+    mOutstandingAsyncSyncObject = nullptr;
+  }
+
   MonitorAutoLock lock(mPaintLock);
 
   // Since this should happen after ALL paints are done and

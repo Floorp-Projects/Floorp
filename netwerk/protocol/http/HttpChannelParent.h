@@ -188,8 +188,6 @@ protected:
                                                       const OptionalURIParams& aReferrerURI,
                                                       const OptionalURIParams& apiRedirectUri,
                                                       const OptionalCorsPreflightArgs& aCorsPreflightArgs,
-                                                      const bool& aForceHSTSPriming,
-                                                      const bool& aMixedContentWouldBlock,
                                                       const bool& aChooseAppcache) override;
   virtual mozilla::ipc::IPCResult RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no) override;

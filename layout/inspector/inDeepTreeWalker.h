@@ -14,7 +14,6 @@
 #include "nsTArray.h"
 
 class nsINodeList;
-class inIDOMUtils;
 
 class inDeepTreeWalker final : public inIDeepTreeWalker
 {
@@ -40,7 +39,6 @@ protected:
   // null from here.
   nsCOMPtr<nsIDOMNode> mRoot;
   nsCOMPtr<nsIDOMNode> mCurrentNode;
-  nsCOMPtr<inIDOMUtils> mDOMUtils;
 
   // We cache the siblings of mCurrentNode as a list of nodes.
   // Notes: normally siblings are all the children of the parent
