@@ -18,7 +18,6 @@ NS_IMPL_RELEASE_INHERITED(CSSMozDocumentRule, css::ConditionRule)
 // QueryInterface implementation for CSSMozDocumentRule
 NS_INTERFACE_MAP_BEGIN(CSSMozDocumentRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
 NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 // nsIDOMCSSGroupingRule methods
@@ -39,13 +38,6 @@ NS_IMETHODIMP
 CSSMozDocumentRule::DeleteRule(uint32_t aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
-}
-
-void
-CSSMozDocumentRule::SetConditionText(const nsAString& aConditionText,
-                                     ErrorResult& aRv)
-{
-  aRv = SetConditionText(aConditionText);
 }
 
 /* virtual */ JSObject*
