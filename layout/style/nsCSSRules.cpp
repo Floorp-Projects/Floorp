@@ -870,13 +870,10 @@ nsCSSKeyframeStyleDeclaration::GetServoCSSParsingEnvironment(
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
 
-NS_IMETHODIMP
-nsCSSKeyframeStyleDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
+css::Rule*
+nsCSSKeyframeStyleDeclaration::GetParentRule()
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  NS_IF_ADDREF(*aParent = mRule);
-  return NS_OK;
+  return mRule;
 }
 
 nsresult
@@ -1297,13 +1294,10 @@ nsCSSPageStyleDeclaration::GetServoCSSParsingEnvironment(
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
 
-NS_IMETHODIMP
-nsCSSPageStyleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
+css::Rule*
+nsCSSPageStyleDeclaration::GetParentRule()
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  NS_IF_ADDREF(*aParent = mRule);
-  return NS_OK;
+  return mRule;
 }
 
 nsresult

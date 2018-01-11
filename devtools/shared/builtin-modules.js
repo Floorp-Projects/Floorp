@@ -23,9 +23,11 @@ const { PromiseDebugging, ChromeUtils, HeapSnapshot,
 
 // Create a single Sandbox to access global properties needed in this module.
 // Sandbox are memory expensive, so we should create as little as possible.
-const { CSS, FileReader, indexedDB, InspectorUtils, URL } =
+const { CSS, CSSRule, FileReader, indexedDB, InspectorUtils, URL } =
     Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(), {
-      wantGlobalProperties: ["CSS", "FileReader", "indexedDB", "InspectorUtils", "URL"]
+      wantGlobalProperties: [
+        "CSS", "CSSRule", "FileReader", "indexedDB", "InspectorUtils", "URL",
+      ]
     });
 
 /**
@@ -220,6 +222,7 @@ exports.globals = {
   TextDecoder: TextDecoder,
   URL,
   CSS,
+  CSSRule,
   loader: {
     lazyGetter: defineLazyGetter,
     lazyImporter: defineLazyModuleGetter,
@@ -290,7 +293,6 @@ lazyGlobal("clearInterval", () => {
 lazyGlobal("setInterval", () => {
   return Cu.import("resource://gre/modules/Timer.jsm", {}).setInterval;
 });
-lazyGlobal("CSSRule", () => Ci.nsIDOMCSSRule);
 lazyGlobal("DOMParser", () => {
   return CC("@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
 });

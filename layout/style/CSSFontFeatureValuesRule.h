@@ -21,11 +21,10 @@ public:
   virtual bool IsCCLeaf() const override;
 
   int32_t GetType() const final { return Rule::FONT_FEATURE_VALUES_RULE; }
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override = 0;
 
   // WebIDL interfaces
-  uint16_t Type() const final { return nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::FONT_FEATURE_VALUES_RULE; }
   virtual void GetCssTextImpl(nsAString& aCssText) const override = 0;
   virtual void GetFontFamily(nsAString& aFamily) = 0;
   virtual void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) = 0;

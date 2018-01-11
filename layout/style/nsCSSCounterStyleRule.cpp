@@ -84,7 +84,7 @@ nsCSSCounterStyleRule::GetType() const
 uint16_t
 nsCSSCounterStyleRule::Type() const
 {
-  return nsIDOMCSSRule::COUNTER_STYLE_RULE;
+  return CSSRuleBinding::COUNTER_STYLE_RULE;
 }
 
 void

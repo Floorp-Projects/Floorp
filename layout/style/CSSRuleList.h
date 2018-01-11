@@ -9,7 +9,6 @@
 
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Rule.h"
-#include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsWrapperCache.h"
 
@@ -37,12 +36,6 @@ public:
   GetLength(uint32_t* aLength) override final
   {
     *aLength = Length();
-    return NS_OK;
-  }
-  NS_IMETHOD
-  Item(uint32_t aIndex, nsIDOMCSSRule** aReturn) override final
-  {
-    NS_IF_ADDREF(*aReturn = Item(aIndex));
     return NS_OK;
   }
 

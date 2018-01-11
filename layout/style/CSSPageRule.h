@@ -25,10 +25,9 @@ public:
   virtual bool IsCCLeaf() const override = 0;
 
   int32_t GetType() const final { return Rule::PAGE_RULE; }
-  using Rule::GetType;
 
   // WebIDL interfaces
-  uint16_t Type() const final { return nsIDOMCSSRule::PAGE_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::PAGE_RULE; }
   virtual void GetCssTextImpl(nsAString& aCssText) const override = 0;
   virtual nsICSSDeclaration* Style() = 0;
 

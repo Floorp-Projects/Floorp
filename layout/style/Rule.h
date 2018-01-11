@@ -9,10 +9,10 @@
 #ifndef mozilla_css_Rule_h___
 #define mozilla_css_Rule_h___
 
+#include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
-#include "nsIDOMCSSRule.h"
 #include "nsWrapperCache.h"
 
 class nsIDocument;
@@ -24,7 +24,7 @@ namespace mozilla {
 namespace css {
 class GroupRule;
 
-class Rule : public nsIDOMCSSRule
+class Rule : public nsISupports
            , public nsWrapperCache
 {
 protected:
@@ -53,9 +53,6 @@ public:
   // Return true if this rule is known to be a cycle collection leaf, in the
   // sense that it doesn't have any outgoing owning edges.
   virtual bool IsCCLeaf() const MOZ_MUST_OVERRIDE;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
@@ -116,11 +113,11 @@ public:
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE = 0;
 
-  // WebIDL interface, aka helpers for nsIDOMCSSRule implementation.
+  // WebIDL interface
   virtual uint16_t Type() const = 0;
   virtual void GetCssTextImpl(nsAString& aCssText) const = 0;
   void GetCssText(nsAString& aCssText) const { GetCssTextImpl(aCssText); }
-  // XPCOM SetCssText is OK, since it never throws.
+  void SetCssText(const nsAString& aCssText);
   Rule* GetParentRule() const;
   StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }
   nsIDocument* GetParentObject() const { return GetDocument(); }

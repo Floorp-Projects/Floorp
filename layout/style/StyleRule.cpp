@@ -1063,7 +1063,7 @@ protected:
 public:
   explicit DOMCSSDeclarationImpl(css::StyleRule *aRule);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
+  css::Rule* GetParentRule() final { return mRule; }
   virtual DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(DeclarationBlock* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
@@ -1146,15 +1146,6 @@ DOMCSSDeclarationImpl::GetServoCSSParsingEnvironment(
   MOZ_CRASH("GetURLData shouldn't be calling on a Gecko rule");
 }
 
-NS_IMETHODIMP
-DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
-{
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  NS_IF_ADDREF(*aParent = mRule);
-  return NS_OK;
-}
-
 nsresult
 DOMCSSDeclarationImpl::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
@@ -1191,7 +1182,7 @@ namespace css {
 uint16_t
 StyleRule::Type() const
 {
-  return nsIDOMCSSRule::STYLE_RULE;
+  return CSSRuleBinding::STYLE_RULE;
 }
 
 nsICSSDeclaration*

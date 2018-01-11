@@ -463,12 +463,10 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetParentRule(nsIDOMCSSRule** aParentRule)
+css::Rule*
+nsComputedDOMStyle::GetParentRule()
 {
-  *aParentRule = nullptr;
-
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP

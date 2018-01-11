@@ -64,7 +64,6 @@ interface nsIDOMHTMLHeadElement;
 // CSS
 interface nsIDOMCSSValue;
 interface nsIDOMCSSPrimitiveValue;
-interface nsIDOMCSSRule;
 interface nsIDOMCSSRuleList;
 interface nsIDOMCSSStyleSheet;
 interface nsIDOMCSSStyleDeclaration;

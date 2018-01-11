@@ -20,11 +20,10 @@ protected:
 
 public:
   int32_t GetType() const final { return Rule::KEYFRAME_RULE; }
-  using Rule::GetType;
   bool IsCCLeaf() const override { return Rule::IsCCLeaf(); }
 
   // WebIDL interface
-  uint16_t Type() const final { return nsIDOMCSSRule::KEYFRAME_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::KEYFRAME_RULE; }
   virtual void GetKeyText(nsAString& aKey) = 0;
   virtual void SetKeyText(const nsAString& aKey) = 0;
   virtual nsICSSDeclaration* Style() = 0;
