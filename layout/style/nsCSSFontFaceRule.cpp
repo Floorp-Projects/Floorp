@@ -326,9 +326,6 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsCSSFontFaceRule,
@@ -366,10 +363,7 @@ nsCSSFontFaceRule::IsCCLeaf() const
   return !mDecl.PreservingWrapper();
 }
 
-// QueryInterface implementation for nsCSSFontFaceRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
-NS_INTERFACE_MAP_END_INHERITING(Rule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsCSSFontFaceRule, mozilla::css::Rule)
 
 #ifdef DEBUG
 void
@@ -428,13 +422,6 @@ nsICSSDeclaration*
 nsCSSFontFaceRule::Style()
 {
   return &mDecl;
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_IF_ADDREF(*aStyle = &mDecl);
-  return NS_OK;
 }
 
 // Arguably these should forward to nsCSSFontFaceStyleDecl methods.
