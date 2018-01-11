@@ -9,6 +9,7 @@
  */
 [ChromeOnly]
 namespace InspectorUtils {
+  sequence<StyleSheet> getAllStyleSheets(Document document);
 };
 
 dictionary InspectorRGBTriple {
