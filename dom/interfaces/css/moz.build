@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMCSSStyleDeclaration.idl',
-    'nsIDOMCSSValue.idl',
 ]
 
 XPIDL_MODULE = 'dom_css'
