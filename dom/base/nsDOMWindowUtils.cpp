@@ -1521,6 +1521,11 @@ nsDOMWindowUtils::CompareCanvases(nsISupports *aCanvas1,
   RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(canvas1);
   RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(canvas2);
 
+  if (img1->Equals(img2)) {
+    // They point to the same underlying content.
+    return NS_OK;
+  }
+
   DataSourceSurface::ScopedMap map1(img1, DataSourceSurface::READ);
   DataSourceSurface::ScopedMap map2(img2, DataSourceSurface::READ);
 
