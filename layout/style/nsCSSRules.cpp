@@ -655,15 +655,6 @@ nsCSSFontFeatureValuesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
-
-// QueryInterface implementation for nsCSSFontFeatureValuesRule
-// If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
-// implementation.
-NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSFontFeatureValuesRule)
-
 static void
 FeatureValuesToString(
   const nsTArray<gfxFontFeatureValueSet::FeatureValues>& aFeatureValues,
@@ -746,30 +737,30 @@ nsCSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
+void
 nsCSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
 {
   nsStyleUtil::AppendEscapedCSSFontFamilyList(mFamilyList, aFamilyListStr);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFeatureValuesRule::GetValueText(nsAString& aValueText)
 {
   FeatureValuesToString(mFeatureValues, aValueText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily)
+void
+nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
+                                          ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText)
+void
+nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
+                                         ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 void

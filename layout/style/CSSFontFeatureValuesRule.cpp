@@ -10,29 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(CSSFontFeatureValuesRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSFontFeatureValuesRule, css::Rule)
-
-// QueryInterface implementation for CSSFontFeatureValuesRule
 // If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
 // implementation.
-NS_INTERFACE_MAP_BEGIN(CSSFontFeatureValuesRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
-NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-void
-CSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFamily,
-                                              ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-void
-CSSFontFeatureValuesRule::SetValueText(const nsAString& aFamily,
-                                             ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
 
 bool
 CSSFontFeatureValuesRule::IsCCLeaf() const
