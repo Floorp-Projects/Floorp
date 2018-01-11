@@ -14,8 +14,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=708874
 
 /** Test for Bug 708874 - API for locking pseudo-class state of an element **/
 
-var DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-               .getService(Components.interfaces.inIDOMUtils);
 var DOMWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
@@ -37,7 +35,7 @@ function testLockEnabled() {
   /* starting state is enabled */
   button.removeAttribute("disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), false,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), false,
      "doesn't have lock at start");
 
   is(window.getComputedStyle(button).color, defaultColor,
@@ -47,9 +45,9 @@ function testLockEnabled() {
      "doesn't match selector at start");
 
   /* lock */
-  DOMUtils.addPseudoClassLock(button, ":disabled");
+  InspectorUtils.addPseudoClassLock(button, ":disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), true,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), true,
      "hasPseudoClassLock is true after locking");
 
   is(window.getComputedStyle(button).color, disabledColor,
@@ -68,9 +66,9 @@ function testLockEnabled() {
     "matches selector after adding lock");
 
   /* remove lock */
-  DOMUtils.removePseudoClassLock(button, ":disabled");
+  InspectorUtils.removePseudoClassLock(button, ":disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), false,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), false,
      "hasPseudoClassLock is false after removing on lock");
 
   is(window.getComputedStyle(button).color, disabledColor,
@@ -96,7 +94,7 @@ function testLockDisabled() {
   /* starting state is disabled */
   button.setAttribute("disabled", "disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), false,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), false,
      "doesn't have lock at start");
 
   is(window.getComputedStyle(button).color, disabledColor,
@@ -106,9 +104,9 @@ function testLockDisabled() {
     "matches selector before locking");
 
   /* lock */
-  DOMUtils.addPseudoClassLock(button, ":disabled");
+  InspectorUtils.addPseudoClassLock(button, ":disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), true,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), true,
      "hasPseudoClassLock is true after locking");
 
   is(window.getComputedStyle(button).color, disabledColor,
@@ -127,9 +125,9 @@ function testLockDisabled() {
    "matches selector after enabling with lock on");
 
   /* remove lock */
-  DOMUtils.removePseudoClassLock(button, ":disabled");
+  InspectorUtils.removePseudoClassLock(button, ":disabled");
 
-  is(DOMUtils.hasPseudoClassLock(button, ":disabled"), false,
+  is(InspectorUtils.hasPseudoClassLock(button, ":disabled"), false,
      "hasPseudoClassLock is false after removing on lock");
 
   is(window.getComputedStyle(button).color, defaultColor,
@@ -154,9 +152,9 @@ function testVisited() {
   var unvisitedColor = "rgb(30, 0, 0)";
 
   /* lock visited */
-  DOMUtils.addPseudoClassLock(link, ":visited");
+  InspectorUtils.addPseudoClassLock(link, ":visited");
 
-  is(DOMUtils.hasPseudoClassLock(link, ":visited"), true,
+  is(InspectorUtils.hasPseudoClassLock(link, ":visited"), true,
      "hasPseudoClassLock is true after adding lock");
 
   var color = DOMWindowUtils.getVisitedDependentComputedStyle(link,
@@ -164,12 +162,12 @@ function testVisited() {
   is(color, visitedColor, "color is :visited color after locking");
 
   /* lock unvisited */
-  DOMUtils.addPseudoClassLock(link, ":link");
+  InspectorUtils.addPseudoClassLock(link, ":link");
 
-  is(DOMUtils.hasPseudoClassLock(link, ":link"), true,
+  is(InspectorUtils.hasPseudoClassLock(link, ":link"), true,
      "hasPseudoClassLock is true after adding :link lock");
 
-  is(DOMUtils.hasPseudoClassLock(link, ":visited"), false,
+  is(InspectorUtils.hasPseudoClassLock(link, ":visited"), false,
      "hasPseudoClassLock is false for :visited after adding :link lock");
 
   var color = DOMWindowUtils.getVisitedDependentComputedStyle(link,
@@ -177,12 +175,12 @@ function testVisited() {
   is(color, unvisitedColor, "color is :link color after locking :link");
 
   /* lock visited back on */
-  DOMUtils.addPseudoClassLock(link, ":visited");
+  InspectorUtils.addPseudoClassLock(link, ":visited");
 
-  is(DOMUtils.hasPseudoClassLock(link, ":visited"), true,
+  is(InspectorUtils.hasPseudoClassLock(link, ":visited"), true,
     "hasPseudoClassLock is true after adding :visited lock");
 
-  is(DOMUtils.hasPseudoClassLock(link, ":link"), false,
+  is(InspectorUtils.hasPseudoClassLock(link, ":link"), false,
     "hasPseudoClassLock is false for :link after adding :visited lock");
 
   var color = DOMWindowUtils.getVisitedDependentComputedStyle(link,
@@ -212,11 +210,11 @@ function testMultiple() {
   };
 
   for (var pseudo in styles) {
-    DOMUtils.addPseudoClassLock(div, pseudo);
+    InspectorUtils.addPseudoClassLock(div, pseudo);
   }
 
   for (var pseudo in styles) {
-    is(DOMUtils.hasPseudoClassLock(div, pseudo), true,
+    is(InspectorUtils.hasPseudoClassLock(div, pseudo), true,
        "hasPseudoClassLock is true after locking");
 
     var style = styles[pseudo];
@@ -227,10 +225,10 @@ function testMultiple() {
        "matches selector after locking");
   }
 
-  DOMUtils.clearPseudoClassLocks(div);
+  InspectorUtils.clearPseudoClassLocks(div);
 
   for (var pseudo in styles) {
-    is(DOMUtils.hasPseudoClassLock(div, pseudo), false,
+    is(InspectorUtils.hasPseudoClassLock(div, pseudo), false,
        "hasPseudoClassLock is false after clearing");
 
     is(window.getComputedStyle(div).getPropertyValue(style.property),
@@ -249,23 +247,23 @@ function testInvalid() {
     var pseudo = pseudos[i];
 
     // basically make sure these don't crash the browser.
-    DOMUtils.addPseudoClassLock(div, pseudo);
+    InspectorUtils.addPseudoClassLock(div, pseudo);
 
-    is(DOMUtils.hasPseudoClassLock(div, pseudo), false);
+    is(InspectorUtils.hasPseudoClassLock(div, pseudo), false);
 
-    DOMUtils.removePseudoClassLock(div, pseudo);
+    InspectorUtils.removePseudoClassLock(div, pseudo);
   }
 }
 
 function testNotElement() {
   for (var value of [null, undefined, {}]) {
-    SimpleTest.doesThrow(() => DOMUtils.hasPseudoClassLock(value, ":hover"),
+    SimpleTest.doesThrow(() => InspectorUtils.hasPseudoClassLock(value, ":hover"),
                          "hasPseudoClassLock should throw for " + value);
-    SimpleTest.doesThrow(() => DOMUtils.addPseudoClassLock(value, ":hover"),
+    SimpleTest.doesThrow(() => InspectorUtils.addPseudoClassLock(value, ":hover"),
                          "addPseudoClassLock should throw for " + value);
-    SimpleTest.doesThrow(() => DOMUtils.removePseudoClassLock(value, ":hover"),
+    SimpleTest.doesThrow(() => InspectorUtils.removePseudoClassLock(value, ":hover"),
                          "removePseudoClassLock should throw for " + value);
-    SimpleTest.doesThrow(() => DOMUtils.clearPseudoClassLocks(value),
+    SimpleTest.doesThrow(() => InspectorUtils.clearPseudoClassLocks(value),
                          "clearPseudoClassLocks should throw for " + value);
   }
 }

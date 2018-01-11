@@ -65,6 +65,12 @@ namespace InspectorUtils {
   unsigned long long getContentState(Element element);
   [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(Range range);
   sequence<DOMString> getCSSPseudoElementNames();
+  void addPseudoClassLock(Element element,
+                          DOMString pseudoClass,
+                          optional boolean enabled = true);
+  void removePseudoClassLock(Element element, DOMString pseudoClass);
+  boolean hasPseudoClassLock(Element element, DOMString pseudoClass);
+  void clearPseudoClassLocks(Element element);
 };
 
 dictionary PropertyNamesOptions {

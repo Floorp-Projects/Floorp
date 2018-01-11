@@ -4,10 +4,11 @@
 
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
+const { Ci, Cu, Cr } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
   getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
+const InspectorUtils = require("InspectorUtils");
 
 const lazyContainer = {};
 
@@ -19,16 +20,14 @@ exports.getComputedStyle = (node) =>
 exports.getBindingElementAndPseudo = (node) =>
   lazyContainer.CssLogic.getBindingElementAndPseudo(node);
 
-loader.lazyGetter(lazyContainer, "DOMUtils", () =>
-  Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
 exports.hasPseudoClassLock = (...args) =>
-  lazyContainer.DOMUtils.hasPseudoClassLock(...args);
+  InspectorUtils.hasPseudoClassLock(...args);
 
 exports.addPseudoClassLock = (...args) =>
-  lazyContainer.DOMUtils.addPseudoClassLock(...args);
+  InspectorUtils.addPseudoClassLock(...args);
 
 exports.removePseudoClassLock = (...args) =>
-  lazyContainer.DOMUtils.removePseudoClassLock(...args);
+  InspectorUtils.removePseudoClassLock(...args);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";

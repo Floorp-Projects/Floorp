@@ -12,8 +12,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
-                                   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
                                   "resource://gre/modules/DeferredTask.jsm");
 
@@ -141,14 +139,14 @@ this.SelectContentHelper.prototype = {
     // Do all of the things that change style at once, before we read
     // any styles.
     this._pseudoStylesSetup = true;
-    DOMUtils.addPseudoClassLock(this.element, ":focus");
+    InspectorUtils.addPseudoClassLock(this.element, ":focus");
     let lockedDescendants = this._lockedDescendants = this.element.querySelectorAll(":checked");
     for (let child of lockedDescendants) {
       // Selected options have the :checked pseudo-class, which
       // we want to disable before calculating the computed
       // styles since the user agent styles alter the styling
       // based on :checked.
-      DOMUtils.addPseudoClassLock(child, ":checked", false);
+      InspectorUtils.addPseudoClassLock(child, ":checked", false);
     }
   },
 
@@ -158,10 +156,10 @@ this.SelectContentHelper.prototype = {
     }
     // Undo all of the things that change style at once, after we're
     // done reading styles.
-    DOMUtils.clearPseudoClassLocks(this.element);
+    InspectorUtils.clearPseudoClassLocks(this.element);
     let lockedDescendants = this._lockedDescendants;
     for (let child of lockedDescendants) {
-      DOMUtils.clearPseudoClassLocks(child);
+      InspectorUtils.clearPseudoClassLocks(child);
     }
     this._lockedDescendants = null;
     this._pseudoStylesSetup = false;

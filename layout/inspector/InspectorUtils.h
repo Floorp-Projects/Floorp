@@ -231,6 +231,22 @@ public:
   static void GetCSSPseudoElementNames(GlobalObject& aGlobal,
                                        nsTArray<nsString>& aResult);
 
+  // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
+  // selector string, e.g. ":hover". ":any-link" and non-event-state
+  // pseudo-classes are ignored. aEnabled sets whether the psuedo-class
+  // should be locked to on or off.
+  static void AddPseudoClassLock(GlobalObject& aGlobal,
+                                 Element& aElement,
+                                 const nsAString& aPseudoClass,
+                                 bool aEnabled);
+  static void RemovePseudoClassLock(GlobalObject& aGlobal,
+                                    Element& aElement,
+                                    const nsAString& aPseudoClass);
+  static bool HasPseudoClassLock(GlobalObject& aGlobal,
+                                 Element& aElement,
+                                 const nsAString& aPseudoClass);
+  static void ClearPseudoClassLocks(GlobalObject& aGlobal, Element& aElement);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
