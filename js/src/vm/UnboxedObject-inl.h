@@ -123,10 +123,8 @@ SetUnboxedValue(JSContext* cx, JSObject* unboxedObject, jsid id,
 
       case JSVAL_TYPE_STRING:
         if (v.isString()) {
+            MOZ_ASSERT(!IsInsideNursery(v.toString()));
             JSString** np = reinterpret_cast<JSString**>(p);
-            if (IsInsideNursery(v.toString()) && !IsInsideNursery(unboxedObject))
-                unboxedObject->zone()->group()->storeBuffer().putWholeCell(unboxedObject);
-
             if (preBarrier)
                 JSString::writeBarrierPre(*np);
             *np = v.toString();

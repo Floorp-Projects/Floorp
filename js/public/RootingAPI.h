@@ -199,7 +199,6 @@ template <typename T> class PersistentRooted;
 JS_FRIEND_API(bool) isGCEnabled();
 
 JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next);
-JS_FRIEND_API(void) HeapStringPostBarrier(JSString** objp, JSString* prev, JSString* next);
 
 #ifdef JS_DEBUG
 /**
@@ -209,12 +208,12 @@ JS_FRIEND_API(void) HeapStringPostBarrier(JSString** objp, JSString* prev, JSStr
 extern JS_FRIEND_API(void)
 AssertGCThingMustBeTenured(JSObject* obj);
 extern JS_FRIEND_API(void)
-AssertGCThingIsNotNurseryAllocable(js::gc::Cell* cell);
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell);
 #else
 inline void
 AssertGCThingMustBeTenured(JSObject* obj) {}
 inline void
-AssertGCThingIsNotNurseryAllocable(js::gc::Cell* cell) {}
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell) {}
 #endif
 
 /**
@@ -625,7 +624,7 @@ struct BarrierMethods<T*>
     }
     static void postBarrier(T** vp, T* prev, T* next) {
         if (next)
-            JS::AssertGCThingIsNotNurseryAllocable(reinterpret_cast<js::gc::Cell*>(next));
+            JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(next));
     }
     static void exposeToJS(T* t) {
         if (t)
@@ -670,21 +669,6 @@ struct BarrierMethods<JSFunction*>
     static void exposeToJS(JSFunction* fun) {
         if (fun)
             JS::ExposeObjectToActiveJS(reinterpret_cast<JSObject*>(fun));
-    }
-};
-
-template <>
-struct BarrierMethods<JSString*>
-{
-    static JSString* initial() { return nullptr; }
-    static gc::Cell* asGCThingOrNull(JSString* v) {
-        if (!v)
-            return nullptr;
-        MOZ_ASSERT(uintptr_t(v) > 32);
-        return reinterpret_cast<gc::Cell*>(v);
-    }
-    static void postBarrier(JSString** vp, JSString* prev, JSString* next) {
-        JS::HeapStringPostBarrier(vp, prev, next);
     }
 };
 

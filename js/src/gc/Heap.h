@@ -888,8 +888,6 @@ InFreeList(Arena* arena, void* thing)
 
 static const int32_t ChunkLocationOffsetFromLastByte =
     int32_t(gc::ChunkLocationOffset) - int32_t(gc::ChunkMask);
-static const int32_t ChunkStoreBufferOffsetFromLastByte =
-    int32_t(gc::ChunkStoreBufferOffset) - int32_t(gc::ChunkMask);
 
 } /* namespace gc */
 

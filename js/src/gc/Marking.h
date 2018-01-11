@@ -164,11 +164,11 @@ namespace gc {
 //                  to allow slots to be accessed.
 
 template <typename T>
-inline bool IsForwarded(const T* t);
+inline bool IsForwarded(T* t);
 inline bool IsForwarded(const JS::Value& value);
 
 template <typename T>
-inline T* Forwarded(const T* t);
+inline T* Forwarded(T* t);
 
 inline Value Forwarded(const JS::Value& value);
 

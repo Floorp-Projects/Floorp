@@ -10,8 +10,6 @@
 #include "gc/Heap.h"
 #include "js/RootingAPI.h"
 
-class JSFatInlineString;
-
 namespace js {
 
 struct Class;
@@ -20,48 +18,18 @@ struct Class;
 // fully initialize the thing before calling any function that can potentially
 // trigger GC. This will ensure that GC tracing never sees junk values stored
 // in the partially initialized thing.
-
+//
+// Note that JSObject allocation must use the longer signature below that
+// includes slot, heap, and finalizer information in support of various
+// object-specific optimizations.
 template <typename T, AllowGC allowGC = CanGC>
 T*
 Allocate(JSContext* cx);
 
-// Use for JSObject. A longer signature that includes additional information in
-// support of various optimizations.
 template <typename, AllowGC allowGC = CanGC>
 JSObject*
 Allocate(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots, gc::InitialHeap heap,
          const Class* clasp);
-
-// Internal function used for nursery-allocatable strings.
-template <typename StringAllocT, AllowGC allowGC = CanGC>
-StringAllocT*
-AllocateString(JSContext* cx, gc::InitialHeap heap);
-
-// Use for nursery-allocatable strings. Returns a value cast to the correct
-// type.
-template <typename StringT, AllowGC allowGC = CanGC>
-StringT*
-Allocate(JSContext* cx, gc::InitialHeap heap)
-{
-    return static_cast<StringT*>(js::AllocateString<JSString, allowGC>(cx, heap));
-}
-
-// Specialization for JSFatInlineString that must use a different allocation
-// type. Note that we have to explicitly specialize for both values of AllowGC
-// because partial function specialization is not allowed.
-template <>
-inline JSFatInlineString*
-Allocate<JSFatInlineString, CanGC>(JSContext* cx, gc::InitialHeap heap)
-{
-    return static_cast<JSFatInlineString*>(js::AllocateString<JSFatInlineString, CanGC>(cx, heap));
-}
-
-template <>
-inline JSFatInlineString*
-Allocate<JSFatInlineString, NoGC>(JSContext* cx, gc::InitialHeap heap)
-{
-    return static_cast<JSFatInlineString*>(js::AllocateString<JSFatInlineString, NoGC>(cx, heap));
-}
 
 } // namespace js
 

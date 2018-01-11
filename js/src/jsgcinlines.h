@@ -167,7 +167,7 @@ class ArenaCellIterImpl
     template<typename T> T* get() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(JS::MapTypeToTraceKind<T>::kind == traceKind);
-        return reinterpret_cast<T*>(getCell());
+        return static_cast<T*>(getCell());
     }
 
     void next() {

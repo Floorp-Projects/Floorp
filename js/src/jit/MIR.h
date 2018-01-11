@@ -9905,7 +9905,7 @@ class MFallibleStoreElement
 };
 
 
-// Store an unboxed object or null pointer to an elements vector.
+// Store an unboxed object or null pointer to a v\ector.
 class MStoreUnboxedObjectOrNull
   : public MQuaternaryInstruction,
     public StoreUnboxedObjectOrNullPolicy::Data
@@ -9948,30 +9948,28 @@ class MStoreUnboxedObjectOrNull
     ALLOW_CLONE(MStoreUnboxedObjectOrNull)
 };
 
-// Store an unboxed string to an elements vector.
+// Store an unboxed object or null pointer to a vector.
 class MStoreUnboxedString
-  : public MQuaternaryInstruction,
-    public StoreUnboxedStringPolicy::Data
+  : public MTernaryInstruction,
+    public MixPolicy<SingleObjectPolicy, ConvertToStringPolicy<2> >::Data
 {
     int32_t offsetAdjustment_;
     bool preBarrier_;
 
-    MStoreUnboxedString(MDefinition* elements, MDefinition* index,
-                        MDefinition* value, MDefinition* typedObj,
+    MStoreUnboxedString(MDefinition* elements, MDefinition* index, MDefinition* value,
                         int32_t offsetAdjustment = 0, bool preBarrier = true)
-      : MQuaternaryInstruction(classOpcode, elements, index, value, typedObj),
+      : MTernaryInstruction(classOpcode, elements, index, value),
         offsetAdjustment_(offsetAdjustment),
         preBarrier_(preBarrier)
     {
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType::Int32);
-        MOZ_ASSERT(typedObj->type() == MIRType::Object);
     }
 
   public:
     INSTRUCTION_HEADER(StoreUnboxedString)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, typedObj));
+    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
@@ -9981,12 +9979,6 @@ class MStoreUnboxedString
     }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::UnboxedElement);
-    }
-
-    // For StoreUnboxedStringPolicy, to replace the original output with the
-    // output of a post barrier (if one is needed.)
-    void setValue(MDefinition* def) {
-        replaceOperand(2, def);
     }
 
     ALLOW_CLONE(MStoreUnboxedString)

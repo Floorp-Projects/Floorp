@@ -1097,33 +1097,6 @@ StoreUnboxedObjectOrNullPolicy::adjustInputs(TempAllocator& alloc, MInstruction*
 }
 
 bool
-StoreUnboxedStringPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
-{
-    if (!ObjectPolicy<0>::staticAdjustInputs(alloc, ins))
-        return false;
-
-    // Change the value input to a ToString instruction if it might be
-    // a non-null primitive.
-    if (!ConvertToStringPolicy<2>::staticAdjustInputs(alloc, ins))
-        return false;
-
-    if (!ObjectPolicy<3>::staticAdjustInputs(alloc, ins))
-        return false;
-
-    // Insert a post barrier for the instruction's object and whatever its new
-    // value is.
-    MStoreUnboxedString* store = ins->toStoreUnboxedString();
-
-    MOZ_ASSERT(store->typedObj()->type() == MIRType::Object);
-
-    MDefinition* value = store->value();
-    MOZ_ASSERT(value->type() == MIRType::String);
-    MInstruction* barrier = MPostWriteBarrier::New(alloc, store->typedObj(), value);
-    store->block()->insertBefore(store, barrier);
-    return true;
-}
-
-bool
 ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
     MDefinition* in = ins->toClampToUint8()->input();
@@ -1238,7 +1211,6 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(StoreTypedArrayHolePolicy)                \
     _(StoreUnboxedScalarPolicy)                 \
     _(StoreUnboxedObjectOrNullPolicy)           \
-    _(StoreUnboxedStringPolicy)                 \
     _(TestPolicy)                               \
     _(AllDoublePolicy)                          \
     _(ToDoublePolicy)                           \

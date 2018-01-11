@@ -221,13 +221,6 @@ JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
 }
 
 JS_PUBLIC_API(void)
-JS::HeapStringPostBarrier(JSString** strp, JSString* prev, JSString* next)
-{
-    MOZ_ASSERT(strp);
-    js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
-}
-
-JS_PUBLIC_API(void)
 JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
 {
     MOZ_ASSERT(valuep);

@@ -17,7 +17,7 @@ class JSStringTypeCache(object):
     def __init__(self, cache):
         dummy = gdb.Value(0).cast(cache.JSString_ptr_t)
         self.ROPE_FLAGS = dummy['ROPE_FLAGS']
-        self.NON_ATOM_BIT = dummy['NON_ATOM_BIT']
+        self.ATOM_BIT = dummy['ATOM_BIT']
         self.INLINE_CHARS_BIT = dummy['INLINE_CHARS_BIT']
         self.TYPE_FLAGS_MASK = dummy['TYPE_FLAGS_MASK']
         self.LATIN1_CHARS_BIT = dummy['LATIN1_CHARS_BIT']

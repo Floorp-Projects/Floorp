@@ -34,9 +34,9 @@ struct MightBeForwarded
 
 template <typename T>
 inline bool
-IsForwarded(const T* t)
+IsForwarded(T* t)
 {
-    const RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
     if (!MightBeForwarded<T>::value) {
         MOZ_ASSERT(!overlay->isForwarded());
         return false;
@@ -46,7 +46,7 @@ IsForwarded(const T* t)
 }
 
 struct IsForwardedFunctor : public BoolDefaultAdaptor<Value, false> {
-    template <typename T> bool operator()(const T* t) { return IsForwarded(t); }
+    template <typename T> bool operator()(T* t) { return IsForwarded(t); }
 };
 
 inline bool
@@ -57,15 +57,15 @@ IsForwarded(const JS::Value& value)
 
 template <typename T>
 inline T*
-Forwarded(const T* t)
+Forwarded(T* t)
 {
-    const RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(t);
     MOZ_ASSERT(overlay->isForwarded());
     return reinterpret_cast<T*>(overlay->forwardingAddress());
 }
 
 struct ForwardedFunctor : public IdentityDefaultAdaptor<Value> {
-    template <typename T> inline Value operator()(const T* t) {
+    template <typename T> inline Value operator()(T* t) {
         return js::gc::RewrapTaggedPointer<Value, T>::wrap(Forwarded(t));
     }
 };
@@ -84,22 +84,6 @@ MaybeForwarded(T t)
         t = Forwarded(t);
     MakeAccessibleAfterMovingGC(t);
     return t;
-}
-
-inline void
-RelocationOverlay::forwardTo(Cell* cell)
-{
-    MOZ_ASSERT(!isForwarded());
-    // The location of magic_ is important because it must never be valid to see
-    // the value Relocated there in a GC thing that has not been moved.
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSObject, group_) + sizeof(uint32_t),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(js::Shape, base_) + sizeof(uint32_t),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    static_assert(offsetof(RelocationOverlay, magic_) == offsetof(JSString, d.u1.length),
-                  "RelocationOverlay::magic_ is in the wrong location");
-    magic_ = Relocated;
-    newLocation_ = cell;
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

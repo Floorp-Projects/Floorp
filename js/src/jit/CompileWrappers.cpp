@@ -183,35 +183,15 @@ CompileZone::addressOfNurseryPosition()
 }
 
 const void*
-CompileZone::addressOfStringNurseryPosition()
-{
-    // Objects and strings share a nursery, for now at least.
-    return zone()->runtimeFromAnyThread()->gc.addressOfNurseryPosition();
-}
-
-const void*
 CompileZone::addressOfNurseryCurrentEnd()
 {
     return zone()->runtimeFromAnyThread()->gc.addressOfNurseryCurrentEnd();
 }
 
-const void*
-CompileZone::addressOfStringNurseryCurrentEnd()
-{
-    return zone()->runtimeFromAnyThread()->gc.addressOfStringNurseryCurrentEnd();
-}
-
-bool
-CompileZone::canNurseryAllocateStrings()
-{
-    return nurseryExists() &&
-        zone()->group()->nursery().canAllocateStrings() &&
-        zone()->allocNurseryStrings;
-}
-
 bool
 CompileZone::nurseryExists()
 {
+    MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
     return zone()->group()->nursery().exists();
 }
 
