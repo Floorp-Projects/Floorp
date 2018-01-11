@@ -57,37 +57,22 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
   MOZ_ASSERT(observer == this);
 
-  FrameSet* frameSet = nullptr;
-  if (mRequestToFrameMap.Get(aRequest, &frameSet)) {
-    NS_ASSERTION(frameSet, "This should never be null!");
-  }
+  FrameSet* frameSet =
+    mRequestToFrameMap.LookupForAdd(aRequest).OrInsert([=]() {
+      nsPresContext* presContext = GetPresContext();
+      if (presContext) {
+        nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
+                                                      aRequest,
+                                                      nullptr);
+      }
+      return new FrameSet();
+    });
 
-  if (!frameSet) {
-    nsAutoPtr<FrameSet> newFrameSet(new FrameSet());
-
-    mRequestToFrameMap.Put(aRequest, newFrameSet);
-    frameSet = newFrameSet.forget();
-
-    nsPresContext* presContext = GetPresContext();
-    if (presContext) {
-      nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
-                                                    aRequest,
-                                                    nullptr);
-    }
-  }
-
-  RequestSet* requestSet = nullptr;
-  if (mFrameToRequestMap.Get(aFrame, &requestSet)) {
-    NS_ASSERTION(requestSet, "This should never be null");
-  }
-
-  if (!requestSet) {
-    nsAutoPtr<RequestSet> newRequestSet(new RequestSet());
-
-    mFrameToRequestMap.Put(aFrame, newRequestSet);
-    requestSet = newRequestSet.forget();
-    aFrame->SetHasImageRequest(true);
-  }
+  RequestSet* requestSet =
+    mFrameToRequestMap.LookupForAdd(aFrame).OrInsert([=]() {
+      aFrame->SetHasImageRequest(true);
+      return new RequestSet();
+    });
 
   // Add these to the sets, but only if they're not already there.
   uint32_t i = frameSet->IndexOfFirstElementGt(aFrame);
@@ -247,8 +232,8 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 
     if (aPresContext) {
       nsLayoutUtils::DeregisterImageRequest(aPresContext,
-					    request,
-					    nullptr);
+                                            request,
+                                            nullptr);
     }
   }
 
