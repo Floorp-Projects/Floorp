@@ -67,3 +67,14 @@ jobs:
         sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb7moz1/" \
                -e "s/__DATE__/$(date --rfc-2822)/" \
                -e "s/__CODENAME__/wheezy/" debian/changelog
+
+  deb7-valgrind:
+    description: "Valgrind for Debian Wheezy"
+    treeherder:
+      symbol: Deb7(valgrind)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20170725T040438Z/pool/main/v/valgrind/valgrind_3.13.0-1.dsc
+        sha256: ab84e017d1660efd30e9e0593a4c8b976aeda013cefb8c416dd284cc7222c11c
+      patch: valgrind-wheezy.diff
