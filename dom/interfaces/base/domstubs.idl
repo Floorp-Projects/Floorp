@@ -80,7 +80,3 @@ interface nsIDOMRange;
 
 // Crypto
 interface nsIDOMCrypto;
-
-// Used font face (for inspector)
-interface nsIDOMFontFace;
-interface nsIDOMFontFaceList;

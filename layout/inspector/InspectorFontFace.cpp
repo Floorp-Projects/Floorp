@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsFontFace.h"
-#include "nsIDOMCSSFontFaceRule.h"
+#include "InspectorFontFace.h"
+
 #include "nsCSSRules.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
@@ -15,56 +15,29 @@
 #include "zlib.h"
 #include "mozilla/dom/FontFaceSet.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-nsFontFace::nsFontFace(gfxFontEntry*      aFontEntry,
-                       gfxFontGroup*      aFontGroup,
-                       uint8_t            aMatchType)
-  : mFontEntry(aFontEntry),
-    mFontGroup(aFontGroup),
-    mMatchType(aMatchType)
+bool
+InspectorFontFace::FromFontGroup()
 {
+  return mMatchType & gfxTextRange::kFontGroup;
 }
 
-nsFontFace::~nsFontFace()
+bool
+InspectorFontFace::FromLanguagePrefs()
 {
+  return mMatchType & gfxTextRange::kPrefsFallback;
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-NS_IMPL_ISUPPORTS(nsFontFace, nsIDOMFontFace)
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMFontFace
-
-NS_IMETHODIMP
-nsFontFace::GetFromFontGroup(bool * aFromFontGroup)
+bool
+InspectorFontFace::FromSystemFallback()
 {
-  *aFromFontGroup =
-    (mMatchType & gfxTextRange::kFontGroup) != 0;
-  return NS_OK;
+  return mMatchType & gfxTextRange::kSystemFallback;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetFromLanguagePrefs(bool * aFromLanguagePrefs)
-{
-  *aFromLanguagePrefs =
-    (mMatchType & gfxTextRange::kPrefsFallback) != 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontFace::GetFromSystemFallback(bool * aFromSystemFallback)
-{
-  *aFromSystemFallback =
-    (mMatchType & gfxTextRange::kSystemFallback) != 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontFace::GetName(nsAString & aName)
+void
+InspectorFontFace::GetName(nsAString& aName)
 {
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
@@ -72,18 +45,16 @@ nsFontFace::GetName(nsAString & aName)
   } else {
     aName = mFontEntry->RealFaceName();
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetCSSFamilyName(nsAString & aCSSFamilyName)
+void
+InspectorFontFace::GetCSSFamilyName(nsAString& aCSSFamilyName)
 {
   aCSSFamilyName = mFontEntry->FamilyName();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
+nsCSSFontFaceRule*
+InspectorFontFace::GetRule()
 {
   // check whether this font entry is associated with an @font-face rule
   // in the relevant font group's user font set
@@ -98,41 +69,36 @@ nsFontFace::GetRule(nsIDOMCSSFontFaceRule **aRule)
       }
     }
   }
-
-  NS_IF_ADDREF(*aRule = rule);
-  return NS_OK;
+  return rule;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetSrcIndex(int32_t * aSrcIndex)
+int32_t
+InspectorFontFace::SrcIndex()
 {
   if (mFontEntry->IsUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    *aSrcIndex = mFontEntry->mUserFontData->mSrcIndex;
-  } else {
-    *aSrcIndex = -1;
+    return mFontEntry->mUserFontData->mSrcIndex;
   }
-  return NS_OK;
+
+  return -1;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetURI(nsAString & aURI)
+void
+InspectorFontFace::GetURI(nsAString& aURI)
 {
   aURI.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
     if (mFontEntry->mUserFontData->mURI) {
       nsAutoCString spec;
-      nsresult rv = mFontEntry->mUserFontData->mURI->GetSpec(spec);
-      NS_ENSURE_SUCCESS(rv, rv);
+      mFontEntry->mUserFontData->mURI->GetSpec(spec);
       AppendUTF8toUTF16(spec, aURI);
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetLocalName(nsAString & aLocalName)
+void
+InspectorFontFace::GetLocalName(nsAString& aLocalName)
 {
   if (mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
@@ -140,11 +106,10 @@ nsFontFace::GetLocalName(nsAString & aLocalName)
   } else {
     aLocalName.Truncate();
   }
-  return NS_OK;
 }
 
 static void
-AppendToFormat(nsAString & aResult, const char* aFormat)
+AppendToFormat(nsAString& aResult, const char* aFormat)
 {
   if (!aResult.IsEmpty()) {
     aResult.Append(',');
@@ -152,8 +117,8 @@ AppendToFormat(nsAString & aResult, const char* aFormat)
   aResult.AppendASCII(aFormat);
 }
 
-NS_IMETHODIMP
-nsFontFace::GetFormat(nsAString & aFormat)
+void
+InspectorFontFace::GetFormat(nsAString& aFormat)
 {
   aFormat.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
@@ -181,11 +146,10 @@ nsFontFace::GetFormat(nsAString & aFormat)
       AppendToFormat(aFormat, "woff2");
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontFace::GetMetadata(nsAString & aMetadata)
+void
+InspectorFontFace::GetMetadata(nsAString& aMetadata)
 {
   aMetadata.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
@@ -223,5 +187,7 @@ nsFontFace::GetMetadata(nsAString & aMetadata)
       }
     }
   }
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

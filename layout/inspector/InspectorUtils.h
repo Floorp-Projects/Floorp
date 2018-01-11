@@ -22,6 +22,7 @@ class Rule;
 } // namespace css
 namespace dom {
 class Element;
+class InspectorFontFace;
 } // namespace dom
 } // namespace mozilla
 
@@ -216,6 +217,11 @@ public:
                                  bool aClearActiveDocument,
                                  ErrorResult& aRv);
   static uint64_t GetContentState(GlobalObject& aGlobal, Element& aElement);
+
+  static void GetUsedFontFaces(GlobalObject& aGlobal,
+                               nsRange& aRange,
+                               nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
+                               ErrorResult& aRv);
 
 private:
   static already_AddRefed<nsStyleContext>

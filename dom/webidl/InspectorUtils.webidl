@@ -63,6 +63,7 @@ namespace InspectorUtils {
       unsigned long long state,
       optional boolean clearActiveDocument = false);
   unsigned long long getContentState(Element element);
+  [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(Range range);
 };
 
 dictionary PropertyNamesOptions {
@@ -80,4 +81,27 @@ dictionary InspectorRGBATuple {
   double g = 0;
   double b = 0;
   double a = 1;
+};
+
+[ChromeOnly]
+interface InspectorFontFace {
+  // An indication of how we found this font during font-matching.
+  // Note that the same physical font may have been found in multiple ways within a range.
+  readonly attribute boolean fromFontGroup;
+  readonly attribute boolean fromLanguagePrefs;
+  readonly attribute boolean fromSystemFallback;
+
+  // available for all fonts
+  readonly attribute DOMString name; // full font name as obtained from the font resource
+  readonly attribute DOMString CSSFamilyName; // a family name that could be used in CSS font-family
+                                              // (not necessarily the actual name that was used,
+                                              // due to aliases, generics, localized names, etc)
+
+  // meaningful only when the font is a user font defined using @font-face
+  readonly attribute CSSFontFaceRule? rule; // null if no associated @font-face rule
+  readonly attribute long srcIndex; // index in the rule's src list, -1 if no @font-face rule
+  readonly attribute DOMString URI; // empty string if not a downloaded font, i.e. local
+  readonly attribute DOMString localName; // empty string  if not a src:local(...) rule
+  readonly attribute DOMString format; // as per http://www.w3.org/TR/css3-webfonts/#referencing
+  readonly attribute DOMString metadata; // XML metadata from WOFF file (if any)
 };
