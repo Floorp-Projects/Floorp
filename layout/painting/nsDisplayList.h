@@ -3025,7 +3025,8 @@ public:
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_EXISTING_TRANSACTION = 0x04,
     PAINT_NO_COMPOSITE = 0x08,
-    PAINT_COMPRESSED = 0x10
+    PAINT_COMPRESSED = 0x10,
+    PAINT_IDENTICAL_DISPLAY_LIST = 0x20
   };
   already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aCtx,
