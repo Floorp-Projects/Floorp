@@ -1191,17 +1191,11 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   }
 
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
-    nsCOMPtr<nsIDOMNodeList> kids;
-    if (!mDOMUtils) {
-      mDOMUtils = services::GetInDOMUtils();
-      if (!mDOMUtils) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+    MOZ_ASSERT(node);
 
-    mDOMUtils->GetChildrenForNode(aNode, mShowAnonymous,
-                                  getter_AddRefs(kids));
-
+    nsCOMPtr<nsINodeList> kids =
+      InspectorUtils::GetChildrenForNode(*node, mShowAnonymous);
     if (kids) {
       AppendKidsToArray(kids, aResult);
     }
@@ -1228,17 +1222,12 @@ inDOMView::GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, ns
 }
 
 nsresult
-inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
+inDOMView::AppendKidsToArray(nsINodeList* aKids,
                              nsCOMArray<nsIDOMNode>& aArray)
 {
-  uint32_t l = 0;
-  aKids->GetLength(&l);
-  nsCOMPtr<nsIDOMNode> kid;
-  uint16_t nodeType = 0;
-
-  for (uint32_t i = 0; i < l; ++i) {
-    aKids->Item(i, getter_AddRefs(kid));
-    kid->GetNodeType(&nodeType);
+  for (uint32_t i = 0, len = aKids->Length(); i < len; ++i) {
+    nsIContent* kid = aKids->Item(i);
+    uint16_t nodeType = kid->NodeType();
 
     NS_ASSERTION(nodeType && nodeType <= nsIDOMNode::NOTATION_NODE,
                  "Unknown node type. "
@@ -1262,7 +1251,8 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
         }
       }
 
-      aArray.AppendElement(kid.forget());
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(kid);
+      aArray.AppendElement(node.forget());
     }
   }
 

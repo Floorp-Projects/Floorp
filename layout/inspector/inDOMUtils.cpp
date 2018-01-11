@@ -160,36 +160,24 @@ InspectorUtils::GetParentForNode(nsINode& aNode,
   return parent;
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
-                               bool aShowingAnonymousContent,
-                               nsIDOMNodeList** aChildren)
+/* static */ already_AddRefed<nsINodeList>
+InspectorUtils::GetChildrenForNode(nsINode& aNode,
+                                   bool aShowingAnonymousContent)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-  NS_PRECONDITION(aChildren, "Must have an out parameter");
-
-  nsCOMPtr<nsIDOMNodeList> kids;
+  nsCOMPtr<nsINodeList> kids;
 
   if (aShowingAnonymousContent) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (content) {
-      kids = content->GetChildren(nsIContent::eAllChildren);
+    if (aNode.IsContent()) {
+      kids = aNode.AsContent()->GetChildren(nsIContent::eAllChildren);
     }
   }
 
   if (!kids) {
-    aNode->GetChildNodes(getter_AddRefs(kids));
+    kids = aNode.ChildNodes();
   }
 
-  kids.forget(aChildren);
-  return NS_OK;
+  return kids.forget();
 }
-
-namespace mozilla {
-namespace dom {
 
 /* static */ void
 InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
