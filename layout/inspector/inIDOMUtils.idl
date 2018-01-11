@@ -20,11 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Utilities for working with CSS properties
-  //
-  // Returns true if the string names a property that is inherited by default.
-  bool isInheritedProperty(in AString aPropertyName);
-
   // Get a list of all our supported property names.  Optionally
   // shorthands can be excluded or property aliases included.
   const unsigned long EXCLUDE_SHORTHANDS = (1<<0);

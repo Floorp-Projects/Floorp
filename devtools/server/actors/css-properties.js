@@ -13,6 +13,7 @@ const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { cssColors } = require("devtools/shared/css/color-db");
+const InspectorUtils = require("InspectorUtils");
 
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
@@ -67,7 +68,7 @@ function generateCssProperties() {
     let subproperties = DOMUtils.getSubpropertiesForCSSProperty(name);
 
     properties[name] = {
-      isInherited: DOMUtils.isInheritedProperty(name),
+      isInherited: InspectorUtils.isInheritedProperty(name),
       values,
       supports,
       subproperties,

@@ -64,7 +64,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
                    "creating a PageStyleActor.");
     }
     this.walker = inspector.walker;
-    this.cssLogic = new CssLogic(DOMUtils.isInheritedProperty);
+    this.cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
 
     // Stores the association of DOM objects -> actors
     this.refMap = new Map();
@@ -467,7 +467,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
   _hasInheritedProps: function (style) {
     return Array.prototype.some.call(style, prop => {
-      return DOMUtils.isInheritedProperty(prop);
+      return InspectorUtils.isInheritedProperty(prop);
     });
   },
 
@@ -591,7 +591,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
         // Don't include inherited rules if none of its properties
         // are inheritable.
         let hasInherited = [...domRule.style].some(
-          prop => DOMUtils.isInheritedProperty(prop)
+          prop => InspectorUtils.isInheritedProperty(prop)
         );
         if (!hasInherited) {
           continue;
