@@ -20,23 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Check whether values of the given type are valid values for the property.
-  // For shorthands, checks whether there's a corresponding longhand property
-  // that accepts values of this type.  Throws on unsupported properties or
-  // unknown types.
-  const unsigned long TYPE_LENGTH = 0;
-  const unsigned long TYPE_PERCENTAGE = 1;
-  const unsigned long TYPE_COLOR = 2;
-  const unsigned long TYPE_URL = 3;
-  const unsigned long TYPE_ANGLE = 4;
-  const unsigned long TYPE_FREQUENCY = 5;
-  const unsigned long TYPE_TIME = 6;
-  const unsigned long TYPE_GRADIENT = 7;
-  const unsigned long TYPE_TIMING_FUNCTION = 8;
-  const unsigned long TYPE_IMAGE_RECT = 9;
-  const unsigned long TYPE_NUMBER = 10;
-  bool cssPropertySupportsType(in AString aProperty, in unsigned long type);
-
   // DOM Node utilities
   boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);
   // Returns the "parent" of a node.  The parent of a document node is the

@@ -37,6 +37,20 @@ namespace InspectorUtils {
   boolean isValidCSSColor(DOMString colorString);
   [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(DOMString property);
   [Throws] boolean cssPropertyIsShorthand(DOMString property);
+
+  // TODO: Change this to use an enum.
+  const unsigned long TYPE_LENGTH = 0;
+  const unsigned long TYPE_PERCENTAGE = 1;
+  const unsigned long TYPE_COLOR = 2;
+  const unsigned long TYPE_URL = 3;
+  const unsigned long TYPE_ANGLE = 4;
+  const unsigned long TYPE_FREQUENCY = 5;
+  const unsigned long TYPE_TIME = 6;
+  const unsigned long TYPE_GRADIENT = 7;
+  const unsigned long TYPE_TIMING_FUNCTION = 8;
+  const unsigned long TYPE_IMAGE_RECT = 9;
+  const unsigned long TYPE_NUMBER = 10;
+  [Throws] boolean cssPropertySupportsType(DOMString property, unsigned long type);
 };
 
 dictionary PropertyNamesOptions {

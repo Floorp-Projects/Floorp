@@ -606,9 +606,6 @@ InspectorUtils::CssPropertyIsShorthand(GlobalObject& aGlobalObject,
   return nsCSSProps::IsShorthand(propertyID);
 }
 
-} // namespace dom
-} // namespace mozilla
-
 // A helper function that determines whether the given property
 // supports the given type.
 static bool
@@ -740,68 +737,67 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
   return (nsCSSProps::ParserVariant(aPropertyID) & aVariant) != 0;
 }
 
-NS_IMETHODIMP
-inDOMUtils::CssPropertySupportsType(const nsAString& aProperty, uint32_t aType,
-                                    bool *_retval)
+bool
+InspectorUtils::CssPropertySupportsType(GlobalObject& aGlobalObject,
+                                        const nsAString& aProperty,
+                                        uint32_t aType,
+                                        ErrorResult& aRv)
 {
   nsCSSPropertyID propertyID =
     nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
   if (propertyID == eCSSProperty_UNKNOWN) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
   if (propertyID >= eCSSProperty_COUNT) {
-    *_retval = false;
-    return NS_OK;
+    return false;
   }
 
   uint32_t variant;
   switch (aType) {
-  case TYPE_LENGTH:
+  case InspectorUtilsBinding::TYPE_LENGTH:
     variant = VARIANT_LENGTH;
     break;
-  case TYPE_PERCENTAGE:
+  case InspectorUtilsBinding::TYPE_PERCENTAGE:
     variant = VARIANT_PERCENT;
     break;
-  case TYPE_COLOR:
+  case InspectorUtilsBinding::TYPE_COLOR:
     variant = VARIANT_COLOR;
     break;
-  case TYPE_URL:
+  case InspectorUtilsBinding::TYPE_URL:
     variant = VARIANT_URL;
     break;
-  case TYPE_ANGLE:
+  case InspectorUtilsBinding::TYPE_ANGLE:
     variant = VARIANT_ANGLE;
     break;
-  case TYPE_FREQUENCY:
+  case InspectorUtilsBinding::TYPE_FREQUENCY:
     variant = VARIANT_FREQUENCY;
     break;
-  case TYPE_TIME:
+  case InspectorUtilsBinding::TYPE_TIME:
     variant = VARIANT_TIME;
     break;
-  case TYPE_GRADIENT:
+  case InspectorUtilsBinding::TYPE_GRADIENT:
     variant = VARIANT_GRADIENT;
     break;
-  case TYPE_TIMING_FUNCTION:
+  case InspectorUtilsBinding::TYPE_TIMING_FUNCTION:
     variant = VARIANT_TIMING_FUNCTION;
     break;
-  case TYPE_IMAGE_RECT:
+  case InspectorUtilsBinding::TYPE_IMAGE_RECT:
     variant = VARIANT_IMAGE_RECT;
     break;
-  case TYPE_NUMBER:
+  case InspectorUtilsBinding::TYPE_NUMBER:
     // Include integers under "number"?
     variant = VARIANT_NUMBER | VARIANT_INTEGER;
     break;
   default:
     // Unknown type
-    return NS_ERROR_NOT_AVAILABLE;
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return false;
   }
 
-  *_retval = PropertySupportsVariant(propertyID, variant);
-  return NS_OK;
+  return PropertySupportsVariant(propertyID, variant);
 }
-
-namespace mozilla {
-namespace dom {
 
 /* static */ void
 InspectorUtils::GetCSSValuesForProperty(GlobalObject& aGlobalObject,
