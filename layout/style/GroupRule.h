@@ -201,7 +201,6 @@ public:
   void DeleteRule(uint32_t aIndex, ErrorResult& aRv);
 
 protected:
-  // to help implement nsIDOMCSSRule
   void AppendRulesToCssText(nsAString& aCssText) const;
 
   // to implement methods on nsIDOMCSSGroupingRule

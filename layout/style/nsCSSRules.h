@@ -207,7 +207,7 @@ class nsCSSKeyframeStyleDeclaration final : public nsDOMCSSDeclaration
 public:
   explicit nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
+  mozilla::css::Rule* GetParentRule() override;
   void DropReference() { mRule = nullptr; }
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
@@ -326,7 +326,7 @@ class nsCSSPageStyleDeclaration final : public nsDOMCSSDeclaration
 public:
   explicit nsCSSPageStyleDeclaration(nsCSSPageRule *aRule);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
+  mozilla::css::Rule* GetParentRule() override;
   void DropReference() { mRule = nullptr; }
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;

@@ -16,7 +16,6 @@
 [uuid(a6cf90c2-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSStyleSheet : nsIDOMStyleSheet
 {
-  readonly attribute nsIDOMCSSRule     ownerRule;
   readonly attribute nsIDOMCSSRuleList cssRules;
 
   unsigned long      insertRule(in DOMString rule, 

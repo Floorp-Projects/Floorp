@@ -31,7 +31,7 @@ class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final;
+  css::Rule* GetParentRule() final;
   nsINode* GetParentObject() final;
   mozilla::dom::DocGroup* GetDocGroup() const final;
 
@@ -98,7 +98,6 @@ public:
 
   // Methods of mozilla::css::Rule
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
-  using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG

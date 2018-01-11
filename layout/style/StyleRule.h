@@ -363,7 +363,6 @@ public:
   void SetDeclaration(Declaration* aDecl);
 
   int32_t GetType() const override;
-  using Rule::GetType;
 
   CSSStyleSheet* GetStyleSheet() const
   {

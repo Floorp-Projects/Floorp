@@ -48,11 +48,10 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(ServoStyleRuleDeclaration, Rule())
 
 /* nsDOMCSSDeclaration implementation */
 
-NS_IMETHODIMP
-ServoStyleRuleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
+css::Rule*
+ServoStyleRuleDeclaration::GetParentRule()
 {
-  *aParent = do_AddRef(Rule()).take();
-  return NS_OK;
+  return Rule();
 }
 
 nsINode*
@@ -218,7 +217,7 @@ ServoStyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
 uint16_t
 ServoStyleRule::Type() const
 {
-  return nsIDOMCSSRule::STYLE_RULE;
+  return CSSRuleBinding::STYLE_RULE;
 }
 
 void
