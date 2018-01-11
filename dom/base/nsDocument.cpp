@@ -13188,7 +13188,20 @@ nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
 }
 
 void
-nsIDocument::MaybeNotifyUserActivation(nsIPrincipal* aPrincipal)
+nsIDocument::NotifyUserActivation()
+{
+  ActivateByUserGesture();
+  // Activate parent document which has same principle on the parent chain.
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  nsCOMPtr<nsIDocument> parent = GetSameTypeParentDocument();
+  while (parent) {
+    parent->MaybeActivateByUserGesture(principal);
+    parent = parent->GetSameTypeParentDocument();
+  }
+}
+
+void
+nsIDocument::MaybeActivateByUserGesture(nsIPrincipal* aPrincipal)
 {
   bool isEqual = false;
   nsresult rv = aPrincipal->Equals(NodePrincipal(), &isEqual);
@@ -13199,12 +13212,12 @@ nsIDocument::MaybeNotifyUserActivation(nsIPrincipal* aPrincipal)
   // If a child frame is actived, it would always activate the top frame and its
   // parent frames which has same priciple.
   if (isEqual || IsTopLevelContentDocument()) {
-    NotifyUserActivation();
+    ActivateByUserGesture();
   }
 }
 
 void
-nsIDocument::NotifyUserActivation()
+nsIDocument::ActivateByUserGesture()
 {
   if (mUserHasActivatedInteraction) {
     return;
