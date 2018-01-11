@@ -46,7 +46,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsROCSSPrimitiveValue)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsROCSSPrimitiveValue)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValue)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, CSSValue)
 NS_INTERFACE_MAP_END
 
@@ -75,10 +74,7 @@ nsROCSSPrimitiveValue::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenPro
   return dom::CSSPrimitiveValueBinding::Wrap(cx, this, aGivenProto);
 }
 
-// nsIDOMCSSValue
-
-
-NS_IMETHODIMP
+nsresult
 nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 {
   nsAutoString tmpStr;
@@ -281,31 +277,16 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aText, ErrorResult& aRv)
   aRv = GetCssText(aText);
 }
 
-NS_IMETHODIMP
-nsROCSSPrimitiveValue::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
 void
 nsROCSSPrimitiveValue::SetCssText(const nsAString& aText, ErrorResult& aRv)
 {
-  aRv = SetCssText(aText);
-}
-
-
-NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetCssValueType(uint16_t* aValueType)
-{
-  NS_ENSURE_ARG_POINTER(aValueType);
-  *aValueType = nsIDOMCSSValue::CSS_PRIMITIVE_VALUE;
-  return NS_OK;
+  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
 }
 
 uint16_t
 nsROCSSPrimitiveValue::CssValueType() const
 {
-  return nsIDOMCSSValue::CSS_PRIMITIVE_VALUE;
+  return CSSValueBinding::CSS_PRIMITIVE_VALUE;
 }
 
 void

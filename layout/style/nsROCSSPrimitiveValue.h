@@ -9,7 +9,6 @@
 #ifndef nsROCSSPrimitiveValue_h___
 #define nsROCSSPrimitiveValue_h___
 
-#include "nsIDOMCSSValue.h"
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/CSSValueBinding.h"
 
@@ -26,15 +25,11 @@ class nsDOMCSSRGBColor;
  * Read-only CSS primitive value - a DOM object representing values in DOM
  * computed style.
  */
-class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue,
-                                    public nsIDOMCSSValue
+class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsROCSSPrimitiveValue, mozilla::dom::CSSValue)
-
-  // nsIDOMCSSValue
-  NS_DECL_NSIDOMCSSVALUE
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsROCSSPrimitiveValue)
 
   // CSSValue
   virtual void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) override final;
@@ -56,6 +51,7 @@ public:
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
 
+  nsresult GetCssText(nsAString& aText);
   void SetNumber(float aValue);
   void SetNumber(int32_t aValue);
   void SetNumber(uint32_t aValue);
