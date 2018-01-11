@@ -20,6 +20,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
@@ -32,6 +33,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::CheckedInt;
+using mozilla::IsValidUtf8;
 using mozilla::Unused;
 
 // Decoder implementation.
@@ -1287,7 +1289,7 @@ DecodeName(Decoder& d)
     if (!d.readBytes(numBytes, &bytes))
         return nullptr;
 
-    if (!JS::StringIsUTF8(bytes, numBytes))
+    if (!IsValidUtf8(bytes, numBytes))
         return nullptr;
 
     UniqueChars name(js_pod_malloc<char>(numBytes + 1));
