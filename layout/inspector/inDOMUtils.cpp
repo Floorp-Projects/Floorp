@@ -1093,27 +1093,35 @@ InspectorUtils::ClearPseudoClassLocks(GlobalObject& aGlobalObject,
   aElement.ClearStyleStateLocks();
 }
 
+/* static */ void
+InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
+                                StyleSheet& aSheet,
+                                const nsAString& aInput,
+                                ErrorResult& aRv)
+{
+  RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(&aSheet);
+  if (geckoSheet) {
+    nsresult rv = geckoSheet->ReparseSheet(aInput);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+    }
+    return;
+  }
+
+  RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(&aSheet);
+  if (servoSheet) {
+    nsresult rv = servoSheet->ReparseSheet(aInput);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+    }
+    return;
+  }
+
+  aRv.Throw(NS_ERROR_INVALID_POINTER);
+}
+
 } // namespace dom
 } // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
-                            const nsAString& aInput)
-{
-  RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(aSheet);
-  if (geckoSheet) {
-    NS_ENSURE_ARG_POINTER(geckoSheet);
-    return geckoSheet->ReparseSheet(aInput);
-  }
-
-  RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(aSheet);
-  if (servoSheet) {
-    NS_ENSURE_ARG_POINTER(servoSheet);
-    return servoSheet->ReparseSheet(aInput);
-  }
-
-  return NS_ERROR_INVALID_POINTER;
-}
 
 NS_IMETHODIMP
 inDOMUtils::ScrollElementIntoView(nsIDOMElement *aElement)

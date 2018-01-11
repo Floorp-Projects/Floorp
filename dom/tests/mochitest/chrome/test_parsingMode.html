@@ -12,8 +12,6 @@
 
     const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
       .getService(Ci.nsIStyleSheetService);
-    const domutils = Cc["@mozilla.org/inspector/dom-utils;1"]
-      .getService(Ci.inIDOMUtils);
     const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -48,7 +46,7 @@
 
       // Check that re-parsing preserves the mode.
       let mode = sheet.parsingMode;
-      domutils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+      InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
       is(sheet.parsingMode, mode,
          "check that re-parsing preserved mode " + mode);
     }
