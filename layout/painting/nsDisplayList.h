@@ -3030,6 +3030,11 @@ public:
   already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
                                            gfxContext* aCtx,
                                            uint32_t aFlags);
+
+  mozilla::FrameLayerBuilder* BuildLayers(nsDisplayListBuilder* aBuilder,
+                                          LayerManager* aLayerManager,
+                                          uint32_t aFlags,
+                                          bool aIsWidgetTransaction);
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    * The result is not cached.
