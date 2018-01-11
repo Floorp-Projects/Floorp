@@ -10,8 +10,6 @@ interface nsIContentViewer;
 
 [scriptable, uuid(ea2ce7a0-5c3d-11d4-90c2-0050041caf44)]
 interface nsIContentViewerContainer : nsISupports {
-	void embed(in nsIContentViewer aDocViewer, in string aCommand, in nsISupports aExtraInfo);
-
   /**
    * Allows nsPrintJob to make this call on an internal interface to the
    * DocShell.

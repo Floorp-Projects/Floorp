@@ -6856,11 +6856,7 @@ nsDocShell::RefreshURIFromQueue()
   return NS_OK;
 }
 
-//*****************************************************************************
-// nsDocShell::nsIContentViewerContainer
-//*****************************************************************************
-
-NS_IMETHODIMP
+nsresult
 nsDocShell::Embed(nsIContentViewer* aContentViewer,
                   const char* aCommand, nsISupports* aExtraInfo)
 {
