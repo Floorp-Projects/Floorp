@@ -13,8 +13,6 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/WeakPtr.h"
 
-#include "nsICSSStyleRuleDOMWrapper.h"
-#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
 
 namespace mozilla {
@@ -59,7 +57,6 @@ private:
 };
 
 class ServoStyleRule final : public BindingStyleRule
-                           , public nsICSSStyleRuleDOMWrapper
                            , public SupportsWeakPtr<ServoStyleRule>
 {
 public:
@@ -72,9 +69,6 @@ public:
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
-
-  // nsICSSStyleRuleDOMWrapper
-  NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;
 
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex,
