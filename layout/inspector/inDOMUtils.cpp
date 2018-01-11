@@ -384,22 +384,18 @@ InspectorUtils::SelectorMatchesElement(GlobalObject& aGlobalObject,
   return result;
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
+/* static */ bool
+InspectorUtils::IsInheritedProperty(GlobalObject& aGlobalObject,
+                                    const nsAString& aPropertyName)
 {
   nsCSSPropertyID prop = nsCSSProps::
     LookupProperty(aPropertyName, CSSEnabledState::eIgnoreEnabledState);
   if (prop == eCSSProperty_UNKNOWN) {
-    *_retval = false;
-    return NS_OK;
+    return false;
   }
 
   if (prop == eCSSPropertyExtra_variable) {
-    *_retval = true;
-    return NS_OK;
+    return true;
   }
 
   if (nsCSSProps::IsShorthand(prop)) {
@@ -407,9 +403,11 @@ inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
   }
 
   nsStyleStructID sid = nsCSSProps::kSIDTable[prop];
-  *_retval = !nsStyleContext::IsReset(sid);
-  return NS_OK;
+  return !nsStyleContext::IsReset(sid);
 }
+
+} // namespace dom
+} // namespace mozilla
 
 extern const char* const kCSSRawProperties[];
 

@@ -97,6 +97,12 @@ public:
                                      const nsAString& aPseudo,
                                      ErrorResult& aRv);
 
+  // Utilities for working with CSS properties
+  //
+  // Returns true if the string names a property that is inherited by default.
+  static bool IsInheritedProperty(GlobalObject& aGlobal,
+                                  const nsAString& aPropertyName);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
