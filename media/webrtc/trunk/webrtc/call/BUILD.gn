@@ -11,12 +11,21 @@ import("../build/webrtc.gni")
 rtc_source_set("call_interfaces") {
   sources = [
     "audio_receive_stream.h",
-    "audio_send_stream.cc",
     "audio_send_stream.h",
     "audio_state.h",
     "call.h",
     "flexfec_receive_stream.h",
   ]
+
+  if (!build_with_mozilla) {
+    sources += [
+      "audio_send_stream.cc",
+    ]
+  } else {
+    sources += [
+      "audio_send_stream_call.cc",
+    ]
+  }
 }
 
 rtc_static_library("call") {

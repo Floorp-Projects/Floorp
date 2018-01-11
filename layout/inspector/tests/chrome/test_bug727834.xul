@@ -17,8 +17,6 @@ http://creativecommons.org/publicdomain/zero/1.0/
 function RunTests() {
   SimpleTest.waitForExplicitFinish();
 
-  let DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                   .getService(Components.interfaces.inIDOMUtils);
   let body = document.querySelector("body");
   let testSheet = document.styleSheets[2];
   let rule = document.styleSheets[2].cssRules[0];
@@ -30,7 +28,7 @@ function RunTests() {
   is(window.getComputedStyle(body).paddingTop, "100px",
      "original first rule applies");
 
-  DOMUtils.parseStyleSheet(testSheet,
+  InspectorUtils.parseStyleSheet(testSheet,
     "@import url(test_bug727834.css); body{background: red;}");
 
   is(testSheet.cssRules.length, 2,
@@ -55,7 +53,7 @@ function RunTests() {
   is(rule.parentStyleSheet, testSheet,
      "rule's parent style sheet is not null");
 
-  DOMUtils.parseStyleSheet(testSheet,
+  InspectorUtils.parseStyleSheet(testSheet,
     "body{background: lime;}");
 
   is(testSheet.cssRules.length, 1,
@@ -66,7 +64,7 @@ function RunTests() {
      "detached rule's parent style sheet is null");
 
   SimpleTest.executeSoon(function () {
-    DOMUtils.parseStyleSheet(testSheet,
+    InspectorUtils.parseStyleSheet(testSheet,
       "@import url(test_bug727834.css); body{background: blue;}");
 
     is(testSheet.cssRules.length, 2,

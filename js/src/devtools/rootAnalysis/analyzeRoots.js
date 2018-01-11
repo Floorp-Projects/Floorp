@@ -83,9 +83,14 @@ function isUnrootedType(type)
 {
     if (type.Kind == "Pointer")
         return isGCType(type.Type);
-    else if (type.Kind == "Array")
+    else if (type.Kind == "Array") {
+        if (!type.Type) {
+            printErr("Received Array Kind with no Type");
+            printErr(JSON.stringify(type));
+            printErr(getBacktrace({args: true, locals: true}));
+        }
         return isUnrootedType(type.Type);
-    else if (type.Kind == "CSU")
+    } else if (type.Kind == "CSU")
         return type.Name in gcPointers;
     else
         return false;

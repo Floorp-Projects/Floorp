@@ -18,9 +18,9 @@ const {
   isContentStylesheet,
   getCSSStyleRules
 } = require("devtools/shared/inspector/css-logic");
-const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                  .getService(Ci.mozIJSSubScriptLoader);
+const InspectorUtils = require("InspectorUtils");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -546,7 +546,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    */
   hasPseudoClassLock: function (selector, pseudo) {
     let node = this._querySelector(selector);
-    return DOMUtils.hasPseudoClassLock(node, pseudo);
+    return InspectorUtils.hasPseudoClassLock(node, pseudo);
   },
 
   loadAndWaitForCustomEvent: function (url) {
@@ -784,8 +784,8 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
 
     let sheets = [];
 
-    for (let i = 0, n = domRules.Count(); i < n; i++) {
-      let sheet = domRules.GetElementAt(i).parentStyleSheet;
+    for (let i = 0, n = domRules.length; i < n; i++) {
+      let sheet = domRules[i].parentStyleSheet;
       sheets.push({
         href: sheet.href,
         isContentSheet: isContentStylesheet(sheet)

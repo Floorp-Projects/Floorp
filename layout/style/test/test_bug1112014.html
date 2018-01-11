@@ -10,8 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   <script src="property_database.js"></script>
   <script type="application/javascript">
 
-  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-    .getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   SimpleTest.requestLongerTimeout(2);
 
@@ -87,7 +86,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   // test value, to try to ensure that this test is updated
   // whenever a new type is added.
   let reps = [];
-  for (let tc in utils) {
+  for (let tc in InspectorUtils) {
     if (/TYPE_/.test(tc)) {
       if (!(tc in testValues)) {
 	reps.push(tc);
@@ -107,7 +106,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
       }
 
       let supported =
-        utils.cssPropertySupportsType(propertyName, utils[iter]);
+        InspectorUtils.cssPropertySupportsType(propertyName, InspectorUtils[iter]);
       let parsed = CSS.supports(propertyName, testValue);
       is(supported, parsed, propertyName + " supports " + iter);
     }
@@ -116,7 +115,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   // Regression test for an assertion failure in an earlier version of
   // the code.  Note that cssPropertySupportsType returns false for
   // all types for a variable.
-  ok(!utils.cssPropertySupportsType("--variable", utils.TYPE_COLOR),
+  ok(!InspectorUtils.cssPropertySupportsType("--variable", InspectorUtils.TYPE_COLOR),
      "cssPropertySupportsType returns false for variable");
 
   </script>

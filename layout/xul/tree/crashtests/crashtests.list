@@ -1,7 +1,7 @@
 load 307298-1.xul
 load 309732-1.xul
 load 309732-2.xul
-load 366583-1.xul
+asserts-if(winWidget,0-1) load 366583-1.xul # Bug 1428087
 load 380217-1.xul
 load 382444-1.html
 load 391178-1.xhtml

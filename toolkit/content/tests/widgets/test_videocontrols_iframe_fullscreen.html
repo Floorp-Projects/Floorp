@@ -18,10 +18,10 @@
 <script clas="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  const domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-    getService(SpecialPowers.Ci.inIDOMUtils);
-  const iframe1 = SpecialPowers.wrap(document.getElementById("ifr1"));
-  const iframe2 = SpecialPowers.wrap(document.getElementById("ifr2"));
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
+  const iframe1 = document.getElementById("ifr1");
+  const iframe2 = document.getElementById("ifr2");
   const testCases = [];
 
   function checkIframeFullscreenAvailable(ifr) {
@@ -36,8 +36,10 @@
       video.src = "seek_with_sound.ogg";
       video.addEventListener("loadedmetadata", resolve);
     })).then(() => new Promise(resolve => {
-      const videoControl = domUtils.getChildrenForNode(video, true)[1];
-      const controlBar = video.ownerDocument.getAnonymousElementByAttribute(
+      const children = InspectorUtils.getChildrenForNode(video, true);
+      const videoControl = children[1];
+      const doc = SpecialPowers.wrap(video.ownerDocument);
+      const controlBar = doc.getAnonymousElementByAttribute(
         videoControl, "class", "controlBar");
 
       is(controlBar.getAttribute("fullscreen-unavailable") == "true", !available, "The controlbar should have an attribute marking whether fullscreen is available that corresponds to if the iframe has the allowfullscreen attribute.");

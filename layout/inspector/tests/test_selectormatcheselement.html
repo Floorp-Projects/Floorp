@@ -38,24 +38,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037519
 <pre id="test">
 <script type="application/javascript">
 
-function do_test() {
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-    .getService(SpecialPowers.Ci.inIDOMUtils);
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
+function do_test() {
   var element = document.querySelector("#foo");
 
-  var elementRules = utils.getCSSStyleRules(element);
-  var elementRule = elementRules.GetElementAt(elementRules.Count() - 1);
+  var elementRules = InspectorUtils.getCSSStyleRules(element);
+  var elementRule = elementRules[elementRules.length - 1];
 
-  is (utils.selectorMatchesElement(element, elementRule, 0), true,
+  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0), true,
     "Matches #foo");
-  is (utils.selectorMatchesElement(element, elementRule, 1), false,
+  is (InspectorUtils.selectorMatchesElement(element, elementRule, 1), false,
     "Doesn't match #bar");
-  is (utils.selectorMatchesElement(element, elementRule, 0, ":bogus"), false,
+  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0, ":bogus"), false,
     "Doesn't match #foo with a bogus pseudo");
-  is (utils.selectorMatchesElement(element, elementRule, 2, ":bogus"), false,
+  is (InspectorUtils.selectorMatchesElement(element, elementRule, 2, ":bogus"), false,
     "Doesn't match #foo::before with bogus pseudo");
-  is (utils.selectorMatchesElement(element, elementRule, 0, ":after"), false,
+  is (InspectorUtils.selectorMatchesElement(element, elementRule, 0, ":after"), false,
     "Does match #foo::before with the :after pseudo");
 
   checkPseudo(":before");
@@ -66,17 +65,17 @@ function do_test() {
   SimpleTest.finish();
 
   function checkPseudo(pseudo) {
-    var rules = utils.getCSSStyleRules(element, pseudo);
-    var rule = rules.GetElementAt(rules.Count() - 1);
+    var rules = InspectorUtils.getCSSStyleRules(element, pseudo);
+    var rule = rules[rules.length - 1];
 
-    is (utils.selectorMatchesElement(element, rule, 0), false,
+    is (InspectorUtils.selectorMatchesElement(element, rule, 0), false,
       "Doesn't match without " + pseudo);
-    is (utils.selectorMatchesElement(element, rule, 1), false,
+    is (InspectorUtils.selectorMatchesElement(element, rule, 1), false,
       "Doesn't match without " + pseudo);
 
-    is (utils.selectorMatchesElement(element, rule, 0, pseudo), true,
+    is (InspectorUtils.selectorMatchesElement(element, rule, 0, pseudo), true,
       "Matches on #foo" + pseudo);
-    is (utils.selectorMatchesElement(element, rule, 1, pseudo), false,
+    is (InspectorUtils.selectorMatchesElement(element, rule, 1, pseudo), false,
       "Doesn't match on #bar" + pseudo);
   }
 }

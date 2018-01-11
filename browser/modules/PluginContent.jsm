@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/BrowserUtils.jsm");
 
+Cu.importGlobalProperties(["InspectorUtils"]);
+
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
   return Services.strings.createBundle(url);
@@ -519,10 +521,8 @@ PluginContent.prototype = {
       plugin.removeAttribute("href");
       let overlay = this.getPluginUI(plugin, "main");
       this.setVisibility(plugin, overlay, OVERLAY_DISPLAY.FULL);
-      let inIDOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-                          .getService(Ci.inIDOMUtils);
-      // Add psuedo class so our styling will take effect
-      inIDOMUtils.addPseudoClassLock(plugin, "-moz-handler-clicktoplay");
+      // Add pseudo class so our styling will take effect
+      InspectorUtils.addPseudoClassLock(plugin, "-moz-handler-clicktoplay");
       overlay.addEventListener("click", this, true);
       return;
     }

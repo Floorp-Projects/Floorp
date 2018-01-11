@@ -29,7 +29,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
-#include "nsIHstsPrimingCallback.h"
 #include "nsIRaceCacheWithNetwork.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/Mutex.h"
@@ -84,7 +83,6 @@ class nsHttpChannel final : public HttpBaseChannel
                           , public nsSupportsWeakReference
                           , public nsICorsPreflightCallback
                           , public nsIChannelWithDivertableParentListener
-                          , public nsIHstsPrimingCallback
                           , public nsIRaceCacheWithNetwork
                           , public nsIRequestTailUnblockCallback
                           , public nsITimerCallback
@@ -104,7 +102,6 @@ public:
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
-    NS_DECL_NSIHSTSPRIMINGCALLBACK
     NS_DECL_NSITHREADRETARGETABLEREQUEST
     NS_DECL_NSIDNSLISTENER
     NS_DECL_NSICHANNELWITHDIVERTABLEPARENTLISTENER
@@ -211,9 +208,6 @@ public: /* internal necko use only */
                                                  nsIApplicationCache *applicationCache,
                                                  bool noAppCache);
     MOZ_MUST_USE nsresult ContinueConnect();
-
-    // If the load is mixed-content, build and send an HSTS priming request.
-    MOZ_MUST_USE nsresult TryHSTSPriming();
 
     MOZ_MUST_USE nsresult StartRedirectChannelToURI(nsIURI *, uint32_t);
 

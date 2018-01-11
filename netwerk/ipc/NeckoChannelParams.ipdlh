@@ -73,10 +73,6 @@ struct LoadInfoArgs
   bool                        isPreflight;
   bool                        loadTriggeredFromExternal;
   bool                        serviceWorkerTaintingSynthesized;
-  bool                        forceHSTSPriming;
-  bool                        mixedContentWouldBlock;
-  bool                        isHSTSPriming;
-  bool                        isHSTSPrimingUpgrade;
 };
 
 /**

@@ -990,8 +990,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   nsIntRegion paintRegion = aPaintRegion;
   nsIntRegion dirtyRegion = aDirtyRegion;
   if (!paintRegion.IsEmpty()) {
-    MOZ_ASSERT(mPaintClears.size() == 0);
-    MOZ_ASSERT(mPaintCopies.size() == 0);
+    MOZ_ASSERT(mPaintStates.size() == 0);
     for (size_t i = 0; i < newTileCount; ++i) {
       const TileIntPoint tilePosition = newTiles.TilePosition(i);
 
@@ -1028,50 +1027,29 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
       drawTarget->SetTransform(Matrix());
 
+      // Draw into the tiled draw target
+      RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
+      MOZ_ASSERT(ctx); // already checked the draw target above
+      ctx->SetMatrix(
+        ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
+
+      mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
+                DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+      ctx = nullptr;
+
       if (aFlags & TilePaintFlags::Async) {
-        // Create a capture draw target
-        RefPtr<DrawTargetCapture> captureDT =
-          Factory::CreateCaptureDrawTarget(drawTarget->GetBackendType(),
-                                           drawTarget->GetSize(),
-                                           drawTarget->GetFormat());
-
-        // Draw into the capture target
-        RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(captureDT);
-        MOZ_ASSERT(ctx); // already checked the draw target above
-        ctx->SetMatrix(
-          ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
-
-        mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
-                  DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
-        ctx = nullptr;
-
-        // Replay on the paint thread
-        RefPtr<CapturedTiledPaintState> capturedState =
-          new CapturedTiledPaintState(drawTarget,
-                                      captureDT);
-        capturedState->mClients = std::move(mPaintTilesTextureClients);
-        capturedState->mCopies = std::move(mPaintCopies);
-        capturedState->mClears = std::move(mPaintClears);
-
-        PaintThread::Get()->PaintTiledContents(capturedState);
+        for (const auto& state : mPaintStates) {
+          PaintThread::Get()->PaintTiledContents(state);
+        }
         mManager->SetQueuedAsyncPaints();
+        MOZ_ASSERT(mPaintStates.size() > 0);
+        mPaintStates.clear();
       } else {
-        MOZ_ASSERT(mPaintCopies.size() == 0);
-        MOZ_ASSERT(mPaintClears.size() == 0);
-
-        // Draw into the tiled draw target
-        RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
-        MOZ_ASSERT(ctx); // already checked the draw target above
-        ctx->SetMatrix(
-          ctx->CurrentMatrix().PreScale(mResolution, mResolution).PreTranslate(-mTilingOrigin));
-
-        mCallback(&mPaintedLayer, ctx, paintRegion, dirtyRegion,
-                  DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+        MOZ_ASSERT(mPaintStates.size() == 0);
       }
 
       // Reset
       mPaintTiles.clear();
-      mPaintTilesTextureClients.clear();
       mTilingOrigin = IntPoint(std::numeric_limits<int32_t>::max(),
                                std::numeric_limits<int32_t>::max());
     }
@@ -1146,6 +1124,9 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
   offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
 
+  std::vector<CapturedTiledPaintState::Copy> asyncPaintCopies;
+  std::vector<RefPtr<TextureClient>> asyncPaintClients;
+
   nsIntRegion extraPainted;
   RefPtr<TextureClient> backBufferOnWhite;
   RefPtr<TextureClient> backBuffer =
@@ -1155,8 +1136,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                         extraPainted,
                         aFlags,
                         &backBufferOnWhite,
-                        &mPaintCopies,
-                        &mPaintTilesTextureClients);
+                        &asyncPaintCopies,
+                        &asyncPaintClients);
 
   // Mark the area we need to paint in the back buffer as invalid in the
   // front buffer as they will become out of sync.
@@ -1181,30 +1162,22 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     return false;
   }
 
-  gfx::Tile paintTile;
   RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
   RefPtr<DrawTarget> dtOnWhite;
   if (backBufferOnWhite) {
     dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
-    paintTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
-  } else {
-    paintTile.mDrawTarget = dt;
   }
-  paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+
   if (!dt || (backBufferOnWhite && !dtOnWhite)) {
     aTile.DiscardBuffers();
     return false;
   }
 
-  mPaintTiles.push_back(paintTile);
-  mTilingOrigin.x = std::min(mTilingOrigin.x, paintTile.mTileOrigin.x);
-  mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);
-
-  if (aFlags & TilePaintFlags::Async) {
-    mPaintTilesTextureClients.push_back(backBuffer);
-    if (backBufferOnWhite) {
-      mPaintTilesTextureClients.push_back(backBufferOnWhite);
-    }
+  RefPtr<DrawTarget> drawTarget;
+  if (dtOnWhite) {
+    drawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
+  } else {
+    drawTarget = dt;
   }
 
   auto clear = CapturedTiledPaintState::Clear{
@@ -1213,11 +1186,39 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     offsetScaledDirtyRegion
   };
 
+  gfx::Tile paintTile;
+  paintTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+
   if (aFlags & TilePaintFlags::Async) {
-    mPaintClears.push_back(clear);
+    RefPtr<CapturedTiledPaintState> asyncPaint = new CapturedTiledPaintState();
+
+    RefPtr<DrawTargetCapture> captureDT =
+      Factory::CreateCaptureDrawTarget(drawTarget->GetBackendType(),
+                                       drawTarget->GetSize(),
+                                       drawTarget->GetFormat());
+    paintTile.mDrawTarget = captureDT;
+    asyncPaint->mTarget = drawTarget;
+    asyncPaint->mCapture = captureDT;
+
+    asyncPaint->mCopies = std::move(asyncPaintCopies);
+    asyncPaint->mClears.push_back(clear);
+
+    asyncPaint->mClients = std::move(asyncPaintClients);
+    asyncPaint->mClients.push_back(backBuffer);
+    if (backBufferOnWhite) {
+      asyncPaint->mClients.push_back(backBufferOnWhite);
+    }
+
+    mPaintStates.push_back(asyncPaint);
   } else {
+    paintTile.mDrawTarget = drawTarget;
     clear.ClearBuffer();
   }
+
+  mPaintTiles.push_back(paintTile);
+
+  mTilingOrigin.x = std::min(mTilingOrigin.x, paintTile.mTileOrigin.x);
+  mTilingOrigin.y = std::min(mTilingOrigin.y, paintTile.mTileOrigin.y);
 
   // The new buffer is now validated, remove the dirty region from it.
   aTile.mInvalidBack.SubOut(offsetScaledDirtyRegion);

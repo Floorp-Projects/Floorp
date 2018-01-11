@@ -36,6 +36,7 @@
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
+#include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
@@ -945,6 +946,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             fileReader = true;
         } else if (!strcmp(name.ptr(), "MessageChannel")) {
             messageChannel = true;
+        } else if (!strcmp(name.ptr(), "InspectorUtils")) {
+            inspectorUtils = true;
         } else {
             JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -1025,6 +1028,10 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     if (messageChannel &&
         (!dom::MessageChannelBinding::GetConstructorObject(cx) ||
          !dom::MessagePortBinding::GetConstructorObject(cx)))
+        return false;
+
+    if (inspectorUtils &&
+        !dom::InspectorUtilsBinding::GetConstructorObject(cx))
         return false;
 
     return true;

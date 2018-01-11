@@ -36,6 +36,7 @@
 #include <limits>
 #include <algorithm>
 #include "gfxPoint.h"
+#include "nsClassHashtable.h"
 
 class gfxContext;
 class nsPresContext;
@@ -81,6 +82,7 @@ class Element;
 class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
+class InspectorFontFace;
 class OffscreenCanvas;
 class Selection;
 } // namespace dom
@@ -2267,12 +2269,15 @@ public:
    */
   static bool NeedsPrintPreviewBackground(nsPresContext* aPresContext);
 
+  typedef nsClassHashtable<nsPtrHashKey<gfxFontEntry>,
+                           mozilla::dom::InspectorFontFace> UsedFontFaceTable;
+
   /**
    * Adds all font faces used in the frame tree starting from aFrame
    * to the list aFontFaceList.
    */
   static nsresult GetFontFacesForFrames(nsIFrame* aFrame,
-                                        nsFontFaceList* aFontFaceList);
+                                        UsedFontFaceTable& aResult);
 
   /**
    * Adds all font faces used within the specified range of text in aFrame,
@@ -2284,7 +2289,7 @@ public:
                                       int32_t aStartOffset,
                                       int32_t aEndOffset,
                                       bool aFollowContinuations,
-                                      nsFontFaceList* aFontFaceList);
+                                      UsedFontFaceTable& aResult);
 
   /**
    * Walks the frame tree starting at aFrame looking for textRuns.

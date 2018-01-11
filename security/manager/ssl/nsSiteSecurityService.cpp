@@ -129,7 +129,6 @@ public:
       case SourceUnknown:
       case SourcePreload:
       case SourceOrganic:
-      case SourceHSTSPriming:
         break;
       default:
         return false;
@@ -675,21 +674,6 @@ nsSiteSecurityService::SetHSTSState(uint32_t aType,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSiteSecurityService::CacheNegativeHSTSResult(
-  nsIURI* aSourceURI,
-  uint64_t aMaxAge,
-  const OriginAttributes& aOriginAttributes)
-{
-  nsAutoCString hostname;
-  nsresult rv = GetHost(aSourceURI, hostname);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // SecurityPropertyNegative results only come from HSTS priming
-  return SetHSTSState(nsISiteSecurityService::HEADER_HSTS, hostname.get(),
-                      aMaxAge, false, 0, SecurityPropertyNegative,
-                      SourceHSTSPriming, aOriginAttributes);
-}
-
 nsresult
 nsSiteSecurityService::RemoveStateInternal(
   uint32_t aType, nsIURI* aURI, uint32_t aFlags,
@@ -841,7 +825,6 @@ nsSiteSecurityService::ProcessHeader(uint32_t aType,
     case SourceUnknown:
     case SourcePreload:
     case SourceOrganic:
-    case SourceHSTSPriming:
       break;
     default:
       return NS_ERROR_INVALID_ARG;
