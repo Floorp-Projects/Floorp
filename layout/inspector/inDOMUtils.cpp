@@ -587,25 +587,27 @@ InspectorUtils::GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
   }
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::CssPropertyIsShorthand(const nsAString& aProperty, bool *_retval)
+/* static */ bool
+InspectorUtils::CssPropertyIsShorthand(GlobalObject& aGlobalObject,
+                                       const nsAString& aProperty,
+                                       ErrorResult& aRv)
 {
   nsCSSPropertyID propertyID =
     nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
   if (propertyID == eCSSProperty_UNKNOWN) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
   if (propertyID == eCSSPropertyExtra_variable) {
-    *_retval = false;
-  } else {
-    *_retval = nsCSSProps::IsShorthand(propertyID);
+    return false;
   }
-  return NS_OK;
+
+  return nsCSSProps::IsShorthand(propertyID);
 }
+
+} // namespace dom
+} // namespace mozilla
 
 // A helper function that determines whether the given property
 // supports the given type.

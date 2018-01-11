@@ -90,7 +90,7 @@ function isCssPropertyKnown(name) {
     // If the property name is unknown, the cssPropertyIsShorthand
     // will throw an exception.  But if it is known, no exception will
     // be thrown; so we just ignore the return value.
-    DOMUtils.cssPropertyIsShorthand(name);
+    InspectorUtils.cssPropertyIsShorthand(name);
     return true;
   } catch (e) {
     return false;
