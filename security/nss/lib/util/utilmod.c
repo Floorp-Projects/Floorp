@@ -24,7 +24,6 @@
 
 #if defined(_WIN32)
 #include <io.h>
-#include <windows.h>
 #endif
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -35,184 +34,15 @@
 #include <fcntl.h>
 
 #if defined(_WIN32)
+#define os_open _open
 #define os_fdopen _fdopen
+#define os_stat _stat
 #define os_truncate_open_flags _O_CREAT | _O_RDWR | _O_TRUNC
 #define os_append_open_flags _O_CREAT | _O_RDWR | _O_APPEND
 #define os_open_permissions_type int
 #define os_open_permissions_default _S_IREAD | _S_IWRITE
 #define os_stat_type struct _stat
-
-/*
- * Convert a UTF8 string to Unicode wide character
- */
-LPWSTR
-_NSSUTIL_UTF8ToWide(const char *buf)
-{
-    DWORD size;
-    LPWSTR wide;
-
-    if (!buf) {
-        return NULL;
-    }
-
-    size = MultiByteToWideChar(CP_UTF8, 0, buf, -1, NULL, 0);
-    if (size == 0) {
-        return NULL;
-    }
-    wide = PORT_Alloc(sizeof(WCHAR) * size);
-    if (!wide) {
-        return NULL;
-    }
-    size = MultiByteToWideChar(CP_UTF8, 0, buf, -1, wide, size);
-    if (size == 0) {
-        PORT_Free(wide);
-        return NULL;
-    }
-    return wide;
-}
-
-static int
-os_open(const char *filename, int oflag, int pmode)
-{
-    int fd;
-
-    if (!filename) {
-        return -1;
-    }
-
-    wchar_t *filenameWide = _NSSUTIL_UTF8ToWide(filename);
-    if (!filenameWide) {
-        return -1;
-    }
-    fd = _wopen(filenameWide, oflag, pmode);
-    PORT_Free(filenameWide);
-
-    return fd;
-}
-
-static int
-os_stat(const char *path, os_stat_type *buffer)
-{
-    int result;
-
-    if (!path) {
-        return -1;
-    }
-
-    wchar_t *pathWide = _NSSUTIL_UTF8ToWide(path);
-    if (!pathWide) {
-        return -1;
-    }
-    result = _wstat(pathWide, buffer);
-    PORT_Free(pathWide);
-
-    return result;
-}
-
-static FILE *
-os_fopen(const char *filename, const char *mode)
-{
-    FILE *fp;
-
-    if (!filename || !mode) {
-        return NULL;
-    }
-
-    wchar_t *filenameWide = _NSSUTIL_UTF8ToWide(filename);
-    if (!filenameWide) {
-        return NULL;
-    }
-    wchar_t *modeWide = _NSSUTIL_UTF8ToWide(mode);
-    if (!modeWide) {
-        PORT_Free(filenameWide);
-        return NULL;
-    }
-    fp = _wfopen(filenameWide, modeWide);
-    PORT_Free(filenameWide);
-    PORT_Free(modeWide);
-
-    return fp;
-}
-
-PRStatus
-_NSSUTIL_Access(const char *path, PRAccessHow how)
-{
-    int result;
-
-    if (!path) {
-        return PR_FAILURE;
-    }
-
-    int mode;
-    switch (how) {
-        case PR_ACCESS_WRITE_OK:
-            mode = 2;
-            break;
-        case PR_ACCESS_READ_OK:
-            mode = 4;
-            break;
-        case PR_ACCESS_EXISTS:
-            mode = 0;
-            break;
-        default:
-            return PR_FAILURE;
-    }
-
-    wchar_t *pathWide = _NSSUTIL_UTF8ToWide(path);
-    if (!pathWide) {
-        return PR_FAILURE;
-    }
-    result = _waccess(pathWide, mode);
-    PORT_Free(pathWide);
-
-    return result < 0 ? PR_FAILURE : PR_SUCCESS;
-}
-
-static PRStatus
-nssutil_Delete(const char *name)
-{
-    BOOL result;
-
-    if (!name) {
-        return PR_FAILURE;
-    }
-
-    wchar_t *nameWide = _NSSUTIL_UTF8ToWide(name);
-    if (!nameWide) {
-        return PR_FAILURE;
-    }
-    result = DeleteFileW(nameWide);
-    PORT_Free(nameWide);
-
-    return result ? PR_SUCCESS : PR_FAILURE;
-}
-
-static PRStatus
-nssutil_Rename(const char *from, const char *to)
-{
-    BOOL result;
-
-    if (!from || !to) {
-        return PR_FAILURE;
-    }
-
-    wchar_t *fromWide = _NSSUTIL_UTF8ToWide(from);
-    if (!fromWide) {
-        return PR_FAILURE;
-    }
-    wchar_t *toWide = _NSSUTIL_UTF8ToWide(to);
-    if (!toWide) {
-        PORT_Free(fromWide);
-        return PR_FAILURE;
-    }
-    result = MoveFileW(fromWide, toWide);
-    PORT_Free(fromWide);
-    PORT_Free(toWide);
-
-    return result ? PR_SUCCESS : PR_FAILURE;
-}
 #else
-#define os_fopen fopen
 #define os_open open
 #define os_fdopen fdopen
 #define os_stat stat
@@ -221,8 +51,6 @@ nssutil_Rename(const char *from, const char *to)
 #define os_open_permissions_type mode_t
 #define os_open_permissions_default 0600
 #define os_stat_type struct stat
-#define nssutil_Delete PR_Delete
-#define nssutil_Rename PR_Rename
 #endif
 
 /****************************************************************
@@ -391,7 +219,7 @@ nssutil_ReadSecmodDB(const char *appName,
     }
 
     /* do we really want to use streams here */
-    fd = os_fopen(dbname, "r");
+    fd = fopen(dbname, "r");
     if (fd == NULL)
         goto done;
 
@@ -575,7 +403,7 @@ done:
         }
 
         /* old one exists */
-        status = _NSSUTIL_Access(olddbname, PR_ACCESS_EXISTS);
+        status = PR_Access(olddbname, PR_ACCESS_EXISTS);
         if (status == PR_SUCCESS) {
             PR_smprintf_free(olddbname);
             PORT_ZFree(moduleList, useCount * sizeof(char *));
@@ -704,7 +532,7 @@ nssutil_DeleteSecmodDBEntry(const char *appName,
     }
 
     /* do we really want to use streams here */
-    fd = os_fopen(dbname, "r");
+    fd = fopen(dbname, "r");
     if (fd == NULL)
         goto loser;
 
@@ -774,10 +602,10 @@ nssutil_DeleteSecmodDBEntry(const char *appName,
     fclose(fd2);
     if (found) {
         /* rename dbname2 to dbname */
-        nssutil_Delete(dbname);
-        nssutil_Rename(dbname2, dbname);
+        PR_Delete(dbname);
+        PR_Rename(dbname2, dbname);
     } else {
-        nssutil_Delete(dbname2);
+        PR_Delete(dbname2);
     }
     PORT_Free(dbname2);
     PORT_Free(lib);
@@ -793,7 +621,7 @@ loser:
         fclose(fd2);
     }
     if (dbname2) {
-        nssutil_Delete(dbname2);
+        PR_Delete(dbname2);
         PORT_Free(dbname2);
     }
     PORT_Free(lib);
