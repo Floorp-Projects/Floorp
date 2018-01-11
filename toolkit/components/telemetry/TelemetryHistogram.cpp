@@ -1916,6 +1916,36 @@ TelemetryHistogram::Accumulate(HistogramID aID,
 }
 
 void
+TelemetryHistogram::Accumulate(HistogramID aID, const nsCString& aKey,
+                              const nsTArray<uint32_t>& aSamples)
+{
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aID))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids");
+    return;
+  }
+
+  // Check that this histogram is keyed
+  MOZ_ASSERT(gHistogramInfos[aID].keyed, "Cannot accumulate into a non-keyed histogram using a key.");
+
+  // Check if we're allowed to record in the provided key, for this histogram.
+  if (!gHistogramInfos[aID].allows_key(aKey)) {
+    nsPrintfCString msg("%s - key '%s' not allowed for this keyed histogram",
+                        gHistogramInfos[aID].name(),
+                        aKey.get());
+    LogToBrowserConsole(nsIScriptError::errorFlag, NS_ConvertUTF8toUTF16(msg));
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
+      NS_ConvertASCIItoUTF16(gHistogramInfos[aID].name()), 1);
+    return;
+  }
+
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  for(uint32_t sample: aSamples){
+    internal_Accumulate(aID, aKey, sample);
+  }
+}
+
+void
 TelemetryHistogram::Accumulate(const char* name, uint32_t sample)
 {
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
