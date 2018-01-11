@@ -688,14 +688,6 @@ JSDependentString::undependInternal(JSContext* cx)
     if (!s)
         return nullptr;
 
-    if (!isTenured()) {
-        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
-            js_free(s);
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-    }
-
     AutoCheckCannotGC nogc;
     PodCopy(s, nonInlineChars<CharT>(nogc), n);
     s[n] = '\0';
@@ -1097,14 +1089,6 @@ JSExternalString::ensureFlat(JSContext* cx)
     char16_t* s = cx->pod_malloc<char16_t>(n + 1);
     if (!s)
         return nullptr;
-
-    if (!isTenured()) {
-        if (!cx->runtime()->gc.nursery().registerMallocedBuffer(s)) {
-            js_free(s);
-            ReportOutOfMemory(cx);
-            return nullptr;
-        }
-    }
 
     // Copy the chars before finalizing the string.
     {
