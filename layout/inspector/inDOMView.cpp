@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "inDOMView.h"
-#include "inIDOMUtils.h"
 
 #include "inLayoutUtils.h"
 
@@ -26,6 +25,7 @@
 #include "nsITreeBoxObject.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/InspectorUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -776,6 +776,16 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
   }
 }
 
+static already_AddRefed<nsIDOMNode>
+GetParentForNode(nsINode* aChild, bool aShowAnonymous)
+{
+  MOZ_ASSERT(aChild);
+  nsINode* parent = InspectorUtils::GetParentForNode(*aChild, aShowAnonymous);
+
+  nsCOMPtr<nsIDOMNode> parentDOMNode = do_QueryInterface(parent);
+  return parentDOMNode.forget();
+}
+
 void
 inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                            nsIContent* aChild)
@@ -785,15 +795,13 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
   nsresult rv;
   nsCOMPtr<nsIDOMNode> childDOMNode(do_QueryInterface(aChild));
-  nsCOMPtr<nsIDOMNode> parent;
   if (!mDOMUtils) {
     mDOMUtils = services::GetInDOMUtils();
     if (!mDOMUtils) {
       return;
     }
   }
-  mDOMUtils->GetParentForNode(childDOMNode, mShowAnonymous,
-                              getter_AddRefs(parent));
+  nsCOMPtr<nsIDOMNode> parent = GetParentForNode(aChild, mShowAnonymous);
 
   // find the inDOMViewNode for the parent of the inserted content
   int32_t parentRow = 0;

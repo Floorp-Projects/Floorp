@@ -55,9 +55,9 @@ function do_test() {
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.getParentForNode(docElement, true);
+    var res = InspectorUtils.getParentForNode(docElement, true);
     is(res.nodeType, DOCUMENT_NODE_TYPE, "getParentForNode(docElement, true)");
-    res = utils.getParentForNode(text, true);
+    res = InspectorUtils.getParentForNode(text, true);
     is(res.tagName, "BODY", "getParentForNode(text, true)");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }

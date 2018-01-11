@@ -53,6 +53,7 @@ namespace InspectorUtils {
   [Throws] boolean cssPropertySupportsType(DOMString property, unsigned long type);
 
   boolean isIgnorableWhitespace(CharacterData dataNode);
+  Node? getParentForNode(Node node, boolean showingAnonymousContent);
 };
 
 dictionary PropertyNamesOptions {
