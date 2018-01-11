@@ -1,0 +1,16 @@
+%include build/sparse-profiles/mach
+
+[include]
+path:taskcluster/
+
+# Result from `grep -hr %include taskcluster/docker | grep -v " taskcluster/" | sort -u`
+path:build/unix/build-gtk3/build-gtk3.sh
+path:build/valgrind/valgrind-epochs.patch
+path:python/mozbuild/mozbuild/action/tooltool.py
+path:testing/config/tooltool-manifests/linux64/releng.manifest
+path:testing/mozharness/external_tools/robustcheckout.py
+path:tools/lint/eslint/eslint-plugin-mozilla/manifest.tt
+path:tools/lint/eslint/manifest.tt
+path:tools/lint/python/flake8_requirements.txt
+path:tools/lint/tox/tox_requirements.txt
+
