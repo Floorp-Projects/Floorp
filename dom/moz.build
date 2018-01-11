@@ -19,7 +19,6 @@ interfaces = [
     'core',
     'html',
     'events',
-    'stylesheets',
     'sidebar',
     'css',
     'traversal',

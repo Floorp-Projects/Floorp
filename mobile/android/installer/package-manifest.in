@@ -145,7 +145,6 @@
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
-@BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_system.xpt
 @BINPATH@/components/dom_traversal.xpt
 @BINPATH@/components/dom_tv.xpt
