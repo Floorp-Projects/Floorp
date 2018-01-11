@@ -45,7 +45,7 @@ class RuntimeService final : public nsIObserver
     nsTArray<WorkerPrivate*> mActiveWorkers;
     nsTArray<WorkerPrivate*> mActiveServiceWorkers;
     nsTArray<WorkerPrivate*> mQueuedWorkers;
-    nsTArray<UniquePtr<SharedWorkerInfo>> mSharedWorkerInfos;
+    nsClassHashtable<nsCStringHashKey, SharedWorkerInfo> mSharedWorkerInfos;
     uint32_t mChildWorkerCount;
 
     WorkerDomainInfo()
