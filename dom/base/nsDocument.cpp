@@ -6361,13 +6361,6 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
-{
-  NS_ADDREF(*aStyleSheets = StyleSheets());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetMozSelectedStyleSheetSet(nsAString& aSheetSet)
 {
   nsIDocument::GetSelectedStyleSheetSet(aSheetSet);
