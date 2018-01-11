@@ -121,6 +121,15 @@ public:
                              nsAString& aResult,
                              ErrorResult& aRv);
 
+  // Convert a given CSS color string to rgba. Returns null on failure or an
+  // InspectorRGBATuple on success.
+  //
+  // NOTE: Converting a color to RGBA may be lossy when converting from some
+  // formats e.g. CMYK.
+  static void ColorToRGBA(GlobalObject& aGlobal,
+                          const nsAString& aColorString,
+                          Nullable<InspectorRGBATuple>& aResult);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

@@ -20,14 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Convert a given CSS color string to rgba. Returns null on failure or an
-  // InspectorRGBATuple on success.
-  //
-  // NOTE: Converting a color to RGBA may be lossy when converting from some
-  // formats e.g. CMYK.
-  [implicit_jscontext]
-  jsval colorToRGBA(in DOMString aColorString);
-
   // Check whether a given color is a valid CSS color.
   bool isValidCSSColor(in AString aColorString);
 
