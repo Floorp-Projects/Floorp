@@ -204,7 +204,7 @@ protected:
   // to help implement nsIDOMCSSRule
   void AppendRulesToCssText(nsAString& aCssText) const;
 
-  // to implement methods on nsIDOMCSSMediaRule
+  // to implement methods on nsIDOMCSSGroupingRule
   nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
   nsresult InsertRule(const nsAString & aRule, uint32_t aIndex,
                       uint32_t* _retval);
