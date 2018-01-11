@@ -51,12 +51,11 @@ function do_test() {
   }
 
   try {
-    utils.getParentForNode(null, true); 
+    InspectorUtils.getParentForNode(null, true);
     ok(false, "expected an exception");
   }
   catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, INVALID_POINTER, "got the expected exception");
+    is(e.name, "TypeError", "got the expected exception");
   }
 
   try {

@@ -167,6 +167,18 @@ public:
   }
   static bool IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode);
 
+  // Returns the "parent" of a node.  The parent of a document node is the
+  // frame/iframe containing that document.  aShowingAnonymousContent says
+  // whether we are showing anonymous content.
+  static nsINode* GetParentForNode(nsINode& aNode,
+                                   bool aShowingAnonymousContent);
+  static nsINode* GetParentForNode(GlobalObject& aGlobalObject,
+                                   nsINode& aNode,
+                                   bool aShowingAnonymousContent)
+  {
+    return GetParentForNode(aNode, aShowingAnonymousContent);
+  }
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

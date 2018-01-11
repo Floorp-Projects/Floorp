@@ -58,7 +58,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
   return nullptr;
 }
 
-nsIDOMNode*
+nsINode*
 inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
 {
   nsPIDOMWindowOuter* pwin = aDoc.GetWindow();
@@ -66,7 +66,6 @@ inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(pwin->GetFrameElementInternal());
-  return node;
+  return pwin->GetFrameElementInternal();
 }
 

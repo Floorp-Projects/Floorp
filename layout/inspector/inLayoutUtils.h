@@ -22,7 +22,7 @@ public:
   static mozilla::EventStateManager*
            GetEventStateManagerFor(nsIDOMElement *aElement);
   static nsIDOMDocument* GetSubDocumentFor(nsIDOMNode* aNode);
-  static nsIDOMNode* GetContainerFor(const nsIDocument& aDoc);
+  static nsINode* GetContainerFor(const nsIDocument& aDoc);
 };
 
 #endif // __inLayoutUtils_h__
