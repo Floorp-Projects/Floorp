@@ -55,6 +55,4 @@ interface nsIDOMCSSPrimitiveValue : nsIDOMCSSValue
                                         raises(DOMException);
   DOMString          getStringValue()
                                         raises(DOMException);
-  nsIDOMRect         getRectValue()
-                                        raises(DOMException);
 };

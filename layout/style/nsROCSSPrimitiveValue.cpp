@@ -171,38 +171,25 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
       {
         NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
         NS_NAMED_LITERAL_STRING(comma, ", ");
-        nsCOMPtr<nsIDOMCSSPrimitiveValue> sideCSSValue;
         nsAutoString sideValue;
         tmpStr.AssignLiteral("rect(");
         // get the top
-        result = mValue.mRect->GetTop(getter_AddRefs(sideCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = sideCSSValue->GetCssText(sideValue);
+        result = mValue.mRect->Top()->GetCssText(sideValue);
         if (NS_FAILED(result))
           break;
         tmpStr.Append(sideValue + comma);
         // get the right
-        result = mValue.mRect->GetRight(getter_AddRefs(sideCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = sideCSSValue->GetCssText(sideValue);
+        result = mValue.mRect->Right()->GetCssText(sideValue);
         if (NS_FAILED(result))
           break;
         tmpStr.Append(sideValue + comma);
         // get the bottom
-        result = mValue.mRect->GetBottom(getter_AddRefs(sideCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = sideCSSValue->GetCssText(sideValue);
+        result = mValue.mRect->Bottom()->GetCssText(sideValue);
         if (NS_FAILED(result))
           break;
         tmpStr.Append(sideValue + comma);
         // get the left
-        result = mValue.mRect->GetLeft(getter_AddRefs(sideCSSValue));
-        if (NS_FAILED(result))
-          break;
-        result = sideCSSValue->GetCssText(sideValue);
+        result = mValue.mRect->Left()->GetCssText(sideValue);
         if (NS_FAILED(result))
           break;
         tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
@@ -497,14 +484,6 @@ nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 
   NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
   return mValue.mRect;
-}
-
-NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aRect)
-{
-  ErrorResult error;
-  NS_IF_ADDREF(*aRect = GetRectValue(error));
-  return error.StealNSResult();
 }
 
 nsDOMCSSRGBColor*
