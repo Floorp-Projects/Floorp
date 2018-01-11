@@ -223,6 +223,14 @@ public:
                                nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
                                ErrorResult& aRv);
 
+  /**
+   * Get the names of all the supported pseudo-elements.
+   * Pseudo-elements which are only accepted in UA style sheets are
+   * not included.
+   */
+  static void GetCSSPseudoElementNames(GlobalObject& aGlobal,
+                                       nsTArray<nsString>& aResult);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

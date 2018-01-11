@@ -64,6 +64,7 @@ namespace InspectorUtils {
       optional boolean clearActiveDocument = false);
   unsigned long long getContentState(Element element);
   [NewObject, Throws] sequence<InspectorFontFace> getUsedFontFaces(Range range);
+  sequence<DOMString> getCSSPseudoElementNames();
 };
 
 dictionary PropertyNamesOptions {

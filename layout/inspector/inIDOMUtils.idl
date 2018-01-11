@@ -20,17 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  /**
-   * Get the names of all the supported pseudo-elements.
-   * Pseudo-elements which are only accepted in UA style sheets are
-   * not included.
-   *
-   * @param {unsigned long} aCount the number of items returned
-   * @param {wstring[]} aNames the names
-   */
-  void getCSSPseudoElementNames([optional] out unsigned long aCount,
-                                [retval, array, size_is(aCount)] out wstring aNames);
-
   // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
   // selector string, e.g. ":hover". ":any-link" and non-event-state
   // pseudo-classes are ignored. aEnabled sets whether the psuedo-class

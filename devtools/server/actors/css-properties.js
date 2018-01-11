@@ -4,8 +4,6 @@
 
 "use strict";
 
-loader.lazyServiceGetter(this, "DOMUtils",
-  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 loader.lazyRequireGetter(this, "CSS_TYPES",
   "devtools/shared/css/properties-db", true);
 
@@ -28,7 +26,7 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
 
   getCSSDatabase() {
     const properties = generateCssProperties();
-    const pseudoElements = DOMUtils.getCSSPseudoElementNames();
+    const pseudoElements = InspectorUtils.getCSSPseudoElementNames();
     const supportedFeature = {
       // checking for css-color-4 color function support.
       "css-color-4-color-function": InspectorUtils.isValidCSSColor("rgb(1 1 1 / 100%)"),

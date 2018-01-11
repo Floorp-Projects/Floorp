@@ -1027,30 +1027,26 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
   return sPseudoClassStates[static_cast<CSSPseudoClassTypeBase>(type)];
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
-{
-  nsTArray<nsAtom*> array;
+namespace mozilla {
+namespace dom {
 
+/* static */ void
+InspectorUtils::GetCSSPseudoElementNames(GlobalObject& aGlobalObject,
+                                         nsTArray<nsString>& aResult)
+{
   const CSSPseudoElementTypeBase pseudoCount =
     static_cast<CSSPseudoElementTypeBase>(CSSPseudoElementType::Count);
   for (CSSPseudoElementTypeBase i = 0; i < pseudoCount; ++i) {
     CSSPseudoElementType type = static_cast<CSSPseudoElementType>(i);
     if (nsCSSPseudoElements::IsEnabled(type, CSSEnabledState::eForAllContent)) {
       nsAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
-      array.AppendElement(atom);
+      aResult.AppendElement(nsDependentAtomString(atom));
     }
   }
-
-  *aLength = array.Length();
-  char16_t** ret =
-    static_cast<char16_t**>(moz_xmalloc(*aLength * sizeof(char16_t*)));
-  for (uint32_t i = 0; i < *aLength; ++i) {
-    ret[i] = ToNewUnicode(nsDependentAtomString(array[i]));
-  }
-  *aNames = ret;
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
