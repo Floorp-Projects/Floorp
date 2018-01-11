@@ -81,7 +81,6 @@ class CodeSegment
     uint8_t*        interruptCode_;
     uint8_t*        outOfBoundsCode_;
     uint8_t*        unalignedAccessCode_;
-    uint8_t*        trapCode_;
 
     bool            registered_;
 
@@ -109,7 +108,6 @@ class CodeSegment
         interruptCode_(nullptr),
         outOfBoundsCode_(nullptr),
         unalignedAccessCode_(nullptr),
-        trapCode_(nullptr),
         registered_(false)
     {}
 
@@ -141,7 +139,6 @@ class CodeSegment
     uint8_t* interruptCode() const { return interruptCode_; }
     uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
     uint8_t* unalignedAccessCode() const { return unalignedAccessCode_; }
-    uint8_t* trapCode() const { return trapCode_; }
 
     bool containsCodePC(const void* pc) const {
         return pc >= base() && pc < (base() + length_);
@@ -354,7 +351,6 @@ struct MetadataTier
     MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
-    TrapSiteVectorArray   trapSites;
     FuncImportVector      funcImports;
     FuncExportVector      funcExports;
 
@@ -492,7 +488,6 @@ class Code : public ShareableBase<Code>
     const CodeRange* lookupRange(void* pc) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
     bool containsCodePC(const void* pc) const;
-    bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 
     // To save memory, profilingLabels_ are generated lazily when profiling mode
     // is enabled.

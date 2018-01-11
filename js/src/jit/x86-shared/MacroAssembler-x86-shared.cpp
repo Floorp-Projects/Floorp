@@ -668,14 +668,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     return retAddr;
 }
 
-// ===============================================================
-// WebAssembly
-
-CodeOffset
-MacroAssembler::illegalInstruction()
-{
-    return ud2();
-}
+// wasm specific methods, used in both the wasm baseline compiler and ion.
 
 // RAII class that generates the jumps to traps when it's destructed, to
 // prevent some code duplication in the outOfLineWasmTruncateXtoY methods.
