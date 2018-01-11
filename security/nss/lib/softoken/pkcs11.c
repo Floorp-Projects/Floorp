@@ -2364,17 +2364,22 @@ sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all)
     return slot;
 }
 
-SFTKSlot *
-sftk_SlotFromSessionHandle(CK_SESSION_HANDLE handle)
+CK_SLOT_ID
+sftk_SlotIDFromSessionHandle(CK_SESSION_HANDLE handle)
 {
     CK_ULONG slotIDIndex = (handle >> 24) & 0x7f;
     CK_ULONG moduleIndex = (handle >> 31) & 1;
 
     if (slotIDIndex >= nscSlotCount[moduleIndex]) {
-        return NULL;
+        return (CK_SLOT_ID)-1;
     }
+    return nscSlotList[moduleIndex][slotIDIndex];
+}
 
-    return sftk_SlotFromID(nscSlotList[moduleIndex][slotIDIndex], PR_FALSE);
+SFTKSlot *
+sftk_SlotFromSessionHandle(CK_SESSION_HANDLE handle)
+{
+    return sftk_SlotFromID(sftk_SlotIDFromSessionHandle(handle), PR_FALSE);
 }
 
 static CK_RV

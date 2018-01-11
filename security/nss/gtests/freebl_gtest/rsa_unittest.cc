@@ -53,5 +53,9 @@ TEST_F(RSANewKeyTest, WrongKeysizeTest) {
 
 TEST_F(RSANewKeyTest, expThreeTest) {
   ScopedRSAPrivateKey key(CreateKeyWithExponent(2048, 0x03));
+#ifdef NSS_FIPS_DISABLED
   ASSERT_TRUE(key != nullptr);
+#else
+  ASSERT_TRUE(key == nullptr);
+#endif
 }

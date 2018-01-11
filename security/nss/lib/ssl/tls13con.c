@@ -4725,6 +4725,8 @@ static const struct {
     { ssl_server_name_xtn, _M2(client_hello, encrypted_extensions) },
     { ssl_supported_groups_xtn, _M2(client_hello, encrypted_extensions) },
     { ssl_signature_algorithms_xtn, _M2(client_hello, certificate_request) },
+    { ssl_signature_algorithms_cert_xtn, _M2(client_hello,
+                                             certificate_request) },
     { ssl_use_srtp_xtn, _M2(client_hello, encrypted_extensions) },
     { ssl_app_layer_protocol_xtn, _M2(client_hello, encrypted_extensions) },
     { ssl_padding_xtn, _M1(client_hello) },
