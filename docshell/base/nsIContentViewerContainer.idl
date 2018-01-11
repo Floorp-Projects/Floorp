@@ -10,9 +10,4 @@ interface nsIContentViewer;
 
 [scriptable, uuid(ea2ce7a0-5c3d-11d4-90c2-0050041caf44)]
 interface nsIContentViewerContainer : nsISupports {
-  /**
-   * Allows nsPrintJob to make this call on an internal interface to the
-   * DocShell.
-   */
-  void setIsPrinting(in boolean aIsPrinting);
 };

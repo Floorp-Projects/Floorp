@@ -6919,12 +6919,6 @@ nsDocShell::Embed(nsIContentViewer* aContentViewer,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetIsPrinting(bool aIsPrinting)
-{
-  mIsPrintingOrPP = aIsPrinting;
-  return NS_OK;
-}
 
 //*****************************************************************************
 // nsDocShell::nsIWebProgressListener
@@ -13851,6 +13845,13 @@ nsDocShell::StopDocumentLoad(void)
   }
   // return failer if this request is not accepted due to mCharsetReloadState
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetIsPrinting(bool aIsPrinting)
+{
+  mIsPrintingOrPP = aIsPrinting;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
