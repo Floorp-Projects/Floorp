@@ -20,11 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Get a list of all valid keywords and colors for aProperty.
-  void getCSSValuesForProperty(in AString aProperty,
-                               [optional] out unsigned long aLength,
-                               [array, size_is(aLength), retval] out wstring aValues);
-
   // Utilities for working with CSS colors
   [implicit_jscontext]
   jsval colorNameToRGB(in DOMString aColorName);
