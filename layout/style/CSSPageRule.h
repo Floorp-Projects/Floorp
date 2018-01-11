@@ -10,7 +10,6 @@
 #include "mozilla/css/Rule.h"
 
 #include "nsICSSDeclaration.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 
 namespace mozilla {
 namespace dom {

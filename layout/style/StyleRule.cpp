@@ -33,8 +33,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsRuleProcessorData.h"
 
-class nsIDOMCSSStyleDeclaration;
-
 using namespace mozilla;
 
 #define NS_IF_CLONE(member_)                                                  \

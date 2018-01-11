@@ -9,7 +9,6 @@
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsAString.h"

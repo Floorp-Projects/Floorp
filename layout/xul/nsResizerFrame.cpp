@@ -13,7 +13,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 
 #include "nsPresContext.h"
 #include "nsFrameManager.h"

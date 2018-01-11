@@ -2178,7 +2178,7 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
   nsCOMPtr<nsPIDOMWindowInner> innerWindow = window->GetCurrentInnerWindow();
   NS_ENSURE_STATE(window);
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> decl;
+  nsCOMPtr<nsICSSDeclaration> decl;
   {
     ErrorResult rv;
     decl = innerWindow->GetComputedStyle(*element, aPseudoElement, rv);

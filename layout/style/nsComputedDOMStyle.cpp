@@ -1216,12 +1216,6 @@ nsComputedDOMStyle::SetProperty(const nsAString& aPropertyName,
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  return nsDOMCSSDeclaration::Item(aIndex, aReturn);
-}
-
 void
 nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
                                   bool&      aFound,
