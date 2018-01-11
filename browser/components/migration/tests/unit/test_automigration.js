@@ -43,36 +43,45 @@ async function visitsForURL(url) {
   return visitCount;
 }
 
+async function promiseThrows(fn) {
+  let failed = false;
+  try {
+    await fn();
+  } catch (e) {
+    failed = true;
+  }
+  Assert.ok(failed);
+}
 
 /**
  * Test automatically picking a browser to migrate from
  */
 add_task(async function checkMigratorPicking() {
-  Assert.throws(() => AutoMigrate.pickMigrator("firefox"),
-                /Can't automatically migrate from Firefox/,
-                "Should throw when explicitly picking Firefox.");
+  await promiseThrows(() => AutoMigrate.pickMigrator("firefox"),
+                      /Can't automatically migrate from Firefox/,
+                      "Should throw when explicitly picking Firefox.");
 
-  Assert.throws(() => AutoMigrate.pickMigrator("gobbledygook"),
-                /migrator object is not available/,
-                "Should throw when passing unknown migrator key");
+  await promiseThrows(() => AutoMigrate.pickMigrator("gobbledygook"),
+                      /migrator object is not available/,
+                      "Should throw when passing unknown migrator key");
   gShimmedMigratorKeyPicker = function() {
     return "firefox";
   };
-  Assert.throws(() => AutoMigrate.pickMigrator(),
-                /Can't automatically migrate from Firefox/,
-                "Should throw when implicitly picking Firefox.");
+  await promiseThrows(() => AutoMigrate.pickMigrator(),
+                      /Can't automatically migrate from Firefox/,
+                      "Should throw when implicitly picking Firefox.");
   gShimmedMigratorKeyPicker = function() {
     return "gobbledygook";
   };
-  Assert.throws(() => AutoMigrate.pickMigrator(),
-                /migrator object is not available/,
-                "Should throw when an unknown migrator is the default");
+  await promiseThrows(() => AutoMigrate.pickMigrator(),
+                      /migrator object is not available/,
+                      "Should throw when an unknown migrator is the default");
   gShimmedMigratorKeyPicker = function() {
     return "";
   };
-  Assert.throws(() => AutoMigrate.pickMigrator(),
-                /Could not determine default browser key/,
-                "Should throw when an unknown migrator is the default");
+  await promiseThrows(() => AutoMigrate.pickMigrator(),
+                      /Could not determine default browser key/,
+                      "Should throw when an unknown migrator is the default");
 });
 
 
@@ -80,32 +89,37 @@ add_task(async function checkMigratorPicking() {
  * Test automatically picking a profile to migrate from
  */
 add_task(async function checkProfilePicking() {
-  let fakeMigrator = {sourceProfiles: [{id: "a"}, {id: "b"}]};
-  let profB = fakeMigrator.sourceProfiles[1];
-  Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator),
-                /Don't know how to pick a profile when more/,
-                "Should throw when there are multiple profiles.");
-  Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator, "c"),
-                /Profile specified was not found/,
-                "Should throw when the profile supplied doesn't exist.");
-  let profileToMigrate = AutoMigrate.pickProfile(fakeMigrator, "b");
+  let fakeMigrator = {
+    _sourceProfiles: [{id: "a"}, {id: "b"}],
+    getSourceProfiles() {
+      return this._sourceProfiles;
+    },
+  };
+  let profB = fakeMigrator._sourceProfiles[1];
+  await promiseThrows(() => AutoMigrate.pickProfile(fakeMigrator),
+                      /Don't know how to pick a profile when more/,
+                      "Should throw when there are multiple profiles.");
+  await promiseThrows(() => AutoMigrate.pickProfile(fakeMigrator, "c"),
+                      /Profile specified was not found/,
+                      "Should throw when the profile supplied doesn't exist.");
+  let profileToMigrate = await AutoMigrate.pickProfile(fakeMigrator, "b");
   Assert.equal(profileToMigrate, profB, "Should return profile supplied");
 
-  fakeMigrator.sourceProfiles = null;
-  Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator, "c"),
-                /Profile specified but only a default profile found./,
-                "Should throw when the profile supplied doesn't exist.");
-  profileToMigrate = AutoMigrate.pickProfile(fakeMigrator);
+  fakeMigrator._sourceProfiles = null;
+  await promiseThrows(() => AutoMigrate.pickProfile(fakeMigrator, "c"),
+                      /Profile specified but only a default profile found./,
+                      "Should throw when the profile supplied doesn't exist.");
+  profileToMigrate = await AutoMigrate.pickProfile(fakeMigrator);
   Assert.equal(profileToMigrate, null, "Should return default profile when that's the only one.");
 
-  fakeMigrator.sourceProfiles = [];
-  Assert.throws(() => AutoMigrate.pickProfile(fakeMigrator),
-                /No profile data found/,
-                "Should throw when no profile data is present.");
+  fakeMigrator._sourceProfiles = [];
+  await promiseThrows(() => AutoMigrate.pickProfile(fakeMigrator),
+                      /No profile data found/,
+                      "Should throw when no profile data is present.");
 
-  fakeMigrator.sourceProfiles = [{id: "a"}];
-  let profA = fakeMigrator.sourceProfiles[0];
-  profileToMigrate = AutoMigrate.pickProfile(fakeMigrator);
+  fakeMigrator._sourceProfiles = [{id: "a"}];
+  let profA = fakeMigrator._sourceProfiles[0];
+  profileToMigrate = await AutoMigrate.pickProfile(fakeMigrator);
   Assert.equal(profileToMigrate, profA, "Should return the only profile if only one is present.");
 });
 
@@ -115,7 +129,7 @@ add_task(async function checkProfilePicking() {
  */
 add_task(async function checkIntegration() {
   gShimmedMigrator = {
-    get sourceProfiles() {
+    getSourceProfiles() {
       info("Read sourceProfiles");
       return null;
     },
@@ -130,7 +144,7 @@ add_task(async function checkIntegration() {
   gShimmedMigratorKeyPicker = function() {
     return "gobbledygook";
   };
-  AutoMigrate.migrate("startup");
+  await AutoMigrate.migrate("startup");
   Assert.strictEqual(gShimmedMigrator._getMigrateDataArgs, null,
                      "getMigrateData called with 'null' as a profile");
 
@@ -146,7 +160,7 @@ add_task(async function checkIntegration() {
 add_task(async function checkUndoPreconditions() {
   let shouldAddData = false;
   gShimmedMigrator = {
-    get sourceProfiles() {
+    getSourceProfiles() {
       info("Read sourceProfiles");
       return null;
     },
@@ -174,7 +188,7 @@ add_task(async function checkUndoPreconditions() {
   gShimmedMigratorKeyPicker = function() {
     return "gobbledygook";
   };
-  AutoMigrate.migrate("startup");
+  await AutoMigrate.migrate("startup");
   let migrationFinishedPromise = TestUtils.topicObserved("Migration:Ended");
   Assert.strictEqual(gShimmedMigrator._getMigrateDataArgs, null,
                      "getMigrateData called with 'null' as a profile");
@@ -193,7 +207,7 @@ add_task(async function checkUndoPreconditions() {
   Preferences.reset("browser.migrate.automigrate.browser");
   shouldAddData = true;
 
-  AutoMigrate.migrate("startup");
+  await AutoMigrate.migrate("startup");
   migrationFinishedPromise = TestUtils.topicObserved("Migration:Ended");
   Assert.strictEqual(gShimmedMigrator._getMigrateDataArgs, null,
                      "getMigrateData called with 'null' as a profile");

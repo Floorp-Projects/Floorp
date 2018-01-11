@@ -3,11 +3,11 @@
 add_task(async function() {
   registerFakePath("AppData", do_get_file("AppData/Roaming/"));
 
-  let migrator = MigrationUtils.getMigrator("360se");
+  let migrator = await MigrationUtils.getMigrator("360se");
   // Sanity check for the source.
-  Assert.ok(migrator.sourceExists);
+  Assert.ok(await migrator.isSourceAvailable());
 
-  let profiles = migrator.sourceProfiles;
+  let profiles = await migrator.getSourceProfiles();
   Assert.equal(profiles.length, 2, "Should present two profiles");
   Assert.equal(profiles[0].name, "test@firefox.com.cn", "Current logged in user should be the first");
   Assert.equal(profiles[profiles.length - 1].name, "Default", "Default user should be the last");

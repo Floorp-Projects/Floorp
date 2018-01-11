@@ -4,9 +4,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
 
 add_task(async function() {
-  let migrator = MigrationUtils.getMigrator("ie");
+  let migrator = await MigrationUtils.getMigrator("ie");
   // Sanity check for the source.
-  Assert.ok(migrator.sourceExists);
+  Assert.ok(await migrator.isSourceAvailable());
 
   const BOOL = ctypes.bool;
   const LPCTSTR = ctypes.char16_t.ptr;
