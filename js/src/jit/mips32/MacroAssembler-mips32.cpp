@@ -647,6 +647,9 @@ MacroAssemblerMIPS::ma_lid(FloatRegister dest, double value)
         uint32_t hi;
     } ;
     DoubleStruct intStruct = mozilla::BitwiseCast<DoubleStruct>(value);
+#if MOZ_BIG_ENDIAN
+    mozilla::Swap(intStruct.hi, intStruct.lo);
+#endif
 
     // put hi part of 64 bit value into the odd register
     if (intStruct.hi == 0) {
@@ -702,13 +705,14 @@ MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
     // Use single precision load instructions so we don't have to worry about
     // alignment.
 
+    int32_t off = address.offset + PAYLOAD_OFFSET;
     int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::IsInSignedRange(address.offset) && Imm16::IsInSignedRange(off2)) {
-        as_ls(ft, address.base, address.offset);
+    if (Imm16::IsInSignedRange(off) && Imm16::IsInSignedRange(off2)) {
+        as_ls(ft, address.base, off);
         as_ls(getOddPair(ft), address.base, off2);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
-        ma_li(ScratchRegister, Imm32(address.offset));
+        ma_li(ScratchRegister, Imm32(off));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ls(ft, ScratchRegister, PAYLOAD_OFFSET);
         as_ls(getOddPair(ft), ScratchRegister, TAG_OFFSET);
@@ -718,13 +722,14 @@ MacroAssemblerMIPS::ma_ld(FloatRegister ft, Address address)
 void
 MacroAssemblerMIPS::ma_sd(FloatRegister ft, Address address)
 {
+    int32_t off = address.offset + PAYLOAD_OFFSET;
     int32_t off2 = address.offset + TAG_OFFSET;
-    if (Imm16::IsInSignedRange(address.offset) && Imm16::IsInSignedRange(off2)) {
-        as_ss(ft, address.base, address.offset);
+    if (Imm16::IsInSignedRange(off) && Imm16::IsInSignedRange(off2)) {
+        as_ss(ft, address.base, off);
         as_ss(getOddPair(ft), address.base, off2);
     } else {
         MOZ_ASSERT(address.base != ScratchRegister);
-        ma_li(ScratchRegister, Imm32(address.offset));
+        ma_li(ScratchRegister, Imm32(off));
         as_addu(ScratchRegister, address.base, ScratchRegister);
         as_ss(ft, ScratchRegister, PAYLOAD_OFFSET);
         as_ss(getOddPair(ft), ScratchRegister, TAG_OFFSET);
@@ -938,6 +943,7 @@ void
 MacroAssemblerMIPSCompat::loadUnalignedDouble(const wasm::MemoryAccessDesc& access,
                                               const BaseIndex& src, Register temp, FloatRegister dest)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(src, SecondScratchReg);
 
     uint32_t framePushed = asMasm().framePushed();
@@ -996,6 +1002,7 @@ void
 MacroAssemblerMIPSCompat::loadUnalignedFloat32(const wasm::MemoryAccessDesc& access,
                                                const BaseIndex& src, Register temp, FloatRegister dest)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(src, SecondScratchReg);
     BufferOffset load;
     if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 3)) {
@@ -1148,6 +1155,7 @@ void
 MacroAssemblerMIPSCompat::storeUnalignedFloat32(const wasm::MemoryAccessDesc& access,
                                                 FloatRegister src, Register temp, const BaseIndex& dest)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(dest, SecondScratchReg);
     moveFromFloat32(src, temp);
 
@@ -1168,6 +1176,7 @@ void
 MacroAssemblerMIPSCompat::storeUnalignedDouble(const wasm::MemoryAccessDesc& access,
                                                FloatRegister src, Register temp, const BaseIndex& dest)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(dest, SecondScratchReg);
 
     uint32_t framePushed = asMasm().framePushed();
