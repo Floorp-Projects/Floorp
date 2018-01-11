@@ -20,7 +20,6 @@ NS_IMPL_RELEASE_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
 NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 // nsIDOMCSSGroupingRule methods
