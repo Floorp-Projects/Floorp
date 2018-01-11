@@ -31,6 +31,26 @@ jobs:
       - deb7-mercurial
       - deb7-ninja
       - deb7-python
+  debian7-amd64-build:
+    symbol: I(deb7)
+    definition: debian7-build
+    packages:
+      - deb7-git
+      - deb7-mercurial
+      - deb7-python
+      - deb7-valgrind
+    args:
+      ARCH: amd64
+  debian7-i386-build:
+    symbol: I(deb7-32)
+    definition: debian7-build
+    packages:
+      - deb7-git
+      - deb7-mercurial
+      - deb7-python
+      - deb7-valgrind
+    args:
+      ARCH: i386
   lint:
     symbol: I(lnt)
   android-build:
