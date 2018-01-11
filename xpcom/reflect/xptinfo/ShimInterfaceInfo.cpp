@@ -70,7 +70,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsIDOMStyleSheet.h"
-#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMText.h"
@@ -316,7 +315,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM(SimpleGestureEvent),
   DEFINE_SHIM(StyleSheet),
-  DEFINE_SHIM(StyleSheetList),
   DEFINE_SHIM(SVGElement),
   DEFINE_SHIM(SVGLength),
   DEFINE_SHIM(Text),

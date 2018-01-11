@@ -9,7 +9,6 @@ with Files("**"):
 
 XPIDL_SOURCES += [
     'nsIDOMStyleSheet.idl',
-    'nsIDOMStyleSheetList.idl',
 ]
 
 XPIDL_MODULE = 'dom_stylesheets'
