@@ -2310,6 +2310,7 @@ bool
 nsHttpTransaction::Do0RTT()
 {
    if (mRequestHead->IsSafeMethod() &&
+       !mDoNotTryEarlyData &&
        (!mConnection ||
        !mConnection->IsProxyConnectInProgress())) {
      m0RTTInProgress = true;
