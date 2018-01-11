@@ -275,7 +275,9 @@ NSSSMIME_GetVersion
 NSS_SMIMESignerInfo_SaveSMIMEProfile
 NSS_SMIMEUtil_FindBulkAlgForRecipients
 NSSSSL_GetVersion
+#ifdef XP_WIN
 _NSSUTIL_Access
+#endif
 NSSUTIL_ArgDecodeNumber
 NSSUTIL_ArgFetchValue
 NSSUTIL_ArgGetLabel
@@ -297,7 +299,9 @@ NSSUTIL_MkModuleSpec
 NSSUTIL_MkNSSString
 NSSUTIL_MkSlotString
 NSSUTIL_Quote
+#ifdef XP_WIN
 _NSSUTIL_UTF8ToWide
+#endif
 PK11_AlgtagToMechanism
 PK11_Authenticate
 PK11_ChangePW
