@@ -795,12 +795,6 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
   nsresult rv;
   nsCOMPtr<nsIDOMNode> childDOMNode(do_QueryInterface(aChild));
-  if (!mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
-    if (!mDOMUtils) {
-      return;
-    }
-  }
   nsCOMPtr<nsIDOMNode> parent = GetParentForNode(aChild, mShowAnonymous);
 
   // find the inDOMViewNode for the parent of the inserted content
