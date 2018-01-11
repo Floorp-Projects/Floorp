@@ -785,6 +785,9 @@ class TokenStreamCharsBase
 
     TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length, size_t startOffset);
 
+    static MOZ_ALWAYS_INLINE JSAtom*
+    atomizeChars(JSContext* cx, const CharT* chars, size_t length);
+
     const CharBuffer& getTokenbuf() const { return tokenbuf; }
 
     // This is the low-level interface to the JS source code buffer.  It just
@@ -946,6 +949,13 @@ class TokenStreamCharsBase
     CharBuffer tokenbuf;
 };
 
+template<>
+/* static */ MOZ_ALWAYS_INLINE JSAtom*
+TokenStreamCharsBase<char16_t>::atomizeChars(JSContext* cx, const char16_t* chars, size_t length)
+{
+    return AtomizeChars(cx, chars, length);
+}
+
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
 
 template<class AnyCharsAccess>
@@ -985,11 +995,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
             return false;
 
         return matchTrailForLeadSurrogate(c, codepoint);
-    }
-
-    static MOZ_ALWAYS_INLINE JSAtom*
-    atomizeChars(JSContext* cx, const char16_t* chars, size_t length) {
-        return AtomizeChars(cx, chars, length);
     }
 };
 
@@ -1066,7 +1071,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   private:
     using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
-    using CharsBase::atomizeChars;
+    using CharsSharedBase::atomizeChars;
     using CharsBase::copyTokenbufTo;
     using CharsBase::isMultiUnitCodepoint;
     using CharsSharedBase::tokenbuf;
@@ -1156,7 +1161,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                 return nullptr;
             cur++;
         }
-        return CharsBase::atomizeChars(anyChars.cx, charbuf.begin(), charbuf.length());
+        return atomizeChars(anyChars.cx, charbuf.begin(), charbuf.length());
     }
 
   private:
