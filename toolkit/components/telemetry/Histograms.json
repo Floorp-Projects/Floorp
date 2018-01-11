@@ -9417,7 +9417,7 @@
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "64",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
@@ -9427,7 +9427,7 @@
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "64",
     "kind": "enumerated",
     "n_values": 4,
     "bug_numbers": [1400757],
