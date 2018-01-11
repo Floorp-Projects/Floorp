@@ -31,6 +31,7 @@ namespace InspectorUtils {
       [TreatNullAs=EmptyString] optional DOMString pseudo = "");
   boolean isInheritedProperty(DOMString property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options);
+  [Throws] sequence<DOMString> getCSSValuesForProperty(DOMString property);
 };
 
 dictionary PropertyNamesOptions {

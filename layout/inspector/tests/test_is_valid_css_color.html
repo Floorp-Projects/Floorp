@@ -6,11 +6,12 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+  const InspectorUtils = SpecialPowers.InspectorUtils;
   let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
                            .getService(SpecialPowers.Ci.inIDOMUtils);
 
   // Color names
-  let colors = utils.getCSSValuesForProperty("color");
+  let colors = InspectorUtils.getCSSValuesForProperty("color");
   let notColor = ["hsl", "hsla", "inherit", "initial", "rgb", "rgba",
                   "unset", "transparent", "currentColor"];
   for (let color of colors) {
