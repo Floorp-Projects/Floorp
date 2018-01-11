@@ -83,7 +83,7 @@ RenderMacIOSurfaceTextureHostOGL::Lock(uint8_t aChannelIndex, gl::GLContext* aGL
   }
 
   if (!mSurface || !mGL || !mGL->MakeCurrent()) {
-    return NativeTextureToWrExternalImage(0, 0, 0, 0, 0);
+    return InvalidToWrExternalImage();
   }
 
   if (!mTextureHandles[0]) {

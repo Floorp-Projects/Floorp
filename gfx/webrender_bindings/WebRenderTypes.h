@@ -556,6 +556,15 @@ static inline wr::WrExternalImage NativeTextureToWrExternalImage(uint32_t aHandl
   };
 }
 
+static inline wr::WrExternalImage InvalidToWrExternalImage()
+{
+  return wr::WrExternalImage {
+    wr::WrExternalImageType::Invalid,
+    0, 0, 0, 0, 0,
+    nullptr, 0
+  };
+}
+
 inline wr::ByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
   return wr::ByteSlice { aRange.begin().get(), aRange.length() };
 }
