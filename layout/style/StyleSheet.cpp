@@ -377,13 +377,6 @@ StyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-StyleSheet::GetMedia(nsIDOMMediaList** aMedia)
-{
-  NS_ADDREF(*aMedia = Media());
-  return NS_OK;
-}
-
 void
 StyleSheet::WillDirty()
 {

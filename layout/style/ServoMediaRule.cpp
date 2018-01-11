@@ -101,7 +101,7 @@ void
 ServoMediaRule::SetConditionText(const nsAString& aConditionText,
                                  ErrorResult& aRv)
 {
-  aRv = Media()->SetMediaText(aConditionText);
+  Media()->SetMediaText(aConditionText);
 }
 
 /* virtual */ void

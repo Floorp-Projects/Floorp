@@ -1767,10 +1767,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
         obj.class != "CSSRuleList" &&
+        obj.class != "MediaList" &&
         !(rawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
           rawObj instanceof Ci.nsIDOMCSSValueList ||
           rawObj instanceof Ci.nsIDOMFileList ||
-          rawObj instanceof Ci.nsIDOMMediaList ||
           rawObj instanceof Ci.nsIDOMNodeList ||
           rawObj instanceof Ci.nsIDOMStyleSheetList)) {
       return false;
