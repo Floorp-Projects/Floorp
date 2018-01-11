@@ -119,7 +119,6 @@ TEST(MoofParser, EmptyStream)
   EXPECT_TRUE(parser.mInitRange.IsEmpty());
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
-  EXPECT_FALSE(parser.HasMetadata());
   RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
   EXPECT_FALSE(metadataBuffer);
   EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsEmpty());
@@ -395,7 +394,6 @@ TEST(MoofParser, test_case_mp4)
     EXPECT_FALSE(parser.ReachedEnd()) << tests[test].mFilename;
     EXPECT_TRUE(parser.mInitRange.IsEmpty()) << tests[test].mFilename;
 
-    EXPECT_TRUE(parser.HasMetadata()) << tests[test].mFilename;
     RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
     EXPECT_TRUE(metadataBuffer) << tests[test].mFilename;
 
@@ -442,7 +440,6 @@ TEST(MoofParser, test_case_mp4_subsets)
         MediaByteRangeSet byteRanges;
         EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
         parser.GetCompositionRange(byteRanges);
-        parser.HasMetadata();
         RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
         parser.FirstCompleteMediaSegment();
         parser.FirstCompleteMediaHeader();

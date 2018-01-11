@@ -40,11 +40,6 @@ toolkit.jar:
    content/global/browser-content.js
 *   content/global/buildconfig.html
    content/global/contentAreaUtils.js
-#ifndef MOZ_FENNEC
-   content/global/customizeToolbar.css
-   content/global/customizeToolbar.js
-   content/global/customizeToolbar.xul
-#endif
    content/global/datepicker.xhtml
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js

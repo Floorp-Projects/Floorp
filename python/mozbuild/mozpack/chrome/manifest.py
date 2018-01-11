@@ -210,7 +210,7 @@ class ManifestOverlay(ManifestOverload):
 class ManifestStyle(ManifestOverload):
     '''
     Class for 'style' entries.
-        style chrome://global/content/customizeToolbar.xul \
+        style chrome://global/content/viewSource.xul \
             chrome://browser/skin/
     '''
     type = 'style'

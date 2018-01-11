@@ -36,7 +36,6 @@ module.exports = {
       "extensions/pref/**",
       "mobile/android/**",
       "testing/**",
-      "tools/profiler/**",
     ],
     "rules": {
       "mozilla/use-services": "off",

@@ -9,8 +9,6 @@
 %charsetDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
 %textcontextDTD;
-<!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
-  %customizeToolbarDTD;
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
 <!ENTITY % safebrowsingDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
