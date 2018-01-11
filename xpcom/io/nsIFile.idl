@@ -260,7 +260,9 @@ interface nsIFile : nsISupports
     readonly attribute AString path;
     [notxpcom,nostdcall,must_use] PathString nativePath();
 %{C++
+#ifndef XP_WIN
     nsresult GetNativePath(nsACString& aPath);
+#endif
     /*
      * Returns a human-readable path string.
      */
