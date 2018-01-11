@@ -71,7 +71,6 @@ interface nsIDOMCSSStyleDeclaration;
 interface nsIDOMCounter;
 interface nsIDOMRect;
 interface nsIDOMCSSStyleRule;
-interface nsIDOMCSSStyleRuleCollection;
 
 // Range
 interface nsIDOMRange;
