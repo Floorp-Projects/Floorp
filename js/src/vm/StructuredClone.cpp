@@ -1873,6 +1873,12 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Mut
             return false;
         byteOffset = n;
     }
+    if (!v.isObject() || !v.toObject().is<ArrayBufferObjectMaybeShared>()) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "typed array must be backed by an ArrayBuffer");
+        return false;
+    }
+
     RootedObject buffer(context(), &v.toObject());
     RootedObject obj(context(), nullptr);
 
@@ -1930,6 +1936,11 @@ JSStructuredCloneReader::readDataView(uint32_t byteLength, MutableHandleValue vp
     RootedValue v(context());
     if (!startRead(&v))
         return false;
+    if (!v.isObject() || !v.toObject().is<ArrayBufferObjectMaybeShared>()) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "DataView must be backed by an ArrayBuffer");
+        return false;
+    }
 
     // Read byteOffset.
     uint64_t n;
@@ -1980,8 +1991,11 @@ JSStructuredCloneReader::readSharedArrayBuffer(uint32_t nbytes, MutableHandleVal
 
     // We must not transfer buffer pointers cross-process.  The cloneDataPolicy
     // in the sender should guard against this; check that it does.
-
-    MOZ_RELEASE_ASSERT(storedScope <= JS::StructuredCloneScope::SameProcessDifferentThread);
+    if (storedScope > JS::StructuredCloneScope::SameProcessDifferentThread) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "can't transfer SharedArrayBuffer cross-process");
+        return false;
+    }
 
     // The new object will have a new reference to the rawbuf.
 
@@ -2009,7 +2023,11 @@ bool
 JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
                                            MutableHandleValue vp)
 {
-    MOZ_ASSERT(arrayType <= Scalar::Uint8Clamped);
+    if (arrayType > Scalar::Uint8Clamped) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "invalid TypedArray type");
+        return false;
+    }
 
     mozilla::CheckedInt<size_t> nbytes =
         mozilla::CheckedInt<size_t>(nelems) *
@@ -2276,6 +2294,14 @@ JSStructuredCloneReader::readHeader()
     }
 
     MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
+    if (data != uint32_t(JS::StructuredCloneScope::SameProcessSameThread) &&
+        data != uint32_t(JS::StructuredCloneScope::SameProcessDifferentThread) &&
+        data != uint32_t(JS::StructuredCloneScope::DifferentProcess))
+    {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+                                  "invalid structured clone scope");
+        return false;
+    }
     storedScope = JS::StructuredCloneScope(data);
     if (storedScope < allowedScope) {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
