@@ -64,7 +64,6 @@
 #include "nsIDOMParser.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMRect.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsIDOMSerializer.h"
@@ -307,7 +306,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
   DEFINE_SHIM(ProcessingInstruction),
   DEFINE_SHIM(Range),
-  DEFINE_SHIM(Rect),
   DEFINE_SHIM(Screen),
   DEFINE_SHIM(ScrollAreaEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIScrollBoxObject, ScrollBoxObject),
