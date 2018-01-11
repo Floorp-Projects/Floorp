@@ -2833,3 +2833,15 @@ Gecko_GetBoolPrefValue(const char* aPrefName)
   MOZ_ASSERT(NS_IsMainThread());
   return Preferences::GetBool(aPrefName);
 }
+
+bool
+Gecko_IsInServoTraversal()
+{
+  return ServoStyleSet::IsInServoTraversal();
+}
+
+bool
+Gecko_IsMainThread()
+{
+  return NS_IsMainThread();
+}
