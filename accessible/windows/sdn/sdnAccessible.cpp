@@ -13,7 +13,7 @@
 #include "nsCoreUtils.h"
 #include "nsIAccessibleTypes.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 #include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWinUtils.h"
@@ -231,7 +231,7 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
   if (mNode->IsNodeOfType(nsINode::eDOCUMENT))
     return S_FALSE;
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
+  nsCOMPtr<nsICSSDeclaration> cssDecl =
     nsWinUtils::GetComputedStyleDeclaration(mNode->AsContent());
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
@@ -244,7 +244,8 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
     nsAutoString property, value;
 
     // Ignore -moz-* properties.
-    if (NS_SUCCEEDED(cssDecl->Item(index, property)) && property.CharAt(0) != '-')
+    cssDecl->Item(index, property);
+    if (property.CharAt(0) != '-')
       cssDecl->GetPropertyValue(property, value);  // Get property value
 
     if (!value.IsEmpty()) {
@@ -274,7 +275,7 @@ sdnAccessible::get_computedStyleForProperties(unsigned short aNumStyleProperties
   if (mNode->IsNodeOfType(nsINode::eDOCUMENT))
     return S_FALSE;
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
+  nsCOMPtr<nsICSSDeclaration> cssDecl =
     nsWinUtils::GetComputedStyleDeclaration(mNode->AsContent());
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 

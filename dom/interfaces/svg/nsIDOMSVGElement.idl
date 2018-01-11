@@ -5,8 +5,6 @@
 
 #include "nsIDOMElement.idl"
 
-interface nsIDOMCSSStyleDeclaration;
-
 [uuid(c63517c5-8bab-4cd1-8694-bccafc32a195)]
 interface nsIDOMSVGElement : nsIDOMElement
 {
@@ -16,5 +14,4 @@ interface nsIDOMSVGElement : nsIDOMElement
 
   [binaryname(SVGClassName)]
   readonly attribute nsISupports   className;
-  readonly attribute nsIDOMCSSStyleDeclaration style;
 };
