@@ -41,6 +41,32 @@ public:
                                const nsAString& aPseudo,
                                nsTArray<RefPtr<css::Rule>>& aResult);
 
+  /**
+   * Get the line number of a rule.
+   *
+   * @param aRule The rule.
+   * @return The rule's line number.  Line numbers are 1-based.
+   */
+  static uint32_t GetRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
+
+  /**
+   * Get the column number of a rule.
+   *
+   * @param aRule The rule.
+   * @return The rule's column number.  Column numbers are 1-based.
+   */
+  static uint32_t GetRuleColumn(GlobalObject& aGlobal, css::Rule& aRule);
+
+  /**
+   * Like getRuleLine, but if the rule is in a <style> element,
+   * returns a line number relative to the start of the element.
+   *
+   * @param aRule the rule to examine
+   * @return the line number of the rule, possibly relative to the
+   *         <style> element
+   */
+  static uint32_t GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
