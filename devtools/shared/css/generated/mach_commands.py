@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-This script implements the `mach devtools-css-db` command. It runs an xpcshell script
-that uses inIDOMUtils to query the CSS properties used by the browser. This information
-is used to generate the properties-db.js file.
+This script implements the `mach devtools-css-db` command. It runs an xpcshell
+script that uses InspectorUtils to query the CSS properties used by the browser.
+This information is used to generate the properties-db.js file.
 """
 
 import json

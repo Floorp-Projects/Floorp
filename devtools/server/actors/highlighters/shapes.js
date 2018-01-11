@@ -2517,8 +2517,8 @@ function getDefinedShapeProperties(node, property) {
   }
 
   let cssRules = getCSSStyleRules(node);
-  for (let i = 0; i < cssRules.Count(); i++) {
-    let rule = cssRules.GetElementAt(i);
+  for (let i = 0; i < cssRules.length; i++) {
+    let rule = cssRules[i];
     let value = rule.style.getPropertyValue(property);
     if (value && value !== "auto") {
       prop = value;

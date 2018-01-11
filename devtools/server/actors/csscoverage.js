@@ -4,17 +4,15 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
+const { Ci } = require("chrome");
 
+const InspectorUtils = require("InspectorUtils");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const protocol = require("devtools/shared/protocol");
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
 
-loader.lazyGetter(this, "DOMUtils", () => {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
 loader.lazyRequireGetter(this, "stylesheets", "devtools/server/actors/stylesheets");
 loader.lazyRequireGetter(this, "prettifyCSS", "devtools/shared/inspector/css-logic", true);
 
@@ -541,8 +539,8 @@ function getImportedSheets(stylesheet) {
  * @see deconstructRuleId(ruleId)
  */
 function ruleToId(rule) {
-  let line = DOMUtils.getRelativeRuleLine(rule);
-  let column = DOMUtils.getRuleColumn(rule);
+  let line = InspectorUtils.getRelativeRuleLine(rule);
+  let column = InspectorUtils.getRuleColumn(rule);
   return sheetToUrl(rule.parentStyleSheet) + "|" + line + "|" + column;
 }
 

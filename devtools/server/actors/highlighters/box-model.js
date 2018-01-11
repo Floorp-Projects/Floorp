@@ -119,6 +119,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     let doc = this.win.document;
 
     let highlighterContainer = doc.createElement("div");
+    highlighterContainer.setAttribute("role", "presentation");
     highlighterContainer.className = "highlighter-container box-model";
 
     // Build the root wrapper, used to adapt to the page zoom.
@@ -126,7 +127,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       parent: highlighterContainer,
       attributes: {
         "id": "root",
-        "class": "root"
+        "class": "root",
+        "role": "presentation"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -140,7 +142,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         "id": "elements",
         "width": "100%",
         "height": "100%",
-        "hidden": "true"
+        "hidden": "true",
+        "role": "presentation"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -149,7 +152,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       nodeType: "g",
       parent: svg,
       attributes: {
-        "class": "regions"
+        "class": "regions",
+        "role": "presentation"
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -160,7 +164,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         parent: regions,
         attributes: {
           "class": region,
-          "id": region
+          "id": region,
+          "role": "presentation"
         },
         prefix: this.ID_CLASS_PREFIX
       });
@@ -173,7 +178,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
         attributes: {
           "class": "guide-" + side,
           "id": "guide-" + side,
-          "stroke-width": GUIDE_STROKE_WIDTH
+          "stroke-width": GUIDE_STROKE_WIDTH,
+          "role": "presentation"
         },
         prefix: this.ID_CLASS_PREFIX
       });

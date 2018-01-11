@@ -14,8 +14,7 @@
   </head>
   <body>
     <script type="application/javascript">
-var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-               .getService(SpecialPowers.Ci.inIDOMUtils);
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
 function do_test() {
   var sheet = document.styleSheets[1];
@@ -29,12 +28,12 @@ function do_test() {
 
   // "suffixed" refers to the "-2".
   var suffixedSheet = sheet.cssRules[1].styleSheet;
-  domUtils.parseStyleSheet(suffixedSheet, "");
+  InspectorUtils.parseStyleSheet(suffixedSheet, "");
   is(suffixedSheet.cssRules.length, 0, "second imported sheet now has no rules");
 
   // Re-parse the style sheet, preserving the imports.
-  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
-                           "@import url('bug1202095-2.css');");
+  InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
+                                        "@import url('bug1202095-2.css');");
   is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
      "re-parsed sheet has @import rule");
   is(sheet.cssRules[0].styleSheet, importedSheet,
@@ -44,20 +43,20 @@ function do_test() {
 
   // Re-parse the style sheet, preserving both imports, but changing
   // the order.
-  domUtils.parseStyleSheet(sheet, "@import url('bug1202095-2.css');" +
-                           "@import url('bug1202095.css');");
+  InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095-2.css');" +
+                                        "@import url('bug1202095.css');");
   is(sheet.cssRules[0].styleSheet, suffixedSheet,
      "reordering preserved suffixed style sheet");
   is(sheet.cssRules[1].styleSheet, importedSheet,
      "reordering preserved unsuffixed style sheet");
 
   // Re-parse the style sheet, removing the imports.
-  domUtils.parseStyleSheet(sheet, "");
+  InspectorUtils.parseStyleSheet(sheet, "");
   is(sheet.cssRules.length, 0, "style sheet now has no rules");
 
   // Re-parse the style sheet, adding one import back.  This should
   // not allow reuse.
-  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');");
+  InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');");
   is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
      "re-re-re-parsed sheet has @import rule");
   isnot(sheet.cssRules[0].styleSheet, importedSheet,
@@ -66,8 +65,8 @@ function do_test() {
   // Re-parse the style sheet, importing the same URL twice.
   // The style sheet should be reused once, but not two times.
   importedSheet = sheet.cssRules[0].styleSheet;
-  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
-     "@import url('bug1202095.css');");
+  InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
+                                        "@import url('bug1202095.css');");
   is(sheet.cssRules[0].styleSheet, importedSheet,
      "first imported sheet is reused");
   isnot(sheet.cssRules[1].styleSheet, importedSheet,

@@ -25,17 +25,14 @@ function RunTest() {
   const kIsMac = navigator.platform.indexOf("Mac") == 0;
   const kIsWin = navigator.platform.indexOf("Win") == 0;
 
-  var domUtils =
-    CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
-
   var rng = document.createRange();
   var elem, fonts, f;
 
   elem = document.getElementById("test1");
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 1, "number of fonts for simple Latin text");
-  f = fonts.item(0);
+  f = fonts[0];
   is(f.rule, null, "rule");
   is(f.srcIndex, -1, "srcIndex");
   is(f.localName, "", "local name");
@@ -46,22 +43,22 @@ function RunTest() {
 
   elem = document.getElementById("test2");
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 3, "number of fonts for mixed serif, sans and monospaced text");
 //  report(elem.id, fonts);
 
   elem = document.getElementById("test3");
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 2, "number of fonts for mixed Latin & Chinese");
 //  report(elem.id, fonts);
 
   // get properties of a @font-face font
   elem = document.getElementById("test4");
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 1, "number of fonts in @font-face test");
-  f = fonts.item(0);
+  f = fonts[0];
   isnot(f.rule, null, "missing rule");
   is(f.srcIndex, 1, "srcIndex");
   is(f.localName, "", "local name");
@@ -77,21 +74,21 @@ function RunTest() {
   // initial latin substring...
   rng.setStart(elem, 0);
   rng.setEnd(elem, 20); // "supercalifragilistic"
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 1, "number of fonts (Latin-only)");
-  f = fonts.item(0);
+  f = fonts[0];
   is(f.name, "Gentium Plus", "font name");
   is(f.CSSFamilyName, "font-face-test-family", "family name");
   is(f.fromFontGroup, true, "font matched in font group");
 
   // extend to include a chinese character
   rng.setEnd(elem, 21);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 2, "number of fonts (incl Chinese)");
   if (kIsMac || kIsWin) { // these are only implemented by the Mac & Win font backends
     var i;
     for (i = 0; i < fonts.length; ++i) {
-      f = fonts.item(i);
+      f = fonts[i];
       if (f.rule) {
         is(f.fromFontGroup, true, "@font-face font matched in group");
         is(f.fromLanguagePrefs, false, "not from language prefs");
@@ -109,33 +106,33 @@ function RunTest() {
   rng.setStart(elem, elem.length - 1);
   rng.setEnd(elem, elem.length);
   is(rng.toString(), "!", "content of range");
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 1, "number of fonts for last char");
-  f = fonts.item(0);
+  f = fonts[0];
   is(f.name, "Gentium Plus", "font name");
 
   // include the preceding character as well
   rng.setStart(elem, elem.length - 2);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 2, "number of fonts for last two chars");
 
   // then trim the final one
   rng.setEnd(elem, elem.length - 1);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 1, "number of fonts for Chinese char");
-  f = fonts.item(0);
+  f = fonts[0];
   isnot(f.name, "Gentium Plus", "font name for Chinese char");
 
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
 //  report("test5", fonts);
 
   elem = document.getElementById("test6");
   rng.selectNode(elem);
-  fonts = domUtils.getUsedFontFaces(rng);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
   is(fonts.length, 2, "number of font faces for regular & italic");
-  is(fonts.item(0).CSSFamilyName, fonts.item(1).CSSFamilyName, "same family for regular & italic");
-  isnot(fonts.item(0).name, fonts.item(1).name, "different faces for regular & italic");
+  is(fonts[0].CSSFamilyName, fonts[1].CSSFamilyName, "same family for regular & italic");
+  isnot(fonts[0].name, fonts[1].name, "different faces for regular & italic");
 //  report(elem.id, fonts);
 
   SimpleTest.finish();

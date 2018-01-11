@@ -105,7 +105,7 @@ The following event properties are valid:
   - ``main``
   - ``content``
   - ``gpu``
-  - ``all_child`` (record in all the child processes)
+  - ``all_children`` (record in all the child processes)
   - ``all`` (record in all the processes).
 
 - ``bug_numbers`` *(required, list of numbers)*: A list of Bugzilla bug numbers that are relevant to this event.

@@ -8,7 +8,6 @@
 #define __inDOMView_h__
 
 #include "inIDOMView.h"
-#include "inIDOMUtils.h"
 
 #include "nsITreeView.h"
 #include "nsITreeSelection.h"
@@ -45,7 +44,6 @@ protected:
 
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
-  nsCOMPtr<inIDOMUtils> mDOMUtils;
 
   bool mShowAnonymous;
   bool mShowSubDocuments;
@@ -82,7 +80,7 @@ protected:
   void ReplaceLink(inDOMViewNode* aNewNode, inDOMViewNode* aOldNode);
 
   nsresult GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult);
-  nsresult AppendKidsToArray(nsIDOMNodeList* aKids, nsCOMArray<nsIDOMNode>& aArray);
+  nsresult AppendKidsToArray(nsINodeList* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult AppendAttrsToArray(nsIDOMMozNamedAttrMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult GetFirstDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
   nsresult GetLastDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);

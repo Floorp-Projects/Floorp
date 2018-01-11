@@ -22,20 +22,10 @@ using namespace mozilla;
 ///////////////////////////////////////////////////////////////////////////////
 
 EventStateManager*
-inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
+inLayoutUtils::GetEventStateManagerFor(Element& aElement)
 {
-  NS_PRECONDITION(aElement, "Passing in a null element is bad");
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-
-  if (!doc) {
-    NS_WARNING("Could not get an nsIDocument!");
-    return nullptr;
-  }
-
-  nsIPresShell *shell = doc->GetShell();
+  nsIDocument* doc = aElement.OwnerDoc();
+  nsIPresShell* shell = doc->GetShell();
   if (!shell)
     return nullptr;
 
@@ -58,7 +48,7 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
   return nullptr;
 }
 
-nsIDOMNode*
+nsINode*
 inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
 {
   nsPIDOMWindowOuter* pwin = aDoc.GetWindow();
@@ -66,7 +56,6 @@ inLayoutUtils::GetContainerFor(const nsIDocument& aDoc)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(pwin->GetFrameElementInternal());
-  return node;
+  return pwin->GetFrameElementInternal();
 }
 

@@ -47,7 +47,6 @@ parent:
                         OptionalURIParams referrerUri,
                         OptionalURIParams apiRedirectTo,
                         OptionalCorsPreflightArgs corsPreflightArgs,
-                        bool forceHSTSPriming, bool mixedContentWouldBlock,
                         bool chooseAppcache);
 
   // For document loads we keep this protocol open after child's

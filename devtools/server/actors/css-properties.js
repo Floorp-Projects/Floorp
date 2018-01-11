@@ -4,8 +4,6 @@
 
 "use strict";
 
-loader.lazyServiceGetter(this, "DOMUtils",
-  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 loader.lazyRequireGetter(this, "CSS_TYPES",
   "devtools/shared/css/properties-db", true);
 
@@ -13,6 +11,7 @@ const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { cssColors } = require("devtools/shared/css/color-db");
+const InspectorUtils = require("InspectorUtils");
 
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
@@ -27,10 +26,10 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
 
   getCSSDatabase() {
     const properties = generateCssProperties();
-    const pseudoElements = DOMUtils.getCSSPseudoElementNames();
+    const pseudoElements = InspectorUtils.getCSSPseudoElementNames();
     const supportedFeature = {
       // checking for css-color-4 color function support.
-      "css-color-4-color-function": DOMUtils.isValidCSSColor("rgb(1 1 1 / 100%)"),
+      "css-color-4-color-function": InspectorUtils.isValidCSSColor("rgb(1 1 1 / 100%)"),
     };
 
     return { properties, pseudoElements, supportedFeature };
@@ -45,29 +44,29 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
  */
 function generateCssProperties() {
   const properties = {};
-  const propertyNames = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
+  const propertyNames = InspectorUtils.getCSSPropertyNames({ includeAliases: true });
   const colors = Object.keys(cssColors);
 
   propertyNames.forEach(name => {
     // Get the list of CSS types this property supports.
     let supports = [];
     for (let type in CSS_TYPES) {
-      if (safeCssPropertySupportsType(name, DOMUtils["TYPE_" + type])) {
+      if (safeCssPropertySupportsType(name, InspectorUtils["TYPE_" + type])) {
         supports.push(CSS_TYPES[type]);
       }
     }
 
     // Don't send colors over RDP, these will be re-attached by the front.
-    let values = DOMUtils.getCSSValuesForProperty(name);
+    let values = InspectorUtils.getCSSValuesForProperty(name);
     if (values.includes("aliceblue")) {
       values = values.filter(x => !colors.includes(x));
       values.unshift("COLOR");
     }
 
-    let subproperties = DOMUtils.getSubpropertiesForCSSProperty(name);
+    let subproperties = InspectorUtils.getSubpropertiesForCSSProperty(name);
 
     properties[name] = {
-      isInherited: DOMUtils.isInheritedProperty(name),
+      isInherited: InspectorUtils.isInheritedProperty(name),
       values,
       supports,
       subproperties,
@@ -89,7 +88,7 @@ function isCssPropertyKnown(name) {
     // If the property name is unknown, the cssPropertyIsShorthand
     // will throw an exception.  But if it is known, no exception will
     // be thrown; so we just ignore the return value.
-    DOMUtils.cssPropertyIsShorthand(name);
+    InspectorUtils.cssPropertyIsShorthand(name);
     return true;
   } catch (e) {
     return false;
@@ -99,7 +98,7 @@ function isCssPropertyKnown(name) {
 exports.isCssPropertyKnown = isCssPropertyKnown;
 
 /**
- * A wrapper for DOMUtils.cssPropertySupportsType that ignores invalid
+ * A wrapper for InspectorUtils.cssPropertySupportsType that ignores invalid
  * properties.
  *
  * @param {String} name The property name.
@@ -109,7 +108,7 @@ exports.isCssPropertyKnown = isCssPropertyKnown;
  */
 function safeCssPropertySupportsType(name, type) {
   try {
-    return DOMUtils.cssPropertySupportsType(name, type);
+    return InspectorUtils.cssPropertySupportsType(name, type);
   } catch (e) {
     return false;
   }

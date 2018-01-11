@@ -20,20 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536379
 
 const CI = SpecialPowers.Ci;
 const CC = SpecialPowers.Cc;
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
-var domUtils =
-  CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
-var rules = domUtils.getCSSStyleRules(document.getElementById("display"));
-var firstPRule =
-  rules.GetElementAt(rules.Count() - 2).QueryInterface(CI.nsIDOMCSSStyleRule);
+var rules = InspectorUtils.getCSSStyleRules(document.getElementById("display"));
+var firstPRule = rules[rules.length - 2];
 firstPRule.style.removeProperty("color");
 ok(true, "should not crash");
 
 var links = document.getElementsByTagName("link");
 is(links.length, 3, "links.length");
 is(SpecialPowers.unwrap(firstPRule.parentStyleSheet), links[1].sheet, "sheet match for first P rule");
-var secondPRule =
-  rules.GetElementAt(rules.Count() - 1).QueryInterface(CI.nsIDOMCSSStyleRule);
+var secondPRule = rules[rules.length - 1];
 is(SpecialPowers.unwrap(secondPRule.parentStyleSheet), links[2].sheet, "sheet match for second P rule");
 is(links[1].href, links[2].href, "links should have same href");
 isnot(links[1].sheet, links[2].sheet, "links should have different sheets");

@@ -2,12 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test inDOMUtils::CssPropertyIsShorthand</title>
+  <title>Test InspectorUtils::CssPropertyIsShorthand</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   let tests = [
     {
@@ -25,13 +24,13 @@
   ];
 
   for (let {property, expected} of tests) {
-    let result = utils.cssPropertyIsShorthand(property);
+    let result = InspectorUtils.cssPropertyIsShorthand(property);
     is(result, expected, "checking whether " + property + " is shorthand");
   }
 
   let sawException = false;
   try {
-    let result = utils.cssPropertyIsShorthand("nosuchproperty");
+    let result = InspectorUtils.cssPropertyIsShorthand("nosuchproperty");
   } catch (e) {
     sawException = true;
   }
@@ -40,7 +39,7 @@
   </script>
 </head>
 <body>
-<h1>Test inDOMUtils::CssPropertyIsShorthand</h1>
+<h1>Test InspectorUtils::CssPropertyIsShorthand</h1>
 <p id="display"></p>
 <div id="content" style="display: none">
 

@@ -62,7 +62,7 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
   int32_t clientX, clientY;
   aMouseEvent->GetClientX(&clientX);
   aMouseEvent->GetClientY(&clientY);
-  htmlEditor->MouseUp(clientX, clientY, element);
+  htmlEditor->OnMouseUp(clientX, clientY, element);
 
   return EditorEventListener::MouseUp(aMouseEvent);
 }
@@ -194,7 +194,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
     int32_t clientX, clientY;
     aMouseEvent->GetClientX(&clientX);
     aMouseEvent->GetClientY(&clientY);
-    htmlEditor->MouseDown(clientX, clientY, element, aMouseEvent->AsEvent());
+    htmlEditor->OnMouseDown(clientX, clientY, element, aMouseEvent->AsEvent());
   }
 
   return EditorEventListener::MouseDown(aMouseEvent);

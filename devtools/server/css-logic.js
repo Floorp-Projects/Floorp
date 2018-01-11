@@ -29,8 +29,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { Cu } = require("chrome");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {
   getBindingElementAndPseudo,
@@ -41,6 +40,7 @@ const {
   FILTER,
   STATUS
 } = require("devtools/shared/inspector/css-logic");
+const InspectorUtils = require("InspectorUtils");
 
 /**
  * @param {function} isInherited A function that determines if the CSS property
@@ -474,7 +474,7 @@ CssLogic.prototype = {
   selectorMatchesElement: function (domRule, idx) {
     let element = this.viewedElement;
     do {
-      if (domUtils.selectorMatchesElement(element, domRule, idx)) {
+      if (InspectorUtils.selectorMatchesElement(element, domRule, idx)) {
         return true;
       }
     } while ((element = element.parentNode) &&
@@ -552,9 +552,9 @@ CssLogic.prototype = {
       }
 
       // getCSSStyleRules can return null with a shadow DOM element.
-      let numDomRules = domRules ? domRules.Count() : 0;
+      let numDomRules = domRules ? domRules.length : 0;
       for (let i = 0; i < numDomRules; i++) {
-        let domRule = domRules.GetElementAt(i);
+        let domRule = domRules[i];
         if (domRule.type !== CSSRule.STYLE_RULE) {
           continue;
         }
@@ -640,9 +640,9 @@ CssLogic.getShortName = function (element) {
 CssLogic.getSelectors = function (domRule) {
   let selectors = [];
 
-  let len = domUtils.getSelectorCount(domRule);
+  let len = InspectorUtils.getSelectorCount(domRule);
   for (let i = 0; i < len; i++) {
-    let text = domUtils.getSelectorText(domRule, i);
+    let text = InspectorUtils.getSelectorText(domRule, i);
     selectors.push(text);
   }
   return selectors;
@@ -904,8 +904,8 @@ function CssRule(cssSheet, domRule, element) {
   if (this._cssSheet) {
     // parse domRule.selectorText on call to this.selectors
     this._selectors = null;
-    this.line = domUtils.getRuleLine(this.domRule);
-    this.column = domUtils.getRuleColumn(this.domRule);
+    this.line = InspectorUtils.getRuleLine(this.domRule);
+    this.column = InspectorUtils.getRuleColumn(this.domRule);
     this.source = this._cssSheet.shortSource + ":" + this.line;
     if (this.mediaText) {
       this.source += " @media " + this.mediaText;
@@ -1129,8 +1129,8 @@ CssSelector.prototype = {
       return this._specificity;
     }
 
-    this._specificity = domUtils.getSpecificity(this.cssRule.domRule,
-                                                this.selectorIndex);
+    this._specificity = InspectorUtils.getSpecificity(this.cssRule.domRule,
+                                                      this.selectorIndex);
 
     return this._specificity;
   },
@@ -1483,7 +1483,3 @@ CssSelectorInfo.prototype = {
     return this.selector + " -> " + this.value;
   },
 };
-
-DevToolsUtils.defineLazyGetter(this, "domUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});

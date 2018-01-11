@@ -1,0 +1,114 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+FINAL_LIBRARY = "webrtc"
+
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/common_audio/fir_filter_sse.cc",
+    "/media/webrtc/trunk/webrtc/common_audio/resampler/sinc_resampler_sse.cc"
+]
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/media/webrtc/trunk/"
+]
+
+COMPILE_FLAGS["STL"] = []
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
+DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NVALGRIND"] = True
+    DEFINES["NDEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    DEFINES["_WIN32_WINNT"] = "0x0A00"
+    DEFINES["_HAS_EXCEPTIONS"] = "0"
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["_USING_V110_SDK71_"] = True
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["__STD_C"] = True
+    DEFINES["UNICODE"] = True
+    DEFINES["NOMINMAX"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True
+    DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+    DEFINES["WIN32"] = True
+    DEFINES["PSAPI_VERSION"] = "1"
+    DEFINES["WEBRTC_WIN"] = True
+    DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_ATL_NO_OPENGL"] = True
+    DEFINES["WINVER"] = "0x0A00"
+    DEFINES["_CRT_SECURE_NO_WARNINGS"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["NTDDI_VERSION"] = "0x0A000000"
+    DEFINES["_WINDOWS"] = True
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["USE_X11"] = "1"
+
+if CONFIG["OS_TARGET"] == "Android":
+
+    DEFINES["__GNU_SOURCE"] = "1"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["ANDROID"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["OS_TARGET"] == "Android" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["OS_TARGET"] == "Darwin" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+Library("common_audio_sse2_gn")
