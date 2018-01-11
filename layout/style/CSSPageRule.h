@@ -10,25 +10,18 @@
 #include "mozilla/css/Rule.h"
 
 #include "nsICSSDeclaration.h"
-#include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSPageRule : public css::Rule
-                  , public nsIDOMCSSPageRule
 {
 protected:
   using Rule::Rule;
   virtual ~CSSPageRule() {};
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMCSSPageRule interface
-  NS_DECL_NSIDOMCSSPAGERULE
-
   virtual bool IsCCLeaf() const override = 0;
 
   int32_t GetType() const final { return Rule::PAGE_RULE; }
