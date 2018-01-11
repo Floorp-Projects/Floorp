@@ -194,7 +194,7 @@ nsPresContext::MakeColorPref(const nsString& aColor)
 bool
 nsPresContext::IsDOMPaintEventPending()
 {
-  if (mFireAfterPaintEvents) {
+  if (!mTransactions.IsEmpty()) {
     return true;
   }
   nsRootPresContext* drpc = GetRootPresContext();
@@ -203,7 +203,6 @@ nsPresContext::IsDOMPaintEventPending()
     // fired, we record an empty invalidation in case display list
     // invalidation doesn't invalidate anything further.
     NotifyInvalidation(drpc->mRefreshDriver->LastTransactionId() + 1, nsRect(0, 0, 0, 0));
-    NS_ASSERTION(mFireAfterPaintEvents, "Why aren't we planning to fire the event?");
     return true;
   }
   return false;
@@ -315,7 +314,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mFontFeatureValuesDirty(true),
     mSuppressResizeReflow(false),
     mIsVisual(false),
-    mFireAfterPaintEvents(false),
     mIsChrome(false),
     mIsChromeOriginImage(false),
     mPaintFlashing(false),
@@ -2596,6 +2594,17 @@ nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsIntRect& aRec
   NotifyInvalidation(aTransactionId, rect);
 }
 
+nsPresContext::TransactionInvalidations*
+nsPresContext::GetInvalidations(uint64_t aTransactionId)
+{
+  for (TransactionInvalidations& t : mTransactions) {
+    if (t.mTransactionId == aTransactionId) {
+      return &t;
+    }
+  }
+  return nullptr;
+}
+
 void
 nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect)
 {
@@ -2609,9 +2618,13 @@ nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect)
 
   nsPresContext* pc;
   for (pc = this; pc; pc = pc->GetParentPresContext()) {
-    if (pc->mFireAfterPaintEvents)
+    TransactionInvalidations* transaction = pc->GetInvalidations(aTransactionId);
+    if (transaction) {
       break;
-    pc->mFireAfterPaintEvents = true;
+    } else {
+      transaction = pc->mTransactions.AppendElement();
+      transaction->mTransactionId = aTransactionId;
+    }
   }
   if (!pc) {
     nsRootPresContext* rpc = GetRootPresContext();
@@ -2620,18 +2633,8 @@ nsPresContext::NotifyInvalidation(uint64_t aTransactionId, const nsRect& aRect)
     }
   }
 
-  TransactionInvalidations* transaction = nullptr;
-  for (TransactionInvalidations& t : mTransactions) {
-    if (t.mTransactionId == aTransactionId) {
-      transaction = &t;
-      break;
-    }
-  }
-  if (!transaction) {
-    transaction = mTransactions.AppendElement();
-    transaction->mTransactionId = aTransactionId;
-  }
-
+  TransactionInvalidations* transaction = GetInvalidations(aTransactionId);
+  MOZ_ASSERT(transaction);
   transaction->mInvalidations.AppendElement(aRect);
 }
 
@@ -2683,7 +2686,6 @@ nsPresContext::ClearNotifySubDocInvalidationData(ContainerLayer* aContainer)
 struct NotifyDidPaintSubdocumentCallbackClosure {
   uint64_t mTransactionId;
   const mozilla::TimeStamp& mTimeStamp;
-  bool mNeedsAnotherDidPaintNotification;
 };
 /* static */ bool
 nsPresContext::NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
@@ -2696,9 +2698,6 @@ nsPresContext::NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* a
     if (pc) {
       pc->NotifyDidPaintForSubtree(closure->mTransactionId,
                                    closure->mTimeStamp);
-      if (pc->mFireAfterPaintEvents) {
-        closure->mNeedsAnotherDidPaintNotification = true;
-      }
     }
   }
   return true;
@@ -2743,12 +2742,12 @@ nsPresContext::NotifyDidPaintForSubtree(uint64_t aTransactionId,
   if (IsRoot()) {
     static_cast<nsRootPresContext*>(this)->CancelDidPaintTimers(aTransactionId);
 
-    if (!mFireAfterPaintEvents) {
+    if (mTransactions.IsEmpty()) {
       return;
     }
   }
 
-  if (!PresShell()->IsVisible() && !mFireAfterPaintEvents) {
+  if (!PresShell()->IsVisible() && mTransactions.IsEmpty()) {
     return;
   }
 
@@ -2762,11 +2761,13 @@ nsPresContext::NotifyDidPaintForSubtree(uint64_t aTransactionId,
   uint32_t i = 0;
   while (i < mTransactions.Length()) {
     if (mTransactions[i].mTransactionId <= aTransactionId) {
-      nsCOMPtr<nsIRunnable> ev =
-        new DelayedFireDOMPaintEvent(this, &mTransactions[i].mInvalidations,
-                                     mTransactions[i].mTransactionId, aTimeStamp);
-      nsContentUtils::AddScriptRunner(ev);
-      sent = true;
+      if (!mTransactions[i].mInvalidations.IsEmpty()) {
+        nsCOMPtr<nsIRunnable> ev =
+          new DelayedFireDOMPaintEvent(this, &mTransactions[i].mInvalidations,
+                                       mTransactions[i].mTransactionId, aTimeStamp);
+        nsContentUtils::AddScriptRunner(ev);
+        sent = true;
+      }
       mTransactions.RemoveElementAt(i);
     } else {
       i++;
@@ -2781,14 +2782,8 @@ nsPresContext::NotifyDidPaintForSubtree(uint64_t aTransactionId,
     nsContentUtils::AddScriptRunner(ev);
   }
 
-  NotifyDidPaintSubdocumentCallbackClosure closure = { aTransactionId, aTimeStamp, false };
+  NotifyDidPaintSubdocumentCallbackClosure closure = { aTransactionId, aTimeStamp };
   mDocument->EnumerateSubDocuments(nsPresContext::NotifyDidPaintSubdocumentCallback, &closure);
-
-  if (!closure.mNeedsAnotherDidPaintNotification &&
-      mTransactions.IsEmpty()) {
-    // Nothing more to do for the moment.
-    mFireAfterPaintEvents = false;
-  }
 }
 
 bool
