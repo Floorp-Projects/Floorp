@@ -184,12 +184,17 @@ add_task(async function visits_searchterm_is_title_query() {
     let uri = NetUtil.newURI(data.uri);
     let origTitle = data.title;
     data.title = "match";
+
+    info("Adding " + uri.spec);
     await PlacesTestUtils.addVisits({ uri, title: data.title,
                                       visitDate: data.lastVisit });
+
     compareArrayToResult([data], root);
     data.title = origTitle;
+    info("Clobbering " + uri.spec);
     await PlacesTestUtils.addVisits({ uri, title: data.title,
                                       visitDate: data.lastVisit });
+
     compareArrayToResult([], root);
   }
 

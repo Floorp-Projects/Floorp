@@ -134,7 +134,7 @@ PuppetWidget::InfallibleCreate(nsIWidget* aParent,
     mLayerManager = parent->GetLayerManager();
   }
   else {
-    Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
+    Resize(mBounds.X(), mBounds.Y(), mBounds.Width(), mBounds.Height(), false);
   }
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -224,7 +224,7 @@ PuppetWidget::Show(bool aState)
     // of no use anymore (and is actually actively harmful - see
     // bug 1323586).
     mPreviouslyAttachedWidgetListener = nullptr;
-    Resize(mBounds.width, mBounds.height, false);
+    Resize(mBounds.Width(), mBounds.Height(), false);
     Invalidate(mBounds);
   }
 }
@@ -257,9 +257,9 @@ PuppetWidget::Resize(double aWidth,
   if (!oldBounds.IsEqualEdges(mBounds) && mAttachedWidgetListener) {
     if (GetCurrentWidgetListener() &&
         GetCurrentWidgetListener() != mAttachedWidgetListener) {
-      GetCurrentWidgetListener()->WindowResized(this, mBounds.width, mBounds.height);
+      GetCurrentWidgetListener()->WindowResized(this, mBounds.Width(), mBounds.Height());
     }
-    mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
+    mAttachedWidgetListener->WindowResized(this, mBounds.Width(), mBounds.Height());
   }
 }
 
@@ -274,11 +274,11 @@ PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
     w->SetWindowClipRegion(configuration.mClipRegion, true);
     LayoutDeviceIntRect bounds = w->GetBounds();
     if (bounds.Size() != configuration.mBounds.Size()) {
-      w->Resize(configuration.mBounds.x, configuration.mBounds.y,
-                configuration.mBounds.width, configuration.mBounds.height,
+      w->Resize(configuration.mBounds.X(), configuration.mBounds.Y(),
+                configuration.mBounds.Width(), configuration.mBounds.Height(),
                 true);
     } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
-      w->Move(configuration.mBounds.x, configuration.mBounds.y);
+      w->Move(configuration.mBounds.X(), configuration.mBounds.Y());
     }
     w->SetWindowClipRegion(configuration.mClipRegion, false);
   }
@@ -1314,7 +1314,7 @@ nsIntSize
 PuppetWidget::GetScreenDimensions()
 {
   nsIntRect r = ScreenConfig().rect();
-  return nsIntSize(r.width, r.height);
+  return nsIntSize(r.Width(), r.Height());
 }
 
 NS_IMETHODIMP
@@ -1322,10 +1322,7 @@ PuppetScreen::GetRect(int32_t *outLeft,  int32_t *outTop,
                       int32_t *outWidth, int32_t *outHeight)
 {
   nsIntRect r = ScreenConfig().rect();
-  *outLeft = r.x;
-  *outTop = r.y;
-  *outWidth = r.width;
-  *outHeight = r.height;
+  r.GetRect(outLeft, outTop, outWidth, outHeight);
   return NS_OK;
 }
 

@@ -23,6 +23,67 @@ interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
 interface nsINavHistoryBatchCallback;
 
+/**
+ * This interface exists specifically for passing visit information
+ * in bulk to onVisits below.
+ */
+[scriptable, uuid(9d8df1ff-142f-4ca7-9f45-3c62a508c7e2)]
+interface nsIVisitData : nsISupports
+{
+  /**
+   * URI of the visit that was just created.
+   */
+  readonly attribute nsIURI uri;
+
+  /**
+   * Id of the visit that was just created.
+   */
+  readonly attribute long long visitId;
+
+  /**
+   * Time of the visit.
+   */
+  readonly attribute PRTime time;
+
+  /**
+   * The id of the visit the user came from, defaults to 0 for no referrer.
+   */
+  readonly attribute long long referrerId;
+
+  /**
+   * One of nsINavHistory.TRANSITION_*
+   */
+  readonly attribute unsigned long transitionType;
+
+  /**
+   * The unique id associated with the page.
+   */
+  readonly attribute ACString guid;
+
+  /**
+   * Whether the visited page is marked as hidden.
+   */
+  readonly attribute boolean hidden;
+
+  /**
+   * Number of visits (included this one) for this URI.
+   */
+  readonly attribute unsigned long visitCount;
+
+  /**
+   * Whether the URI has been typed or not.
+   * TODO (Bug 1271801): This will become a count, rather than a boolean.
+   * For future compatibility, always compare it with "> 0".
+   */
+  readonly attribute unsigned long typed;
+
+  /**
+   * The last known title of the page. Might not be from the current visit,
+   * and might be null if it is not known.
+   */
+  readonly attribute AString lastKnownTitle;
+};
+
 [scriptable, uuid(91d104bb-17ef-404b-9f9a-d9ed8de6824c)]
 interface nsINavHistoryResultNode : nsISupports
 {
@@ -623,48 +684,16 @@ interface nsINavHistoryObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Called everytime a URI is visited.
+   * Called everytime a URI is visited, or once for a batch of visits if visits were
+   * added in bulk.
    *
    * @note TRANSITION_EMBED visits (corresponding to images in a page, for
    *       example) are not displayed in history results. Most observers can
    *       ignore TRANSITION_EMBED visit notifications (which will comprise the
    *       majority of visit notifications) to save work.
-   *
-   * @param aVisitId
-   *        Id of the visit that was just created.
-   * @param aTime
-   *        Time of the visit.
-   * @param aSessionId
-   *        No longer supported and always set to 0.
-   * @param aReferrerVisitId
-   *        The id of the visit the user came from, defaults to 0 for no referrer.
-   * @param aTransitionType
-   *        One of nsINavHistory.TRANSITION_*
-   * @param aGuid
-   *        The unique id associated with the page.
-   * @param aHidden
-   *        Whether the visited page is marked as hidden.
-   * @param aVisitCount
-   *        Number of visits (included this one) for this URI.
-   * @param aTyped
-   *        Whether the URI has been typed or not.
-   *        TODO (Bug 1271801): This will become a count, rather than a boolean.
-   *        For future compatibility, always compare it with "> 0".
-   * @param aLastKnownTitle
-   *        The last known title of the page. Might not be from the current visit,
-   *        and might be null if it is not known.
    */
-  void onVisit(in nsIURI aURI,
-               in long long aVisitId,
-               in PRTime aTime,
-               in long long aSessionId,
-               in long long aReferrerVisitId,
-               in unsigned long aTransitionType,
-               in ACString aGuid,
-               in boolean aHidden,
-               in unsigned long aVisitCount,
-               in unsigned long aTyped,
-               in AString aLastKnownTitle);
+  void onVisits([array, size_is(aVisitsCount)] in nsIVisitData aVisits,
+                in unsigned long aVisitsCount);
 
   /**
    * Called whenever either the "real" title or the custom title of the page

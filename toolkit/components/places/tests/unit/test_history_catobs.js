@@ -14,7 +14,9 @@ add_task(async function() {
   // Add a common observer, it should be invoked after the category observer.
   promises.push(new Promise(resolve => {
     let observer = new NavHistoryObserver();
-    observer.onVisit = uri => {
+    observer.onVisits = visits => {
+      Assert.equal(visits.length, 1, "Got the right number of visits");
+      let uri = visits[0].uri;
       info("Got visit for " + uri.spec);
       let observers = PlacesUtils.history.getObservers();
       let observersCount = observers.length;

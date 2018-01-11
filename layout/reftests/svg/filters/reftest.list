@@ -96,7 +96,7 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
-fuzzy(1,26732) fails-if(webrender) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(1,26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 

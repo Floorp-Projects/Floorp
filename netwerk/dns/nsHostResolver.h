@@ -23,6 +23,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "nsRefPtrHashtable.h"
 
 class nsHostResolver;
 class nsHostRecord;
@@ -55,6 +56,7 @@ struct nsHostKey
 
     bool operator==(const nsHostKey& other) const;
     size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    PLDHashNumber Hash() const;
 };
 
 /**
@@ -66,9 +68,6 @@ class nsHostRecord : public PRCList, public nsHostKey
 
 public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHostRecord)
-
-    /* instantiates a new host record */
-    static nsresult Create(const nsHostKey *key, nsHostRecord **record);
 
     /* a fully resolved host record has either a non-null |addr_info| or |addr|
      * field.  if |addr_info| is null, it implies that the |host| is an IP
@@ -172,7 +171,6 @@ private:
     // of gencnt.
     nsTArray<nsCString> mBlacklistedItems;
 
-    explicit nsHostRecord(const nsHostKey *key);           /* use Create() instead */
    ~nsHostRecord();
 };
 
@@ -367,7 +365,7 @@ private:
     uint32_t      mDefaultGracePeriod; // granularity seconds
     mutable Mutex mLock;    // mutable so SizeOfIncludingThis can be const
     CondVar       mIdleThreadCV;
-    PLDHashTable  mDB;
+    nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord> mRecordDB;
     PRCList       mHighQ;
     PRCList       mMediumQ;
     PRCList       mLowQ;

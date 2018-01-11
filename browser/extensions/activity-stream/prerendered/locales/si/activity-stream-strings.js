@@ -66,7 +66,7 @@ window.gActivityStreamStrings = {
   "settings_pane_highlights_options_visited": "පිවිසුණු අඩවි",
   "settings_pane_snippets_header": "Snippets",
   "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
-  "settings_pane_done_button": "",
+  "settings_pane_done_button": "Done",
   "settings_pane_topstories_options_sponsored": "අනුග්‍රහක පුවත් පෙන්වන්න",
   "edit_topsites_button_text": "සැකසුම්",
   "edit_topsites_button_label": "Customize your Top Sites section",

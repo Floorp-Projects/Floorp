@@ -869,6 +869,7 @@ pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
 
+pref("gfx.webrender.all", false);
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
 #else
@@ -880,7 +881,7 @@ pref("gfx.webrender.program-binary", true);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.blob-images", false);
+pref("gfx.webrender.blob-images", 2);
 pref("gfx.webrender.hit-test", false);
 
 // WebRender debugging utilities.
@@ -1380,6 +1381,12 @@ pref("privacy.firstparty.isolate",                        false);
 pref("privacy.firstparty.isolate.restrict_opener_access", true);
 // Anti-fingerprinting, disabled by default
 pref("privacy.resistFingerprinting", false);
+// A subset of Resist Fingerprinting protections focused specifically on timers for testing
+// This affects the Animation API, the performance APIs, Date.getTime, Event.timestamp,
+//   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
+pref("privacy.reduceTimerPrecision", true);
+// Dynamically tune the resolution of the timer reduction for both of the two above prefs
+pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 20);
 // Lower the priority of network loads for resources on the tracking protection list.
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 #ifdef NIGHTLY_BUILD
@@ -4679,7 +4686,7 @@ pref("image.mem.animated.discardable", true);
 
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes.
-pref("image.mem.shared", false);
+pref("image.mem.shared", 2);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);

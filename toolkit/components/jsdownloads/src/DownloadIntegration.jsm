@@ -1028,7 +1028,7 @@ this.DownloadHistoryObserver.prototype = {
   onTitleChanged() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onVisit() {},
+  onVisits() {},
   onPageChanged() {},
   onDeleteVisits() {},
 };

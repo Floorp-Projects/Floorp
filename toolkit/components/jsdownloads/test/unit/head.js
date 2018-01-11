@@ -158,11 +158,16 @@ function promiseWaitForVisit(aUrl) {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
-      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                        aTransitionType, aGUID, aHidden) {
-        if (aURI.equals(uri)) {
+      onVisits(aVisits) {
+        Assert.equal(aVisits.length, 1);
+        let {
+          uri: visitUri,
+          time,
+          transitionType,
+        } = aVisits[0];
+        if (visitUri.equals(uri)) {
           PlacesUtils.history.removeObserver(this);
-          resolve([aTime, aTransitionType]);
+          resolve([time, transitionType]);
         }
       },
       onTitleChanged() {},
