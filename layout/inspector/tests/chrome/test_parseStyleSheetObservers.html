@@ -12,8 +12,6 @@ body { color: red; }
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-let DOMUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-               .getService(SpecialPowers.Ci.inIDOMUtils);
 const Cu = SpecialPowers.Components.utils;
 const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
 
@@ -41,7 +39,7 @@ function test1Setup() {
   document.addEventListener("StyleRuleAdded", countingAddListener, listenerOptions);
   document.addEventListener("StyleRuleRemoved", countingRemoveListener, listenerOptions);
 
-  DOMUtils.parseStyleSheet(sheet, "body { color: blue; } p { color: green; }");
+  InspectorUtils.parseStyleSheet(sheet, "body { color: blue; } p { color: green; }");
   is(sheet.cssRules.length, 2, "Test 1: Stylesheet now has 2 rules.");
 
   SimpleTest.executeSoon(test1Result);
@@ -85,7 +83,7 @@ async function test2Setup() {
   let gotAllStyleRuleAddedEvents = ContentTaskUtils.waitForEvent(document,
     "StyleRuleAdded", true, styleFirstAddProcessor);
 
-  DOMUtils.parseStyleSheet(sheet, "@import url('imported_no_op.css'); p {color: purple;}");
+  InspectorUtils.parseStyleSheet(sheet, "@import url('imported_no_op.css'); p {color: purple;}");
   is(sheet.cssRules.length, 2, "Test 2: Stylesheet now has 2 rules.");
 
   // Await and then process the events we expect to arrive.

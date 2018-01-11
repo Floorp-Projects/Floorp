@@ -1029,7 +1029,7 @@ telemetry.discarded:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
   keyed_accumulations:
     bug_numbers:
       - 1369041
@@ -1041,7 +1041,7 @@ telemetry.discarded:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
   scalar_actions:
     bug_numbers:
       - 1369041
@@ -1053,7 +1053,7 @@ telemetry.discarded:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
   keyed_scalar_actions:
     bug_numbers:
       - 1369041
@@ -1065,7 +1065,7 @@ telemetry.discarded:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
   child_events:
     bug_numbers:
       - 1369041
@@ -1077,7 +1077,7 @@ telemetry.discarded:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
 
 # The following section contains graphics-related scalars.
 gfx.advanced.layers:
@@ -1537,7 +1537,7 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     record_in_processes:
-      - 'all_childs'
+      - 'all_children'
 
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last

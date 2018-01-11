@@ -254,7 +254,7 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
           to the user loging in. We remember the length of the marker */
         if (nsCRT::strncasecmp(path,"/%2F",4) == 0)
             special_ftp_len = 4;
-        else if (nsCRT::strncmp(path,"//",2) == 0 )
+        else if (strncmp(path, "//", 2) == 0 )
             special_ftp_len = 2;
     }
 

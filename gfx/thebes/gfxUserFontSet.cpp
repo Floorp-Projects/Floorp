@@ -719,7 +719,7 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
 
     // Because platform font activation code may replace the name table
     // in the font with a synthetic one, we save the original name so that
-    // it can be reported via the nsIDOMFontFace API.
+    // it can be reported via the InspectorUtils API.
     nsAutoString originalFullName;
 
     // Call the OTS sanitizer; this will also decode WOFF to sfnt
@@ -785,7 +785,7 @@ gfxUserFontEntry::LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength)
     if (fe) {
         fe->mComputedSizeOfUserFont = computedSize;
 
-        // Save a copy of the metadata block (if present) for nsIDOMFontFace
+        // Save a copy of the metadata block (if present) for InspectorUtils
         // to use if required. Ownership of the metadata block will be passed
         // to the gfxUserFontData record below.
         FallibleTArray<uint8_t> metadata;

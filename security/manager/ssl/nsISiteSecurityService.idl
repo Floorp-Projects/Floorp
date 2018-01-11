@@ -99,7 +99,6 @@ interface nsISiteSecurityService : nsISupports
     const uint32_t SOURCE_UNKNOWN         = 0;
     const uint32_t SOURCE_PRELOAD_LIST    = 1;
     const uint32_t SOURCE_ORGANIC_REQUEST = 2;
-    const uint32_t SOURCE_HSTS_PRIMING    = 3;
 
     /**
      * Parses a given HTTP header and records the results internally.
@@ -296,22 +295,6 @@ interface nsISiteSecurityService : nsISupports
     boolean setHSTSPreload(in ACString aHost,
                            in boolean aIncludesSubdomains,
                            in int64_t aExpires);
-
-    /**
-     * Mark a host as declining to provide a given security state so that features
-     * such as HSTS priming will not flood a server with requests.
-     *
-     * @param aURI the nsIURI that this applies to
-     * @param aMaxAge lifetime (in seconds) of this negative cache
-     * @param aOriginAttributes the origin attributes that isolate this origin,
-     *                          (note that this implementation does not isolate
-     *                          by userContextId because of the risk of man-in-
-     *                          the-middle attacks before trust-on-second-use
-     *                          happens).
-     */
-    [noscript, must_use] void cacheNegativeHSTSResult(
-      in nsIURI aURI, in unsigned long long aMaxAge,
-      in const_OriginAttributesRef aOriginAttributes);
 
     /**
      * Returns an enumerator of the nsISiteSecurityService storage. Each item in

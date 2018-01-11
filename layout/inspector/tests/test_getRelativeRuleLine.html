@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test inDOMUtils::getRelativeRuleLine</title>
+  <title>Test InspectorUtils::getRelativeRuleLine</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
@@ -26,8 +26,7 @@
      }
   </style>
   <script type="application/javascript">
-  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   const supportsRuleColumn = SpecialPowers.DOMWindowUtils.isStyledByServo ? 14
                                                                           : 15;
@@ -45,8 +44,8 @@
     for (let test of tests) {
       let sheet = document.styleSheets[test.sheetNo];
       let rule = sheet.cssRules[test.ruleNo];
-      let line = utils.getRelativeRuleLine(rule);
-      let column = utils.getRuleColumn(rule);
+      let line = InspectorUtils.getRelativeRuleLine(rule);
+      let column = InspectorUtils.getRuleColumn(rule);
       info("testing sheet " + test.sheetNo + ", rule " + test.ruleNo);
       is(line, test.lineNo, "line number is correct");
       is(column, test.columnNo, "column number is correct");
@@ -60,7 +59,7 @@
   </script>
 </head>
 <body>
-<h1>Test inDOMUtils::getRelativeRuleLine</h1>
+<h1>Test InspectorUtils::getRelativeRuleLine</h1>
 <p id="display"></p>
 <div id="content" style="display: none">
 

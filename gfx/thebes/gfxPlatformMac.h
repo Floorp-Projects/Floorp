@@ -26,6 +26,8 @@ public:
         return (gfxPlatformMac*) gfxPlatform::GetPlatform();
     }
 
+    bool UsesTiling() const override;
+
     virtual already_AddRefed<gfxASurface>
       CreateOffscreenSurface(const IntSize& aSize,
                              gfxImageFormat aFormat) override;

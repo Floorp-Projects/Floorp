@@ -398,11 +398,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       aLoadInfo->GetForcePreflight(),
       aLoadInfo->GetIsPreflight(),
       aLoadInfo->GetLoadTriggeredFromExternal(),
-      aLoadInfo->GetServiceWorkerTaintingSynthesized(),
-      aLoadInfo->GetForceHSTSPriming(),
-      aLoadInfo->GetMixedContentWouldBlock(),
-      aLoadInfo->GetIsHSTSPriming(),
-      aLoadInfo->GetIsHSTSPrimingUpgrade()
+      aLoadInfo->GetServiceWorkerTaintingSynthesized()
       );
 
   return NS_OK;
@@ -508,11 +504,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.forcePreflight(),
                           loadInfoArgs.isPreflight(),
                           loadInfoArgs.loadTriggeredFromExternal(),
-                          loadInfoArgs.serviceWorkerTaintingSynthesized(),
-                          loadInfoArgs.forceHSTSPriming(),
-                          loadInfoArgs.mixedContentWouldBlock(),
-                          loadInfoArgs.isHSTSPriming(),
-                          loadInfoArgs.isHSTSPrimingUpgrade()
+                          loadInfoArgs.serviceWorkerTaintingSynthesized()
                           );
 
    loadInfo.forget(outLoadInfo);

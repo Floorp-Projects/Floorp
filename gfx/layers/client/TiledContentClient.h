@@ -450,9 +450,7 @@ private:
   // Parameters that are collected during Update for a paint before they
   // are either executed or replayed on the paint thread.
   std::vector<gfx::Tile> mPaintTiles;
-  std::vector<RefPtr<TextureClient>> mPaintTilesTextureClients;
-  std::vector<CapturedTiledPaintState::Copy> mPaintCopies;
-  std::vector<CapturedTiledPaintState::Clear> mPaintClears;
+  std::vector<RefPtr<CapturedTiledPaintState>> mPaintStates;
 
   /**
    * While we're adding tiles, this is used to keep track of the position of

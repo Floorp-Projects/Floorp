@@ -116,8 +116,6 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
     'set': [['security.mixed_content.block_active_content',   false],
             ['security.mixed_content.block_display_content',  false],
-            ['security.mixed_content.send_hsts_priming',  false],
-            ['security.mixed_content.use_hsts',  false],
     ]
     },
     function() {

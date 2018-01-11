@@ -19,12 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462789
 
 /** Test for Bug 462789 **/
 
-function do_test() {
-  const ERROR_INVALID_ARG = 0x80070057;
-  const DOCUMENT_NODE_TYPE = 9;
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
+function do_test() {
+  const DOCUMENT_NODE_TYPE = 9;
 
   var iframe = document.getElementById("bug462789_iframe");
   var docElement = iframe.contentDocument.documentElement;
@@ -33,54 +31,45 @@ function do_test() {
   var text = body.firstChild;
 
   try {
-    var res = utils.getCSSStyleRules(docElement);
-    is(res, null, "getCSSStyleRules");
-    res = utils.getCSSStyleRules(body);
-    is(res, null, "getCSSStyleRules");
+    var res = InspectorUtils.getCSSStyleRules(docElement);
+    is(res.length, 0, "getCSSStyleRules");
+    res = InspectorUtils.getCSSStyleRules(body);
+    is(res.length, 0, "getCSSStyleRules");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.getRuleLine(rule);
+    var res = InspectorUtils.getRuleLine(rule);
     is(res, 1, "getRuleLine");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.isIgnorableWhitespace(text);
+    var res = InspectorUtils.isIgnorableWhitespace(text);
     is(res, false, "isIgnorableWhitespace");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.getParentForNode(docElement, true);
+    var res = InspectorUtils.getParentForNode(docElement, true);
     is(res.nodeType, DOCUMENT_NODE_TYPE, "getParentForNode(docElement, true)");
-    res = utils.getParentForNode(text, true);
+    res = InspectorUtils.getParentForNode(text, true);
     is(res.tagName, "BODY", "getParentForNode(text, true)");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.getBindingURLs(docElement);
-    ok(SpecialPowers.call_Instanceof(res, SpecialPowers.Ci["nsIArray"]), "getBindingURLs result type");
+    var res = InspectorUtils.getBindingURLs(docElement);
+    ok(Array.isArray(SpecialPowers.unwrap(res)), "getBindingURLs result type");
     is(res.length, 0, "getBindingURLs array length");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    utils.getContentState(docElement);
+    InspectorUtils.getContentState(docElement);
     ok(true, "Should not throw"); 
   }
   catch(e) { ok(false, "Got an exception: " + e); }
-
-  try {
-    utils.setContentState(docElement, false);
-    ok(false, "expected an exception"); 
-  }
-  catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, ERROR_INVALID_ARG, "got the expected exception");
-  }
 
   SimpleTest.finish();
 }

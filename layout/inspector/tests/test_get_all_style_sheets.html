@@ -12,12 +12,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=734861
 
   /** Test for Bug 734861 **/
 
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
   SimpleTest.waitForExplicitFinish();
 
   function runTest() {
-    var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
-    var res = utils.getAllStyleSheets(document);
+    var res = InspectorUtils.getAllStyleSheets(document);
 
     var foundUA = false;
     for (var i = 0; i < res.length; i++) {

@@ -2,61 +2,60 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test inDOMUtils::isValidCSSColor</title>
+  <title>Test InspectorUtils::isValidCSSColor</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   // Color names
-  let colors = utils.getCSSValuesForProperty("color");
+  let colors = InspectorUtils.getCSSValuesForProperty("color");
   let notColor = ["hsl", "hsla", "inherit", "initial", "rgb", "rgba",
                   "unset", "transparent", "currentColor"];
   for (let color of colors) {
     if (notColor.indexOf(color) !== -1) {
       continue;
     }
-    ok(utils.isValidCSSColor(color), color + " is a valid color");
-    ok(!utils.isValidCSSColor("xxx" + color), "xxx" + color + " is not a valid color");
+    ok(InspectorUtils.isValidCSSColor(color), color + " is a valid color");
+    ok(!InspectorUtils.isValidCSSColor("xxx" + color), "xxx" + color + " is not a valid color");
   }
 
   // rgb(a)
   for (let i = 0; i <= 265; i++) {
-    ok(utils.isValidCSSColor("rgb(" + i + ",0,0)"), "rgb(" + i + ",0,0) is a valid color");
-    ok(utils.isValidCSSColor("rgb(0," + i + ",0)"), "rgb(0," + i + ",0) is a valid color");
-    ok(utils.isValidCSSColor("rgb(0,0," + i + ")"), "rgb(0,0," + i + ") is a valid color");
-    ok(utils.isValidCSSColor("rgba(" + i + ",0,0,0.2)"), "rgba(" + i + ",0,0,0.2) is a valid color");
-    ok(utils.isValidCSSColor("rgba(0," + i + ",0,0.5)"), "rgba(0," + i + ",0,0.5) is a valid color");
-    ok(utils.isValidCSSColor("rgba(0,0," + i + ",0.7)"), "rgba(0,0," + i + ",0.7) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(" + i + ",0,0)"), "rgb(" + i + ",0,0) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(0," + i + ",0)"), "rgb(0," + i + ",0) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(0,0," + i + ")"), "rgb(0,0," + i + ") is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(" + i + ",0,0,0.2)"), "rgba(" + i + ",0,0,0.2) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(0," + i + ",0,0.5)"), "rgba(0," + i + ",0,0.5) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(0,0," + i + ",0.7)"), "rgba(0,0," + i + ",0.7) is a valid color");
 
-    ok(!utils.isValidCSSColor("rgbxxx(" + i + ",0,0)"), "rgbxxx(" + i + ",0,0) is not a valid color");
-    ok(!utils.isValidCSSColor("rgbxxx(0," + i + ",0)"), "rgbxxx(0," + i + ",0) is not a valid color");
-    ok(!utils.isValidCSSColor("rgbxxx(0,0," + i + ")"), "rgbxxx(0,0," + i + ") is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbxxx(" + i + ",0,0)"), "rgbxxx(" + i + ",0,0) is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbxxx(0," + i + ",0)"), "rgbxxx(0," + i + ",0) is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbxxx(0,0," + i + ")"), "rgbxxx(0,0," + i + ") is not a valid color");
   }
 
   // rgb(a) (%)
   for (let i = 0; i <= 110; i++) {
-    ok(utils.isValidCSSColor("rgb(" + i + "%,0%,0%)"), "rgb(" + i + "%,0%,0%) is a valid color");
-    ok(utils.isValidCSSColor("rgb(0%," + i + "%,0%)"), "rgb(0%," + i + "%,0%) is a valid color");
-    ok(utils.isValidCSSColor("rgb(0%,0%," + i + "%)"), "rgb(0%,0%," + i + "%) is a valid color");
-    ok(utils.isValidCSSColor("rgba(" + i + "%,0%,0%,0.2)"), "rgba(" + i + "%,0%,0%,0.2) is a valid color");
-    ok(utils.isValidCSSColor("rgba(0%," + i + "%,0%,0.5)"), "rgba(0%," + i + "%,0%,0.5) is a valid color");
-    ok(utils.isValidCSSColor("rgba(0%,0%," + i + "%,0.7)"), "rgba(0%,0%," + i + "%,0.7) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(" + i + "%,0%,0%)"), "rgb(" + i + "%,0%,0%) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(0%," + i + "%,0%)"), "rgb(0%," + i + "%,0%) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgb(0%,0%," + i + "%)"), "rgb(0%,0%," + i + "%) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(" + i + "%,0%,0%,0.2)"), "rgba(" + i + "%,0%,0%,0.2) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(0%," + i + "%,0%,0.5)"), "rgba(0%," + i + "%,0%,0.5) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("rgba(0%,0%," + i + "%,0.7)"), "rgba(0%,0%," + i + "%,0.7) is a valid color");
 
-    ok(!utils.isValidCSSColor("rgbaxxx(" + i + "%,0%,0%,0.2)"), "rgbaxxx(" + i + "%,0%,0%,0.2) is not a valid color");
-    ok(!utils.isValidCSSColor("rgbaxxx(0%," + i + "%,0%,0.5)"), "rgbaxxx(0%," + i + "%,0%,0.5) is not a valid color");
-    ok(!utils.isValidCSSColor("rgbaxxx(0%,0%," + i + "%,0.7)"), "rgbaxxx(0%,0%," + i + "%,0.7) is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbaxxx(" + i + "%,0%,0%,0.2)"), "rgbaxxx(" + i + "%,0%,0%,0.2) is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbaxxx(0%," + i + "%,0%,0.5)"), "rgbaxxx(0%," + i + "%,0%,0.5) is not a valid color");
+    ok(!InspectorUtils.isValidCSSColor("rgbaxxx(0%,0%," + i + "%,0.7)"), "rgbaxxx(0%,0%," + i + "%,0.7) is not a valid color");
   }
 
   // hsl(a)
   for (let i = 0; i <= 370; i++) {
-    ok(utils.isValidCSSColor("hsl(" + i + ",30%,10%)"), "rgb(" + i + ",30%,10%) is a valid color");
-    ok(utils.isValidCSSColor("hsla(" + i + ",60%,70%,0.2)"), "rgba(" + i + ",60%,70%,0.2) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("hsl(" + i + ",30%,10%)"), "rgb(" + i + ",30%,10%) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("hsla(" + i + ",60%,70%,0.2)"), "rgba(" + i + ",60%,70%,0.2) is a valid color");
   }
   for (let i = 0; i <= 110; i++) {
-    ok(utils.isValidCSSColor("hsl(100," + i + "%,20%)"), "hsl(100," + i + "%,20%) is a valid color");
-    ok(utils.isValidCSSColor("hsla(100,20%," + i + "%,0.6)"), "hsla(100,20%," + i + "%,0.6) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("hsl(100," + i + "%,20%)"), "hsl(100," + i + "%,20%) is a valid color");
+    ok(InspectorUtils.isValidCSSColor("hsla(100,20%," + i + "%,0.6)"), "hsla(100,20%," + i + "%,0.6) is a valid color");
   }
 
   // hex
@@ -65,22 +64,22 @@
     if (hex.length === 1) {
       hex = 0 + hex;
     }
-    ok(utils.isValidCSSColor("#" + hex + "7777"), "#" + hex + "7777 is a valid color");
-    ok(utils.isValidCSSColor("#77" + hex + "77"), "#77" + hex + "77 is a valid color");
-    ok(utils.isValidCSSColor("#7777" + hex), "#7777" + hex + " is a valid color");
+    ok(InspectorUtils.isValidCSSColor("#" + hex + "7777"), "#" + hex + "7777 is a valid color");
+    ok(InspectorUtils.isValidCSSColor("#77" + hex + "77"), "#77" + hex + "77 is a valid color");
+    ok(InspectorUtils.isValidCSSColor("#7777" + hex), "#7777" + hex + " is a valid color");
   }
-  ok(!utils.isValidCSSColor("#kkkkkk"), "#kkkkkk is not a valid color");
+  ok(!InspectorUtils.isValidCSSColor("#kkkkkk"), "#kkkkkk is not a valid color");
 
   // short hex
   for (let i = 0; i <= 16; i++) {
     let hex = (i).toString(16);
-    ok(utils.isValidCSSColor("#" + hex + hex + hex), "#" + hex + hex + hex + " is a valid color");
+    ok(InspectorUtils.isValidCSSColor("#" + hex + hex + hex), "#" + hex + hex + hex + " is a valid color");
   }
-  ok(!utils.isValidCSSColor("#ggg"), "#ggg is not a valid color");
+  ok(!InspectorUtils.isValidCSSColor("#ggg"), "#ggg is not a valid color");
   </script>
 </head>
 <body>
-<h1>Test inDOMUtils::isValidCSSColor</h1>
+<h1>Test InspectorUtils::isValidCSSColor</h1>
 <p id="display"></p>
 <div id="content" style="display: none">
 
