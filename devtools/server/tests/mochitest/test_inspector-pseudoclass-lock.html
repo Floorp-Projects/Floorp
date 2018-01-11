@@ -13,9 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(Components.interfaces.inIDOMUtils);
-
 const KNOWN_PSEUDOCLASSES = [":hover", ":active", ":focus"];
 
 window.onload = function () {
@@ -66,7 +63,8 @@ function checkChange(change, expectation) {
     let enabled = expectation.enabled === undefined ? true : expectation.enabled[i];
     ok(target.hasPseudoClassLock(pseudo), "Expect lock: " + pseudo);
     let rawNode = target.rawNode();
-    ok(DOMUtils.hasPseudoClassLock(rawNode, pseudo), "Expect lock in dom: " + pseudo);
+    ok(InspectorUtils.hasPseudoClassLock(rawNode, pseudo),
+       "Expect lock in dom: " + pseudo);
 
     is(rawNode.matches(pseudo), enabled,
        `Target should match pseudoclass, '${pseudo}', if enabled (with .matches())`);
@@ -75,7 +73,7 @@ function checkChange(change, expectation) {
   for (let pseudo of KNOWN_PSEUDOCLASSES) {
     if (!expectation.pseudos.some(expected => pseudo === expected)) {
       ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
-      ok(!DOMUtils.hasPseudoClassLock(target.rawNode(), pseudo),
+      ok(!InspectorUtils.hasPseudoClassLock(target.rawNode(), pseudo),
          "Don't expect lock in dom: " + pseudo);
     }
   }
@@ -172,7 +170,7 @@ addTest(function testPseudoClassLock() {
       // Now shut down the walker and make sure that clears up the remaining lock.
       return gWalker.release();
     }).then(() => {
-      ok(!DOMUtils.hasPseudoClassLock(contentNode, ":active"),
+      ok(!InspectorUtils.hasPseudoClassLock(contentNode, ":active"),
          "Pseudoclass should have been removed during destruction.");
       teardown();
     }).then(runNextTest));

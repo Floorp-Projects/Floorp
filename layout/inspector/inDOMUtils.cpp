@@ -1045,75 +1045,56 @@ InspectorUtils::GetCSSPseudoElementNames(GlobalObject& aGlobalObject,
   }
 }
 
+/* static */ void
+InspectorUtils::AddPseudoClassLock(GlobalObject& aGlobalObject,
+                                   Element& aElement,
+                                   const nsAString& aPseudoClass,
+                                   bool aEnabled)
+{
+  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  if (state.IsEmpty()) {
+    return;
+  }
+
+  aElement.LockStyleStates(state, aEnabled);
+}
+
+/* static */ void
+InspectorUtils::RemovePseudoClassLock(GlobalObject& aGlobal,
+                                      Element& aElement,
+                                      const nsAString& aPseudoClass)
+{
+  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  if (state.IsEmpty()) {
+    return;
+  }
+
+  aElement.UnlockStyleStates(state);
+}
+
+/* static */ bool
+InspectorUtils::HasPseudoClassLock(GlobalObject& aGlobalObject,
+                                   Element& aElement,
+                                   const nsAString& aPseudoClass)
+{
+  EventStates state = GetStatesForPseudoClass(aPseudoClass);
+  if (state.IsEmpty()) {
+    return false;
+  }
+
+  EventStates locks = aElement.LockedStyleStates().mLocks;
+  return locks.HasAllStates(state);
+}
+
+/* static */ void
+InspectorUtils::ClearPseudoClassLocks(GlobalObject& aGlobalObject,
+                                      Element& aElement)
+{
+  aElement.ClearStyleStateLocks();
+}
+
 } // namespace dom
 } // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
-                               const nsAString &aPseudoClass,
-                               bool aEnabled,
-                               uint8_t aArgc)
-{
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
-  if (state.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  element->LockStyleStates(state, aArgc > 0 ? aEnabled : true);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMUtils::RemovePseudoClassLock(nsIDOMElement *aElement,
-                                  const nsAString &aPseudoClass)
-{
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
-  if (state.IsEmpty()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  element->UnlockStyleStates(state);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMUtils::HasPseudoClassLock(nsIDOMElement *aElement,
-                               const nsAString &aPseudoClass,
-                               bool *_retval)
-{
-  EventStates state = GetStatesForPseudoClass(aPseudoClass);
-  if (state.IsEmpty()) {
-    *_retval = false;
-    return NS_OK;
-  }
-
-  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  EventStates locks = element->LockedStyleStates().mLocks;
-
-  *_retval = locks.HasAllStates(state);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-inDOMUtils::ClearPseudoClassLocks(nsIDOMElement *aElement)
-{
-  nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(element);
-
-  element->ClearStyleStateLocks();
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
