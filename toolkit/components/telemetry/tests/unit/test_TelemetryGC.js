@@ -31,19 +31,33 @@ function run_test() {
 
   // Get it back.
   assert_num_entries(1, false);
-  let entries = GCTelemetry.entries("main", false);
-  Assert.ok(entries, "Got entries object");
-  Assert.ok(entries.random, "Has random property");
-  Assert.ok(entries.worst, "Has worst property");
-  let entry = entries.worst[0];
-  Assert.ok(entry, "Got worst entry");
-
+  let entries1 = GCTelemetry.entries("main", false);
+  Assert.ok(entries1, "Got entries object");
+  Assert.ok(entries1.random, "Has random property");
+  Assert.ok(entries1.worst, "Has worst property");
+  let entry1 = entries1.worst[0];
+  Assert.ok(entry1, "Got worst entry");
 
   // "true" will cause the entry to be clared.
   assert_num_entries(1, true);
   // There are currently no entries.
   assert_num_entries(0, false);
-  Assert.equal(20, Object.keys(entry).length);
+  Assert.equal(20, Object.keys(entry1).length);
+
+  // Test too many fields
+  let my_gc = make_gc();
+  for (let i = 0; i < 100; i++) {
+      my_gc["new_property_" + i] = "Data";
+  }
+
+  GCTelemetry.observeRaw(my_gc);
+  // Assert that it was recorded but has only 7 fields.
+  assert_num_entries(1, false);
+  let entries2 = GCTelemetry.entries("main", false);
+  Assert.ok(entries2, "Got entries object");
+  let entry2 = entries2.worst[0];
+  Assert.ok(entry2, "Got worst entry");
+  Assert.equal(7, Object.keys(entry2).length);
 }
 
 function assert_num_entries(expect, clear) {
