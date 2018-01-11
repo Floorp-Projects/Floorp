@@ -333,18 +333,11 @@ MediaRule::SetConditionText(const nsAString& aConditionText,
                             ErrorResult& aRv)
 {
   if (!mMedia) {
-    RefPtr<nsMediaList> media = new nsMediaList();
-    media->SetStyleSheet(GetStyleSheet());
-    nsresult rv = media->SetMediaText(aConditionText);
-    if (NS_SUCCEEDED(rv)) {
-      mMedia = media;
-    } else {
-      aRv.Throw(rv);
-    }
-    return;
+    mMedia = new nsMediaList();
+    mMedia->SetStyleSheet(GetStyleSheet());
   }
 
-  aRv = mMedia->SetMediaText(aConditionText);
+  mMedia->SetMediaText(aConditionText);
 }
 
 // GroupRule interface

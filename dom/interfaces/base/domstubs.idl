@@ -43,7 +43,6 @@ class DOMException;
 // Style Sheets
 interface nsIDOMStyleSheetList;
 interface nsIDOMStyleSheet;
-interface nsIDOMMediaList;
 
 // Base
 interface nsIDOMWindow;

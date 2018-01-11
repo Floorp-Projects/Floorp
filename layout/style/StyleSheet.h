@@ -245,7 +245,6 @@ public:
   NS_IMETHOD GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet) final;
   NS_IMETHOD GetHref(nsAString& aHref) final;
   NS_IMETHOD GetTitle(nsAString& aTitle) final;
-  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
 
   // Changes to sheets should be inside of a WillDirty-DidDirty pair.
   // However, the calls do not need to be matched; it's ok to call
