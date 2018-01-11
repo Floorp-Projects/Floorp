@@ -184,11 +184,10 @@ ImportRule::GetStyleSheet() const
   return mChildSheet;
 }
 
-NS_IMETHODIMP
-ImportRule::GetHref(nsAString & aHref)
+void
+ImportRule::GetHref(nsAString& aHref) const
 {
   aHref = mURLSpec;
-  return NS_OK;
 }
 
 /* virtual */ size_t
