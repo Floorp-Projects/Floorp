@@ -136,38 +136,32 @@ InspectorUtils::IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode)
   return true;
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::GetParentForNode(nsIDOMNode* aNode,
-                             bool aShowingAnonymousContent,
-                             nsIDOMNode** aParent)
+/* static */ nsINode*
+InspectorUtils::GetParentForNode(nsINode& aNode,
+                                 bool aShowingAnonymousContent)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
   // First do the special cases -- document nodes and anonymous content
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDOMNode> parent;
+  nsINode* parent = nullptr;
 
-  if (doc) {
-    parent = inLayoutUtils::GetContainerFor(*doc);
+  if (aNode.IsNodeOfType(nsINode::eDOCUMENT)) {
+    auto& doc = static_cast<nsIDocument&>(aNode);
+    parent = inLayoutUtils::GetContainerFor(doc);
   } else if (aShowingAnonymousContent) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (content) {
-      nsIContent* bparent = content->GetFlattenedTreeParent();
-      parent = do_QueryInterface(bparent);
+    if (aNode.IsContent()) {
+      parent = aNode.AsContent()->GetFlattenedTreeParent();
     }
   }
 
   if (!parent) {
     // Ok, just get the normal DOM parent node
-    aNode->GetParentNode(getter_AddRefs(parent));
+    return aNode.GetParentNode();
   }
 
-  NS_IF_ADDREF(*aParent = parent);
-  return NS_OK;
+  return parent;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
