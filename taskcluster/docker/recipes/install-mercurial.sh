@@ -116,44 +116,9 @@ fi
 
 chmod 644 /usr/local/mercurial/robustcheckout.py
 
-mkdir -p /etc/mercurial
-cat >/etc/mercurial/hgrc <<EOF
-# By default the progress bar starts after 3s and updates every 0.1s. We
-# change this so it shows and updates every 1.0s.
-# We also tell progress to assume a TTY is present so updates are printed
-# even if there is no known TTY.
-[progress]
-delay = 1.0
-refresh = 1.0
-assume-tty = true
-
+cat >/etc/mercurial/hgrc.d/cacerts.rc <<EOF
 [web]
 cacerts = ${CERT_PATH}
-
-[extensions]
-share =
-sparse =
-robustcheckout = /usr/local/mercurial/robustcheckout.py
-
-[hostsecurity]
-# When running a modern Python, Mercurial will default to TLS 1.1+.
-# When running on a legacy Python, Mercurial will default to TLS 1.0+.
-# There is no good reason we shouldn't be running a modern Python
-# capable of speaking TLS 1.2. And the only Mercurial servers we care
-# about should be running TLS 1.2. So make TLS 1.2 the minimum.
-minimumprotocol = tls1.2
-
-# Settings to make 1-click loaners more useful.
-[extensions]
-histedit =
-rebase =
-
-[diff]
-git = 1
-showfunc = 1
-
-[pager]
-pager = LESS=FRSXQ less
 EOF
 
-chmod 644 /etc/mercurial/hgrc
+chmod 644 /etc/mercurial/hgrc.d/cacerts.rc
