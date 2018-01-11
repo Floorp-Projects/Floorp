@@ -1120,24 +1120,20 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
   aRv.Throw(NS_ERROR_INVALID_POINTER);
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::ScrollElementIntoView(nsIDOMElement *aElement)
+void
+InspectorUtils::ScrollElementIntoView(GlobalObject& aGlobalObject,
+                                      Element& aElement)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(content);
-
-  nsIPresShell* presShell = content->OwnerDoc()->GetShell();
+  nsIPresShell* presShell = aElement.OwnerDoc()->GetShell();
   if (!presShell) {
-    return NS_OK;
+    return;
   }
 
-  presShell->ScrollContentIntoView(content,
+  presShell->ScrollContentIntoView(&aElement,
                                    nsIPresShell::ScrollAxis(),
                                    nsIPresShell::ScrollAxis(),
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
-
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

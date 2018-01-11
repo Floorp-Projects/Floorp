@@ -20,13 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  /**
-   * Scroll an element completely into view, if possible.
-   * This is similar to ensureElementIsVisible but for all ancestors.
-   *
-   * @param DOMElement aElement
-   */
-  void scrollElementIntoView(in nsIDOMElement aElement);
 };
 
 %{ C++
