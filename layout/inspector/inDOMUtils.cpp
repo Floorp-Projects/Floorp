@@ -206,36 +206,33 @@ inDOMUtils::GetChildrenForNode(nsIDOMNode* aNode,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
-                             const nsAString& aPseudo,
-                             nsIArrayExtensions **_retval)
+namespace mozilla {
+namespace dom {
+
+/* static */ void
+InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
+                                 Element& aElement,
+                                 const nsAString& aPseudo,
+                                 nsTArray<RefPtr<css::Rule>>& aResult)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
-  *_retval = nullptr;
-
   RefPtr<nsAtom> pseudoElt;
   if (!aPseudo.IsEmpty()) {
     pseudoElt = NS_Atomize(aPseudo);
   }
 
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  NS_ENSURE_STATE(element);
   RefPtr<nsStyleContext> styleContext =
-    GetCleanStyleContextForElement(element, pseudoElt);
+    GetCleanStyleContextForElement(&aElement, pseudoElt);
   if (!styleContext) {
     // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
-    return NS_OK;
+    return;
   }
 
 
-  nsCOMPtr<nsIMutableArray> rules = nsArray::Create();
   if (auto gecko = styleContext->GetAsGecko()) {
     nsRuleNode* ruleNode = gecko->RuleNode();
     if (!ruleNode) {
-      return NS_OK;
+      return;
     }
 
     AutoTArray<nsRuleNode*, 16> ruleNodes;
@@ -249,15 +246,15 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
       if (decl) {
         css::Rule* owningRule = decl->GetOwningRule();
         if (owningRule) {
-          rules->AppendElement(owningRule);
+          aResult.AppendElement(owningRule);
         }
       }
     }
   } else {
-    nsIDocument* doc = element->GetOwnerDocument();
+    nsIDocument* doc = aElement.OwnerDoc();
     nsIPresShell* shell = doc->GetShell();
     if (!shell) {
-      return NS_OK;
+      return;
     }
 
     ServoStyleContext* servo = styleContext->AsServo();
@@ -273,7 +270,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
     }
 
     // Collect style rule maps for bindings.
-    for (nsIContent* bindingContent = element; bindingContent;
+    for (nsIContent* bindingContent = &aElement; bindingContent;
          bindingContent = bindingContent->GetBindingParent()) {
       for (nsXBLBinding* binding = bindingContent->GetXBLBinding();
            binding; binding = binding->GetBaseBinding()) {
@@ -300,17 +297,16 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
         }
       }
       if (rule) {
-        rules->AppendElement(static_cast<css::Rule*>(rule));
+        aResult.AppendElement(rule);
       } else {
         MOZ_ASSERT_UNREACHABLE("We should be able to map a raw rule to a rule");
       }
     }
   }
-
-  rules.forget(_retval);
-
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 static already_AddRefed<BindingStyleRule>
 GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
@@ -1129,9 +1125,12 @@ inDOMUtils::GetContentState(nsIDOMElement* aElement,
   return NS_OK;
 }
 
+namespace mozilla {
+namespace dom {
+
 /* static */ already_AddRefed<nsStyleContext>
-inDOMUtils::GetCleanStyleContextForElement(dom::Element* aElement,
-                                           nsAtom* aPseudo)
+InspectorUtils::GetCleanStyleContextForElement(dom::Element* aElement,
+                                               nsAtom* aPseudo)
 {
   MOZ_ASSERT(aElement);
 
@@ -1156,6 +1155,9 @@ inDOMUtils::GetCleanStyleContextForElement(dom::Element* aElement,
     nsComputedDOMStyle::GetStyleContext(aElement, aPseudo, presShell);
   return styleContext.forget();
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::GetUsedFontFaces(nsIDOMRange* aRange,

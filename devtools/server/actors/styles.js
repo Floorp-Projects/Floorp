@@ -9,6 +9,7 @@ const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {Task} = require("devtools/shared/task");
+const InspectorUtils = require("InspectorUtils");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
 
@@ -568,7 +569,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @returns Array
    */
   _getElementRules: function (node, pseudo, inherited, options) {
-    let domRules = DOMUtils.getCSSStyleRules(node, pseudo);
+    let domRules = InspectorUtils.getCSSStyleRules(node, pseudo);
     if (!domRules) {
       return [];
     }
@@ -577,8 +578,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     // getCSSStyleRules returns ordered from least-specific to
     // most-specific.
-    for (let i = domRules.Count() - 1; i >= 0; i--) {
-      let domRule = domRules.GetElementAt(i);
+    for (let i = domRules.length - 1; i >= 0; i--) {
+      let domRule = domRules[i];
 
       let isSystem = !SharedCssLogic.isContentStylesheet(domRule.parentStyleSheet);
 
