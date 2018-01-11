@@ -60,6 +60,8 @@ using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
 
+extern const char* const kCSSRawProperties[];
+
 ///////////////////////////////////////////////////////////////////////////////
 
 inDOMUtils::inDOMUtils()
@@ -406,44 +408,21 @@ InspectorUtils::IsInheritedProperty(GlobalObject& aGlobalObject,
   return !nsStyleContext::IsReset(sid);
 }
 
-} // namespace dom
-} // namespace mozilla
-
-extern const char* const kCSSRawProperties[];
-
-NS_IMETHODIMP
-inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
-                                char16_t*** aProps)
+/* static */ void
+InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
+                                    const PropertyNamesOptions& aOptions,
+                                    nsTArray<nsString>& aResult)
 {
-  // maxCount is the largest number of properties we could have; our actual
-  // number might be smaller because properties might be disabled.
-  uint32_t maxCount;
-  if (aFlags & EXCLUDE_SHORTHANDS) {
-    maxCount = eCSSProperty_COUNT_no_shorthands;
-  } else {
-    maxCount = eCSSProperty_COUNT;
-  }
-
-  if (aFlags & INCLUDE_ALIASES) {
-    maxCount += (eCSSProperty_COUNT_with_aliases - eCSSProperty_COUNT);
-  }
-
-  char16_t** props =
-    static_cast<char16_t**>(moz_xmalloc(maxCount * sizeof(char16_t*)));
-
 #define DO_PROP(_prop)                                                      \
   PR_BEGIN_MACRO                                                            \
-    nsCSSPropertyID cssProp = nsCSSPropertyID(_prop);                           \
+    nsCSSPropertyID cssProp = nsCSSPropertyID(_prop);                       \
     if (nsCSSProps::IsEnabled(cssProp, CSSEnabledState::eForAllContent)) {  \
-      props[propCount] =                                                    \
-        ToNewUnicode(nsDependentCString(kCSSRawProperties[_prop]));         \
-      ++propCount;                                                          \
+      nsDependentCString name(kCSSRawProperties[_prop]);                    \
+      aResult.AppendElement(NS_ConvertASCIItoUTF16(name));                  \
     }                                                                       \
   PR_END_MACRO
 
-  // prop is the property id we're considering; propCount is how many properties
-  // we've put into props so far.
-  uint32_t prop = 0, propCount = 0;
+  uint32_t prop = 0;
   for ( ; prop < eCSSProperty_COUNT_no_shorthands; ++prop) {
     if (nsCSSProps::PropertyParseType(nsCSSPropertyID(prop)) !=
         CSS_PROPERTY_PARSE_INACCESSIBLE) {
@@ -451,30 +430,26 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
     }
   }
 
-  if (!(aFlags & EXCLUDE_SHORTHANDS)) {
-    for ( ; prop < eCSSProperty_COUNT; ++prop) {
-      // Some shorthands are also aliases
-      if ((aFlags & INCLUDE_ALIASES) ||
-          !nsCSSProps::PropHasFlags(nsCSSPropertyID(prop),
-                                    CSS_PROPERTY_IS_ALIAS)) {
-        DO_PROP(prop);
-      }
+  for ( ; prop < eCSSProperty_COUNT; ++prop) {
+    // Some shorthands are also aliases
+    if (aOptions.mIncludeAliases ||
+        !nsCSSProps::PropHasFlags(nsCSSPropertyID(prop),
+                                  CSS_PROPERTY_IS_ALIAS)) {
+      DO_PROP(prop);
     }
   }
 
-  if (aFlags & INCLUDE_ALIASES) {
+  if (aOptions.mIncludeAliases) {
     for (prop = eCSSProperty_COUNT; prop < eCSSProperty_COUNT_with_aliases; ++prop) {
       DO_PROP(prop);
     }
   }
 
 #undef DO_PROP
-
-  *aCount = propCount;
-  *aProps = props;
-
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 static void InsertNoDuplicates(nsTArray<nsString>& aArray,
                                const nsAString& aString)
