@@ -179,6 +179,17 @@ public:
     return GetParentForNode(aNode, aShowingAnonymousContent);
   }
 
+  static already_AddRefed<nsINodeList> GetChildrenForNode(
+      GlobalObject& aGlobalObject,
+      nsINode& aNode,
+      bool aShowingAnonymousContent)
+  {
+    return GetChildrenForNode(aNode, aShowingAnonymousContent);
+  }
+  static already_AddRefed<nsINodeList> GetChildrenForNode(
+      nsINode& aNode,
+      bool aShowingAnonymousContent);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
