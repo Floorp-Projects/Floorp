@@ -10,7 +10,6 @@
 
 #include jar.inc.mn
 
-  skin/classic/global/customizeToolbar.css                 (../../windows/global/customizeToolbar.css)
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
   skin/classic/global/filefield.css                        (../../windows/global/filefield.css)
   skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)

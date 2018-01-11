@@ -31,7 +31,7 @@ add_task(async function task() {
   await loadDocument(documentUrl);
   info("Document loaded.");
 
-  await testNetmonitorLink(toolbox, hud, documentUrl);
+  await openMessageInNetmonitor(toolbox, hud, documentUrl);
 
   // Go back to console.
   await toolbox.selectTool("webconsole");
@@ -43,36 +43,5 @@ add_task(async function task() {
   });
 
   const jsonUrl = TEST_PATH + JSON_TEST_URL;
-  await testNetmonitorLink(toolbox, hud, jsonUrl);
+  await openMessageInNetmonitor(toolbox, hud, jsonUrl);
 });
-
-async function testNetmonitorLink(toolbox, hud, url) {
-  let messageNode = await waitFor(() => findMessage(hud, url));
-  info("Network message found.");
-
-  let onNetmonitorSelected = toolbox.once("netmonitor-selected", (event, panel) => {
-    return panel;
-  });
-
-  let menuPopup = await openContextMenu(hud, messageNode);
-  let openInNetMenuItem = menuPopup.querySelector("#console-menu-open-in-network-panel");
-  ok(openInNetMenuItem, "open in network panel item is enabled");
-  openInNetMenuItem.click();
-
-  const {panelWin} = await onNetmonitorSelected;
-  ok(true, "The netmonitor panel is selected when clicking on the network message");
-
-  let { store, windowRequire } = panelWin;
-  let actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSelectedRequest } =
-    windowRequire("devtools/client/netmonitor/src/selectors/index");
-
-  store.dispatch(actions.batchEnable(false));
-
-  await waitUntil(() => {
-    const selected = getSelectedRequest(store.getState());
-    return selected && selected.url === url;
-  });
-
-  ok(true, "The attached url is correct.");
-}

@@ -34,10 +34,6 @@
   locale/@AB_CD@/global/config.dtd                      (%chrome/global/config.dtd)
   locale/@AB_CD@/global/config.properties               (%chrome/global/config.properties)
   locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)
-#ifndef MOZ_FENNEC
-  locale/@AB_CD@/global/customizeToolbar.dtd            (%chrome/global/customizeToolbar.dtd)
-  locale/@AB_CD@/global/customizeToolbar.properties     (%chrome/global/customizeToolbar.properties)
-#endif
   locale/@AB_CD@/global/datetimebox.dtd                 (%chrome/global/datetimebox.dtd)
   locale/@AB_CD@/global/dialogOverlay.dtd               (%chrome/global/dialogOverlay.dtd)
 #ifndef MOZ_FENNEC

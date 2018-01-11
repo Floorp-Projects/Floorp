@@ -803,7 +803,15 @@ HttpObserverManager = {
           try {
             result = await result;
           } catch (e) {
-            Cu.reportError(e);
+            let error;
+
+            if (e instanceof Error) {
+              error = e;
+            } else if (typeof e === "object" && e.message) {
+              error = new Error(e.message, e.fileName, e.lineNumber);
+            }
+
+            Cu.reportError(error);
             continue;
           }
           if (!result || typeof result !== "object") {
