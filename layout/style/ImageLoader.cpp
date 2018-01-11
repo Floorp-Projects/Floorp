@@ -359,10 +359,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
-  FrameSet::size_type length = aFrameSet->Length();
-  for (FrameSet::size_type i = 0; i < length; i++) {
-    nsIFrame* frame = aFrameSet->ElementAt(i);
-
+  for (nsIFrame* frame : *aFrameSet) {
     if (frame->StyleVisibility()->IsVisible()) {
       if (frame->IsFrameOfType(nsIFrame::eTablePart)) {
         // Tables don't necessarily build border/background display items
@@ -441,10 +438,7 @@ ImageLoader::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     return NS_OK;
   }
 
-  FrameSet::size_type length = frameSet->Length();
-  for (FrameSet::size_type i = 0; i < length; i++) {
-    nsIFrame* frame = frameSet->ElementAt(i);
-
+  for (nsIFrame* frame : *frameSet) {
     if (frame->StyleVisibility()->IsVisible()) {
       frame->MarkNeedsDisplayItemRebuild();
     }
