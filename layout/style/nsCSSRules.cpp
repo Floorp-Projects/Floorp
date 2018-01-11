@@ -997,11 +997,10 @@ nsCSSKeyframeRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.AppendLiteral(" }");
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframeRule::GetKeyText(nsAString& aKeyText)
 {
   DoGetKeyText(aKeyText);
-  return NS_OK;
 }
 
 void
@@ -1020,7 +1019,7 @@ nsCSSKeyframeRule::DoGetKeyText(nsAString& aKeyText) const
   }
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
 {
   nsCSSParser parser;
@@ -1029,7 +1028,7 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   // FIXME: pass filename and line number
   if (!parser.ParseKeyframeSelectorString(aKeyText, nullptr, 0, newSelectors)) {
     // for now, we don't do anything if the parse fails
-    return NS_OK;
+    return;
   }
 
   nsIDocument* doc = GetDocument();
@@ -1040,8 +1039,6 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
-
-  return NS_OK;
 }
 
 nsICSSDeclaration*
