@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDOMCSSKeyframeRule.idl',
     'nsIDOMCSSKeyframesRule.idl',
     'nsIDOMCSSMediaRule.idl',
-    'nsIDOMCSSMozDocumentRule.idl',
     'nsIDOMCSSPageRule.idl',
     'nsIDOMCSSPrimitiveValue.idl',
     'nsIDOMCSSRule.idl',
