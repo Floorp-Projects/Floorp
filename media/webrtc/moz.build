@@ -81,6 +81,7 @@ GN_DIRS['trunk'].mozilla_flags = [
 # We allow warnings for third-party code that can be updated from upstream.
 GN_DIRS['trunk'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
 GN_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
+GN_DIRS['trunk'].sandbox_vars['GN_TARGET'] = '//:webrtc'
 GN_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:

@@ -1202,3 +1202,4 @@ class GnProjectData(ContextDerived):
         self.gn_input_variables = gn_dir_attrs.variables
         self.gn_sandbox_variables = gn_dir_attrs.sandbox_vars
         self.mozilla_flags = gn_dir_attrs.mozilla_flags
+        self.gn_target = gn_dir_attrs.gn_target
