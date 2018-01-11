@@ -2143,10 +2143,16 @@ nsNSSComponent::ShutdownNSS()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ShutdownNSS\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  // If we don't do this we might try to unload the loadable roots while the
-  // loadable roots loading thread is setting up EV information, which can cause
-  // it to fail to find the roots it is expecting.
-  Unused << BlockUntilLoadableRootsLoaded();
+  // This is idempotent and can happen as a result of observing
+  // profile-before-change and being called from nsNSSComponent's destructor.
+  // We need to do this before other cleanup because we must avoid acquiring
+  // mMutex and then preventing threads holding nsNSSShutDownPreventionLocks
+  // from continuing (which is what evaporateAllNSSResourcesAndShutDown does).
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("evaporating psm resources"));
+  if (NS_FAILED(nsNSSShutDownList::evaporateAllNSSResourcesAndShutDown())) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to evaporate resources"));
+    return;
+  }
 
   // This currently calls GetPIPNSSBundleString, which acquires mMutex, so we
   // can't call it while already holding mMutex. This is fine as mMutex doesn't
@@ -2178,11 +2184,15 @@ nsNSSComponent::ShutdownNSS()
   Unused << SSL_ShutdownServerSessionIDCache();
 
   // Release the default CertVerifier. This will cause any held NSS resources
-  // to be released.
+  // to be released (it's not an nsNSSShutDownObject, so we have to do this
+  // manually).
   mDefaultCertVerifier = nullptr;
-  // We don't actually shut down NSS - XPCOM does, after all threads have been
-  // joined and the component manager has been shut down (and so there shouldn't
-  // be any XPCOM objects holding NSS resources).
+
+  if (NSS_Shutdown() != SECSuccess) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("NSS SHUTDOWN FAILURE"));
+  } else {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS shutdown =====>> OK <<====="));
+  }
 }
 
 nsresult
