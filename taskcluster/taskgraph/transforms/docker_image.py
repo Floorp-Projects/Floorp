@@ -168,7 +168,7 @@ def fill_template(config, tasks):
             cache_name = 'imagebuilder-v1'
         else:
             worker['docker-image'] = {'in-tree': 'image_builder'}
-            cache_name = 'imagebuilder-{}'.format(_run_task_suffix())
+            cache_name = 'imagebuilder-sparse-{}'.format(_run_task_suffix())
             # Force images built against the in-tree image builder to
             # have a different digest by adding a fixed string to the
             # hashed data.
