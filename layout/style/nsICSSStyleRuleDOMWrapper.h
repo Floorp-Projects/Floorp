@@ -12,8 +12,6 @@
 #ifndef nsICSSStyleRuleDOMWrapper_h_
 #define nsICSSStyleRuleDOMWrapper_h_
 
-#include "nsIDOMCSSStyleRule.h"
-
 // IID for the nsICSSStyleRuleDOMWrapper interface
 // {cee1bbb6-0a32-4cf3-8d42-ba3938e9ecaa}
 #define NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID \
@@ -23,7 +21,7 @@ namespace mozilla {
 class BindingStyleRule;
 } // namespace mozilla
 
-class nsICSSStyleRuleDOMWrapper : public nsIDOMCSSStyleRule {
+class nsICSSStyleRuleDOMWrapper : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID)
 

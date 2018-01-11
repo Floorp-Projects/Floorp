@@ -1727,7 +1727,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSStyleRule({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSStyleRule)) {
+    if (isWorker || !rawObj || obj.class != "CSSStyleRule") {
       return false;
     }
     grip.preview = {

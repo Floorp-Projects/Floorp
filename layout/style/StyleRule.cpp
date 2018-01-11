@@ -1194,13 +1194,6 @@ StyleRule::Type() const
   return nsIDOMCSSRule::STYLE_RULE;
 }
 
-NS_IMETHODIMP
-StyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_ADDREF(*aStyle = Style());
-  return NS_OK;
-}
-
 nsICSSDeclaration*
 StyleRule::Style()
 {
@@ -1264,7 +1257,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleRule)
   }
   else
   NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
@@ -1389,23 +1381,21 @@ StyleRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.Append(char16_t('}'));
 }
 
-NS_IMETHODIMP
+void
 StyleRule::GetSelectorText(nsAString& aSelectorText)
 {
   if (mSelector)
     mSelector->ToString(aSelectorText, GetStyleSheet());
   else
     aSelectorText.Truncate();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 StyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
   // XXX TBI - get a parser and re-parse the selectors,
   // XXX then need to re-compute the cascade
   // XXX and dirty sheet
-  return NS_OK;
 }
 
 /* virtual */ size_t
