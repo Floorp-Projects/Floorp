@@ -36,8 +36,10 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "ease", left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", left: "100px" },
+    { offset: 0, computedOffset: 0, easing: "ease", composite: null,
+      left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "linear", composite: null,
+      left: "100px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -59,8 +61,10 @@ test(function(t) {
   assert_equals(frames.length, 2, "number of frames");
 
   var expected = [
-    { offset: 0, computedOffset: 0, easing: "steps(2)", left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "linear", left: "100px" },
+    { offset: 0, computedOffset: 0, easing: "steps(2)", composite: null,
+      left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "linear", composite: null,
+      left: "100px" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
@@ -81,8 +85,10 @@ test(function(t) {
   // CSS transition endpoints are based on the computed value so we
   // shouldn't see the variable reference
   var expected = [
-    { offset: 0, computedOffset: 0, easing: 'ease', left: '0px' },
-    { offset: 1, computedOffset: 1, easing: 'linear', left: '100px' },
+    { offset: 0, computedOffset: 0, easing: 'ease', composite: null,
+      left: '0px' },
+    { offset: 1, computedOffset: 1, easing: 'linear', composite: null,
+      left: '100px' },
   ];
   for (var i = 0; i < frames.length; i++) {
     assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
