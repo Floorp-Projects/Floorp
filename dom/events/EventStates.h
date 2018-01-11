@@ -150,8 +150,9 @@ public:
     return (mStates & aEventStates.mStates) == aEventStates.mStates;
   }
 
-  // We only need that method for inDOMUtils::GetContentState.
-  // If inDOMUtils::GetContentState is removed, this method should be removed.
+  // We only need that method for InspectorUtils::GetContentState.
+  // If InspectorUtils::GetContentState is removed, this method should
+  // be removed.
   InternalType GetInternalValue() const {
     return mStates;
   }
