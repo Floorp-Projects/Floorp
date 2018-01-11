@@ -1286,199 +1286,179 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   }
 
   // Step 15. and later in the HTML5 spec
-  nsresult rv = NS_OK;
-  RefPtr<ScriptLoadRequest> request;
-  mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
   if (aElement->GetScriptExternal()) {
-    // external script
-    nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
-    if (!scriptURI) {
-      // Asynchronously report the failure to create a URI object
+    return ProcessExternalScript(aElement, scriptKind, type, scriptContent);
+  }
+
+  return ProcessInlineScript(aElement, scriptKind);
+}
+
+bool
+ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
+                                    ScriptKind aScriptKind,
+                                    nsAutoString aTypeAttr,
+                                    nsIContent* aScriptContent)
+{
+  nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
+  if (!scriptURI) {
+    // Asynchronously report the failure to create a URI object
+    NS_DispatchToCurrentThread(
+      NewRunnableMethod("nsIScriptElement::FireErrorEvent",
+                        aElement,
+                        &nsIScriptElement::FireErrorEvent));
+    return false;
+  }
+
+  RefPtr<ScriptLoadRequest> request = LookupPreloadRequest(aElement, aScriptKind);
+
+  if (request && NS_FAILED(CheckContentPolicy(mDocument, aElement, request->mURI,
+                                              aTypeAttr, false))) {
+    // Probably plans have changed; even though the preload was allowed seems
+    // like the actual load is not; let's cancel the preload request.
+    request->Cancel();
+    return false;
+  }
+
+  if (request) {
+    // Use the preload request.
+
+    // It's possible these attributes changed since we started the preload so
+    // update them here.
+    request->SetScriptMode(aElement->GetScriptDeferred(),
+                           aElement->GetScriptAsync());
+  } else {
+    // No usable preload found.
+
+    SRIMetadata sriMetadata;
+    {
+      nsAutoString integrity;
+      aScriptContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                          nsGkAtoms::integrity,
+                                          integrity);
+      GetSRIMetadata(integrity, &sriMetadata);
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = aElement->GetScriptURITriggeringPrincipal();
+    if (!principal) {
+      principal = aScriptContent->NodePrincipal();
+    }
+
+    CORSMode ourCORSMode = aElement->GetCORSMode();
+    mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
+    request = CreateLoadRequest(aScriptKind, scriptURI, aElement,
+                                ourCORSMode, sriMetadata, ourRefPolicy);
+    request->mTriggeringPrincipal = Move(principal);
+    request->mIsInline = false;
+    request->SetScriptMode(aElement->GetScriptDeferred(),
+                           aElement->GetScriptAsync());
+    // keep request->mScriptFromHead to false so we don't treat non preloaded
+    // scripts as blockers for full page load. See bug 792438.
+
+    nsresult rv = StartLoad(request);
+    if (NS_FAILED(rv)) {
+      ReportErrorToConsole(request, rv);
+
+      // Asynchronously report the load failure
       NS_DispatchToCurrentThread(
         NewRunnableMethod("nsIScriptElement::FireErrorEvent",
                           aElement,
                           &nsIScriptElement::FireErrorEvent));
       return false;
     }
+  }
 
-    // Double-check that the preload matches what we're asked to load now.
-    CORSMode ourCORSMode = aElement->GetCORSMode();
-    nsTArray<PreloadInfo>::index_type i =
-      mPreloads.IndexOf(scriptURI.get(), 0, PreloadURIComparator());
-    if (i != nsTArray<PreloadInfo>::NoIndex) {
-      // preloaded
-      // note that a script-inserted script can steal a preload!
-      request = mPreloads[i].mRequest;
-      request->mElement = aElement;
-      nsString preloadCharset(mPreloads[i].mCharset);
-      mPreloads.RemoveElementAt(i);
+  // Should still be in loading stage of script.
+  NS_ASSERTION(!request->InCompilingStage(),
+               "Request should not yet be in compiling stage.");
 
-      // Double-check that the charset the preload used is the same as
-      // the charset we have now.
-      nsAutoString elementCharset;
-      aElement->GetScriptCharset(elementCharset);
-      if (elementCharset.Equals(preloadCharset) &&
-          ourCORSMode == request->mCORSMode &&
-          ourRefPolicy == request->mReferrerPolicy &&
-          scriptKind == request->mKind) {
-        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type, false);
-        if (NS_FAILED(rv)) {
-          // probably plans have changed; even though the preload was allowed seems
-          // like the actual load is not; let's cancel the preload request.
-          request->Cancel();
-          return false;
-        }
-      } else {
-        // Drop the preload
-        request = nullptr;
-      }
-    }
+  if (request->IsAsyncScript()) {
+    AddAsyncRequest(request);
+    if (request->IsReadyToRun()) {
+      // The script is available already. Run it ASAP when the event
+      // loop gets a chance to spin.
 
-    if (request) {
-      // Use a preload request.
-
-      // It's possible these attributes changed since we started the preload so
-      // update them here.
-      request->SetScriptMode(aElement->GetScriptDeferred(),
-                             aElement->GetScriptAsync());
-    } else {
-      // No usable preload found.
-
-      SRIMetadata sriMetadata;
-      {
-        nsAutoString integrity;
-        scriptContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::integrity,
-                                            integrity);
-        if (!integrity.IsEmpty()) {
-          MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-                  ("ScriptLoader::ProcessScriptElement, integrity=%s",
-                   NS_ConvertUTF16toUTF8(integrity).get()));
-          nsAutoCString sourceUri;
-          if (mDocument->GetDocumentURI()) {
-            mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
-          }
-          SRICheck::IntegrityMetadata(integrity, sourceUri, mReporter,
-                                      &sriMetadata);
-        }
-      }
-
-      nsCOMPtr<nsIPrincipal> principal = aElement->GetScriptURITriggeringPrincipal();
-      if (!principal) {
-        principal = scriptContent->NodePrincipal();
-      }
-
-      request = CreateLoadRequest(scriptKind, scriptURI, aElement, ourCORSMode,
-                                  sriMetadata, ourRefPolicy);
-      request->mTriggeringPrincipal = Move(principal);
-      request->mIsInline = false;
-      request->SetScriptMode(aElement->GetScriptDeferred(),
-                             aElement->GetScriptAsync());
-      // keep request->mScriptFromHead to false so we don't treat non preloaded
-      // scripts as blockers for full page load. See bug 792438.
-
-      rv = StartLoad(request);
-      if (NS_FAILED(rv)) {
-        ReportErrorToConsole(request, rv);
-
-        // Asynchronously report the load failure
-        NS_DispatchToCurrentThread(
-          NewRunnableMethod("nsIScriptElement::FireErrorEvent",
-                            aElement,
-                            &nsIScriptElement::FireErrorEvent));
-        return false;
-      }
-    }
-
-    // Should still be in loading stage of script.
-    NS_ASSERTION(!request->InCompilingStage(),
-                 "Request should not yet be in compiling stage.");
-
-    if (request->IsAsyncScript()) {
-      AddAsyncRequest(request);
-      if (request->IsReadyToRun()) {
-        // The script is available already. Run it ASAP when the event
-        // loop gets a chance to spin.
-
-        // KVKV TODO: Instead of processing immediately, try off-thread-parsing
-        // it and only schedule a pending ProcessRequest if that fails.
-        ProcessPendingRequestsAsync();
-      }
-      return false;
-    }
-    if (!aElement->GetParserCreated()) {
-      // Violate the HTML5 spec in order to make LABjs and the "order" plug-in
-      // for RequireJS work with their Gecko-sniffed code path. See
-      // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
-      request->mIsNonAsyncScriptInserted = true;
-      mNonAsyncExternalScriptInsertedRequests.AppendElement(request);
-      if (request->IsReadyToRun()) {
-        // The script is available already. Run it ASAP when the event
-        // loop gets a chance to spin.
-        ProcessPendingRequestsAsync();
-      }
-      return false;
-    }
-    // we now have a parser-inserted request that may or may not be still
-    // loading
-    if (request->IsDeferredScript()) {
-      // We don't want to run this yet.
-      // If we come here, the script is a parser-created script and it has
-      // the defer attribute but not the async attribute. Since a
-      // a parser-inserted script is being run, we came here by the parser
-      // running the script, which means the parser is still alive and the
-      // parse is ongoing.
-      NS_ASSERTION(mDocument->GetCurrentContentSink() ||
-                   aElement->GetParserCreated() == FROM_PARSER_XSLT,
-          "Non-XSLT Defer script on a document without an active parser; bug 592366.");
-      AddDeferRequest(request);
-      return false;
-    }
-
-    if (aElement->GetParserCreated() == FROM_PARSER_XSLT) {
-      // Need to maintain order for XSLT-inserted scripts
-      NS_ASSERTION(!mParserBlockingRequest,
-          "Parser-blocking scripts and XSLT scripts in the same doc!");
-      request->mIsXSLT = true;
-      mXSLTRequests.AppendElement(request);
-      if (request->IsReadyToRun()) {
-        // The script is available already. Run it ASAP when the event
-        // loop gets a chance to spin.
-        ProcessPendingRequestsAsync();
-      }
-      return true;
-    }
-
-    if (request->IsReadyToRun() && ReadyToExecuteParserBlockingScripts()) {
-      // The request has already been loaded and there are no pending style
-      // sheets. If the script comes from the network stream, cheat for
-      // performance reasons and avoid a trip through the event loop.
-      if (aElement->GetParserCreated() == FROM_PARSER_NETWORK) {
-        return ProcessRequest(request) == NS_ERROR_HTMLPARSER_BLOCK;
-      }
-      // Otherwise, we've got a document.written script, make a trip through
-      // the event loop to hide the preload effects from the scripts on the
-      // Web page.
-      NS_ASSERTION(!mParserBlockingRequest,
-          "There can be only one parser-blocking script at a time");
-      NS_ASSERTION(mXSLTRequests.isEmpty(),
-          "Parser-blocking scripts and XSLT scripts in the same doc!");
-      mParserBlockingRequest = request;
+      // KVKV TODO: Instead of processing immediately, try off-thread-parsing
+      // it and only schedule a pending ProcessRequest if that fails.
       ProcessPendingRequestsAsync();
-      return true;
     }
+    return false;
+  }
+  if (!aElement->GetParserCreated()) {
+    // Violate the HTML5 spec in order to make LABjs and the "order" plug-in
+    // for RequireJS work with their Gecko-sniffed code path. See
+    // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
+    request->mIsNonAsyncScriptInserted = true;
+    mNonAsyncExternalScriptInsertedRequests.AppendElement(request);
+    if (request->IsReadyToRun()) {
+      // The script is available already. Run it ASAP when the event
+      // loop gets a chance to spin.
+      ProcessPendingRequestsAsync();
+    }
+    return false;
+  }
+  // we now have a parser-inserted request that may or may not be still
+  // loading
+  if (request->IsDeferredScript()) {
+    // We don't want to run this yet.
+    // If we come here, the script is a parser-created script and it has
+    // the defer attribute but not the async attribute. Since a
+    // a parser-inserted script is being run, we came here by the parser
+    // running the script, which means the parser is still alive and the
+    // parse is ongoing.
+    NS_ASSERTION(mDocument->GetCurrentContentSink() ||
+                 aElement->GetParserCreated() == FROM_PARSER_XSLT,
+        "Non-XSLT Defer script on a document without an active parser; bug 592366.");
+    AddDeferRequest(request);
+    return false;
+  }
 
-    // The script hasn't loaded yet or there's a style sheet blocking it.
-    // The script will be run when it loads or the style sheet loads.
+  if (aElement->GetParserCreated() == FROM_PARSER_XSLT) {
+    // Need to maintain order for XSLT-inserted scripts
+    NS_ASSERTION(!mParserBlockingRequest,
+        "Parser-blocking scripts and XSLT scripts in the same doc!");
+    request->mIsXSLT = true;
+    mXSLTRequests.AppendElement(request);
+    if (request->IsReadyToRun()) {
+      // The script is available already. Run it ASAP when the event
+      // loop gets a chance to spin.
+      ProcessPendingRequestsAsync();
+    }
+    return true;
+  }
+
+  if (request->IsReadyToRun() && ReadyToExecuteParserBlockingScripts()) {
+    // The request has already been loaded and there are no pending style
+    // sheets. If the script comes from the network stream, cheat for
+    // performance reasons and avoid a trip through the event loop.
+    if (aElement->GetParserCreated() == FROM_PARSER_NETWORK) {
+      return ProcessRequest(request) == NS_ERROR_HTMLPARSER_BLOCK;
+    }
+    // Otherwise, we've got a document.written script, make a trip through
+    // the event loop to hide the preload effects from the scripts on the
+    // Web page.
     NS_ASSERTION(!mParserBlockingRequest,
         "There can be only one parser-blocking script at a time");
     NS_ASSERTION(mXSLTRequests.isEmpty(),
         "Parser-blocking scripts and XSLT scripts in the same doc!");
     mParserBlockingRequest = request;
+    ProcessPendingRequestsAsync();
     return true;
   }
 
-  // inline script
+  // The script hasn't loaded yet or there's a style sheet blocking it.
+  // The script will be run when it loads or the style sheet loads.
+  NS_ASSERTION(!mParserBlockingRequest,
+      "There can be only one parser-blocking script at a time");
+  NS_ASSERTION(mXSLTRequests.isEmpty(),
+      "Parser-blocking scripts and XSLT scripts in the same doc!");
+  mParserBlockingRequest = request;
+  return true;
+}
+
+bool
+ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
+                                  ScriptKind aScriptKind)
+{
   // Is this document sandboxed without 'allow-scripts'?
   if (mDocument->HasScriptsBlockedBySandbox()) {
     return false;
@@ -1491,14 +1471,15 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
   // Inline classic scripts ignore their CORS mode and are always CORS_NONE.
   CORSMode corsMode = CORS_NONE;
-  if (scriptKind == ScriptKind::eModule) {
+  if (aScriptKind == ScriptKind::eModule) {
     corsMode = aElement->GetCORSMode();
   }
 
-  request = CreateLoadRequest(scriptKind, mDocument->GetDocumentURI(), aElement,
-                              corsMode,
-                              SRIMetadata(), // SRI doesn't apply
-                              ourRefPolicy);
+  RefPtr<ScriptLoadRequest> request =
+    CreateLoadRequest(aScriptKind, mDocument->GetDocumentURI(), aElement,
+                      corsMode,
+                      SRIMetadata(), // SRI doesn't apply
+                      mDocument->GetReferrerPolicy());
   request->mIsInline = true;
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mLineNo = aElement->GetScriptLineNumber();
@@ -1572,6 +1553,60 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
       "Not safe to run a parser-inserted script?");
   return ProcessRequest(request) == NS_ERROR_HTMLPARSER_BLOCK;
+}
+
+ScriptLoadRequest*
+ScriptLoader::LookupPreloadRequest(nsIScriptElement* aElement,
+                                   ScriptKind aScriptKind)
+{
+  nsTArray<PreloadInfo>::index_type i =
+    mPreloads.IndexOf(aElement->GetScriptURI(), 0, PreloadURIComparator());
+  if (i == nsTArray<PreloadInfo>::NoIndex) {
+    return nullptr;
+  }
+
+  // Found preloaded request. Note that a script-inserted script can steal a
+  // preload!
+  RefPtr<ScriptLoadRequest> request = mPreloads[i].mRequest;
+  request->mElement = aElement;
+  nsString preloadCharset(mPreloads[i].mCharset);
+  mPreloads.RemoveElementAt(i);
+
+  // Double-check that the charset the preload used is the same as the charset
+  // we have now.
+  nsAutoString elementCharset;
+  aElement->GetScriptCharset(elementCharset);
+  if (!elementCharset.Equals(preloadCharset) ||
+      aElement->GetCORSMode() != request->mCORSMode ||
+      mDocument->GetReferrerPolicy() != request->mReferrerPolicy ||
+      aScriptKind != request->mKind) {
+    // Drop the preload.
+    return nullptr;
+  }
+
+  return request;
+}
+
+void
+ScriptLoader::GetSRIMetadata(const nsAString& aIntegrityAttr,
+                             SRIMetadata *aMetadataOut)
+{
+  MOZ_ASSERT(aMetadataOut->IsEmpty());
+
+  if (aIntegrityAttr.IsEmpty()) {
+    return;
+  }
+
+  MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
+          ("ScriptLoader::GetSRIMetadata, integrity=%s",
+           NS_ConvertUTF16toUTF8(aIntegrityAttr).get()));
+
+  nsAutoCString sourceUri;
+  if (mDocument->GetDocumentURI()) {
+    mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+  }
+  SRICheck::IntegrityMetadata(aIntegrityAttr, sourceUri, mReporter,
+                              aMetadataOut);
 }
 
 namespace {
@@ -3129,16 +3164,7 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   }
 
   SRIMetadata sriMetadata;
-  if (!aIntegrity.IsEmpty()) {
-    MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-            ("ScriptLoader::PreloadURI, integrity=%s",
-             NS_ConvertUTF16toUTF8(aIntegrity).get()));
-    nsAutoCString sourceUri;
-    if (mDocument->GetDocumentURI()) {
-      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
-    }
-    SRICheck::IntegrityMetadata(aIntegrity, sourceUri, mReporter, &sriMetadata);
-  }
+  GetSRIMetadata(aIntegrity, &sriMetadata);
 
   RefPtr<ScriptLoadRequest> request =
     CreateLoadRequest(ScriptKind::eClassic, aURI, nullptr,
