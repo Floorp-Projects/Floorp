@@ -22,7 +22,7 @@ add_task(function* () {
   let serviceWorkersElement = getServiceWorkerList(document);
 
   // Open a tab that registers a push service worker.
-  let swTab = yield addTab(TAB_URL, { background: true });
+  let swTab = yield addTab(TAB_URL);
 
   info("Make the test page notify us when the service worker sends a message.");
 
