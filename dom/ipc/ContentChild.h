@@ -410,6 +410,7 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvGarbageCollect() override;
   virtual mozilla::ipc::IPCResult RecvCycleCollect() override;
+  virtual mozilla::ipc::IPCResult RecvUnlinkGhosts() override;
 
   virtual mozilla::ipc::IPCResult RecvAppInfo(const nsCString& version, const nsCString& buildID,
                                               const nsCString& name, const nsCString& UAName,
