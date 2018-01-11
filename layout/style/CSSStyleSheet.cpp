@@ -25,7 +25,6 @@
 #include "nsStyleSet.h"
 #include "nsTArray.h"
 #include "mozilla/dom/CSSRuleList.h"
-#include "nsIDOMMediaList.h"
 #include "nsIDOMNode.h"
 #include "nsError.h"
 #include "nsCSSParser.h"

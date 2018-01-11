@@ -22,5 +22,4 @@ interface nsIDOMStyleSheet : nsISupports
   readonly attribute nsIDOMStyleSheet parentStyleSheet;
   readonly attribute DOMString        href;
   readonly attribute DOMString        title;
-  readonly attribute nsIDOMMediaList  media;
 };
