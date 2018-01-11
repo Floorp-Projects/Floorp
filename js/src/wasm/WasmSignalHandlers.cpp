@@ -421,27 +421,31 @@ struct macos_arm_context {
 # define LR_sig(p) R31_sig(p)
 #endif
 
+#if defined(FP_sig) && defined(SP_sig) && defined(SP_sig)
+# define KNOWS_MACHINE_STATE
+#endif
+
 static uint8_t**
 ContextToPC(CONTEXT* context)
 {
-#ifdef JS_CODEGEN_NONE
-    MOZ_CRASH();
-#else
+#ifdef KNOWS_MACHINE_STATE
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
+#else
+    MOZ_CRASH();
 #endif
 }
 
 static uint8_t*
 ContextToFP(CONTEXT* context)
 {
-#ifdef JS_CODEGEN_NONE
-    MOZ_CRASH();
-#else
+#ifdef KNOWS_MACHINE_STATE
     return reinterpret_cast<uint8_t*>(FP_sig(context));
+#else
+    MOZ_CRASH();
 #endif
 }
 
-#ifndef JS_CODEGEN_NONE
+#ifdef KNOWS_MACHINE_STATE
 static uint8_t*
 ContextToSP(CONTEXT* context)
 {
@@ -455,7 +459,7 @@ ContextToLR(CONTEXT* context)
     return reinterpret_cast<uint8_t*>(LR_sig(context));
 }
 # endif
-#endif // JS_CODEGEN_NONE
+#endif // KNOWS_MACHINE_STATE
 
 #if defined(XP_DARWIN)
 
@@ -532,9 +536,7 @@ ToRegisterState(EMULATOR_CONTEXT* context)
 static JS::ProfilingFrameIterator::RegisterState
 ToRegisterState(CONTEXT* context)
 {
-#ifdef JS_CODEGEN_NONE
-    MOZ_CRASH();
-#else
+#ifdef KNOWS_MACHINE_STATE
     JS::ProfilingFrameIterator::RegisterState state;
     state.fp = ContextToFP(context);
     state.pc = *ContextToPC(context);
@@ -543,6 +545,8 @@ ToRegisterState(CONTEXT* context)
     state.lr = ContextToLR(context);
 # endif
     return state;
+#else
+    MOZ_CRASH();
 #endif
 }
 
