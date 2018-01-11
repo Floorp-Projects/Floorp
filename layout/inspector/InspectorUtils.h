@@ -109,6 +109,12 @@ public:
                                   const PropertyNamesOptions& aOptions,
                                   nsTArray<nsString>& aResult);
 
+  // Get a list of all valid keywords and colors for aProperty.
+  static void GetCSSValuesForProperty(GlobalObject& aGlobal,
+                                      const nsAString& aPropertyName,
+                                      nsTArray<nsString>& aResult,
+                                      ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

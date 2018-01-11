@@ -15,6 +15,7 @@ const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUt
 
 const {colorUtils} = require("devtools/shared/css/color");
 const {cssColors} = require("devtools/shared/css/color-db");
+const InspectorUtils = require("InspectorUtils");
 
 function isValid(colorName) {
   ok(colorUtils.isValidCSSColor(colorName),
@@ -52,7 +53,7 @@ function run_test() {
 
   // Now check that platform didn't add a new name when we weren't
   // looking.
-  let names = DOMUtils.getCSSValuesForProperty("background-color");
+  let names = InspectorUtils.getCSSValuesForProperty("background-color");
   for (let name of names) {
     if (name !== "hsl" && name !== "hsla" &&
         name !== "rgb" && name !== "rgba" &&
