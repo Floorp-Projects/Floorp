@@ -8,9 +8,10 @@ Support for running spidermonkey jobs via dedicated scripts
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import re
 
 from taskgraph.util.schema import Schema
-from voluptuous import Optional, Required
+from voluptuous import Any, Optional, Required
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import add_public_artifacts
@@ -18,6 +19,9 @@ from taskgraph.transforms.job.common import add_public_artifacts
 from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
 from taskgraph.util.cached_tasks import add_optimization
+
+DSC_PACKAGE_RE = re.compile('.*(?=_)')
+SOURCE_PACKAGE_RE = re.compile('.*(?=[-_]\d)')
 
 source_definition = {
     Required('url'): basestring,
@@ -34,8 +38,9 @@ run_schema = Schema({
     # (only the YYYYMMDD part).
     Optional('snapshot'): basestring,
 
-    # URL/SHA256 of the source control (.dsc) file to build.
-    Required('dsc'): source_definition,
+    # URL/SHA256 of a source file to build, which can either be a source
+    # control (.dsc), or a tarball.
+    Required(Any('dsc', 'tarball')): source_definition,
 
     # Patch to apply to the extracted source.
     Optional('patch'): basestring,
@@ -59,8 +64,22 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     add_public_artifacts(config, job, taskdesc, path='/tmp/artifacts')
 
-    dsc_file = os.path.basename(run['dsc']['url'])
-    package = dsc_file[:dsc_file.index('_')]
+    if 'dsc' in run:
+        src = run['dsc']
+        unpack = 'dpkg-source -x {src_file} {package}'
+        package_re = DSC_PACKAGE_RE
+    elif 'tarball' in run:
+        src = run['tarball']
+        unpack = ('mkdir {package} && '
+                  'tar -C {package} -axf {src_file} --strip-components=1')
+        package_re = SOURCE_PACKAGE_RE
+    else:
+        raise RuntimeError('Unreachable')
+    src_url = src['url']
+    src_file = os.path.basename(src_url)
+    src_sha256 = src['sha256']
+    package = package_re.match(src_file).group(0)
+    unpack = unpack.format(src_file=src_file, package=package)
 
     adjust = ''
     if 'patch' in run:
@@ -75,6 +94,12 @@ def docker_worker_debian_package(config, job, taskdesc):
         )
     if 'pre-build-command' in run:
         adjust += run['pre-build-command'] + ' && '
+    if 'tarball' in run:
+        adjust += 'mv ../{src_file} ../{package}_{ver}.orig.tar.gz && '.format(
+            src_file=src_file,
+            package=package,
+            ver='$(dpkg-parsechangelog | awk \'$1=="Version:"{print $2}\' | cut -f 1 -d -)',
+        )
 
     # We can't depend on docker images (since docker images depend on packages),
     # so we inline the whole script here.
@@ -94,9 +119,9 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-get install -yyq fakeroot build-essential devscripts apt-utils && '
         'cd /tmp && '
         # Get, validate and extract the package source.
-        'dget -d -u {dsc} && '
-        'echo "{dsc_sha256}  {dsc_file}" | sha256sum -c && '
-        'dpkg-source -x {dsc_file} {package} && '
+        'dget -d -u {src_url} && '
+        'echo "{src_sha256}  {src_file}" | sha256sum -c && '
+        '{unpack} && '
         'cd {package} && '
         # Optionally apply patch and/or pre-build command.
         '{adjust}'
@@ -117,9 +142,10 @@ def docker_worker_debian_package(config, job, taskdesc):
             package=package,
             snapshot=run['snapshot'],
             dist=run['dist'],
-            dsc=run['dsc']['url'],
-            dsc_file=dsc_file,
-            dsc_sha256=run['dsc']['sha256'],
+            src_url=src_url,
+            src_file=src_file,
+            src_sha256=src_sha256,
+            unpack=unpack,
             adjust=adjust,
             artifacts='/tmp/artifacts',
         )
@@ -136,6 +162,6 @@ def docker_worker_debian_package(config, job, taskdesc):
     for k in ('snapshot', 'dist', 'pre-build-command'):
         if k in run:
             data.append(run[k])
-    data.append(run['dsc']['sha256'])
+    data.append(src['sha256'])
     add_optimization(config, taskdesc, cache_type='packages.v1',
                      cache_name=name, digest_data=data)
