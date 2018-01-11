@@ -1766,8 +1766,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     if (isWorker || !rawObj ||
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
+        obj.class != "CSSRuleList" &&
         !(rawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
-          rawObj instanceof Ci.nsIDOMCSSRuleList ||
           rawObj instanceof Ci.nsIDOMCSSValueList ||
           rawObj instanceof Ci.nsIDOMFileList ||
           rawObj instanceof Ci.nsIDOMMediaList ||
