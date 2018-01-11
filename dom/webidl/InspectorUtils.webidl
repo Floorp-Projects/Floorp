@@ -56,6 +56,7 @@ namespace InspectorUtils {
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
   [NewObject] NodeList getChildrenForNode(Node node,
                                           boolean showingAnonymousContent);
+  sequence<DOMString> getBindingURLs(Element element);
 };
 
 dictionary PropertyNamesOptions {
