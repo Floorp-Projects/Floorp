@@ -20,32 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  /**
-   * Get the line number of a rule.
-   *
-   * @param nsIDOMCSSRule aRule The rule.
-   * @return The rule's line number.  Line numbers are 1-based.
-   */
-  unsigned long getRuleLine(in nsIDOMCSSRule aRule);
-
-  /**
-   * Get the column number of a rule.
-   *
-   * @param nsIDOMCSSRule aRule The rule.
-   * @return The rule's column number.  Column numbers are 1-based.
-   */
-  unsigned long getRuleColumn(in nsIDOMCSSRule aRule);
-
-  /**
-   * Like getRuleLine, but if the rule is in a <style> element,
-   * returns a line number relative to the start of the element.
-   *
-   * @param nsIDOMCSSRule aRule the rule to examine
-   * @return the line number of the rule, possibly relative to the
-   *         <style> element
-   */
-  unsigned long getRelativeRuleLine(in nsIDOMCSSRule aRule);
-
   [implicit_jscontext]
   jsval getCSSLexer(in DOMString aText);
 

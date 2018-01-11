@@ -955,8 +955,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       if ((this.type === Ci.nsIDOMCSSRule.STYLE_RULE ||
            this.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) &&
           this.rawRule.parentStyleSheet) {
-        this.line = DOMUtils.getRelativeRuleLine(this.rawRule);
-        this.column = DOMUtils.getRuleColumn(this.rawRule);
+        this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
+        this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
         this._computeRuleIndex();
         this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
@@ -1217,8 +1217,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // Also tell the page style so that future calls to _styleRef
       // return the same StyleRuleActor.
       this.pageStyle.updateStyleRef(oldRule, this.rawRule, this);
-      let line = DOMUtils.getRelativeRuleLine(this.rawRule);
-      let column = DOMUtils.getRuleColumn(this.rawRule);
+      let line = InspectorUtils.getRelativeRuleLine(this.rawRule);
+      let column = InspectorUtils.getRuleColumn(this.rawRule);
       if (line !== this.line || column !== this.column) {
         this._notifyLocationChanged(line, column);
       }

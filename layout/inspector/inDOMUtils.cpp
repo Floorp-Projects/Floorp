@@ -329,46 +329,26 @@ GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
   return cssrule.forget();
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetRuleLine(nsIDOMCSSRule* aRule, uint32_t* _retval)
+namespace mozilla {
+namespace dom {
+
+/* static */ uint32_t
+InspectorUtils::GetRuleLine(GlobalObject& aGlobal, css::Rule& aRule)
 {
-  NS_ENSURE_ARG_POINTER(aRule);
-
-  Rule* rule = aRule->GetCSSRule();
-  if (!rule) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *_retval = rule->GetLineNumber();
-  return NS_OK;
+  return aRule.GetLineNumber();
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetRuleColumn(nsIDOMCSSRule* aRule, uint32_t* _retval)
+/* static */ uint32_t
+InspectorUtils::GetRuleColumn(GlobalObject& aGlobal, css::Rule& aRule)
 {
-  NS_ENSURE_ARG_POINTER(aRule);
-
-  Rule* rule = aRule->GetCSSRule();
-  if (!rule) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *_retval = rule->GetColumnNumber();
-  return NS_OK;
+  return aRule.GetColumnNumber();
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetRelativeRuleLine(nsIDOMCSSRule* aRule, uint32_t* _retval)
+/* static */ uint32_t
+InspectorUtils::GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule)
 {
-  NS_ENSURE_ARG_POINTER(aRule);
-
-  Rule* rule = aRule->GetCSSRule();
-  if (!rule) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t lineNumber = rule->GetLineNumber();
-  StyleSheet* sheet = rule->GetStyleSheet();
+  uint32_t lineNumber = aRule.GetLineNumber();
+  StyleSheet* sheet = aRule.GetStyleSheet();
   if (sheet && lineNumber != 0) {
     nsINode* owningNode = sheet->GetOwnerNode();
     if (owningNode) {
@@ -380,9 +360,11 @@ inDOMUtils::GetRelativeRuleLine(nsIDOMCSSRule* aRule, uint32_t* _retval)
     }
   }
 
-  *_retval = lineNumber;
-  return NS_OK;
+  return lineNumber;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::GetCSSLexer(const nsAString& aText, JSContext* aCx,
