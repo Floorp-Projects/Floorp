@@ -54,6 +54,8 @@ namespace InspectorUtils {
 
   boolean isIgnorableWhitespace(CharacterData dataNode);
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
+  [NewObject] NodeList getChildrenForNode(Node node,
+                                          boolean showingAnonymousContent);
 };
 
 dictionary PropertyNamesOptions {

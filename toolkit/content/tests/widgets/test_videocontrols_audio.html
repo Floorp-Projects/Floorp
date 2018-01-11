@@ -16,8 +16,7 @@
 <pre id="test">
 <script class="testbody" type="application/javascript">
 
-  var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-    getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   function findElementByAttribute(element, aName, aValue) {
     if (!("getAttribute" in element)) {
@@ -26,7 +25,8 @@
     if (element.getAttribute(aName) === aValue) {
       return element;
     }
-    let children = domUtils.getChildrenForNode(element, true);
+    let children =
+      InspectorUtils.getChildrenForNode(element, true);
     for (let child of children) {
       var result = findElementByAttribute(child, aName, aValue);
       if (result) {
