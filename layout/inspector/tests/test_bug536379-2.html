@@ -20,12 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=536379
 
 const CI = SpecialPowers.Ci;
 const CC = SpecialPowers.Cc;
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
-var domUtils =
-  CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
-var rules = domUtils.getCSSStyleRules(document.getElementById("display"));
-var firstPRule =
-  rules.GetElementAt(rules.Count() - 2).QueryInterface(CI.nsIDOMCSSStyleRule);
+var rules = InspectorUtils.getCSSStyleRules(document.getElementById("display"));
+var firstPRule = rules[rules.length - 2];
 firstPRule.style.removeProperty("color");
 ok(true, "should not crash");
 

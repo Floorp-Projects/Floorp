@@ -745,6 +745,15 @@ static void printSize(char * aDesc, nscoord aSize)
 //-- Main Reflow for the Combobox
 //-------------------------------------------------------------------
 
+bool
+nsComboboxControlFrame::HasDropDownButton() const
+{
+  const nsStyleDisplay* disp = StyleDisplay();
+  return disp->mAppearance == NS_THEME_MENULIST &&
+    (!IsThemed(disp) ||
+     PresContext()->GetTheme()->ThemeNeedsComboboxDropmarker());
+}
+
 nscoord
 nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                           nsLayoutUtils::IntrinsicISizeType aType)
@@ -790,10 +799,7 @@ nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
   }
 
   // add room for the dropmarker button if there is one
-  const nsStyleDisplay* disp = StyleDisplay();
-  if ((!IsThemed(disp) ||
-       presContext->GetTheme()->ThemeNeedsComboboxDropmarker()) &&
-      disp->mAppearance != NS_THEME_NONE) {
+  if (HasDropDownButton()) {
     displayISize += scrollbarWidth;
   }
 
@@ -865,9 +871,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // size of the dropdown button.
   WritingMode wm = aReflowInput.GetWritingMode();
   nscoord buttonISize;
-  const nsStyleDisplay *disp = StyleDisplay();
-  if ((IsThemed(disp) && !aPresContext->GetTheme()->ThemeNeedsComboboxDropmarker()) ||
-      StyleDisplay()->mAppearance == NS_THEME_NONE) {
+  if (!HasDropDownButton()) {
     buttonISize = 0;
   }
   else {

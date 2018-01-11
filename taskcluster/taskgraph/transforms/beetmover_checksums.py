@@ -143,15 +143,6 @@ def generate_upstream_artifacts(refs, platform, locale=None):
         "locale": locale or "en-US",
     }]
 
-    if not locale and "android" in platform:
-        # edge case to support 'multi' locale paths
-        upstream_artifacts.extend([{
-            "taskId": {"task-reference": refs["signing"]},
-            "taskType": "signing",
-            "paths": common_paths,
-            "locale": "multi"
-        }])
-
     return upstream_artifacts
 
 

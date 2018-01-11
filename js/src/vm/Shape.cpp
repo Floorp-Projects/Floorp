@@ -1984,6 +1984,13 @@ Shape::dump(js::GenericPrinter& out) const
 }
 
 void
+Shape::dump() const
+{
+    Fprinter out(stderr);
+    dump(out);
+}
+
+void
 Shape::dumpSubtree(int level, js::GenericPrinter& out) const
 {
     if (!parent) {

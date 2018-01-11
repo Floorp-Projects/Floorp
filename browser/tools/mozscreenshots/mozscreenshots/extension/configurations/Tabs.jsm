@@ -17,6 +17,8 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
+Cu.importGlobalProperties(["InspectorUtils"]);
+
 this.Tabs = {
   init(libDir) {},
 
@@ -189,11 +191,10 @@ function closeAllButOneTab(url = "about:blank") {
 }
 
 function hoverTab(tab, hover = true) {
-  const inIDOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
   if (hover) {
-    inIDOMUtils.addPseudoClassLock(tab, ":hover");
+    InspectorUtils.addPseudoClassLock(tab, ":hover");
   } else {
-    inIDOMUtils.clearPseudoClassLocks(tab);
+    InspectorUtils.clearPseudoClassLocks(tab);
   }
   // XXX TODO: this isn't necessarily testing what we ship
   if (tab.nextElementSibling)

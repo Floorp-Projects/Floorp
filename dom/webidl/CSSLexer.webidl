@@ -108,7 +108,7 @@ dictionary CSSToken {
  * CSSLexer is an interface to the CSS lexer.  It tokenizes an
  * input stream and returns CSS tokens.
  *
- * @see inIDOMUtils.getCSSLexer to create an instance of the lexer.
+ * @see InspectorUtils.getCSSLexer to create an instance of the lexer.
  */
 [ChromeOnly]
 interface CSSLexer

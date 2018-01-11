@@ -33,6 +33,7 @@ class DocGroup;
 class DocumentFragment;
 class DOMRect;
 class DOMRectList;
+class InspectorFontFace;
 class Selection;
 } // namespace dom
 } // namespace mozilla
@@ -280,7 +281,8 @@ public:
     return parentNode;
   }
 
-  NS_IMETHOD GetUsedFontFaces(nsIDOMFontFaceList** aResult);
+  nsresult GetUsedFontFaces(
+      nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>>& aResult);
 
   // nsIMutationObserver methods
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

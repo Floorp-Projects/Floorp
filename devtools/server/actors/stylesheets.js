@@ -16,6 +16,7 @@ const {mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {
   addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
+const InspectorUtils = require("InspectorUtils");
 
 loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic");
 loader.lazyRequireGetter(this, "addPseudoClassLock",
@@ -23,8 +24,6 @@ loader.lazyRequireGetter(this, "addPseudoClassLock",
 loader.lazyRequireGetter(this, "removePseudoClassLock",
   "devtools/server/actors/highlighters/utils/markup", true);
 loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
-
-loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
 var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
@@ -83,8 +82,8 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
     this._matchesChange = this._matchesChange.bind(this);
 
-    this.line = DOMUtils.getRuleLine(mediaRule);
-    this.column = DOMUtils.getRuleColumn(mediaRule);
+    this.line = InspectorUtils.getRuleLine(mediaRule);
+    this.column = InspectorUtils.getRuleColumn(mediaRule);
 
     try {
       this.mql = this.window.matchMedia(mediaRule.media.mediaText);
@@ -253,7 +252,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     for (let i = 0; i < rules.length; i++) {
       let rule = rules[i];
-      if (DOMUtils.getRelativeRuleLine(rule) === 0) {
+      if (InspectorUtils.getRelativeRuleLine(rule) === 0) {
         return false;
       }
     }
@@ -594,7 +593,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
   update: function (text, transition, kind = UPDATE_GENERAL) {
-    DOMUtils.parseStyleSheet(this.rawSheet, text);
+    InspectorUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
 
@@ -805,7 +804,8 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       doc.styleSheetChangeEventsEnabled = true;
 
       let isChrome = Services.scriptSecurityManager.isSystemPrincipal(doc.nodePrincipal);
-      let styleSheets = isChrome ? DOMUtils.getAllStyleSheets(doc) : doc.styleSheets;
+      let styleSheets =
+        isChrome ? InspectorUtils.getAllStyleSheets(doc) : doc.styleSheets;
       let actors = [];
       for (let i = 0; i < styleSheets.length; i++) {
         let sheet = styleSheets[i];

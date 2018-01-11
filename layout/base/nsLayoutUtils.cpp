@@ -88,7 +88,6 @@
 #include "nsDataHashtable.h"
 #include "nsTableWrapperFrame.h"
 #include "nsTextFrame.h"
-#include "nsFontFaceList.h"
 #include "nsFontInflationData.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
@@ -133,6 +132,7 @@
 #include "nsDeckFrame.h"
 #include "nsIEffectiveTLDService.h" // for IsInStyloBlocklist
 #include "mozilla/StylePrefs.h"
+#include "mozilla/dom/InspectorFontFace.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -7999,14 +7999,15 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
 #endif
 
 static void
-GetFontFacesForFramesInner(nsIFrame* aFrame, nsFontFaceList* aFontFaceList)
+GetFontFacesForFramesInner(nsIFrame* aFrame,
+                           nsLayoutUtils::UsedFontFaceTable& aFontFaces)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   if (aFrame->IsTextFrame()) {
     if (!aFrame->GetPrevContinuation()) {
       nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, true,
-                                         aFontFaceList);
+                                         aFontFaces);
     }
     return;
   }
@@ -8018,32 +8019,56 @@ GetFontFacesForFramesInner(nsIFrame* aFrame, nsFontFaceList* aFontFaceList)
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       child = nsPlaceholderFrame::GetRealFrameFor(child);
-      GetFontFacesForFramesInner(child, aFontFaceList);
+      GetFontFacesForFramesInner(child, aFontFaces);
     }
   }
 }
 
-/* static */
-nsresult
+/* static */ nsresult
 nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
-                                     nsFontFaceList* aFontFaceList)
+                                     UsedFontFaceTable& aFontFaces)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   while (aFrame) {
-    GetFontFacesForFramesInner(aFrame, aFontFaceList);
+    GetFontFacesForFramesInner(aFrame, aFontFaces);
     aFrame = GetNextContinuationOrIBSplitSibling(aFrame);
   }
 
   return NS_OK;
 }
 
-/* static */
-nsresult
+static void
+AddFontsFromTextRun(gfxTextRun* aTextRun,
+                    uint32_t aOffset,
+                    uint32_t aLength,
+                    nsLayoutUtils::UsedFontFaceTable& aFontFaces)
+{
+  gfxTextRun::Range range(aOffset, aOffset + aLength);
+  gfxTextRun::GlyphRunIterator iter(aTextRun, range);
+  while (iter.NextRun()) {
+    gfxFontEntry *fe = iter.GetGlyphRun()->mFont->GetFontEntry();
+    // if we have already listed this face, just make sure the match type is
+    // recorded
+    InspectorFontFace* existingFace = aFontFaces.Get(fe);
+    if (existingFace) {
+      existingFace->AddMatchType(iter.GetGlyphRun()->mMatchType);
+    } else {
+      // A new font entry we haven't seen before
+      InspectorFontFace* ff =
+        new InspectorFontFace(fe, aTextRun->GetFontGroup(),
+                              iter.GetGlyphRun()->mMatchType);
+      aFontFaces.Put(fe, ff);
+    }
+  }
+}
+
+/* static */ nsresult
 nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
-                                   int32_t aStartOffset, int32_t aEndOffset,
+                                   int32_t aStartOffset,
+                                   int32_t aEndOffset,
                                    bool aFollowContinuations,
-                                   nsFontFaceList* aFontFaceList)
+                                   UsedFontFaceTable& aFontFaces)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
@@ -8078,7 +8103,7 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 
     uint32_t skipStart = iter.ConvertOriginalToSkipped(fstart);
     uint32_t skipEnd = iter.ConvertOriginalToSkipped(fend);
-    aFontFaceList->AddFontsFromTextRun(textRun, skipStart, skipEnd - skipStart);
+    AddFontsFromTextRun(textRun, skipStart, skipEnd - skipStart, aFontFaces);
     curr = next;
   } while (aFollowContinuations && curr);
 

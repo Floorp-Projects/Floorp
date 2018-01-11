@@ -131,8 +131,8 @@ function getDefinedGeometryProperties(node) {
 
   // Get the list of css rules applying to the current node.
   let cssRules = getCSSStyleRules(node);
-  for (let i = 0; i < cssRules.Count(); i++) {
-    let rule = cssRules.GetElementAt(i);
+  for (let i = 0; i < cssRules.length; i++) {
+    let rule = cssRules[i];
     for (let name of GeoProp.allProps()) {
       let value = rule.style.getPropertyValue(name);
       if (value && value !== "auto") {

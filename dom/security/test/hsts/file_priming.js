@@ -1,4 +1,0 @@
-function completed() {
-  return;
-}
-completed();

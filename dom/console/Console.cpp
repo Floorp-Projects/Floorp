@@ -7,6 +7,7 @@
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
+#include "ConsoleCommon.h"
 
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/Exceptions.h"
@@ -295,24 +296,6 @@ private:
   }
 };
 
-// This class is used to clear any exception at the end of this method.
-class ClearException
-{
-public:
-  explicit ClearException(JSContext* aCx)
-    : mCx(aCx)
-  {
-  }
-
-  ~ClearException()
-  {
-    JS_ClearPendingException(mCx);
-  }
-
-private:
-  JSContext* mCx;
-};
-
 class ConsoleRunnable : public WorkerProxyToMainThreadRunnable
                       , public StructuredCloneHolderBase
 {
@@ -536,7 +519,7 @@ private:
     mWorkerPrivate->AssertIsOnWorkerThread();
     mCallData->AssertIsOnOwningThread();
 
-    ClearException ce(aCx);
+    ConsoleCommon::ClearException ce(aCx);
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mCallData->mCopiedArguments.Length()));
@@ -623,7 +606,7 @@ private:
   {
     AssertIsOnMainThread();
 
-    ClearException ce(aCx);
+    ConsoleCommon::ClearException ce(aCx);
 
     JS::Rooted<JS::Value> argumentsValue(aCx);
     if (!Read(aCx, &argumentsValue)) {
@@ -681,7 +664,7 @@ private:
   bool
   PreDispatch(JSContext* aCx) override
   {
-    ClearException ce(aCx);
+    ConsoleCommon::ClearException ce(aCx);
 
     JS::Rooted<JSObject*> arguments(aCx,
       JS_NewArrayObject(aCx, mArguments.Length()));
@@ -713,7 +696,7 @@ private:
   {
     AssertIsOnMainThread();
 
-    ClearException ce(aCx);
+    ConsoleCommon::ClearException ce(aCx);
 
     // Now we could have the correct window (if we are not window-less).
     mClonedData.mParent = aInnerWindow;
@@ -1014,7 +997,7 @@ Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
                               MethodName aMethodName,
                               const nsAString& aMethodString)
 {
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
@@ -1037,7 +1020,7 @@ Console::TimeStamp(const GlobalObject& aGlobal,
 {
   JSContext* cx = aGlobal.Context();
 
-  ClearException ce(cx);
+  ConsoleCommon::ClearException ce(cx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(cx, &data);
@@ -1113,7 +1096,7 @@ Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   RootedDictionary<ConsoleProfileEvent> event(aCx);
   event.mAction = aAction;
@@ -1264,7 +1247,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());
 
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   if (NS_WARN_IF(!callData->Initialize(aCx, aMethodName, aMethodString,
                                        aData, this))) {
@@ -1530,7 +1513,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
     frame = *aData->mTopStackFrame;
   }
 
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
   RootedDictionary<ConsoleEvent> event(aCx);
 
   event.mAddonId = aData->mAddonId;
@@ -2188,7 +2171,7 @@ Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
 {
   AssertIsOnOwningThread();
 
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   MOZ_ASSERT(!aArguments.IsEmpty());
 
@@ -2224,7 +2207,7 @@ JS::Value
 Console::CreateCounterValue(JSContext* aCx, const nsAString& aCountLabel,
                             uint32_t aCountValue) const
 {
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   if (aCountValue == MAX_PAGE_COUNTERS) {
     RootedDictionary<ConsoleCounterError> error(aCx);

@@ -47,30 +47,5 @@ interface nsIHTMLObjectResizer : nsISupports
    * Refresh visible resizers
    */
   void refreshResizers();
-
-  /**
-   * event callback when a mouse button is pressed
-   * @param aX      [IN] horizontal position of the pointer
-   * @param aY      [IN] vertical position of the pointer
-   * @param aTarget [IN] the element triggering the event
-   * @param aMouseEvent [IN] the event
-   */
-  void mouseDown(in long aX, in long aY,
-                 in nsIDOMElement aTarget, in nsIDOMEvent aMouseEvent);
-
-  /**
-   * event callback when a mouse button is released
-   * @param aX      [IN] horizontal position of the pointer
-   * @param aY      [IN] vertical position of the pointer
-   * @param aTarget [IN] the element triggering the event
-   */
-  void mouseUp(in long aX, in long aY,
-               in nsIDOMElement aTarget);
-
-  /**
-   * event callback when the mouse pointer is moved
-   * @param aMouseEvent [IN] the event
-   */
-  void mouseMove(in nsIDOMEvent aMouseEvent);
 };
 

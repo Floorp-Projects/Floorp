@@ -32,10 +32,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=398492
     /** Test for Bug 398492 **/
     SimpleTest.waitForExplicitFinish();
 
+    const InspectorUtils = SpecialPowers.InspectorUtils;
+
     function getXBLParent(node) {
-      var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                            .getService(Components.interfaces.inIDOMUtils);
-      return utils.getParentForNode(node, true);
+      return SpecialPowers.unwrap(InspectorUtils.getParentForNode(node, true));
     }
 
     addLoadEvent(function() {

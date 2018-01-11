@@ -21,15 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121643
 
 /** Test for Bug 1121643 **/
 
-const DOMUtils =  SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                               .getService(SpecialPowers.Ci.inIDOMUtils);
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
 // Given an element id, returns the first font face name encountered.
 let fontUsed = id => {
   let element = document.getElementById(id),
       range = document.createRange();
   range.selectNode(element);
-  return DOMUtils.getUsedFontFaces(range).item(0).CSSFamilyName;
+  return InspectorUtils.getUsedFontFaces(range)[0].CSSFamilyName;
 }
 
 // A map of the default mono, sans and serif fonts, obtained when

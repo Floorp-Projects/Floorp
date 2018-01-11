@@ -94,6 +94,14 @@ public:
   void
   Clear(JSContext* aCx);
 
+  // For testing only.
+  void ReportForServiceWorkerScope(const nsAString& aScope,
+                                   const nsAString& aMessage,
+                                   const nsAString& aFilename,
+                                   uint32_t aLineNumber,
+                                   uint32_t aColumnNumber,
+                                   ConsoleLevel aLevel);
+
 private:
   ~ConsoleInstance();
 

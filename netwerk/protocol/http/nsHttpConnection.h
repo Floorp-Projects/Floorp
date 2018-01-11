@@ -135,6 +135,9 @@ public:
         mForcePlainText = true;
     }
 
+    bool IsUrgentStartPreferred() const { return mUrgentStartPreferredKnown && mUrgentStartPreferred; }
+    void SetUrgentStartPreferred(bool urgent);
+
     nsISocketTransport   *Transport()      { return mSocketTransport; }
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
@@ -326,6 +329,11 @@ private:
 
     PRIntervalTime                  mRtt;
 
+    // Whether the first non-null transaction dispatched on this connection was
+    // urgent-start or not
+    bool                            mUrgentStartPreferred;
+    // A flag to prevent reset of mUrgentStartPreferred by subsequent transactions
+    bool                            mUrgentStartPreferredKnown;
     bool                            mConnectedTransport;
     bool                            mKeepAlive;
     bool                            mKeepAliveMask;

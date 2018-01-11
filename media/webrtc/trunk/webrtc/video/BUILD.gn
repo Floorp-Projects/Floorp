@@ -63,7 +63,6 @@ rtc_static_library("video") {
     "../base:rtc_task_queue",
     "../common_video",
     "../logging:rtc_event_log_api",
-    "../media:rtc_media_base",
     "../modules/bitrate_controller",
     "../modules/congestion_controller",
     "../modules/pacing",
@@ -75,6 +74,12 @@ rtc_static_library("video") {
     "../system_wrappers",
     "../voice_engine",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "../media:rtc_media_base",
+    ]
+  }
 }
 
 if (rtc_include_tests) {
@@ -86,7 +91,6 @@ if (rtc_include_tests) {
     ]
     deps = [
       "../base:rtc_task_queue",
-      "../media:rtc_media_base",
       "../system_wrappers",
       "//testing/gtest",
       "//webrtc/test:test_renderer",
@@ -97,6 +101,11 @@ if (rtc_include_tests) {
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (!build_with_mozilla) {
+      deps += [
+        "../media:rtc_media_base",
+      ]
     }
   }
 
@@ -208,7 +217,6 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":video",
-      "../media:rtc_media_base",
       "//testing/gmock",
       "//testing/gtest",
     ]
@@ -218,6 +226,11 @@ if (rtc_include_tests) {
     }
     if (rtc_use_h264) {
       defines += [ "WEBRTC_USE_H264" ]
+    }
+    if (!build_with_mozilla) {
+      deps += [
+        "../media:rtc_media_base",
+      ]
     }
   }
 }
