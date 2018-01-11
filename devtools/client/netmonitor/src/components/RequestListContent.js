@@ -95,23 +95,30 @@ class RequestListContent extends Component {
       toggleDelay: REQUESTS_TOOLTIP_TOGGLE_DELAY,
       interactive: true
     });
+    // Everytime the list is created or pruned, re-enable scroll to bottom feature.
+    this.shouldScrollToBottom = true;
+
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
     this.onResize();
   }
 
-  componentWillUpdate(nextProps) {
+  componentDidUpdate(prevProps) {
+    if (!this.shouldScrollToBottom) {
+      return;
+    }
     // Check if the list is scrolled to bottom before the UI update.
     // The scroll is ever needed only if new rows are added to the list.
-    const delta = nextProps.displayedRequests.size - this.props.displayedRequests.size;
-    this.shouldScrollBottom = delta > 0 && this.isScrolledToBottom();
-  }
-
-  componentDidUpdate(prevProps) {
-    let node = this.refs.contentEl;
+    const hasNewRequests = this.props.displayedRequests.size -
+      prevProps.displayedRequests.size > 0;
     // Keep the list scrolled to bottom if a new row was added
-    if (this.shouldScrollBottom && node.scrollTop !== MAX_SCROLL_HEIGHT) {
+    if (hasNewRequests) {
+      // Set a boolean flag to help `scroll` listener to know that the next event
+      // is related to the scroll to bottom and can be ignored.
+      this.ignoreNextScroll = true;
+
       // Using maximum scroll height rather than node.scrollHeight to avoid sync reflow.
+      let node = this.refs.contentEl;
       node.scrollTop = MAX_SCROLL_HEIGHT;
     }
   }
@@ -193,6 +200,14 @@ class RequestListContent extends Component {
    */
   onScroll() {
     this.tooltip.hide();
+
+    // Ignore scroll related to new requests being displayed
+    // To prevent slow reflows done in isScrolledToBottom.
+    if (this.ignoreNextScroll) {
+      this.ignoreNextScroll = false;
+      return;
+    }
+    this.shouldScrollToBottom = this.isScrolledToBottom();
   }
 
   /**
@@ -244,7 +259,7 @@ class RequestListContent extends Component {
    * scrolled to bottom, but allow scrolling up with the selection.
    */
   onFocusedNodeChange() {
-    this.shouldScrollBottom = false;
+    this.shouldScrollToBottom = false;
   }
 
   render() {
