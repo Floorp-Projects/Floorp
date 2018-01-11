@@ -607,6 +607,11 @@ this.browserAction = class extends ExtensionAPI {
           browserAction.setProperty(tab, "enabled", false);
         },
 
+        isEnabled: function(details) {
+          let tab = getTab(details.tabId);
+          return browserAction.getProperty(tab, "enabled");
+        },
+
         setTitle: function(details) {
           let tab = getTab(details.tabId);
 
