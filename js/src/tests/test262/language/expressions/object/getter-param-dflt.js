@@ -15,7 +15,7 @@ info: |
     get PropertyName[?Yield] ( ) { FunctionBody }
 features: [default-parameters]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

@@ -13,7 +13,7 @@ description: >
     No parameter named "yield"
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [onlyStrict]
 ---*/

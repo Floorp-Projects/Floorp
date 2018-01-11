@@ -9,7 +9,7 @@ es6id: 13.7.4.7
 features: [destructuring-binding]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     IterationStatement :

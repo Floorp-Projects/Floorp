@@ -5,7 +5,7 @@
 /*---
 esid: sec-get-regexp.prototype.flags
 description: Gets are performed in specified order
-info: >
+info: |
   get RegExp.prototype.flags
 
   [...]

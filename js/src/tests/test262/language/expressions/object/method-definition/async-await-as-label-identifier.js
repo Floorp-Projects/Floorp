@@ -8,7 +8,7 @@ esid: prod-AsyncMethod
 features: [async-functions]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     Async Function Definitions

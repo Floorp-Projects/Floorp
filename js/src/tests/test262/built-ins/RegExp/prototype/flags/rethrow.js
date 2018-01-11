@@ -5,7 +5,7 @@
 /*---
 esid: sec-get-regexp.prototype.flags
 description: Rethrows exceptions raised in property gets
-info: >
+info: |
   get RegExp.prototype.flags
 
   [...]
