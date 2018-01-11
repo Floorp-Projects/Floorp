@@ -755,7 +755,7 @@ mediarecorder:
       - 1400757
     description: >
       The number of times a MediaRecorder has been started. Recorded when a MediaRecorder starts
-    expires: "60"
+    expires: "64"
     kind: uint
     notification_emails:
       - bvandyk@mozilla.com
