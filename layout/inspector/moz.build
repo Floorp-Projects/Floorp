@@ -15,22 +15,16 @@ XPIDL_SOURCES += [
     'inIDOMView.idl',
     'inISearchObserver.idl',
     'inISearchProcess.idl',
-    'nsIDOMFontFace.idl',
-    'nsIDOMFontFaceList.idl',
 ]
 
 XPIDL_MODULE = 'inspector'
-
-EXPORTS += [
-    'nsFontFace.h',
-    'nsFontFaceList.h',
-]
 
 EXPORTS.mozilla += [
     'ServoStyleRuleMap.h',
 ]
 
 EXPORTS.mozilla.dom += [
+    'InspectorFontFace.h',
     'InspectorUtils.h',
 ]
 
@@ -39,8 +33,7 @@ UNIFIED_SOURCES += [
     'inDeepTreeWalker.cpp',
     'inDOMUtils.cpp',
     'inLayoutUtils.cpp',
-    'nsFontFace.cpp',
-    'nsFontFaceList.cpp',
+    'InspectorFontFace.cpp',
     'ServoStyleRuleMap.cpp',
 ]
 

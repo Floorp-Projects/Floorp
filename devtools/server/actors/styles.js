@@ -272,11 +272,11 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     // We don't get fonts for a node, but for a range
     let rng = contentDocument.createRange();
     rng.selectNodeContents(actualNode);
-    let fonts = DOMUtils.getUsedFontFaces(rng);
+    let fonts = InspectorUtils.getUsedFontFaces(rng);
     let fontsArray = [];
 
     for (let i = 0; i < fonts.length; i++) {
-      let font = fonts.item(i);
+      let font = fonts[i];
       let fontFace = {
         name: font.name,
         CSSFamilyName: font.CSSFamilyName,

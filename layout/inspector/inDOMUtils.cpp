@@ -56,6 +56,7 @@
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/dom/InspectorUtils.h"
+#include "mozilla/dom/InspectorFontFace.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -973,15 +974,20 @@ InspectorUtils::GetCleanStyleContextForElement(dom::Element* aElement,
   return styleContext.forget();
 }
 
+/* static */ void
+InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
+                                 nsRange& aRange,
+                                 nsTArray<nsAutoPtr<InspectorFontFace>>& aResult,
+                                 ErrorResult& aRv)
+{
+  nsresult rv = aRange.GetUsedFontFaces(aResult);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::GetUsedFontFaces(nsIDOMRange* aRange,
-                             nsIDOMFontFaceList** aFontFaceList)
-{
-  return static_cast<nsRange*>(aRange)->GetUsedFontFaces(aFontFaceList);
-}
 
 static EventStates
 GetStatesForPseudoClass(const nsAString& aStatePseudo)

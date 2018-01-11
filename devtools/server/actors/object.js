@@ -1770,7 +1770,6 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           rawObj instanceof Ci.nsIDOMCSSRuleList ||
           rawObj instanceof Ci.nsIDOMCSSValueList ||
           rawObj instanceof Ci.nsIDOMFileList ||
-          rawObj instanceof Ci.nsIDOMFontFaceList ||
           rawObj instanceof Ci.nsIDOMMediaList ||
           rawObj instanceof Ci.nsIDOMNodeList ||
           rawObj instanceof Ci.nsIDOMStyleSheetList)) {
