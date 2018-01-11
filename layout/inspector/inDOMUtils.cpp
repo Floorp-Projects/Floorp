@@ -552,49 +552,43 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
   }
 }
 
-NS_IMETHODIMP
-inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
-                                           uint32_t* aLength,
-                                           char16_t*** aValues)
+namespace mozilla {
+namespace dom {
+
+/* static */ void
+InspectorUtils::GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
+                                               const nsAString& aProperty,
+                                               nsTArray<nsString>& aResult,
+                                               ErrorResult& aRv)
 {
   nsCSSPropertyID propertyID =
     nsCSSProps::LookupProperty(aProperty, CSSEnabledState::eForAllContent);
 
   if (propertyID == eCSSProperty_UNKNOWN) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   if (propertyID == eCSSPropertyExtra_variable) {
-    *aValues = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t*)));
-    (*aValues)[0] = ToNewUnicode(aProperty);
-    *aLength = 1;
-    return NS_OK;
+    aResult.AppendElement(aProperty);
+    return;
   }
 
   if (!nsCSSProps::IsShorthand(propertyID)) {
-    *aValues = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t*)));
-    (*aValues)[0] = ToNewUnicode(nsCSSProps::GetStringValue(propertyID));
-    *aLength = 1;
-    return NS_OK;
+    nsString* name = aResult.AppendElement();
+    CopyASCIItoUTF16(nsCSSProps::GetStringValue(propertyID), *name);
+    return;
   }
 
-  // Count up how many subproperties we have.
-  size_t subpropCount = 0;
-  for (const nsCSSPropertyID *props = nsCSSProps::SubpropertyEntryFor(propertyID);
+  for (const nsCSSPropertyID* props = nsCSSProps::SubpropertyEntryFor(propertyID);
        *props != eCSSProperty_UNKNOWN; ++props) {
-    ++subpropCount;
+    nsString* name = aResult.AppendElement();
+    CopyASCIItoUTF16(nsCSSProps::GetStringValue(*props), *name);
   }
-
-  *aValues =
-    static_cast<char16_t**>(moz_xmalloc(subpropCount * sizeof(char16_t*)));
-  *aLength = subpropCount;
-  for (const nsCSSPropertyID *props = nsCSSProps::SubpropertyEntryFor(propertyID),
-                           *props_start = props;
-       *props != eCSSProperty_UNKNOWN; ++props) {
-    (*aValues)[props-props_start] = ToNewUnicode(nsCSSProps::GetStringValue(*props));
-  }
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::CssPropertyIsShorthand(const nsAString& aProperty, bool *_retval)

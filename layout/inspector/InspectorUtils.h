@@ -134,6 +134,16 @@ public:
   static bool IsValidCSSColor(GlobalObject& aGlobal,
                               const nsAString& aColorString);
 
+  // Utilities for obtaining information about a CSS property.
+
+  // Get a list of the longhands corresponding to the given CSS property.  If
+  // the property is a longhand already, just returns the property itself.
+  // Throws on unsupported property names.
+  static void GetSubpropertiesForCSSProperty(GlobalObject& aGlobal,
+                                             const nsAString& aProperty,
+                                             nsTArray<nsString>& aResult,
+                                             ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

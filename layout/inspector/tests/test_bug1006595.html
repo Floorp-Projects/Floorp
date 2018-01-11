@@ -11,6 +11,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   <script type="application/javascript">
 
   /** Test for Bug 1006595 **/
+
+  const InspectorUtils = SpecialPowers.InspectorUtils;
+
   function arraysEqual(arr1, arr2, message) {
     is(arr1.length, arr2.length, message + " length");
     for (var i = 0; i < arr1.length; ++i) {
@@ -20,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
     .getService(SpecialPowers.Ci.inIDOMUtils);
 
-  var paddingSubProps = utils.getSubpropertiesForCSSProperty("padding");
+  var paddingSubProps = InspectorUtils.getSubpropertiesForCSSProperty("padding");
   arraysEqual(paddingSubProps,
               [ "padding-top",
                 "padding-right",
@@ -28,11 +31,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
                 "padding-left" ],
               "'padding' subproperties");
 
-  var displaySubProps = utils.getSubpropertiesForCSSProperty("color");
+  var displaySubProps = InspectorUtils.getSubpropertiesForCSSProperty("color");
   arraysEqual(displaySubProps, [ "color" ],
               "'color' subproperties");
 
-  var varProps = utils.getSubpropertiesForCSSProperty("--foo");
+  var varProps = InspectorUtils.getSubpropertiesForCSSProperty("--foo");
   arraysEqual(varProps, ["--foo"], "'--foo' subproperties");
 
   ok(utils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
