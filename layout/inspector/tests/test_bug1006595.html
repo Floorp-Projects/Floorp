@@ -38,8 +38,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   var varProps = InspectorUtils.getSubpropertiesForCSSProperty("--foo");
   arraysEqual(varProps, ["--foo"], "'--foo' subproperties");
 
-  ok(utils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
-  ok(!utils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
+  ok(InspectorUtils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
+  ok(!InspectorUtils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
 
   ok(utils.cssPropertySupportsType("padding", utils.TYPE_LENGTH),
      "'padding' can be a length");

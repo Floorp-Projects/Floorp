@@ -144,6 +144,12 @@ public:
                                              nsTArray<nsString>& aResult,
                                              ErrorResult& aRv);
 
+  // Check whether a given CSS property is a shorthand.  Throws on unsupported
+  // property names.
+  static bool CssPropertyIsShorthand(GlobalObject& aGlobal,
+                                     const nsAString& aProperty,
+                                     ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
