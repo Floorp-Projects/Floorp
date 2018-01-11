@@ -19,7 +19,6 @@
 #include "nsIDOMClipboardEvent.h"
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCustomEvent.h"
@@ -257,7 +256,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(CommandEvent),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIContainerBoxObject, ContainerBoxObject),
-  DEFINE_SHIM(CSSPrimitiveValue),
   DEFINE_SHIM(CSSStyleDeclaration),
   DEFINE_SHIM(CSSValue),
   DEFINE_SHIM(CustomEvent),
