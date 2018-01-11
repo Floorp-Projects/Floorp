@@ -310,12 +310,6 @@ struct ParamTraits<int8_t>
   {
     return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
   }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    // Use 0xff to avoid sign extension.
-    aLog->append(StringPrintf(L"0x%02x", aParam & 0xff));
-  }
 };
 
 template<>
@@ -331,11 +325,6 @@ struct ParamTraits<uint8_t>
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return aMsg->ReadBytesInto(aIter, aResult, sizeof(*aResult));
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"0x%02x", aParam));
   }
 };
 
