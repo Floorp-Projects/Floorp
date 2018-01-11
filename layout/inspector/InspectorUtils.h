@@ -10,10 +10,18 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 
+class nsAtom;
 class nsIDocument;
+class nsStyleContext;
 
 namespace mozilla {
 class StyleSheet;
+namespace css {
+class Rule;
+} // namespace css
+namespace dom {
+class Element;
+} // namespace dom
 } // namespace mozilla
 
 namespace mozilla {
@@ -28,6 +36,14 @@ public:
   static void GetAllStyleSheets(GlobalObject& aGlobal,
                                 nsIDocument& aDocument,
                                 nsTArray<RefPtr<StyleSheet>>& aResult);
+  static void GetCSSStyleRules(GlobalObject& aGlobal,
+                               Element& aElement,
+                               const nsAString& aPseudo,
+                               nsTArray<RefPtr<css::Rule>>& aResult);
+
+private:
+  static already_AddRefed<nsStyleContext>
+    GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
 };
 
 } // namespace dom

@@ -15,18 +15,16 @@
  * an element with "unknowntagname".
  */
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 let iframe = document.getElementById("test");
-let domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                            .getService(SpecialPowers.Ci.inIDOMUtils);
-const nsIDOMCSSStyleRule = SpecialPowers.Ci["nsIDOMCSSStyleRule"];
 
 SimpleTest.waitForExplicitFinish();
 
 function* getStyleRules(elem) {
-  let rules = domUtils.getCSSStyleRules(elem);
+  let rules = InspectorUtils.getCSSStyleRules(elem);
   for (let i = 0; i < rules.length; i++) {
-    yield SpecialPowers.unwrap(rules.GetElementAt(i)
-                               .QueryInterface(nsIDOMCSSStyleRule));
+    yield SpecialPowers.unwrap(rules[i]);
   }
 }
 

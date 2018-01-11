@@ -38,14 +38,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037519
 <pre id="test">
 <script type="application/javascript">
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 function do_test() {
   var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
     .getService(SpecialPowers.Ci.inIDOMUtils);
 
   var element = document.querySelector("#foo");
 
-  var elementRules = utils.getCSSStyleRules(element);
-  var elementRule = elementRules.GetElementAt(elementRules.Count() - 1);
+  var elementRules = InspectorUtils.getCSSStyleRules(element);
+  var elementRule = elementRules[elementRules.length - 1];
 
   is (utils.selectorMatchesElement(element, elementRule, 0), true,
     "Matches #foo");
@@ -66,8 +68,8 @@ function do_test() {
   SimpleTest.finish();
 
   function checkPseudo(pseudo) {
-    var rules = utils.getCSSStyleRules(element, pseudo);
-    var rule = rules.GetElementAt(rules.Count() - 1);
+    var rules = InspectorUtils.getCSSStyleRules(element, pseudo);
+    var rule = rules[rules.length - 1];
 
     is (utils.selectorMatchesElement(element, rule, 0), false,
       "Doesn't match without " + pseudo);

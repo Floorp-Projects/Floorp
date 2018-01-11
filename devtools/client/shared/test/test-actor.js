@@ -784,8 +784,8 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
 
     let sheets = [];
 
-    for (let i = 0, n = domRules.Count(); i < n; i++) {
-      let sheet = domRules.GetElementAt(i).parentStyleSheet;
+    for (let i = 0, n = domRules.length; i < n; i++) {
+      let sheet = domRules[i].parentStyleSheet;
       sheets.push({
         href: sheet.href,
         isContentSheet: isContentStylesheet(sheet)

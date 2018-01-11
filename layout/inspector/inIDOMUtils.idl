@@ -20,8 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  nsIArrayExtensions getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
-
   /**
    * Get the line number of a rule.
    *

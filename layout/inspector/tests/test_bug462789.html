@@ -19,6 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462789
 
 /** Test for Bug 462789 **/
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 function do_test() {
   const ERROR_INVALID_ARG = 0x80070057;
   const DOCUMENT_NODE_TYPE = 9;
@@ -33,10 +35,10 @@ function do_test() {
   var text = body.firstChild;
 
   try {
-    var res = utils.getCSSStyleRules(docElement);
-    is(res, null, "getCSSStyleRules");
-    res = utils.getCSSStyleRules(body);
-    is(res, null, "getCSSStyleRules");
+    var res = InspectorUtils.getCSSStyleRules(docElement);
+    is(res.length, 0, "getCSSStyleRules");
+    res = InspectorUtils.getCSSStyleRules(body);
+    is(res.length, 0, "getCSSStyleRules");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 

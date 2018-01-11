@@ -22,31 +22,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=416896
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 416896 **/
+
+ const InspectorUtils = SpecialPowers.InspectorUtils;
+
  var inlineSheet = $("i").sheet;
  isnot(inlineSheet, null, "Should have sheet here");
 
  var linkedSheet = $("l").sheet;
  isnot(linkedSheet, null, "Should have sheet here");
 
- var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                             .getService(SpecialPowers.Ci.inIDOMUtils);
- const nsIDOMCSSStyleRule = SpecialPowers.Ci["nsIDOMCSSStyleRule"];
- var inspectedRules = domUtils.getCSSStyleRules(document.links[0]);
+ var inspectedRules = InspectorUtils.getCSSStyleRules(document.links[0]);
 
  var seenInline = false;
  var seenLinked = false;
  
- for (var i = 0; i < inspectedRules.Count(); ++i)
+ for (var i = 0; i < inspectedRules.length; ++i)
  {
-   var rule =
-     SpecialPowers.unwrap(inspectedRules.GetElementAt(i).QueryInterface(nsIDOMCSSStyleRule));
+   var rule = SpecialPowers.unwrap(inspectedRules[i]);
    var sheet = rule.parentStyleSheet;
    if (sheet == inlineSheet) {
      is(sheet.href, null, "It's an inline sheet");
      is(seenInline, false, "Only one inline rule matches");
      seenInline = true;
    } else {
-     isnot(sheet.href, null, "Shouldn't have null href here");
+     isnot(sheet.href, null, "Shouldn't have null href here " + i);
      if (sheet == linkedSheet) {
        is(seenLinked, false, "Only one linked rule matches");
        seenLinked = true;
