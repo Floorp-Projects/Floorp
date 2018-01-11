@@ -14,7 +14,6 @@
 #include "mozilla/WeakPtr.h"
 
 #include "nsICSSStyleRuleDOMWrapper.h"
-#include "nsIDOMCSSStyleRule.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
 
@@ -71,7 +70,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
-  NS_DECL_NSIDOMCSSSTYLERULE
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
 
@@ -92,6 +90,8 @@ public:
   // WebIDL interface
   uint16_t Type() const final;
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetSelectorText(nsAString& aSelectorText) final;
+  void SetSelectorText(const nsAString& aSelectorText) final;
   nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
