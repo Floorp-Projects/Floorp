@@ -1175,6 +1175,7 @@ impl PrimitiveStore {
                         prim_context,
                         render_tasks,
                         metadata.screen_rect.as_ref().expect("bug: trying to draw an off-screen picture!?"),
+                        &metadata.local_rect,
                         child_tasks,
                         parent_tasks,
                     );
@@ -1770,7 +1771,7 @@ impl PrimitiveStore {
             let metadata = &mut self.cpu_metadata[prim_index.0];
             if metadata.local_rect.size.width <= 0.0 ||
                metadata.local_rect.size.height <= 0.0 {
-                warn!("invalid primitive rect {:?}", metadata.local_rect);
+                //warn!("invalid primitive rect {:?}", metadata.local_rect);
                 return None;
             }
 
