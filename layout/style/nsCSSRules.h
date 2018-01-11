@@ -29,7 +29,6 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsIDOMCSSFontFeatureValuesRule.h"
 #include "nsTArray.h"
 
 class nsMediaList;
@@ -166,18 +165,17 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
   already_AddRefed<mozilla::css::Rule> Clone() const final;
 
-  // nsIDOMCSSFontFeatureValuesRule interface
-  NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetFontFamily(nsAString& aFamily) final;
+  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final;
+  void GetValueText(nsAString& aValueText) final;
+  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final;
 
   mozilla::SharedFontList* GetFamilyList() const { return mFamilyList; }
   void SetFamilyList(mozilla::SharedFontList* aFamilyList)
