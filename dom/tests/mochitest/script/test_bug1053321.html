@@ -10,32 +10,41 @@ are unexpectedly blocked.
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
+  <script>
+    // The two scripts below are expected to load and call scriptLoaded().
+    SimpleTest.waitForExplicitFinish();
+
+    window.expected_scripts = {
+      "defer": true,
+      "async": true,
+    };
+
+    function scriptLoaded(script)
+    {
+      ok(true, 'Script ' + script + ' executed');
+      delete window.expected_scripts[script];
+
+      let expecting = Object.keys(window.expected_scripts).length;
+      info("Expecting " + expecting + " more script(s) to execute");
+
+      if (expecting == 0) {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+
   <!-- this script is not loaded until file_blocked_script.sjs?unblock&defer request is made,
-       when this script is executed, it sets window.script_executed_defer to true
+       when this script is executed, it calls SimpleTest.finish().
    -->
   <script defer src="file_blocked_script.sjs?blocked&defer"></script>
 
   <!-- this script is not loaded until file_blocked_script.sjs?unblock&async request is made,
-       when this script is executed, it sets window.script_executed_async to true
+       when this script is executed, it calls SimpleTest.finish().
    -->
   <script async src="file_blocked_script.sjs?blocked&async"></script>
 </head>
 
 <body>
-  <script>
-    SimpleTest.waitForExplicitFinish();
-
-    // We can't test whether the two scripts have not been executed here, since
-    // preloads of the two images below (that unblock the two tested <head>
-    // scripts) may happen sooner than this script executes.
-    document.addEventListener("DOMContentLoaded", function() {
-      ok(window.script_executed_defer, "Deferred script executed before DOMContentLoaded");
-    });
-    window.addEventListener("load", function() {
-      ok(window.script_executed_async, "Async script executed before onload");
-      SimpleTest.finish();
-    }, true);
-  </script>
   <img src="file_blocked_script.sjs?unblock&defer"/>
   <img src="file_blocked_script.sjs?unblock&async"/>
 </body>
