@@ -91,18 +91,17 @@ ServoMediaRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-// nsIDOMCSSConditionRule methods
-
-NS_IMETHODIMP
+void
 ServoMediaRule::GetConditionText(nsAString& aConditionText)
 {
-  return Media()->GetMediaText(aConditionText);
+  Media()->GetMediaText(aConditionText);
 }
 
-NS_IMETHODIMP
-ServoMediaRule::SetConditionText(const nsAString& aConditionText)
+void
+ServoMediaRule::SetConditionText(const nsAString& aConditionText,
+                                 ErrorResult& aRv)
 {
-  return Media()->SetMediaText(aConditionText);
+  Media()->SetMediaText(aConditionText);
 }
 
 /* virtual */ void

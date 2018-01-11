@@ -922,7 +922,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-003.xht css-wr
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-004.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-004-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-006.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-006-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-007.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-007-ref.xht
-fails-if(OSX||winWidget||Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-008-ref.xht
+fails-if(OSX||winWidget) == css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-008-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-009.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-003-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-010.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-010-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-011.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-011-ref.xht
@@ -932,7 +932,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-015.xht css-wr
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-016.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-016-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-018.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-018-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-019.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-019-ref.xht
-fails-if(OSX||winWidget||Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-020-ref.xht
+fails-if(OSX||winWidget) == css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-020-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vlr-021.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-015-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-022.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-022-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vlr-023.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-023-ref.xht
@@ -942,7 +942,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-003.xht css-wr
 fails == css-writing-modes-3/sizing-orthog-htb-in-vrl-004.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-004-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-006.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-006-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-007.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-007-ref.xht
-fails-if(OSX||winWidget||Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-008-ref.xht
+fails-if(OSX||winWidget) == css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-008-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-009.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-003-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-010.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-010-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-011.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-011-ref.xht
@@ -952,7 +952,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-015.xht css-wr
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-016.xht css-writing-modes-3/sizing-orthog-htb-in-vlr-016-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-018.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-018-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-019.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-019-ref.xht
-fails-if(OSX||winWidget||Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-020-ref.xht
+fails-if(OSX||winWidget) == css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-020-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-htb-in-vrl-021.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-015-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-022.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-022-ref.xht
 == css-writing-modes-3/sizing-orthog-htb-in-vrl-023.xht css-writing-modes-3/sizing-orthog-htb-in-vrl-023-ref.xht

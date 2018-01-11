@@ -58,7 +58,6 @@
 #include "mozilla/EventStateManager.h"
 #include "nsIDOMNodeFilter.h"
 
-#include "nsIDOMStyleSheet.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsIDOMDOMImplementation.h"
@@ -237,7 +236,6 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
-#include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
@@ -6356,13 +6354,6 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   // transfer ref to aReturn
   list.forget(aReturn);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
-{
-  NS_ADDREF(*aStyleSheets = StyleSheets());
   return NS_OK;
 }
 

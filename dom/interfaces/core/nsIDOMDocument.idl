@@ -147,10 +147,6 @@ interface nsIDOMDocument : nsIDOMNode
 
 
   // CSSOM
-  /**
-   * @see <http://dev.w3.org/csswg/cssom/#dom-document-stylesheets>
-   */
-  readonly attribute nsIDOMStyleSheetList   styleSheets;
 
   /**
    * This attribute must return the preferred style sheet set as set by the

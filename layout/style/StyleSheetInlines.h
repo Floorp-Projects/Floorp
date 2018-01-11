@@ -89,7 +89,7 @@ StyleSheet::GetParentObject() const
   if (mOwningNode) {
     return dom::ParentObject(mOwningNode);
   }
-  return dom::ParentObject(static_cast<nsIDOMCSSStyleSheet*>(mParent), mParent);
+  return dom::ParentObject(mParent);
 }
 
 nsIPrincipal*

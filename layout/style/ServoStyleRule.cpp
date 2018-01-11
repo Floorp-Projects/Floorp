@@ -48,11 +48,10 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(ServoStyleRuleDeclaration, Rule())
 
 /* nsDOMCSSDeclaration implementation */
 
-NS_IMETHODIMP
-ServoStyleRuleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
+css::Rule*
+ServoStyleRuleDeclaration::GetParentRule()
 {
-  *aParent = do_AddRef(Rule()).take();
-  return NS_OK;
+  return Rule();
 }
 
 nsINode*
@@ -126,14 +125,7 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule,
 {
 }
 
-// QueryInterface implementation for ServoStyleRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoStyleRule)
-  NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
-NS_INTERFACE_MAP_END_INHERITING(css::Rule)
-
-NS_IMPL_ADDREF_INHERITED(ServoStyleRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ServoStyleRule, css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleRule)
 
@@ -205,21 +197,12 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* nsICSSStyleRuleDOMWrapper implementation */
-
-NS_IMETHODIMP
-ServoStyleRule::GetCSSStyleRule(BindingStyleRule **aResult)
-{
-  NS_ADDREF(*aResult = this);
-  return NS_OK;
-}
-
 /* CSSRule implementation */
 
 uint16_t
 ServoStyleRule::Type() const
 {
-  return nsIDOMCSSRule::STYLE_RULE;
+  return CSSRuleBinding::STYLE_RULE;
 }
 
 void
@@ -236,27 +219,18 @@ ServoStyleRule::Style()
 
 /* CSSStyleRule implementation */
 
-NS_IMETHODIMP
+void
 ServoStyleRule::GetSelectorText(nsAString& aSelectorText)
 {
   Servo_StyleRule_GetSelectorText(mRawRule, &aSelectorText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
   // XXX We need to implement this... But Gecko doesn't have this either
   //     so it's probably okay to leave it unimplemented currently?
   //     See bug 37468 and mozilla::css::StyleRule::SetSelectorText.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ServoStyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  *aStyle = do_AddRef(&mDecls).take();
-  return NS_OK;
 }
 
 uint32_t

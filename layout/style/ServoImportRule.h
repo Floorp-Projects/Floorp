@@ -26,21 +26,15 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoImportRule, dom::CSSImportRule)
 
-  // unhide since nsIDOMCSSImportRule has its own GetStyleSheet and GetMedia
-  using dom::CSSImportRule::GetStyleSheet;
-  using dom::CSSImportRule::GetMedia;
-
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
   already_AddRefed<css::Rule> Clone() const final;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
 
-  // nsIDOMCSSImportRule interface
-  NS_IMETHOD GetHref(nsAString& aHref) final;
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetHref(nsAString& aHref) const final;
   dom::MediaList* GetMedia() const final;
   StyleSheet* GetStyleSheet() const final;
 
