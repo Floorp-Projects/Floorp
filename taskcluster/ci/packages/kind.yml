@@ -52,3 +52,18 @@ jobs:
         url: http://snapshot.debian.org/archive/debian-debug/20160209T034956Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
         sha256: 25cd62b011d669c31bcd51d36d454dd826bc50af6a3af8d87bcab8948ec21626
       patch: ninja-wheezy.diff
+
+  deb7-mercurial:
+    description: "Modern Mercurial for Debian wheezy"
+    treeherder:
+      symbol: Deb7(hg)
+    run:
+      using: debian-package
+      tarball:
+        url: https://www.mercurial-scm.org/release/mercurial-4.4.2.tar.gz
+        sha256: dc2f72caccd6b760226753d48c2f4e8889fe176a6b23ef50775caac55ce28b85
+      pre-build-command: >-
+        cp -r contrib/debian debian &&
+        sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb7moz1/" \
+               -e "s/__DATE__/$(date --rfc-2822)/" \
+               -e "s/__CODENAME__/wheezy/" debian/changelog
