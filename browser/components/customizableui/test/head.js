@@ -103,10 +103,6 @@ function removeCustomToolbars() {
   gAddedToolbars.clear();
 }
 
-function getToolboxCustomToolbarId(toolbarName) {
-  return "__customToolbar_" + toolbarName.replace(" ", "_");
-}
-
 function resetCustomization() {
   return CustomizableUI.reset();
 }

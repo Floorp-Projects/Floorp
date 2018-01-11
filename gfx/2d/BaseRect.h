@@ -60,7 +60,7 @@ struct BaseRect {
   // Emptiness. An empty rect is one that has no area, i.e. its height or width
   // is <= 0.  Zero rect is the one with height and width set to zero.  Note
   // that SetEmpty() may change a rectangle that identified as IsEmpty().
-  MOZ_ALWAYS_INLINE bool IsZero() const { return height == 0 || width == 0; }
+  MOZ_ALWAYS_INLINE bool IsZeroArea() const { return height == 0 || width == 0; }
   MOZ_ALWAYS_INLINE bool IsEmpty() const { return height <= 0 || width <= 0; }
   void SetEmpty() { width = height = 0; }
 

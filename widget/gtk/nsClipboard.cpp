@@ -10,6 +10,9 @@
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
 #include "nsClipboardX11.h"
+#if defined(MOZ_WAYLAND)
+#include "nsClipboardWayland.h"
+#endif
 #include "HeadlessClipboard.h"
 #include "nsSupportsPrimitives.h"
 #include "nsString.h"
@@ -44,7 +47,7 @@ clipboard_get_cb(GtkClipboard *aGtkClipboard,
 void
 clipboard_clear_cb(GtkClipboard *aGtkClipboard,
                    gpointer user_data);
-                   
+
 static void
 ConvertHTMLtoUCS2          (const char*         data,
                             int32_t             dataLength,
@@ -95,6 +98,10 @@ nsClipboard::Init(void)
     // create nsRetrievalContext
     if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
         mContext = new nsRetrievalContextX11();
+#if defined(MOZ_WAYLAND)
+    } else {
+        mContext = new nsRetrievalContextWayland();
+#endif
     }
     return NS_OK;
 }
@@ -186,13 +193,13 @@ nsClipboard::SetData(nsITransferable *aTransferable,
             gtk_target_list_add(list, atom, 0, 0);
         }
     }
-    
+
     // Get GTK clipboard (CLIPBOARD or PRIMARY)
     GtkClipboard *gtkClipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-  
+
     gint numTargets;
     GtkTargetEntry *gtkTargets = gtk_target_table_new_from_list(list, &numTargets);
-          
+
     // Set getcallback and request to store data after an application exit
     if (gtkTargets &&
         gtk_clipboard_set_with_data(gtkClipboard, gtkTargets, numTargets,
@@ -200,7 +207,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     {
         // We managed to set-up the clipboard so update internal state
         // We have to set it now because gtk_clipboard_set_with_data() calls clipboard_clear_cb()
-        // which reset our internal state 
+        // which reset our internal state
         if (aWhichClipboard == kSelectionClipboard) {
             mSelectionOwner = aOwner;
             mSelectionTransferable = aTransferable;
@@ -213,13 +220,13 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 
         rv = NS_OK;
     }
-    else {  
+    else {
         rv = NS_ERROR_FAILURE;
     }
 
     gtk_target_table_free(gtkTargets, numTargets);
     gtk_target_list_unref(list);
-  
+
     return rv;
 }
 
@@ -273,9 +280,9 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 
             uint32_t    clipboardDataLength;
             const char* clipboardData =
-                mContext->WaitForClipboardContext(flavorStr.get(),
-                                                  aWhichClipboard,
-                                                  &clipboardDataLength);
+                mContext->GetClipboardData(flavorStr.get(),
+                                           aWhichClipboard,
+                                           &clipboardDataLength);
             if (!clipboardData)
                 continue;
 
@@ -286,7 +293,8 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                                   NS_ASSIGNMENT_COPY);
             aTransferable->SetTransferData(flavorStr.get(), byteStream,
                                            sizeof(nsIInputStream*));
-            free((void *)clipboardData);
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
 
@@ -294,11 +302,11 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
         // string into text/unicode
         if (flavorStr.EqualsLiteral(kUnicodeMime)) {
             uint32_t    clipboardDataLength;
-            const char* rawData =
-                mContext->WaitForClipboardContext(GTK_DEFAULT_MIME_TEXT,
-                                                  aWhichClipboard,
-                                                  &clipboardDataLength);
-            if (!rawData) {
+            const char* clipboardData =
+                mContext->GetClipboardData(GTK_DEFAULT_MIME_TEXT,
+                                           aWhichClipboard,
+                                           &clipboardDataLength);
+            if (!clipboardData) {
                 // If the type was text/unicode and we couldn't get
                 // text off the clipboard, run the next loop
                 // iteration.
@@ -306,19 +314,20 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
             }
 
             // Convert utf-8 into our unicode format.
-            NS_ConvertUTF8toUTF16 ucs2string(rawData, clipboardDataLength);
-            const char* clipboardData = (const char *)ToNewUnicode(ucs2string);
-            clipboardDataLength = ucs2string.Length() * 2;
+            NS_ConvertUTF8toUTF16 ucs2string(clipboardData, clipboardDataLength);
+            const char* unicodeData = (const char *)ToNewUnicode(ucs2string);
+            uint32_t unicodeDataLength = ucs2string.Length() * 2;
             SetTransferableData(aTransferable, flavorStr,
-                                clipboardData, clipboardDataLength);
-            free((void *)rawData);
-            free((void *)clipboardData);
+                                unicodeData, unicodeDataLength);
+            free((void *)unicodeData);
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
 
 
         uint32_t clipboardDataLength;
-        const char* clipboardData = mContext->WaitForClipboardContext(
+        const char* clipboardData = mContext->GetClipboardData(
             flavorStr.get(), aWhichClipboard, &clipboardDataLength);
 
         if (clipboardData) {
@@ -329,11 +338,12 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                 // Convert text/html into our unicode format
                 ConvertHTMLtoUCS2(clipboardData, clipboardDataLength,
                                   &htmlBody, htmlBodyLen);
-                free((void *)clipboardData);
 
                 // Try next data format?
-                if (!htmlBodyLen)
+                if (!htmlBodyLen) {
+                    mContext->ReleaseClipboardData(clipboardData);
                     continue;
+                }
 
                 SetTransferableData(aTransferable, flavorStr,
                                     (const char*)htmlBody, htmlBodyLen * 2);
@@ -341,8 +351,9 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
             } else {
                 SetTransferableData(aTransferable, flavorStr,
                                     clipboardData, clipboardDataLength);
-                free((void *)clipboardData);
             }
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
     }
@@ -444,7 +455,7 @@ nsClipboard::GetTransferable(int32_t aWhichClipboard)
         retval = mSelectionTransferable.get();
     else
         retval = mGlobalTransferable.get();
-        
+
     return retval;
 }
 
@@ -497,7 +508,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
                                     &len);
         if (!item || NS_FAILED(rv))
             return;
-        
+
         nsCOMPtr<nsISupportsString> wideString;
         wideString = do_QueryInterface(item);
         if (!wideString)
@@ -508,7 +519,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         char *utf8string = ToNewUTF8String(ucs2string);
         if (!utf8string)
             return;
-        
+
         gtk_selection_data_set_text (aSelectionData, utf8string,
                                      strlen(utf8string));
 
@@ -583,7 +594,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
             primitive_data = (guchar *)buffer;
             len += sizeof(prefix);
         }
-  
+
         gtk_selection_data_set(aSelectionData, selectionTarget,
                                8, /* 8 bits in a unit */
                                (const guchar *)primitive_data, len);
@@ -591,7 +602,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
     }
 
     g_free(target_name);
-                           
+
 }
 
 void
@@ -746,7 +757,7 @@ void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str)
             valueStart = end;
             start = end;
             htmlStr.EndReading(end);
-          
+
             if (FindCharInReadable('"', start, end))
                 valueEnd = start;
         }

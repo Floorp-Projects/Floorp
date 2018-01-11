@@ -19,12 +19,6 @@
 #include <gtk/gtk.h>
 #include <algorithm>
 
-#if (MOZ_WIDGET_GTK == 2)
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-#endif
-
 /*** type definitions ***/
 typedef struct {
   guint8 active;
@@ -335,38 +329,22 @@ void moz_gtk_refresh();
  */
 gint moz_gtk_shutdown();
 
-#if (MOZ_WIDGET_GTK == 2)
-/**
- * Retrieves the colormap to use for drawables passed to moz_gtk_widget_paint.
- */
-GdkColormap* moz_gtk_widget_get_colormap();
-#endif
-
 /*** Widget drawing ***/
-#if (MOZ_WIDGET_GTK == 2)
 /**
  * Paint a widget in the current theme.
  * widget:    a constant giving the widget to paint
  * drawable:  the drawable to paint to;
  *            it's colormap must be moz_gtk_widget_get_colormap().
  * rect:      the bounding rectangle for the widget
- * cliprect:  a clipprect rectangle for this painting operation
  * state:     the state of the widget.  ignored for some widgets.
  * flags:     widget-dependant flags; see the WidgetNodeType definition.
  * direction: the text direction, to draw the widget correctly LTR and RTL.
  */
 gint
-moz_gtk_widget_paint(WidgetNodeType widget, GdkDrawable* drawable,
-                     GdkRectangle* rect, GdkRectangle* cliprect,
-                     GtkWidgetState* state, gint flags,
-                     GtkTextDirection direction);
-#else
-gint
 moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
                      GdkRectangle* rect,
                      GtkWidgetState* state, gint flags,
                      GtkTextDirection direction);
-#endif
 
 
 /*** Widget metrics ***/
@@ -394,7 +372,7 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint
-moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom, 
+moz_gtk_get_tab_border(gint* left, gint* top, gint* right, gint* bottom,
                        GtkTextDirection direction, GtkTabFlags flags,
                        WidgetNodeType widget);
 
@@ -429,7 +407,7 @@ gint
 moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
 /** Get the extra size for the focus ring for outline:auto.
- * widget:             [IN]  the widget to get the focus metrics for    
+ * widget:             [IN]  the widget to get the focus metrics for
  * focus_h_width:      [OUT] the horizontal width
  * focus_v_width:      [OUT] the vertical width
  *
@@ -573,11 +551,5 @@ gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
  */
 gint
 moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
-
-#if (MOZ_WIDGET_GTK == 2)
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-#endif
 
 #endif

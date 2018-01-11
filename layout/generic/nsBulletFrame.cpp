@@ -603,7 +603,7 @@ BulletRenderer::CreateWebRenderCommandsForText(nsDisplayItem* aItem,
 
   RefPtr<TextDrawTarget> textDrawer = new TextDrawTarget(aBuilder, aSc, aManager, aItem, bounds);
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
-  PaintTextToContext(aItem->Frame(), captureCtx, aItem);
+  PaintTextToContext(aItem->Frame(), captureCtx, aItem->IsSubpixelAADisabled());
   textDrawer->TerminateShadows();
 
   return !textDrawer->HasUnsupportedFeatures();

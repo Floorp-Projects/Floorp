@@ -216,6 +216,67 @@ add_task(async function test_set_responseHeaders() {
   chromeScript.destroy();
 });
 
+// Test that exceptions raised from a blocking webRequest listener that returns
+// a promise are logged as expected.
+add_task(async function test_logged_error_on_promise_result() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://mochi.test/*",
+      ],
+    },
+
+    background() {
+      async function onBeforeRequest() {
+        throw new Error("Expected webRequest exception from a promise result");
+      }
+
+      let exceptionRaised = false;
+
+      browser.webRequest.onBeforeRequest.addListener(() => {
+        if (exceptionRaised) {
+          return;
+        }
+
+        // We only need to raise the exception once.
+        exceptionRaised = true;
+        return onBeforeRequest();
+      }, {
+        urls: ["http://mochi.test/*"],
+        types: ["main_frame"],
+      }, ["blocking"]);
+
+      browser.webRequest.onBeforeRequest.addListener(() => {
+        browser.test.sendMessage("web-request-event-received");
+      }, {
+        urls: ["http://mochi.test/*"],
+        types: ["main_frame"],
+      }, ["blocking"]);
+
+      browser.test.sendMessage("background-ready");
+    },
+  });
+
+  // Start to monitor the console service for the expected console message.
+  consoleMonitor.start([{message: /Expected webRequest exception from a promise result/}]);
+
+  await extension.startup();
+
+  await extension.awaitMessage("background-ready");
+
+  const testWin = window.open("http://mochi.test:8888/", "_blank", "width=100,height=100");
+  await waitForLoad(testWin);
+  await extension.awaitMessage("web-request-event-received");
+  testWin.close();
+
+  // Check that the collected messages contains the expected console message, and fails
+  // otherwise.
+  await consoleMonitor.finished();
+
+  await extension.unload();
+});
 
 </script>
 </body>
