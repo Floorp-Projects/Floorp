@@ -8,6 +8,14 @@
 #ifndef mozilla_dom_InspectorUtils_h
 #define mozilla_dom_InspectorUtils_h
 
+#include "mozilla/dom/BindingDeclarations.h"
+
+class nsIDocument;
+
+namespace mozilla {
+class StyleSheet;
+} // namespace mozilla
+
 namespace mozilla {
 namespace dom {
 
@@ -16,6 +24,10 @@ namespace dom {
  */
 class InspectorUtils
 {
+public:
+  static void GetAllStyleSheets(GlobalObject& aGlobal,
+                                nsIDocument& aDocument,
+                                nsTArray<RefPtr<StyleSheet>>& aResult);
 };
 
 } // namespace dom

@@ -26,7 +26,7 @@
     const authorUrl = "chrome://mochikit/content/tests/SimpleTest/test.css";
 
     let results = [];
-    for (let sheet of domutils.getAllStyleSheets(document)) {
+    for (let sheet of InspectorUtils.getAllStyleSheets(document)) {
       if (sheet.href === agentUrl) {
         is(sheet.parsingMode, "agent", "agent sheet has expected mode");
         results[sss.AGENT_SHEET] = 1;
