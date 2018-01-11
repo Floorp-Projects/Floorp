@@ -203,12 +203,6 @@ public:
 protected:
   void AppendRulesToCssText(nsAString& aCssText) const;
 
-  // to implement methods on nsIDOMCSSGroupingRule
-  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
-  nsresult InsertRule(const nsAString & aRule, uint32_t aIndex,
-                      uint32_t* _retval);
-  nsresult DeleteRule(uint32_t aIndex);
-
   // Must only be called if this is a Gecko GroupRule.
   IncrementalClearCOMRuleArray& GeckoRules() {
     return mInner.as<GeckoGroupRuleRules>().mRules;
