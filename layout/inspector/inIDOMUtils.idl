@@ -20,14 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Get a list of all our supported property names.  Optionally
-  // shorthands can be excluded or property aliases included.
-  const unsigned long EXCLUDE_SHORTHANDS = (1<<0);
-  const unsigned long INCLUDE_ALIASES = (1<<1);
-  void getCSSPropertyNames([optional] in unsigned long aFlags,
-			   [optional] out unsigned long aCount,
-			   [retval, array, size_is(aCount)] out wstring aProps);
-
   // Get a list of all valid keywords and colors for aProperty.
   void getCSSValuesForProperty(in AString aProperty,
                                [optional] out unsigned long aLength,

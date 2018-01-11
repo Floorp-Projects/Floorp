@@ -46,7 +46,7 @@ exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
  */
 function generateCssProperties() {
   const properties = {};
-  const propertyNames = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
+  const propertyNames = InspectorUtils.getCSSPropertyNames({ includeAliases: true });
   const colors = Object.keys(cssColors);
 
   propertyNames.forEach(name => {

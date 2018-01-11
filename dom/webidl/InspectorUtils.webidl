@@ -30,6 +30,11 @@ namespace InspectorUtils {
       unsigned long selectorIndex,
       [TreatNullAs=EmptyString] optional DOMString pseudo = "");
   boolean isInheritedProperty(DOMString property);
+  sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options);
+};
+
+dictionary PropertyNamesOptions {
+  boolean includeAliases = false;
 };
 
 dictionary InspectorRGBTriple {
