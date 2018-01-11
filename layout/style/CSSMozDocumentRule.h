@@ -9,13 +9,12 @@
 
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
-#include "nsIDOMCSSMozDocumentRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSMozDocumentRule : public css::ConditionRule
-                         , public nsIDOMCSSMozDocumentRule
+                         , public nsIDOMCSSConditionRule
 {
 protected:
   using ConditionRule::ConditionRule;
@@ -38,9 +37,6 @@ public:
 
   // nsIDOMCSSConditionRule interface
   NS_IMETHOD SetConditionText(const nsAString& aConditionText) override = 0;
-
-  // nsIDOMCSSMozDocumentRule interface
-  NS_DECL_NSIDOMCSSMOZDOCUMENTRULE
 
   // WebIDL interface
   uint16_t Type() const final override {
