@@ -6,6 +6,7 @@
  */
 
 #include "RetainedDisplayListBuilder.h"
+#include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
 
@@ -624,7 +625,7 @@ static void
 ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
              AnimatedGeometryRoot** aAGR, nsRect& aOverflow,
              nsIFrame* aStopAtFrame, nsTArray<nsIFrame*>& aOutFramesWithProps,
-             const bool /* aStopAtStackingContext */)
+             const bool aStopAtStackingContext)
 {
   nsIFrame* currentFrame = aFrame;
 
@@ -633,12 +634,46 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
 
     // Convert 'aOverflow' into the coordinate space of the nearest stacking context
     // or display port ancestor and update 'currentFrame' to point to that frame.
-    aOverflow = nsLayoutUtils::TransformFrameRectToAncestor(currentFrame, aOverflow,
-                                                            aStopAtFrame,
-                                                            nullptr, nullptr,
-                                                            /* aStopAtStackingContextAndDisplayPort = */ true,
-                                                            &currentFrame);
+    nsIFrame* previousFrame = currentFrame;
+    aOverflow = nsLayoutUtils::TransformFrameRectToAncestor(currentFrame, aOverflow, aStopAtFrame,
+                                                           nullptr, nullptr,
+                                                           /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
+                                                           &currentFrame);
     MOZ_ASSERT(currentFrame);
+
+    // If the current frame is an OOF frame, DisplayListBuildingData needs to be
+    // set on all the ancestor stacking contexts of the  placeholder frame, up
+    // to the containing block of the OOF frame. This is done to ensure that the
+    // content that might be behind the OOF frame is built for merging.
+    nsIFrame* placeholder = previousFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
+                          ? previousFrame->GetPlaceholderFrame()
+                          : nullptr;
+
+    if (placeholder) {
+      nsRect placeholderOverflow =
+        aOverflow + previousFrame->GetOffsetTo(placeholder);
+
+      CRR_LOG("Processing placeholder %p for OOF frame %p\n",
+              placeholder, previousFrame);
+
+      CRR_LOG("OOF frame draw area: %d %d %d %d\n",
+              placeholderOverflow.x, placeholderOverflow.y,
+              placeholderOverflow.width, placeholderOverflow.height);
+
+      // Tracking AGRs for the placeholder processing is not necessary, as the
+      // goal is to only modify the DisplayListBuildingData rect.
+      AnimatedGeometryRoot* dummyAGR = nullptr;
+
+      // Find a common ancestor frame to handle frame continuations.
+      // TODO: It might be possible to write a more specific and efficient
+      // function for this.
+      nsIFrame* ancestor =
+        nsLayoutUtils::FindNearestCommonAncestorFrame(previousFrame->GetParent(),
+                                                      placeholder->GetParent());
+
+      ProcessFrame(placeholder, aBuilder, &dummyAGR, placeholderOverflow,
+                   ancestor, aOutFramesWithProps, false);
+    }
 
     if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
@@ -662,7 +697,8 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
           aOutFramesWithProps.AppendElement(currentFrame);
         }
         rect->UnionRect(*rect, r);
-        CRR_LOG("Adding area to displayport draw area: %d %d %d %d\n", r.x, r.y, r.width, r.height);
+        CRR_LOG("Adding area to displayport draw area: %d %d %d %d\n",
+                r.x, r.y, r.width, r.height);
 
         // TODO: Can we just use MarkFrameForDisplayIfVisible, plus MarkFramesForDifferentAGR to
         // ensure that this displayport, plus any items that move relative to it get rebuilt,
@@ -680,40 +716,50 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
       // If we found an intermediate stacking context with an existing display item
       // then we can store the dirty rect there and stop. If we couldn't find one then
       // we need to keep bubbling up to the next stacking context.
-      if (currentFrame != aBuilder.RootReferenceFrame() &&
-          currentFrame->HasDisplayItems()) {
-        aBuilder.MarkFrameForDisplayIfVisible(currentFrame,
-                                              aBuilder.RootReferenceFrame());
-
-        // Store the stacking context relative dirty area such
-        // that display list building will pick it up when it
-        // gets to it.
-        nsDisplayListBuilder::DisplayListBuildingData* data =
-          currentFrame->GetProperty(nsDisplayListBuilder::DisplayListBuildingRect());
-        if (!data) {
-          data = new nsDisplayListBuilder::DisplayListBuildingData;
-          currentFrame->SetProperty(nsDisplayListBuilder::DisplayListBuildingRect(), data);
-          currentFrame->SetHasOverrideDirtyRegion(true);
-          aOutFramesWithProps.AppendElement(currentFrame);
-        }
-        data->mDirtyRect.UnionRect(data->mDirtyRect, aOverflow);
-        CRR_LOG("Adding area to stacking context draw area: %d %d %d %d\n",
-                aOverflow.x, aOverflow.y, aOverflow.width, aOverflow.height);
-        if (!data->mModifiedAGR) {
-          data->mModifiedAGR = *aAGR;
-        } else if (data->mModifiedAGR != *aAGR) {
-          data->mDirtyRect = currentFrame->GetVisualOverflowRectRelativeToSelf();
-          CRR_LOG("Found multiple modified AGRs within this stacking context, giving up\n");
-        }
-
-        // Don't contribute to the root dirty area at all.
-        *aAGR = nullptr;
-        aOverflow.SetEmpty();
-        break;
+      if (currentFrame == aBuilder.RootReferenceFrame() ||
+          !currentFrame->HasDisplayItems()) {
+        continue;
       }
+
+      aBuilder.MarkFrameForDisplayIfVisible(currentFrame,
+                                            aBuilder.RootReferenceFrame());
+
+      // Store the stacking context relative dirty area such
+      // that display list building will pick it up when it
+      // gets to it.
+      nsDisplayListBuilder::DisplayListBuildingData* data =
+        currentFrame->GetProperty(nsDisplayListBuilder::DisplayListBuildingRect());
+      if (!data) {
+        data = new nsDisplayListBuilder::DisplayListBuildingData();
+        currentFrame->SetProperty(nsDisplayListBuilder::DisplayListBuildingRect(), data);
+        currentFrame->SetHasOverrideDirtyRegion(true);
+        aOutFramesWithProps.AppendElement(currentFrame);
+      }
+      CRR_LOG("Adding area to stacking context draw area: %d %d %d %d\n",
+              aOverflow.x, aOverflow.y, aOverflow.width, aOverflow.height);
+      data->mDirtyRect.UnionRect(data->mDirtyRect, aOverflow);
+
+      if (!aStopAtStackingContext) {
+        // Continue ascending the frame tree until we reach aStopAtFrame.
+        continue;
+      }
+
+      if (!data->mModifiedAGR) {
+        data->mModifiedAGR = *aAGR;
+      } else if (data->mModifiedAGR != *aAGR) {
+        data->mDirtyRect = currentFrame->GetVisualOverflowRectRelativeToSelf();
+        CRR_LOG("Found multiple modified AGRs within this stacking context, giving up\n");
+      }
+
+      // Don't contribute to the root dirty area at all.
+      aOverflow.SetEmpty();
+      *aAGR = nullptr;
+
+      break;
     }
   }
 }
+
 /**
  * Given a list of frames that has been modified, computes the region that we need to
  * do display list building for in order to build all modified display items.
