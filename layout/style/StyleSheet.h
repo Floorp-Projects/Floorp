@@ -136,6 +136,7 @@ public:
                                              FORCED_UNIQUE_INNER; }
   bool HasModifiedRules() const { return mDirtyFlags &
                                          MODIFIED_RULES; }
+  void ClearModifiedRules() { mDirtyFlags &= ~MODIFIED_RULES; }
 
   inline bool HasUniqueInner() const;
   void EnsureUniqueInner();
