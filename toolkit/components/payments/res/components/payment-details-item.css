@@ -1,0 +1,8 @@
+payment-details-item {
+  margin: 1px 0;
+  min-height: 2em;
+}
+
+payment-details-item > currency-amount {
+  text-align: end;
+}
