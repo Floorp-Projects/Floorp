@@ -130,7 +130,7 @@ Required. This field is a list of processes this histogram can be recorded in. C
 - ``main``
 - ``content``
 - ``gpu``
-- ``all_children`` (record in all child processes)
+- ``all_childs`` (record in all child processes)
 - ``all`` (record in all processes)
 
 ``alert_emails``
