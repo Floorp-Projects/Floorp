@@ -448,6 +448,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
+.addon-banner-item:last-child {
+  border-bottom: 1px solid @appmenuWarningBorderColor@;
+}
+
 .addon-banner-item:hover {
   background-color: @appmenuWarningBackgroundColorHover@;
 }
@@ -482,8 +486,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 .panel-banner-item {
   border-top: 1px solid var(--panel-separator-color);
   border-bottom: 1px solid var(--panel-separator-color);
-  margin-bottom: 3px;
   padding-inline-start: 12px;
+}
+
+#appMenu-addon-banners:not(:empty) + .panel-banner-item {
+  /* Overlap the .addon-banner-item border so there's one border. */
+  margin-top: -1px;
 }
 
 #appMenu-addon-banners > .addon-banner-item {
@@ -496,6 +504,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .panel-banner-item > .toolbarbutton-icon {
   width: 16px;
+}
+
+#appMenu-addon-banners:not(:empty) ~ #appMenu-fxa-container,
+.panel-banner-item:not([hidden]) + #appMenu-fxa-container {
+  margin-top: 6px;
 }
 
 /* FxAccount indicator bits. */
@@ -903,6 +916,7 @@ panelmultiview .toolbaritem-combined-buttons > label {
   -moz-box-flex: 1;
   font: menu;
   margin: 0;
+  padding: 4px 0px;
 }
 
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
