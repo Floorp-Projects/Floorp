@@ -4250,11 +4250,6 @@ HttpBaseChannel::GetPerformanceStorage()
     return performanceStorage;
   }
 
-  // We don't need to report the resource timing entry for a TYPE_DOCUMENT load.
-  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
-    return nullptr;
-  }
-
   nsCOMPtr<nsIDOMDocument> domDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(domDocument));
   if (!domDocument) {
@@ -4285,6 +4280,31 @@ HttpBaseChannel::GetPerformanceStorage()
   }
 
   return performance->AsPerformanceStorage();
+}
+
+void
+HttpBaseChannel::MaybeReportTimingData()
+{
+  // We don't need to report the resource timing entry for a TYPE_DOCUMENT load.
+  // But for the case that Server-Timing headers are existed for
+  // a document load, we have to create the document entry early
+  // with the timed channel. This is the only way to make
+  // server timing data availeble in the document entry.
+  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+    if ((mResponseHead && mResponseHead->HasHeader(nsHttp::Server_Timing)) ||
+        (mResponseTrailers && mResponseTrailers->HasHeader(nsHttp::Server_Timing))) {
+      mozilla::dom::PerformanceStorage* documentPerformance = GetPerformanceStorage();
+      if (documentPerformance) {
+        documentPerformance->CreateDocumentEntry(this);
+      }
+    }
+    return;
+  }
+
+  mozilla::dom::PerformanceStorage* documentPerformance = GetPerformanceStorage();
+  if (documentPerformance) {
+      documentPerformance->AddEntry(this, this);
+  }
 }
 
 NS_IMETHODIMP
