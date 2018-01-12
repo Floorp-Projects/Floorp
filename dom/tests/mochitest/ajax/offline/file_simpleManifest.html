@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/browser/dom/tests/mochitest/ajax/offline/file_simpleManifest.cacheManifest">
+<head>
+<title>load manifest test</title>
+
+<script type="text/javascript">
+  window.addEventListener("load", () => {
+    const hasAppcache = document.getElementById("hasAppcache");
+    hasAppcache.textContent = "applicationCache" in window ? "yes" : "no";
+  });
+</script>
+<script type="text/javascript" src="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js"></script>
+</head>
+
+<body>
+Offline testing<br />
+We have AppCache: <span id="hasAppcache"></span><br />
+
+<iframe id="childframe" src="http://mochi.test:8888/browser/dom/tests/mochitest/ajax/offline/file_testFile.sjs" ></iframe>
+</body>
+</html>

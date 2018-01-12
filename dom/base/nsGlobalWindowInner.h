@@ -390,6 +390,8 @@ public:
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
+  static bool OfflineCacheAllowedForContext(JSContext* /* unused */, JSObject* aObj);
+
   static bool IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject* /* unused */);
 
   static bool IsWindowPrintEnabled(JSContext* /* unused */, JSObject* /* unused */);
