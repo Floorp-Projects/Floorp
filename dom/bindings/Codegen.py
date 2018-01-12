@@ -11086,19 +11086,6 @@ class ClassMember(ClassItem):
                                    self.name, body)
 
 
-class ClassTypedef(ClassItem):
-    def __init__(self, name, type, visibility="public"):
-        self.type = type
-        ClassItem.__init__(self, name, visibility)
-
-    def declare(self, cgClass):
-        return 'typedef %s %s;\n' % (self.type, self.name)
-
-    def define(self, cgClass):
-        # Only goes in the header
-        return ''
-
-
 class ClassEnum(ClassItem):
     def __init__(self, name, entries, values=None, visibility="public"):
         self.entries = entries
@@ -11137,7 +11124,7 @@ class ClassUnion(ClassItem):
 class CGClass(CGThing):
     def __init__(self, name, bases=[], members=[], constructors=[],
                  destructor=None, methods=[],
-                 typedefs=[], enums=[], unions=[], templateArgs=[],
+                 enums=[], unions=[], templateArgs=[],
                  templateSpecialization=[], isStruct=False,
                  disallowCopyConstruction=False, indent='',
                  decorators='',
@@ -11152,7 +11139,6 @@ class CGClass(CGThing):
         # code wants lists of members.
         self.destructors = [destructor] if destructor else []
         self.methods = methods
-        self.typedefs = typedefs
         self.enums = enums
         self.unions = unions
         self.templateArgs = templateArgs
@@ -11247,7 +11233,7 @@ class CGClass(CGThing):
             disallowedCopyConstructors = []
 
         order = [self.enums, self.unions,
-                 self.typedefs, self.members,
+                 self.members,
                  self.constructors + disallowedCopyConstructors,
                  self.destructors, self.methods]
 
