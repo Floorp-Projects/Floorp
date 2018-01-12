@@ -125,7 +125,7 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
   }
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<RefCountedShmem> smallShmems;
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
@@ -154,7 +154,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
 #endif
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<RefCountedShmem> smallShmems;
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
@@ -321,7 +321,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
     return instanceKey;
   }
 
-  wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resources(this);
 
   wr::FontKey fontKey = GetFontKeyForUnscaledFont(aScaledFont->GetUnscaledFont());
   wr::FontKey nullKey = { wr::IdNamespace { 0 }, 0};
@@ -354,7 +354,7 @@ WebRenderBridgeChild::GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaled)
 
   wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
   if (!mFontKeys.Get(aUnscaled, &fontKey)) {
-    wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+    wr::IpcResourceUpdateQueue resources(this);
     FontFileDataSink sink = { &fontKey, this, &resources };
     // First try to retrieve a descriptor for the font, as this is much cheaper
     // to send over IPC than the full raw font data. If this is not possible, then
@@ -376,7 +376,7 @@ void
 WebRenderBridgeChild::RemoveExpiredFontKeys()
 {
   uint32_t counter = gfx::ScaledFont::DeletionCounter();
-  wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resources(this);
   if (mFontInstanceKeysDeleted != counter) {
     mFontInstanceKeysDeleted = counter;
     for (auto iter = mFontInstanceKeys.Iter(); !iter.Done(); iter.Next()) {

@@ -277,9 +277,20 @@ WebRenderBridgeParent::DeallocShmems(nsTArray<ipc::Shmem>& aShmems)
   aShmems.Clear();
 }
 
+void
+WebRenderBridgeParent::DeallocShmems(nsTArray<RefCountedShmem>& aShmems)
+{
+  if (IPCOpen()) {
+    for (auto& shm : aShmems) {
+       RefCountedShm::Dealloc(this, shm);
+    }
+  }
+  aShmems.Clear();
+}
+
 bool
 WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
-                                       const nsTArray<ipc::Shmem>& aSmallShmems,
+                                       const nsTArray<RefCountedShmem>& aSmallShmems,
                                        const nsTArray<ipc::Shmem>& aLargeShmems,
                                        wr::ResourceUpdateQueue& aUpdates)
 {
@@ -450,7 +461,7 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                           nsTArray<ipc::Shmem>&& aSmallShmems,
+                                           nsTArray<RefCountedShmem>&& aSmallShmems,
                                            nsTArray<ipc::Shmem>&& aLargeShmems)
 {
   if (mDestroyed) {
@@ -580,7 +591,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
                                           const wr::BuiltDisplayListDescriptor& dlDesc,
                                           const WebRenderScrollData& aScrollData,
                                           nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                          nsTArray<ipc::Shmem>&& aSmallShmems,
+                                          nsTArray<RefCountedShmem>&& aSmallShmems,
                                           nsTArray<ipc::Shmem>&& aLargeShmems,
                                           const wr::IdNamespace& aIdNamespace,
                                           const TimeStamp& aTxnStartTime,
