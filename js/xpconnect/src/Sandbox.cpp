@@ -756,6 +756,19 @@ bool WrapAccessorFunction(JSContext* cx, Op& op, PropertyDescriptor* desc,
     return true;
 }
 
+static bool
+IsMaybeWrappedDOMConstructor(JSObject* obj)
+{
+    // We really care about the underlying object here, which might be wrapped
+    // in cross-compartment wrappers.
+    obj = js::CheckedUnwrap(obj);
+    if (!obj) {
+        return false;
+    }
+
+    return dom::IsDOMConstructor(obj);
+}
+
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext* cx,
                                                 JS::Handle<JSObject*> proxy,
@@ -780,7 +793,11 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext* cx,
         return false;
     if (desc.value().isObject()) {
         RootedObject val (cx, &desc.value().toObject());
-        if (JS::IsCallable(val)) {
+        if (JS::IsCallable(val) &&
+            // Don't wrap DOM constructors: they don't care about the "this"
+            // they're invoked with anyway, being constructors.  And if we wrap
+            // them here we break invariants like Node == Node and whatnot.
+            !IsMaybeWrappedDOMConstructor(val)) {
             val = WrapCallable(cx, val, proxy);
             if (!val)
                 return false;
