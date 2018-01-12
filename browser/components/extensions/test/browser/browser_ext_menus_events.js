@@ -372,12 +372,12 @@ add_task(async function test_show_hide_password() {
       contexts: ["password"],
     },
     expectedShownEvent: {
-      contexts: ["password", "all"],
+      contexts: ["editable", "password", "all"],
       editable: true,
       frameId: 0,
     },
     expectedShownEventWithPermissions: {
-      contexts: ["password", "all"],
+      contexts: ["editable", "password", "all"],
       editable: true,
       frameId: 0,
       pageUrl: PAGE,
