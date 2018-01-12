@@ -328,6 +328,9 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
     }
   }
 
+  // Our rules are no longer considered modified.
+  ClearModifiedRules();
+
   return NS_OK;
 }
 
