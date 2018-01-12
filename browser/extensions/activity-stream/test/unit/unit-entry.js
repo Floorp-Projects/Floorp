@@ -48,10 +48,8 @@ overrider.set({
   Preferences: FakePrefs,
   Services: {
     locale: {
+      getAppLocaleAsLangTag() { return "en-US"; },
       getAppLocalesAsLangTags() {},
-      getRequestedLocale() {
-        return "en-US";
-      },
       negotiateLanguages() {}
     },
     urlFormatter: {formatURL: str => str},

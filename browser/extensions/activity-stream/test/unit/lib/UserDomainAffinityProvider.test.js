@@ -36,7 +36,7 @@ describe("User Domain Affinity Provider", () => {
 
   beforeEach(() => {
     globals = new GlobalOverrider();
-    globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}, io: {newURI: u => ({host: "www.somedomain.org"})}});
+    globals.set("Services", {io: {newURI: u => ({host: "www.somedomain.org"})}});
     globals.set("PlacesUtils", {
       history: {
         getNewQuery: () => ({"TIME_RELATIVE_NOW": 1}),
