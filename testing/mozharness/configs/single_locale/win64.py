@@ -1,5 +1,3 @@
-import sys
-
 config = {
     "platform": "win64",
     "stage_product": "firefox",
