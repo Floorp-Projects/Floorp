@@ -27,6 +27,7 @@ jobs:
     symbol: I(toolchain)
     packages:
       - deb7-cmake
+      - deb7-git
       - deb7-mercurial
       - deb7-ninja
       - deb7-python
