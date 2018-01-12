@@ -589,7 +589,8 @@ TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherde
                            'blob/master/schemas/task-treeherder-config.yml'
 
 
-UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to taskcluster/ci/config.yml"
+UNKNOWN_GROUP_NAME = "Treeherder group {} (from {}) has no name; " \
+                     "add it to taskcluster/ci/config.yml"
 
 V2_ROUTE_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.latest.{product}.{job-name}",
@@ -1396,7 +1397,8 @@ def build_task(config, tasks):
             if groupSymbol != '?':
                 treeherder['groupSymbol'] = groupSymbol
                 if groupSymbol not in group_names:
-                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
+                    path = os.path.join(config.path, task.get('job-from', ''))
+                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol, path))
                 treeherder['groupName'] = group_names[groupSymbol]
             treeherder['symbol'] = symbol
             if len(symbol) > 25 or len(groupSymbol) > 25:
