@@ -31,16 +31,16 @@ function ReadTopManifest(aFileURL, aFilter)
         throw "Expected a file or http URL for the manifest.";
 
     g.manifestsLoaded = {};
-    ReadManifest(url, EXPECTED_PASS, aFilter);
+    ReadManifest(url, aFilter);
 }
 
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in print-manifest-dirs.py in sync.
-function ReadManifest(aURL, inherited_status, aFilter)
+function ReadManifest(aURL, aFilter)
 {
-    // Ensure each manifest is only read once. This assumes that manifests that are
-    // included with an unusual inherited_status or filters will be read via their
-    // include before they are read directly in the case of a duplicate
+    // Ensure each manifest is only read once. This assumes that manifests that
+    // are included with filters will be read via their include before they are
+    // read directly in the case of a duplicate
     if (g.manifestsLoaded.hasOwnProperty(aURL.spec)) {
         if (g.manifestsLoaded[aURL.spec] === null)
             return;
@@ -132,6 +132,7 @@ function ReadManifest(aURL, inherited_status, aFilter)
         var fuzzy_delta = { min: 0, max: 2 };
         var fuzzy_pixels = { min: 0, max: 1 };
         var chaosMode = false;
+        var nonSkipUsed = false;
 
         while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|test-pref|ref-pref|fuzzy|chaos-mode)/)) {
             var item = items.shift();
@@ -219,6 +220,10 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": unexpected item " + item;
             }
 
+            if (stat != "skip") {
+                nonSkipUsed = true;
+            }
+
             if (cond) {
                 if (stat == "fails") {
                     expected_status = EXPECTED_FAIL;
@@ -231,8 +236,6 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 }
             }
         }
-
-        expected_status = Math.max(expected_status, inherited_status);
 
         if (minAsserts > maxAsserts) {
             throw "Bad range in manifest file " + aURL.spec + " line " + lineNo;
@@ -271,10 +274,28 @@ function ReadManifest(aURL, inherited_status, aFilter)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to include";
             if (runHttp)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": use of include with http";
-            var incURI = g.ioService.newURI(items[1], null, listURL);
-            secMan.checkLoadURIWithPrincipal(principal, incURI,
-                                             CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-            ReadManifest(incURI, expected_status, aFilter);
+
+            // If the expected_status is EXPECTED_PASS (the default) then allow
+            // the include. If it is EXPECTED_DEATH, that means there was a skip
+            // or skip-if annotation (with a true condition) on this include
+            // statement, so we should skip the include. Any other expected_status
+            // is disallowed since it's nonintuitive as to what the intended
+            // effect is.
+            if (nonSkipUsed) {
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": include statement with annotation other than 'skip' or 'skip-if'";
+            } else if (expected_status == EXPECTED_DEATH) {
+                g.logger.info("Skipping included manifest at " + aURL.spec + " line " + lineNo + " due to matching skip condition");
+            } else {
+                // poor man's assertion
+                if (expected_status != EXPECTED_PASS) {
+                    throw "Error in manifest file parsing code: we should never get expected_status=" + expected_status + " when nonSkipUsed=false (from " + aURL.spec + " line " + lineNo + ")";
+                }
+
+                var incURI = g.ioService.newURI(items[1], null, listURL);
+                secMan.checkLoadURIWithPrincipal(principal, incURI,
+                                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+                ReadManifest(incURI, aFilter);
+            }
         } else if (items[0] == TYPE_LOAD) {
             if (items.length != 2)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo + ": incorrect number of arguments to load";

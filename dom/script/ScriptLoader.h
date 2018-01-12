@@ -357,6 +357,20 @@ private:
   void ContinueParserAsync(ScriptLoadRequest* aParserBlockingRequest);
 
 
+  bool ProcessExternalScript(nsIScriptElement* aElement,
+                             ScriptKind aScriptKind,
+                             nsAutoString aTypeAttr,
+                             nsIContent* aScriptContent);
+
+  bool ProcessInlineScript(nsIScriptElement* aElement,
+                           ScriptKind aScriptKind);
+
+  ScriptLoadRequest* LookupPreloadRequest(nsIScriptElement* aElement,
+                                          ScriptKind aScriptKind);
+
+  void GetSRIMetadata(const nsAString& aIntegrityAttr,
+                      SRIMetadata *aMetadataOut);
+
   /**
    * Helper function to check the content policy for a given request.
    */

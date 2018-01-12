@@ -3005,6 +3005,14 @@ Assembler::as_bkpt()
     hit++;
 }
 
+BufferOffset
+Assembler::as_illegal_trap()
+{
+    // Encoding of the permanently-undefined 'udf' instruction, with the imm16
+    // set to 0.
+    return writeInst(0xe7f000f0);
+}
+
 void
 Assembler::flushBuffer()
 {

@@ -871,6 +871,7 @@ class AssemblerShared
 {
     wasm::CallSiteVector callSites_;
     wasm::CallSiteTargetVector callSiteTargets_;
+    wasm::TrapSiteVectorArray trapSites_;
     wasm::OldTrapSiteVector oldTrapSites_;
     wasm::OldTrapFarJumpVector oldTrapFarJumps_;
     wasm::CallFarJumpVector callFarJumps_;
@@ -930,6 +931,9 @@ class AssemblerShared
         enoughMemory_ &= callSites_.emplaceBack(desc, retAddr.offset());
         enoughMemory_ &= callSiteTargets_.emplaceBack(mozilla::Forward<Args>(args)...);
     }
+    void append(wasm::Trap trap, wasm::TrapSite site) {
+        enoughMemory_ &= trapSites_[trap].append(site);
+    }
     void append(wasm::OldTrapSite trapSite) {
         enoughMemory_ &= oldTrapSites_.append(trapSite);
     }
@@ -966,6 +970,7 @@ class AssemblerShared
 
     wasm::CallSiteVector& callSites() { return callSites_; }
     wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
+    wasm::TrapSiteVectorArray& trapSites() { return trapSites_; }
     wasm::OldTrapSiteVector& oldTrapSites() { return oldTrapSites_; }
     wasm::OldTrapFarJumpVector& oldTrapFarJumps() { return oldTrapFarJumps_; }
     wasm::CallFarJumpVector& callFarJumps() { return callFarJumps_; }

@@ -658,7 +658,7 @@ ConvertKeyframeSequence(JSContext* aCx,
       keyframe->mOffset.emplace(keyframeDict.mOffset.Value());
     }
 
-    if (keyframeDict.mComposite.WasPassed()) {
+    if (!keyframeDict.mComposite.IsNull()) {
       keyframe->mComposite.emplace(keyframeDict.mComposite.Value());
     }
 
@@ -1547,23 +1547,27 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   //
   // This corresponds to step 5, "Otherwise," branch, substep 12 of
   // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
-  const FallibleTArray<dom::CompositeOperation>* compositeOps;
-  AutoTArray<dom::CompositeOperation, 1> singleCompositeOp;
+  const FallibleTArray<Nullable<dom::CompositeOperation>>* compositeOps =
+    nullptr;
+  AutoTArray<Nullable<dom::CompositeOperation>, 1> singleCompositeOp;
   auto& composite = keyframeDict.mComposite;
   if (composite.IsCompositeOperation()) {
     singleCompositeOp.AppendElement(composite.GetAsCompositeOperation());
-    const FallibleTArray<dom::CompositeOperation>& asFallibleArray =
+    const FallibleTArray<Nullable<dom::CompositeOperation>>& asFallibleArray =
       singleCompositeOp;
     compositeOps = &asFallibleArray;
-  } else {
-    compositeOps = &composite.GetAsCompositeOperationSequence();
+  } else if (composite.IsCompositeOperationOrNullSequence()) {
+    compositeOps = &composite.GetAsCompositeOperationOrNullSequence();
   }
 
   // Fill in and repeat as needed.
-  if (!compositeOps->IsEmpty()) {
+  if (compositeOps && !compositeOps->IsEmpty()) {
+    size_t length = compositeOps->Length();
     for (size_t i = 0; i < aResult.Length(); i++) {
-      aResult[i].mComposite.emplace(
-        compositeOps->ElementAt(i % compositeOps->Length()));
+      if (!compositeOps->ElementAt(i % length).IsNull()) {
+        aResult[i].mComposite.emplace(
+          compositeOps->ElementAt(i % length).Value());
+      }
     }
   }
 }

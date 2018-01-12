@@ -7,9 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/arm.gni")
-if (!build_with_mozilla) {
-  import("//third_party/protobuf/proto_library.gni")
-}
+import("//third_party/protobuf/proto_library.gni")
 import("../../build/webrtc.gni")
 
 declare_args() {

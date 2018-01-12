@@ -12,7 +12,7 @@
 #include "nsWindowSizes.h"
 #include <algorithm>
 
-#include "mozilla/CachedAnonBoxStyles.h"
+#include "mozilla/CachedInheritingStyles.h"
 
 namespace mozilla {
 
@@ -50,13 +50,13 @@ public:
   ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
   {
     MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
-    return mInheritingAnonBoxStyles.Lookup(aAnonBox);
+    return mCachedInheritingStyles.Lookup(aAnonBox);
   }
 
   void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ServoStyleContext* aStyle)
   {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
-    mInheritingAnonBoxStyles.Insert(aStyle);
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
   ServoStyleContext* GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const;
@@ -65,7 +65,6 @@ public:
   {
     MOZ_ASSERT(aStyle->GetPseudo() && !aStyle->IsAnonBox());
     MOZ_ASSERT(!GetCachedLazyPseudoStyle(aStyle->GetPseudoType()));
-    MOZ_ASSERT(!aStyle->mNextLazyPseudoStyle);
     MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "lazy pseudos can't inherit lazy pseudos");
     MOZ_ASSERT(aStyle->IsLazilyCascadedPseudoElement());
 
@@ -82,8 +81,7 @@ public:
       return;
     }
 
-    mNextLazyPseudoStyle.swap(aStyle->mNextLazyPseudoStyle);
-    mNextLazyPseudoStyle = aStyle;
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
   /**
@@ -103,32 +101,15 @@ public:
     // clearly identify in DMD's output the memory measured here.
     *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
     mSource.AddSizeOfExcludingThis(aSizes);
-    mInheritingAnonBoxStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
-
-    if (mNextLazyPseudoStyle &&
-        !aSizes.mState.HaveSeenPtr(mNextLazyPseudoStyle)) {
-      mNextLazyPseudoStyle->AddSizeOfIncludingThis(aSizes, aCVsSize);
-    }
+    mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
   }
 
 private:
   nsPresContext* mPresContext;
   ServoComputedData mSource;
 
-  // A cache of inheriting anon boxes inheriting from this style _if the style
-  // isn't an inheriting anon-box_.
-  CachedAnonBoxStyles mInheritingAnonBoxStyles;
-
-  // A linked-list cache of lazy pseudo styles inheriting from this style _if
-  // the style isn't a lazy pseudo style itself_.
-  //
-  // Otherwise it represents the next entry in the cache of the parent style
-  // context.
-  //
-  // Note that we store these separately from inheriting anonymous boxes so that
-  // text nodes inheriting from lazy pseudo styles can share styles, which is
-  // very important on some pages.
-  RefPtr<ServoStyleContext> mNextLazyPseudoStyle;
+  // A cache of anonymous box and lazy pseudo styles inheriting from this style.
+  CachedInheritingStyles mCachedInheritingStyles;
 };
 
 } // namespace mozilla

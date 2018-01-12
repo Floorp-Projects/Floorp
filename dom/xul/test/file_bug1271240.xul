@@ -77,6 +77,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1271240
 
   ]]>
   </script>
-  <!-- <browser type="content-primary" flex="1" id="content" />
-  <browser type="content-primary" flex="1" id="content-remote" remote="true" /> -->
+  <!-- <browser type="content" flex="1" id="content" />
+  <browser type="content" flex="1" id="content-remote" remote="true" /> -->
 </window>

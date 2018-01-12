@@ -47,6 +47,7 @@ CompiledCode::swap(MacroAssembler& masm)
 
     callSites.swap(masm.callSites());
     callSiteTargets.swap(masm.callSiteTargets());
+    trapSites.swap(masm.trapSites());
     oldTrapSites.swap(masm.oldTrapSites());
     callFarJumps.swap(masm.callFarJumps());
     oldTrapFarJumps.swap(masm.oldTrapFarJumps());
@@ -380,7 +381,7 @@ InRange(uint32_t caller, uint32_t callee)
 }
 
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> OffsetMap;
-typedef EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>> TrapOffsetArray;
+typedef EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>> TrapMaybeOffsetArray;
 
 bool
 ModuleGenerator::linkCallSites()
@@ -399,7 +400,7 @@ ModuleGenerator::linkCallSites()
     if (!existingCallFarJumps.init())
         return false;
 
-    TrapOffsetArray existingTrapFarJumps;
+    TrapMaybeOffsetArray existingTrapFarJumps;
 
     for (; lastPatchedCallSite_ < metadataTier_->callSites.length(); lastPatchedCallSite_++) {
         const CallSite& callSite = metadataTier_->callSites[lastPatchedCallSite_];
@@ -523,6 +524,10 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         MOZ_ASSERT(!linkDataTier_->interruptOffset);
         linkDataTier_->interruptOffset = codeRange.begin();
         break;
+      case CodeRange::TrapExit:
+        MOZ_ASSERT(!linkDataTier_->trapOffset);
+        linkDataTier_->trapOffset = codeRange.begin();
+        break;
       case CodeRange::Throw:
         // Jumped to by other stubs, so nothing to do.
         break;
@@ -579,6 +584,12 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
 
     if (!callSiteTargets_.appendAll(code.callSiteTargets))
         return false;
+
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+        auto trapSiteOp = [=](uint32_t, TrapSite* ts) { ts->offsetBy(offsetInModule); };
+        if (!AppendForEach(&metadataTier_->trapSites[trap], code.trapSites[trap], trapSiteOp))
+            return false;
+    }
 
     MOZ_ASSERT(code.oldTrapSites.empty());
 
@@ -798,6 +809,7 @@ ModuleGenerator::finishCode()
 
     MOZ_ASSERT(masm_.callSites().empty());
     MOZ_ASSERT(masm_.callSiteTargets().empty());
+    MOZ_ASSERT(masm_.trapSites().empty());
     MOZ_ASSERT(masm_.oldTrapSites().empty());
     MOZ_ASSERT(masm_.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm_.callFarJumps().empty());
@@ -812,19 +824,32 @@ ModuleGenerator::finishCode()
 bool
 ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 {
+    // Assert all sorted metadata is sorted.
 #ifdef DEBUG
-    // Assert CodeRanges are sorted.
-    uint32_t lastEnd = 0;
+    uint32_t last = 0;
     for (const CodeRange& codeRange : metadataTier_->codeRanges) {
-        MOZ_ASSERT(codeRange.begin() >= lastEnd);
-        lastEnd = codeRange.end();
+        MOZ_ASSERT(codeRange.begin() >= last);
+        last = codeRange.end();
     }
 
-    // Assert debugTrapFarJumpOffsets are sorted.
-    uint32_t lastOffset = 0;
+    last = 0;
+    for (const CallSite& callSite : metadataTier_->callSites) {
+        MOZ_ASSERT(callSite.returnAddressOffset() >= last);
+        last = callSite.returnAddressOffset();
+    }
+
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+        last = 0;
+        for (const TrapSite& trapSite : metadataTier_->trapSites[trap]) {
+            MOZ_ASSERT(trapSite.pcOffset >= last);
+            last = trapSite.pcOffset;
+        }
+    }
+
+    last = 0;
     for (uint32_t debugTrapFarJumpOffset : metadataTier_->debugTrapFarJumpOffsets) {
-        MOZ_ASSERT(debugTrapFarJumpOffset >= lastOffset);
-        lastOffset = debugTrapFarJumpOffset;
+        MOZ_ASSERT(debugTrapFarJumpOffset >= last);
+        last = debugTrapFarJumpOffset;
     }
 #endif
 
@@ -849,7 +874,7 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 
     metadataTier_->memoryAccesses.podResizeToFit();
     metadataTier_->codeRanges.podResizeToFit();
-    metadataTier_->callSites.podResizeToFit();
+    metadataTier_->trapSites.podResizeToFit();
     metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
     metadataTier_->debugFuncToCodeRange.podResizeToFit();
 

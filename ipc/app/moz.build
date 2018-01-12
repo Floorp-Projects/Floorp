@@ -4,15 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Any changes that affect Android need to be made in pie/moz.build as well.
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     Program(CONFIG['MOZ_CHILD_PROCESS_NAME'])
     SOURCES += [
         'MozillaRuntimeMainAndroid.cpp',
     ]
-
-    DIRS += ['pie']
 else:
     GeckoProgram(CONFIG['MOZ_CHILD_PROCESS_NAME'], linkage='dependent')
 

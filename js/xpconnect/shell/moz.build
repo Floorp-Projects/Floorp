@@ -50,9 +50,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'xul.dll',
     ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    LDFLAGS += ['-pie']
-
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 OS_LIBS += CONFIG['TK_LIBS']

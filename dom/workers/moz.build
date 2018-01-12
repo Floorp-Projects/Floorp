@@ -125,6 +125,7 @@ MOCHITEST_CHROME_MANIFESTS += [
 
 BROWSER_CHROME_MANIFESTS += [
     'test/serviceworkers/browser.ini',
+    'test/serviceworkers/isolated/multi-e10s-update/browser.ini',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']

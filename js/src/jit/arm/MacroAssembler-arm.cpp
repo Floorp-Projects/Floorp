@@ -4911,6 +4911,12 @@ template void
 MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
+CodeOffset
+MacroAssembler::illegalInstruction()
+{
+    return CodeOffset(as_illegal_trap().getOffset());
+}
+
 void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
 {

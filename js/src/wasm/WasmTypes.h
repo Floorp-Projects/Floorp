@@ -935,6 +935,52 @@ enum class Trap
     Limit
 };
 
+// A wrapper around the bytecode offset of a wasm instruction within a whole
+// module, used for trap offsets or call offsets. These offsets should refer to
+// the first byte of the instruction that triggered the trap / did the call and
+// should ultimately derive from OpIter::bytecodeOffset.
+
+struct BytecodeOffset
+{
+    static const uint32_t INVALID = -1;
+    uint32_t offset;
+
+    BytecodeOffset() : offset(INVALID) {}
+    explicit BytecodeOffset(uint32_t offset) : offset(offset) {}
+
+    bool isValid() const { return offset != INVALID; }
+};
+
+// A TrapSite (in the TrapSiteVector for a given Trap code) represents a wasm
+// instruction at a given bytecode offset that can fault at the given pc offset.
+// When such a fault occurs, a signal/exception handler looks up the TrapSite to
+// confirm the fault is intended/safe and redirects pc to the trap stub.
+
+struct TrapSite
+{
+    uint32_t pcOffset;
+    BytecodeOffset bytecode;
+
+    TrapSite() : pcOffset(-1), bytecode() {}
+    TrapSite(uint32_t pcOffset, BytecodeOffset bytecode) : pcOffset(pcOffset), bytecode(bytecode) {}
+
+    void offsetBy(uint32_t offset) {
+        pcOffset += offset;
+    }
+};
+
+WASM_DECLARE_POD_VECTOR(TrapSite, TrapSiteVector)
+
+struct TrapSiteVectorArray : EnumeratedArray<Trap, Trap::Limit, TrapSiteVector>
+{
+    bool empty() const;
+    void clear();
+    void swap(TrapSiteVectorArray& rhs);
+    void podResizeToFit();
+
+    WASM_DECLARE_SERIALIZABLE(TrapSiteVectorArray)
+};
+
 // The (,Callable,Func)Offsets classes are used to record the offsets of
 // different key points in a CodeRange during compilation.
 
@@ -1011,6 +1057,7 @@ class CodeRange
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
         BuiltinThunk,      // fast-path calling from wasm into a C++ native
+        TrapExit,          // calls C++ to report and jumps to throw stub
         OldTrapExit,       // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
@@ -1087,7 +1134,7 @@ class CodeRange
         return kind() == ImportJitExit;
     }
     bool isTrapExit() const {
-        return kind() == OldTrapExit;
+        return kind() == OldTrapExit || kind() == TrapExit;
     }
     bool isDebugTrap() const {
         return kind() == DebugTrap;
@@ -1101,7 +1148,7 @@ class CodeRange
     // the return instruction to calculate the frame pointer.
 
     bool hasReturn() const {
-        return isFunction() || isImportExit() || isTrapExit() || isDebugTrap();
+        return isFunction() || isImportExit() || kind() == OldTrapExit || isDebugTrap();
     }
     uint32_t ret() const {
         MOZ_ASSERT(hasReturn());
@@ -1178,22 +1225,6 @@ WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
 
 extern const CodeRange*
 LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target);
-
-// A wrapper around the bytecode offset of a wasm instruction within a whole
-// module, used for trap offsets or call offsets. These offsets should refer to
-// the first byte of the instruction that triggered the trap / did the call and
-// should ultimately derive from OpIter::bytecodeOffset.
-
-struct BytecodeOffset
-{
-    static const uint32_t INVALID = -1;
-    uint32_t offset;
-
-    BytecodeOffset() : offset(INVALID) {}
-    explicit BytecodeOffset(uint32_t offset) : offset(offset) {}
-
-    bool isValid() const { return offset != INVALID; }
-};
 
 // While the frame-pointer chain allows the stack to be unwound without
 // metadata, Error.stack still needs to know the line/column of every call in
@@ -1333,6 +1364,7 @@ enum class SymbolicAddress
     HandleExecutionInterrupt,
     HandleDebugTrap,
     HandleThrow,
+    ReportTrap,
     OldReportTrap,
     ReportOutOfBounds,
     ReportUnalignedAccess,

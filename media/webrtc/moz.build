@@ -11,7 +11,6 @@ with Files("signaling/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 
 include('/build/gyp.mozbuild')
-include('/build/gn.mozbuild')
 
 webrtc_non_unified_sources = [
     'trunk/webrtc/common_audio/vad/vad_core.c',                                  # Because of name clash in the kInitCheck variable
@@ -57,6 +56,8 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/video/overuse_frame_detector.cc',                              # Because of name clash with call_stats.cc on kWeightFactor
 ]
 
+GYP_DIRS += ['trunk']
+
 # Set gyp vars that webrtc needs when building under various analysis tools.
 # Primarily this prevents webrtc from setting NVALGRIND and breaking builds.
 gyp_vars_copy = gyp_vars.copy()
@@ -67,20 +68,12 @@ elif CONFIG['MOZ_ASAN']:
 elif CONFIG['MOZ_TSAN']:
     gyp_vars_copy.update(build_for_tool="tsan")
 
-GN_DIRS += ['trunk']
-
-gn_vars_copy = gn_vars.copy()
-
-GN_DIRS['trunk'].variables = gn_vars_copy
-GN_DIRS['trunk'].mozilla_flags = [
-    '-fobjc-arc',
-    '-mfpu=neon',
-]
-
+GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
+GYP_DIRS['trunk'].variables = gyp_vars_copy
 # We allow warnings for third-party code that can be updated from upstream.
-GN_DIRS['trunk'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
-GN_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
-GN_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
+GYP_DIRS['trunk'].sandbox_vars['COMPILE_FLAGS'] = {'WARNINGS_AS_ERRORS': []}
+GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
+GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     DIRS += [
