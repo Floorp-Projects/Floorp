@@ -1,3 +1,5 @@
+import os
+
 config = {
     "nightly_build": True,
     "branch": "mozilla-beta",
