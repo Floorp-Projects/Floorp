@@ -76,14 +76,12 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
   nsCOMPtr<nsIURI> uri;
   rv = ioservice->NewFileURI(aFile, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoCString uriSpec;
-  uri->GetSpec(uriSpec);
 
-  nsCOMPtr<nsIGIOMimeApp> app;
+  nsCOMPtr<nsIHandlerApp> app;
   if (NS_FAILED(giovfs->GetAppForMimeType(mSchemeOrType, getter_AddRefs(app))) || !app) {
     return NS_ERROR_FILE_NOT_FOUND;
   }
 
-  return app->Launch(uriSpec);
+  return app->LaunchWithURI(uri, nullptr);
 }
 
