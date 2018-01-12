@@ -850,8 +850,9 @@ public:
   ~nsTArray_Impl()
   {
     if (!base_type::IsEmpty()) {
-      Clear();
+      ClearAndRetainStorage();
     }
+    // mHdr cleanup will be handled by base destructor
   }
 
   //
@@ -1716,8 +1717,10 @@ public:
   // A variation on the RemoveElementsAt method defined above.
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
 
-  // A variation on the RemoveElementsAt method defined above.
-  void Clear() { RemoveElementsAt(0, Length()); }
+  void Clear() {
+    ClearAndRetainStorage();
+    Compact();
+  }
 
   // This method removes elements based on the return value of the
   // callback function aPredicate. If the function returns true for

@@ -230,9 +230,6 @@
 @RESPATH@/components/exthandler.xpt
 @RESPATH@/components/fastfind.xpt
 @RESPATH@/components/feeds.xpt
-#ifdef MOZ_GTK
-@RESPATH@/components/filepicker.xpt
-#endif
 @RESPATH@/components/gfx.xpt
 @RESPATH@/components/html5.xpt
 @RESPATH@/components/htmlparser.xpt
@@ -404,10 +401,6 @@
 @RESPATH@/components/webvtt.xpt
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
-#ifdef MOZ_GTK
-@RESPATH@/components/nsFilePicker.manifest
-@RESPATH@/components/nsFilePicker.js
-#endif
 @RESPATH@/components/nsHelperAppDlg.manifest
 @RESPATH@/components/nsHelperAppDlg.js
 @RESPATH@/components/NetworkGeolocationProvider.manifest

@@ -385,6 +385,10 @@ struct ProxyReservedSlots
 
     static inline int offsetOfPrivateSlot();
 
+    static inline int offsetOfSlot(size_t slot) {
+        return offsetof(ProxyReservedSlots, slots[0]) + slot * sizeof(Value);
+    }
+
     void init(size_t nreserved) {
         for (size_t i = 0; i < nreserved; i++)
             slots[i] = JS::UndefinedValue();

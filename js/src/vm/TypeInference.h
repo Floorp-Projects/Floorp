@@ -738,6 +738,8 @@ class HeapTypeSet : public ConstraintTypeSet
 CompilerConstraintList*
 NewCompilerConstraintList(jit::TempAllocator& alloc);
 
+enum class DOMObjectKind : uint8_t { Proxy, Native, Unknown };
+
 class TemporaryTypeSet : public TypeSet
 {
   public:
@@ -828,13 +830,10 @@ class TemporaryTypeSet : public TypeSet
                                    TypedArraySharedness* sharedness = nullptr);
 
     /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
-    bool isDOMClass(CompilerConstraintList* constraints);
+    bool isDOMClass(CompilerConstraintList* constraints, DOMObjectKind* kind);
 
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
     bool maybeCallable(CompilerConstraintList* constraints);
-
-    /* Whether clasp->isProxy() might be true for one or more objects in this set. */
-    bool maybeProxy(CompilerConstraintList* constraints);
 
     /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
     bool maybeEmulatesUndefined(CompilerConstraintList* constraints);

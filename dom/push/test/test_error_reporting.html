@@ -79,10 +79,12 @@ http://creativecommons.org/licenses/publicdomain/
   add_task(async function reportDecryptionError() {
     var message = await new Promise(resolve => {
       SpecialPowers.registerConsoleListener(message => {
-        if (!message.isScriptError) {
+        if (!message.isScriptError && !message.isConsoleEvent) {
           return;
         }
-        if (message.innerWindowID == controlledFrame.innerWindowId()) {
+        const scope = "http://mochi.test:8888/tests/dom/push/test/";
+        if (message.innerWindowID === "ServiceWorker" &&
+            message.windowID === scope) {
           SpecialPowers.postConsoleSentinel();
           resolve(message);
         }

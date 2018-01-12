@@ -37,6 +37,7 @@
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #endif
+#include "utilpars.h"
 
 #ifdef SQLITE_UNSAFE_THREADS
 #include "prlock.h"
@@ -189,6 +190,34 @@ sdb_done(int err, int *count)
     }
     return 0;
 }
+
+#if defined(_WIN32)
+/*
+ * NSPR functions and narrow CRT functions do not handle UTF-8 file paths that
+ * sqlite3 expects.
+ */
+
+static int
+sdb_chmod(const char *filename, int pmode)
+{
+    int result;
+
+    if (!filename) {
+        return -1;
+    }
+
+    wchar_t *filenameWide = _NSSUTIL_UTF8ToWide(filename);
+    if (!filenameWide) {
+        return -1;
+    }
+    result = _wchmod(filenameWide, pmode);
+    PORT_Free(filenameWide);
+
+    return result;
+}
+#else
+#define sdb_chmod(filename, pmode) chmod((filename), (pmode))
+#endif
 
 /*
  * find out where sqlite stores the temp tables. We do this by replicating
@@ -1739,7 +1768,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      * sqlite3 will always create it.
      */
     LOCK_SQLITE();
-    create = (PR_Access(dbname, PR_ACCESS_EXISTS) != PR_SUCCESS);
+    create = (_NSSUTIL_Access(dbname, PR_ACCESS_EXISTS) != PR_SUCCESS);
     if ((flags == SDB_RDONLY) && create) {
         error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
         goto loser;
@@ -1756,7 +1785,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
      *
      * NO NSPR call for chmod? :(
      */
-    if (create && chmod(dbname, 0600) != 0) {
+    if (create && sdb_chmod(dbname, 0600) != 0) {
         error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
         goto loser;
     }

@@ -7,6 +7,7 @@
 #include "Fetch.h"
 #include "FetchConsumer.h"
 
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIInputStreamPump.h"
 #include "nsProxyRelease.h"
 #include "WorkerPrivate.h"

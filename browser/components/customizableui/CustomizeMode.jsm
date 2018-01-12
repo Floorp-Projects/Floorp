@@ -2317,10 +2317,6 @@ CustomizeMode.prototype = {
     if (!expectedParent.contains(aEvent.target)) {
       return expectedParent;
     }
-    // Our tests are stupid. Cope:
-    if (!aEvent.clientX && !aEvent.clientY) {
-      return aEvent.target;
-    }
     // Offset the drag event's position with the offset to the center of
     // the thing we're dragging
     let dragX = aEvent.clientX - this._dragOffset.x;

@@ -82,6 +82,10 @@ public:
   FlushReportsToConsole(uint64_t aInnerWindowID,
                         ReportAction aAction = ReportAction::Forget) = 0;
 
+  virtual void
+  FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
+                                             ReportAction aAction = ReportAction::Forget) = 0;
+
   // Flush all pending reports to the console.  Main thread only.
   //
   // aDocument      An optional document representing where to flush the

@@ -128,6 +128,7 @@
       [ 'disable_fips==1', {
         'defines': [
           'NSS_FIPS_DISABLED',
+          'NSS_NO_INIT_SUPPORT',
         ],
       }],
       [ 'OS!="android" and OS!="mac" and OS!="win"', {
@@ -299,7 +300,6 @@
       'Common': {
         'abstract': 1,
         'defines': [
-          'NSS_NO_INIT_SUPPORT',
           'USE_UTIL_DIRECTLY',
           'NO_NSPR_10_SUPPORT',
           'SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES',

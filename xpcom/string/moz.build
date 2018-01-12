@@ -59,6 +59,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsReadableUtilsSSE2.cpp']
     SOURCES['nsReadableUtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
+if CONFIG['BUILD_ARM_NEON'] or CONFIG['CPU_ARCH'] == 'aarch64':
+    SOURCES += ['nsUTF8UtilsNEON.cpp']
+    SOURCES['nsUTF8UtilsNEON.cpp'].flags += CONFIG['NEON_FLAGS']
+
 # MSVC 2017 has a bug that incorrectly generates C5037 warning which
 # hits the template string code. We need to disable this warning as a
 # workaround. See https://developercommunity.visualstudio.com/

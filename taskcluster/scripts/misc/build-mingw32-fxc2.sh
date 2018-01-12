@@ -20,7 +20,7 @@ cd $WORKSPACE
 git clone -n https://github.com/mozilla/fxc2.git fxc2-clone
 cd fxc2-clone
 git checkout 82527b81104e5e21390d3ddcd328700c67ce73d4 # Asserts integrity of the clone (right?)
-make
+make -j$(nproc)
 
 cp fxc2.exe $INSTALL_DIR/bin/
 cp d3dcompiler_47.dll $INSTALL_DIR/bin/

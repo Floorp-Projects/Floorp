@@ -15,7 +15,7 @@ add_task(async function() {
   let lastButton = placements[lastButtonIndex];
   let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["feed-button", lastButton]);
   let lastButtonNode = document.getElementById(lastButton);
-  simulateItemDrag(btn, lastButtonNode);
+  simulateItemDrag(btn, lastButtonNode, "start");
   assertAreaPlacements(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, placementsAfterInsert);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
@@ -63,7 +63,8 @@ add_task(async function() {
   assertAreaPlacements(panel.id, []);
 });
 
-add_task(async function asyncCleanup() {
+registerCleanupFunction(async function asyncCleanup() {
+  CustomizableUI.destroyWidget("cui-panel-item-to-drag-to");
   await endCustomizing();
   await resetCustomization();
 });

@@ -1716,7 +1716,9 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   }
   mAsyncImageManager = new AsyncImagePipelineManager(api->Clone());
   RefPtr<AsyncImagePipelineManager> asyncMgr = mAsyncImageManager;
-  api->SetRootPipeline(aPipelineId);
+  wr::TransactionBuilder txn;
+  txn.SetRootPipeline(aPipelineId);
+  api->SendTransaction(txn);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(asyncMgr), Move(animStorage));
   mWrBridge.get()->AddRef(); // IPDL reference
