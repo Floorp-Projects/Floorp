@@ -3,7 +3,7 @@ name = "mozrunner"
 version = "0.5.0"
 authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
 description = "Library for starting Firefox binaries."
-repository = "https://github.com/jgraham/rust_mozrunner"
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozrunner"
 license = "MPL-2.0"
 
 [dependencies]
