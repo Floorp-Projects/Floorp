@@ -33,11 +33,6 @@ notification[value="translation"] hbox[anonid="details"] {
 notification[value="translation"] button,
 notification[value="translation"] menulist {
   -moz-appearance: none;
-  border-width: 1px;
-  -moz-border-top-colors: none;
-  -moz-border-right-colors: none;
-  -moz-border-bottom-colors: none;
-  -moz-border-left-colors: none;
   border-radius: 2px;
   min-width: 0;
   box-shadow: 0 1px rgba(255, 255, 255, 0.5), 0 1px rgba(255, 255, 255, 0.5) inset;

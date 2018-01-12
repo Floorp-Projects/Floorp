@@ -96,8 +96,11 @@ struct AutoFreeGlobalPrinters
 
 //----------------------------------------------------------------------------------
 nsDeviceContextSpecWin::nsDeviceContextSpecWin()
+  : mDevMode(nullptr)
+#ifdef MOZ_ENABLE_SKIA_PDF
+  , mPrintViaSkPDF(false)
+#endif
 {
-  mDevMode       = nullptr;
 }
 
 

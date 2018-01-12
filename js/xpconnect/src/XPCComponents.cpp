@@ -2457,6 +2457,14 @@ nsXPCComponents_Utils::UnlinkGhostWindows()
 {
 #ifdef DEBUG
     nsWindowMemoryReporter::UnlinkGhostWindows();
+
+    if (XRE_IsParentProcess()) {
+        nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService();
+        if (obsvc) {
+            obsvc->NotifyObservers(nullptr, "child-ghost-request", nullptr);
+        }
+    }
+
     return NS_OK;
 #else
     return NS_ERROR_NOT_IMPLEMENTED;

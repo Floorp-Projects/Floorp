@@ -1644,7 +1644,7 @@ DebuggerProgressListener.prototype = {
         let handler = getDocShellChromeEventHandler(progress);
         let onLoad = evt => {
           // Ignore events from iframes
-          if (evt.target == window.document) {
+          if (!Cu.isDeadWrapper(window) && evt.target === window.document) {
             handler.removeEventListener("DOMContentLoaded", onLoad, true);
             this._tabActor._navigate(window);
           }

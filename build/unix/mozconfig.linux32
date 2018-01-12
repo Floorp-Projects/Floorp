@@ -1,6 +1,8 @@
 . "$topsrcdir/build/unix/mozconfig.linux"
 
+if [ -f /etc/redhat-release ]; then
 export PKG_CONFIG_LIBDIR=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+fi
 
 export MOZ_LINUX_32_SSE2_STARTUP_ERROR=1
 
