@@ -115,11 +115,6 @@
                   // xul:text, i.e. the tab label text
                   role: ROLE_TEXT_LEAF,
                   children: []
-                },
-                {
-                  // xul:toolbarbutton ("Close Tab")
-                  role: ROLE_PUSHBUTTON,
-                  children: []
                 }
               ]
             },
@@ -130,11 +125,6 @@
                 {
                   // xul:text, i.e. the tab label text
                   role: ROLE_TEXT_LEAF,
-                  children: []
-                },
-                {
-                  // xul:toolbarbutton ("Close Tab")
-                  role: ROLE_PUSHBUTTON,
                   children: []
                 }
               ]

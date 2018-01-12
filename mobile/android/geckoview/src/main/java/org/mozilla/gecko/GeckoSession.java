@@ -296,7 +296,7 @@ public class GeckoSession extends LayerSession
         }
 
         @Override // IInterface
-        public IBinder asBinder() {
+        public Binder asBinder() {
             if (mBinder == null) {
                 mBinder = new Binder();
                 mBinder.attachInterface(this, Window.class.getName());
@@ -310,8 +310,22 @@ public class GeckoSession extends LayerSession
                                        GeckoBundle settings, String chromeUri,
                                        int screenId, boolean privateMode);
 
-        @WrapForJNI(dispatchTo = "proxy")
-        @Override protected native void disposeNative();
+        @Override // JNIObject
+        protected void disposeNative() {
+            // Detach ourselves from the binder as well, to prevent this window from being
+            // read from any parcels.
+            asBinder().attachInterface(null, Window.class.getName());
+
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                nativeDisposeNative();
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        this, "nativeDisposeNative");
+            }
+        }
+
+        @WrapForJNI(dispatchTo = "proxy", stubName = "DisposeNative")
+        private native void nativeDisposeNative();
 
         @WrapForJNI(dispatchTo = "proxy")
         public native void close();
@@ -528,14 +542,12 @@ public class GeckoSession extends LayerSession
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             mWindow.close();
-            mWindow.disposeNative();
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     mWindow, "close");
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    mWindow, "disposeNative");
         }
 
+        mWindow.disposeNative();
         mWindow = null;
         onWindowChanged();
     }
