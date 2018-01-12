@@ -211,6 +211,10 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
                       ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                       buttonArg, relatedTargetArg, dataTransfer);
 
+  if (aEvent._domDispatchOnly) {
+    return aTarget.dispatchEvent(event);
+  }
+
   var utils = _getDOMWindowUtils(aWindow);
   return utils.dispatchDOMEventViaPresShell(aTarget, event, true);
 }
@@ -2134,6 +2138,7 @@ function createDragEventObject(aType, aDestElement, aDestWindow, aDataTransfer,
     screenX: destScreenX, screenY: destScreenY,
     clientX: destClientX, clientY: destClientY,
     dataTransfer: dataTransfer,
+    _domDispatchOnly: aDragEvent._domDispatchOnly,
   }, aDragEvent);
 }
 

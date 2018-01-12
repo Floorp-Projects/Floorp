@@ -1005,7 +1005,7 @@ GeneralParser<ParseHandler, CharT>::parse()
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
-    if (tt != TOK_EOF) {
+    if (tt != TokenKind::TOK_EOF) {
         error(JSMSG_GARBAGE_AFTER_INPUT, "script", TokenKindToDesc(tt));
         return null();
     }
@@ -1025,13 +1025,13 @@ bool
 ParserBase::isValidStrictBinding(PropertyName* name)
 {
     TokenKind tt = ReservedWordTokenKind(name);
-    if (tt == TOK_NAME) {
+    if (tt == TokenKind::TOK_NAME) {
         return name != context->names().eval &&
                name != context->names().arguments;
     }
-    return tt != TOK_LET &&
-           tt != TOK_STATIC &&
-           tt != TOK_YIELD &&
+    return tt != TokenKind::TOK_LET &&
+           tt != TokenKind::TOK_STATIC &&
+           tt != TokenKind::TOK_YIELD &&
            !TokenKindIsStrictReservedWord(tt);
 }
 
@@ -1702,12 +1702,12 @@ Parser<FullParseHandler, CharT>::checkStatementsEOF()
     // This is designed to be paired with parsing a statement list at the top
     // level.
     //
-    // The statementList() call breaks on TOK_RC, so make sure we've
+    // The statementList() call breaks on TokenKind::TOK_RC, so make sure we've
     // reached EOF here.
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::Operand))
         return false;
-    if (tt != TOK_EOF) {
+    if (tt != TokenKind::TOK_EOF) {
         error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(tt));
         return false;
     }
@@ -2276,7 +2276,7 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
-    if (tt != TOK_EOF) {
+    if (tt != TokenKind::TOK_EOF) {
         error(JSMSG_GARBAGE_AFTER_INPUT, "module", TokenKindToDesc(tt));
         return null();
     }
@@ -2555,16 +2555,16 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
     if (asyncKind == FunctionAsyncKind::AsyncFunction) {
-        MOZ_ASSERT(tt == TOK_ASYNC);
+        MOZ_ASSERT(tt == TokenKind::TOK_ASYNC);
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
     }
-    MOZ_ASSERT(tt == TOK_FUNCTION);
+    MOZ_ASSERT(tt == TokenKind::TOK_FUNCTION);
 
     if (!tokenStream.getToken(&tt))
         return null();
     if (generatorKind == GeneratorKind::Generator) {
-        MOZ_ASSERT(tt == TOK_MUL);
+        MOZ_ASSERT(tt == TokenKind::TOK_MUL);
         if (!tokenStream.getToken(&tt))
             return null();
     }
@@ -2608,7 +2608,7 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
 
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
-    if (tt != TOK_EOF) {
+    if (tt != TokenKind::TOK_EOF) {
         error(JSMSG_GARBAGE_AFTER_INPUT, "function body", TokenKindToDesc(tt));
         return null();
     }
@@ -2865,10 +2865,14 @@ template <class ParseHandler, typename CharT>
 bool
 GeneralParser<ParseHandler, CharT>::matchOrInsertSemicolon()
 {
-    TokenKind tt = TOK_EOF;
+    TokenKind tt = TokenKind::TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return false;
-    if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
+    if (tt != TokenKind::TOK_EOF &&
+        tt != TokenKind::TOK_EOL &&
+        tt != TokenKind::TOK_SEMI &&
+        tt != TokenKind::TOK_RC)
+    {
         /*
          * When current token is `await` and it's outside of async function,
          * it's possibly intended to be an await expression.
@@ -2881,11 +2885,11 @@ GeneralParser<ParseHandler, CharT>::matchOrInsertSemicolon()
          * Detect this situation and throw an understandable error.  Otherwise
          * we'd throw a confusing "unexpected token: (unexpected token)" error.
          */
-        if (!pc->isAsync() && anyChars.currentToken().type == TOK_AWAIT) {
+        if (!pc->isAsync() && anyChars.currentToken().type == TokenKind::TOK_AWAIT) {
             error(JSMSG_AWAIT_OUTSIDE_ASYNC);
             return false;
         }
-        if (!yieldExpressionsSupported() && anyChars.currentToken().type == TOK_YIELD) {
+        if (!yieldExpressionsSupported() && anyChars.currentToken().type == TokenKind::TOK_YIELD) {
             error(JSMSG_YIELD_OUTSIDE_GENERATOR);
             return false;
         }
@@ -2896,7 +2900,7 @@ GeneralParser<ParseHandler, CharT>::matchOrInsertSemicolon()
         return false;
     }
     bool matched;
-    return tokenStream.matchToken(&matched, TOK_SEMI, TokenStream::Operand);
+    return tokenStream.matchToken(&matched, TokenKind::TOK_SEMI, TokenStream::Operand);
 }
 
 bool
@@ -3000,7 +3004,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
         TokenKind tt;
         if (!tokenStream.getToken(&tt, firstTokenModifier))
             return false;
-        if (tt != TOK_LP) {
+        if (tt != TokenKind::TOK_LP) {
             error(kind == Arrow ? JSMSG_BAD_ARROW_ARGS : JSMSG_PAREN_BEFORE_FORMAL);
             return false;
         }
@@ -3027,7 +3031,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
         hasArguments = true;
     } else {
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_RP, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_RP, TokenStream::Operand))
             return false;
         if (!matched)
             hasArguments = true;
@@ -3056,7 +3060,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
             argModifier = TokenStream::Operand;
             MOZ_ASSERT_IF(parenFreeArrow, TokenKindIsPossibleIdentifier(tt));
 
-            if (tt == TOK_TRIPLEDOT) {
+            if (tt == TokenKind::TOK_TRIPLEDOT) {
                 if (IsSetterKind(kind)) {
                     error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -3075,15 +3079,18 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
                 if (!tokenStream.getToken(&tt))
                     return false;
 
-                if (!TokenKindIsPossibleIdentifier(tt) && tt != TOK_LB && tt != TOK_LC) {
+                if (!TokenKindIsPossibleIdentifier(tt) &&
+                    tt != TokenKind::TOK_LB &&
+                    tt != TokenKind::TOK_LC)
+                {
                     error(JSMSG_NO_REST_NAME);
                     return false;
                 }
             }
 
             switch (tt) {
-              case TOK_LB:
-              case TOK_LC: {
+              case TokenKind::TOK_LB:
+              case TokenKind::TOK_LC: {
                 disallowDuplicateParams = true;
                 if (duplicatedParam) {
                     // Has duplicated args before the destructuring parameter.
@@ -3145,7 +3152,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
                 break;
 
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_ASSIGN, TokenStream::Operand))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_ASSIGN, TokenStream::Operand))
                 return false;
             if (matched) {
                 // A default argument without parentheses would look like:
@@ -3184,7 +3191,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
             if (IsSetterKind(kind))
                 break;
 
-            if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
                 return false;
             if (!matched)
                 break;
@@ -3192,7 +3199,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
             if (!hasRest) {
                 if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                     return null();
-                if (tt == TOK_RP)
+                if (tt == TokenKind::TOK_RP)
                     break;
             }
         }
@@ -3201,7 +3208,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
             TokenKind tt;
             if (!tokenStream.getToken(&tt, TokenStream::Operand))
                 return false;
-            if (tt != TOK_RP) {
+            if (tt != TokenKind::TOK_RP) {
                 if (IsSetterKind(kind)) {
                     error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
                     return false;
@@ -3304,7 +3311,7 @@ GeneralParser<ParseHandler, CharT>::addExprAndGetNextTemplStrToken(YieldHandling
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
-    if (tt != TOK_RC) {
+    if (tt != TokenKind::TOK_RC) {
         error(JSMSG_TEMPLSTR_UNTERM_EXPR);
         return false;
     }
@@ -3325,7 +3332,7 @@ GeneralParser<ParseHandler, CharT>::taggedTemplate(YieldHandling yieldHandling, 
     while (true) {
         if (!appendToCallSiteObj(callSiteObjNode))
             return false;
-        if (tt != TOK_TEMPLATE_HEAD)
+        if (tt != TokenKind::TOK_TEMPLATE_HEAD)
             break;
 
         if (!addExprAndGetNextTemplStrToken(yieldHandling, nodeList, &tt))
@@ -3357,7 +3364,7 @@ GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
             return null();
 
         handler.addList(nodeList, pn);
-    } while (tt == TOK_TEMPLATE_HEAD);
+    } while (tt == TokenKind::TOK_TEMPLATE_HEAD);
     return nodeList;
 }
 
@@ -3742,7 +3749,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
 
     if (kind == Arrow) {
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_ARROW))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_ARROW))
             return false;
         if (!matched) {
             error(JSMSG_BAD_ARROW_ARGS);
@@ -3763,7 +3770,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
     uint32_t openedPos = 0;
-    if (tt != TOK_LC) {
+    if (tt != TokenKind::TOK_LC) {
         if (kind != Arrow) {
             if (funbox->isGenerator() || funbox->isAsync() || kind == Method ||
                 kind == GetterNoExpressionClosure || kind == SetterNoExpressionClosure ||
@@ -3837,7 +3844,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
     }
 
     if (bodyType == StatementListBody) {
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_CURLY_AFTER_BODY,
                                                               JSMSG_CURLY_OPENED, openedPos));
         funbox->setEnd(anyChars);
@@ -3872,7 +3879,7 @@ GeneralParser<ParseHandler, CharT>::functionStmt(uint32_t toStringStart,
                                                  DefaultHandling defaultHandling,
                                                  FunctionAsyncKind asyncKind)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FUNCTION));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FUNCTION));
 
     // In sloppy mode, Annex B.3.2 allows labelled function declarations.
     // Otherwise it's a parse error.
@@ -3898,7 +3905,7 @@ GeneralParser<ParseHandler, CharT>::functionStmt(uint32_t toStringStart,
         return null();
 
     GeneratorKind generatorKind = GeneratorKind::NotGenerator;
-    if (tt == TOK_MUL) {
+    if (tt == TokenKind::TOK_MUL) {
         generatorKind = GeneratorKind::Generator;
         if (!tokenStream.getToken(&tt))
             return null();
@@ -3963,7 +3970,7 @@ GeneralParser<ParseHandler, CharT>::functionExpr(uint32_t toStringStart,
                                                  InvokedPrediction invoked,
                                                  FunctionAsyncKind asyncKind)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FUNCTION));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FUNCTION));
 
     AutoAwaitIsKeyword<ParseHandler, CharT> awaitIsKeyword(this, GetAwaitHandling(asyncKind));
     GeneratorKind generatorKind = GeneratorKind::NotGenerator;
@@ -3971,7 +3978,7 @@ GeneralParser<ParseHandler, CharT>::functionExpr(uint32_t toStringStart,
     if (!tokenStream.getToken(&tt))
         return null();
 
-    if (tt == TOK_MUL) {
+    if (tt == TokenKind::TOK_MUL) {
         generatorKind = GeneratorKind::Generator;
         if (!tokenStream.getToken(&tt))
             return null();
@@ -4187,13 +4194,13 @@ GeneralParser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
     bool warnedAboutStatementsAfterReturn = false;
     uint32_t statementBegin = 0;
     for (;;) {
-        TokenKind tt = TOK_EOF;
+        TokenKind tt = TokenKind::TOK_EOF;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
             if (anyChars.isEOF())
                 isUnexpectedEOF_ = true;
             return null();
         }
-        if (tt == TOK_EOF || tt == TOK_RC) {
+        if (tt == TokenKind::TOK_EOF || tt == TokenKind::TOK_RC) {
             TokenPos pos;
             if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand)) {
                 return null();
@@ -4239,13 +4246,13 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::condition(InHandling inHandling, YieldHandling yieldHandling)
 {
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
+    MUST_MATCH_TOKEN(TokenKind::TOK_LP, JSMSG_PAREN_BEFORE_COND);
 
     Node pn = exprInParens(inHandling, yieldHandling, TripledotProhibited);
     if (!pn)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_COND);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_COND);
 
     /* Check for (a = b) and warn about possible (a == b) mistype. */
     if (handler.isUnparenthesizedAssignment(pn)) {
@@ -4260,7 +4267,7 @@ bool
 GeneralParser<ParseHandler, CharT>::matchLabel(YieldHandling yieldHandling,
                                                MutableHandle<PropertyName*> label)
 {
-    TokenKind tt = TOK_EOF;
+    TokenKind tt = TokenKind::TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return false;
 
@@ -4436,7 +4443,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::bindingInitializer(Node lhs, DeclarationKind kind,
                                                        YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_ASSIGN));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_ASSIGN));
 
     if (kind == DeclarationKind::FormalParameter)
         pc->functionBox()->hasParameterExprs = true;
@@ -4479,10 +4486,10 @@ GeneralParser<ParseHandler, CharT>::bindingIdentifierOrPattern(DeclarationKind k
                                                                YieldHandling yieldHandling,
                                                                TokenKind tt)
 {
-    if (tt == TOK_LB)
+    if (tt == TokenKind::TOK_LB)
         return arrayBindingPattern(kind, yieldHandling);
 
-    if (tt == TOK_LC)
+    if (tt == TokenKind::TOK_LC)
         return objectBindingPattern(kind, yieldHandling);
 
     if (!TokenKindIsPossibleIdentifierName(tt)) {
@@ -4498,7 +4505,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
                                                          YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LC));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LC));
 
     if (!CheckRecursionLimit(context))
         return null();
@@ -4514,13 +4521,13 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
         TokenKind tt;
         if (!tokenStream.peekToken(&tt))
             return null();
-        if (tt == TOK_RC) {
+        if (tt == TokenKind::TOK_RC) {
             anyChars.addModifierException(TokenStream::OperandIsNone);
             break;
         }
 
-        if (tt == TOK_TRIPLEDOT) {
-            tokenStream.consumeKnownToken(TOK_TRIPLEDOT);
+        if (tt == TokenKind::TOK_TRIPLEDOT) {
+            tokenStream.consumeKnownToken(TokenKind::TOK_TRIPLEDOT);
             uint32_t begin = pos().begin;
 
             TokenKind tt;
@@ -4557,7 +4564,7 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
                     return null();
 
                 bool hasInitializer;
-                if (!tokenStream.matchToken(&hasInitializer, TOK_ASSIGN, TokenStream::Operand))
+                if (!tokenStream.matchToken(&hasInitializer, TokenKind::TOK_ASSIGN, TokenStream::Operand))
                     return null();
 
                 Node bindingExpr = hasInitializer
@@ -4588,7 +4595,7 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
                 if (!binding)
                     return null();
 
-                tokenStream.consumeKnownToken(TOK_ASSIGN);
+                tokenStream.consumeKnownToken(TokenKind::TOK_ASSIGN);
 
                 Node bindingExpr = bindingInitializer(binding, kind, yieldHandling);
                 if (!bindingExpr)
@@ -4603,17 +4610,17 @@ GeneralParser<ParseHandler, CharT>::objectBindingPattern(DeclarationKind kind,
         }
 
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
             return null();
         if (!matched)
             break;
-        if (tt == TOK_TRIPLEDOT) {
+        if (tt == TokenKind::TOK_TRIPLEDOT) {
             error(JSMSG_REST_WITH_COMMA);
             return null();
         }
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                      reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
                                                           JSMSG_CURLY_OPENED, begin));
 
@@ -4626,7 +4633,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
                                                         YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LB));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LB));
 
     if (!CheckRecursionLimit(context))
         return null();
@@ -4647,16 +4654,16 @@ GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
          if (!tokenStream.getToken(&tt))
              return null();
 
-         if (tt == TOK_RB) {
+         if (tt == TokenKind::TOK_RB) {
              anyChars.ungetToken();
              anyChars.addModifierException(TokenStream::OperandIsNone);
              break;
          }
 
-         if (tt == TOK_COMMA) {
+         if (tt == TokenKind::TOK_COMMA) {
              if (!handler.addElision(literal, pos()))
                  return null();
-         } else if (tt == TOK_TRIPLEDOT) {
+         } else if (tt == TokenKind::TOK_TRIPLEDOT) {
              uint32_t begin = pos().begin;
 
              TokenKind tt;
@@ -4675,7 +4682,7 @@ GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
                  return null();
 
              bool hasInitializer;
-             if (!tokenStream.matchToken(&hasInitializer, TOK_ASSIGN, TokenStream::Operand))
+             if (!tokenStream.matchToken(&hasInitializer, TokenKind::TOK_ASSIGN, TokenStream::Operand))
                  return null();
 
              Node element = hasInitializer
@@ -4687,22 +4694,22 @@ GeneralParser<ParseHandler, CharT>::arrayBindingPattern(DeclarationKind kind,
              handler.addArrayElement(literal, element);
          }
 
-         if (tt != TOK_COMMA) {
-             // If we didn't already match TOK_COMMA in above case.
+         if (tt != TokenKind::TOK_COMMA) {
+             // If we didn't already match TokenKind::TOK_COMMA in above case.
              bool matched;
-             if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+             if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
                  return null();
              if (!matched)
                  break;
 
-             if (tt == TOK_TRIPLEDOT) {
+             if (tt == TokenKind::TOK_TRIPLEDOT) {
                  error(JSMSG_REST_WITH_COMMA);
                  return null();
              }
          }
      }
 
-     MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, TokenStream::Operand,
+     MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RB, TokenStream::Operand,
                                       reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                            JSMSG_BRACKET_OPENED, begin));
 
@@ -4717,9 +4724,9 @@ GeneralParser<ParseHandler, CharT>::destructuringDeclaration(DeclarationKind kin
                                                              TokenKind tt)
 {
     MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
-    MOZ_ASSERT(tt == TOK_LB || tt == TOK_LC);
+    MOZ_ASSERT(tt == TokenKind::TOK_LB || tt == TokenKind::TOK_LC);
 
-    return tt == TOK_LB
+    return tt == TokenKind::TOK_LB
            ? arrayBindingPattern(kind, yieldHandling)
            : objectBindingPattern(kind, yieldHandling);
 }
@@ -4751,7 +4758,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
                                                    unsigned errorNumber)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LC));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LC));
     uint32_t openedPos = pos().begin;
 
     ParseContext::Statement stmt(pc, StatementKind::Block);
@@ -4763,7 +4770,7 @@ GeneralParser<ParseHandler, CharT>::blockStatement(YieldHandling yieldHandling,
     if (!list)
         return null();
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                      reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED,
                                                           openedPos));
 
@@ -4790,8 +4797,8 @@ GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind,
                                                        ParseNodeKind* forHeadKind,
                                                        Node* forInOrOfExpression)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LB) ||
-               anyChars.isCurrentTokenType(TOK_LC));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LB) ||
+               anyChars.isCurrentTokenType(TokenKind::TOK_LC));
 
     Node pattern = destructuringDeclaration(declKind, yieldHandling, tt);
     if (!pattern)
@@ -4823,7 +4830,7 @@ GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind,
         }
     }
 
-    MUST_MATCH_TOKEN_MOD(TOK_ASSIGN, TokenStream::Operand, JSMSG_BAD_DESTRUCT_DECL);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_ASSIGN, TokenStream::Operand, JSMSG_BAD_DESTRUCT_DECL);
 
     Node init = assignExpr(forHeadKind ? InProhibited : InAllowed,
                            yieldHandling, TripledotProhibited);
@@ -4844,7 +4851,7 @@ GeneralParser<ParseHandler, CharT>::initializerInNameDeclaration(Node binding,
                                                                  ParseNodeKind* forHeadKind,
                                                                  Node* forInOrOfExpression)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_ASSIGN));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_ASSIGN));
 
     uint32_t initializerOffset;
     if (!tokenStream.peekOffset(&initializerOffset, TokenStream::Operand))
@@ -4928,7 +4935,7 @@ GeneralParser<ParseHandler, CharT>::declarationName(DeclarationKind declKind, To
     //
     // Therefore get the token here as Operand.
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_ASSIGN, TokenStream::Operand))
+    if (!tokenStream.matchToken(&matched, TokenKind::TOK_ASSIGN, TokenStream::Operand))
         return null();
 
     if (matched) {
@@ -5018,7 +5025,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
         if (!tokenStream.getToken(&tt))
             return null();
 
-        Node binding = (tt == TOK_LB || tt == TOK_LC)
+        Node binding = (tt == TokenKind::TOK_LB || tt == TokenKind::TOK_LC)
                        ? declarationPattern(declKind, tt, initialDeclaration, yieldHandling,
                                             forHeadKind, forInOrOfExpression)
                        : declarationName(declKind, tt, initialDeclaration, yieldHandling,
@@ -5035,7 +5042,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
 
         initialDeclaration = false;
 
-        if (!tokenStream.matchToken(&moreDeclarations, TOK_COMMA, TokenStream::Operand))
+        if (!tokenStream.matchToken(&moreDeclarations, TokenKind::TOK_COMMA, TokenStream::Operand))
             return null();
     } while (moreDeclarations);
 
@@ -5074,7 +5081,7 @@ template <typename CharT>
 bool
 Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet)
 {
-    if (tt == TOK_LC) {
+    if (tt == TokenKind::TOK_LC) {
         while (true) {
             // Handle the forms |import {} from 'a'| and
             // |import { ..., } from 'a'| (where ... is non empty), by
@@ -5082,7 +5089,7 @@ Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt, Nod
             if (!tokenStream.getToken(&tt))
                 return false;
 
-            if (tt == TOK_RC)
+            if (tt == TokenKind::TOK_RC)
                 break;
 
             if (!TokenKindIsPossibleIdentifierName(tt)) {
@@ -5094,7 +5101,7 @@ Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt, Nod
             TokenPos importNamePos = pos();
 
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_AS))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_AS))
                 return null();
 
             if (matched) {
@@ -5141,18 +5148,18 @@ Parser<FullParseHandler, CharT>::namedImportsOrNamespaceImport(TokenKind tt, Nod
             if (!tokenStream.getToken(&next))
                 return false;
 
-            if (next == TOK_RC)
+            if (next == TokenKind::TOK_RC)
                 break;
 
-            if (next != TOK_COMMA) {
+            if (next != TokenKind::TOK_COMMA) {
                 error(JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
                 return false;
             }
         }
     } else {
-        MOZ_ASSERT(tt == TOK_MUL);
+        MOZ_ASSERT(tt == TokenKind::TOK_MUL);
 
-        MUST_MATCH_TOKEN(TOK_AS, JSMSG_AS_AFTER_IMPORT_STAR);
+        MUST_MATCH_TOKEN(TokenKind::TOK_AS, JSMSG_AS_AFTER_IMPORT_STAR);
 
         MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifierName, JSMSG_NO_BINDING_NAME);
 
@@ -5191,7 +5198,7 @@ template<typename CharT>
 ParseNode*
 Parser<FullParseHandler, CharT>::importDeclaration()
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_IMPORT));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_IMPORT));
 
     if (!pc->atModuleLevel()) {
         error(JSMSG_IMPORT_DECL_AT_TOP_LEVEL);
@@ -5207,12 +5214,12 @@ Parser<FullParseHandler, CharT>::importDeclaration()
     if (!importSpecSet)
         return null();
 
-    if (tt == TOK_STRING) {
+    if (tt == TokenKind::TOK_STRING) {
         // Handle the form |import 'a'| by leaving the list empty. This is
         // equivalent to |import {} from 'a'|.
         importSpecSet->pn_pos.end = importSpecSet->pn_pos.begin;
     } else {
-        if (tt == TOK_LC || tt == TOK_MUL) {
+        if (tt == TokenKind::TOK_LC || tt == TokenKind::TOK_MUL) {
             if (!namedImportsOrNamespaceImport(tt, importSpecSet))
                 return null();
         } else if (TokenKindIsPossibleIdentifierName(tt)) {
@@ -5244,12 +5251,12 @@ Parser<FullParseHandler, CharT>::importDeclaration()
             if (!tokenStream.peekToken(&tt))
                 return null();
 
-            if (tt == TOK_COMMA) {
+            if (tt == TokenKind::TOK_COMMA) {
                 tokenStream.consumeKnownToken(tt);
                 if (!tokenStream.getToken(&tt))
                     return null();
 
-                if (tt != TOK_LC && tt != TOK_MUL) {
+                if (tt != TokenKind::TOK_LC && tt != TokenKind::TOK_MUL) {
                     error(JSMSG_NAMED_IMPORTS_OR_NAMESPACE_IMPORT);
                     return null();
                 }
@@ -5262,9 +5269,9 @@ Parser<FullParseHandler, CharT>::importDeclaration()
             return null();
         }
 
-        MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_IMPORT_CLAUSE);
+        MUST_MATCH_TOKEN(TokenKind::TOK_FROM, JSMSG_FROM_AFTER_IMPORT_CLAUSE);
 
-        MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+        MUST_MATCH_TOKEN(TokenKind::TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
     }
 
     Node moduleSpec = stringLiteral();
@@ -5463,12 +5470,12 @@ GeneralParser<ParseHandler, CharT>::exportFrom(uint32_t begin, Node specList)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FROM));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FROM));
 
     if (!abortIfSyntaxParser())
         return null();
 
-    MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+    MUST_MATCH_TOKEN(TokenKind::TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
 
     Node moduleSpec = stringLiteral();
     if (!moduleSpec)
@@ -5494,7 +5501,7 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_MUL));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_MUL));
 
     Node kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
     if (!kid)
@@ -5508,7 +5515,7 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
     handler.addList(kid, exportSpec);
 
-    MUST_MATCH_TOKEN(TOK_FROM, JSMSG_FROM_AFTER_EXPORT_STAR);
+    MUST_MATCH_TOKEN(TokenKind::TOK_FROM, JSMSG_FROM_AFTER_EXPORT_STAR);
 
     return exportFrom(begin, kid);
 }
@@ -5552,7 +5559,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LC));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LC));
 
     Node kid = handler.newList(ParseNodeKind::ExportSpecList, pos());
     if (!kid)
@@ -5565,7 +5572,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
         if (!tokenStream.getToken(&tt))
             return null();
 
-        if (tt == TOK_RC)
+        if (tt == TokenKind::TOK_RC)
             break;
 
         if (!TokenKindIsPossibleIdentifierName(tt)) {
@@ -5578,7 +5585,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
             return null();
 
         bool foundAs;
-        if (!tokenStream.matchToken(&foundAs, TOK_AS))
+        if (!tokenStream.matchToken(&foundAs, TokenKind::TOK_AS))
             return null();
         if (foundAs)
             MUST_MATCH_TOKEN_FUNC(TokenKindIsPossibleIdentifierName, JSMSG_NO_EXPORT_NAME);
@@ -5600,10 +5607,10 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
         if (!tokenStream.getToken(&next))
             return null();
 
-        if (next == TOK_RC)
+        if (next == TokenKind::TOK_RC)
             break;
 
-        if (next != TOK_COMMA) {
+        if (next != TokenKind::TOK_COMMA) {
             error(JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
             return null();
         }
@@ -5623,7 +5630,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
     // In that case let matchOrInsertSemicolon sort out ASI or any necessary
     // error.
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_FROM, TokenStream::Operand))
+    if (!tokenStream.matchToken(&matched, TokenKind::TOK_FROM, TokenStream::Operand))
         return null();
 
     if (matched)
@@ -5652,7 +5659,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_VAR));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_VAR));
 
     Node kid = declarationList(YieldIsName, ParseNodeKind::Var);
     if (!kid)
@@ -5681,7 +5688,7 @@ GeneralParser<ParseHandler, CharT>::exportFunctionDeclaration(uint32_t begin,
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FUNCTION));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FUNCTION));
 
     Node kid = functionStmt(toStringStart, YieldIsName, NameRequired, asyncKind);
     if (!kid)
@@ -5707,7 +5714,7 @@ GeneralParser<ParseHandler, CharT>::exportClassDeclaration(uint32_t begin)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_CLASS));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_CLASS));
 
     Node kid = classDefinition(YieldIsName, ClassStatement, NameRequired);
     if (!kid)
@@ -5734,8 +5741,8 @@ GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, Dec
         return null();
 
     MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
-    MOZ_ASSERT_IF(kind == DeclarationKind::Const, anyChars.isCurrentTokenType(TOK_CONST));
-    MOZ_ASSERT_IF(kind == DeclarationKind::Let, anyChars.isCurrentTokenType(TOK_LET));
+    MOZ_ASSERT_IF(kind == DeclarationKind::Const, anyChars.isCurrentTokenType(TokenKind::TOK_CONST));
+    MOZ_ASSERT_IF(kind == DeclarationKind::Let, anyChars.isCurrentTokenType(TokenKind::TOK_LET));
 
     Node kid = lexicalDeclaration(YieldIsName, kind);
     if (!kid)
@@ -5762,7 +5769,7 @@ GeneralParser<ParseHandler, CharT>::exportDefaultFunctionDeclaration(uint32_t be
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FUNCTION));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FUNCTION));
 
     Node kid = functionStmt(toStringStart, YieldIsName, AllowDefaultName, asyncKind);
     if (!kid)
@@ -5785,7 +5792,7 @@ GeneralParser<ParseHandler, CharT>::exportDefaultClassDeclaration(uint32_t begin
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_CLASS));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_CLASS));
 
     Node kid = classDefinition(YieldIsName, ClassStatement, AllowDefaultName);
     if (!kid)
@@ -5841,7 +5848,7 @@ GeneralParser<ParseHandler, CharT>::exportDefault(uint32_t begin)
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_DEFAULT));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_DEFAULT));
 
     TokenKind tt;
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
@@ -5851,17 +5858,17 @@ GeneralParser<ParseHandler, CharT>::exportDefault(uint32_t begin)
         return null();
 
     switch (tt) {
-      case TOK_FUNCTION:
+      case TokenKind::TOK_FUNCTION:
         return exportDefaultFunctionDeclaration(begin, pos().begin);
 
-      case TOK_ASYNC: {
-        TokenKind nextSameLine = TOK_EOF;
+      case TokenKind::TOK_ASYNC: {
+        TokenKind nextSameLine = TokenKind::TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
 
-        if (nextSameLine == TOK_FUNCTION) {
+        if (nextSameLine == TokenKind::TOK_FUNCTION) {
             uint32_t toStringStart = pos().begin;
-            tokenStream.consumeKnownToken(TOK_FUNCTION);
+            tokenStream.consumeKnownToken(TokenKind::TOK_FUNCTION);
             return exportDefaultFunctionDeclaration(begin, toStringStart,
                                                     FunctionAsyncKind::AsyncFunction);
         }
@@ -5870,7 +5877,7 @@ GeneralParser<ParseHandler, CharT>::exportDefault(uint32_t begin)
         return exportDefaultAssignExpr(begin);
       }
 
-      case TOK_CLASS:
+      case TokenKind::TOK_CLASS:
         return exportDefaultClassDeclaration(begin);
 
       default:
@@ -5886,7 +5893,7 @@ GeneralParser<ParseHandler, CharT>::exportDeclaration()
     if (!abortIfSyntaxParser())
         return null();
 
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_EXPORT));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_EXPORT));
 
     if (!pc->atModuleLevel()) {
         error(JSMSG_EXPORT_DECL_AT_TOP_LEVEL);
@@ -5899,26 +5906,26 @@ GeneralParser<ParseHandler, CharT>::exportDeclaration()
     if (!tokenStream.getToken(&tt))
         return null();
     switch (tt) {
-      case TOK_MUL:
+      case TokenKind::TOK_MUL:
         return exportBatch(begin);
 
-      case TOK_LC:
+      case TokenKind::TOK_LC:
         return exportClause(begin);
 
-      case TOK_VAR:
+      case TokenKind::TOK_VAR:
         return exportVariableStatement(begin);
 
-      case TOK_FUNCTION:
+      case TokenKind::TOK_FUNCTION:
         return exportFunctionDeclaration(begin, pos().begin);
 
-      case TOK_ASYNC: {
-        TokenKind nextSameLine = TOK_EOF;
+      case TokenKind::TOK_ASYNC: {
+        TokenKind nextSameLine = TokenKind::TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
 
-        if (nextSameLine == TOK_FUNCTION) {
+        if (nextSameLine == TokenKind::TOK_FUNCTION) {
             uint32_t toStringStart = pos().begin;
-            tokenStream.consumeKnownToken(TOK_FUNCTION);
+            tokenStream.consumeKnownToken(TokenKind::TOK_FUNCTION);
             return exportFunctionDeclaration(begin, toStringStart,
                                              FunctionAsyncKind::AsyncFunction);
         }
@@ -5927,16 +5934,16 @@ GeneralParser<ParseHandler, CharT>::exportDeclaration()
         return null();
       }
 
-      case TOK_CLASS:
+      case TokenKind::TOK_CLASS:
         return exportClassDeclaration(begin);
 
-      case TOK_CONST:
+      case TokenKind::TOK_CONST:
         return exportLexicalDeclaration(begin, DeclarationKind::Const);
 
-      case TOK_LET:
+      case TokenKind::TOK_LET:
         return exportLexicalDeclaration(begin, DeclarationKind::Let);
 
-      case TOK_DEFAULT:
+      case TokenKind::TOK_DEFAULT:
         return exportDefault(begin);
 
       default:
@@ -5974,7 +5981,7 @@ GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldH
     //
     // Careful!  FunctionDeclaration doesn't include generators or async
     // functions.
-    if (next == TOK_FUNCTION) {
+    if (next == TokenKind::TOK_FUNCTION) {
         tokenStream.consumeKnownToken(next, TokenStream::Operand);
 
         // Parser::statement would handle this, but as this function handles
@@ -5988,7 +5995,7 @@ GeneralParser<ParseHandler, CharT>::consequentOrAlternative(YieldHandling yieldH
         if (!tokenStream.peekToken(&maybeStar))
             return null();
 
-        if (maybeStar == TOK_MUL) {
+        if (maybeStar == TokenKind::TOK_MUL) {
             error(JSMSG_FORBIDDEN_AS_STATEMENT, "generator declarations");
             return null();
         }
@@ -6035,7 +6042,7 @@ GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
         TokenKind tt;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
-        if (tt == TOK_SEMI) {
+        if (tt == TokenKind::TOK_SEMI) {
             if (!extraWarning(JSMSG_EMPTY_CONSEQUENT))
                 return null();
         }
@@ -6048,10 +6055,10 @@ GeneralParser<ParseHandler, CharT>::ifStatement(YieldHandling yieldHandling)
             return null();
 
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_ELSE, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_ELSE, TokenStream::Operand))
             return null();
         if (matched) {
-            if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_IF, TokenStream::Operand))
                 return null();
             if (matched)
                 continue;
@@ -6082,7 +6089,7 @@ GeneralParser<ParseHandler, CharT>::doWhileStatement(YieldHandling yieldHandling
     Node body = statement(yieldHandling);
     if (!body)
         return null();
-    MUST_MATCH_TOKEN_MOD(TOK_WHILE, TokenStream::Operand, JSMSG_WHILE_AFTER_DO);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_WHILE, TokenStream::Operand, JSMSG_WHILE_AFTER_DO);
     Node cond = condition(InAllowed, yieldHandling);
     if (!cond)
         return null();
@@ -6094,7 +6101,7 @@ GeneralParser<ParseHandler, CharT>::doWhileStatement(YieldHandling yieldHandling
     //   https://bugs.ecmascript.org/show_bug.cgi?id=157
     // To parse |do {} while (true) false| correctly, use Operand.
     bool ignored;
-    if (!tokenStream.matchToken(&ignored, TOK_SEMI, TokenStream::Operand))
+    if (!tokenStream.matchToken(&ignored, TokenKind::TOK_SEMI, TokenStream::Operand))
         return null();
     return handler.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
@@ -6122,8 +6129,8 @@ GeneralParser<ParseHandler, CharT>::matchInOrOf(bool* isForInp, bool* isForOfp)
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return false;
 
-    *isForInp = tt == TOK_IN;
-    *isForOfp = tt == TOK_OF;
+    *isForInp = tt == TokenKind::TOK_IN;
+    *isForOfp = tt == TokenKind::TOK_OF;
     if (!*isForInp && !*isForOfp)
         anyChars.ungetToken();
 
@@ -6138,7 +6145,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
                                                  Maybe<ParseContext::Scope>& forLoopLexicalScope,
                                                  Node* forInOrOfExpression)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LP));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LP));
 
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::Operand))
@@ -6146,7 +6153,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
 
     // Super-duper easy case: |for (;| is a C-style for-loop with no init
     // component.
-    if (tt == TOK_SEMI) {
+    if (tt == TokenKind::TOK_SEMI) {
         *forInitialPart = null();
         *forHeadKind = ParseNodeKind::ForHead;
         return true;
@@ -6155,7 +6162,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
     // Parsing after |for (var| is also relatively simple (from this method's
     // point of view).  No block-related work complicates matters, so delegate
     // to Parser::declaration.
-    if (tt == TOK_VAR) {
+    if (tt == TokenKind::TOK_VAR) {
         tokenStream.consumeKnownToken(tt, TokenStream::Operand);
 
         // Pass null for block object because |var| declarations don't use one.
@@ -6171,15 +6178,15 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
     // parse as an identifier.  (|let| in for-of is always a declaration.)
     bool parsingLexicalDeclaration = false;
     bool letIsIdentifier = false;
-    if (tt == TOK_CONST) {
+    if (tt == TokenKind::TOK_CONST) {
         parsingLexicalDeclaration = true;
         tokenStream.consumeKnownToken(tt, TokenStream::Operand);
-    } else if (tt == TOK_LET) {
+    } else if (tt == TokenKind::TOK_LET) {
         // We could have a {For,Lexical}Declaration, or we could have a
         // LeftHandSideExpression with lookahead restrictions so it's not
         // ambiguous with the former.  Check for a continuation of the former
         // to decide which we have.
-        tokenStream.consumeKnownToken(TOK_LET, TokenStream::Operand);
+        tokenStream.consumeKnownToken(TokenKind::TOK_LET, TokenStream::Operand);
 
         TokenKind next;
         if (!tokenStream.peekToken(&next))
@@ -6203,7 +6210,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         ParseContext::Statement forHeadStmt(pc, StatementKind::ForLoopLexicalHead);
 
         *forInitialPart = declarationList(yieldHandling,
-                                          tt == TOK_CONST
+                                          tt == TokenKind::TOK_CONST
                                           ? ParseNodeKind::Const
                                           : ParseNodeKind::Let,
                                           forHeadKind, forInOrOfExpression);
@@ -6290,7 +6297,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_FOR));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_FOR));
 
     uint32_t begin = pos().begin;
 
@@ -6301,7 +6308,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
 
     if (pc->isAsync()) {
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_AWAIT))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_AWAIT))
             return null();
 
         if (matched) {
@@ -6310,8 +6317,8 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         }
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_LP, TokenStream::None,
-                                     error((token == TOK_AWAIT && !pc->isAsync())
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_LP, TokenStream::None,
+                                     error((token == TokenKind::TOK_AWAIT && !pc->isAsync())
                                            ? JSMSG_FOR_AWAIT_OUTSIDE_ASYNC
                                            : JSMSG_PAREN_AFTER_FOR));
 
@@ -6369,14 +6376,14 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
 
         // Look for an operand: |for (;| means we might have already examined
         // this semicolon with that modifier.
-        MUST_MATCH_TOKEN_MOD(TOK_SEMI, TokenStream::Operand, JSMSG_SEMI_AFTER_FOR_INIT);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_SEMI, TokenStream::Operand, JSMSG_SEMI_AFTER_FOR_INIT);
 
         TokenKind tt;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
 
         Node test;
-        if (tt == TOK_SEMI) {
+        if (tt == TokenKind::TOK_SEMI) {
             test = null();
         } else {
             test = expr(InAllowed, yieldHandling, TripledotProhibited);
@@ -6384,13 +6391,13 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
                 return null();
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_SEMI, TokenStream::Operand, JSMSG_SEMI_AFTER_FOR_COND);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_SEMI, TokenStream::Operand, JSMSG_SEMI_AFTER_FOR_COND);
 
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
 
         Node update;
-        if (tt == TOK_RP) {
+        if (tt == TokenKind::TOK_RP) {
             update = null();
         } else {
             update = expr(InAllowed, yieldHandling, TripledotProhibited);
@@ -6398,7 +6405,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
                 return null();
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
 
         TokenPos headPos(begin, pos().end);
         forHead = handler.newForHead(init, test, update, headPos);
@@ -6421,7 +6428,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         // Parser::declaration consumed everything up to the closing ')'.  That
         // token follows an {Assignment,}Expression and so must be interpreted
         // as an operand to be consistent with normal expression tokenizing.
-        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_FOR_CTRL);
 
         TokenPos headPos(begin, pos().end);
         forHead = handler.newForInOrOfHead(headKind, target, iteratedExpr, headPos);
@@ -6447,17 +6454,17 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_SWITCH));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_SWITCH));
     uint32_t begin = pos().begin;
 
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
+    MUST_MATCH_TOKEN(TokenKind::TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
 
     Node discriminant = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
     if (!discriminant)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_SWITCH);
-    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_SWITCH);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_SWITCH);
+    MUST_MATCH_TOKEN(TokenKind::TOK_LC, JSMSG_CURLY_BEFORE_SWITCH);
 
     ParseContext::Statement stmt(pc, StatementKind::Switch);
     ParseContext::Scope scope(this);
@@ -6473,13 +6480,13 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
     while (true) {
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
-        if (tt == TOK_RC)
+        if (tt == TokenKind::TOK_RC)
             break;
         uint32_t caseBegin = pos().begin;
 
         Node caseExpr;
         switch (tt) {
-          case TOK_DEFAULT:
+          case TokenKind::TOK_DEFAULT:
             if (seenDefault) {
                 error(JSMSG_TOO_MANY_DEFAULTS);
                 return null();
@@ -6488,7 +6495,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
             caseExpr = null();  // The default case has pn_left == nullptr.
             break;
 
-          case TOK_CASE:
+          case TokenKind::TOK_CASE:
             caseExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!caseExpr)
                 return null();
@@ -6499,7 +6506,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
             return null();
         }
 
-        MUST_MATCH_TOKEN_MOD(TOK_COLON, TokenStream::Operand, JSMSG_COLON_AFTER_CASE);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_COLON, TokenStream::Operand, JSMSG_COLON_AFTER_CASE);
 
         Node body = handler.newStatementList(pos());
         if (!body)
@@ -6511,7 +6518,7 @@ GeneralParser<ParseHandler, CharT>::switchStatement(YieldHandling yieldHandling)
         while (true) {
             if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                 return null();
-            if (tt == TOK_RC || tt == TOK_CASE || tt == TOK_DEFAULT)
+            if (tt == TokenKind::TOK_RC || tt == TokenKind::TOK_CASE || tt == TokenKind::TOK_DEFAULT)
                 break;
             if (afterReturn) {
                 if (!tokenStream.peekOffset(&statementBegin, TokenStream::Operand))
@@ -6554,7 +6561,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_CONTINUE));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_CONTINUE));
     uint32_t begin = pos().begin;
 
     RootedPropertyName label(context);
@@ -6584,7 +6591,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::breakStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_BREAK));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_BREAK));
     uint32_t begin = pos().begin;
 
     RootedPropertyName label(context);
@@ -6624,7 +6631,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_RETURN));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_RETURN));
     uint32_t begin = pos().begin;
 
     MOZ_ASSERT(pc->isFunctionBox());
@@ -6634,14 +6641,14 @@ GeneralParser<ParseHandler, CharT>::returnStatement(YieldHandling yieldHandling)
     //
     // This is ugly, but we don't want to require a semicolon.
     Node exprNode;
-    TokenKind tt = TOK_EOF;
+    TokenKind tt = TokenKind::TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
     switch (tt) {
-      case TOK_EOL:
-      case TOK_EOF:
-      case TOK_SEMI:
-      case TOK_RC:
+      case TokenKind::TOK_EOL:
+      case TokenKind::TOK_EOF:
+      case TokenKind::TOK_SEMI:
+      case TokenKind::TOK_RC:
         exprNode = null();
         break;
       default: {
@@ -6661,7 +6668,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_YIELD));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_YIELD));
     uint32_t begin = pos().begin;
 
     MOZ_ASSERT(pc->isGenerator());
@@ -6671,32 +6678,32 @@ GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
 
     Node exprNode;
     ParseNodeKind kind = ParseNodeKind::Yield;
-    TokenKind tt = TOK_EOF;
+    TokenKind tt = TokenKind::TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
     switch (tt) {
-      // TOK_EOL is special; it implements the [no LineTerminator here]
+      // TokenKind::TOK_EOL is special; it implements the [no LineTerminator here]
       // quirk in the grammar.
-      case TOK_EOL:
+      case TokenKind::TOK_EOL:
       // The rest of these make up the complete set of tokens that can
       // appear after any of the places where AssignmentExpression is used
       // throughout the grammar.  Conveniently, none of them can also be the
       // start an expression.
-      case TOK_EOF:
-      case TOK_SEMI:
-      case TOK_RC:
-      case TOK_RB:
-      case TOK_RP:
-      case TOK_COLON:
-      case TOK_COMMA:
-      case TOK_IN:
+      case TokenKind::TOK_EOF:
+      case TokenKind::TOK_SEMI:
+      case TokenKind::TOK_RC:
+      case TokenKind::TOK_RB:
+      case TokenKind::TOK_RP:
+      case TokenKind::TOK_COLON:
+      case TokenKind::TOK_COMMA:
+      case TokenKind::TOK_IN:
         // No value.
         exprNode = null();
         anyChars.addModifierException(TokenStream::NoneIsOperand);
         break;
-      case TOK_MUL:
+      case TokenKind::TOK_MUL:
         kind = ParseNodeKind::YieldStar;
-        tokenStream.consumeKnownToken(TOK_MUL, TokenStream::Operand);
+        tokenStream.consumeKnownToken(TokenKind::TOK_MUL, TokenStream::Operand);
         MOZ_FALLTHROUGH;
       default:
         exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
@@ -6712,7 +6719,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::withStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_WITH));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_WITH));
     uint32_t begin = pos().begin;
 
     // Usually we want the constructs forbidden in strict mode code to be a
@@ -6725,13 +6732,13 @@ GeneralParser<ParseHandler, CharT>::withStatement(YieldHandling yieldHandling)
             return null();
     }
 
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
+    MUST_MATCH_TOKEN(TokenKind::TOK_LP, JSMSG_PAREN_BEFORE_WITH);
 
     Node objectExpr = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
     if (!objectExpr)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_WITH);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_WITH);
 
     Node innerBlock;
     {
@@ -6754,14 +6761,14 @@ GeneralParser<ParseHandler, CharT>::labeledItem(YieldHandling yieldHandling)
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
 
-    if (tt == TOK_FUNCTION) {
+    if (tt == TokenKind::TOK_FUNCTION) {
         TokenKind next;
         if (!tokenStream.peekToken(&next))
             return null();
 
         // GeneratorDeclaration is only matched by HoistableDeclaration in
         // StatementListItem, so generators can't be inside labels.
-        if (next == TOK_MUL) {
+        if (next == TokenKind::TOK_MUL) {
             error(JSMSG_GENERATOR_LABEL);
             return null();
         }
@@ -6800,7 +6807,7 @@ GeneralParser<ParseHandler, CharT>::labeledStatement(YieldHandling yieldHandling
         return null();
     }
 
-    tokenStream.consumeKnownToken(TOK_COLON);
+    tokenStream.consumeKnownToken(TokenKind::TOK_COLON);
 
     /* Push a label struct and parse the statement. */
     ParseContext::LabelStatement stmt(pc, label);
@@ -6815,18 +6822,18 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::throwStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_THROW));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_THROW));
     uint32_t begin = pos().begin;
 
     /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-    TokenKind tt = TOK_EOF;
+    TokenKind tt = TokenKind::TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
-    if (tt == TOK_EOF || tt == TOK_SEMI || tt == TOK_RC) {
+    if (tt == TokenKind::TOK_EOF || tt == TokenKind::TOK_SEMI || tt == TokenKind::TOK_RC) {
         error(JSMSG_MISSING_EXPR_AFTER_THROW);
         return null();
     }
-    if (tt == TOK_EOL) {
+    if (tt == TokenKind::TOK_EOL) {
         error(JSMSG_LINE_BREAK_AFTER_THROW);
         return null();
     }
@@ -6845,7 +6852,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_TRY));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_TRY));
     uint32_t begin = pos().begin;
 
     /*
@@ -6860,14 +6867,14 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
      *
      * catch lvalue nodes are either:
      *   a single identifier
-     *   TOK_RB or TOK_RC for a destructuring left-hand side
+     *   TokenKind::TOK_RB or TokenKind::TOK_RC for a destructuring left-hand side
      *
-     * finally nodes are TOK_LC statement lists.
+     * finally nodes are TokenKind::TOK_LC statement lists.
      */
 
     Node innerBlock;
     {
-        MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
+        MUST_MATCH_TOKEN(TokenKind::TOK_LC, JSMSG_CURLY_BEFORE_TRY);
 
         uint32_t openedPos = pos().begin;
 
@@ -6884,7 +6891,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
         if (!innerBlock)
             return null();
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
                                                               JSMSG_CURLY_OPENED, openedPos));
     }
@@ -6893,7 +6900,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
     TokenKind tt;
     if (!tokenStream.getToken(&tt))
         return null();
-    if (tt == TOK_CATCH) {
+    if (tt == TokenKind::TOK_CATCH) {
         /*
          * Create a lexical scope node around the whole catch clause,
          * including the head.
@@ -6910,20 +6917,20 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
          * where lhs is a name or a destructuring left-hand side.
          */
         bool omittedBinding;
-        if (!tokenStream.matchToken(&omittedBinding, TOK_LC))
+        if (!tokenStream.matchToken(&omittedBinding, TokenKind::TOK_LC))
             return null();
 
         Node catchName;
         if (omittedBinding) {
             catchName = null();
         } else {
-            MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
+            MUST_MATCH_TOKEN(TokenKind::TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
 
             if (!tokenStream.getToken(&tt))
                 return null();
             switch (tt) {
-              case TOK_LB:
-              case TOK_LC:
+              case TokenKind::TOK_LB:
+              case TokenKind::TOK_LC:
                 catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
                                                      yieldHandling, tt);
                 if (!catchName)
@@ -6944,9 +6951,9 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
               }
             }
 
-            MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
+            MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
 
-            MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+            MUST_MATCH_TOKEN(TokenKind::TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
         }
 
         Node catchBody = catchBlockStatement(yieldHandling, scope);
@@ -6967,8 +6974,8 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 
     Node finallyBlock = null();
 
-    if (tt == TOK_FINALLY) {
-        MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
+    if (tt == TokenKind::TOK_FINALLY) {
+        MUST_MATCH_TOKEN(TokenKind::TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
 
         uint32_t openedPos = pos().begin;
 
@@ -6985,7 +6992,7 @@ GeneralParser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
         if (!finallyBlock)
             return null();
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
                                                               JSMSG_CURLY_OPENED, openedPos));
     } else {
@@ -7025,7 +7032,7 @@ GeneralParser<ParseHandler, CharT>::catchBlockStatement(YieldHandling yieldHandl
     if (!list)
         return null();
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                      reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
                                                           JSMSG_CURLY_OPENED, openedPos));
 
@@ -7080,7 +7087,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
                                                     ClassContext classContext,
                                                     DefaultHandling defaultHandling)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_CLASS));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_CLASS));
 
     uint32_t classStartOffset = pos().begin;
     bool savedStrictness = setLocalStrictMode(true);
@@ -7132,7 +7139,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
 
     Node classHeritage = null();
     bool hasHeritage;
-    if (!tokenStream.matchToken(&hasHeritage, TOK_EXTENDS))
+    if (!tokenStream.matchToken(&hasHeritage, TokenKind::TOK_EXTENDS))
         return null();
     if (hasHeritage) {
         if (!tokenStream.getToken(&tt))
@@ -7143,7 +7150,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
             return null();
     }
 
-    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
+    MUST_MATCH_TOKEN(TokenKind::TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
 
     Node classMethods = handler.newClassMethodList(pos().begin);
     if (!classMethods)
@@ -7154,23 +7161,23 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
         TokenKind tt;
         if (!tokenStream.getToken(&tt))
             return null();
-        if (tt == TOK_RC)
+        if (tt == TokenKind::TOK_RC)
             break;
 
-        if (tt == TOK_SEMI)
+        if (tt == TokenKind::TOK_SEMI)
             continue;
 
         bool isStatic = false;
-        if (tt == TOK_STATIC) {
+        if (tt == TokenKind::TOK_STATIC) {
             if (!tokenStream.peekToken(&tt))
                 return null();
-            if (tt == TOK_RC) {
+            if (tt == TokenKind::TOK_RC) {
                 tokenStream.consumeKnownToken(tt);
                 error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(tt));
                 return null();
             }
 
-            if (tt != TOK_LP)
+            if (tt != TokenKind::TOK_LP)
                 isStatic = true;
             else
                 anyChars.ungetToken();
@@ -7221,7 +7228,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
         switch (propType) {
           case PropertyType::GetterNoExpressionClosure:
           case PropertyType::SetterNoExpressionClosure:
-            if (!anyChars.isCurrentTokenType(TOK_RB)) {
+            if (!anyChars.isCurrentTokenType(TokenKind::TOK_RB)) {
                 funName = prefixAccessorName(propType, propAtom);
                 if (!funName)
                     return null();
@@ -7232,7 +7239,7 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
             funName = name;
             break;
           default:
-            if (!anyChars.isCurrentTokenType(TOK_RB))
+            if (!anyChars.isCurrentTokenType(TokenKind::TOK_RB))
                 funName = propAtom;
         }
 
@@ -7306,13 +7313,13 @@ GeneralParser<ParseHandler, CharT>::classDefinition(YieldHandling yieldHandling,
 bool
 ParserBase::nextTokenContinuesLetDeclaration(TokenKind next)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LET));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LET));
     MOZ_ASSERT(anyChars.nextToken().type == next);
 
     TokenStreamShared::verifyConsistentModifier(TokenStreamShared::None, anyChars.nextToken());
 
     // Destructuring continues a let declaration.
-    if (next == TOK_LB || next == TOK_LC)
+    if (next == TokenKind::TOK_LB || next == TokenKind::TOK_LC)
         return true;
 
     // A "let" edge case deserves special comment.  Consider this:
@@ -7357,20 +7364,20 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
 
     switch (tt) {
       // BlockStatement[?Yield, ?Return]
-      case TOK_LC:
+      case TokenKind::TOK_LC:
         return blockStatement(yieldHandling);
 
       // VariableStatement[?Yield]
-      case TOK_VAR:
+      case TokenKind::TOK_VAR:
         return variableStatement(yieldHandling);
 
       // EmptyStatement
-      case TOK_SEMI:
+      case TokenKind::TOK_SEMI:
         return handler.newEmptyStatement(pos());
 
       // ExpressionStatement[?Yield].
 
-      case TOK_YIELD: {
+      case TokenKind::TOK_YIELD: {
         // Don't use a ternary operator here due to obscure linker issues
         // around using static consts in the arms of a ternary.
         Modifier modifier;
@@ -7383,7 +7390,7 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
         if (!tokenStream.peekToken(&next, modifier))
             return null();
 
-        if (next == TOK_COLON)
+        if (next == TokenKind::TOK_COLON)
             return labeledStatement(yieldHandling);
 
         return expressionStatement(yieldHandling);
@@ -7391,7 +7398,7 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
 
       default: {
         // Avoid getting next token with None.
-        if (tt == TOK_AWAIT && pc->isAsync())
+        if (tt == TokenKind::TOK_AWAIT && pc->isAsync())
             return expressionStatement(yieldHandling);
 
         if (!TokenKindIsPossibleIdentifier(tt))
@@ -7403,35 +7410,35 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
 
         // |let| here can only be an Identifier, not a declaration.  Give nicer
         // errors for declaration-looking typos.
-        if (tt == TOK_LET) {
+        if (tt == TokenKind::TOK_LET) {
             bool forbiddenLetDeclaration = false;
 
-            if (next == TOK_LB) {
+            if (next == TokenKind::TOK_LB) {
                 // Enforce ExpressionStatement's 'let [' lookahead restriction.
                 forbiddenLetDeclaration = true;
-            } else if (next == TOK_LC || TokenKindIsPossibleIdentifier(next)) {
+            } else if (next == TokenKind::TOK_LC || TokenKindIsPossibleIdentifier(next)) {
                 // 'let {' and 'let foo' aren't completely forbidden, if ASI
                 // causes 'let' to be the entire Statement.  But if they're
                 // same-line, we can aggressively give a better error message.
                 //
-                // Note that this ignores 'yield' as TOK_YIELD: we'll handle it
+                // Note that this ignores 'yield' as TokenKind::TOK_YIELD: we'll handle it
                 // correctly but with a worse error message.
                 TokenKind nextSameLine;
                 if (!tokenStream.peekTokenSameLine(&nextSameLine))
                     return null();
 
                 MOZ_ASSERT(TokenKindIsPossibleIdentifier(nextSameLine) ||
-                           nextSameLine == TOK_LC ||
-                           nextSameLine == TOK_EOL);
+                           nextSameLine == TokenKind::TOK_LC ||
+                           nextSameLine == TokenKind::TOK_EOL);
 
-                forbiddenLetDeclaration = nextSameLine != TOK_EOL;
+                forbiddenLetDeclaration = nextSameLine != TokenKind::TOK_EOL;
             }
 
             if (forbiddenLetDeclaration) {
                 error(JSMSG_FORBIDDEN_AS_STATEMENT, "lexical declarations");
                 return null();
             }
-        } else if (tt == TOK_ASYNC) {
+        } else if (tt == TokenKind::TOK_ASYNC) {
             // Peek only on the same line: ExpressionStatement's lookahead
             // restriction is phrased as
             //
@@ -7446,7 +7453,7 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
             if (!tokenStream.peekTokenSameLine(&maybeFunction))
                 return null();
 
-            if (maybeFunction == TOK_FUNCTION) {
+            if (maybeFunction == TokenKind::TOK_FUNCTION) {
                 error(JSMSG_FORBIDDEN_AS_STATEMENT, "async function declarations");
                 return null();
             }
@@ -7457,17 +7464,17 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
 
         // NOTE: It's unfortunately allowed to have a label named 'let' in
         //       non-strict code.  💯
-        if (next == TOK_COLON)
+        if (next == TokenKind::TOK_COLON)
             return labeledStatement(yieldHandling);
 
         return expressionStatement(yieldHandling);
       }
 
-      case TOK_NEW:
+      case TokenKind::TOK_NEW:
         return expressionStatement(yieldHandling, PredictInvoked);
 
       // IfStatement[?Yield, ?Return]
-      case TOK_IF:
+      case TokenKind::TOK_IF:
         return ifStatement(yieldHandling);
 
       // BreakableStatement[?Yield, ?Return]
@@ -7475,28 +7482,28 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
       // BreakableStatement[Yield, Return]:
       //   IterationStatement[?Yield, ?Return]
       //   SwitchStatement[?Yield, ?Return]
-      case TOK_DO:
+      case TokenKind::TOK_DO:
         return doWhileStatement(yieldHandling);
 
-      case TOK_WHILE:
+      case TokenKind::TOK_WHILE:
         return whileStatement(yieldHandling);
 
-      case TOK_FOR:
+      case TokenKind::TOK_FOR:
         return forStatement(yieldHandling);
 
-      case TOK_SWITCH:
+      case TokenKind::TOK_SWITCH:
         return switchStatement(yieldHandling);
 
       // ContinueStatement[?Yield]
-      case TOK_CONTINUE:
+      case TokenKind::TOK_CONTINUE:
         return continueStatement(yieldHandling);
 
       // BreakStatement[?Yield]
-      case TOK_BREAK:
+      case TokenKind::TOK_BREAK:
         return breakStatement(yieldHandling);
 
       // [+Return] ReturnStatement[?Yield]
-      case TOK_RETURN:
+      case TokenKind::TOK_RETURN:
         // The Return parameter is only used here, and the effect is easily
         // detected this way, so don't bother passing around an extra parameter
         // everywhere.
@@ -7507,51 +7514,51 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
         return returnStatement(yieldHandling);
 
       // WithStatement[?Yield, ?Return]
-      case TOK_WITH:
+      case TokenKind::TOK_WITH:
         return withStatement(yieldHandling);
 
       // LabelledStatement[?Yield, ?Return]
-      // This is really handled by default and TOK_YIELD cases above.
+      // This is really handled by default and TokenKind::TOK_YIELD cases above.
 
       // ThrowStatement[?Yield]
-      case TOK_THROW:
+      case TokenKind::TOK_THROW:
         return throwStatement(yieldHandling);
 
       // TryStatement[?Yield, ?Return]
-      case TOK_TRY:
+      case TokenKind::TOK_TRY:
         return tryStatement(yieldHandling);
 
       // DebuggerStatement
-      case TOK_DEBUGGER:
+      case TokenKind::TOK_DEBUGGER:
         return debuggerStatement();
 
       // |function| is forbidden by lookahead restriction (unless as child
       // statement of |if| or |else|, but Parser::consequentOrAlternative
       // handles that).
-      case TOK_FUNCTION:
+      case TokenKind::TOK_FUNCTION:
         error(JSMSG_FORBIDDEN_AS_STATEMENT, "function declarations");
         return null();
 
       // |class| is also forbidden by lookahead restriction.
-      case TOK_CLASS:
+      case TokenKind::TOK_CLASS:
         error(JSMSG_FORBIDDEN_AS_STATEMENT, "classes");
         return null();
 
       // ImportDeclaration (only inside modules)
-      case TOK_IMPORT:
+      case TokenKind::TOK_IMPORT:
         return importDeclaration();
 
       // ExportDeclaration (only inside modules)
-      case TOK_EXPORT:
+      case TokenKind::TOK_EXPORT:
         return exportDeclaration();
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
-      case TOK_CATCH:
+      case TokenKind::TOK_CATCH:
         error(JSMSG_CATCH_WITHOUT_TRY);
         return null();
 
-      case TOK_FINALLY:
+      case TokenKind::TOK_FINALLY:
         error(JSMSG_FINALLY_WITHOUT_TRY);
         return null();
 
@@ -7575,22 +7582,22 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
 
     switch (tt) {
       // BlockStatement[?Yield, ?Return]
-      case TOK_LC:
+      case TokenKind::TOK_LC:
         return blockStatement(yieldHandling);
 
       // VariableStatement[?Yield]
-      case TOK_VAR:
+      case TokenKind::TOK_VAR:
         return variableStatement(yieldHandling);
 
       // EmptyStatement
-      case TOK_SEMI:
+      case TokenKind::TOK_SEMI:
         return handler.newEmptyStatement(pos());
 
       // ExpressionStatement[?Yield].
       //
       // These should probably be handled by a single ExpressionStatement
       // function in a default, not split up this way.
-      case TOK_STRING:
+      case TokenKind::TOK_STRING:
         if (!canHaveDirectives && anyChars.currentToken().atom() == context->names().useAsm) {
             if (!abortIfSyntaxParser())
                 return null();
@@ -7599,7 +7606,7 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
         }
         return expressionStatement(yieldHandling);
 
-      case TOK_YIELD: {
+      case TokenKind::TOK_YIELD: {
         // Don't use a ternary operator here due to obscure linker issues
         // around using static consts in the arms of a ternary.
         Modifier modifier;
@@ -7612,7 +7619,7 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
         if (!tokenStream.peekToken(&next, modifier))
             return null();
 
-        if (next == TOK_COLON)
+        if (next == TokenKind::TOK_COLON)
             return labeledStatement(yieldHandling);
 
         return expressionStatement(yieldHandling);
@@ -7620,7 +7627,7 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
 
       default: {
         // Avoid getting next token with None.
-        if (tt == TOK_AWAIT && pc->isAsync())
+        if (tt == TokenKind::TOK_AWAIT && pc->isAsync())
             return expressionStatement(yieldHandling);
 
         if (!TokenKindIsPossibleIdentifier(tt))
@@ -7630,32 +7637,32 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
         if (!tokenStream.peekToken(&next))
             return null();
 
-        if (tt == TOK_LET && nextTokenContinuesLetDeclaration(next))
+        if (tt == TokenKind::TOK_LET && nextTokenContinuesLetDeclaration(next))
             return lexicalDeclaration(yieldHandling, DeclarationKind::Let);
 
-        if (tt == TOK_ASYNC) {
-            TokenKind nextSameLine = TOK_EOF;
+        if (tt == TokenKind::TOK_ASYNC) {
+            TokenKind nextSameLine = TokenKind::TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
-            if (nextSameLine == TOK_FUNCTION) {
+            if (nextSameLine == TokenKind::TOK_FUNCTION) {
                 uint32_t toStringStart = pos().begin;
-                tokenStream.consumeKnownToken(TOK_FUNCTION);
+                tokenStream.consumeKnownToken(TokenKind::TOK_FUNCTION);
                 return functionStmt(toStringStart, yieldHandling, NameRequired,
                                     FunctionAsyncKind::AsyncFunction);
             }
         }
 
-        if (next == TOK_COLON)
+        if (next == TokenKind::TOK_COLON)
             return labeledStatement(yieldHandling);
 
         return expressionStatement(yieldHandling);
       }
 
-      case TOK_NEW:
+      case TokenKind::TOK_NEW:
         return expressionStatement(yieldHandling, PredictInvoked);
 
       // IfStatement[?Yield, ?Return]
-      case TOK_IF:
+      case TokenKind::TOK_IF:
         return ifStatement(yieldHandling);
 
       // BreakableStatement[?Yield, ?Return]
@@ -7663,28 +7670,28 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
       // BreakableStatement[Yield, Return]:
       //   IterationStatement[?Yield, ?Return]
       //   SwitchStatement[?Yield, ?Return]
-      case TOK_DO:
+      case TokenKind::TOK_DO:
         return doWhileStatement(yieldHandling);
 
-      case TOK_WHILE:
+      case TokenKind::TOK_WHILE:
         return whileStatement(yieldHandling);
 
-      case TOK_FOR:
+      case TokenKind::TOK_FOR:
         return forStatement(yieldHandling);
 
-      case TOK_SWITCH:
+      case TokenKind::TOK_SWITCH:
         return switchStatement(yieldHandling);
 
       // ContinueStatement[?Yield]
-      case TOK_CONTINUE:
+      case TokenKind::TOK_CONTINUE:
         return continueStatement(yieldHandling);
 
       // BreakStatement[?Yield]
-      case TOK_BREAK:
+      case TokenKind::TOK_BREAK:
         return breakStatement(yieldHandling);
 
       // [+Return] ReturnStatement[?Yield]
-      case TOK_RETURN:
+      case TokenKind::TOK_RETURN:
         // The Return parameter is only used here, and the effect is easily
         // detected this way, so don't bother passing around an extra parameter
         // everywhere.
@@ -7695,56 +7702,56 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
         return returnStatement(yieldHandling);
 
       // WithStatement[?Yield, ?Return]
-      case TOK_WITH:
+      case TokenKind::TOK_WITH:
         return withStatement(yieldHandling);
 
       // LabelledStatement[?Yield, ?Return]
-      // This is really handled by default and TOK_YIELD cases above.
+      // This is really handled by default and TokenKind::TOK_YIELD cases above.
 
       // ThrowStatement[?Yield]
-      case TOK_THROW:
+      case TokenKind::TOK_THROW:
         return throwStatement(yieldHandling);
 
       // TryStatement[?Yield, ?Return]
-      case TOK_TRY:
+      case TokenKind::TOK_TRY:
         return tryStatement(yieldHandling);
 
       // DebuggerStatement
-      case TOK_DEBUGGER:
+      case TokenKind::TOK_DEBUGGER:
         return debuggerStatement();
 
       // Declaration[Yield]:
 
       //   HoistableDeclaration[?Yield, ~Default]
-      case TOK_FUNCTION:
+      case TokenKind::TOK_FUNCTION:
         return functionStmt(pos().begin, yieldHandling, NameRequired);
 
       //   ClassDeclaration[?Yield, ~Default]
-      case TOK_CLASS:
+      case TokenKind::TOK_CLASS:
         return classDefinition(yieldHandling, ClassStatement, NameRequired);
 
       //   LexicalDeclaration[In, ?Yield]
       //     LetOrConst BindingList[?In, ?Yield]
-      case TOK_CONST:
+      case TokenKind::TOK_CONST:
         // [In] is the default behavior, because for-loops specially parse
         // their heads to handle |in| in this situation.
         return lexicalDeclaration(yieldHandling, DeclarationKind::Const);
 
       // ImportDeclaration (only inside modules)
-      case TOK_IMPORT:
+      case TokenKind::TOK_IMPORT:
         return importDeclaration();
 
       // ExportDeclaration (only inside modules)
-      case TOK_EXPORT:
+      case TokenKind::TOK_EXPORT:
         return exportDeclaration();
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
-      case TOK_CATCH:
+      case TokenKind::TOK_CATCH:
         error(JSMSG_CATCH_WITHOUT_TRY);
         return null();
 
-      case TOK_FINALLY:
+      case TokenKind::TOK_FINALLY:
         error(JSMSG_FINALLY_WITHOUT_TRY);
         return null();
 
@@ -7765,7 +7772,7 @@ GeneralParser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yi
         return null();
 
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+    if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
         return null();
     if (!matched)
         return pn;
@@ -7784,13 +7791,13 @@ GeneralParser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yi
             if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                 return null();
 
-            if (tt == TOK_RP) {
-                tokenStream.consumeKnownToken(TOK_RP, TokenStream::Operand);
+            if (tt == TokenKind::TOK_RP) {
+                tokenStream.consumeKnownToken(TokenKind::TOK_RP, TokenStream::Operand);
 
                 if (!tokenStream.peekToken(&tt))
                     return null();
-                if (tt != TOK_ARROW) {
-                    error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(TOK_RP));
+                if (tt != TokenKind::TOK_ARROW) {
+                    error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(TokenKind::TOK_RP));
                     return null();
                 }
 
@@ -7819,7 +7826,7 @@ GeneralParser<ParseHandler, CharT>::expr(InHandling inHandling, YieldHandling yi
 
         handler.addList(seq, pn);
 
-        if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
             return null();
         if (!matched)
             break;
@@ -7831,7 +7838,7 @@ static ParseNodeKind
 BinaryOpTokenKindToParseNodeKind(TokenKind tok)
 {
     MOZ_ASSERT(TokenKindIsBinaryOp(tok));
-    return ParseNodeKind(size_t(ParseNodeKind::BinOpFirst) + (tok - TOK_BINOP_FIRST));
+    return ParseNodeKind(size_t(ParseNodeKind::BinOpFirst) + (size_t(tok) - size_t(TokenKind::TOK_BINOP_FIRST)));
 }
 
 static const int PrecedenceTable[] = {
@@ -7913,19 +7920,19 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
             return null();
 
         ParseNodeKind pnk;
-        if (tok == TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
+        if (tok == TokenKind::TOK_IN ? inHandling == InAllowed : TokenKindIsBinaryOp(tok)) {
             // We're definitely not in a destructuring context, so report any
             // pending expression error now.
             if (possibleError && !possibleError->checkForExpressionError())
                 return null();
             // Report an error for unary expressions on the LHS of **.
-            if (tok == TOK_POW && handler.isUnparenthesizedUnaryExpression(pn)) {
+            if (tok == TokenKind::TOK_POW && handler.isUnparenthesizedUnaryExpression(pn)) {
                 error(JSMSG_BAD_POW_LEFTSIDE);
                 return null();
             }
             pnk = BinaryOpTokenKindToParseNodeKind(tok);
         } else {
-            tok = TOK_EOF;
+            tok = TokenKind::TOK_EOF;
             pnk = ParseNodeKind::Limit;
         }
 
@@ -7983,7 +7990,7 @@ GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandlin
         return condition;
 
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_HOOK))
+    if (!tokenStream.matchToken(&matched, TokenKind::TOK_HOOK))
         return null();
     if (!matched)
         return condition;
@@ -7992,7 +7999,7 @@ GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandlin
     if (!thenExpr)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_COLON, TokenStream::Operand, JSMSG_COLON_IN_COND);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_COLON, TokenStream::Operand, JSMSG_COLON_IN_COND);
 
     Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     if (!elseExpr)
@@ -8033,7 +8040,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
     // This only handles identifiers that *never* have special meaning anywhere
     // in the language.  Contextual keywords, reserved words in strict mode,
     // and other hard cases are handled outside this fast path.
-    if (firstToken == TOK_NAME) {
+    if (firstToken == TokenKind::TOK_NAME) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr) {
@@ -8045,26 +8052,26 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
         }
     }
 
-    if (firstToken == TOK_NUMBER) {
+    if (firstToken == TokenKind::TOK_NUMBER) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr)
             return newNumber(anyChars.currentToken());
     }
 
-    if (firstToken == TOK_STRING) {
+    if (firstToken == TokenKind::TOK_STRING) {
         if (!tokenStream.nextTokenEndsExpr(&endsExpr))
             return null();
         if (endsExpr)
             return stringLiteral();
     }
 
-    if (firstToken == TOK_YIELD && yieldExpressionsSupported())
+    if (firstToken == TokenKind::TOK_YIELD && yieldExpressionsSupported())
         return yieldExpression(inHandling);
 
     bool maybeAsyncArrow = false;
-    if (firstToken == TOK_ASYNC) {
-        TokenKind nextSameLine = TOK_EOF;
+    if (firstToken == TokenKind::TOK_ASYNC) {
+        TokenKind nextSameLine = TokenKind::TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&nextSameLine))
             return null();
 
@@ -8084,7 +8091,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
     TokenKind tokenAfterLHS;
     bool isArrow;
     if (maybeAsyncArrow) {
-        tokenStream.consumeKnownToken(TOK_ASYNC, TokenStream::Operand);
+        tokenStream.consumeKnownToken(TokenKind::TOK_ASYNC, TokenStream::Operand);
 
         TokenKind tokenAfterAsync;
         if (!tokenStream.getToken(&tokenAfterAsync))
@@ -8098,7 +8105,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
         if (!tokenStream.peekTokenSameLine(&tokenAfterLHS))
             return null();
-        if (tokenAfterLHS != TOK_ARROW) {
+        if (tokenAfterLHS != TokenKind::TOK_ARROW) {
             error(JSMSG_UNEXPECTED_TOKEN,
                   "'=>' on the same line after an argument list", TokenKindToDesc(tokenAfterLHS));
             return null();
@@ -8117,7 +8124,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
         if (!tokenStream.peekTokenSameLine(&tokenAfterLHS, TokenStream::Operand))
             return null();
 
-        isArrow = tokenAfterLHS == TOK_ARROW;
+        isArrow = tokenAfterLHS == TokenKind::TOK_ARROW;
     }
 
     if (isArrow) {
@@ -8131,17 +8138,17 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
         FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
 
-        if (next == TOK_ASYNC) {
+        if (next == TokenKind::TOK_ASYNC) {
             tokenStream.consumeKnownToken(next, TokenStream::Operand);
 
-            TokenKind nextSameLine = TOK_EOF;
+            TokenKind nextSameLine = TokenKind::TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
 
             // The AsyncArrowFunction production are
             //   async [no LineTerminator here] AsyncArrowBindingIdentifier ...
             //   async [no LineTerminator here] ArrowFormalParameters ...
-            if (TokenKindIsPossibleIdentifier(nextSameLine) || nextSameLine == TOK_LP)
+            if (TokenKindIsPossibleIdentifier(nextSameLine) || nextSameLine == TokenKind::TOK_LP)
                 asyncKind = FunctionAsyncKind::AsyncFunction;
             else
                 anyChars.ungetToken();
@@ -8159,19 +8166,19 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
     ParseNodeKind kind;
     switch (tokenAfterLHS) {
-      case TOK_ASSIGN:       kind = ParseNodeKind::Assign;       break;
-      case TOK_ADDASSIGN:    kind = ParseNodeKind::AddAssign;    break;
-      case TOK_SUBASSIGN:    kind = ParseNodeKind::SubAssign;    break;
-      case TOK_BITORASSIGN:  kind = ParseNodeKind::BitOrAssign;  break;
-      case TOK_BITXORASSIGN: kind = ParseNodeKind::BitXorAssign; break;
-      case TOK_BITANDASSIGN: kind = ParseNodeKind::BitAndAssign; break;
-      case TOK_LSHASSIGN:    kind = ParseNodeKind::LshAssign;    break;
-      case TOK_RSHASSIGN:    kind = ParseNodeKind::RshAssign;    break;
-      case TOK_URSHASSIGN:   kind = ParseNodeKind::UrshAssign;   break;
-      case TOK_MULASSIGN:    kind = ParseNodeKind::MulAssign;    break;
-      case TOK_DIVASSIGN:    kind = ParseNodeKind::DivAssign;    break;
-      case TOK_MODASSIGN:    kind = ParseNodeKind::ModAssign;    break;
-      case TOK_POWASSIGN:    kind = ParseNodeKind::PowAssign;    break;
+      case TokenKind::TOK_ASSIGN:       kind = ParseNodeKind::Assign;       break;
+      case TokenKind::TOK_ADDASSIGN:    kind = ParseNodeKind::AddAssign;    break;
+      case TokenKind::TOK_SUBASSIGN:    kind = ParseNodeKind::SubAssign;    break;
+      case TokenKind::TOK_BITORASSIGN:  kind = ParseNodeKind::BitOrAssign;  break;
+      case TokenKind::TOK_BITXORASSIGN: kind = ParseNodeKind::BitXorAssign; break;
+      case TokenKind::TOK_BITANDASSIGN: kind = ParseNodeKind::BitAndAssign; break;
+      case TokenKind::TOK_LSHASSIGN:    kind = ParseNodeKind::LshAssign;    break;
+      case TokenKind::TOK_RSHASSIGN:    kind = ParseNodeKind::RshAssign;    break;
+      case TokenKind::TOK_URSHASSIGN:   kind = ParseNodeKind::UrshAssign;   break;
+      case TokenKind::TOK_MULASSIGN:    kind = ParseNodeKind::MulAssign;    break;
+      case TokenKind::TOK_DIVASSIGN:    kind = ParseNodeKind::DivAssign;    break;
+      case TokenKind::TOK_MODASSIGN:    kind = ParseNodeKind::ModAssign;    break;
+      case TokenKind::TOK_POWASSIGN:    kind = ParseNodeKind::PowAssign;    break;
 
       default:
         MOZ_ASSERT(!anyChars.isCurrentTokenAssignment());
@@ -8324,18 +8331,18 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         return null();
     uint32_t begin = pos().begin;
     switch (tt) {
-      case TOK_VOID:
+      case TokenKind::TOK_VOID:
         return unaryOpExpr(yieldHandling, ParseNodeKind::Void, begin);
-      case TOK_NOT:
+      case TokenKind::TOK_NOT:
         return unaryOpExpr(yieldHandling, ParseNodeKind::Not, begin);
-      case TOK_BITNOT:
+      case TokenKind::TOK_BITNOT:
         return unaryOpExpr(yieldHandling, ParseNodeKind::BitNot, begin);
-      case TOK_ADD:
+      case TokenKind::TOK_ADD:
         return unaryOpExpr(yieldHandling, ParseNodeKind::Pos, begin);
-      case TOK_SUB:
+      case TokenKind::TOK_SUB:
         return unaryOpExpr(yieldHandling, ParseNodeKind::Neg, begin);
 
-      case TOK_TYPEOF: {
+      case TokenKind::TOK_TYPEOF: {
         // The |typeof| operator is specially parsed to distinguish its
         // application to a name, from its application to a non-name
         // expression:
@@ -8354,8 +8361,8 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         return handler.newTypeof(begin, kid);
       }
 
-      case TOK_INC:
-      case TOK_DEC:
+      case TokenKind::TOK_INC:
+      case TokenKind::TOK_DEC:
       {
         TokenKind tt2;
         if (!tokenStream.getToken(&tt2, TokenStream::Operand))
@@ -8366,13 +8373,13 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
             memberExpr(yieldHandling, TripledotProhibited, ExpressionClosure::Forbidden, tt2);
         if (!operand || !checkIncDecOperand(operand, operandOffset))
             return null();
-        ParseNodeKind pnk = (tt == TOK_INC)
+        ParseNodeKind pnk = (tt == TokenKind::TOK_INC)
                             ? ParseNodeKind::PreIncrement
                             : ParseNodeKind::PreDecrement;
         return handler.newUpdate(pnk, begin, operand);
       }
 
-      case TOK_DELETE: {
+      case TokenKind::TOK_DELETE: {
         uint32_t exprOffset;
         if (!tokenStream.peekOffset(&exprOffset, TokenStream::Operand))
             return null();
@@ -8393,7 +8400,7 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         return handler.newDelete(begin, expr);
       }
 
-      case TOK_AWAIT: {
+      case TokenKind::TOK_AWAIT: {
         if (pc->isAsync()) {
             Node kid = unaryExpr(yieldHandling, tripledotHandling, ExpressionClosure::Forbidden,
                                  possibleError, invoked);
@@ -8419,14 +8426,14 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
 
-        if (tt != TOK_INC && tt != TOK_DEC)
+        if (tt != TokenKind::TOK_INC && tt != TokenKind::TOK_DEC)
             return expr;
 
         tokenStream.consumeKnownToken(tt);
         if (!checkIncDecOperand(expr, begin))
             return null();
 
-        ParseNodeKind pnk = (tt == TOK_INC)
+        ParseNodeKind pnk = (tt == TokenKind::TOK_INC)
                             ? ParseNodeKind::PostIncrement
                             : ParseNodeKind::PostDecrement;
         return handler.newUpdate(pnk, begin, expr);
@@ -8462,7 +8469,7 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
                                                  PossibleError* possibleError /* = nullptr */)
 {
     bool matched;
-    if (!tokenStream.matchToken(&matched, TOK_RP, TokenStream::Operand))
+    if (!tokenStream.matchToken(&matched, TokenKind::TOK_RP, TokenStream::Operand))
         return false;
     if (matched) {
         handler.setEndPosition(listNode, pos().end);
@@ -8472,7 +8479,7 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
     while (true) {
         bool spread = false;
         uint32_t begin = 0;
-        if (!tokenStream.matchToken(&matched, TOK_TRIPLEDOT, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_TRIPLEDOT, TokenStream::Operand))
             return false;
         if (matched) {
             spread = true;
@@ -8492,7 +8499,7 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
         handler.addList(listNode, argNode);
 
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
             return false;
         if (!matched)
             break;
@@ -8500,11 +8507,11 @@ GeneralParser<ParseHandler, CharT>::argumentList(YieldHandling yieldHandling, No
         TokenKind tt;
         if (!tokenStream.peekToken(&tt, TokenStream::Operand))
             return null();
-        if (tt == TOK_RP)
+        if (tt == TokenKind::TOK_RP)
             break;
     }
 
-    MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_ARGS);
 
     handler.setEndPosition(listNode, pos().end);
     return true;
@@ -8537,7 +8544,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
         return null();
 
     /* Check for new expression first. */
-    if (tt == TOK_NEW) {
+    if (tt == TokenKind::TOK_NEW) {
         uint32_t newBegin = pos().begin;
         // Make sure this wasn't a |new.target| in disguise.
         Node newTarget;
@@ -8560,7 +8567,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                 return null();
 
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_LP))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_LP))
                 return null();
             if (matched) {
                 bool isSpread = false;
@@ -8570,7 +8577,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     handler.setOp(lhs, JSOP_SPREADNEW);
             }
         }
-    } else if (tt == TOK_SUPER) {
+    } else if (tt == TokenKind::TOK_SUPER) {
         Node thisName = newThisName();
         if (!thisName)
             return null();
@@ -8587,16 +8594,16 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
             return lhs;
     }
 
-    MOZ_ASSERT_IF(handler.isSuperBase(lhs), anyChars.isCurrentTokenType(TOK_SUPER));
+    MOZ_ASSERT_IF(handler.isSuperBase(lhs), anyChars.isCurrentTokenType(TokenKind::TOK_SUPER));
 
     while (true) {
         if (!tokenStream.getToken(&tt))
             return null();
-        if (tt == TOK_EOF)
+        if (tt == TokenKind::TOK_EOF)
             break;
 
         Node nextMember;
-        if (tt == TOK_DOT) {
+        if (tt == TokenKind::TOK_DOT) {
             if (!tokenStream.getToken(&tt))
                 return null();
             if (TokenKindIsPossibleIdentifierName(tt)) {
@@ -8612,12 +8619,12 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                 error(JSMSG_NAME_AFTER_DOT);
                 return null();
             }
-        } else if (tt == TOK_LB) {
+        } else if (tt == TokenKind::TOK_LB) {
             Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!propExpr)
                 return null();
 
-            MUST_MATCH_TOKEN_MOD(TOK_RB, TokenStream::Operand, JSMSG_BRACKET_IN_INDEX);
+            MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RB, TokenStream::Operand, JSMSG_BRACKET_IN_INDEX);
 
             if (handler.isSuperBase(lhs) && !checkAndMarkSuperScope()) {
                 error(JSMSG_BAD_SUPERPROP, "member");
@@ -8626,9 +8633,9 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
             nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
-        } else if ((allowCallSyntax && tt == TOK_LP) ||
-                   tt == TOK_TEMPLATE_HEAD ||
-                   tt == TOK_NO_SUBS_TEMPLATE)
+        } else if ((allowCallSyntax && tt == TokenKind::TOK_LP) ||
+                   tt == TokenKind::TOK_TEMPLATE_HEAD ||
+                   tt == TokenKind::TOK_NO_SUBS_TEMPLATE)
         {
             if (handler.isSuperBase(lhs)) {
                 if (!pc->sc()->allowSuperCall()) {
@@ -8636,7 +8643,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     return null();
                 }
 
-                if (tt != TOK_LP) {
+                if (tt != TokenKind::TOK_LP) {
                     error(JSMSG_BAD_SUPER);
                     return null();
                 }
@@ -8669,7 +8676,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                 }
 
                 TokenPos nextMemberPos = pos();
-                nextMember = tt == TOK_LP
+                nextMember = tt == TokenKind::TOK_LP
                              ? handler.newCall(nextMemberPos)
                              : handler.newTaggedTemplate(nextMemberPos);
                 if (!nextMember)
@@ -8687,7 +8694,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                     } else if (prop == context->names().call) {
                         op = JSOP_FUNCALL;
                     }
-                } else if (tt == TOK_LP) {
+                } else if (tt == TokenKind::TOK_LP) {
                     if (handler.isAsyncKeyword(lhs, context)) {
                         // |async (| can be the start of an async arrow
                         // function, so we need to defer reporting possible
@@ -8719,7 +8726,7 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                 handler.setBeginPosition(nextMember, lhs);
                 handler.addList(nextMember, lhs);
 
-                if (tt == TOK_LP) {
+                if (tt == TokenKind::TOK_LP) {
                     bool isSpread = false;
                     PossibleError* asyncPossibleError = maybeAsyncArrow ? possibleError : nullptr;
                     if (!argumentList(yieldHandling, nextMember, &isSpread, asyncPossibleError))
@@ -8775,20 +8782,20 @@ bool
 GeneralParser<ParseHandler, CharT>::checkLabelOrIdentifierReference(PropertyName* ident,
                                                                     uint32_t offset,
                                                                     YieldHandling yieldHandling,
-                                                                    TokenKind hint /* = TOK_LIMIT */)
+                                                                    TokenKind hint /* = TokenKind::TOK_LIMIT */)
 {
     TokenKind tt;
-    if (hint == TOK_LIMIT) {
+    if (hint == TokenKind::TOK_LIMIT) {
         tt = ReservedWordTokenKind(ident);
     } else {
         MOZ_ASSERT(hint == ReservedWordTokenKind(ident), "hint doesn't match actual token kind");
         tt = hint;
     }
 
-    if (tt == TOK_NAME)
+    if (tt == TokenKind::TOK_NAME)
         return true;
     if (TokenKindIsContextualKeyword(tt)) {
-        if (tt == TOK_YIELD) {
+        if (tt == TokenKind::TOK_YIELD) {
             if (yieldHandling == YieldIsKeyword) {
                 errorAt(offset, JSMSG_RESERVED_ID, "yield");
                 return false;
@@ -8799,7 +8806,7 @@ GeneralParser<ParseHandler, CharT>::checkLabelOrIdentifierReference(PropertyName
             }
             return true;
         }
-        if (tt == TOK_AWAIT) {
+        if (tt == TokenKind::TOK_AWAIT) {
             if (awaitIsKeyword()) {
                 errorAt(offset, JSMSG_RESERVED_ID, "await");
                 return false;
@@ -8807,12 +8814,12 @@ GeneralParser<ParseHandler, CharT>::checkLabelOrIdentifierReference(PropertyName
             return true;
         }
         if (pc->sc()->needStrictChecks()) {
-            if (tt == TOK_LET) {
+            if (tt == TokenKind::TOK_LET) {
                 if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "let"))
                     return false;
                 return true;
             }
-            if (tt == TOK_STATIC) {
+            if (tt == TokenKind::TOK_STATIC) {
                 if (!strictModeErrorAt(offset, JSMSG_RESERVED_ID, "static"))
                     return false;
                 return true;
@@ -8843,7 +8850,7 @@ template <class ParseHandler, typename CharT>
 bool
 GeneralParser<ParseHandler, CharT>::checkBindingIdentifier(PropertyName* ident, uint32_t offset,
                                                            YieldHandling yieldHandling,
-                                                           TokenKind hint /* = TOK_LIMIT */)
+                                                           TokenKind hint /* = TokenKind::TOK_LIMIT */)
 {
     if (pc->sc()->needStrictChecks()) {
         if (ident == context->names().arguments) {
@@ -8877,7 +8884,7 @@ GeneralParser<ParseHandler, CharT>::labelOrIdentifierReference(YieldHandling yie
     // to determine if the name is a restricted identifier.
     TokenKind hint = !anyChars.currentNameHasEscapes()
                      ? anyChars.currentToken().type
-                     : TOK_LIMIT;
+                     : TokenKind::TOK_LIMIT;
     RootedPropertyName ident(context, anyChars.currentName());
     if (!checkLabelOrIdentifierReference(ident, pos().begin, yieldHandling, hint))
         return nullptr;
@@ -8890,7 +8897,7 @@ GeneralParser<ParseHandler, CharT>::bindingIdentifier(YieldHandling yieldHandlin
 {
     TokenKind hint = !anyChars.currentNameHasEscapes()
                      ? anyChars.currentToken().type
-                     : TOK_LIMIT;
+                     : TokenKind::TOK_LIMIT;
     RootedPropertyName ident(context, anyChars.currentName());
     if (!checkBindingIdentifier(ident, pos().begin, yieldHandling, hint))
         return nullptr;
@@ -9104,7 +9111,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling,
                                                      PossibleError* possibleError)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LB));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LB));
 
     uint32_t begin = pos().begin;
     Node literal = handler.newArrayLiteral(begin);
@@ -9115,7 +9122,7 @@ GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
 
-    if (tt == TOK_RB) {
+    if (tt == TokenKind::TOK_RB) {
         /*
          * Mark empty arrays as non-constant, since we cannot easily
          * determine their type.
@@ -9133,18 +9140,18 @@ GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling
             TokenKind tt;
             if (!tokenStream.peekToken(&tt, TokenStream::Operand))
                 return null();
-            if (tt == TOK_RB)
+            if (tt == TokenKind::TOK_RB)
                 break;
 
-            if (tt == TOK_COMMA) {
-                tokenStream.consumeKnownToken(TOK_COMMA, TokenStream::Operand);
+            if (tt == TokenKind::TOK_COMMA) {
+                tokenStream.consumeKnownToken(TokenKind::TOK_COMMA, TokenStream::Operand);
                 if (!handler.addElision(literal, pos()))
                     return null();
                 continue;
             }
 
-            if (tt == TOK_TRIPLEDOT) {
-                tokenStream.consumeKnownToken(TOK_TRIPLEDOT, TokenStream::Operand);
+            if (tt == TokenKind::TOK_TRIPLEDOT) {
+                tokenStream.consumeKnownToken(TokenKind::TOK_TRIPLEDOT, TokenStream::Operand);
                 uint32_t begin = pos().begin;
 
                 TokenPos innerPos;
@@ -9185,16 +9192,16 @@ GeneralParser<ParseHandler, CharT>::arrayInitializer(YieldHandling yieldHandling
             }
 
             bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+            if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
                 return null();
             if (!matched)
                 break;
 
-            if (tt == TOK_TRIPLEDOT && possibleError)
+            if (tt == TokenKind::TOK_TRIPLEDOT && possibleError)
                 possibleError->setPendingDestructuringErrorAt(pos(), JSMSG_REST_WITH_COMMA);
         }
 
-        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RB, TokenStream::Operand,
+        MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RB, TokenStream::Operand,
                                          reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                               JSMSG_BRACKET_OPENED, begin));
     }
@@ -9223,12 +9230,12 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     if (!tokenStream.getToken(&ltok))
         return null();
 
-    MOZ_ASSERT(ltok != TOK_RC, "caller should have handled TOK_RC");
+    MOZ_ASSERT(ltok != TokenKind::TOK_RC, "caller should have handled TokenKind::TOK_RC");
 
     bool isGenerator = false;
     bool isAsync = false;
 
-    if (ltok == TOK_ASYNC) {
+    if (ltok == TokenKind::TOK_ASYNC) {
         // AsyncMethod[Yield, Await]:
         //   async [no LineTerminator here] PropertyName[?Yield, ?Await] ...
         //
@@ -9246,11 +9253,11 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
         //
         // ComputedPropertyName[Yield, Await]:
         //   [ ...
-        TokenKind tt = TOK_EOF;
+        TokenKind tt = TokenKind::TOK_EOF;
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
-        if (tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_LB ||
-            TokenKindIsPossibleIdentifierName(tt) || tt == TOK_MUL)
+        if (tt == TokenKind::TOK_STRING || tt == TokenKind::TOK_NUMBER || tt == TokenKind::TOK_LB ||
+            TokenKindIsPossibleIdentifierName(tt) || tt == TokenKind::TOK_MUL)
         {
             isAsync = true;
             tokenStream.consumeKnownToken(tt);
@@ -9258,7 +9265,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
         }
     }
 
-    if (ltok == TOK_MUL) {
+    if (ltok == TokenKind::TOK_MUL) {
         isGenerator = true;
         if (!tokenStream.getToken(&ltok))
             return null();
@@ -9267,7 +9274,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     propAtom.set(nullptr);
     Node propName;
     switch (ltok) {
-      case TOK_NUMBER:
+      case TokenKind::TOK_NUMBER:
         propAtom.set(DoubleToAtom(context, anyChars.currentToken().number()));
         if (!propAtom.get())
             return null();
@@ -9276,7 +9283,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
             return null();
         break;
 
-      case TOK_STRING: {
+      case TokenKind::TOK_STRING: {
         propAtom.set(anyChars.currentToken().atom());
         uint32_t index;
         if (propAtom->isIndex(&index)) {
@@ -9291,7 +9298,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
         break;
       }
 
-      case TOK_LB:
+      case TokenKind::TOK_LB:
         propName = computedPropertyName(yieldHandling, maybeDecl, propList);
         if (!propName)
             return null();
@@ -9305,14 +9312,14 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
 
         propAtom.set(anyChars.currentName());
         // Do not look for accessor syntax on generator or async methods.
-        if (isGenerator || isAsync || !(ltok == TOK_GET || ltok == TOK_SET)) {
+        if (isGenerator || isAsync || !(ltok == TokenKind::TOK_GET || ltok == TokenKind::TOK_SET)) {
             propName = handler.newObjectLiteralPropertyName(propAtom, pos());
             if (!propName)
                 return null();
             break;
         }
 
-        *propType = ltok == TOK_GET ? PropertyType::Getter : PropertyType::Setter;
+        *propType = ltok == TokenKind::TOK_GET ? PropertyType::Getter : PropertyType::Setter;
 
         // We have parsed |get| or |set|. Look for an accessor property
         // name next.
@@ -9325,8 +9332,8 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
             propAtom.set(anyChars.currentName());
             return handler.newObjectLiteralPropertyName(propAtom, pos());
         }
-        if (tt == TOK_STRING) {
-            tokenStream.consumeKnownToken(TOK_STRING);
+        if (tt == TokenKind::TOK_STRING) {
+            tokenStream.consumeKnownToken(TokenKind::TOK_STRING);
 
             propAtom.set(anyChars.currentToken().atom());
 
@@ -9339,16 +9346,16 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
             }
             return stringLiteral();
         }
-        if (tt == TOK_NUMBER) {
-            tokenStream.consumeKnownToken(TOK_NUMBER);
+        if (tt == TokenKind::TOK_NUMBER) {
+            tokenStream.consumeKnownToken(TokenKind::TOK_NUMBER);
 
             propAtom.set(DoubleToAtom(context, anyChars.currentToken().number()));
             if (!propAtom.get())
                 return null();
             return newNumber(anyChars.currentToken());
         }
-        if (tt == TOK_LB) {
-            tokenStream.consumeKnownToken(TOK_LB);
+        if (tt == TokenKind::TOK_LB) {
+            tokenStream.consumeKnownToken(TokenKind::TOK_LB);
 
             return computedPropertyName(yieldHandling, maybeDecl, propList);
         }
@@ -9365,7 +9372,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     if (!tokenStream.getToken(&tt))
         return null();
 
-    if (tt == TOK_COLON) {
+    if (tt == TokenKind::TOK_COLON) {
         if (isGenerator || isAsync) {
             error(JSMSG_BAD_PROP_ID);
             return null();
@@ -9375,7 +9382,7 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
     }
 
     if (TokenKindIsPossibleIdentifierName(ltok) &&
-        (tt == TOK_COMMA || tt == TOK_RC || tt == TOK_ASSIGN))
+        (tt == TokenKind::TOK_COMMA || tt == TokenKind::TOK_RC || tt == TokenKind::TOK_ASSIGN))
     {
         if (isGenerator || isAsync) {
             error(JSMSG_BAD_PROP_ID);
@@ -9384,13 +9391,13 @@ GeneralParser<ParseHandler, CharT>::propertyName(YieldHandling yieldHandling,
 
         anyChars.ungetToken();
         anyChars.addModifierException(TokenStream::OperandIsNone);
-        *propType = tt == TOK_ASSIGN
+        *propType = tt == TokenKind::TOK_ASSIGN
                     ? PropertyType::CoverInitializedName
                     : PropertyType::Shorthand;
         return propName;
     }
 
-    if (tt == TOK_LP) {
+    if (tt == TokenKind::TOK_LP) {
         anyChars.ungetToken();
 
         if (isGenerator && isAsync)
@@ -9414,7 +9421,7 @@ GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHand
                                                          const Maybe<DeclarationKind>& maybeDecl,
                                                          Node literal)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LB));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LB));
 
     uint32_t begin = pos().begin;
 
@@ -9429,7 +9436,7 @@ GeneralParser<ParseHandler, CharT>::computedPropertyName(YieldHandling yieldHand
     if (!assignNode)
         return null();
 
-    MUST_MATCH_TOKEN_MOD(TOK_RB, TokenStream::Operand, JSMSG_COMP_PROP_UNTERM_EXPR);
+    MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RB, TokenStream::Operand, JSMSG_COMP_PROP_UNTERM_EXPR);
     return handler.newComputedName(assignNode, begin, pos().end);
 }
 
@@ -9438,7 +9445,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                                                   PossibleError* possibleError)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LC));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LC));
 
     uint32_t openedPos = pos().begin;
 
@@ -9454,13 +9461,13 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
         TokenKind tt;
         if (!tokenStream.peekToken(&tt))
             return null();
-        if (tt == TOK_RC) {
+        if (tt == TokenKind::TOK_RC) {
             anyChars.addModifierException(TokenStream::OperandIsNone);
             break;
         }
 
-        if (tt == TOK_TRIPLEDOT) {
-            tokenStream.consumeKnownToken(TOK_TRIPLEDOT);
+        if (tt == TokenKind::TOK_TRIPLEDOT) {
+            tokenStream.consumeKnownToken(TokenKind::TOK_TRIPLEDOT);
             uint32_t begin = pos().begin;
 
             TokenPos innerPos;
@@ -9526,7 +9533,7 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                     }
                     seenPrototypeMutation = true;
 
-                    // Note: this occurs *only* if we observe TOK_COLON!  Only
+                    // Note: this occurs *only* if we observe TokenKind::TOK_COLON!  Only
                     // __proto__: v mutates [[Prototype]].  Getters, setters,
                     // method/generator definitions, computed property name
                     // versions of all of these, and shorthands do not.
@@ -9571,7 +9578,7 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                 if (!lhs)
                     return null();
 
-                tokenStream.consumeKnownToken(TOK_ASSIGN);
+                tokenStream.consumeKnownToken(TokenKind::TOK_ASSIGN);
 
                 if (!seenCoverInitializedName) {
                     // "shorthand default" or "CoverInitializedName" syntax is
@@ -9615,7 +9622,7 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
                     return null();
             } else {
                 RootedAtom funName(context);
-                if (!anyChars.isCurrentTokenType(TOK_RB)) {
+                if (!anyChars.isCurrentTokenType(TokenKind::TOK_RB)) {
                     funName = propAtom;
 
                     if (propType == PropertyType::Getter || propType == PropertyType::Setter) {
@@ -9643,15 +9650,15 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
         }
 
         bool matched;
-        if (!tokenStream.matchToken(&matched, TOK_COMMA, TokenStream::Operand))
+        if (!tokenStream.matchToken(&matched, TokenKind::TOK_COMMA, TokenStream::Operand))
             return null();
         if (!matched)
             break;
-        if (tt == TOK_TRIPLEDOT && possibleError)
+        if (tt == TokenKind::TOK_TRIPLEDOT && possibleError)
             possibleError->setPendingDestructuringErrorAt(pos(), JSMSG_REST_WITH_COMMA);
     }
 
-    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TOK_RC, TokenStream::Operand,
+    MUST_MATCH_TOKEN_MOD_WITH_REPORT(TokenKind::TOK_RC, TokenStream::Operand,
                                      reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
                                                           JSMSG_CURLY_OPENED, openedPos));
 
@@ -9725,7 +9732,7 @@ template <class ParseHandler, typename CharT>
 bool
 GeneralParser<ParseHandler, CharT>::tryNewTarget(Node &newTarget)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_NEW));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_NEW));
 
     newTarget = null();
 
@@ -9742,12 +9749,12 @@ GeneralParser<ParseHandler, CharT>::tryNewTarget(Node &newTarget)
 
     // Don't unget the token, since lookahead cannot handle someone calling
     // getToken() with a different modifier. Callers should inspect currentToken().
-    if (next != TOK_DOT)
+    if (next != TokenKind::TOK_DOT)
         return true;
 
     if (!tokenStream.getToken(&next))
         return false;
-    if (next != TOK_TARGET) {
+    if (next != TokenKind::TOK_TARGET) {
         error(JSMSG_UNEXPECTED_TOKEN, "target", TokenKindToDesc(next));
         return false;
     }
@@ -9778,33 +9785,33 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         return null();
 
     switch (tt) {
-      case TOK_FUNCTION:
+      case TokenKind::TOK_FUNCTION:
         return functionExpr(pos().begin, expressionClosureHandling, invoked,
                             FunctionAsyncKind::SyncFunction);
 
-      case TOK_CLASS:
+      case TokenKind::TOK_CLASS:
         return classDefinition(yieldHandling, ClassExpression, NameRequired);
 
-      case TOK_LB:
+      case TokenKind::TOK_LB:
         return arrayInitializer(yieldHandling, possibleError);
 
-      case TOK_LC:
+      case TokenKind::TOK_LC:
         return objectLiteral(yieldHandling, possibleError);
 
-      case TOK_LP: {
+      case TokenKind::TOK_LP: {
         TokenKind next;
         if (!tokenStream.peekToken(&next, TokenStream::Operand))
             return null();
 
-        if (next == TOK_RP) {
+        if (next == TokenKind::TOK_RP) {
             // Not valid expression syntax, but this is valid in an arrow function
             // with no params: `() => body`.
-            tokenStream.consumeKnownToken(TOK_RP, TokenStream::Operand);
+            tokenStream.consumeKnownToken(TokenKind::TOK_RP, TokenStream::Operand);
 
             if (!tokenStream.peekToken(&next))
                 return null();
-            if (next != TOK_ARROW) {
-                error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(TOK_RP));
+            if (next != TokenKind::TOK_ARROW) {
+                error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(TokenKind::TOK_RP));
                 return null();
             }
 
@@ -9818,17 +9825,17 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed, possibleError);
         if (!expr)
             return null();
-        MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_IN_PAREN);
+        MUST_MATCH_TOKEN_MOD(TokenKind::TOK_RP, TokenStream::Operand, JSMSG_PAREN_IN_PAREN);
         return handler.parenthesize(expr);
       }
 
-      case TOK_TEMPLATE_HEAD:
+      case TokenKind::TOK_TEMPLATE_HEAD:
         return templateLiteral(yieldHandling);
 
-      case TOK_NO_SUBS_TEMPLATE:
+      case TokenKind::TOK_NO_SUBS_TEMPLATE:
         return noSubstitutionUntaggedTemplate();
 
-      case TOK_STRING:
+      case TokenKind::TOK_STRING:
         return stringLiteral();
 
       default: {
@@ -9837,14 +9844,14 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
             return null();
         }
 
-        if (tt == TOK_ASYNC) {
-            TokenKind nextSameLine = TOK_EOF;
+        if (tt == TokenKind::TOK_ASYNC) {
+            TokenKind nextSameLine = TokenKind::TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
 
-            if (nextSameLine == TOK_FUNCTION) {
+            if (nextSameLine == TokenKind::TOK_FUNCTION) {
                 uint32_t toStringStart = pos().begin;
-                tokenStream.consumeKnownToken(TOK_FUNCTION);
+                tokenStream.consumeKnownToken(TokenKind::TOK_FUNCTION);
                 return functionExpr(toStringStart, expressionClosureHandling, PredictUninvoked,
                                     FunctionAsyncKind::AsyncFunction);
             }
@@ -9857,17 +9864,17 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         return identifierReference(name);
       }
 
-      case TOK_REGEXP:
+      case TokenKind::TOK_REGEXP:
         return newRegExp();
 
-      case TOK_NUMBER:
+      case TokenKind::TOK_NUMBER:
         return newNumber(anyChars.currentToken());
 
-      case TOK_TRUE:
+      case TokenKind::TOK_TRUE:
         return handler.newBooleanLiteral(true, pos());
-      case TOK_FALSE:
+      case TokenKind::TOK_FALSE:
         return handler.newBooleanLiteral(false, pos());
-      case TOK_THIS: {
+      case TokenKind::TOK_THIS: {
         if (pc->isFunctionBox())
             pc->functionBox()->usesThis = true;
         Node thisName = null();
@@ -9878,10 +9885,10 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         }
         return handler.newThisLiteral(pos(), thisName);
       }
-      case TOK_NULL:
+      case TokenKind::TOK_NULL:
         return handler.newNullLiteral(pos());
 
-      case TOK_TRIPLEDOT: {
+      case TokenKind::TOK_TRIPLEDOT: {
         // This isn't valid expression syntax, but it's valid in an arrow
         // function as a trailing rest param: `(a, b, ...rest) => body`.  Check
         // if it's directly under
@@ -9897,7 +9904,7 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
         if (!tokenStream.getToken(&next))
             return null();
 
-        if (next == TOK_LB || next == TOK_LC) {
+        if (next == TokenKind::TOK_LB || next == TokenKind::TOK_LC) {
             // Validate, but don't store the pattern right now. The whole arrow
             // function is reparsed in functionFormalParametersAndBody().
             if (!destructuringDeclaration(DeclarationKind::CoverArrowParameter, yieldHandling,
@@ -9918,14 +9925,14 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
 
         if (!tokenStream.getToken(&next))
             return null();
-        if (next != TOK_RP) {
+        if (next != TokenKind::TOK_RP) {
             error(JSMSG_UNEXPECTED_TOKEN, "closing parenthesis", TokenKindToDesc(next));
             return null();
         }
 
         if (!tokenStream.peekToken(&next))
             return null();
-        if (next != TOK_ARROW) {
+        if (next != TokenKind::TOK_ARROW) {
             // Advance the scanner for proper error location reporting.
             tokenStream.consumeKnownToken(next);
             error(JSMSG_UNEXPECTED_TOKEN, "'=>' after argument list", TokenKindToDesc(next));
@@ -9934,7 +9941,7 @@ GeneralParser<ParseHandler, CharT>::primaryExpr(YieldHandling yieldHandling,
 
         anyChars.ungetToken();  // put back right paren
 
-        // Return an arbitrary expression node. See case TOK_RP above.
+        // Return an arbitrary expression node. See case TokenKind::TOK_RP above.
         return handler.newNullLiteral(pos());
       }
     }
@@ -9947,7 +9954,7 @@ GeneralParser<ParseHandler, CharT>::exprInParens(InHandling inHandling,
                                                  TripledotHandling tripledotHandling,
                                                  PossibleError* possibleError /* = nullptr */)
 {
-    MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LP));
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::TOK_LP));
     return expr(inHandling, yieldHandling, tripledotHandling, possibleError, PredictInvoked);
 }
 
