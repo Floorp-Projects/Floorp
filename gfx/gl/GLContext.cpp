@@ -754,6 +754,30 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             MarkUnsupported(GLFeature::depth_texture);
         }
 #endif
+        if (IsSupported(GLFeature::frag_color_float)) {
+            float was[4] = {};
+            fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, was);
+
+            const float test[4] = {-1.0, 0, 2.0, 255.0};
+            fClearColor(test[0], test[1], test[2], test[3]);
+
+            float now[4] = {};
+            fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, now);
+
+            fClearColor(was[0], was[1], was[2], was[3]);
+
+            const bool unclamped = now[0] == test[0] && now[1] == test[1] &&
+                                   now[2] == test[2] && now[3] == test[3];
+            if (!unclamped) {
+                printf_stderr("COLOR_CLEAR_VALUE: now{%f,%f,%f,%f} != test{%f,%f,%f,%f}\n",
+                              test[0], test[1], test[2], test[3],
+                              now[0], now[1], now[2], now[3]);
+                gfxCriticalNote << "GLFeature::frag_color_float failed support probe,"
+                                << " disabling. (RENDERER: "
+                                << (const char*)fGetString(LOCAL_GL_RENDERER) << ")";
+                MarkUnsupported(GLFeature::frag_color_float);
+            }
+        }
     }
 
     if (IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) {
@@ -2045,6 +2069,86 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     }
 
     return isComplete;
+}
+
+
+void
+GLContext::ClearSafely()
+{
+    // bug 659349 --- we must be very careful here: clearing a GL framebuffer is nontrivial, relies on a lot of state,
+    // and in the case of the backbuffer of a WebGL context, state is exposed to scripts.
+    //
+    // The code here is taken from WebGLContext::ForceClearFramebufferWithDefaultValues, but I didn't find a good way of
+    // sharing code with it. WebGL's code is somewhat performance-critical as it is typically called on every frame, so
+    // WebGL keeps track of GL state to avoid having to query it everytime, and also tries to only do work for actually
+    // present buffers (e.g. stencil buffer). Doing that here seems like premature optimization,
+    // as ClearSafely() is called only when e.g. a canvas is resized, not on every animation frame.
+
+    realGLboolean scissorTestEnabled;
+    realGLboolean ditherEnabled;
+    realGLboolean colorWriteMask[4];
+    realGLboolean depthWriteMask;
+    GLint stencilWriteMaskFront, stencilWriteMaskBack;
+    GLfloat colorClearValue[4];
+    GLfloat depthClearValue;
+    GLint stencilClearValue;
+
+    // save current GL state
+    fGetBooleanv(LOCAL_GL_SCISSOR_TEST, &scissorTestEnabled);
+    fGetBooleanv(LOCAL_GL_DITHER, &ditherEnabled);
+    fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorWriteMask);
+    fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
+    fGetIntegerv(LOCAL_GL_STENCIL_WRITEMASK, &stencilWriteMaskFront);
+    fGetIntegerv(LOCAL_GL_STENCIL_BACK_WRITEMASK, &stencilWriteMaskBack);
+    fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);
+    fGetFloatv(LOCAL_GL_DEPTH_CLEAR_VALUE, &depthClearValue);
+    fGetIntegerv(LOCAL_GL_STENCIL_CLEAR_VALUE, &stencilClearValue);
+
+    // prepare GL state for clearing
+    fDisable(LOCAL_GL_SCISSOR_TEST);
+    fDisable(LOCAL_GL_DITHER);
+
+    fColorMask(1, 1, 1, 1);
+    fClearColor(0.f, 0.f, 0.f, 0.f);
+
+    fDepthMask(1);
+    fClearDepth(1.0f);
+
+    fStencilMask(0xffffffff);
+    fClearStencil(0);
+
+    // do clear
+    fClear(LOCAL_GL_COLOR_BUFFER_BIT |
+           LOCAL_GL_DEPTH_BUFFER_BIT |
+           LOCAL_GL_STENCIL_BUFFER_BIT);
+
+    // restore GL state after clearing
+    fColorMask(colorWriteMask[0],
+               colorWriteMask[1],
+               colorWriteMask[2],
+               colorWriteMask[3]);
+    fClearColor(colorClearValue[0],
+                colorClearValue[1],
+                colorClearValue[2],
+                colorClearValue[3]);
+
+    fDepthMask(depthWriteMask);
+    fClearDepth(depthClearValue);
+
+    fStencilMaskSeparate(LOCAL_GL_FRONT, stencilWriteMaskFront);
+    fStencilMaskSeparate(LOCAL_GL_BACK, stencilWriteMaskBack);
+    fClearStencil(stencilClearValue);
+
+    if (ditherEnabled)
+        fEnable(LOCAL_GL_DITHER);
+    else
+        fDisable(LOCAL_GL_DITHER);
+
+    if (scissorTestEnabled)
+        fEnable(LOCAL_GL_SCISSOR_TEST);
+    else
+        fDisable(LOCAL_GL_SCISSOR_TEST);
+
 }
 
 void
