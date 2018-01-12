@@ -192,9 +192,6 @@ public:
                        CompositorAnimationStorage* aAnimStorage);
 
 private:
-  void DeallocShmems(nsTArray<ipc::Shmem>& aShmems);
-  void DeallocShmems(nsTArray<RefCountedShmem>& aShmems);
-
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
 

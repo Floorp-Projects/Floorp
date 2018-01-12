@@ -118,6 +118,8 @@ public:
              nsTArray<layers::RefCountedShmem>& aSmallAllocs,
              nsTArray<ipc::Shmem>& aLargeAllocs);
 
+  static void ReleaseShmems(ipc::IProtocol*, nsTArray<layers::RefCountedShmem>& aShmems);
+  static void ReleaseShmems(ipc::IProtocol*, nsTArray<ipc::Shmem>& aShmems);
 protected:
   ShmSegmentsWriter mWriter;
   nsTArray<layers::OpUpdateResource> mUpdates;
