@@ -250,7 +250,6 @@ const HEADERS = [
   ...RESPONSE_HEADERS
     .map(header => ({
       name: header,
-      boxName: "response-header",
       canFilter: false,
       subMenu: "responseHeaders",
       noLocalization: true
