@@ -478,11 +478,7 @@ def get_release_config(config):
 
 
 def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
-    if build_platform in (
-        'linux-devedition-nightly', 'linux64-devedition-nightly',
-        'macosx64-devedition-nightly',
-        'win32-devedition-nightly', 'win64-devedition-nightly',
-    ):
+    if 'devedition' in build_platform:
         return get_devedition_signing_cert_scope(config)
     elif is_nightly:
         return get_signing_cert_scope(config)
