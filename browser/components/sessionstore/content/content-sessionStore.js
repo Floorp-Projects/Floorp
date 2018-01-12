@@ -233,7 +233,6 @@ var MessageListener = {
         this.flush(data);
         break;
       case "SessionStore:becomeActiveProcess":
-        let shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
         SessionHistoryListener.collect();
         break;
       default:
