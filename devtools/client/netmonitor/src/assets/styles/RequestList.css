@@ -329,6 +329,12 @@
   width: 8%;
 }
 
+/* Domain column */
+
+.requests-list-domain {
+  width: 13%;
+}
+
 /* Start Time column */
 
 .requests-list-start-time {
@@ -359,15 +365,7 @@
   width: 8%;
 }
 
-/* Response header columns */
-
 .requests-list-response-header {
-  width: 10%;
-}
-
-/* Domain column */
-
-.requests-list-domain {
   width: 13%;
 }
 
