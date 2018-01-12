@@ -1390,7 +1390,8 @@ bool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                              nsNavHistoryQueryOptions *aOptions)
 {
   uint16_t resultType = aOptions->ResultType();
-  return resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS;
+  return resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
+         aOptions->ExcludeQueries();
 }
 
 // ** Helper class for ConstructQueryString **/
@@ -3157,7 +3158,9 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
                                   nsCString* aClause)
 {
   bool hasIt;
-  bool excludeQueries = aOptions->ExcludeQueries();
+  // We don't use the value from options here - we post filter if that
+  // is set.
+  bool excludeQueries = false;
 
   ConditionBuilder clause(aQueryIndex);
 
@@ -3306,7 +3309,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   }
 
   if (excludeQueries) {
-    // Serching by terms implicitly exclude queries.
+    // Serching by terms implicitly exclude queries and folder shortcuts.
     clause.Condition("NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
                                             "hash('place', 'prefix_hi')");
   }
@@ -3556,25 +3559,29 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   ParseSearchTermsFromQueries(aQueries, &terms);
 
   uint16_t resultType = aOptions->ResultType();
+  bool excludeQueries = aOptions->ExcludeQueries();
   for (int32_t nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex++) {
-    // exclude-queries is implicit when searching, we're only looking at
-    // plan URI nodes
-    if (!aSet[nodeIndex]->IsURI())
+    if (excludeQueries && aSet[nodeIndex]->IsQuery()) {
       continue;
+    }
 
     // RESULTS_AS_TAG_CONTENTS returns a set ordered by place_id and
-    // lastModified. So, to remove duplicates, we can retain the first result
-    // for each uri.
+    // lastModified. The set may contain duplicate, and to remove them we can
+    // just retain the first result.
     if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
-        nodeIndex > 0 && aSet[nodeIndex]->mURI == aSet[nodeIndex-1]->mURI)
+        (!aSet[nodeIndex]->IsURI() ||
+         nodeIndex > 0 && aSet[nodeIndex]->mURI == aSet[nodeIndex-1]->mURI)) {
       continue;
+    }
 
     if (aSet[nodeIndex]->mItemId != -1 && aQueryNode &&
         aQueryNode->mItemId == aSet[nodeIndex]->mItemId) {
       continue;
     }
 
-    // Append the node only if it matches one of the queries.
+    // If there are search terms, we are already getting only uri nodes,
+    // thus we don't need to filter node types. Though, we must check for
+    // matching terms.
     bool appendNode = false;
     for (int32_t queryIndex = 0;
          queryIndex < aQueries.Count() && !appendNode; queryIndex++) {
