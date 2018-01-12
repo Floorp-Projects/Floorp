@@ -3576,12 +3576,6 @@ public:
         return mScreen.get();
     }
 
-    /* Clear to transparent black, with 0 depth and stencil,
-     * while preserving current ClearColor etc. values.
-     * Useful for resizing offscreen buffers.
-     */
-    void ClearSafely();
-
     bool WorkAroundDriverBugs() const { return mWorkAroundDriverBugs; }
 
     bool IsDrawingToDefaultFramebuffer();
