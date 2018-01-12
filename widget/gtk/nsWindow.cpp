@@ -4986,7 +4986,7 @@ nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
     LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
          (void *)this, aFullScreen));
 
-    if (!IsFullscreenSupported(mShell)) {
+    if (mIsX11Display && !IsFullscreenSupported(mShell)) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
