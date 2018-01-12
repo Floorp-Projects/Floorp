@@ -302,7 +302,7 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
   nsPoint point =
     ToAppUnits(aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
   nsRect frameRect = aFrame->GetScreenRectInAppUnits();
-  nsPoint deltaPoint(point.x - frameRect.x, point.y - frameRect.y);
+  nsPoint deltaPoint = point - frameRect.TopLeft();
 
   nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
   scrollPoint -= deltaPoint;

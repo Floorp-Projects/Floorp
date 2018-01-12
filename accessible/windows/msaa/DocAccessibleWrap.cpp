@@ -154,8 +154,8 @@ DocAccessibleWrap::DoInitialUpdate()
       if (Compatibility::IsDolphin()) {
         rect = Bounds();
         nsIntRect rootRect = rootDocument->Bounds();
-        rect.x = rootRect.x - rect.x;
-        rect.y -= rootRect.y;
+        rect.MoveToX(rootRect.X() - rect.X());
+        rect.MoveByY(-rootRect.Y());
 
         nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
         nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
@@ -169,8 +169,8 @@ DocAccessibleWrap::DoInitialUpdate()
 
       HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
       mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent, parentWnd,
-                                             rect.x, rect.y,
-                                             rect.width, rect.height, isActive,
+                                             rect.X(), rect.Y(),
+                                             rect.Width(), rect.Height(), isActive,
                                              &onCreate);
     } else {
       DocAccessible* parentDocument = ParentDocument();
