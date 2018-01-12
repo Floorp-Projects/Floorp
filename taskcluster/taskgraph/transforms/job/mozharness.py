@@ -133,9 +133,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
                                   "'use-magic-mh-args' on docker-workers")
 
     # Running via mozharness assumes an image that contains build.sh:
-    # by default, desktop-build, but it could be another image (like
-    # android-build) that "inherits" from desktop-build.
-    taskdesc['worker'].setdefault('docker-image', {'in-tree': 'desktop-build'})
+    # by default, debian7-amd64-build, but it could be another image (like
+    # android-build).
+    taskdesc['worker'].setdefault('docker-image', {'in-tree': 'debian7-amd64-build'})
 
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
 
