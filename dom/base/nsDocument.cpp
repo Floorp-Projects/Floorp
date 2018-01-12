@@ -5055,24 +5055,19 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       }
     }
 
-    using mozilla::dom::workers::ServiceWorkerManager;
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      ErrorResult error;
-      if (GetController().isSome()) {
-        imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this);
-        if (loader) {
-          loader->ClearCacheForControlledDocument(this);
-        }
-
-        // We may become controlled again if this document comes back out
-        // of bfcache.  Clear our state to allow that to happen.  Only
-        // clear this flag if we are actually controlled, though, so pages
-        // that were force reloaded don't become controlled when they
-        // come out of bfcache.
-        mMaybeServiceWorkerControlled = false;
+    ErrorResult error;
+    if (GetController().isSome()) {
+      imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this);
+      if (loader) {
+        loader->ClearCacheForControlledDocument(this);
       }
-      swm->MaybeStopControlling(this);
+
+      // We may become controlled again if this document comes back out
+      // of bfcache.  Clear our state to allow that to happen.  Only
+      // clear this flag if we are actually controlled, though, so pages
+      // that were force reloaded don't become controlled when they
+      // come out of bfcache.
+      mMaybeServiceWorkerControlled = false;
     }
   }
 
@@ -5192,11 +5187,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       return;
     }
 
-    nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-    if (swm) {
-      swm->MaybeStartControlling(this);
-      mMaybeServiceWorkerControlled = true;
-    }
+    mMaybeServiceWorkerControlled = true;
   }
 }
 

@@ -39,8 +39,6 @@
 #include "nsDeviceContextSpecG.h"
 #endif
 
-#include "mozilla/Preferences.h"
-
 #include "nsImageToPixbuf.h"
 #include "nsPrintDialogGTK.h"
 
@@ -60,12 +58,6 @@
 
 using namespace mozilla;
 using namespace mozilla::widget;
-
-/* from nsFilePicker.js */
-#define XULFILEPICKER_CID \
-  { 0x54ae32f8, 0x1dd2, 0x11b2, \
-    { 0xa2, 0x09, 0xdf, 0x7c, 0x50, 0x53, 0x70, 0xf8} }
-static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -139,19 +131,7 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  bool allowPlatformPicker =
-      Preferences::GetBool("ui.allow_platform_file_picker", true);
-
-  nsCOMPtr<nsIFilePicker> picker;
-  if (allowPlatformPicker) {
-      picker = new nsFilePicker;
-  } else {
-    picker = do_CreateInstance(kXULFilePickerCID);
-  }
-
-  if (!picker) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsCOMPtr<nsIFilePicker> picker = new nsFilePicker;
 
   return picker->QueryInterface(aIID, aResult);
 }
