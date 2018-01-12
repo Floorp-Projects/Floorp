@@ -28,6 +28,7 @@ jobs:
     packages:
       - deb7-cmake
       - deb7-git
+      - deb7-make
       - deb7-mercurial
       - deb7-ninja
       - deb7-python
@@ -36,6 +37,7 @@ jobs:
     definition: debian7-build
     packages:
       - deb7-git
+      - deb7-make
       - deb7-mercurial
       - deb7-python
       - deb7-valgrind
@@ -46,6 +48,7 @@ jobs:
     definition: debian7-build
     packages:
       - deb7-git
+      - deb7-make
       - deb7-mercurial
       - deb7-python
       - deb7-valgrind
