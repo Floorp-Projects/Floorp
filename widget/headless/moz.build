@@ -15,8 +15,7 @@ LOCAL_INCLUDES += [
 ]
 
 widget_dir = CONFIG['MOZ_WIDGET_TOOLKIT']
-if widget_dir in ('gtk3', 'gtk2'):
-    # gtk3 shares includes with gtk2
+if widget_dir == 'gtk3':
     widget_dir = 'gtk'
 
 LOCAL_INCLUDES += [

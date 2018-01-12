@@ -7,12 +7,12 @@
 #include "mozilla/ServoStyleRuleMap.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleRule.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoImportRule.h"
 #include "mozilla/StyleSheetInlines.h"
-
 #include "nsDocument.h"
 #include "nsStyleSheetService.h"
 
@@ -78,26 +78,26 @@ ServoStyleRuleMap::RuleRemoved(ServoStyleSheet& aStyleSheet,
   }
 
   switch (aStyleRule.Type()) {
-    case nsIDOMCSSRule::STYLE_RULE: {
+    case CSSRuleBinding::STYLE_RULE: {
       auto& rule = static_cast<ServoStyleRule&>(aStyleRule);
       mTable.Remove(rule.Raw());
       break;
     }
-    case nsIDOMCSSRule::IMPORT_RULE:
-    case nsIDOMCSSRule::MEDIA_RULE:
-    case nsIDOMCSSRule::SUPPORTS_RULE:
-    case nsIDOMCSSRule::DOCUMENT_RULE: {
+    case CSSRuleBinding::IMPORT_RULE:
+    case CSSRuleBinding::MEDIA_RULE:
+    case CSSRuleBinding::SUPPORTS_RULE:
+    case CSSRuleBinding::DOCUMENT_RULE: {
       // See the comment in StyleSheetRemoved.
       mTable.Clear();
       break;
     }
-    case nsIDOMCSSRule::FONT_FACE_RULE:
-    case nsIDOMCSSRule::PAGE_RULE:
-    case nsIDOMCSSRule::KEYFRAMES_RULE:
-    case nsIDOMCSSRule::KEYFRAME_RULE:
-    case nsIDOMCSSRule::NAMESPACE_RULE:
-    case nsIDOMCSSRule::COUNTER_STYLE_RULE:
-    case nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE:
+    case CSSRuleBinding::FONT_FACE_RULE:
+    case CSSRuleBinding::PAGE_RULE:
+    case CSSRuleBinding::KEYFRAMES_RULE:
+    case CSSRuleBinding::KEYFRAME_RULE:
+    case CSSRuleBinding::NAMESPACE_RULE:
+    case CSSRuleBinding::COUNTER_STYLE_RULE:
+    case CSSRuleBinding::FONT_FEATURE_VALUES_RULE:
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled rule");
@@ -116,20 +116,20 @@ void
 ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule)
 {
   switch (aRule.Type()) {
-    case nsIDOMCSSRule::STYLE_RULE: {
+    case CSSRuleBinding::STYLE_RULE: {
       auto& rule = static_cast<ServoStyleRule&>(aRule);
       mTable.Put(rule.Raw(), &rule);
       break;
     }
-    case nsIDOMCSSRule::MEDIA_RULE:
-    case nsIDOMCSSRule::SUPPORTS_RULE:
-    case nsIDOMCSSRule::DOCUMENT_RULE: {
+    case CSSRuleBinding::MEDIA_RULE:
+    case CSSRuleBinding::SUPPORTS_RULE:
+    case CSSRuleBinding::DOCUMENT_RULE: {
       auto& rule = static_cast<css::GroupRule&>(aRule);
       auto ruleList = static_cast<ServoCSSRuleList*>(rule.CssRules());
       FillTableFromRuleList(*ruleList);
       break;
     }
-    case nsIDOMCSSRule::IMPORT_RULE: {
+    case CSSRuleBinding::IMPORT_RULE: {
       auto& rule = static_cast<ServoImportRule&>(aRule);
       MOZ_ASSERT(aRule.GetStyleSheet());
       FillTableFromStyleSheet(*rule.GetStyleSheet()->AsServo());

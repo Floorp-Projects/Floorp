@@ -37,9 +37,6 @@ with Files('**'):
 with Files('aboutTelemetry.*'):
     BUG_COMPONENT = ('Toolkit', 'Telemetry')
 
-with Files('customizeToolbar.*'):
-    BUG_COMPONENT = ('Toolkit', 'Toolbars and Toolbar Customization')
-
 with Files('aboutwebrtc/*'):
     BUG_COMPONENT = ('Core', 'WebRTC')
 
@@ -147,8 +144,6 @@ with Files('tests/chrome/rtlchrome/**'):
 with Files('tests/chrome/*451540*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
-with Files('tests/chrome/*554279*'):
-    BUG_COMPONENT = ('Toolkit', 'Toolbars and Toolbar Customization')
 with Files('tests/chrome/*585946*'):
     BUG_COMPONENT = ('Toolkit', 'Toolbars and Toolbar Customization')
 
@@ -250,9 +245,6 @@ with Files('buildconfig.html'):
 
 with Files('contentAreaUtils.js'):
     BUG_COMPONENT = ('Toolkit', 'General')
-
-with Files('customizeToolbar.*'):
-    BUG_COMPONENT = ('Toolkit', 'Toolbars and Toolbar Customization')
 
 with Files('*picker*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')

@@ -61,7 +61,6 @@
 #include "nsXULPrototypeCache.h"
 #endif
 
-#include "nsIDOMStyleSheet.h"
 #include "nsError.h"
 
 #include "nsIContentSecurityPolicy.h"
@@ -2600,7 +2599,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
          !iter.Done();
          iter.Next()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Sheet cache nsCSSLoader");
-      cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, iter.UserData()));
+      cb.NoteXPCOMChild(iter.UserData());
     }
   }
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver>>::ForwardIterator

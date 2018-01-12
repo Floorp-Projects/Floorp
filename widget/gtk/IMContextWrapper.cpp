@@ -151,7 +151,7 @@ public:
     virtual ~GetTextRangeStyleText() {};
 };
 
-const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
+const static bool kUseSimpleContextDefault = false;
 
 /******************************************************************************
  * IMContextWrapper
@@ -432,12 +432,7 @@ IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
 void
 IMContextWrapper::PrepareToDestroyContext(GtkIMContext* aContext)
 {
-#if (MOZ_WIDGET_GTK == 2)
-    GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
-    GtkIMContext *slave = multicontext->slave;
-#else
     GtkIMContext *slave = nullptr; //TODO GTK3
-#endif
     if (!slave) {
         return;
     }
@@ -772,7 +767,7 @@ IMContextWrapper::SetInputContext(nsWindow* aCaller,
     mInputContext = *aContext;
 
     if (changingEnabledState) {
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
         static bool sInputPurposeSupported = !gtk_check_version(3, 6, 0);
         if (sInputPurposeSupported && mInputContext.mIMEState.MaybeEditable()) {
             GtkIMContext* currentContext = GetCurrentContext();
@@ -812,7 +807,7 @@ IMContextWrapper::SetInputContext(nsWindow* aCaller,
                 g_object_set(currentContext, "input-purpose", purpose, nullptr);
             }
         }
-#endif // #if (MOZ_WIDGET_GTK == 3)
+#endif // #ifdef MOZ_WIDGET_GTK
 
         // Even when aState is not enabled state, we need to set IME focus.
         // Because some IMs are updating the status bar of them at this time.
@@ -1260,7 +1255,7 @@ IMContextWrapper::OnDeleteSurroundingNative(GtkIMContext* aContext,
          this));
     return FALSE;
 }
-                         
+
 /* static */
 void
 IMContextWrapper::OnCommitCompositionCallback(GtkIMContext* aContext,

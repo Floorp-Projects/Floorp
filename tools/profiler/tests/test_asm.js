@@ -1,25 +1,21 @@
 // Check that asm.js code shows up on the stack.
 function run_test() {
-    let p = Cc["@mozilla.org/tools/profiler;1"];
-
     // Just skip the test if the profiler component isn't present.
-    if (!p)
-        return;
-    p = p.getService(Ci.nsIProfiler);
-    if (!p)
-        return;
+    if (!AppConstants.MOZ_GECKO_PROFILER) {
+      return;
+    }
 
     // This test assumes that it's starting on an empty profiler stack.
     // (Note that the other profiler tests also assume the profiler
     // isn't already started.)
-    Assert.ok(!p.IsActive());
+    Assert.ok(!Services.profiler.IsActive());
 
     let jsFuns = Cu.getJSTestingFunctions();
     if (!jsFuns.isAsmJSCompilationAvailable())
         return;
 
     const ms = 10;
-    p.StartProfiler(10000, ms, ["js"], 1);
+    Services.profiler.StartProfiler(10000, ms, ["js"], 1);
 
     let stack = null;
     function ffi_function() {
@@ -30,7 +26,7 @@ function run_test() {
               // do nothing
             } while (Date.now() - then < delayMS);
 
-            var thread0 = p.getProfileData().threads[0];
+            var thread0 = Services.profiler.getProfileData().threads[0];
 
             if (delayMS > 30000)
                 return;
@@ -77,5 +73,5 @@ function run_test() {
     Assert.ok(i2 < i3);
     Assert.ok(i3 < i4);
 
-    p.StopProfiler();
+    Services.profiler.StopProfiler();
 }

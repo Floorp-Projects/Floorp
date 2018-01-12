@@ -14,13 +14,19 @@ namespace gfx {
 
 // Wraps a DataSourceSurface and forwards all methods except for GetType(),
 // from which it always returns SurfaceType::DATA.
-class DataSourceSurfaceWrapper : public DataSourceSurface
+class DataSourceSurfaceWrapper final : public DataSourceSurface
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceWrapper, override)
   explicit DataSourceSurfaceWrapper(DataSourceSurface *aSurface)
    : mSurface(aSurface)
   {}
+
+  bool Equals(SourceSurface* aOther, bool aSymmetric = true) override
+  {
+    return DataSourceSurface::Equals(aOther, aSymmetric) ||
+           mSurface->Equals(aOther, aSymmetric);
+  }
 
   virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
 
@@ -29,6 +35,13 @@ public:
   virtual IntSize GetSize() const override { return mSurface->GetSize(); }
   virtual SurfaceFormat GetFormat() const override { return mSurface->GetFormat(); }
   virtual bool IsValid() const override { return mSurface->IsValid(); }
+
+  bool Map(MapType aType, MappedSurface *aMappedSurface) override
+  {
+    return mSurface->Map(aType, aMappedSurface);
+  }
+
+  void Unmap() override { mSurface->Unmap(); }
 
 private:
   RefPtr<DataSourceSurface> mSurface;

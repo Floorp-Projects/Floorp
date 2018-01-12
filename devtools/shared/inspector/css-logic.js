@@ -24,7 +24,7 @@ const MAX_DATA_URL_LENGTH = 40;
  *
  * - CssSheet provides a more useful API to a DOM CSSSheet for our purposes,
  *   including shortSource and href.
- * - CssRule a more useful API to a nsIDOMCSSRule including access to the group
+ * - CssRule a more useful API to a DOM CSSRule including access to the group
  *   of CssSelectors that the rule provides properties for
  * - CssSelector A single selector - i.e. not a selector group. In other words
  *   a CssSelector does not contain ','. This terminology is different from the

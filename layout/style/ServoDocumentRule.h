@@ -31,12 +31,11 @@ public:
 
   RawServoDocumentRule* Raw() const { return mRawRule; }
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using CSSMozDocumentRule::SetConditionText;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override;

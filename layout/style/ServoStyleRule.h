@@ -13,9 +13,6 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/WeakPtr.h"
 
-#include "nsICSSStyleRuleDOMWrapper.h"
-#include "nsIDOMCSSStyleRule.h"
-#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
 
 namespace mozilla {
@@ -32,7 +29,7 @@ class ServoStyleRuleDeclaration final : public nsDOMCSSDeclaration
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final;
+  css::Rule* GetParentRule() final;
   nsINode* GetParentObject() final;
   mozilla::dom::DocGroup* GetDocGroup() const final;
 
@@ -60,7 +57,6 @@ private:
 };
 
 class ServoStyleRule final : public BindingStyleRule
-                           , public nsICSSStyleRuleDOMWrapper
                            , public SupportsWeakPtr<ServoStyleRule>
 {
 public:
@@ -71,12 +67,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
   bool IsCCLeaf() const final MOZ_MUST_OVERRIDE;
-  NS_DECL_NSIDOMCSSSTYLERULE
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ServoStyleRule)
-
-  // nsICSSStyleRuleDOMWrapper
-  NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;
 
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex,
@@ -92,13 +84,14 @@ public:
   // WebIDL interface
   uint16_t Type() const final;
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetSelectorText(nsAString& aSelectorText) final;
+  void SetSelectorText(const nsAString& aSelectorText) final;
   nsICSSDeclaration* Style() final;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
-  using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG

@@ -40,11 +40,6 @@ class DOMException;
 }
 %}
 
-// Style Sheets
-interface nsIDOMStyleSheetList;
-interface nsIDOMStyleSheet;
-interface nsIDOMMediaList;
-
 // Base
 interface nsIDOMWindow;
 interface nsIDOMWindowCollection;
@@ -60,20 +55,6 @@ interface nsIDOMEventListener;
 interface nsIDOMHTMLElement;
 interface nsIDOMHTMLFormElement;
 interface nsIDOMHTMLHeadElement;
-
-// CSS
-interface nsIDOMCSSValue;
-interface nsIDOMCSSPrimitiveValue;
-interface nsIDOMCSSRule;
-interface nsIDOMCSSRuleList;
-interface nsIDOMCSSKeyframeRule;
-interface nsIDOMCSSFontFeatureValuesRule;
-interface nsIDOMCSSStyleSheet;
-interface nsIDOMCSSStyleDeclaration;
-interface nsIDOMCounter;
-interface nsIDOMRect;
-interface nsIDOMCSSStyleRule;
-interface nsIDOMCSSStyleRuleCollection;
 
 // Range
 interface nsIDOMRange;

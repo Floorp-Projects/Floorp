@@ -29,11 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
     ServoKeyframeDeclaration, nsICSSDeclaration)
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParent) final
-  {
-    NS_IF_ADDREF(*aParent = mRule);
-    return NS_OK;
-  }
+  css::Rule* GetParentRule() final { return mRule; }
 
   void DropReference() {
     mRule = nullptr;
@@ -188,21 +184,19 @@ ServoKeyframeRule::UpdateRule(Func aCallback)
   }
 }
 
-NS_IMETHODIMP
+void
 ServoKeyframeRule::GetKeyText(nsAString& aKeyText)
 {
   Servo_Keyframe_GetKeyText(mRaw, &aKeyText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 ServoKeyframeRule::SetKeyText(const nsAString& aKeyText)
 {
   NS_ConvertUTF16toUTF8 keyText(aKeyText);
   UpdateRule([this, &keyText]() {
     Servo_Keyframe_SetKeyText(mRaw, &keyText);
   });
-  return NS_OK;
 }
 
 void

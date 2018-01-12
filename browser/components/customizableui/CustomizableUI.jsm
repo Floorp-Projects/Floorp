@@ -58,7 +58,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 13;
+var kVersion = 14;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -242,6 +242,13 @@ var CustomizableUIInternal = {
     }, true);
 
     SearchWidgetTracker.init();
+  },
+
+  get _builtinAreas() {
+    return new Set([
+      ...this._builtinToolbars,
+      CustomizableUI.AREA_FIXED_OVERFLOW_PANEL,
+    ]);
   },
 
   get _builtinToolbars() {
@@ -456,6 +463,15 @@ var CustomizableUIInternal = {
         let buttonIndex = placements.indexOf("e10s-button");
         if (buttonIndex != -1) {
           placements.splice(buttonIndex, 1);
+        }
+      }
+    }
+
+    // Remove unsupported custom toolbar saved placements
+    if (currentVersion < 14 && gSavedState.placements) {
+      for (let area in gSavedState.placements) {
+        if (!this._builtinAreas.has(area)) {
+          delete gSavedState.placements[area];
         }
       }
     }
@@ -686,10 +702,9 @@ var CustomizableUIInternal = {
 
     // If this area is not registered, try to do it automatically:
     if (!areaProperties) {
-      // If there's no defaultset attribute and this isn't a legacy extra toolbar,
-      // we assume that we should wait for registerArea to be called:
-      if (!aToolbar.hasAttribute("defaultset") &&
-          !aToolbar.hasAttribute("customindex")) {
+      // If there's no default set attribute at all, we assume that we should
+      // wait for registerArea to be called:
+      if (!aToolbar.hasAttribute("defaultset")) {
         if (!gPendingBuildAreas.has(area)) {
           gPendingBuildAreas.set(area, new Map());
         }
@@ -2632,8 +2647,6 @@ var CustomizableUIInternal = {
       gUIStateBeforeReset.newElementCount = gNewElementCount;
     } catch (e) { }
 
-    this._resetExtraToolbars();
-
     Services.prefs.clearUserPref(kPrefCustomizationState);
     Services.prefs.clearUserPref(kPrefDrawInTitlebar);
     Services.prefs.clearUserPref(kPrefExtraDragSpace);
@@ -2653,28 +2666,6 @@ var CustomizableUIInternal = {
     // Restore the state for each area to its defaults
     for (let [areaId, ] of gAreas) {
       this.restoreStateForArea(areaId);
-    }
-  },
-
-  _resetExtraToolbars(aFilter = null) {
-    let firstWindow = true; // Only need to unregister and persist once
-    for (let [win, ] of gBuildWindows) {
-      let toolbox = win.gNavToolbox;
-      for (let child of toolbox.children) {
-        let matchesFilter = !aFilter || aFilter == child.id;
-        if (child.hasAttribute("customindex") && matchesFilter) {
-          let toolbarId = "toolbar" + child.getAttribute("customindex");
-          toolbox.toolbarset.removeAttribute(toolbarId);
-          if (firstWindow) {
-            win.document.persist(toolbox.toolbarset.id, toolbarId);
-            // We have to unregister it properly to ensure we don't kill
-            // XUL widgets which might be in here
-            this.unregisterArea(child.id, true);
-          }
-          child.remove();
-        }
-      }
-      firstWindow = false;
     }
   },
 
@@ -2743,10 +2734,6 @@ var CustomizableUIInternal = {
     Object.getOwnPropertyNames(gUIStateBeforeReset).forEach((prop) => {
       gUIStateBeforeReset[prop] = null;
     });
-  },
-
-  removeExtraToolbar(aToolbarId) {
-    this._resetExtraToolbars(aToolbarId);
   },
 
   /**

@@ -440,7 +440,7 @@ fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObje
 == text-font-size-01.svg pass.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
-random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
+random-if(winWidget) fuzzy-if(Android,10,2) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
 fuzzy-if(skiaContent,1,5500) == text-gradient-03.svg pass.svg
 == text-gradient-04.svg text-gradient-04-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg

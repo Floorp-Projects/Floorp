@@ -300,9 +300,7 @@ function assertDebugLine(dbg, line) {
     const url = source.get("url");
     ok(
       false,
-      `Looks like the source ${
-        url
-      } is still loading. Try adding waitForLoadedSource in the test.`
+      `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
     );
     return;
   }
@@ -917,9 +915,7 @@ const selectors = {
   expressionNode: i =>
     `.expressions-list .expression-container:nth-child(${i}) .object-label`,
   expressionValue: i =>
-    `.expressions-list .expression-container:nth-child(${
-      i
-    }) .object-delimiter + *`,
+    `.expressions-list .expression-container:nth-child(${i}) .object-delimiter + *`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionNodes: ".expressions-list .tree-node",

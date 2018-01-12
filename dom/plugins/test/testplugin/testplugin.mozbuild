@@ -18,7 +18,7 @@ if toolkit == 'cocoa':
     UNIFIED_SOURCES += [
         'nptest_macosx.mm'
     ]
-elif toolkit in ('gtk2', 'gtk3'):
+elif toolkit == 'gtk3':
     UNIFIED_SOURCES += [
         'nptest_gtk2.cpp',
     ]
@@ -47,7 +47,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' and '64' in CONFIG['OS_TEST']:
     OS_LIBS += ['-framework Carbon']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     CXXFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
     CFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
     OS_LIBS += CONFIG['MOZ_GTK2_LIBS']

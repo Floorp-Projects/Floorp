@@ -15,7 +15,7 @@
  *
  * - CssSheet provides a more useful API to a DOM CSSSheet for our purposes,
  *   including shortSource and href.
- * - CssRule a more useful API to a nsIDOMCSSRule including access to the group
+ * - CssRule a more useful API to a DOM CSSRule including access to the group
  *   of CssSelectors that the rule provides properties for
  * - CssSelector A single selector - i.e. not a selector group. In other words
  *   a CssSelector does not contain ','. This terminology is different from the
@@ -384,15 +384,15 @@ CssLogic.prototype = {
   /**
 
   /**
-   * Get the number nsIDOMCSSRule objects in the document, counted from all of
+   * Get the number CSSRule objects in the document, counted from all of
    * the stylesheets. System sheets are excluded. If a filter is active, this
-   * tells only the number of nsIDOMCSSRule objects inside the selected
+   * tells only the number of CSSRule objects inside the selected
    * CSSStyleSheet.
    *
    * WARNING: This only provides an estimate of the rule count, and the results
    * could change at a later date. Todo remove this
    *
-   * @return {number} the number of nsIDOMCSSRule (all rules).
+   * @return {number} the number of CSSRule (all rules).
    */
   get ruleCount() {
     if (!this._sheetsCached) {
@@ -806,7 +806,7 @@ CssSheet.prototype = {
   /**
    * Retrieve the number of rules in this stylesheet.
    *
-   * @return {number} the number of nsIDOMCSSRule objects in this stylesheet.
+   * @return {number} the number of CSSRule objects in this stylesheet.
    */
   get ruleCount() {
     try {

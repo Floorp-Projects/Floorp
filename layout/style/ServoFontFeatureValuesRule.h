@@ -20,15 +20,14 @@ public:
   ServoFontFeatureValuesRule(RefPtr<RawServoFontFeatureValuesRule> aRawRule,
                              uint32_t aLine, uint32_t aColumn);
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   RawServoFontFeatureValuesRule* Raw() const { return mRawRule; }
-
-  // nsIDOMCSSFontFeatureValuesRule interface
-  NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
 
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetFontFamily(nsAString& aFamily) final;
+  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final;
+  void GetValueText(nsAString& aValueText) final;
+  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final;
 
   // Methods of mozilla::css::Rule
   already_AddRefed<css::Rule> Clone() const final;

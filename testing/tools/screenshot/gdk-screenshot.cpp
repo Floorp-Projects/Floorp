@@ -129,16 +129,9 @@ int main(int argc, char** argv)
 
   GdkPixbuf* screenshot = nullptr;
   GdkWindow* window = gdk_get_default_root_window();
-#if (MOZ_WIDGET_GTK == 2)
-  screenshot = gdk_pixbuf_get_from_drawable(nullptr, window, nullptr,
-                                            0, 0, 0, 0,
-                                            gdk_screen_width(),
-                                            gdk_screen_height());
-#else
   screenshot = gdk_pixbuf_get_from_window(window, 0, 0,
                                           gdk_window_get_width(window),
                                           gdk_window_get_height(window));
-#endif
   if (!screenshot) {
     fprintf(stderr, "%s: failed to create screenshot GdkPixbuf\n", argv[0]);
     return 1;

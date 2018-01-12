@@ -519,8 +519,8 @@ MeasuringToolHighlighter.prototype = {
 
         let { coords } = this;
 
-        x = Math.min(innerWidth + scrollX - 1, Math.max(0 + scrollX, x));
-        y = Math.min(innerHeight + scrollY, Math.max(1 + scrollY, y));
+        x = Math.min(innerWidth + scrollX, Math.max(scrollX, x));
+        y = Math.min(innerHeight + scrollY, Math.max(scrollY, y));
 
         this.setSize(x - coords.x, y - coords.y);
 

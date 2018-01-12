@@ -7,10 +7,12 @@
 /* DOM object representing lists of values in DOM computed style */
 
 #include "nsDOMCSSValueList.h"
+#include "mozilla/dom/CSSValueBinding.h"
 #include "mozilla/dom/CSSValueListBinding.h"
 #include "mozilla/Move.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsDOMCSSValueList::nsDOMCSSValueList(bool aCommaDelimited, bool aReadonly)
   : CSSValue(), mCommaDelimited(aCommaDelimited), mReadonly(aReadonly)
@@ -27,8 +29,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMCSSValueList)
 // QueryInterface implementation for nsDOMCSSValueList
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMCSSValueList)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValue)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValueList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, CSSValue)
 NS_INTERFACE_MAP_END
 
@@ -47,9 +47,7 @@ nsDOMCSSValueList::AppendCSSValue(already_AddRefed<CSSValue> aValue)
   mCSSValues.AppendElement(Move(val));
 }
 
-// nsIDOMCSSValue
-
-NS_IMETHODIMP
+void
 nsDOMCSSValueList::GetCssText(nsAString& aCssText)
 {
   aCssText.Truncate();
@@ -89,43 +87,27 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
       aCssText.Append(tmpStr);
     }
   }
-
-  return NS_OK;
 }
 
 void
-nsDOMCSSValueList::GetCssText(nsString& aText, ErrorResult& aRv)
+nsDOMCSSValueList::GetCssText(nsString& aCssText, ErrorResult& aRv)
 {
-  aRv = GetCssText(aText);
-}
-
-NS_IMETHODIMP
-nsDOMCSSValueList::SetCssText(const nsAString& aCssText)
-{
-  if (mReadonly) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Can't SetCssText yet: please write me!");
-  return NS_OK;
+  GetCssText(aCssText);
 }
 
 void
 nsDOMCSSValueList::SetCssText(const nsAString& aText, ErrorResult& aRv)
 {
-  aRv = SetCssText(aText);
-}
+  if (mReadonly) {
+    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
 
-NS_IMETHODIMP
-nsDOMCSSValueList::GetCssValueType(uint16_t* aValueType)
-{
-  NS_ENSURE_ARG_POINTER(aValueType);
-  *aValueType = nsIDOMCSSValue::CSS_VALUE_LIST;
-  return NS_OK;
+  MOZ_ASSERT_UNREACHABLE("Can't SetCssText yet: please write me!");
 }
 
 uint16_t
 nsDOMCSSValueList::CssValueType() const
 {
-  return nsIDOMCSSValue::CSS_VALUE_LIST;
+  return CSSValueBinding::CSS_VALUE_LIST;
 }

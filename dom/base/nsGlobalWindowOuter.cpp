@@ -6893,7 +6893,7 @@ nsGlobalWindowOuter::GetComputedStyleHelperOuter(Element& aElt,
     }
   }
 
-  RefPtr<nsComputedDOMStyle> compStyle =
+  RefPtr<nsICSSDeclaration> compStyle =
     NS_NewComputedDOMStyle(&aElt, aPseudoElt, presShell,
                            aDefaultStylesOnly ? nsComputedDOMStyle::eDefaultOnly :
                                                 nsComputedDOMStyle::eAll);

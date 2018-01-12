@@ -1316,12 +1316,10 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   nsCSSFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
   nsString href;
   nsString text;
-  nsresult rv;
   uint32_t line = 0;
   uint32_t column = 0;
   if (rule) {
-    rv = rule->GetCssText(text);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rule->GetCssText(text);
     StyleSheet* sheet = rule->GetStyleSheet();
     // if the style sheet is removed while the font is loading can be null
     if (sheet) {
@@ -1335,6 +1333,7 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
     column = rule->GetColumnNumber();
   }
 
+  nsresult rv;
   nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

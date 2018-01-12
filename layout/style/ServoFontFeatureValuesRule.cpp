@@ -26,13 +26,6 @@ ServoFontFeatureValuesRule::~ServoFontFeatureValuesRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(ServoFontFeatureValuesRule, CSSFontFeatureValuesRule)
-NS_IMPL_RELEASE_INHERITED(ServoFontFeatureValuesRule, CSSFontFeatureValuesRule)
-
-// QueryInterface implementation for FontFeatureValuesRule
-NS_INTERFACE_MAP_BEGIN(ServoFontFeatureValuesRule)
-NS_INTERFACE_MAP_END_INHERITING(CSSFontFeatureValuesRule)
-
 already_AddRefed<css::Rule>
 ServoFontFeatureValuesRule::Clone() const
 {
@@ -73,30 +66,30 @@ ServoFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
 
 /* CSSFontFeatureValuesRule implementation */
 
-NS_IMETHODIMP
+void
 ServoFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
 {
   Servo_FontFeatureValuesRule_GetFontFamily(mRawRule, &aFamilyListStr);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 ServoFontFeatureValuesRule::GetValueText(nsAString& aValueText)
 {
   Servo_FontFeatureValuesRule_GetValueText(mRawRule, &aValueText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-ServoFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily)
+void
+ServoFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily,
+                                          ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
-NS_IMETHODIMP
-ServoFontFeatureValuesRule::SetValueText(const nsAString& aValueText)
+void
+ServoFontFeatureValuesRule::SetValueText(const nsAString& aValueText,
+                                         ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 } // namespace mozilla
