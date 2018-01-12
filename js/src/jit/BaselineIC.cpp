@@ -4291,7 +4291,7 @@ ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
 static bool
 TryAttachInstanceOfStub(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub,
-                        HandleValue lhs, HandleValue rhs, bool* attached)
+                        HandleValue lhs, HandleObject rhs, bool* attached)
 {
     MOZ_ASSERT(!*attached);
     FallbackICSpew(cx, stub, "InstanceOf");
@@ -4350,7 +4350,7 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
     EnsureTrackPropertyTypes(cx, obj, NameToId(cx->names().prototype));
 
     bool attached = false;
-    if (!TryAttachInstanceOfStub(cx, frame, stub, lhs, rhs, &attached))
+    if (!TryAttachInstanceOfStub(cx, frame, stub, lhs, obj, &attached))
         return false;
     if (!attached)
         stub->noteUnoptimizableAccess();

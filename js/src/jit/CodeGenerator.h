@@ -371,7 +371,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitInArray(LInArray* ins) override;
     void visitInstanceOfO(LInstanceOfO* ins) override;
     void visitInstanceOfV(LInstanceOfV* ins) override;
-    void visitCallInstanceOf(LCallInstanceOf* ins) override;
+    void visitInstanceOfCache(LInstanceOfCache* ins) override;
     void visitGetDOMProperty(LGetDOMProperty* lir) override;
     void visitGetDOMMemberV(LGetDOMMemberV* lir) override;
     void visitGetDOMMemberT(LGetDOMMemberT* lir) override;
