@@ -147,12 +147,6 @@ Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
 #endif
 }
 
-bool
-Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
-{
-  return aNode->IsInComposedDoc();
-}
-
 /*
  * Does this child count as significant for selector matching?
  *
@@ -846,17 +840,6 @@ Gecko_GetLookAndFeelSystemColor(int32_t aId,
   AutoWriteLock guard(*sServoFFILock);
   LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
   return result;
-}
-
-bool
-Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed aElement,
-                           CSSPseudoClassType aType,
-                           const char16_t* aIdent)
-{
-  EventStates dummyMask; // mask is never read because we pass aDependence=nullptr
-  return nsCSSPseudoClasses::StringPseudoMatches(aElement, aType, aIdent,
-                                                 aElement->OwnerDoc(),
-                                                 dummyMask, nullptr);
 }
 
 bool

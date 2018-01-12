@@ -10,16 +10,10 @@ HOST_SOURCES += [
 
 HostProgram('mbsdiff')
 
-if CONFIG['MOZ_SYSTEM_BZ2']:
-    HOST_OS_LIBS += CONFIG['MOZ_BZ2_LIBS']
-else:
-    HOST_USE_LIBS += [
-        'hostbz2',
-    ]
-
 if CONFIG['HOST_OS_ARCH'] == 'WINNT':
     HOST_OS_LIBS += [
         'ws2_32',
+        'vcruntime',
     ]
     USE_STATIC_LIBS = True
 
@@ -27,4 +21,10 @@ LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/updater',
 ]
 
-HOST_CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']
+if CONFIG['MOZ_SYSTEM_ZLIB']:
+    HOST_CFLAGS += CONFIG['MOZ_ZLIB_CFLAGS']
+    HOST_OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+else:
+    LOCAL_INCLUDES += ['/modules/zlib/src']
+    HOST_USE_LIBS += ['hostzlib']
+

@@ -24,21 +24,21 @@ GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
     return;
   }
 
-  nsIntRect rect;
-  int32_t colorDepth, pixelDepth;
+  int32_t colorDepth, pixelDepth, x, y, w, h;
   dom::ScreenOrientationInternal orientation;
   nsCOMPtr<nsIScreen> screen;
 
   screenMgr->GetPrimaryScreen(getter_AddRefs(screen));
-  screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height);
+  screen->GetRect(&x, &y, &w, &h);
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
-  orientation = rect.width >= rect.height
+  orientation = w >= h
                 ? dom::eScreenOrientation_LandscapePrimary
                 : dom::eScreenOrientation_PortraitPrimary;
 
-  *aScreenConfiguration =
-      hal::ScreenConfiguration(rect, orientation, 0, colorDepth, pixelDepth);
+  *aScreenConfiguration = hal::ScreenConfiguration(nsIntRect(x, y, w, h),
+						   orientation, 0,
+						   colorDepth, pixelDepth);
 }
 
 }

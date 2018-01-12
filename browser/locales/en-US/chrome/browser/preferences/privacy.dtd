@@ -3,15 +3,15 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY  trackingProtectionHeader2.label      "Tracking Protection">
-<!ENTITY  trackingProtection2.description      "Tracking is the collection of your browsing data across multiple websites. Tracking can be used to build a profile and display content based on your browsing and personal information.">
-<!ENTITY  trackingProtection2.radioGroupLabel  "Use Tracking Protection to block known trackers">
+<!ENTITY  trackingProtection3.description      "Tracking Protection blocks online trackers that collect your browsing data across multiple websites.">
+<!ENTITY  trackingProtection3.radioGroupLabel  "Use Tracking Protection to block known trackers">
 <!ENTITY  trackingProtectionAlways.label       "Always">
 <!ENTITY  trackingProtectionAlways.accesskey   "y">
 <!ENTITY  trackingProtectionPrivate.label      "Only in private windows">
 <!ENTITY  trackingProtectionPrivate.accesskey  "l">
 <!ENTITY  trackingProtectionNever.label        "Never">
 <!ENTITY  trackingProtectionNever.accesskey    "n">
-<!ENTITY  trackingProtectionLearnMore.label    "Learn more">
+<!ENTITY  trackingProtectionLearnMore2.label    "Learn more about Tracking Protection and your privacy">
 <!ENTITY  trackingProtectionExceptions.label   "Exceptions…">
 <!ENTITY  trackingProtectionExceptions.accesskey "x">
 

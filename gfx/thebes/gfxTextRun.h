@@ -367,22 +367,22 @@ public:
 
     /**
      * Finds the longest substring that will fit into the given width.
-     * Uses GetHyphenationBreaks and GetSpacing from aBreakProvider.
+     * Uses GetHyphenationBreaks and GetSpacing from aProvider.
      * Guarantees the following:
      * -- 0 <= result <= aMaxLength
      * -- result is the maximal value of N such that either
-     *       N < aMaxLength && line break at N && GetAdvanceWidth(aStart, N) <= aWidth
-     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(aStart, N) + GetHyphenWidth() <= aWidth
-     *   OR  N == aMaxLength && GetAdvanceWidth(aStart, N) <= aWidth
+     *       N < aMaxLength && line break at N && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
+     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(Range(aStart, N), aProvider) + GetHyphenWidth() <= aWidth
+     *   OR  N == aMaxLength && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
      * where GetAdvanceWidth assumes the effect of
-     * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, N), aLineBreakBefore, N < aMaxLength, aProvider)
      * -- if no such N exists, then result is the smallest N such that
      *       N < aMaxLength && line break at N
      *   OR  N < aMaxLength && hyphen break at N
      *   OR  N == aMaxLength
      *
      * The call has the effect of
-     * SetLineBreaks(aStart, result, aLineBreakBefore, result < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, result), aLineBreakBefore, result < aMaxLength, aProvider)
      * and the returned metrics and the invariants above reflect this.
      *
      * @param aMaxLength this can be UINT32_MAX, in which case the length used
@@ -396,6 +396,8 @@ public:
      * trimmed spaces will not be included in returned metrics. The width
      * of the trimmed spaces will be returned in aTrimWhitespace.
      * Trimmed spaces are still counted in the "characters fit" result.
+     * @param aHangWhitespace true if we allow whitespace to overflow the
+     * container at a soft-wrap
      * @param aMetrics if non-null, we fill this in for the returned substring.
      * If a hyphenation break was used, the hyphen is NOT included in the returned metrics.
      * @param aBoundingBoxType whether to make the bounding box in aMetrics tight
@@ -404,11 +406,11 @@ public:
      * @param aUsedHyphenation if non-null, records if we selected a hyphenation break
      * @param aLastBreak if non-null and result is aMaxLength, we set this to
      * the maximal N such that
-     *       N < aMaxLength && line break at N && GetAdvanceWidth(aStart, N) <= aWidth
-     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(aStart, N) + GetHyphenWidth() <= aWidth
+     *       N < aMaxLength && line break at N && GetAdvanceWidth(Range(aStart, N), aProvider) <= aWidth
+     *   OR  N < aMaxLength && hyphen break at N && GetAdvanceWidth(Range(aStart, N), aProvider) + GetHyphenWidth() <= aWidth
      * or UINT32_MAX if no such N exists, where GetAdvanceWidth assumes
      * the effect of
-     * SetLineBreaks(aStart, N, aLineBreakBefore, N < aMaxLength, aProvider)
+     * SetLineBreaks(Range(aStart, N), aLineBreakBefore, N < aMaxLength, aProvider)
      *
      * @param aCanWordWrap true if we can break between any two grapheme
      * clusters. This is set by overflow-wrap|word-wrap: break-word

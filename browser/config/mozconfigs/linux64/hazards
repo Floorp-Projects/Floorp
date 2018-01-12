@@ -40,6 +40,8 @@ CFLAGS="$CFLAGS -Wno-attributes"
 CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"
 
+if [ -f /etc/redhat-release ]; then
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
+fi
 
 . "$topsrcdir/build/mozconfig.common.override"

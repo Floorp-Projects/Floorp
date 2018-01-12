@@ -1274,11 +1274,6 @@ if CONFIG['MOZ_SYSTEM_HUNSPELL']:
         'hunspell.hxx',
     ]
 
-if CONFIG['MOZ_SYSTEM_BZ2']:
-    system_headers += [
-        'bzlib.h',
-    ]
-
 if CONFIG['MOZ_SYSTEM_LIBEVENT']:
     system_headers += [
         'event2/event_compat.h',
