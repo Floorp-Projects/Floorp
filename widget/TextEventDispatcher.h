@@ -102,9 +102,17 @@ public:
 
   /**
    * IsComposing() returns true after calling StartComposition() and before
-   * calling CommitComposition().
+   * calling CommitComposition().  In other words, native IME has composition
+   * when this returns true.
    */
   bool IsComposing() const { return mIsComposing; }
+
+  /**
+   * IsHandlingComposition() returns true after calling StartComposition() and
+   * content has not handled eCompositionCommit(AsIs) event.  In other words,
+   * our content has composition when this returns true.
+   */
+  bool IsHandlingComposition() const { return mIsHandlingComposition; }
 
   /**
    * IsInNativeInputTransaction() returns true if native IME handler began a
@@ -435,6 +443,9 @@ private:
 
   // See IsComposing().
   bool mIsComposing;
+
+  // See IsHandlingComposition().
+  bool mIsHandlingComposition;
 
   // true while NOTIFY_IME_OF_FOCUS is received but NOTIFY_IME_OF_BLUR has not
   // received yet.  Otherwise, false.
