@@ -262,6 +262,28 @@
   fun:recalc_style_at<style::gecko::wrapper::GeckoElement,style::gecko::traversal::RecalcStyleOnly,closure>
 }
 
+# Similar issue triggered by rust 1.23.0 on builds of stylo.
+#
+# at 0x11819B3E: std::sync::once::Once::call_once::{{closure}} (raw_vec.rs:225)
+# by 0x118FDCCC: std::sync::once::Once::call_inner (once.rs:341)
+# by 0x1139C761: UnknownInlinedFun (once.rs:228)
+{
+  Bug 1418083 Servo::TraverseSubtree, January 2018
+  Memcheck:Cond
+  fun:*ZN3std4sync4once4Once9call_once*
+  fun:*ZN3std4sync4once4Once10call_inner*
+  ...
+  fun:Servo_TraverseSubtree
+}
+
+# Issue triggered by rust 1.23.0 on builds of stylo.
+{
+  Bug 1418083 SelectorList::parse, January 2018
+  Memcheck:Cond
+  fun:_ZN36_$LT$smallvec..SmallVec*
+  fun:_ZN52_$LT$selectors..parser..SelectorList*
+}
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.
