@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Scoped.h"
@@ -49,6 +50,7 @@
 #include "vm/Stack.h"
 #include "vm/Stopwatch.h"
 #include "vm/Symbol.h"
+#include "wasm/WasmSignalHandlers.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -1049,34 +1051,17 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
   public:
     js::RuntimeCaches& caches() { return caches_.ref(); }
 
-  private:
-    // When wasm is interrupted, the pc at which we should return if the
-    // interrupt hasn't stopped execution of the current running code. Since
-    // this is used only by the interrupt handler and the latter is not
-    // reentrant, this value can't be clobbered so there is at most one
-    // resume PC at a time.
-    js::ActiveThreadData<void*> wasmResumePC_;
+    // When wasm traps or is interrupted, the signal handler records some data
+    // for unwinding purposes. Wasm code can't interrupt or trap reentrantly.
+    js::ActiveThreadData<
+        mozilla::MaybeOneOf<js::wasm::TrapData, js::wasm::InterruptData>
+    > wasmUnwindData;
 
-    // To ensure a consistent state of fp/pc, the unwound pc might be
-    // different from the resumePC, especially at call boundaries.
-    js::ActiveThreadData<void*> wasmUnwindPC_;
-
-  public:
-    void startWasmInterrupt(void* resumePC, void* unwindPC) {
-        MOZ_ASSERT(resumePC && unwindPC);
-        wasmResumePC_ = resumePC;
-        wasmUnwindPC_ = unwindPC;
+    js::wasm::TrapData& wasmTrapData() {
+        return wasmUnwindData.ref().ref<js::wasm::TrapData>();
     }
-    void finishWasmInterrupt() {
-        MOZ_ASSERT(wasmResumePC_ && wasmUnwindPC_);
-        wasmResumePC_ = nullptr;
-        wasmUnwindPC_ = nullptr;
-    }
-    void* wasmResumePC() const {
-        return wasmResumePC_;
-    }
-    void* wasmUnwindPC() const {
-        return wasmUnwindPC_;
+    js::wasm::InterruptData& wasmInterruptData() {
+        return wasmUnwindData.ref().ref<js::wasm::InterruptData>();
     }
 
   public:

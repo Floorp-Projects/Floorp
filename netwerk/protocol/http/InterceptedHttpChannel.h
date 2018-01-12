@@ -94,6 +94,7 @@ private:
     Reset
   } mSynthesizedOrReset;
   Atomic<bool> mCallingStatusAndProgress;
+  bool mDiverting;
 
   InterceptedHttpChannel(PRTime aCreationTime,
                          const TimeStamp& aCreationTimestamp,
