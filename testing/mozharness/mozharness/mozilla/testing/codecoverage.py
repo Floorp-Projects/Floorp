@@ -160,7 +160,7 @@ class CodeCoverageMixin(object):
             dirs = self.query_abs_dirs()
 
             # Zip gcda files (will be given in input to grcov).
-            file_path_gcda = 'code-coverage-gcda.zip'
+            file_path_gcda = os.path.join(os.getcwd(), 'code-coverage-gcda.zip')
             self.run_command(['zip', '-q', '-0', '-r', file_path_gcda, '.'], cwd=self.gcov_dir)
 
             # Package JSVM coverage data.
@@ -189,7 +189,8 @@ class CodeCoverageMixin(object):
                 grcov_command,
                 silent=True,
                 save_tmpfiles=True,
-                return_type='files'
+                return_type='files',
+                throw_exception=True,
             )
             output_file_name = 'grcov_lcov_output.info'
             shutil.move(grcov_output, os.path.join(self.grcov_dir, output_file_name))
