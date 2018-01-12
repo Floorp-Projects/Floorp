@@ -1,0 +1,167 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker:
+        max-run-time: 36000
+        docker-image: {in-tree: desktop-build}
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
+
+sm-package-linux64/opt:
+    description: "Spidermonkey source package and test"
+    index:
+        job-name: sm-package-linux64-opt
+    treeherder:
+        symbol: SM-tc(pkg)
+        platform: linux64/opt
+    run:
+        using: spidermonkey-package
+        spidermonkey-variant: plain
+
+sm-mozjs-sys-linux64/debug:
+    description: "Build js/src as the mozjs_sys Rust crate"
+    index:
+        job-name: sm-mozjs-sys-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(mozjs-crate)
+    run:
+        using: spidermonkey-mozjs-crate
+        spidermonkey-variant: plain
+    run-on-projects: ['integration', 'release', 'try']
+
+sm-rust-bindings-linux64/debug:
+    description: "Build and test the Rust bindings for SpiderMonkey"
+    index:
+        job-name: sm-rust-bindings-linux64-debug
+    treeherder:
+        symbol: SM-tc(rust)
+        tier: 2
+        platform: linux64/debug
+    run:
+        using: spidermonkey-rust-bindings
+        spidermonkey-variant: plain
+    run-on-projects: ['integration', 'release', 'try']
+
+sm-plain-linux64/debug:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(p)
+    run:
+        spidermonkey-variant: plaindebug
+
+sm-plain-linux64/opt:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-linux64-opt
+    treeherder:
+        symbol: SM-tc(p)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: plain
+
+sm-nojit-linux64/opt:
+    description: "Spidermonkey no JIT"
+    index:
+        job-name: sm-nojit-linux64-opt
+    treeherder:
+        symbol: SM-tc(nojit)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: nojit
+
+sm-arm-sim-linux32/debug:
+    description: "Spidermonkey ARM sim"
+    index:
+        job-name: sm-arm-sim-linux32-debug
+    treeherder:
+        platform: linux32/debug
+        symbol: SM-tc(arm)
+    run:
+        spidermonkey-variant: arm-sim
+
+sm-arm64-sim-linux64/debug:
+    description: "Spidermonkey ARM64 sim"
+    index:
+        job-name: sm-arm64-sim-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(arm64)
+    run:
+        spidermonkey-variant: arm64-sim
+
+sm-asan-linux64/opt:
+    description: "Spidermonkey Address Sanitizer"
+    index:
+        job-name: sm-asan-linux64-opt
+    treeherder:
+        symbol: SM-tc(asan)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: asan
+
+sm-compacting-linux64/debug:
+    description: "Spidermonkey Compacting"
+    index:
+        job-name: sm-compacting-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(cgc)
+    run:
+        spidermonkey-variant: compacting
+
+sm-msan-linux64/opt:
+    description: "Spidermonkey Memory Sanitizer"
+    index:
+        job-name: sm-msan-linux64-opt
+    treeherder:
+        symbol: SM-tc(msan)
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: msan
+
+sm-tsan-linux64/opt:
+    description: "Spidermonkey Thread Sanitizer"
+    index:
+        job-name: sm-tsan-linux64-opt
+    treeherder:
+        symbol: SM-tc(tsan)
+        tier: 3
+        platform: linux64/opt
+    run:
+        spidermonkey-variant: tsan
+
+sm-rootanalysis-linux64/debug:
+    description: "Spidermonkey Root Analysis"
+    index:
+        job-name: sm-rootanalysis-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(r)
+    run:
+        spidermonkey-variant: rootanalysis
+
+sm-nonunified-linux64/debug:
+    description: "Spidermonkey Non-Unified Debug"
+    index:
+        job-name: sm-nonunified-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM-tc(nu)
+    run:
+        spidermonkey-variant: nonunified
+
+sm-fuzzing-linux64/opt:
+    description: "Spidermonkey Fuzzing"
+    index:
+        job-name: sm-fuzzing-linux64
+    treeherder:
+        platform: linux64/opt
+        symbol: SM-tc(f)
+    run:
+        spidermonkey-variant: fuzzing
