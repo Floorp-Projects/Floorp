@@ -21,6 +21,8 @@ AddonTestUtils.init(this);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+let lastSetPref;
+
 const STORE_TYPE = "prefs";
 
 // Test settings to use with the preferences manager.
@@ -50,6 +52,10 @@ const SETTINGS = {
 
     initalValues: ["value1"],
 
+    onPrefsChanged(item) {
+      lastSetPref = item;
+    },
+
     valueFn(pref, value) {
       return value;
     },
@@ -74,6 +80,15 @@ for (let setting in SETTINGS) {
 function checkPrefs(settingObj, value, msg) {
   for (let pref of settingObj.prefNames) {
     equal(Preferences.get(pref), settingObj.valueFn(pref, value), msg);
+  }
+}
+
+function checkOnPrefsChanged(setting, value, msg) {
+  if (value) {
+    deepEqual(lastSetPref, value, msg);
+    lastSetPref = null;
+  } else {
+    ok(!lastSetPref, msg);
   }
 }
 
@@ -105,6 +120,9 @@ add_task(async function test_preference_manager() {
     let newValue1 = "newValue1";
     let levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(
       extensions[1].id, setting);
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(setting, null, "onPrefsChanged has not been called yet");
+    }
     equal(levelOfControl, "controllable_by_this_extension",
           "getLevelOfControl returns correct levelOfControl with no settings set.");
 
@@ -113,6 +131,11 @@ add_task(async function test_preference_manager() {
     ok(prefsChanged, "setSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue1,
                "setSetting sets the prefs for the first extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, {id: extensions[1].id, value: newValue1, key: setting},
+        "onPrefsChanged is called when pref changes");
+    }
     levelOfControl = await ExtensionPreferencesManager.getLevelOfControl(extensions[1].id, setting);
     equal(
       levelOfControl,
@@ -127,44 +150,84 @@ add_task(async function test_preference_manager() {
     ok(!prefsChanged, "setSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
                "setSetting does not set the pref(s) for an earlier extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, null, "onPrefsChanged isn't called without control change");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.disableSetting(extensions[0].id, setting);
     ok(!prefsChanged, "disableSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
                "disableSetting does not change the pref(s) for the non-top extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, null, "onPrefsChanged isn't called without control change on disable");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.enableSetting(extensions[0].id, setting);
     ok(!prefsChanged, "enableSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
                "enableSetting does not change the pref(s) for the non-top extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, null, "onPrefsChanged isn't called without control change on enable");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[0].id, setting);
     ok(!prefsChanged, "removeSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
                "removeSetting does not change the pref(s) for the non-top extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, null, "onPrefsChanged isn't called without control change on remove");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.setSetting(extensions[0].id, setting, newValue2);
     ok(!prefsChanged, "setSetting returns false when the pref(s) have not been set.");
     checkPrefs(settingObj, newValue1,
                "setSetting does not set the pref(s) for an earlier extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, null, "onPrefsChanged isn't called without control change again");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.disableSetting(extensions[1].id, setting);
     ok(prefsChanged, "disableSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue2,
                "disableSetting sets the pref(s) to the next value when disabling the top extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, {id: extensions[0].id, key: setting, value: newValue2},
+        "onPrefsChanged is called when control changes on disable");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.enableSetting(extensions[1].id, setting);
     ok(prefsChanged, "enableSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue1,
                "enableSetting sets the pref(s) to the previous value(s).");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, {id: extensions[1].id, key: setting, value: newValue1},
+        "onPrefsChanged is called when control changes on enable");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[1].id, setting);
     ok(prefsChanged, "removeSetting returns true when the pref(s) have been set.");
     checkPrefs(settingObj, newValue2,
                "removeSetting sets the pref(s) to the next value when removing the top extension.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, {id: extensions[0].id, key: setting, value: newValue2},
+        "onPrefsChanged is called when control changes on remove");
+    }
 
     prefsChanged = await ExtensionPreferencesManager.removeSetting(extensions[0].id, setting);
     ok(prefsChanged, "removeSetting returns true when the pref(s) have been set.");
+    if (settingObj.onPrefsChanged) {
+      checkOnPrefsChanged(
+        setting, {key: setting, initialValue: {"my.single.pref": "value1"}},
+        "onPrefsChanged is called when control is entirely removed");
+    }
     for (let i = 0; i < settingObj.prefNames.length; i++) {
       equal(Preferences.get(settingObj.prefNames[i]), settingObj.initalValues[i],
             "removeSetting sets the pref(s) to the initial value(s) when removing the last extension.");
