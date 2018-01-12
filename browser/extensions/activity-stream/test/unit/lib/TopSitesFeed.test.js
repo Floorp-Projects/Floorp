@@ -424,12 +424,12 @@ describe("Top Sites Feed", () => {
       await feed.refresh({broadcast: true});
       assert.calledOnce(feed.store.dispatch);
     });
-    it("should dispatch sendToMain when broadcast is false", async () => {
+    it("should dispatch SendToPreloaded when broadcast is false", async () => {
       sandbox.stub(feed, "getLinksWithDefaults").returns([]);
       await feed.refresh({broadcast: false});
 
       assert.calledOnce(feed.store.dispatch);
-      assert.calledWithExactly(feed.store.dispatch, ac.SendToMain({
+      assert.calledWithExactly(feed.store.dispatch, ac.SendToPreloaded({
         type: at.TOP_SITES_UPDATED,
         data: []
       }));
