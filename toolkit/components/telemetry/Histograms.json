@@ -7766,7 +7766,7 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_ALL_CHILD_PROCESSES": {
-    "record_in_processes": ["all_children"],
+    "record_in_processes": ["all_childs"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
