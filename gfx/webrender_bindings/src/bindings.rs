@@ -1072,6 +1072,9 @@ pub extern "C" fn wr_api_send_transaction(
     dh: &mut DocumentHandle,
     transaction: &mut Transaction
 ) {
+    if transaction.is_empty() {
+        return;
+    }
     let txn = mem::replace(transaction, Transaction::new());
     dh.api.send_transaction(dh.document_id, txn);
 }
