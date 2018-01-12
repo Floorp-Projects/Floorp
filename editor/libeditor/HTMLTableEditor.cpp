@@ -9,6 +9,7 @@
 
 #include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/FlushType.h"

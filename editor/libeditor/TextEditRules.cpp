@@ -8,6 +8,7 @@
 #include "HTMLEditRules.h"
 #include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/LookAndFeel.h"

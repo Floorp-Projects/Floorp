@@ -34,6 +34,8 @@ class HTMLEditor;
 class RulesInfo;
 class SplitNodeResult;
 class TextEditor;
+enum class EditAction : int32_t;
+
 namespace dom {
 class Element;
 class Selection;

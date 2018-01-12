@@ -31,12 +31,16 @@ class InitEditorSpellCheckCallback;
 class UpdateCurrentDictionaryCallback;
 class mozInlineSpellResume;
 
+namespace mozilla {
+enum class EditAction : int32_t;
+} // namespace mozilla
+
 class mozInlineSpellStatus
 {
 public:
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(EditAction aAction,
+  nsresult InitForEditorChange(mozilla::EditAction aAction,
                                nsINode* aAnchorNode, uint32_t aAnchorOffset,
                                nsINode* aPreviousNode, uint32_t aPreviousOffset,
                                nsINode* aStartNode, uint32_t aStartOffset,

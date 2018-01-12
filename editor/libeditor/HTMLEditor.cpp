@@ -6,6 +6,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/TextEvents.h"
