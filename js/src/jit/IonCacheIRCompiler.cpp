@@ -530,10 +530,22 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(1, ic->value());
         break;
       }
+      case CacheKind::InstanceOf: {
+        IonInstanceOfIC* ic = ic_->asInstanceOfIC();
+        Register output = ic->output();
+        available.add(output);
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, ic->lhs());
+        allocator.initInputLocation(1, TypedOrValueRegister(MIRType::Object,
+                                                            AnyRegister(ic->rhs())));
+        break;
+      }
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
-      case CacheKind::InstanceOf:
         MOZ_CRASH("Unsupported IC");
     }
 

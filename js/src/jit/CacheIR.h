@@ -1504,13 +1504,13 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator
 class MOZ_RAII InstanceOfIRGenerator : public IRGenerator
 {
     HandleValue lhsVal_;
-    HandleValue rhsVal_;
+    HandleObject rhsObj_;
 
     void trackAttached(const char* name);
     void trackNotAttached();
   public:
     InstanceOfIRGenerator(JSContext*, HandleScript, jsbytecode*, ICState::Mode,
-                          HandleValue, HandleValue);
+                          HandleValue, HandleObject);
 
     bool tryAttachStub();
 };
