@@ -271,7 +271,7 @@ class ContextMenu {
     if (href) {
       // Handle SVG links:
       if (typeof href == "object" && href.animVal) {
-        return href.animVal;
+        return this._makeURLAbsolute(this.context.link.baseURI, href.animVal);
       }
 
       return href;
