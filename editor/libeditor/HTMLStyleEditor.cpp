@@ -9,6 +9,7 @@
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EditAction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"

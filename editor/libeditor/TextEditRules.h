@@ -6,7 +6,8 @@
 #ifndef mozilla_TextEditRules_h
 #define mozilla_TextEditRules_h
 
-#include "mozilla/EditorBase.h"
+#include "mozilla/EditAction.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditor.h"
