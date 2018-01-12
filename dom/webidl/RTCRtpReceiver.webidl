@@ -12,7 +12,9 @@
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
   Promise<RTCStatsReport>               getStats();
+  [Pref="media.peerconnection.rtpsourcesapi.enabled"]
   sequence<RTCRtpContributingSource>    getContributingSources();
+  [Pref="media.peerconnection.rtpsourcesapi.enabled"]
   sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
 
   [ChromeOnly]
