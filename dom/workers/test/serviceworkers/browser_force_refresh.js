@@ -36,15 +36,21 @@ function test() {
                             function() {
     var url = gTestRoot + 'browser_base_force_refresh.html';
     var tab = BrowserTestUtils.addTab(gBrowser);
+    var tabBrowser = gBrowser.getBrowserForTab(tab);
     gBrowser.selectedTab = tab;
 
     tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
     gBrowser.loadURI(url);
 
-    function done() {
+    async function done() {
       tab.linkedBrowser.messageManager.removeMessageListener("test:event", eventHandler);
 
-      gBrowser.removeTab(tab);
+      await ContentTask.spawn(tabBrowser, null, async function() {
+        const swr = await content.navigator.serviceWorker.getRegistration();
+        await swr.unregister();
+      });
+
+      await BrowserTestUtils.removeTab(tab);
       executeSoon(finish);
     }
 

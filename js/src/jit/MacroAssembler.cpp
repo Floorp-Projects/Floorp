@@ -2931,6 +2931,12 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
 }
 
 void
+MacroAssembler::wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset)
+{
+    append(trap, wasm::TrapSite(illegalInstruction().offset(), bytecodeOffset));
+}
+
+void
 MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
 {
     // Load the callee, before the caller's registers are clobbered.

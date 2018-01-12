@@ -24,6 +24,12 @@ bc.onmessage = function(e) {
       }, () => {
         bc.postMessage(1);
       });
+
+      // Tell the coordinating frame script that we've kicked off our update
+      // call so that the SW script can be released once both instances of us
+      // have triggered update() and 1 has failed.
+      const blockingChannel = new BroadcastChannel('update');
+      blockingChannel.postMessage(true);
     });
   }
 
