@@ -8,6 +8,7 @@
 #define GFX_WR_IPCRESOURCEUPDATEQUEUE_H
 
 #include "mozilla/layers/WebRenderMessages.h"
+#include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
@@ -20,7 +21,7 @@ namespace wr {
 /// allocations and creates dedicated shmems for large allocations.
 class ShmSegmentsWriter {
 public:
-  ShmSegmentsWriter(ipc::IShmemAllocator* aAllocator, size_t aChunkSize);
+  ShmSegmentsWriter(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize);
   ~ShmSegmentsWriter();
 
   layers::OffsetRange Write(Range<uint8_t> aBytes);
@@ -31,7 +32,7 @@ public:
     return Write(Range<uint8_t>((uint8_t*)aValues.begin().get(), aValues.length() * sizeof(T)));
   }
 
-  void Flush(nsTArray<ipc::Shmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs);
+  void Flush(nsTArray<layers::RefCountedShmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs);
 
   void Clear();
 
@@ -39,16 +40,16 @@ protected:
   bool AllocChunk();
   layers::OffsetRange AllocLargeChunk(size_t aSize);
 
-  nsTArray<ipc::Shmem> mSmallAllocs;
+  nsTArray<layers::RefCountedShmem> mSmallAllocs;
   nsTArray<ipc::Shmem> mLargeAllocs;
-  ipc::IShmemAllocator* mShmAllocator;
+  layers::WebRenderBridgeChild* mShmAllocator;
   size_t mCursor;
   size_t mChunkSize;
 };
 
 class ShmSegmentsReader {
 public:
-  ShmSegmentsReader(const nsTArray<ipc::Shmem>& aSmallShmems,
+  ShmSegmentsReader(const nsTArray<layers::RefCountedShmem>& aSmallShmems,
                     const nsTArray<ipc::Shmem>& aLargeShmems);
 
   bool Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
@@ -56,7 +57,7 @@ public:
 protected:
   bool ReadLarge(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
-  const nsTArray<ipc::Shmem>& mSmallAllocs;
+  const nsTArray<layers::RefCountedShmem>& mSmallAllocs;
   const nsTArray<ipc::Shmem>& mLargeAllocs;
   size_t mChunkSize;
 };
@@ -67,7 +68,7 @@ public:
   // Each shmem has two guard pages, and the minimum shmem size (at least one Windows)
   // is 64k which is already quite large for a lot of the resources we use here.
   // So we pick 64k - 2 * 4k = 57344 bytes as the defautl alloc
-  explicit IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator, size_t aChunkSize = 57344);
+  explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize = 57344);
 
   bool AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
@@ -114,7 +115,7 @@ public:
   void Clear();
 
   void Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
-             nsTArray<ipc::Shmem>& aSmallAllocs,
+             nsTArray<layers::RefCountedShmem>& aSmallAllocs,
              nsTArray<ipc::Shmem>& aLargeAllocs);
 
 protected:

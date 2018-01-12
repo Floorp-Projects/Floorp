@@ -9,11 +9,14 @@
 #include <algorithm>
 #include "mozilla/Maybe.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
 namespace wr {
 
-ShmSegmentsWriter::ShmSegmentsWriter(ipc::IShmemAllocator* aAllocator, size_t aChunkSize)
+using namespace mozilla::layers;
+
+ShmSegmentsWriter::ShmSegmentsWriter(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize)
 : mShmAllocator(aAllocator)
 , mCursor(0)
 , mChunkSize(aChunkSize)
@@ -49,8 +52,8 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
     if (dstCursor >= mSmallAllocs.Length() * mChunkSize) {
       if (!AllocChunk()) {
         for (size_t i = mSmallAllocs.Length() ; currAllocLen < i ; i--) {
-          ipc::Shmem shm = mSmallAllocs.ElementAt(i);
-          mShmAllocator->DeallocShmem(shm);
+          RefCountedShmem& shm = mSmallAllocs.ElementAt(i);
+          RefCountedShm::Dealloc(mShmAllocator, shm);
           mSmallAllocs.RemoveElementAt(i);
         }
         return layers::OffsetRange(0, start, 0);
@@ -68,7 +71,7 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
     size_t copyRange = std::min<int>(availableRange, remainingBytesToCopy);
 
     uint8_t* srcPtr = &aBytes[srcCursor];
-    uint8_t* dstPtr = mSmallAllocs.LastElement().get<uint8_t>() + (dstCursor - dstBaseOffset);
+    uint8_t* dstPtr = RefCountedShm::GetBytes(mSmallAllocs.LastElement()) + (dstCursor - dstBaseOffset);
 
     memcpy(dstPtr, srcPtr, copyRange);
 
@@ -88,9 +91,8 @@ ShmSegmentsWriter::Write(Range<uint8_t> aBytes)
 bool
 ShmSegmentsWriter::AllocChunk()
 {
-  ipc::Shmem shm;
-  auto shmType = ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
-  if (!mShmAllocator->AllocShmem(mChunkSize, shmType, &shm)) {
+  RefCountedShmem shm;
+  if (!RefCountedShm::Alloc(mShmAllocator, mChunkSize, shm)) {
     gfxCriticalNote << "ShmSegmentsWriter failed to allocate chunk #" << mSmallAllocs.Length();
     MOZ_ASSERT(false, "ShmSegmentsWriter fails to allocate chunk");
     return false;
@@ -115,7 +117,7 @@ ShmSegmentsWriter::AllocLargeChunk(size_t aSize)
 }
 
 void
-ShmSegmentsWriter::Flush(nsTArray<ipc::Shmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs)
+ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs)
 {
   aSmallAllocs.Clear();
   aLargeAllocs.Clear();
@@ -128,7 +130,7 @@ ShmSegmentsWriter::Clear()
 {
   if (mShmAllocator) {
     for (auto& shm : mSmallAllocs) {
-      mShmAllocator->DeallocShmem(shm);
+      RefCountedShm::Dealloc(mShmAllocator, shm);
     }
     for (auto& shm : mLargeAllocs) {
       mShmAllocator->DeallocShmem(shm);
@@ -139,7 +141,7 @@ ShmSegmentsWriter::Clear()
   mCursor = 0;
 }
 
-ShmSegmentsReader::ShmSegmentsReader(const nsTArray<ipc::Shmem>& aSmallShmems,
+ShmSegmentsReader::ShmSegmentsReader(const nsTArray<RefCountedShmem>& aSmallShmems,
                                      const nsTArray<ipc::Shmem>& aLargeShmems)
 : mSmallAllocs(aSmallShmems)
 , mLargeAllocs(aLargeShmems)
@@ -149,15 +151,15 @@ ShmSegmentsReader::ShmSegmentsReader(const nsTArray<ipc::Shmem>& aSmallShmems,
     return;
   }
 
-  mChunkSize = mSmallAllocs[0].Size<uint8_t>();
+  mChunkSize = RefCountedShm::GetSize(mSmallAllocs[0]);
 
   // Check that all shmems are readable and have the same size. If anything
   // isn't right, set mChunkSize to zero which signifies that the reader is
   // in an invalid state and Read calls will return false;
   for (const auto& shm : mSmallAllocs) {
-    if (!shm.IsReadable()
-        || shm.Size<uint8_t>() != mChunkSize
-        || shm.get<uint8_t>() == nullptr) {
+    if (!RefCountedShm::IsValid(shm)
+        || RefCountedShm::GetSize(shm) != mChunkSize
+        || RefCountedShm::GetBytes(shm) == nullptr) {
       mChunkSize = 0;
       return;
     }
@@ -219,7 +221,7 @@ ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aIn
     const size_t shm_idx = srcCursor / mChunkSize;
     const size_t ptrOffset = srcCursor % mChunkSize;
     const size_t copyRange = std::min<int>(remainingBytesToCopy, mChunkSize - ptrOffset);
-    uint8_t* srcPtr = mSmallAllocs[shm_idx].get<uint8_t>() + ptrOffset;
+    uint8_t* srcPtr = RefCountedShm::GetBytes(mSmallAllocs[shm_idx]) + ptrOffset;
 
     aInto.PushBytes(Range<uint8_t>(srcPtr, copyRange));
 
@@ -230,7 +232,7 @@ ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aIn
   return aInto.Length() - initialLength == aRange.length();
 }
 
-IpcResourceUpdateQueue::IpcResourceUpdateQueue(ipc::IShmemAllocator* aAllocator,
+IpcResourceUpdateQueue::IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator,
                                                size_t aChunkSize)
 : mWriter(Move(aAllocator), aChunkSize)
 {}
@@ -352,7 +354,7 @@ IpcResourceUpdateQueue::DeleteFontInstance(wr::FontInstanceKey aKey)
 
 void
 IpcResourceUpdateQueue::Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
-                              nsTArray<ipc::Shmem>& aSmallAllocs,
+                              nsTArray<RefCountedShmem>& aSmallAllocs,
                               nsTArray<ipc::Shmem>& aLargeAllocs)
 {
   aUpdates.Clear();
