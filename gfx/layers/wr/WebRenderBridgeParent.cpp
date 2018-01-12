@@ -266,28 +266,6 @@ WebRenderBridgeParent::Destroy()
   ClearResources();
 }
 
-void
-WebRenderBridgeParent::DeallocShmems(nsTArray<ipc::Shmem>& aShmems)
-{
-  if (IPCOpen()) {
-    for (auto& shm : aShmems) {
-      DeallocShmem(shm);
-    }
-  }
-  aShmems.Clear();
-}
-
-void
-WebRenderBridgeParent::DeallocShmems(nsTArray<RefCountedShmem>& aShmems)
-{
-  if (IPCOpen()) {
-    for (auto& shm : aShmems) {
-       RefCountedShm::Dealloc(this, shm);
-    }
-  }
-  aShmems.Clear();
-}
-
 bool
 WebRenderBridgeParent::UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                                        const nsTArray<RefCountedShmem>& aSmallShmems,
@@ -465,16 +443,14 @@ WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourc
                                            nsTArray<ipc::Shmem>&& aLargeShmems)
 {
   if (mDestroyed) {
-    DeallocShmems(aSmallShmems);
-    DeallocShmems(aLargeShmems);
     return IPC_OK();
   }
 
   wr::ResourceUpdateQueue updates;
 
   if (!UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, updates)) {
-    DeallocShmems(aSmallShmems);
-    DeallocShmems(aLargeShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
     IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
   }
 
@@ -482,8 +458,8 @@ WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourc
   txn.UpdateResources(updates);
   mApi->SendTransaction(txn);
 
-  DeallocShmems(aSmallShmems);
-  DeallocShmems(aLargeShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
   return IPC_OK();
 }
 
@@ -601,8 +577,6 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
-    DeallocShmems(aSmallShmems);
-    DeallocShmems(aLargeShmems);
     return IPC_OK();
   }
 
@@ -664,8 +638,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
   }
 
-  DeallocShmems(aSmallShmems);
-  DeallocShmems(aLargeShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
+  wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
   return IPC_OK();
 }
 

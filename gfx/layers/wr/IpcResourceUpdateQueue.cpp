@@ -92,11 +92,12 @@ bool
 ShmSegmentsWriter::AllocChunk()
 {
   RefCountedShmem shm;
-  if (!RefCountedShm::Alloc(mShmAllocator, mChunkSize, shm)) {
+  if (!mShmAllocator->AllocResourceShmem(mChunkSize, shm)) {
     gfxCriticalNote << "ShmSegmentsWriter failed to allocate chunk #" << mSmallAllocs.Length();
     MOZ_ASSERT(false, "ShmSegmentsWriter fails to allocate chunk");
     return false;
   }
+  RefCountedShm::AddRef(shm);
   mSmallAllocs.AppendElement(shm);
   return true;
 }
@@ -119,8 +120,8 @@ ShmSegmentsWriter::AllocLargeChunk(size_t aSize)
 void
 ShmSegmentsWriter::Flush(nsTArray<RefCountedShmem>& aSmallAllocs, nsTArray<ipc::Shmem>& aLargeAllocs)
 {
-  aSmallAllocs.Clear();
-  aLargeAllocs.Clear();
+  MOZ_ASSERT(aSmallAllocs.IsEmpty());
+  MOZ_ASSERT(aLargeAllocs.IsEmpty());
   mSmallAllocs.SwapElements(aSmallAllocs);
   mLargeAllocs.SwapElements(aLargeAllocs);
 }
@@ -129,15 +130,9 @@ void
 ShmSegmentsWriter::Clear()
 {
   if (mShmAllocator) {
-    for (auto& shm : mSmallAllocs) {
-      RefCountedShm::Dealloc(mShmAllocator, shm);
-    }
-    for (auto& shm : mLargeAllocs) {
-      mShmAllocator->DeallocShmem(shm);
-    }
+    IpcResourceUpdateQueue::ReleaseShmems(mShmAllocator, mSmallAllocs);
+    IpcResourceUpdateQueue::ReleaseShmems(mShmAllocator, mLargeAllocs);
   }
-  mSmallAllocs.Clear();
-  mLargeAllocs.Clear();
   mCursor = 0;
 }
 
@@ -354,7 +349,7 @@ IpcResourceUpdateQueue::DeleteFontInstance(wr::FontInstanceKey aKey)
 
 void
 IpcResourceUpdateQueue::Flush(nsTArray<layers::OpUpdateResource>& aUpdates,
-                              nsTArray<RefCountedShmem>& aSmallAllocs,
+                              nsTArray<layers::RefCountedShmem>& aSmallAllocs,
                               nsTArray<ipc::Shmem>& aLargeAllocs)
 {
   aUpdates.Clear();
@@ -367,6 +362,28 @@ IpcResourceUpdateQueue::Clear()
 {
   mWriter.Clear();
   mUpdates.Clear();
+}
+
+//static
+void
+IpcResourceUpdateQueue::ReleaseShmems(ipc::IProtocol* aShmAllocator, nsTArray<layers::RefCountedShmem>& aShms)
+{
+  for (auto& shm : aShms) {
+    if (RefCountedShm::IsValid(shm) && RefCountedShm::Release(shm) == 0) {
+      RefCountedShm::Dealloc(aShmAllocator, shm);
+    }
+  }
+  aShms.Clear();
+}
+
+//static
+void
+IpcResourceUpdateQueue::ReleaseShmems(ipc::IProtocol* aShmAllocator, nsTArray<ipc::Shmem>& aShms)
+{
+  for (auto& shm : aShms) {
+    aShmAllocator->DeallocShmem(shm);
+  }
+  aShms.Clear();
 }
 
 } // namespace
