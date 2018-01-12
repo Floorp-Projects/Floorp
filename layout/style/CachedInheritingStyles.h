@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_CachedAnonBoxStyles_h
-#define mozilla_CachedAnonBoxStyles_h
+#ifndef mozilla_CachedInheritingStyles_h
+#define mozilla_CachedInheritingStyles_h
 
 #include "nsAtom.h"
 #include "nsTArray.h"
@@ -16,20 +16,20 @@ namespace mozilla {
 
 class ServoStyleContext;
 
-// Cache of anonymous box styles that inherit from a given style.
+// Cache of anonymous box and lazy pseudo styles that inherit from a given style.
 //
 // To minimize memory footprint, the cache is word-sized with a tagged pointer
 // If there is only one entry, it's stored inline. If there are more, they're
 // stored in an out-of-line buffer. See bug 1429126 comment 0 and comment 1 for
 // the measurements and rationale that influenced the design.
-class CachedAnonBoxStyles
+class CachedInheritingStyles
 {
 public:
   void Insert(ServoStyleContext* aStyle);
-  ServoStyleContext* Lookup(nsAtom* aAnonBox) const;
+  ServoStyleContext* Lookup(nsAtom* aPseudoTag) const;
 
-  CachedAnonBoxStyles() : mBits(0) {}
-  ~CachedAnonBoxStyles()
+  CachedInheritingStyles() : mBits(0) {}
+  ~CachedInheritingStyles()
   {
     if (IsIndirect()) {
       delete AsIndirect();
@@ -64,4 +64,4 @@ private:
 
 } // namespace mozilla
 
-#endif // mozilla_CachedAnonBoxStyles_h
+#endif // mozilla_CachedInheritingStyles_h
