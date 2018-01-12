@@ -2,7 +2,7 @@ generate:
     description: Generate the Sphinx documentation
     platform: lint/opt
     treeherder:
-        symbol: tc(Doc)
+        symbol: Doc
         kind: test
         tier: 1
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
@@ -26,7 +26,7 @@ upload:
     description: Generate and upload the Sphinx documentation
     platform: lint/opt
     treeherder:
-        symbol: tc(DocUp)
+        symbol: DocUp
         kind: test
         tier: 3
     run-on-projects: [mozilla-central]

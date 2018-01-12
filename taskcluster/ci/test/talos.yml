@@ -29,7 +29,7 @@ job-defaults:
 talos-chrome:
     description: "Talos chrome"
     try-name: chromez
-    treeherder-symbol: tc-T(c)
+    treeherder-symbol: T(c)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -43,7 +43,7 @@ talos-chrome:
 talos-chrome-stylo-disabled:
     description: "Talos Stylo disabled chrome"
     try-name: chromez-stylo-disabled
-    treeherder-symbol: tc-Tsd(c)
+    treeherder-symbol: Tsd(c)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -54,7 +54,7 @@ talos-chrome-stylo-disabled:
 talos-dromaeojs:
     description: "Talos dromaeojs"
     try-name: dromaeojs
-    treeherder-symbol: tc-T(d)
+    treeherder-symbol: T(d)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -68,7 +68,7 @@ talos-dromaeojs:
 talos-dromaeojs-stylo-disabled:
     description: "Talos Stylo disabled dromaeojs"
     try-name: dromaeojs-stylo-disabled
-    treeherder-symbol: tc-Tsd(d)
+    treeherder-symbol: Tsd(d)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -79,7 +79,7 @@ talos-dromaeojs-stylo-disabled:
 talos-g1:
     description: "Talos g1"
     try-name: g1
-    treeherder-symbol: tc-T(g1)
+    treeherder-symbol: T(g1)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -94,7 +94,7 @@ talos-g1:
 talos-g1-stylo-disabled:
     description: "Talos Stylo disabled g1"
     try-name: g1-stylo-disabled
-    treeherder-symbol: tc-Tsd(g1)
+    treeherder-symbol: Tsd(g1)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     max-run-time: 7200
     mozharness:
@@ -106,7 +106,7 @@ talos-g1-stylo-disabled:
 talos-g2:
     description: "Talos g2"
     try-name: g2
-    treeherder-symbol: tc-T(g2)
+    treeherder-symbol: T(g2)
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
@@ -122,7 +122,7 @@ talos-g2:
 talos-g2-stylo-disabled:
     description: "Talos Stylo disabled g2"
     try-name: g2-stylo-disabled
-    treeherder-symbol: tc-Tsd(g2)
+    treeherder-symbol: Tsd(g2)
     max-run-time: 7200
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
@@ -134,7 +134,7 @@ talos-g2-stylo-disabled:
 talos-g3:
     description: "Talos g3"
     try-name: g3
-    treeherder-symbol: tc-T(g3)
+    treeherder-symbol: T(g3)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -148,7 +148,7 @@ talos-g3:
 talos-g3-stylo-disabled:
     description: "Talos Stylo disabled g3"
     try-name: g3-stylo-disabled
-    treeherder-symbol: tc-Tsd(g3)
+    treeherder-symbol: Tsd(g3)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -159,7 +159,7 @@ talos-g3-stylo-disabled:
 talos-g4:
     description: "Talos g4"
     try-name: g4
-    treeherder-symbol: tc-T(g4)
+    treeherder-symbol: T(g4)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -173,7 +173,7 @@ talos-g4:
 talos-g4-stylo-disabled:
     description: "Talos Stylo disabled g4"
     try-name: g4-stylo-disabled
-    treeherder-symbol: tc-Tsd(g4)
+    treeherder-symbol: Tsd(g4)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -184,7 +184,7 @@ talos-g4-stylo-disabled:
 talos-g5:
     description: "Talos g5"
     try-name: g5
-    treeherder-symbol: tc-T(g5)
+    treeherder-symbol: T(g5)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -198,7 +198,7 @@ talos-g5:
 talos-g5-stylo-disabled:
     description: "Talos Stylo disabled g5"
     try-name: g5-stylo-disabled
-    treeherder-symbol: tc-Tsd(g5)
+    treeherder-symbol: Tsd(g5)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -209,7 +209,7 @@ talos-g5-stylo-disabled:
 talos-h1:
     description: "Talos h1"
     try-name: h1
-    treeherder-symbol: tc-T(h1)
+    treeherder-symbol: T(h1)
     max-run-time: 5400
     run-on-projects:
         by-test-platform:
@@ -225,7 +225,7 @@ talos-h1:
 talos-h2:
     description: "Talos h2"
     try-name: h2
-    treeherder-symbol: tc-T(h2)
+    treeherder-symbol: T(h2)
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
@@ -241,7 +241,7 @@ talos-h2:
 talos-other:
     description: "Talos other"
     try-name: other
-    treeherder-symbol: tc-T(o)
+    treeherder-symbol: T(o)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -255,7 +255,7 @@ talos-other:
 talos-other-stylo-disabled:
     description: "Talos Stylo disabled other"
     try-name: other-stylo-disabled
-    treeherder-symbol: tc-Tsd(o)
+    treeherder-symbol: Tsd(o)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -266,7 +266,7 @@ talos-other-stylo-disabled:
 talos-perf-reftest:
     description: "Talos perf-reftest"
     try-name: perf-reftest
-    treeherder-symbol: tc-T(p)
+    treeherder-symbol: T(p)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -278,7 +278,7 @@ talos-perf-reftest:
 talos-perf-reftest-singletons:
     description: "Talos perf-reftest singletons"
     try-name: perf-reftest-singletons
-    treeherder-symbol: tc-T(ps)
+    treeherder-symbol: T(ps)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -290,7 +290,7 @@ talos-perf-reftest-singletons:
 talos-perf-reftest-singletons-stylo-disabled:
     description: "Talos Stylo disabled perf-reftest singletons"
     try-name: perf-reftest-singletons-stylo-disabled
-    treeherder-symbol: tc-Tsd(ps)
+    treeherder-symbol: Tsd(ps)
     run-on-projects: ['mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -299,7 +299,7 @@ talos-perf-reftest-singletons-stylo-disabled:
 talos-perf-reftest-stylo-disabled:
     description: "Talos Stylo disabled perf-reftest"
     try-name: perf-reftest-stylo-disabled
-    treeherder-symbol: tc-Tsd(p)
+    treeherder-symbol: Tsd(p)
     run-on-projects: ['mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -308,7 +308,7 @@ talos-perf-reftest-stylo-disabled:
 talos-speedometer:
     description: "Talos speedometer"
     try-name: speedometer
-    treeherder-symbol: tc-T(sp)
+    treeherder-symbol: T(sp)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -322,7 +322,7 @@ talos-speedometer:
 talos-speedometer-stylo-disabled:
     description: "Talos Stylo disabled speedometer"
     try-name: speedometer-stylo-disabled
-    treeherder-symbol: tc-Tsd(sp)
+    treeherder-symbol: Tsd(sp)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -333,7 +333,7 @@ talos-speedometer-stylo-disabled:
 talos-svgr:
     description: "Talos svgr"
     try-name: svgr
-    treeherder-symbol: tc-T(s)
+    treeherder-symbol: T(s)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -347,7 +347,7 @@ talos-svgr:
 talos-svgr-stylo-disabled:
     description: "Talos Stylo disabled svgr"
     try-name: svgr-stylo-disabled
-    treeherder-symbol: tc-Tsd(s)
+    treeherder-symbol: Tsd(s)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -358,7 +358,7 @@ talos-svgr-stylo-disabled:
 talos-tp5o:
     description: "Talos tp5o"
     try-name: tp5o
-    treeherder-symbol: tc-T(tp)
+    treeherder-symbol: T(tp)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -372,7 +372,7 @@ talos-tp5o:
 talos-tp5o-stylo-disabled:
     description: "Talos Stylo disabled tp5o"
     try-name: tp5o-stylo-disabled
-    treeherder-symbol: tc-Tsd(tp)
+    treeherder-symbol: Tsd(tp)
     run-on-projects: ['mozilla-beta', 'mozilla-central', 'try']
     mozharness:
         extra-options:
@@ -383,7 +383,7 @@ talos-tp5o-stylo-disabled:
 talos-tp6:
     description: "Talos Tp6"
     try-name: tp6
-    treeherder-symbol: tc-T(tp6)
+    treeherder-symbol: T(tp6)
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
@@ -398,7 +398,7 @@ talos-tp6:
 talos-tp6-stylo-disabled:
     description: "Talos Stylo disabled Tp6"
     try-name: tp6-stylo-disabled
-    treeherder-symbol: tc-Tsd(tp6)
+    treeherder-symbol: Tsd(tp6)
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
@@ -412,7 +412,7 @@ talos-tp6-stylo-disabled:
 talos-tp6-stylo-threads:
     description: "Talos Stylo sequential Tp6"
     try-name: tp6-stylo-threads
-    treeherder-symbol: tc-Tss(tp6)
+    treeherder-symbol: Tss(tp6)
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
@@ -426,7 +426,7 @@ talos-tp6-stylo-threads:
 talos-xperf:
     description: "Talos xperf"
     try-name: xperf
-    treeherder-symbol: tc-T(x)
+    treeherder-symbol: T(x)
     virtualization: virtual
     run-on-projects:
         by-test-platform:
