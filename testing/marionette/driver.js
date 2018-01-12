@@ -2767,13 +2767,7 @@ GeckoDriver.prototype.deleteSession = function() {
     // frame scripts can be safely reused
     Preferences.set(CONTENT_LISTENER_PREF, false);
 
-    // clean up state in each frame in each browser
-    for (let win in this.browsers) {
-      let browser = this.browsers[win];
-      browser.knownFrames.forEach(() => {
-        globalMessageManager.broadcastAsyncMessage("Marionette:Deregister");
-      });
-    }
+    globalMessageManager.broadcastAsyncMessage("Marionette:Deregister");
 
     for (let win of this.windows) {
       if (win.messageManager) {
