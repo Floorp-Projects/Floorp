@@ -590,8 +590,7 @@ static const char* sObserverTopics[] = {
   "cacheservice:empty-cache",
   "intl:app-locales-changed",
   "intl:requested-locales-changed",
-  "cookie-changed",
-  "private-cookie-changed",
+  "non-js-cookie-changed",
 };
 
 // PreallocateProcess is called by the PreallocatedProcessManager.
@@ -2940,8 +2939,7 @@ ContentParent::Observe(nsISupports* aSubject,
     LocaleService::GetInstance()->GetRequestedLocales(requestedLocales);
     Unused << SendUpdateRequestedLocales(requestedLocales);
   }
-  else if (!strcmp(aTopic, "cookie-changed") ||
-           !strcmp(aTopic, "private-cookie-changed")) {
+  else if (!strcmp(aTopic, "non-js-cookie-changed")) {
     if (!aData) {
       return NS_ERROR_UNEXPECTED;
     }

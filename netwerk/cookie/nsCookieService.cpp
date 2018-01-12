@@ -2134,7 +2134,7 @@ nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
   nsDependentCString cookieString(aCookieHeader);
   nsDependentCString serverTime(aServerTime ? aServerTime : "");
   SetCookieStringInternal(aHostURI, isForeign, cookieString,
-                          serverTime, aFromHttp, attrs, aChannel);
+                          serverTime, aFromHttp, false, attrs, aChannel);
   return NS_OK;
 }
 
@@ -2144,6 +2144,7 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
                                          nsDependentCString     &aCookieHeader,
                                          const nsCString        &aServerTime,
                                          bool                    aFromHttp,
+                                         bool                    aFromChild,
                                          const OriginAttributes &aOriginAttrs,
                                          nsIChannel             *aChannel)
 {
@@ -2211,7 +2212,7 @@ nsCookieService::SetCookieStringInternal(nsIURI                 *aHostURI,
 
   // process each cookie in the header
   while (SetCookieInternal(aHostURI, key, requireHostMatch, cookieStatus,
-                           aCookieHeader, serverTime, aFromHttp, aChannel)) {
+                           aCookieHeader, serverTime, aFromHttp, aFromChild, aChannel)) {
     // document.cookie can only set one cookie at a time
     if (!aFromHttp)
       break;
@@ -2293,7 +2294,9 @@ nsCookieService::NotifyThirdParty(nsIURI *aHostURI, bool aIsAccepted, nsIChannel
 void
 nsCookieService::NotifyChanged(nsISupports     *aSubject,
                                const char16_t *aData,
-                               bool aOldCookieIsSession)
+                               bool aOldCookieIsSession,
+                               bool aFromHttp,
+                               bool aFromChild)
 {
   const char* topic = mDBState == mPrivateDBState ?
       "private-cookie-changed" : "cookie-changed";
@@ -2304,6 +2307,9 @@ nsCookieService::NotifyChanged(nsISupports     *aSubject,
   // Notify for topic "private-cookie-changed" or "cookie-changed"
   os->NotifyObservers(aSubject, topic, aData);
 
+  if (!aFromChild) {
+    os->NotifyObservers(aSubject, "non-js-cookie-changed", aData);
+  }
   // Notify for topic "session-cookie-changed" to update the copy of session
   // cookies in session restore component.
   // Ignore private session cookies since they will not be restored.
@@ -3454,6 +3460,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                    nsDependentCString            &aCookieHeader,
                                    int64_t                        aServerTime,
                                    bool                           aFromHttp,
+                                   bool                           aFromChild,
                                    nsIChannel                    *aChannel)
 {
   NS_ASSERTION(aHostURI, "null host!");
@@ -3511,7 +3518,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
   AddInternal(aKey, cookie, PR_Now(), aHostURI, savedCookieHeader.get(),
-              aFromHttp);
+              aFromHttp, aFromChild);
   return newCookie;
 }
 
@@ -3526,7 +3533,8 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
                              int64_t            aCurrentTimeInUsec,
                              nsIURI            *aHostURI,
                              const char        *aCookieHeader,
-                             bool               aFromHttp)
+                             bool               aFromHttp,
+                             bool               aFromChild)
 {
   MOZ_ASSERT(mInitializedDBStates);
   MOZ_ASSERT(mInitializedDBConn);
@@ -3644,7 +3652,7 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
       if (aCookie->Expiry() <= currentTime) {
         COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
           "previously stored cookie was deleted");
-        NotifyChanged(oldCookie, u"deleted");
+        NotifyChanged(oldCookie, u"deleted", oldCookieIsSession, aFromHttp, aFromChild);
         return;
       }
 
@@ -3718,7 +3726,7 @@ nsCookieService::AddInternal(const nsCookieKey &aKey,
     NotifyChanged(purgedList, u"batch-deleted");
   }
 
-  NotifyChanged(aCookie, foundCookie ? u"changed" : u"added", oldCookieIsSession);
+  NotifyChanged(aCookie, foundCookie ? u"changed" : u"added", oldCookieIsSession, aFromHttp, aFromChild);
 }
 
 /******************************************************************************
