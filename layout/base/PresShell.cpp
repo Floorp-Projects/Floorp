@@ -1836,8 +1836,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     nsContentUtils::AddScriptRunner(new XBLConstructorRunner(mDocument));
   }
 
-  mDocument->TriggerAutoFocus();
-
   NS_ASSERTION(rootFrame, "How did that happen?");
 
   // Note: when the frame was created above it had the NS_FRAME_IS_DIRTY bit

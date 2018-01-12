@@ -1707,8 +1707,6 @@ needs-focus == 703186-1.html 703186-1-ref.html
 needs-focus == 703186-2.html 703186-2-ref.html
 needs-focus != 703186-1.html 703186-2.html
 == 711359-1.html 711359-1-ref.html
-needs-focus == 712130-1.html 712130-1-ref.html
-needs-focus == 712130-2.html 712130-2-ref.html
 == 712849-1.html 712849-1-ref.html
 == 713856-static.html  713856-ref.html
 == 713856-dynamic.html 713856-ref.html
