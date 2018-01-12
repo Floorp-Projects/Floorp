@@ -67,8 +67,10 @@ public:
   // Because we are using shmems, the size should be a multiple of the page size.
   // Each shmem has two guard pages, and the minimum shmem size (at least one Windows)
   // is 64k which is already quite large for a lot of the resources we use here.
-  // So we pick 64k - 2 * 4k = 57344 bytes as the defautl alloc
-  explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize = 57344);
+  // The RefCountedShmem type used to allocate the chunks keeps a 16 bytes header
+  // in the buffer which we account for here as well.
+  // So we pick 64k - 2 * 4k - 16 = 57328 bytes as the default alloc size.
+  explicit IpcResourceUpdateQueue(layers::WebRenderBridgeChild* aAllocator, size_t aChunkSize = 57328);
 
   bool AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
