@@ -1,0 +1,13 @@
+diff -Nru git-2.8.0~rc3/debian/changelog git-2.8.0~rc3/debian/changelog
+--- git-2.8.0~rc3/debian/changelog	2016-03-17 10:28:14.000000000 +0900
++++ git-2.8.0~rc3/debian/changelog	2018-01-12 14:46:45.000000000 +0900
+@@ -1,3 +1,9 @@
++git (1:2.8.0~rc3-1.deb7moz1) wheezy; urgency=medium
++
++  * Mozilla backport for wheezy.
++
++ -- Mike Hommey <glandium@mozilla.com>  Fri, 12 Jan 2018 14:46:45 +0900
++
+ git (1:2.8.0~rc3-1) unstable; urgency=medium
+ 
+   * new upstream release candidate (see RelNotes/2.8.0.txt).
