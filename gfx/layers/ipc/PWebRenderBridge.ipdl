@@ -52,13 +52,13 @@ parent:
   async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                        LayoutSize aContentSize, ByteBuf aDL, BuiltDisplayListDescriptor aDLDesc,
                        WebRenderScrollData aScrollData,
-                       OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems,
+                       OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
                        IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async EmptyTransaction(FocusTarget focusTarget,
                          WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                          IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);
-  async UpdateResources(OpUpdateResource[] aResourceUpdates, Shmem[] aSmallShmems, Shmem[] aLargeShmems);
+  async UpdateResources(OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture);
   async AddPipelineIdForCompositable(PipelineId aImageId, CompositableHandle aHandle, bool aAsync);

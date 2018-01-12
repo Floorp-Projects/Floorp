@@ -3765,15 +3765,17 @@ ElementIsVisibleNoFlush(Element* aElement)
 }
 
 static void
-AppendTransformedText(InnerTextAccumulator& aResult,
-                      nsGenericDOMDataNode* aTextNode,
-                      uint32_t aStart, uint32_t aEnd)
+AppendTransformedText(InnerTextAccumulator& aResult, nsIContent* aContainer)
 {
-  nsIFrame* frame = aTextNode->GetPrimaryFrame();
+  auto textNode = static_cast<nsGenericDOMDataNode*>(aContainer);
+
+  nsIFrame* frame = textNode->GetPrimaryFrame();
   if (!IsVisibleAndNotInReplacedElement(frame)) {
     return;
   }
-  nsIFrame::RenderedText text = frame->GetRenderedText(aStart, aEnd);
+
+  nsIFrame::RenderedText text =
+    frame->GetRenderedText(0, aContainer->GetChildCount());
   aResult.Append(text.mString);
 }
 
@@ -3851,35 +3853,25 @@ IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
 
 void
 nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
-                             nsIContent* aStartContainer, uint32_t aStartOffset,
-                             nsIContent* aEndContainer, uint32_t aEndOffset)
+                             nsIContent* aContainer)
 {
   InnerTextAccumulator result(aValue);
-  nsIContent* currentNode = aStartContainer;
-  TreeTraversalState currentState = AFTER_NODE;
-  if (aStartContainer->IsNodeOfType(nsINode::eTEXT)) {
-    auto t = static_cast<nsGenericDOMDataNode*>(aStartContainer);
-    if (aStartContainer == aEndContainer) {
-      AppendTransformedText(result, t, aStartOffset, aEndOffset);
-      return;
-    }
-    AppendTransformedText(result, t, aStartOffset, t->TextLength());
-  } else {
-    if (uint32_t(aStartOffset) < aStartContainer->GetChildCount()) {
-      currentNode = aStartContainer->GetChildAt_Deprecated(aStartOffset);
-      currentState = AT_NODE;
-    }
+
+  if (aContainer->IsNodeOfType(nsINode::eTEXT)) {
+    AppendTransformedText(result, aContainer);
+    return;
   }
 
-  nsIContent* endNode = aEndContainer;
+  nsIContent* currentNode = aContainer;
+  TreeTraversalState currentState = AFTER_NODE;
+
+  nsIContent* endNode = aContainer;
   TreeTraversalState endState = AFTER_NODE;
-  if (aEndContainer->IsNodeOfType(nsINode::eTEXT)) {
-    endState = AT_NODE;
-  } else {
-    if (aEndOffset < aEndContainer->GetChildCount()) {
-      endNode = aEndContainer->GetChildAt_Deprecated(aEndOffset);
-      endState = AT_NODE;
-    }
+
+  nsIContent* firstChild = aContainer->GetFirstChild();
+  if (firstChild) {
+    currentNode = firstChild;
+    currentState = AT_NODE;
   }
 
   while (currentNode != endNode || currentState != endState) {
@@ -3939,10 +3931,6 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     }
   }
 
-  if (aEndContainer->IsNodeOfType(nsINode::eTEXT)) {
-    nsGenericDOMDataNode* t = static_cast<nsGenericDOMDataNode*>(aEndContainer);
-    AppendTransformedText(result, t, 0, aEndOffset);
-  }
   // Do not flush trailing line breaks! Required breaks at the end of the text
   // are suppressed.
 }

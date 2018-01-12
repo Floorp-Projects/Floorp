@@ -207,7 +207,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                 "--symbols-path=%s" % self.query_symbols_url(),
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
-                "--run-by-dir=3"]
+                "--run-by-dir=3",
+                "--no-pause-after-test"]
 
         if not sys.platform.startswith("linux"):
             cmd += ["--exclude=css"]

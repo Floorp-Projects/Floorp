@@ -457,8 +457,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
       if (aIsLinksOnly) {
         // Don't check if inside link when searching all text
-        RangeStartsInsideLink(returnRange, presShell, &isInsideLink,
-                              &isStartingLink);
+        RangeStartsInsideLink(static_cast<nsRange*>(returnRange.get()),
+                              presShell, &isInsideLink, &isStartingLink);
       }
 
       bool usesIndependentSelection;
@@ -874,7 +874,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 }
 
 void
-nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
+nsTypeAheadFind::RangeStartsInsideLink(nsRange *aRange,
                                        nsIPresShell *aPresShell,
                                        bool *aIsInsideLink,
                                        bool *aIsStartingLink)
@@ -897,7 +897,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   origContent = startContent;
 
   if (startContent->IsElement()) {
-    nsIContent *childContent = startContent->GetChildAt_Deprecated(startOffset);
+    nsIContent *childContent = aRange->GetChildAtStartOffset();
     if (childContent) {
       startContent = childContent;
     }

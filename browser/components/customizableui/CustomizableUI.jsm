@@ -159,12 +159,19 @@ var gUIStateBeforeReset = {
   autoTouchMode: null,
 };
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gDebuggingEnabled", kPrefCustomizationDebug, false,
+  (pref, oldVal, newVal) => {
+    if (typeof log != "undefined") {
+      log.maxLogLevel = newVal ? "all" : "log";
+    }
+  }
+);
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
   Cu.import("resource://gre/modules/Console.jsm", scope);
-  let debug = Services.prefs.getBoolPref(kPrefCustomizationDebug, false);
   let consoleOptions = {
-    maxLogLevel: debug ? "all" : "log",
+    maxLogLevel: gDebuggingEnabled ? "all" : "log",
     prefix: "CustomizableUI",
   };
   return new scope.ConsoleAPI(consoleOptions);

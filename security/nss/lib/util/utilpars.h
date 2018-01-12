@@ -59,5 +59,11 @@ char *NSSUTIL_MkNSSString(char **slotStrings, int slotCount, PRBool internal,
 char *_NSSUTIL_GetSecmodName(const char *param, NSSDBType *dbType,
                              char **appName, char **filename, PRBool *rw);
 const char *_NSSUTIL_EvaluateConfigDir(const char *configdir, NSSDBType *dbType, char **app);
+#if defined(_WIN32)
+wchar_t *_NSSUTIL_UTF8ToWide(const char *buf);
+PRStatus _NSSUTIL_Access(const char *path, PRAccessHow how);
+#else
+#define _NSSUTIL_Access(path, how) PR_Access((path), (how))
+#endif
 
 #endif /* _UTILPARS_H_ */

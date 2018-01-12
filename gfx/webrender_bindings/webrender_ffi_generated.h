@@ -257,6 +257,14 @@ struct ResourceUpdates;
 // Offset in number of tiles.
 struct Tiles;
 
+// A Transaction is a group of commands to apply atomically to a document.
+//
+// This mechanism ensures that:
+//  - no other message can be interleaved between two commands that need to be applied together.
+//  - no redundant work is performed if two commands in the same transaction cause the scene or
+//    the frame to be rebuilt.
+struct Transaction;
+
 // The default unit.
 struct UnknownUnit;
 
@@ -307,42 +315,6 @@ using VecU8 = Vec<uint8_t>;
 
 using ArcVecU8 = Arc<VecU8>;
 
-struct Epoch {
-  uint32_t mHandle;
-
-  bool operator==(const Epoch& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-  bool operator<(const Epoch& aOther) const {
-    return mHandle < aOther.mHandle;
-  }
-  bool operator<=(const Epoch& aOther) const {
-    return mHandle <= aOther.mHandle;
-  }
-};
-
-using WrEpoch = Epoch;
-
-// This type carries no valuable semantics for WR. However, it reflects the fact that
-// clients (Servo) may generate pipelines by different semi-independent sources.
-// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
-// Having this extra Id field enables them to generate `PipelineId` without collision.
-using PipelineSourceId = uint32_t;
-
-// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
-// it's clonable, serializable, comparable, and hashable.
-struct PipelineId {
-  PipelineSourceId mNamespace;
-  uint32_t mHandle;
-
-  bool operator==(const PipelineId& aOther) const {
-    return mNamespace == aOther.mNamespace &&
-           mHandle == aOther.mHandle;
-  }
-};
-
-using WrPipelineId = PipelineId;
-
 template<typename T, typename U>
 struct TypedSize2D {
   T width;
@@ -389,78 +361,6 @@ struct WrVecU8 {
   }
 };
 
-struct WrOpacityProperty {
-  uint64_t id;
-  float opacity;
-
-  bool operator==(const WrOpacityProperty& aOther) const {
-    return id == aOther.id &&
-           opacity == aOther.opacity;
-  }
-};
-
-// Geometry in a stacking context's local coordinate space (logical pixels).
-//
-// For now layout pixels are equivalent to layer pixels, but it may change.
-using LayoutPixel = LayerPixel;
-
-// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
-//
-// Transforms can be parametrized over the source and destination units, to describe a
-// transformation from a space to another.
-// For example, `TypedTransform3D<f32, WordSpace, ScreenSpace>::transform_point3d`
-// takes a `TypedPoint3D<f32, WordSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
-//
-// Transforms expose a set of convenience methods for pre- and post-transformations.
-// A pre-transformation corresponds to adding an operation that is applied before
-// the rest of the transformation, while a post-transformation adds an operation
-// that is applied after.
-template<typename T, typename Src, typename Dst>
-struct TypedTransform3D {
-  T m11;
-  T m12;
-  T m13;
-  T m14;
-  T m21;
-  T m22;
-  T m23;
-  T m24;
-  T m31;
-  T m32;
-  T m33;
-  T m34;
-  T m41;
-  T m42;
-  T m43;
-  T m44;
-
-  bool operator==(const TypedTransform3D& aOther) const {
-    return m11 == aOther.m11 &&
-           m12 == aOther.m12 &&
-           m13 == aOther.m13 &&
-           m14 == aOther.m14 &&
-           m21 == aOther.m21 &&
-           m22 == aOther.m22 &&
-           m23 == aOther.m23 &&
-           m24 == aOther.m24 &&
-           m31 == aOther.m31 &&
-           m32 == aOther.m32 &&
-           m33 == aOther.m33 &&
-           m34 == aOther.m34 &&
-           m41 == aOther.m41 &&
-           m42 == aOther.m42 &&
-           m43 == aOther.m43 &&
-           m44 == aOther.m44;
-  }
-};
-
-using LayoutTransform = TypedTransform3D<float, LayoutPixel, LayoutPixel>;
-
-struct WrTransformProperty {
-  uint64_t id;
-  LayoutTransform transform;
-};
-
 using WrIdNamespace = IdNamespace;
 
 // A 2d Point tagged with a unit.
@@ -477,23 +377,25 @@ struct TypedPoint2D {
 
 using WorldPoint = TypedPoint2D<float, WorldPixel>;
 
-// Represents RGBA screen colors with floating point numbers.
-//
-// All components must be between 0.0 and 1.0.
-// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
-struct ColorF {
-  float r;
-  float g;
-  float b;
-  float a;
+// This type carries no valuable semantics for WR. However, it reflects the fact that
+// clients (Servo) may generate pipelines by different semi-independent sources.
+// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
+// Having this extra Id field enables them to generate `PipelineId` without collision.
+using PipelineSourceId = uint32_t;
 
-  bool operator==(const ColorF& aOther) const {
-    return r == aOther.r &&
-           g == aOther.g &&
-           b == aOther.b &&
-           a == aOther.a;
+// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
+// it's clonable, serializable, comparable, and hashable.
+struct PipelineId {
+  PipelineSourceId mNamespace;
+  uint32_t mHandle;
+
+  bool operator==(const PipelineId& aOther) const {
+    return mNamespace == aOther.mNamespace &&
+           mHandle == aOther.mHandle;
   }
 };
+
+using WrPipelineId = PipelineId;
 
 // A 2d Rectangle optionally tagged with a unit.
 template<typename T, typename U>
@@ -616,6 +518,24 @@ struct BorderWidths {
   }
 };
 
+// Represents RGBA screen colors with floating point numbers.
+//
+// All components must be between 0.0 and 1.0.
+// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
+struct ColorF {
+  float r;
+  float g;
+  float b;
+  float a;
+
+  bool operator==(const ColorF& aOther) const {
+    return r == aOther.r &&
+           g == aOther.g &&
+           b == aOther.b &&
+           a == aOther.a;
+  }
+};
+
 struct BorderSide {
   ColorF color;
   BorderStyle style;
@@ -692,6 +612,63 @@ struct WrAnimationProperty {
            id == aOther.id;
   }
 };
+
+// Geometry in a stacking context's local coordinate space (logical pixels).
+//
+// For now layout pixels are equivalent to layer pixels, but it may change.
+using LayoutPixel = LayerPixel;
+
+// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
+//
+// Transforms can be parametrized over the source and destination units, to describe a
+// transformation from a space to another.
+// For example, `TypedTransform3D<f32, WordSpace, ScreenSpace>::transform_point3d`
+// takes a `TypedPoint3D<f32, WordSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
+//
+// Transforms expose a set of convenience methods for pre- and post-transformations.
+// A pre-transformation corresponds to adding an operation that is applied before
+// the rest of the transformation, while a post-transformation adds an operation
+// that is applied after.
+template<typename T, typename Src, typename Dst>
+struct TypedTransform3D {
+  T m11;
+  T m12;
+  T m13;
+  T m14;
+  T m21;
+  T m22;
+  T m23;
+  T m24;
+  T m31;
+  T m32;
+  T m33;
+  T m34;
+  T m41;
+  T m42;
+  T m43;
+  T m44;
+
+  bool operator==(const TypedTransform3D& aOther) const {
+    return m11 == aOther.m11 &&
+           m12 == aOther.m12 &&
+           m13 == aOther.m13 &&
+           m14 == aOther.m14 &&
+           m21 == aOther.m21 &&
+           m22 == aOther.m22 &&
+           m23 == aOther.m23 &&
+           m24 == aOther.m24 &&
+           m31 == aOther.m31 &&
+           m32 == aOther.m32 &&
+           m33 == aOther.m33 &&
+           m34 == aOther.m34 &&
+           m41 == aOther.m41 &&
+           m42 == aOther.m42 &&
+           m43 == aOther.m43 &&
+           m44 == aOther.m44;
+  }
+};
+
+using LayoutTransform = TypedTransform3D<float, LayoutPixel, LayoutPixel>;
 
 struct WrFilterOp {
   WrFilterOpType filter_type;
@@ -778,6 +755,22 @@ struct WrWindowId {
     return mHandle <= aOther.mHandle;
   }
 };
+
+struct Epoch {
+  uint32_t mHandle;
+
+  bool operator==(const Epoch& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  bool operator<(const Epoch& aOther) const {
+    return mHandle < aOther.mHandle;
+  }
+  bool operator<=(const Epoch& aOther) const {
+    return mHandle <= aOther.mHandle;
+  }
+};
+
+using WrEpoch = Epoch;
 
 struct WrDebugFlags {
   uint32_t mBits;
@@ -919,6 +912,21 @@ struct FontInstancePlatformOptions {
 
 using DeviceUintRect = TypedRect<uint32_t, DevicePixel>;
 
+struct WrOpacityProperty {
+  uint64_t id;
+  float opacity;
+
+  bool operator==(const WrOpacityProperty& aOther) const {
+    return id == aOther.id &&
+           opacity == aOther.opacity;
+  }
+};
+
+struct WrTransformProperty {
+  uint64_t id;
+  LayoutTransform transform;
+};
+
 extern "C" {
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
@@ -969,12 +977,6 @@ const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_clear_display_list(DocumentHandle *aDh,
-                               WrEpoch aEpoch,
-                               WrPipelineId aPipelineId)
-WR_FUNC;
-
-WR_INLINE
 void wr_api_clone(DocumentHandle *aDh,
                   DocumentHandle **aOutHandle)
 WR_FUNC;
@@ -991,18 +993,6 @@ void wr_api_finalize_builder(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_generate_frame(DocumentHandle *aDh)
-WR_FUNC;
-
-WR_INLINE
-void wr_api_generate_frame_with_properties(DocumentHandle *aDh,
-                                           const WrOpacityProperty *aOpacityArray,
-                                           size_t aOpacityCount,
-                                           const WrTransformProperty *aTransformArray,
-                                           size_t aTransformCount)
-WR_FUNC;
-
-WR_INLINE
 WrIdNamespace wr_api_get_namespace(DocumentHandle *aDh)
 WR_FUNC;
 
@@ -1015,49 +1005,13 @@ bool wr_api_hit_test(DocumentHandle *aDh,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_remove_pipeline(DocumentHandle *aDh,
-                            WrPipelineId aPipelineId)
-WR_FUNC;
-
-WR_INLINE
 void wr_api_send_external_event(DocumentHandle *aDh,
                                 size_t aEvt)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-void wr_api_set_display_list(DocumentHandle *aDh,
-                             ColorF aColor,
-                             WrEpoch aEpoch,
-                             float aViewportWidth,
-                             float aViewportHeight,
-                             WrPipelineId aPipelineId,
-                             LayoutSize aContentSize,
-                             BuiltDisplayListDescriptor aDlDescriptor,
-                             WrVecU8 *aDlData,
-                             ResourceUpdates *aResources)
-WR_FUNC;
-
-WR_INLINE
-void wr_api_set_root_pipeline(DocumentHandle *aDh,
-                              WrPipelineId aPipelineId)
-WR_FUNC;
-
-WR_INLINE
-void wr_api_set_window_parameters(DocumentHandle *aDh,
-                                  int32_t aWidth,
-                                  int32_t aHeight)
-WR_FUNC;
-
-WR_INLINE
-void wr_api_update_pipeline_resources(DocumentHandle *aDh,
-                                      WrPipelineId aPipelineId,
-                                      WrEpoch aEpoch,
-                                      ResourceUpdates *aResources)
-WR_FUNC;
-
-WR_INLINE
-void wr_api_update_resources(DocumentHandle *aDh,
-                             ResourceUpdates *aResources)
+void wr_api_send_transaction(DocumentHandle *aDh,
+                             Transaction *aTransaction)
 WR_FUNC;
 
 WR_INLINE
@@ -1579,6 +1533,75 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrThreadPool *wr_thread_pool_new()
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_clear_display_list(Transaction *aTxn,
+                                       WrEpoch aEpoch,
+                                       WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_delete(Transaction *aTxn)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+void wr_transaction_generate_frame(Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
+bool wr_transaction_is_empty(const Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
+Transaction *wr_transaction_new()
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_remove_pipeline(Transaction *aTxn,
+                                    WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_display_list(Transaction *aTxn,
+                                     WrEpoch aEpoch,
+                                     ColorF aBackground,
+                                     float aViewportWidth,
+                                     float aViewportHeight,
+                                     WrPipelineId aPipelineId,
+                                     LayoutSize aContentSize,
+                                     BuiltDisplayListDescriptor aDlDescriptor,
+                                     WrVecU8 *aDlData)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_root_pipeline(Transaction *aTxn,
+                                      WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_window_parameters(Transaction *aTxn,
+                                          int32_t aWindowWidth,
+                                          int32_t aWindowHeight)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_dynamic_properties(Transaction *aTxn,
+                                              const WrOpacityProperty *aOpacityArray,
+                                              size_t aOpacityCount,
+                                              const WrTransformProperty *aTransformArray,
+                                              size_t aTransformCount)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_epoch(Transaction *aTxn,
+                                 WrPipelineId aPipelineId,
+                                 WrEpoch aEpoch)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_resources(Transaction *aTxn,
+                                     ResourceUpdates *aResourceUpdates)
 WR_FUNC;
 
 WR_INLINE
