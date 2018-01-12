@@ -6912,22 +6912,10 @@ nsWindow::RoundsWidgetCoordinatesTo()
 
 void nsWindow::GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData)
 {
-#ifdef MOZ_X11
-#ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
-    *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-                                  (uintptr_t)nullptr,
-                                  nsCString(nullptr),
-                                  GetClientSize());
-  } else
-#endif
-  {
-    *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-                                  mXWindow,
-                                  nsCString(XDisplayString(mXDisplay)),
-                                  GetClientSize());
-  }
-#endif
+  *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
+                                (mXWindow != X11None) ? mXWindow : (uintptr_t)nullptr,
+                                mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(),
+                                GetClientSize());
 }
 
 bool
