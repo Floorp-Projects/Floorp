@@ -157,7 +157,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mUpdatedDimensions(false)
   , mSizeMode(nsSizeMode_Normal)
   , mManager(aManager)
-  , mDocShellIsActive(true)
+  , mDocShellIsActive(false)
   , mMarkedDestroying(false)
   , mIsDestroyed(false)
   , mChromeFlags(aChromeFlags)
