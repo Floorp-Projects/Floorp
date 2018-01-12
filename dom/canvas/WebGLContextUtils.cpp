@@ -804,19 +804,9 @@ WebGLContext::AssertCachedGlobalState() const
                   gl->fIsEnabled(LOCAL_GL_RASTERIZER_DISCARD) == mRasterizerDiscardEnabled);
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
 
-    GLfloat colorClearValue[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);
-    const bool ok = IsCacheCorrect(mColorClearValue[0], colorClearValue[0]) &&
-               IsCacheCorrect(mColorClearValue[1], colorClearValue[1]) &&
-               IsCacheCorrect(mColorClearValue[2], colorClearValue[2]) &&
-               IsCacheCorrect(mColorClearValue[3], colorClearValue[3]);
-    if (!ok) {
-        gfxCriticalNote << mColorClearValue[0] << " - " << colorClearValue[0] << " = " << (mColorClearValue[0] - colorClearValue[0]) << "\n"
-                        << mColorClearValue[1] << " - " << colorClearValue[1] << " = " << (mColorClearValue[1] - colorClearValue[1]) << "\n"
-                        << mColorClearValue[2] << " - " << colorClearValue[2] << " = " << (mColorClearValue[2] - colorClearValue[2]) << "\n"
-                        << mColorClearValue[3] << " - " << colorClearValue[3] << " = " << (mColorClearValue[3] - colorClearValue[3]);
-    }
-    MOZ_ASSERT(ok);
+    // Cannot trivially check COLOR_CLEAR_VALUE, since in old GL versions glGet may clamp
+    // based on whether the current framebuffer is floating-point or not.
+    // This also means COLOR_CLEAR_VALUE save+restore is dangerous!
 
     realGLboolean depthWriteMask = 0;
     gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
