@@ -173,6 +173,12 @@ typedef bool (*IonInICFn)(JSContext*, HandleScript, IonInIC*, HandleValue, Handl
 static const VMFunction IonInICInfo =
     FunctionInfo<IonInICFn>(IonInIC::update, "IonInIC::update");
 
+
+typedef bool (*IonInstanceOfICFn)(JSContext*, HandleScript, IonInstanceOfIC*,
+                         HandleValue lhs, HandleObject rhs, bool* res);
+static const VMFunction IonInstanceOfInfo =
+    FunctionInfo<IonInstanceOfICFn>(IonInstanceOfIC::update, "IonInstanceOfIC::update");
+
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 {
@@ -331,10 +337,27 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
+      case CacheKind::InstanceOf: {
+        IonInstanceOfIC* hasInstanceOfIC = ic->asInstanceOfIC();
+
+        saveLive(lir);
+
+        pushArg(hasInstanceOfIC->rhs());
+        pushArg(hasInstanceOfIC->lhs());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+
+        callVM(IonInstanceOfInfo, lir);
+
+        StoreRegisterTo(hasInstanceOfIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreRegisterTo(hasInstanceOfIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
-      case CacheKind::InstanceOf:
         MOZ_CRASH("Unsupported IC");
     }
     MOZ_CRASH();
@@ -11612,15 +11635,16 @@ typedef bool (*HasInstanceFn)(JSContext*, HandleObject, HandleValue, bool*);
 static const VMFunction HasInstanceInfo = FunctionInfo<HasInstanceFn>(js::HasInstance, "HasInstance");
 
 void
-CodeGenerator::visitCallInstanceOf(LCallInstanceOf* ins)
+CodeGenerator::visitInstanceOfCache(LInstanceOfCache* ins)
 {
-    ValueOperand lhs = ToValue(ins, LCallInstanceOf::LHS);
+    // The Lowering ensures that RHS is an object, and that LHS is a value.
+    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
+    TypedOrValueRegister lhs = TypedOrValueRegister(ToValue(ins, LInstanceOfCache::LHS));
     Register rhs = ToRegister(ins->rhs());
-    MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
+    Register output = ToRegister(ins->output());
 
-    pushArg(lhs);
-    pushArg(rhs);
-    callVM(HasInstanceInfo, ins);
+    IonInstanceOfIC ic(liveRegs, lhs, rhs, output);
+    addIC(ins, allocateIC(ic));
 }
 
 void
