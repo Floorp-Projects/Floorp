@@ -17,14 +17,8 @@ NS_IMPL_ISUPPORTS_INHERITED(nsPagePrintTimer, mozilla::Runnable, nsITimerCallbac
 
 nsPagePrintTimer::~nsPagePrintTimer()
 {
-  // "Destroy" the document viewer; this normally doesn't actually
-  // destroy it because of the IncrementDestroyRefCount call below
-  // XXX This is messy; the document viewer should use a single approach
-  // to keep itself alive during printing
-  nsCOMPtr<nsIContentViewer> cv(do_QueryInterface(mDocViewerPrint));
-  if (cv) {
-    cv->Destroy();
-  }
+  // This matches the IncrementDestroyRefCount call in the constructor.
+  mDocViewerPrint->DecrementDestroyRefCount();
 }
 
 nsresult
