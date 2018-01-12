@@ -12,7 +12,7 @@
 
 # Older Debian based systems had both "admin" and "adm" groups, with "admin"
 # apparently being used in more places. Newer distributions have standardized
-# on just the "adm" group. Check /etc/group for the preferred name of the
+# on just the "adm" group. Check /etc/group for the prefered name of the
 # administrator group.
 admin=$(grep '^admin:' /etc/group >&/dev/null && echo admin || echo adm)
 
@@ -223,8 +223,7 @@ target="${distname}${arch}"
       d|D) sudo rm -rf "/var/lib/chroot/${target}"      \
                        "/usr/local/bin/${target%bit}"   \
                        "/etc/schroot/mount-${target}"   \
-                       "/etc/schroot/script-${target}"  \
-                       "/etc/schroot/${target}"
+                       "/etc/schroot/script-${target}"
            sudo sed -ni '/^[[]'"${target%bit}"']$/,${
                          :1;n;/^[[]/b2;b1;:2;p;n;b2};p' \
                        "/etc/schroot/schroot.conf"
@@ -350,41 +349,13 @@ grep -qs ubuntu.com /usr/share/debootstrap/scripts/"${distname}" &&
 if [ -z "${chroot_groups}" ]; then
   chroot_groups="${admin},$(id -gn)"
 fi
-
-if [ -d '/etc/schroot/default' ]; then
-  new_version=1
-  fstab="/etc/schroot/${target}/fstab"
-else
-  new_version=0
-  fstab="/etc/schroot/mount-${target}"
-fi
-
-if [ "$new_version" = "1" ]; then
-  sudo cp -ar /etc/schroot/default /etc/schroot/${target}
-
-  sudo sh -c 'cat >>/etc/schroot/schroot.conf' <<EOF
-[${target%bit}]
-description=${brand} ${distname} ${arch}
-type=directory
-directory=/var/lib/chroot/${target}
-users=root
-groups=${chroot_groups}
-root-groups=${chroot_groups}
-personality=linux$([ "${arch}" != 64bit ] && echo 32)
-profile=${target}
-
-EOF
-  [ -n "${bind_mounts}" -a "${bind_mounts}" != "NONE" ] &&
-    printf "${bind_mounts}" |
-      sudo sh -c "cat >>${fstab}"
-else
-  # Older versions of schroot wanted a "priority=" line, whereas recent
-  # versions deprecate "priority=" and warn if they see it. We don't have
-  # a good feature test, but scanning for the string "priority=" in the
-  # existing "schroot.conf" file is a good indication of what to do.
-  priority=$(grep -qs 'priority=' /etc/schroot/schroot.conf &&
+# Older versions of schroot wanted a "priority=" line, whereas recent
+# versions deprecate "priority=" and warn if they see it. We don't have
+# a good feature test, but scanning for the string "priority=" in the
+# existing "schroot.conf" file is a good indication of what to do.
+priority=$(grep -qs 'priority=' /etc/schroot/schroot.conf &&
            echo 'priority=3' || :)
-  sudo sh -c 'cat >>/etc/schroot/schroot.conf' <<EOF
+sudo sh -c 'cat >>/etc/schroot/schroot.conf' <<EOF
 [${target%bit}]
 description=${brand} ${distname} ${arch}
 type=directory
@@ -398,43 +369,38 @@ ${priority}
 
 EOF
 
-  # Set up a list of mount points that is specific to this
-  # chroot environment.
-  sed '/^FSTAB=/s,"[^"]*","'"${fstab}"'",' \
-           /etc/schroot/script-defaults |
-    sudo sh -c 'cat >/etc/schroot/script-'"${target}"
-  sed '\,^/home[/[:space:]],s/\([,[:space:]]\)bind[[:space:]]/\1rbind /' \
-    /etc/schroot/mount-defaults |
-    sudo sh -c "cat > ${fstab}"
-fi
+# Set up a list of mount points that is specific to this
+# chroot environment.
+sed '/^FSTAB=/s,"[^"]*","/etc/schroot/mount-'"${target}"'",' \
+         /etc/schroot/script-defaults |
+  sudo sh -c 'cat >/etc/schroot/script-'"${target}"
+sed '\,^/home[/[:space:]],s/\([,[:space:]]\)bind[[:space:]]/\1rbind /' \
+  /etc/schroot/mount-defaults |
+  sudo sh -c 'cat > /etc/schroot/mount-'"${target}"
 
 # Add the extra mount points that the user told us about
 [ -n "${bind_mounts}" -a "${bind_mounts}" != "NONE" ] &&
   printf "${bind_mounts}" |
-    sudo sh -c 'cat >>'"${fstab}"
+    sudo sh -c 'cat >>/etc/schroot/mount-'"${target}"
 
 # If this system has a "/media" mountpoint, import it into the chroot
 # environment. Most modern distributions use this mount point to
 # automatically mount devices such as CDROMs, USB sticks, etc...
 if [ -d /media ] &&
-   ! grep -qs '^/media' "${fstab}"; then
+   ! grep -qs '^/media' /etc/schroot/mount-"${target}"; then
   echo '/media /media none rw,rbind 0 0' |
-    sudo sh -c 'cat >>'"${fstab}"
+    sudo sh -c 'cat >>/etc/schroot/mount-'"${target}"
 fi
 
-# Share /dev/shm, /run and /run/shm.
-grep -qs '^/dev/shm' "${fstab}" ||
+# Share /dev/shm and possibly /run/shm
+grep -qs '^/dev/shm' /etc/schroot/mount-"${target}" ||
   echo '/dev/shm /dev/shm none rw,bind 0 0' |
-    sudo sh -c 'cat >>'"${fstab}"
-if [ ! -d "/var/lib/chroot/${target}/run" ] &&
-   ! grep -qs '^/run' "${fstab}"; then
-  echo '/run /run none rw,bind 0 0' |
-    sudo sh -c 'cat >>'"${fstab}"
-fi
-if ! grep -qs '^/run/shm' "${fstab}"; then
+    sudo sh -c 'cat >>/etc/schroot/mount-'"${target}"
+if [ -d "/var/lib/chroot/${target}/run" ] &&
+   ! grep -qs '^/run/shm' /etc/schroot/mount-"${target}"; then
   { [ -d /run ] && echo '/run/shm /run/shm none rw,bind 0 0' ||
                    echo '/dev/shm /run/shm none rw,bind 0 0'; } |
-    sudo sh -c 'cat >>'"${fstab}"
+    sudo sh -c 'cat >>/etc/schroot/mount-'"${target}"
 fi
 
 # Set up a special directory that changes contents depending on the target
@@ -442,7 +408,7 @@ fi
 d="$(readlink -f "${HOME}/chroot" 2>/dev/null || echo "${HOME}/chroot")"
 s="${d}/.${target}"
 echo "${s} ${d} none rw,bind 0 0" |
-  sudo sh -c 'cat >>'"${target}"
+  sudo sh -c 'cat >>/etc/schroot/mount-'"${target}"
 mkdir -p "${s}"
 
 # Install a helper script to launch commands in the chroot
@@ -527,69 +493,27 @@ while [ "$#" -ne 0 ]; do
   esac
 done
 
-# Start a new chroot session and keep track of the session id. We inject this
-# id into all processes that run inside the chroot. Unless they go out of their
-# way to clear their environment, we can then later identify our child and
-# grand-child processes by scanning their environment.
 session="$(schroot -c "${chroot}" -b)"
-export CHROOT_SESSION_ID="${session}"
-
-# Set GOMA_TMP_DIR for better handling of goma inside chroot.
-export GOMA_TMP_DIR="/tmp/goma_tmp_$CHROOT_SESSION_ID"
-mkdir -p "$GOMA_TMP_DIR"
 
 if [ $# -eq 0 ]; then
-  # Run an interactive shell session
   schroot -c "${session}" -r -p
 else
-  # Run a command inside of the chroot environment
   p="$1"; shift
   schroot -c "${session}" -r -p "$p" -- "$@"
 fi
 rc=$?
 
-# Compute the inode of the root directory inside of the chroot environment.
 i=$(schroot -c "${session}" -r -p ls -- -id /proc/self/root/. |
      awk '{ print $1 }') 2>/dev/null
-other_pids=
 while [ -n "$i" ]; do
-  # Identify processes by the inode number of their root directory. Then
-  # remove all processes that we know belong to other sessions. We use
-  # "sort | uniq -u" to do what amounts to a "set substraction operation".
-  pids=$({ ls -id1 /proc/*/root/. 2>/dev/null |
+  pids=$(ls -id1 /proc/*/root/. 2>/dev/null |
          sed -e 's,^[^0-9]*'$i'.*/\([1-9][0-9]*\)/.*$,\1,
                  t
-                 d';
-         echo "${other_pids}";
-         echo "${other_pids}"; } | sort | uniq -u) >/dev/null 2>&1
-  # Kill all processes that are still left running in the session. This is
-  # typically an assortment of daemon processes that were started
-  # automatically. They result in us being unable to tear down the session
-  # cleanly.
-  [ -z "${pids}" ] && break
-  for j in $pids; do
-    # Unfortunately, the way that schroot sets up sessions has the
-    # side-effect of being unable to tell one session apart from another.
-    # This can result in us attempting to kill processes in other sessions.
-    # We make a best-effort to avoid doing so.
-    k="$( ( xargs -0 -n1 </proc/$j/environ ) 2>/dev/null |
-         sed 's/^CHROOT_SESSION_ID=/x/;t1;d;:1;q')"
-    if [ -n "${k}" -a "${k#x}" != "${session}" ]; then
-      other_pids="${other_pids}
-${j}"
-      continue
-    fi
-    kill -9 $pids
-  done
+                 d') >/dev/null 2>&1
+  [ -z "$pids" ] && break
+  kill -9 $pids
 done
-# End the chroot session. This should clean up all temporary files. But if we
-# earlier failed to terminate all (daemon) processes inside of the session,
-# deleting the session could fail. When that happens, the user has to manually
-# clean up the stale files by invoking us with "--clean" after having killed
-# all running processes.
 schroot -c "${session}" -e
-# Since no goma processes are running, we can remove goma directory.
-rm -rf "$GOMA_TMP_DIR"
 exit $rc
 EOF
 sudo chown root:root /usr/local/bin/"${target%bit}"
@@ -659,12 +583,9 @@ sudo "/usr/local/bin/${target%bit}" dpkg --assert-multi-arch >&/dev/null &&
   sudo sed -i 's/ / [arch=amd64,i386] /' \
               "/var/lib/chroot/${target}/etc/apt/sources.list"
   [ -d /var/lib/chroot/${target}/etc/dpkg/dpkg.cfg.d/ ] &&
-  sudo "/usr/local/bin/${target%bit}" dpkg --add-architecture \
-      $([ "${arch}" = "32bit" ] && echo amd64 || echo i386) >&/dev/null ||
-    echo foreign-architecture \
-        $([ "${arch}" = "32bit" ] && echo amd64 || echo i386) |
-      sudo sh -c \
-        "cat >'/var/lib/chroot/${target}/etc/dpkg/dpkg.cfg.d/multiarch'"
+  echo foreign-architecture \
+       $([ "${arch}" = "32bit" ] && echo amd64 || echo i386) |
+    sudo sh -c "cat >'/var/lib/chroot/${target}/etc/dpkg/dpkg.cfg.d/multiarch'"
 }
 
 # Configure "sudo" package
@@ -675,7 +596,7 @@ sudo "/usr/local/bin/${target%bit}" /bin/sh -c '
 # Install a few more commonly used packages
 sudo "/usr/local/bin/${target%bit}" apt-get -y install                         \
   autoconf automake1.9 dpkg-dev g++-multilib gcc-multilib gdb less libtool     \
-  lsof strace
+  strace
 
 # If running a 32bit environment on a 64bit machine, install a few binaries
 # as 64bit. This is only done automatically if the chroot distro is the same as
@@ -689,7 +610,7 @@ if [ "${copy_64}" = "y" -o \
   readlinepkg=$(sudo "/usr/local/bin/${target%bit}" sh -c \
     'apt-cache search "lib64readline.\$" | sort | tail -n 1 | cut -d " " -f 1')
   sudo "/usr/local/bin/${target%bit}" apt-get -y install                       \
-    lib64expat1 lib64ncurses5 ${readlinepkg} lib64z1 lib64stdc++6
+    lib64expat1 lib64ncurses5 ${readlinepkg} lib64z1
   dep=
   for i in binutils gdb; do
     [ -d /usr/share/doc/"$i" ] || dep="$dep $i"
@@ -747,7 +668,7 @@ if [ -x "${script}" ]; then
         # installing the Chrome build depencies. This prevents the chroot
         # session from being closed.  So, we always try to shut down any running
         # instance of dbus and rsyslog.
-        sudo /usr/local/bin/"${target%bit}" sh -c "${script};
+        sudo /usr/local/bin/"${target%bit}" sh -c "${script} --no-lib32;
               rc=$?;
               /etc/init.d/cron stop >/dev/null 2>&1 || :;
               /etc/init.d/rsyslog stop >/dev/null 2>&1 || :;
@@ -848,7 +769,7 @@ if [ ! -h "${HOME}/chroot" ] &&
 fi
 
 # Clean up package files
-sudo schroot -c "${target%bit}" -p -- apt-get clean
+sudo schroot -c /usr/local/bin/"${target%bit}" -p -- apt-get clean
 sudo apt-get clean
 
 trap '' INT TERM QUIT HUP

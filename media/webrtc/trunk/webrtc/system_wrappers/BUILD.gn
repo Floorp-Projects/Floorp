@@ -82,15 +82,7 @@ rtc_static_library("system_wrappers") {
 
     defines += [ "WEBRTC_THREAD_RR" ]
 
-    if (!build_with_mozilla) {
-      deps += [ ":cpu_features_android" ]
-    } else {
-      include_dirs = [
-        "/config/external/nspr",
-        "/nsprpub/lib/ds",
-        "/nsprpub/pr/include",
-      ]
-    }
+    deps += [ ":cpu_features_android" ]
 
     libs += [ "log" ]
   }
@@ -153,7 +145,7 @@ group("system_wrappers_default") {
   ]
 }
 
-if (is_android && !build_with_mozilla) {
+if (is_android) {
   rtc_static_library("cpu_features_android") {
     sources = [
       "source/cpu_features_android.c",

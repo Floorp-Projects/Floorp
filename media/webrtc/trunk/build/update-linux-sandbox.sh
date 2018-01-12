@@ -6,7 +6,7 @@
 
 BUILDTYPE="${BUILDTYPE:-Debug}"
 CHROME_SRC_DIR="${CHROME_SRC_DIR:-$(dirname -- $(readlink -fn -- "$0"))/..}"
-CHROME_OUT_DIR="${CHROME_SRC_DIR}/${CHROMIUM_OUT_DIR:-out}/${BUILDTYPE}"
+CHROME_OUT_DIR="${CHROME_SRC_DIR}/out/${BUILDTYPE}"
 CHROME_SANDBOX_BUILD_PATH="${CHROME_OUT_DIR}/chrome_sandbox"
 CHROME_SANDBOX_INST_PATH="/usr/local/sbin/chrome-devel-sandbox"
 CHROME_SANDBOX_INST_DIR=$(dirname -- "$CHROME_SANDBOX_INST_PATH")
@@ -39,9 +39,8 @@ if [ ! -d "${CHROME_OUT_DIR}" ]; then
 fi
 
 if [ ! -f "${CHROME_SANDBOX_BUILD_PATH}" ]; then
-  echo "Could not find ${CHROME_SANDBOX_BUILD_PATH}"
-  echo -n "BUILDTYPE is $BUILDTYPE, use \"BUILDTYPE=<value> ${0}\" to override "
-  echo "after you build the chrome_sandbox target"
+  echo -n "Could not find ${CHROME_SANDBOX_BUILD_PATH}, "
+  echo "please make sure you build the chrome_sandbox target"
   exit 1
 fi
 
