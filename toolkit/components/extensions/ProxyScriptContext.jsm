@@ -200,7 +200,7 @@ class ProxyScriptContext extends BaseContext {
     this.extension = extension;
     this.messageManager = Services.cpmm;
     this.sandbox = Cu.Sandbox(this.extension.principal, {
-      sandboxName: `proxyscript:${extension.id}:${url}`,
+      sandboxName: `Extension Proxy Script (${extension.policy.debugName}): ${url}`,
       metadata: {addonID: extension.id},
     });
     this.url = url;

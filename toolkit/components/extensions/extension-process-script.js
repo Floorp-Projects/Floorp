@@ -343,6 +343,8 @@ ExtensionManager = {
         contentScripts: extension.contentScripts.map(parseScriptOptions),
       });
 
+      policy.debugName = `${JSON.stringify(policy.name)} (ID: ${policy.id}, ${policy.getURL()})`;
+
       // Register any existent dinamically registered content script for the extension
       // when a content process is started for the first time (which also cover
       // a content process that crashed and it has been recreated).
