@@ -37,7 +37,6 @@ const PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS =
   "browser.download.hide_plugins_without_extensions";
 
 // Strings to identify ExtensionSettingsStore overrides
-const PREF_SETTING_TYPE = "prefs";
 const CONTAINERS_KEY = "privacy.containers";
 const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";

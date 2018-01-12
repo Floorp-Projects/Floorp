@@ -137,6 +137,7 @@
 #ifdef NS_PRINTING
 #include "nsPrintingProxy.h"
 #endif
+#include "nsWindowMemoryReporter.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -2651,6 +2652,15 @@ ContentChild::RecvCycleCollect()
     obs->NotifyObservers(nullptr, "child-cc-request", nullptr);
   }
   nsJSContext::CycleCollectNow();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvUnlinkGhosts()
+{
+#ifdef DEBUG
+  nsWindowMemoryReporter::UnlinkGhostWindows();
+#endif
   return IPC_OK();
 }
 

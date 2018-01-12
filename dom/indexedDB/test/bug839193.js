@@ -4,7 +4,9 @@
 
 const nsIQuotaManagerService = Components.interfaces.nsIQuotaManagerService;
 
-var gURI = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newURI("http://localhost");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+var gURI = Services.io.newURI("http://localhost");
 
 function onUsageCallback(request) {}
 
@@ -13,20 +15,14 @@ function onLoad()
   var quotaManagerService =
     Components.classes["@mozilla.org/dom/quota-manager-service;1"]
               .getService(nsIQuotaManagerService);
-  let principal = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                            .getService(Components.interfaces.nsIScriptSecurityManager)
-                            .createCodebasePrincipal(gURI, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(gURI, {});
   var quotaRequest = quotaManagerService.getUsageForPrincipal(principal,
                                                               onUsageCallback);
   quotaRequest.cancel();
-  Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "bug839193-loaded");
+  Services.obs.notifyObservers(window, "bug839193-loaded");
 }
 
 function onUnload()
 {
-  Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(window, "bug839193-unloaded");
+  Services.obs.notifyObservers(window, "bug839193-unloaded");
 }

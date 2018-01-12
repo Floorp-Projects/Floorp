@@ -161,6 +161,8 @@ protected:
 };
 
 TEST_F(APZEventRegionsTester, HitRegionImmediateResponse) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -226,6 +228,8 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
 }
 
 TEST_F(APZEventRegionsTester, Obscuration) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
 

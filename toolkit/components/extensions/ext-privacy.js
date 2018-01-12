@@ -6,9 +6,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+
 var {
   ExtensionError,
 } = ExtensionUtils;
+
+const cookieSvc = Ci.nsICookieService;
+
+const cookieBehaviorValues = new Map([
+  ["allow_all", cookieSvc.BEHAVIOR_ACCEPT],
+  ["reject_third_party", cookieSvc.BEHAVIOR_REJECT_FOREIGN],
+  ["reject_all", cookieSvc.BEHAVIOR_REJECT],
+  ["allow_visited", cookieSvc.BEHAVIOR_LIMIT_FOREIGN],
+]);
 
 const checkScope = scope => {
   if (scope && scope !== "regular") {
@@ -115,6 +125,34 @@ ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
+  prefNames: [
+    "network.cookie.cookieBehavior",
+    "network.cookie.lifetimePolicy",
+  ],
+
+  setCallback(value) {
+    return {
+      "network.cookie.cookieBehavior":
+        cookieBehaviorValues.get(value.behavior),
+      "network.cookie.lifetimePolicy":
+        value.nonPersistentCookies ?
+          cookieSvc.ACCEPT_SESSION :
+          cookieSvc.ACCEPT_NORMALLY,
+    };
+  },
+});
+
+ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
+  prefNames: [
+    "privacy.firstparty.isolate",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("websites.hyperlinkAuditingEnabled", {
   prefNames: [
     "browser.send_pings",
@@ -141,16 +179,6 @@ ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
 ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
   prefNames: [
     "privacy.resistFingerprinting",
-  ],
-
-  setCallback(value) {
-    return {[this.prefNames[0]]: value};
-  },
-});
-
-ExtensionPreferencesManager.addSetting("websites.firstPartyIsolate", {
-  prefNames: [
-    "privacy.firstparty.isolate",
   ],
 
   setCallback(value) {
@@ -236,6 +264,23 @@ this.privacy = class extends ExtensionAPI {
         },
 
         websites: {
+          cookieConfig: getPrivacyAPI(
+            extension, "websites.cookieConfig",
+            () => {
+              let prefValue = Preferences.get("network.cookie.cookieBehavior");
+              return {
+                behavior:
+                  Array.from(
+                    cookieBehaviorValues.entries()).find(entry => entry[1] === prefValue)[0],
+                nonPersistentCookies:
+                  Preferences.get("network.cookie.lifetimePolicy") === cookieSvc.ACCEPT_SESSION,
+              };
+            }),
+          firstPartyIsolate: getPrivacyAPI(
+            extension, "websites.firstPartyIsolate",
+            () => {
+              return Preferences.get("privacy.firstparty.isolate");
+            }),
           hyperlinkAuditingEnabled: getPrivacyAPI(
             extension, "websites.hyperlinkAuditingEnabled",
             () => {
@@ -250,11 +295,6 @@ this.privacy = class extends ExtensionAPI {
             extension, "websites.resistFingerprinting",
             () => {
               return Preferences.get("privacy.resistFingerprinting");
-            }),
-          firstPartyIsolate: getPrivacyAPI(
-            extension, "websites.firstPartyIsolate",
-            () => {
-              return Preferences.get("privacy.firstparty.isolate");
             }),
           trackingProtectionMode: getPrivacyAPI(
             extension, "websites.trackingProtectionMode",

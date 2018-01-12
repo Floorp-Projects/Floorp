@@ -28,7 +28,6 @@ const {
   ElementNotInteractableError,
   InsecureCertificateError,
   InvalidArgumentError,
-  InvalidElementStateError,
   InvalidSelectorError,
   NoSuchElementError,
   NoSuchFrameError,
@@ -1324,21 +1323,7 @@ async function sendKeysToElement(el, val) {
 
 /** Clear the text of an element. */
 function clearElement(el) {
-  try {
-    if (el.type == "file") {
-      el.value = null;
-    } else {
-      atom.clearElement(el, curContainer.frame);
-    }
-  } catch (e) {
-    // Bug 964738: Newer atoms contain status codes which makes wrapping
-    // this in an error prototype that has a status property unnecessary
-    if (e.name == "InvalidElementStateError") {
-      throw new InvalidElementStateError(e.message);
-    } else {
-      throw e;
-    }
-  }
+  interaction.clearElement(el);
 }
 
 /** Switch the current context to the specified host's Shadow DOM. */

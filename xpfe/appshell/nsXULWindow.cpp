@@ -613,7 +613,7 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
 
   DesktopToLayoutDeviceScale scale = mWindow->GetDesktopToDeviceScale();
   DesktopRect rect = LayoutDeviceIntRect(aX, aY, aCX, aCY) / scale;
-  mWindow->Resize(rect.x, rect.y, rect.width, rect.height,
+  mWindow->Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(),
                   !!(aFlags & nsIBaseWindow::eRepaint));
   if (!mChromeLoaded) {
     // If we're called before the chrome is loaded someone obviously wants this
@@ -638,13 +638,13 @@ NS_IMETHODIMP nsXULWindow::GetPositionAndSize(int32_t* x, int32_t* y, int32_t* c
   LayoutDeviceIntRect rect = mWindow->GetScreenBounds();
 
   if (x)
-    *x = rect.x;
+    *x = rect.X();
   if (y)
-    *y = rect.y;
+    *y = rect.Y();
   if (cx)
-    *cx = rect.width;
+    *cx = rect.Width();
   if (cy)
-    *cy = rect.height;
+    *cy = rect.Height();
 
   return NS_OK;
 }
@@ -701,8 +701,8 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, bool aScreen, bool aA
   if (!aRelative) {
     if (!mOpenerScreenRect.IsEmpty()) {
       // FIXME - check if these are device or display pixels
-      screenmgr->ScreenForRect(mOpenerScreenRect.x, mOpenerScreenRect.y,
-                               mOpenerScreenRect.width, mOpenerScreenRect.height,
+      screenmgr->ScreenForRect(mOpenerScreenRect.X(), mOpenerScreenRect.Y(),
+                               mOpenerScreenRect.Width(), mOpenerScreenRect.Height(),
                                getter_AddRefs(screen));
     } else {
       screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
@@ -1613,8 +1613,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if (parent && gotRestoredBounds) {
     int32_t parentX, parentY;
     if (NS_SUCCEEDED(parent->GetPosition(&parentX, &parentY))) {
-      rect.x -= parentX;
-      rect.y -= parentY;
+      rect.MoveBy(-parentX, -parentY);
     }
   }
 
@@ -1634,7 +1633,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
     if (persistString.Find("screenX") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.x / posScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.X() / posScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1642,7 +1641,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("screenY") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.y / posScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Y() / posScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1653,7 +1652,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
     if (persistString.Find("width") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.width / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Width() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1661,7 +1660,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("height") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.height / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Height() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
