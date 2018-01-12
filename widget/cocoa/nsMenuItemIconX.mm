@@ -192,11 +192,15 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 
     // Return NS_ERROR_FAILURE if the image region is invalid so the image
     // is not drawn, and behavior is similar to XUL menus.
-    if (r.X() < 0 || r.Y() < 0 || r.IsEmpty()) {
+    if (r.X() < 0 || r.Y() < 0 || r.Width() < 0 || r.Height() < 0) {
       return NS_ERROR_FAILURE;
     }
 
-    mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
+    // 'auto' is represented by a [0, 0, 0, 0] rect. Only set mImageRegionRect
+    // if we have some other value.
+    if (!r.IsEmpty()) {
+      mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
+    }
   }
 
   return NS_OK;
