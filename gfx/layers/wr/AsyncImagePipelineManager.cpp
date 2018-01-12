@@ -120,7 +120,7 @@ AsyncImagePipelineManager::AddAsyncImagePipeline(const wr::PipelineId& aPipeline
 }
 
 void
-AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId)
+AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn)
 {
   if (mDestroyed) {
     return;
@@ -130,12 +130,12 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
   if (auto entry = mAsyncImagePipelines.Lookup(id)) {
     AsyncImagePipeline* holder = entry.Data();
     ++mAsyncImageEpoch; // Update webrender epoch
-    mApi->ClearDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
+    aTxn.ClearDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
     wr::ResourceUpdateQueue resources;
     for (wr::ImageKey key : holder->mKeys) {
       resources.DeleteImage(key);
     }
-    mApi->UpdateResources(resources);
+    aTxn.UpdateResources(resources);
     entry.Remove();
     RemovePipeline(aPipelineId, wr::NewEpoch(mAsyncImageEpoch));
   }

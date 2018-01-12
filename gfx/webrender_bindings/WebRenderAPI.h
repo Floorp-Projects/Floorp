@@ -143,6 +143,8 @@ public:
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       wr::Vec<uint8_t>& dl_data);
 
+  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
+
   void GenerateFrame();
 
   void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
@@ -186,31 +188,6 @@ public:
                gfx::CompositorHitTestInfo& aOutHitInfo);
 
   void SendTransaction(TransactionBuilder& aTxn);
-
-  void GenerateFrame();
-  void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                     const nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  void SetWindowParameters(LayoutDeviceIntSize size);
-
-  void SetDisplayList(gfx::Color aBgColor,
-                      Epoch aEpoch,
-                      mozilla::LayerSize aViewportSize,
-                      wr::WrPipelineId pipeline_id,
-                      const wr::LayoutSize& content_size,
-                      wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec<uint8_t>& dl_data,
-                      ResourceUpdateQueue& aResources);
-
-  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
-
-  void SetRootPipeline(wr::PipelineId aPipeline);
-
-  void RemovePipeline(wr::PipelineId aPipeline);
-
-  void UpdateResources(ResourceUpdateQueue& aUpdates);
-
-  void UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch);
 
   void SetFrameStartTime(const TimeStamp& aTime);
 

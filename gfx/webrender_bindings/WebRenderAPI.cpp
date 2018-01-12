@@ -190,6 +190,12 @@ TransactionBuilder::SetDisplayList(gfx::Color aBgColor,
 }
 
 void
+TransactionBuilder::ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipelineId)
+{
+  wr_transaction_clear_display_list(mTxn, aEpoch, aPipelineId);
+}
+
+void
 TransactionBuilder::GenerateFrame()
 {
   wr_transaction_generate_frame(mTxn);
@@ -330,58 +336,6 @@ WebRenderAPI::HitTest(const wr::WorldPoint& aPoint,
                 "CompositorHitTestInfo should be u16-sized");
   return wr_api_hit_test(mDocHandle, aPoint,
           &aOutPipelineId, &aOutScrollId, (uint16_t*)&aOutHitInfo);
-}
-
-void
-WebRenderAPI::GenerateFrame()
-{
-  wr_api_generate_frame(mDocHandle);
-}
-
-void
-WebRenderAPI::GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                            const nsTArray<wr::WrTransformProperty>& aTransformArray)
-{
-  wr_api_generate_frame_with_properties(mDocHandle,
-                                        aOpacityArray.IsEmpty() ?
-                                          nullptr : aOpacityArray.Elements(),
-                                        aOpacityArray.Length(),
-                                        aTransformArray.IsEmpty() ?
-                                          nullptr : aTransformArray.Elements(),
-                                        aTransformArray.Length());
-}
-
-void
-WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
-                             Epoch aEpoch,
-                             mozilla::LayerSize aViewportSize,
-                             wr::WrPipelineId pipeline_id,
-                             const LayoutSize& content_size,
-                             wr::BuiltDisplayListDescriptor dl_descriptor,
-                             wr::Vec<uint8_t>& dl_data,
-                             ResourceUpdateQueue& aResources)
-{
-  wr_api_set_display_list(mDocHandle,
-                          ToColorF(aBgColor),
-                          aEpoch,
-                          aViewportSize.width, aViewportSize.height,
-                          pipeline_id,
-                          content_size,
-                          dl_descriptor,
-                          &dl_data.inner,
-                          aResources.Raw());
-}
-
-void
-WebRenderAPI::ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id)
-{
-  wr_api_clear_display_list(mDocHandle, aEpoch, pipeline_id);
-}
-
-void
-WebRenderAPI::SetWindowParameters(LayoutDeviceIntSize size)
-{
-  wr_api_set_window_parameters(mDocHandle, size.width, size.height);
 }
 
 void
@@ -538,30 +492,6 @@ WebRenderAPI::WaitFlushed()
     RunOnRenderThread(Move(event));
 
     task.Wait();
-}
-
-void
-WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
-{
-  wr_api_set_root_pipeline(mDocHandle, aPipeline);
-}
-
-void
-WebRenderAPI::RemovePipeline(PipelineId aPipeline)
-{
-  wr_api_remove_pipeline(mDocHandle, aPipeline);
-}
-
-void
-WebRenderAPI::UpdateResources(ResourceUpdateQueue& aUpdates)
-{
-  wr_api_update_resources(mDocHandle, aUpdates.Raw());
-}
-
-void
-WebRenderAPI::UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch)
-{
-  wr_api_update_pipeline_resources(mDocHandle, aPipeline, aEpoch, aUpdates.Raw());
 }
 
 ResourceUpdateQueue::ResourceUpdateQueue()
