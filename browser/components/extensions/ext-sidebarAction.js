@@ -189,7 +189,8 @@ this.sidebarAction = class extends ExtensionAPI {
 
     document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
-    document.getElementById("sidebar-extensions").appendChild(toolbarbutton);
+    let separator = document.getElementById("sidebar-extensions-separator");
+    separator.parentNode.insertBefore(toolbarbutton, separator);
 
     return menuitem;
   }
