@@ -267,7 +267,7 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   wr::LayoutSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize, mLastDisplayListSize);
-  wr::IpcResourceUpdateQueue resourceUpdates(WrBridge()->GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
 
   mWebRenderCommandBuilder.BuildWebRenderCommands(builder,
                                                   resourceUpdates,
@@ -413,7 +413,7 @@ WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 void
 WebRenderLayerManager::DiscardImages()
 {
-  wr::IpcResourceUpdateQueue resources(WrBridge()->GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resources(WrBridge());
   for (const auto& key : mImageKeysToDeleteLater) {
     resources.DeleteImage(key);
   }

@@ -68,6 +68,11 @@ WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
 void
 WebRenderBridgeChild::DoDestroy()
 {
+  if (RefCountedShm::IsValid(mResourceShm) && RefCountedShm::Release(mResourceShm) == 0) {
+    RefCountedShm::Dealloc(this, mResourceShm);
+    mResourceShm = RefCountedShmem();
+  }
+
   // mDestroyed is used to prevent calling Send__delete__() twice.
   // When this function is called from CompositorBridgeChild::Destroy().
   // mActiveResourceTracker is not cleared here, since it is
@@ -125,7 +130,7 @@ WebRenderBridgeChild::UpdateResources(wr::IpcResourceUpdateQueue& aResources)
   }
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<RefCountedShmem> smallShmems;
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
@@ -154,7 +159,7 @@ WebRenderBridgeChild::EndTransaction(const wr::LayoutSize& aContentSize,
 #endif
 
   nsTArray<OpUpdateResource> resourceUpdates;
-  nsTArray<ipc::Shmem> smallShmems;
+  nsTArray<RefCountedShmem> smallShmems;
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
@@ -321,7 +326,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
     return instanceKey;
   }
 
-  wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resources(this);
 
   wr::FontKey fontKey = GetFontKeyForUnscaledFont(aScaledFont->GetUnscaledFont());
   wr::FontKey nullKey = { wr::IdNamespace { 0 }, 0};
@@ -354,7 +359,7 @@ WebRenderBridgeChild::GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaled)
 
   wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
   if (!mFontKeys.Get(aUnscaled, &fontKey)) {
-    wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+    wr::IpcResourceUpdateQueue resources(this);
     FontFileDataSink sink = { &fontKey, this, &resources };
     // First try to retrieve a descriptor for the font, as this is much cheaper
     // to send over IPC than the full raw font data. If this is not possible, then
@@ -376,7 +381,7 @@ void
 WebRenderBridgeChild::RemoveExpiredFontKeys()
 {
   uint32_t counter = gfx::ScaledFont::DeletionCounter();
-  wr::IpcResourceUpdateQueue resources(GetShmemAllocator());
+  wr::IpcResourceUpdateQueue resources(this);
   if (mFontInstanceKeysDeleted != counter) {
     mFontInstanceKeysDeleted = counter;
     for (auto iter = mFontInstanceKeys.Iter(); !iter.Done(); iter.Next()) {
@@ -635,6 +640,50 @@ WebRenderBridgeChild::GetForMedia()
 {
   MOZ_ASSERT(NS_IsMainThread());
   return MakeAndAddRef<KnowsCompositorMediaProxy>(GetTextureFactoryIdentifier());
+}
+
+bool
+WebRenderBridgeChild::AllocResourceShmem(size_t aSize, RefCountedShmem& aShm)
+{
+  // We keep a single shmem around to reuse later if it is reference count has
+  // dropped back to 1 (the reference held by the WebRenderBridgeChild).
+
+  // If the cached shmem exists, has the correct size and isn't held by anything
+  // other than us, recycle it.
+  bool alreadyAllocated = RefCountedShm::IsValid(mResourceShm);
+  if (alreadyAllocated) {
+    if (RefCountedShm::GetSize(mResourceShm) == aSize
+        && RefCountedShm::GetReferenceCount(mResourceShm) <= 1) {
+      MOZ_ASSERT(RefCountedShm::GetReferenceCount(mResourceShm) == 1);
+      aShm = mResourceShm;
+      return true;
+    }
+  }
+
+  // If there was no cached shmem or we couldn't recycle it, alloc a new one.
+  if (!RefCountedShm::Alloc(this, aSize, aShm)) {
+    return false;
+  }
+
+  // Now that we have a valid shmem, put it in the cache if we don't have one
+  // yet.
+  if (!alreadyAllocated) {
+    mResourceShm = aShm;
+    RefCountedShm::AddRef(aShm);
+  }
+
+  return true;
+}
+
+void
+WebRenderBridgeChild::DeallocResourceShmem(RefCountedShmem& aShm)
+{
+  if (!RefCountedShm::IsValid(aShm)) {
+    return;
+  }
+  MOZ_ASSERT(RefCountedShm::GetReferenceCount(aShm) == 0);
+
+  RefCountedShm::Dealloc(this, aShm);
 }
 
 } // namespace layers
