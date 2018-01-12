@@ -458,10 +458,12 @@ function registerSelf() {
   action.inputStateMap = new Map();
   action.inputsToCancel = [];
 
-  // register will have the ID and a boolean describing if this is the
-  // main process or not
-  let register = sendSyncMessage("Marionette:Register", {outerWindowID});
-  if (register[0].outerWindowID === outerWindowID) {
+  let reply = sendSyncMessage("Marionette:Register", {outerWindowID});
+  if (reply.length == 0) {
+    logger.error("No reply from Marionette:Register");
+  }
+
+  if (reply[0].outerWindowID === outerWindowID) {
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
