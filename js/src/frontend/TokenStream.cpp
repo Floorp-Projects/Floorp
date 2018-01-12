@@ -210,7 +210,7 @@ ReservedWordTokenKind(PropertyName* str)
     if (const ReservedWordInfo* rw = FindReservedWord(str))
         return rw->tokentype;
 
-    return TOK_NAME;
+    return TokenKind::TOK_NAME;
 }
 
 const char*
@@ -225,7 +225,7 @@ ReservedWordToCharZ(PropertyName* str)
 const char*
 ReservedWordToCharZ(TokenKind tt)
 {
-    MOZ_ASSERT(tt != TOK_NAME);
+    MOZ_ASSERT(tt != TokenKind::TOK_NAME);
     switch (tt) {
 #define EMIT_CASE(word, name, type) case type: return js_##word##_str;
       FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
@@ -239,7 +239,7 @@ ReservedWordToCharZ(TokenKind tt)
 PropertyName*
 TokenStreamAnyChars::reservedWordToPropertyName(TokenKind tt) const
 {
-    MOZ_ASSERT(tt != TOK_NAME);
+    MOZ_ASSERT(tt != TokenKind::TOK_NAME);
     switch (tt) {
 #define EMIT_CASE(word, name, type) case type: return cx->names().name;
       FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
@@ -426,12 +426,12 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
 
     // See Parser::assignExpr() for an explanation of isExprEnding[].
     PodArrayZero(isExprEnding);
-    isExprEnding[TOK_COMMA] = 1;
-    isExprEnding[TOK_SEMI] = 1;
-    isExprEnding[TOK_COLON] = 1;
-    isExprEnding[TOK_RP] = 1;
-    isExprEnding[TOK_RB] = 1;
-    isExprEnding[TOK_RC] = 1;
+    isExprEnding[size_t(TokenKind::TOK_COMMA)] = 1;
+    isExprEnding[size_t(TokenKind::TOK_SEMI)] = 1;
+    isExprEnding[size_t(TokenKind::TOK_COLON)] = 1;
+    isExprEnding[size_t(TokenKind::TOK_RP)] = 1;
+    isExprEnding[size_t(TokenKind::TOK_RB)] = 1;
+    isExprEnding[size_t(TokenKind::TOK_RC)] = 1;
 }
 
 template<typename CharT>
@@ -796,7 +796,7 @@ TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
 bool
 TokenStreamAnyChars::hasTokenizationStarted() const
 {
-    return isCurrentTokenType(TOK_EOF) && !isEOF();
+    return isCurrentTokenType(TokenKind::TOK_EOF) && !isEOF();
 }
 
 void
@@ -1252,9 +1252,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::newToken(ptrdiff_t adjust)
 static bool
 IsTokenSane(Token* tp)
 {
-    // Nb: TOK_EOL should never be used in an actual Token;  it should only be
-    // returned as a TokenKind from peekTokenSameLine().
-    if (tp->type >= TOK_LIMIT || tp->type == TOK_EOL)
+    // Nb: TokenKind::TOK_EOL should never be used in an actual Token;
+    // it should only be returned as a TokenKind from peekTokenSameLine().
+    if (tp->type >= TokenKind::TOK_LIMIT || tp->type == TokenKind::TOK_EOL)
         return false;
 
     if (tp->pos.end < tp->pos.begin)
@@ -1356,13 +1356,13 @@ enum FirstCharKind {
     // of the tokens seen in practice.
     //
     // We represent the 'OneChar' kind with any positive value less than
-    // TOK_LIMIT.  This representation lets us associate each one-char token
-    // char16_t with a TokenKind and thus avoid a subsequent char16_t-to-TokenKind
-    // conversion.
+    // TokenKind::TOK_LIMIT.  This representation lets us associate
+    // each one-char token char16_t with a TokenKind and thus avoid
+    // a subsequent char16_t-to-TokenKind conversion.
     OneChar_Min = 0,
-    OneChar_Max = TOK_LIMIT - 1,
+    OneChar_Max = size_t(TokenKind::TOK_LIMIT) - 1,
 
-    Space = TOK_LIMIT,
+    Space = size_t(TokenKind::TOK_LIMIT),
     Ident,
     Dec,
     String,
@@ -1385,9 +1385,17 @@ enum FirstCharKind {
 // Space:   9, 11, 12, 32: '\t', '\v', '\f', ' '
 // EOL:     10, 13: '\n', '\r'
 //
-#define T_COMMA     TOK_COMMA
-#define T_COLON     TOK_COLON
-#define T_BITNOT    TOK_BITNOT
+#define T_COMMA     size_t(TokenKind::TOK_COMMA)
+#define T_COLON     size_t(TokenKind::TOK_COLON)
+#define T_BITNOT    size_t(TokenKind::TOK_BITNOT)
+#define T_LP        size_t(TokenKind::TOK_LP)
+#define T_RP        size_t(TokenKind::TOK_RP)
+#define T_SEMI      size_t(TokenKind::TOK_SEMI)
+#define T_HOOK      size_t(TokenKind::TOK_HOOK)
+#define T_LB        size_t(TokenKind::TOK_LB)
+#define T_RB        size_t(TokenKind::TOK_RB)
+#define T_LC        size_t(TokenKind::TOK_LC)
+#define T_RC        size_t(TokenKind::TOK_RC)
 #define Templat     String
 #define _______     Other
 static const uint8_t firstCharKinds[] = {
@@ -1396,19 +1404,27 @@ static const uint8_t firstCharKinds[] = {
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
 /*  20+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
 /*  30+ */ _______, _______,   Space, _______,  String, _______,   Ident, _______, _______,  String,
-/*  40+ */  TOK_LP,  TOK_RP, _______, _______, T_COMMA,_______,  _______, _______,BasePrefix,  Dec,
-/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,    Dec,  T_COLON,TOK_SEMI,
-/*  60+ */ _______, _______, _______,TOK_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
+/*  40+ */    T_LP,    T_RP, _______, _______, T_COMMA,_______,  _______, _______,BasePrefix,  Dec,
+/*  50+ */     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,     Dec,    Dec,  T_COLON,  T_SEMI,
+/*  60+ */ _______, _______, _______,  T_HOOK, _______,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  70+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /*  80+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
-/*  90+ */   Ident,  TOK_LB, _______,  TOK_RB, _______,   Ident, Templat,   Ident,   Ident,   Ident,
+/*  90+ */   Ident,    T_LB, _______,    T_RB, _______,   Ident, Templat,   Ident,   Ident,   Ident,
 /* 100+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
 /* 110+ */   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,   Ident,
-/* 120+ */   Ident,   Ident,   Ident,  TOK_LC, _______,  TOK_RC,T_BITNOT, _______
+/* 120+ */   Ident,   Ident,   Ident,    T_LC, _______,    T_RC,T_BITNOT, _______
 };
 #undef T_COMMA
 #undef T_COLON
 #undef T_BITNOT
+#undef T_LP
+#undef T_RP
+#undef T_SEMI
+#undef T_HOOK
+#undef T_LB
+#undef T_RB
+#undef T_LC
+#undef T_RC
 #undef Templat
 #undef _______
 
@@ -1440,7 +1456,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
   retry:
     if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
         tp = newToken(0);
-        tp->type = TOK_EOF;
+        tp->type = TokenKind::TOK_EOF;
         anyCharsAccess().flags.isEOF = true;
         goto out;
     }
@@ -1580,7 +1596,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         JSAtom* atom = atomizeChars(anyCharsAccess().cx, chars, length);
         if (!atom)
             goto error;
-        tp->type = TOK_NAME;
+        tp->type = TokenKind::TOK_NAME;
         tp->setName(atom->asPropertyName());
         goto out;
     }
@@ -1653,7 +1669,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 goto error;
             }
         }
-        tp->type = TOK_NUMBER;
+        tp->type = TokenKind::TOK_NUMBER;
         tp->setNumber(dval, decimalPoint);
         goto out;
     }
@@ -1768,7 +1784,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             goto error;
         }
 
-        tp->type = TOK_NUMBER;
+        tp->type = TokenKind::TOK_NUMBER;
         tp->setNumber(dval, NoDecimal);
         goto out;
     }
@@ -1788,28 +1804,28 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         }
         if (c == '.') {
             if (matchChar('.')) {
-                tp->type = TOK_TRIPLEDOT;
+                tp->type = TokenKind::TOK_TRIPLEDOT;
                 goto out;
             }
         }
         ungetCharIgnoreEOL(c);
-        tp->type = TOK_DOT;
+        tp->type = TokenKind::TOK_DOT;
         goto out;
 
       case '=':
         if (matchChar('='))
-            tp->type = matchChar('=') ? TOK_STRICTEQ : TOK_EQ;
+            tp->type = matchChar('=') ? TokenKind::TOK_STRICTEQ : TokenKind::TOK_EQ;
         else if (matchChar('>'))
-            tp->type = TOK_ARROW;
+            tp->type = TokenKind::TOK_ARROW;
         else
-            tp->type = TOK_ASSIGN;
+            tp->type = TokenKind::TOK_ASSIGN;
         goto out;
 
       case '+':
         if (matchChar('+'))
-            tp->type = TOK_INC;
+            tp->type = TokenKind::TOK_INC;
         else
-            tp->type = matchChar('=') ? TOK_ADDASSIGN : TOK_ADD;
+            tp->type = matchChar('=') ? TokenKind::TOK_ADDASSIGN : TokenKind::TOK_ADD;
         goto out;
 
       case '\\': {
@@ -1824,31 +1840,31 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
       case '|':
         if (matchChar('|'))
-            tp->type = TOK_OR;
+            tp->type = TokenKind::TOK_OR;
 #ifdef ENABLE_PIPELINE_OPERATOR
         else if (matchChar('>'))
-            tp->type = TOK_PIPELINE;
+            tp->type = TokenKind::TOK_PIPELINE;
 #endif
         else
-            tp->type = matchChar('=') ? TOK_BITORASSIGN : TOK_BITOR;
+            tp->type = matchChar('=') ? TokenKind::TOK_BITORASSIGN : TokenKind::TOK_BITOR;
         goto out;
 
       case '^':
-        tp->type = matchChar('=') ? TOK_BITXORASSIGN : TOK_BITXOR;
+        tp->type = matchChar('=') ? TokenKind::TOK_BITXORASSIGN : TokenKind::TOK_BITXOR;
         goto out;
 
       case '&':
         if (matchChar('&'))
-            tp->type = TOK_AND;
+            tp->type = TokenKind::TOK_AND;
         else
-            tp->type = matchChar('=') ? TOK_BITANDASSIGN : TOK_BITAND;
+            tp->type = matchChar('=') ? TokenKind::TOK_BITANDASSIGN : TokenKind::TOK_BITAND;
         goto out;
 
       case '!':
         if (matchChar('='))
-            tp->type = matchChar('=') ? TOK_STRICTNE : TOK_NE;
+            tp->type = matchChar('=') ? TokenKind::TOK_STRICTNE : TokenKind::TOK_NE;
         else
-            tp->type = TOK_NOT;
+            tp->type = TokenKind::TOK_NOT;
         goto out;
 
       case '<':
@@ -1864,28 +1880,28 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
         }
         if (matchChar('<')) {
-            tp->type = matchChar('=') ? TOK_LSHASSIGN : TOK_LSH;
+            tp->type = matchChar('=') ? TokenKind::TOK_LSHASSIGN : TokenKind::TOK_LSH;
         } else {
-            tp->type = matchChar('=') ? TOK_LE : TOK_LT;
+            tp->type = matchChar('=') ? TokenKind::TOK_LE : TokenKind::TOK_LT;
         }
         goto out;
 
       case '>':
         if (matchChar('>')) {
             if (matchChar('>'))
-                tp->type = matchChar('=') ? TOK_URSHASSIGN : TOK_URSH;
+                tp->type = matchChar('=') ? TokenKind::TOK_URSHASSIGN : TokenKind::TOK_URSH;
             else
-                tp->type = matchChar('=') ? TOK_RSHASSIGN : TOK_RSH;
+                tp->type = matchChar('=') ? TokenKind::TOK_RSHASSIGN : TokenKind::TOK_RSH;
         } else {
-            tp->type = matchChar('=') ? TOK_GE : TOK_GT;
+            tp->type = matchChar('=') ? TokenKind::TOK_GE : TokenKind::TOK_GT;
         }
         goto out;
 
       case '*':
         if (matchChar('*'))
-            tp->type = matchChar('=') ? TOK_POWASSIGN : TOK_POW;
+            tp->type = matchChar('=') ? TokenKind::TOK_POWASSIGN : TokenKind::TOK_POW;
         else
-            tp->type = matchChar('=') ? TOK_MULASSIGN : TOK_MUL;
+            tp->type = matchChar('=') ? TokenKind::TOK_MULASSIGN : TokenKind::TOK_MUL;
         goto out;
 
       case '/':
@@ -2005,16 +2021,16 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 consumeKnownChar(c);
                 goto error;
             }
-            tp->type = TOK_REGEXP;
+            tp->type = TokenKind::TOK_REGEXP;
             tp->setRegExpFlags(reflags);
             goto out;
         }
 
-        tp->type = matchChar('=') ? TOK_DIVASSIGN : TOK_DIV;
+        tp->type = matchChar('=') ? TokenKind::TOK_DIVASSIGN : TokenKind::TOK_DIV;
         goto out;
 
       case '%':
-        tp->type = matchChar('=') ? TOK_MODASSIGN : TOK_MOD;
+        tp->type = matchChar('=') ? TokenKind::TOK_MODASSIGN : TokenKind::TOK_MOD;
         goto out;
 
       case '-':
@@ -2030,9 +2046,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                     goto skipline;
             }
 
-            tp->type = TOK_DEC;
+            tp->type = TokenKind::TOK_DEC;
         } else {
-            tp->type = matchChar('=') ? TOK_SUBASSIGN : TOK_SUB;
+            tp->type = matchChar('=') ? TokenKind::TOK_SUBASSIGN : TokenKind::TOK_SUB;
         }
         goto out;
 
@@ -2320,12 +2336,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(int untilCh
         return false;
 
     if (!parsingTemplate) {
-        (*tp)->type = TOK_STRING;
+        (*tp)->type = TokenKind::TOK_STRING;
     } else {
         if (c == '$' && nc == '{')
-            (*tp)->type = TOK_TEMPLATE_HEAD;
+            (*tp)->type = TokenKind::TOK_TEMPLATE_HEAD;
         else
-            (*tp)->type = TOK_NO_SUBS_TEMPLATE;
+            (*tp)->type = TokenKind::TOK_NO_SUBS_TEMPLATE;
     }
 
     (*tp)->setAtom(atom);
@@ -2336,11 +2352,11 @@ const char*
 TokenKindToDesc(TokenKind tt)
 {
     switch (tt) {
-#define EMIT_CASE(name, desc) case TOK_##name: return desc;
+#define EMIT_CASE(name, desc) case TokenKind::TOK_##name: return desc;
       FOR_EACH_TOKEN_KIND(EMIT_CASE)
 #undef EMIT_CASE
-      case TOK_LIMIT:
-        MOZ_ASSERT_UNREACHABLE("TOK_LIMIT should not be passed.");
+      case TokenKind::TOK_LIMIT:
+        MOZ_ASSERT_UNREACHABLE("TokenKind::TOK_LIMIT should not be passed.");
         break;
     }
 
@@ -2352,10 +2368,10 @@ const char*
 TokenKindToString(TokenKind tt)
 {
     switch (tt) {
-#define EMIT_CASE(name, desc) case TOK_##name: return "TOK_" #name;
+#define EMIT_CASE(name, desc) case TokenKind::TOK_##name: return "TokenKind::TOK_" #name;
       FOR_EACH_TOKEN_KIND(EMIT_CASE)
 #undef EMIT_CASE
-      case TOK_LIMIT: break;
+      case TokenKind::TOK_LIMIT: break;
     }
 
     return "<bad TokenKind>";

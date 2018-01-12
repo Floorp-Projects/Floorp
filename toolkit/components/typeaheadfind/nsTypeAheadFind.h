@@ -22,6 +22,7 @@
 class nsPIDOMWindowInner;
 class nsIPresShell;
 class nsPresContext;
+class nsRange;
 
 #define TYPEAHEADFIND_NOTFOUND_WAV_URL \
         "chrome://global/content/notfound.wav"
@@ -49,7 +50,7 @@ protected:
   nsresult GetWebBrowserFind(nsIDocShell *aDocShell,
                              nsIWebBrowserFind **aWebBrowserFind);
 
-  void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell,
+  void RangeStartsInsideLink(nsRange *aRange, nsIPresShell *aPresShell,
                              bool *aIsInsideLink, bool *aIsStartingLink);
 
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon,
