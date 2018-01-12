@@ -26,5 +26,7 @@ fi
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
+if [ -f /etc/redhat-release ]; then
 # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
+fi
