@@ -11,10 +11,7 @@ import("//build/config/features.gni")
 import("//build/config/mips.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build_overrides/build.gni")
-
-if (!build_with_mozilla) {
-  import("//testing/test.gni")
-}
+import("//testing/test.gni")
 
 declare_args() {
   # Disable this to avoid building the Opus audio codec.
@@ -38,7 +35,7 @@ declare_args() {
   rtc_prefer_fixed_point = false
 
   # Enables the use of protocol buffers for debug recordings.
-  rtc_enable_protobuf = !build_with_mozilla
+  rtc_enable_protobuf = true
 
   # Disable the code for the intelligibility enhancer by default.
   rtc_enable_intelligibility_enhancer = false
@@ -55,20 +52,23 @@ declare_args() {
   rtc_enable_bwe_test_logging = false
 
   # Set this to disable building with support for SCTP data channels.
-  rtc_enable_sctp = !build_with_mozilla
+  rtc_enable_sctp = true
 
   # Disable these to not build components which can be externally provided.
-  rtc_build_expat = !build_with_mozilla
-  rtc_build_json = !build_with_mozilla
-  rtc_build_libjpeg = !build_with_mozilla
-  rtc_build_libsrtp = !build_with_mozilla
-  rtc_build_libvpx = !build_with_mozilla
+  rtc_build_expat = true
+  rtc_build_json = true
+  rtc_build_libjpeg = true
+  rtc_build_libsrtp = true
+  rtc_build_libvpx = true
   rtc_libvpx_build_vp9 = true
-  rtc_build_libyuv = !build_with_mozilla
-  rtc_build_openmax_dl = !build_with_mozilla
-  rtc_build_opus = !build_with_mozilla
-  rtc_build_ssl = !build_with_mozilla
-  rtc_build_usrsctp = !build_with_mozilla
+  rtc_build_libyuv = true
+  rtc_build_openmax_dl = true
+  rtc_build_opus = true
+  rtc_build_ssl = true
+  rtc_build_usrsctp = true
+
+  # Enable to use the Mozilla internal settings.
+  build_with_mozilla = false
 
   rtc_enable_android_opensl = false
 
@@ -90,7 +90,7 @@ declare_args() {
     rtc_build_libevent = false
   } else {
     rtc_enable_libevent = true
-    rtc_build_libevent = !build_with_mozilla
+    rtc_build_libevent = true
   }
 
   if (current_cpu == "arm" || current_cpu == "arm64") {
@@ -101,10 +101,6 @@ declare_args() {
       current_cpu != "mips64el") {
     rtc_use_openmax_dl = true
   } else {
-    rtc_use_openmax_dl = false
-  }
-
-  if (build_with_mozilla) {
     rtc_use_openmax_dl = false
   }
 
@@ -142,7 +138,7 @@ declare_args() {
 
   # Build sources requiring GTK. NOTICE: This is not present in Chrome OS
   # build environments, even if available for Chromium builds.
-  rtc_use_gtk = !build_with_chromium && !build_with_mozilla
+  rtc_use_gtk = !build_with_chromium
 }
 
 # A second declare_args block, so that declarations within it can
@@ -152,7 +148,7 @@ declare_args() {
   # Include the iLBC audio codec?
   rtc_include_ilbc = !(build_with_chromium || build_with_mozilla)
 
-  rtc_restrict_logging = build_with_chromium || build_with_mozilla
+  rtc_restrict_logging = build_with_chromium
 
   # Excluded in Chromium since its prerequisites don't require Pulse Audio.
   rtc_include_pulse_audio = !build_with_chromium
@@ -162,19 +158,14 @@ declare_args() {
   rtc_include_internal_audio_device = !build_with_chromium
 
   # Include tests in standalone checkout.
-  rtc_include_tests = !build_with_chromium && !build_with_mozilla
+  rtc_include_tests = !build_with_chromium
 }
 
 # Make it possible to provide custom locations for some libraries (move these
 # up into declare_args should we need to actually use them for the GN build).
-if (build_with_mozilla) {
-  rtc_libevent_dir = "/ipc/chromium/src/third_party/libevent"
-  rtc_libyuv_dir = "/media/libyuv/libyuv"
-} else {
-  rtc_libvpx_dir = "//third_party/libvpx"
-  rtc_libyuv_dir = "//third_party/libyuv"
-  rtc_opus_dir = "//third_party/opus"
-}
+rtc_libvpx_dir = "//third_party/libvpx"
+rtc_libyuv_dir = "//third_party/libyuv"
+rtc_opus_dir = "//third_party/opus"
 
 ###############################################################################
 # Templates

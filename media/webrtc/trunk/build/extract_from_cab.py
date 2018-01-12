@@ -12,7 +12,7 @@ import sys
 import tempfile
 
 def run_quiet(*args):
-  """Run 'expand' suppressing noisy output. Returns returncode from process."""
+  """Run 'expand' supressing noisy output. Returns returncode from process."""
   popen = subprocess.Popen(args, stdout=subprocess.PIPE)
   out, _ = popen.communicate()
   if popen.returncode:

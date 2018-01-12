@@ -14,115 +14,63 @@ import re
 import subprocess
 import sys
 
-
-compiler_version_cache = {}  # Map from (compiler, tool) -> version.
-
-
-def Usage(program_name):
-  print '%s MODE TOOL' % os.path.basename(program_name)
-  print 'MODE: host or target.'
-  print 'TOOL: assembler or compiler or linker.'
-  return 1
-
-
-def ParseArgs(args):
-  if len(args) != 2:
-    raise Exception('Invalid number of arguments')
-  mode = args[0]
-  tool = args[1]
-  if mode not in ('host', 'target'):
-    raise Exception('Invalid mode: %s' % mode)
-  if tool not in ('assembler',):
-    raise Exception('Invalid tool: %s' % tool)
-  return mode, tool
-
-
-def GetEnvironFallback(var_list, default):
-  """Look up an environment variable from a possible list of variable names."""
-  for var in var_list:
-    if var in os.environ:
-      return os.environ[var]
-  return default
-
-
-def GetVersion(compiler, tool):
-  tool_output = tool_error = None
-  cache_key = (compiler, tool)
-  cached_version = compiler_version_cache.get(cache_key)
-  if cached_version:
-    return cached_version
+def GetVersion(compiler):
   try:
     # Note that compiler could be something tricky like "distcc g++".
-    if tool == "assembler":
-      compiler = compiler + " -Xassembler --version -x assembler -c /dev/null"
-      # Unmodified: GNU assembler (GNU Binutils) 2.24
-      # Ubuntu: GNU assembler (GNU Binutils for Ubuntu) 2.22
-      # Fedora: GNU assembler version 2.23.2
-      version_re = re.compile(r"^GNU [^ ]+ .* (\d+).(\d+).*?$", re.M)
-    else:
-      raise Exception("Unknown tool %s" % tool)
-
-    # Force the locale to C otherwise the version string could be localized
-    # making regex matching fail.
-    env = os.environ.copy()
-    env["LC_ALL"] = "C"
-    pipe = subprocess.Popen(compiler, shell=True, env=env,
+    compiler = compiler + " -dumpversion"
+    pipe = subprocess.Popen(compiler, shell=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    tool_output, tool_error = pipe.communicate()
+    gcc_output, gcc_error = pipe.communicate()
     if pipe.returncode:
       raise subprocess.CalledProcessError(pipe.returncode, compiler)
 
-    parsed_output = version_re.match(tool_output)
-    result = parsed_output.group(1) + parsed_output.group(2)
-    compiler_version_cache[cache_key] = result
-    return result
+    result = re.match(r"(\d+)\.(\d+)", gcc_output)
+    return result.group(1) + result.group(2)
   except Exception, e:
-    if tool_error:
-      sys.stderr.write(tool_error)
+    if gcc_error:
+      sys.stderr.write(gcc_error)
     print >> sys.stderr, "compiler_version.py failed to execute:", compiler
     print >> sys.stderr, e
     return ""
 
+def GetVersionFromEnvironment(compiler_env):
+  """ Returns the version of compiler
 
-def main(args):
-  try:
-    (mode, tool) = ParseArgs(args[1:])
-  except Exception, e:
-    sys.stderr.write(e.message + '\n\n')
-    return Usage(args[0])
+  If the compiler was set by the given environment variable and exists,
+  return its version, otherwise None is returned.
+  """
+  cxx = os.getenv(compiler_env, None)
+  if cxx:
+    cxx_version = GetVersion(cxx)
+    if cxx_version != "":
+      return cxx_version
+  return None
 
-  ret_code, result = ExtractVersion(mode, tool)
-  if ret_code == 0:
-    print result
-  return ret_code
+def main():
+  # Check if CXX_target or CXX environment variable exists an if it does use
+  # that compiler.
+  # TODO: Fix ninja (see http://crbug.com/140900) instead and remove this code
+  # In ninja's cross compile mode, the CXX_target is target compiler, while
+  # the CXX is host. The CXX_target needs be checked first, though the target
+  # and host compiler have different version, there seems no issue to use the
+  # target compiler's version number as gcc_version in Android.
+  cxx_version = GetVersionFromEnvironment("CXX_target")
+  if cxx_version:
+    print cxx_version
+    return 0
 
+  cxx_version = GetVersionFromEnvironment("CXX")
+  if cxx_version:
+    print cxx_version
+    return 0
 
-def DoMain(args):
-  """Hook to be called from gyp without starting a separate python
-  interpreter."""
-  (mode, tool) = ParseArgs(args)
-  ret_code, result = ExtractVersion(mode, tool)
-  if ret_code == 0:
-    return result
-  raise Exception("Failed to extract compiler version for args: %s" % args)
+  # Otherwise we check the g++ version.
+  gccversion = GetVersion("g++")
+  if gccversion != "":
+    print gccversion
+    return 0
 
-
-def ExtractVersion(mode, tool):
-  # Check if various CXX environment variables exist and use them if they
-  # exist. The preferences and fallback order is a close approximation of
-  # GenerateOutputForConfig() in GYP's ninja generator.
-  # The main difference being not supporting GYP's make_global_settings.
-  environments = ['CXX_target', 'CXX']
-  if mode == 'host':
-    environments = ['CXX_host'] + environments;
-  compiler = GetEnvironFallback(environments, 'c++')
-
-  if compiler:
-    compiler_version = GetVersion(compiler, tool)
-    if compiler_version != "":
-      return (0, compiler_version)
-  return (1, None)
-
+  return 1
 
 if __name__ == "__main__":
-  sys.exit(main(sys.argv))
+  sys.exit(main())
