@@ -96,7 +96,8 @@ class MachCommands(MachCommandBase):
                          subsuite=None,
                          verbose=False,
                          stop=False,
-                         jobs=1):
+                         jobs=1,
+                         **kwargs):
         self._activate_virtualenv()
 
         def find_tests_by_path():
