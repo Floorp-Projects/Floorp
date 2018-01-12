@@ -23,12 +23,16 @@ const TEST_URI = `
     #id5 {
       font-family: "monospace";
     }
+    #id6 {
+      font-family: georgia, arial;
+    }
   </style>
   <div id="id1">Text</div>
   <div id="id2">Text</div>
   <div id="id3">Text</div>
   <div id="id4">Text</div>
   <div id="id5">Text</div>
+  <div id="id6">A &#586;</div>
 `;
 
 // Tests that font-family properties in the rule-view correctly
@@ -37,16 +41,23 @@ const TEST_URI = `
 // {
 //   selector: the rule-view selector to look for font-family in
 //   nb: the number of fonts this property should have
-//   used: the index of the font that should be highlighted, or
-//         -1 if none should be highlighted
+//   used: the indexes of all the fonts that should be highlighted, or null if none should
+//         be highlighter
 // }
 const TESTS = [
-  {selector: "#id1", nb: 3, used: 2}, // sans-serif
-  {selector: "#id2", nb: 1, used: 0}, // serif
-  {selector: "#id3", nb: 4, used: 1}, // monospace
-  {selector: "#id4", nb: 2, used: -1},
-  {selector: "#id5", nb: 1, used: 0}, // monospace
+  {selector: "#id1", nb: 3, used: [2]}, // sans-serif
+  {selector: "#id2", nb: 1, used: [0]}, // serif
+  {selector: "#id3", nb: 4, used: [1]}, // monospace
+  {selector: "#id4", nb: 2, used: null},
+  {selector: "#id5", nb: 1, used: [0]}, // monospace
 ];
+
+if (Services.appinfo.OS !== "Linux") {
+  // Both georgia and arial are used because the second character can't be rendered with
+  // georgia, so the browser falls back. Also, skip this on Linux which has neither of
+  // these fonts.
+  TESTS.push({selector: "#id6", nb: 2, used: [0, 1]});
+}
 
 add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -66,8 +77,15 @@ add_task(function* () {
     is(fonts.length, nb, "Correct number of fonts found in the property");
 
     const highlighted = [...fonts].filter(span => span.classList.contains("used-font"));
+    const expectedHighlightedNb = used === null ? 0 : used.length;
+    is(highlighted.length, expectedHighlightedNb, "Correct number of used fonts found");
 
-    ok(highlighted.length <= 1, "No more than one font highlighted");
-    is([...fonts].findIndex(f => f === highlighted[0]), used, "Correct font highlighted");
+    let highlightedIndex = 0;
+    [...fonts].forEach((font, index) => {
+      if (font === highlighted[highlightedIndex]) {
+        is(index, used[highlightedIndex], "The right font is highlighted");
+        highlightedIndex++;
+      }
+    });
   }
 });
