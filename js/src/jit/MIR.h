@@ -4222,7 +4222,8 @@ class MCall
   public:
     INSTRUCTION_HEADER(Call)
     static MCall* New(TempAllocator& alloc, JSFunction* target, size_t maxArgc, size_t numActualArgs,
-                      bool construct, bool ignoresReturnValue, bool isDOMCall);
+                      bool construct, bool ignoresReturnValue, bool isDOMCall,
+                      DOMObjectKind objectKind);
 
     void initFunction(MDefinition* func) {
         initOperand(FunctionOperandIndex, func);
@@ -4312,9 +4313,13 @@ class MCallDOMNative : public MCall
     // actually a separate MIR op from MCall, because all sorts of places use
     // isCall() to check for calls and all we really want is to overload a few
     // virtual things from MCall.
+
+    DOMObjectKind objectKind_;
+
   protected:
-    MCallDOMNative(WrappedFunction* target, uint32_t numActualArgs)
-        : MCall(target, numActualArgs, false, false)
+    MCallDOMNative(WrappedFunction* target, uint32_t numActualArgs, DOMObjectKind objectKind)
+      : MCall(target, numActualArgs, false, false),
+        objectKind_(objectKind)
     {
         MOZ_ASSERT(getJitInfo()->type() != JSJitInfo::InlinableNative);
 
@@ -4330,10 +4335,14 @@ class MCallDOMNative : public MCall
 
     friend MCall* MCall::New(TempAllocator& alloc, JSFunction* target, size_t maxArgc,
                              size_t numActualArgs, bool construct, bool ignoresReturnValue,
-                             bool isDOMCall);
+                             bool isDOMCall, DOMObjectKind objectKind);
 
     const JSJitInfo* getJitInfo() const;
   public:
+    DOMObjectKind objectKind() const {
+        return objectKind_;
+    }
+
     virtual AliasSet getAliasSet() const override;
 
     virtual bool congruentTo(const MDefinition* ins) const override;
@@ -12241,10 +12250,13 @@ class MSetDOMProperty
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
 {
     const JSJitSetterOp func_;
+    DOMObjectKind objectKind_;
 
-    MSetDOMProperty(const JSJitSetterOp func, MDefinition* obj, MDefinition* val)
+    MSetDOMProperty(const JSJitSetterOp func, DOMObjectKind objectKind, MDefinition* obj,
+                    MDefinition* val)
       : MBinaryInstruction(classOpcode, obj, val),
-        func_(func)
+        func_(func),
+        objectKind_(objectKind)
     { }
 
   public:
@@ -12255,20 +12267,23 @@ class MSetDOMProperty
     JSJitSetterOp fun() const {
         return func_;
     }
+    DOMObjectKind objectKind() const {
+        return objectKind_;
+    }
 
     bool possiblyCalls() const override {
         return true;
     }
 };
 
-class MGetDOMProperty
+class MGetDOMPropertyBase
   : public MVariadicInstruction,
     public ObjectPolicy<0>::Data
 {
     const JSJitInfo* info_;
 
   protected:
-    MGetDOMProperty(Opcode op, const JSJitInfo* jitinfo)
+    MGetDOMPropertyBase(Opcode op, const JSJitInfo* jitinfo)
       : MVariadicInstruction(op),
         info_(jitinfo)
     {
@@ -12320,17 +12335,7 @@ class MGetDOMProperty
     }
 
   public:
-    INSTRUCTION_HEADER(GetDOMProperty)
     NAMED_OPERANDS((0, object))
-
-    static MGetDOMProperty* New(TempAllocator& alloc, const JSJitInfo* info, MDefinition* obj,
-                                MDefinition* guard, MDefinition* globalGuard)
-    {
-        auto* res = new(alloc) MGetDOMProperty(classOpcode, info);
-        if (!res || !res->init(alloc, obj, guard, globalGuard))
-            return nullptr;
-        return res;
-    }
 
     JSJitGetterOp fun() const {
         return info_->getter;
@@ -12351,14 +12356,8 @@ class MGetDOMProperty
     bool valueMayBeInSlot() const {
         return info_->isLazilyCachedInSlot;
     }
-    bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isGetDOMProperty())
-            return false;
 
-        return congruentTo(ins->toGetDOMProperty());
-    }
-
-    bool congruentTo(const MGetDOMProperty* ins) const {
+    bool baseCongruentTo(const MGetDOMPropertyBase* ins) const {
         if (!isDomMovable())
             return false;
 
@@ -12378,18 +12377,51 @@ class MGetDOMProperty
         MOZ_ASSERT(aliasSet == JSJitInfo::AliasEverything);
         return AliasSet::Store(AliasSet::Any);
     }
+};
+
+class MGetDOMProperty
+  : public MGetDOMPropertyBase
+{
+    DOMObjectKind objectKind_;
+
+  protected:
+    MGetDOMProperty(const JSJitInfo* jitinfo, DOMObjectKind objectKind)
+      : MGetDOMPropertyBase(classOpcode, jitinfo),
+        objectKind_(objectKind)
+    {}
+
+  public:
+    INSTRUCTION_HEADER(GetDOMProperty)
+
+    static MGetDOMProperty* New(TempAllocator& alloc, const JSJitInfo* info, DOMObjectKind objectKind,
+                                MDefinition* obj, MDefinition* guard, MDefinition* globalGuard)
+    {
+        auto* res = new(alloc) MGetDOMProperty(info, objectKind);
+        if (!res || !res->init(alloc, obj, guard, globalGuard))
+            return nullptr;
+        return res;
+    }
+
+    DOMObjectKind objectKind() const {
+        return objectKind_;
+    }
+
+    bool congruentTo(const MDefinition* ins) const override {
+        if (!ins->isGetDOMProperty())
+            return false;
+
+        return baseCongruentTo(ins->toGetDOMProperty());
+    }
 
     bool possiblyCalls() const override {
         return true;
     }
 };
 
-class MGetDOMMember : public MGetDOMProperty
+class MGetDOMMember : public MGetDOMPropertyBase
 {
-    // We inherit everything from MGetDOMProperty except our
-    // possiblyCalls value and the congruentTo behavior.
     explicit MGetDOMMember(const JSJitInfo* jitinfo)
-      : MGetDOMProperty(classOpcode, jitinfo)
+      : MGetDOMPropertyBase(classOpcode, jitinfo)
     {
         setResultType(MIRTypeFromValueType(jitinfo->returnType()));
     }
@@ -12414,7 +12446,7 @@ class MGetDOMMember : public MGetDOMProperty
         if (!ins->isGetDOMMember())
             return false;
 
-        return MGetDOMProperty::congruentTo(ins->toGetDOMMember());
+        return baseCongruentTo(ins->toGetDOMMember());
     }
 };
 
