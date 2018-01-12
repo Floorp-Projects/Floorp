@@ -233,6 +233,58 @@ add_task(async function() {
   result = await extension.awaitMessage("browser.contextMenus.onClicked");
   checkClickInfo(result);
 
+  extensionMenuRoot = await openExtensionContextMenu("#readonly-text");
+
+  // Check some menu items.
+  items = extensionMenuRoot.getElementsByAttribute("label", "editable");
+  is(items.length, 0, "contextMenu item for text input element was not found (context=editable fails for readonly items)");
+
+  // Hide the popup "manually" because there's nothing to click.
+  await closeContextMenu();
+
+  // Test "editable" context on type=tel and type=number items, and OnClick data property.
+  extensionMenuRoot = await openExtensionContextMenu("#call-me-maybe");
+
+  // Check some menu items.
+  items = extensionMenuRoot.getElementsByAttribute("label", "editable");
+  is(items.length, 1, "contextMenu item for text input element was found (context=editable)");
+  editable = items[0];
+
+  // Click on ext-editable item and check the click results.
+  await closeExtensionContextMenu(editable);
+
+  expectedClickInfo = {
+    menuItemId: "ext-editable",
+    pageUrl: PAGE,
+    editable: true,
+  };
+
+  result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
+  extensionMenuRoot = await openExtensionContextMenu("#number-input");
+
+  // Check some menu items.
+  items = extensionMenuRoot.getElementsByAttribute("label", "editable");
+  is(items.length, 1, "contextMenu item for text input element was found (context=editable)");
+  editable = items[0];
+
+  // Click on ext-editable item and check the click results.
+  await closeExtensionContextMenu(editable);
+
+  expectedClickInfo = {
+    menuItemId: "ext-editable",
+    pageUrl: PAGE,
+    editable: true,
+  };
+
+  result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
   extensionMenuRoot = await openExtensionContextMenu("#password");
   items = extensionMenuRoot.getElementsByAttribute("label", "password");
   is(items.length, 1, "contextMenu item for password input element was found (context=password)");
@@ -244,6 +296,17 @@ add_task(async function() {
     editable: true,
   };
 
+  result = await extension.awaitMessage("onclick");
+  checkClickInfo(result);
+  result = await extension.awaitMessage("browser.contextMenus.onClicked");
+  checkClickInfo(result);
+
+  extensionMenuRoot = await openExtensionContextMenu("#noneditablepassword");
+  items = extensionMenuRoot.getElementsByAttribute("label", "password");
+  is(items.length, 1, "contextMenu item for password input element was found (context=password)");
+  password = items[0];
+  await closeExtensionContextMenu(password);
+  expectedClickInfo.editable = false;
   result = await extension.awaitMessage("onclick");
   checkClickInfo(result);
   result = await extension.awaitMessage("browser.contextMenus.onClicked");
