@@ -15,6 +15,8 @@ class APZCSnappingTester : public APZCTreeManagerTester
 
 TEST_F(APZCSnappingTester, Bug1265510)
 {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   const char* layerTreeSyntax = "c(t)";
   nsIntRegion layerVisibleRegion[] = {
     nsIntRegion(IntRect(0, 0, 100, 100)),

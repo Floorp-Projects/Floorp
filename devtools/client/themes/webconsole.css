@@ -1093,56 +1093,45 @@ a.learn-more-link.webconsole-learn-more-link {
 /* console.table() */
 .new-consoletable {
   width: 100%;
-  border-collapse: collapse;
   --consoletable-border: var(--theme-splitter-color);
   margin-block-end: var(--attachment-margin-block-end);
   color: var(--theme-body-color);
-}
-
-.new-consoletable thead {
+  display: grid;
+  max-height: 250px;
+  overflow-y: auto;
   border: 1px solid var(--consoletable-border);
+  /* border at the left side will be added by the inner divs [role=gridcell] */
+  border-left: none;
 }
 
-.new-consoletable tbody {
-  background-color: var(--theme-body-background);
-  border: 1px solid var(--consoletable-border);
-  border-block-start-width: 0;
+.new-consoletable > div {
+  border-left: 1px solid var(--consoletable-border);
 }
 
-.new-consoletable th {
+.new-consoletable-header {
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid var(--consoletable-border);
   background-color: var(--theme-toolbar-background);
   color: var(--theme-body-color);
   margin: 0;
-  padding: 5px 0 0;
+  padding: 5px 4px;
   font-weight: inherit;
+  z-index: 1;
 }
 
-.new-consoletable th:not(:last-of-type) {
-  border-inline-end: 1px solid var(--consoletable-border);
+.new-consoletable > [role=gridcell] {
+  background-color: var(--theme-body-background);
+  padding: 3px 4px;
+  min-width: 100px;
+  color: var(--theme-body-color);
 }
 
-.new-consoletable tr:nth-of-type(even) {
+.new-consoletable > [role=gridcell].even {
   background-color: var(--table-zebra-background);
 }
 
-.new-consoletable td {
-  padding: 3px 4px;
-  min-width: 100px;
-  -moz-user-focus: normal;
-  color: var(--theme-body-color);
-  height: 1.25em;
-  line-height: 1.25em;
-  /* Objects are expandable in cells, and if one gets tall,
-   * we still want other columns to stick to the top.
-   */
-  vertical-align: top;
-}
-
-.new-consoletable tr td:not(:last-of-type) {
-  border-inline-end: 1px solid var(--consoletable-border);
-}
 /* Layout */
-
 .webconsole-output {
   flex: 1;
   direction: ltr;
