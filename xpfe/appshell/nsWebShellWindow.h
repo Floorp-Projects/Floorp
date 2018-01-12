@@ -24,10 +24,42 @@ class WebShellWindowTimerCallback;
 } // namespace mozilla
 
 class nsWebShellWindow final : public nsXULWindow,
-                               public nsIWebProgressListener,
-                               public nsIWidgetListener
+                               public nsIWebProgressListener
 {
 public:
+
+  // The implementation of non-refcounted nsIWidgetListener, which would hold a
+  // strong reference on stack before calling nsWebShellWindow
+  class WidgetListenerDelegate : public nsIWidgetListener
+  {
+  public:
+    explicit WidgetListenerDelegate(nsWebShellWindow* aWebShellWindow)
+      : mWebShellWindow(aWebShellWindow) {}
+
+    virtual nsIXULWindow* GetXULWindow() override;
+    virtual nsIPresShell* GetPresShell() override;
+    virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
+    virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) override;
+    virtual bool RequestWindowClose(nsIWidget* aWidget) override;
+    virtual void SizeModeChanged(nsSizeMode sizeMode) override;
+    virtual void UIResolutionChanged() override;
+    virtual void FullscreenWillChange(bool aInFullscreen) override;
+    virtual void FullscreenChanged(bool aInFullscreen) override;
+    virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
+    virtual void OSToolbarButtonPressed() override;
+    virtual bool ZLevelChanged(bool aImmediate,
+                               nsWindowZ *aPlacement,
+                               nsIWidget* aRequestBelow,
+                               nsIWidget** aActualBelow) override;
+    virtual void WindowActivated() override;
+    virtual void WindowDeactivated() override;
+
+  private:
+    // The lifetime of WidgetListenerDelegate is bound to nsWebShellWindow so
+    // we just use a raw pointer here.
+    nsWebShellWindow* mWebShellWindow;
+  };
+
   explicit nsWebShellWindow(uint32_t aChromeFlags);
 
   // nsISupports interface...
@@ -50,22 +82,22 @@ public:
   // nsIBaseWindow
   NS_IMETHOD Destroy() override;
 
-  // nsIWidgetListener
-  virtual nsIXULWindow* GetXULWindow() override { return this; }
-  virtual nsIPresShell* GetPresShell() override;
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
-  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) override;
-  virtual bool RequestWindowClose(nsIWidget* aWidget) override;
-  virtual void SizeModeChanged(nsSizeMode sizeMode) override;
-  virtual void UIResolutionChanged() override;
-  virtual void FullscreenWillChange(bool aInFullscreen) override;
-  virtual void FullscreenChanged(bool aInFullscreen) override;
-  virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
-  virtual void OSToolbarButtonPressed() override;
-  virtual bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
-                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow) override;
-  virtual void WindowActivated() override;
-  virtual void WindowDeactivated() override;
+  // nsIWidgetListener methods for WidgetListenerDelegate.
+  nsIXULWindow* GetXULWindow() { return this; }
+  nsIPresShell* GetPresShell();
+  bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
+  bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
+  bool RequestWindowClose(nsIWidget* aWidget);
+  void SizeModeChanged(nsSizeMode aSizeMode);
+  void UIResolutionChanged();
+  void FullscreenWillChange(bool aInFullscreen);
+  void FullscreenChanged(bool aInFullscreen);
+  void OcclusionStateChanged(bool aIsFullyOccluded);
+  void OSToolbarButtonPressed();
+  bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
+                     nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
+  void WindowActivated();
+  void WindowDeactivated();
 
 protected:
   friend class mozilla::WebShellWindowTimerCallback;
@@ -77,10 +109,10 @@ protected:
 
   nsCOMPtr<nsITimer>      mSPTimer;
   mozilla::Mutex          mSPTimerLock;
+  WidgetListenerDelegate  mWidgetListenerDelegate;
 
   void        SetPersistenceTimer(uint32_t aDirtyFlags);
   void        FirePersistenceTimer();
 };
-
 
 #endif /* nsWebShellWindow_h__ */
