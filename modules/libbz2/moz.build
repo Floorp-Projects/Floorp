@@ -4,12 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = '_tests/xpcshell/toolkit/mozapps/update/tests'
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Build Config')
 
-Program('updater-xpcshell')
+DIRS += ['src']
 
-updater_rel_path = '../'
-DEFINES['TEST_UPDATER'] = True
-include('../updater-common.build')
-
-CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']
