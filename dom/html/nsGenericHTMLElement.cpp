@@ -112,6 +112,64 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event when a
+ * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
+ * enabled.
+ */
+class nsAutoFocusEvent : public Runnable
+{
+public:
+  explicit nsAutoFocusEvent(nsGenericHTMLFormElement* aElement)
+    : mozilla::Runnable("nsAutoFocusEvent")
+    , mElement(aElement)
+  {
+  }
+
+  NS_IMETHOD Run() override {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    nsIDocument* document = mElement->OwnerDoc();
+
+    nsPIDOMWindowOuter* window = document->GetWindow();
+    if (!window) {
+      return NS_OK;
+    }
+
+    // Trying to found the top window (equivalent to window.top).
+    if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetTop()) {
+      window = top;
+    }
+
+    if (window->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDocument> topDoc = window->GetExtantDoc();
+    if (topDoc && topDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
+      return NS_OK;
+    }
+
+    // If something is focused in the same document, ignore autofocus.
+    if (!fm->GetFocusedContent() ||
+        fm->GetFocusedContent()->OwnerDoc() != document) {
+      mozilla::ErrorResult rv;
+      mElement->Focus(rv);
+      return rv.StealNSResult();
+    }
+
+    return NS_OK;
+  }
+private:
+  // NOTE: nsGenericHTMLFormElement is saved as a nsGenericHTMLElement
+  // because AddRef/Release are ambiguous with nsGenericHTMLFormElement
+  // and Focus() is declared (and defined) in nsGenericHTMLElement class.
+  RefPtr<nsGenericHTMLElement> mElement;
+};
+
 NS_IMPL_ADDREF_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
 NS_IMPL_RELEASE_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
 
@@ -1828,8 +1886,10 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      nsContentUtils::AutoFocusEnabled() && aDocument) {
-    aDocument->SetAutoFocusElement(this);
+      nsContentUtils::AutoFocusEnabled()) {
+    nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
+    rv = NS_DispatchToCurrentThread(event);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // If @form is set, the element *has* to be in a document, otherwise it
