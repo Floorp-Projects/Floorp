@@ -1156,7 +1156,7 @@ nsContextMenu.prototype = {
     if (linkDownload)
       channel.contentDispositionFilename = linkDownload;
     if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
-      let docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser);
+      let docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
       channel.setPrivate(docIsPrivate);
     }
     channel.notificationCallbacks = new callbacks();
