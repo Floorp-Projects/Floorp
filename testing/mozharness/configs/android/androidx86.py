@@ -3,8 +3,6 @@
 # This configuration should be combined with suite definitions and other
 # mozharness configuration from android_common.py, or similar.
 
-import os
-
 config = {
     "deprecated_sdk_path": True,
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86/releng.manifest",
