@@ -580,8 +580,7 @@ class ContextMenu {
     if (isRemote) {
       editFlags = SpellCheckHelper.isEditable(aEvent.target, this.content);
 
-      if (editFlags &
-          (SpellCheckHelper.EDITABLE | SpellCheckHelper.CONTENTEDITABLE)) {
+      if (editFlags & SpellCheckHelper.SPELLCHECKABLE) {
         spellInfo = InlineSpellCheckerContent.initContextMenu(aEvent, editFlags, this.global);
       }
 
@@ -749,7 +748,7 @@ class ContextMenu {
     context.onCompletedImage    = false;
     context.onCTPPlugin         = false;
     context.onDRMMedia          = false;
-    context.onEditableArea      = false;
+    context.onEditable          = false;
     context.onImage             = false;
     context.onKeywordField      = false;
     context.onLink              = false;
@@ -760,6 +759,7 @@ class ContextMenu {
     context.onNumeric           = false;
     context.onPassword          = false;
     context.onSaveableLink      = false;
+    context.onSpellcheckable    = false;
     context.onTextInput         = false;
     context.onVideo             = false;
 
@@ -873,10 +873,13 @@ class ContextMenu {
     } else if (editFlags & (SpellCheckHelper.INPUT | SpellCheckHelper.TEXTAREA)) {
       context.onTextInput = (editFlags & SpellCheckHelper.TEXTINPUT) !== 0;
       context.onNumeric = (editFlags & SpellCheckHelper.NUMERIC) !== 0;
-      context.onEditableArea = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
+      context.onEditable = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
+      context.onSpellcheckable = (editFlags & SpellCheckHelper.SPELLCHECKABLE) !== 0;
 
-      if (context.onEditableArea) {
+      // This is guaranteed to be an input or textarea because of the condition above,
+      // so the no-children flag is always correct. We deal with contenteditable elsewhere.
+      if (context.onSpellcheckable) {
         context.shouldInitInlineSpellCheckerUINoChildren = true;
       }
 
@@ -1008,9 +1011,9 @@ class ContextMenu {
     }
 
     // if the document is editable, show context menu like in text inputs
-    if (!context.onEditableArea) {
+    if (!context.onEditable) {
       if (editFlags & SpellCheckHelper.CONTENTEDITABLE) {
-        // If this._onEditableArea is false but editFlags is CONTENTEDITABLE, then
+        // If this.onEditable is false but editFlags is CONTENTEDITABLE, then
         // the document itself must be editable.
         context.onTextInput       = true;
         context.onKeywordField    = false;
@@ -1022,7 +1025,8 @@ class ContextMenu {
         context.inSrcdocFrame     = false;
         context.hasBGImage        = false;
         context.isDesignMode      = true;
-        context.onEditableArea    = true;
+        context.onEditable        = true;
+        context.onSpellcheckable  = true;
         context.shouldInitInlineSpellCheckerUIWithChildren = true;
       }
     }
