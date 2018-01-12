@@ -603,6 +603,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   uint32_t wrEpoch = GetNextWrEpoch();
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+
   ProcessWebRenderParentCommands(aCommands);
 
   wr::ResourceUpdateQueue resources;
@@ -610,6 +611,8 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     return IPC_FAIL(this, "Failed to deserialize resource updates");
   }
 
+  wr::TransactionBuilder txn;
+  txn.UpdateResources(resources);
 
   wr::Vec<uint8_t> dlData(Move(dl));
 
@@ -619,13 +622,14 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   if (mIdNamespace == aIdNamespace) {
     if (mWidget) {
       LayoutDeviceIntSize size = mWidget->GetClientSize();
-      mApi->SetWindowParameters(size);
+      txn.SetWindowParameters(size);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
-    mApi->SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
-                        mPipelineId, aContentSize,
-                        dlDesc, dlData,
-                        resources);
+    txn.SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
+                       mPipelineId, aContentSize,
+                       dlDesc, dlData);
+
+    mApi->SendTransaction(txn);
 
     ScheduleGenerateFrame();
 
@@ -686,12 +690,11 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   UpdateAPZ(false);
 
   if (!aCommands.IsEmpty()) {
+    wr::TransactionBuilder txn;
     uint32_t wrEpoch = GetNextWrEpoch();
-    // Send empty UpdatePipelineResources to WebRender just to notify a new epoch.
-    // The epoch is used to know a timing of calling DidComposite().
-    // This is much simpler than tracking an epoch of AsyncImagePipeline.
-    wr::ResourceUpdateQueue resourceUpdates;
-    mApi->UpdatePipelineResources(resourceUpdates, mPipelineId, wr::NewEpoch(wrEpoch));
+    txn.UpdateEpoch(mPipelineId, wr::NewEpoch(wrEpoch));
+    mApi->SendTransaction(txn);
+
     HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
   } else {
     bool sendDidComposite = false;
@@ -706,6 +709,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
       mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
     }
   }
+
   return IPC_OK();
 }
 
@@ -1243,11 +1247,15 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   mApi->SetFrameStartTime(startTime);
 #endif
 
+  wr::TransactionBuilder txn;
+
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
-    mApi->GenerateFrame(opacityArray, transformArray);
-  } else {
-    mApi->GenerateFrame();
+    txn.UpdateDynamicProperties(opacityArray, transformArray);
   }
+
+  txn.GenerateFrame();
+
+  mApi->SendTransaction(txn);
 }
 
 void
