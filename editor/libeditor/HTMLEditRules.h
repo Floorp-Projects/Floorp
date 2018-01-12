@@ -11,7 +11,6 @@
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
-#include "nsIEditActionListener.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsISupportsImpl.h"
@@ -78,7 +77,6 @@ struct StyleCache final : public PropItem
 #define SIZE_STYLE_TABLE 19
 
 class HTMLEditRules : public TextEditRules
-                    , public nsIEditActionListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -110,36 +108,22 @@ public:
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
   nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode);
 
-  // nsIEditActionListener methods
+  void DidCreateNode(Element* aNewElement);
+  void DidInsertNode(nsIContent& aNode);
+  void WillDeleteNode(nsINode* aChild);
+  void DidSplitNode(nsINode* aExistingRightNode,
+                    nsINode* aNewLeftNode);
+  void WillJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
+  void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
+  void DidInsertText(nsINode* aTextNode, int32_t aOffset,
+                     const nsAString& aString);
+  void DidDeleteText(nsINode* aTextNode, int32_t aOffset, int32_t aLength);
+  void WillDeleteSelection(Selection* aSelection);
 
-  NS_IMETHOD WillCreateNode(const nsAString& aTag,
-                            nsIDOMNode* aNextSiblingOfNewNode) override;
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode* aNewNode,
-                           nsresult aResult) override;
-  NS_IMETHOD WillInsertNode(nsIDOMNode* aNode,
-                            nsIDOMNode* aNextSiblingOfNewNode) override;
-  NS_IMETHOD DidInsertNode(nsIDOMNode* aNode, nsresult aResult) override;
-  NS_IMETHOD WillDeleteNode(nsIDOMNode* aChild) override;
-  NS_IMETHOD DidDeleteNode(nsIDOMNode* aChild, nsresult aResult) override;
-  NS_IMETHOD WillSplitNode(nsIDOMNode* aExistingRightNode,
-                           int32_t aOffset) override;
-  NS_IMETHOD DidSplitNode(nsIDOMNode* aExistingRightNode,
-                          nsIDOMNode* aNewLeftNode) override;
-  NS_IMETHOD WillJoinNodes(nsIDOMNode* aLeftNode, nsIDOMNode* aRightNode,
-                           nsIDOMNode* aParent) override;
-  NS_IMETHOD DidJoinNodes(nsIDOMNode* aLeftNode, nsIDOMNode* aRightNode,
-                          nsIDOMNode* aParent, nsresult aResult) override;
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData* aTextNode, int32_t aOffset,
-                            const nsAString &aString) override;
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData* aTextNode, int32_t aOffset,
-                           const nsAString &aString, nsresult aResult) override;
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData* aTextNode, int32_t aOffset,
-                            int32_t aLength) override;
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData* aTextNode, int32_t aOffset,
-                           int32_t aLength, nsresult aResult) override;
-  NS_IMETHOD WillDeleteSelection(nsISelection* aSelection) override;
-  NS_IMETHOD DidDeleteSelection(nsISelection* aSelection) override;
   void DeleteNodeIfCollapsedText(nsINode& aNode);
+
+  void StartToListenToEditActions() { mListenerEnabled = true; }
+  void EndListeningToEditActions() { mListenerEnabled = false; }
 
 protected:
   virtual ~HTMLEditRules();
