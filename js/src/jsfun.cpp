@@ -193,11 +193,13 @@ ArgumentsGetterImpl(JSContext* cx, const CallArgs& args)
     if (!argsobj)
         return false;
 
+#ifndef JS_CODEGEN_NONE
     // Disabling compiling of this script in IonMonkey.  IonMonkey doesn't
     // guarantee |f.arguments| can be fully recovered, so we try to mitigate
     // observing this behavior by detecting its use early.
     JSScript* script = iter.script();
     jit::ForbidCompilation(cx, script);
+#endif
 
     args.rval().setObject(*argsobj);
     return true;

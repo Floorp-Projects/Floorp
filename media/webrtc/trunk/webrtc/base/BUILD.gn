@@ -20,22 +20,17 @@ if (is_win) {
 
 group("base") {
   public_deps = [
+    ":rtc_base",
     ":rtc_base_approved",
     ":rtc_task_queue",
   ]
-  if (!build_with_mozilla) {
-    public_deps += [
-      ":rtc_base",
-    ]
-  }
-
-  if (is_android && !build_with_mozilla) {
+  if (is_android) {
     public_deps += [ ":base_java" ]
   }
 }
 
 config("rtc_base_approved_all_dependent_config") {
-  if (is_mac && !(build_with_chromium || build_with_mozilla)) {
+  if (is_mac && !build_with_chromium) {
     libs = [ "Foundation.framework" ]  # needed for logging_mac.mm
   }
 }
@@ -77,7 +72,7 @@ config("rtc_base_all_dependent_config") {
   }
 }
 
-if (is_linux && !build_with_chromium && !build_with_mozilla) {
+if (is_linux && !build_with_chromium) {
   # Provides the same functionality as the //crypto:platform target, which
   # WebRTC cannot use as we don't sync src/crypto from Chromium.
   group("linux_system_ssl") {
@@ -89,11 +84,9 @@ if (is_linux && !build_with_chromium && !build_with_mozilla) {
 
 if (!rtc_build_ssl) {
   config("external_ssl_library") {
-    if (!build_with_mozilla) {
-      assert(rtc_ssl_root != "",
-             "You must specify rtc_ssl_root when rtc_build_ssl==0.")
-      include_dirs = [ rtc_ssl_root ]
-    }
+    assert(rtc_ssl_root != "",
+           "You must specify rtc_ssl_root when rtc_build_ssl==0.")
+    include_dirs = [ rtc_ssl_root ]
   }
 }
 
@@ -201,18 +194,7 @@ rtc_static_library("rtc_base_approved") {
 
   if (is_win) {
     sources += [ "file_win.cc" ]
-
-    if (build_with_mozilla) {
-      sources += [ "win32.cc" ]
-    }
   }
-
-  if (is_mac) {
-    if (build_with_mozilla) {
-      sources += [ "macutils.cc" ]
-    }
-  }
-
 
   if (build_with_chromium) {
     # Dependency on chromium's logging (in //base).
@@ -341,11 +323,6 @@ rtc_static_library("rtc_task_queue") {
         "task_queue_posix.cc",
       ]
       all_dependent_configs = [ ":enable_libevent_config" ]
-
-      if (build_with_mozilla) {
-        include_dirs = [ "$rtc_libevent_dir/include" ]
-        include_dirs += [ "$rtc_libevent_dir/linux" ]
-      }
     } else {
       if (is_mac || is_ios) {
         sources += [
@@ -966,7 +943,7 @@ if (rtc_include_tests) {
   }
 }
 
-if (is_android && !build_with_mozilla) {
+if (is_android) {
   android_library("base_java") {
     java_files = [
       "java/src/org/webrtc/Logging.java",

@@ -111,7 +111,6 @@ nsHttpTransaction::nsHttpTransaction()
     , mClosed(false)
     , mConnected(false)
     , mActivated(false)
-    , mActivatedAsH2(false)
     , mHaveStatusLine(false)
     , mHaveAllHeaders(false)
     , mTransactionDone(false)
@@ -175,6 +174,7 @@ void nsHttpTransaction::ResumeReading()
     mThrottlingReadAllowance = THROTTLE_NO_LIMIT;
 
     if (mConnection) {
+        mConnection->TransactionHasDataToRecv(this);
         nsresult rv = mConnection->ResumeRecv();
         if (NS_FAILED(rv)) {
             LOG(("  resume failed with rv=%" PRIx32, static_cast<uint32_t>(rv)));
@@ -539,11 +539,10 @@ nsHttpTransaction::SetConnection(nsAHttpConnection *conn)
 }
 
 void
-nsHttpTransaction::OnActivated(bool h2)
+nsHttpTransaction::OnActivated()
 {
     MOZ_ASSERT(OnSocketThread());
 
-    mActivatedAsH2 = h2;
     if (mActivated) {
         return;
     }
@@ -875,17 +874,6 @@ nsHttpTransaction::WritePipeSegment(nsIOutputStream *stream,
 
 bool nsHttpTransaction::ShouldThrottle()
 {
-    if (mActivatedAsH2) {
-        // Throttling feature is now disabled for http/2 transactions
-        // because of bug 1367861.  The logic around mActivatedAsH2
-        // will be removed when that is fixed.
-        // 
-        // Calling ShouldThrottle on the manager just to make sure
-        // the throttling time window is correctly updated by this transaction.
-        Unused << gHttpHandler->ConnMgr()->ShouldThrottle(this);
-        return false;
-    }
-
     if (mClassOfService & nsIClassOfService::DontThrottle) {
         // We deliberately don't touch the throttling window here since
         // DontThrottle requests are expected to be long-standing media

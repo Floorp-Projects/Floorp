@@ -730,7 +730,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
         mTransaction = mTLSFilter;
     }
 
-    trans->OnActivated(false);
+    trans->OnActivated();
 
     rv = OnOutputStreamReady(mSocketOut);
 

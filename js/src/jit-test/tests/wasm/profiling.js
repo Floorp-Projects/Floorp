@@ -194,7 +194,7 @@ for (let type of ['f32', 'f64']) {
         (func (export "") (call $foo))
     )`,
     WebAssembly.RuntimeError,
-    ["", ">", "1,>", "0,1,>", "interstitial,0,1,>", "trap handling,0,1,>", "", ">", ""]);
+    ["", ">", "1,>", "0,1,>", "1,>", "", ">", ""]);
 
     testError(
     `(module

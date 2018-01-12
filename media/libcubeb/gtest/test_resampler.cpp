@@ -497,13 +497,15 @@ TEST(cubeb, resampler_output_only_noop)
   cubeb_resampler_destroy(resampler);
 }
 
-long test_drain_data_cb(cubeb_stream * /*stm*/, void * /*user_ptr*/,
+long test_drain_data_cb(cubeb_stream * /*stm*/, void * user_ptr,
                         const void * input_buffer,
                         void * output_buffer, long frame_count)
 {
   EXPECT_TRUE(output_buffer);
   EXPECT_TRUE(!input_buffer);
-  return frame_count - 10;
+  auto cb_count = static_cast<int *>(user_ptr);
+  (*cb_count)++;
+  return frame_count - 1;
 }
 
 TEST(cubeb, resampler_drain)
@@ -515,10 +517,11 @@ TEST(cubeb, resampler_drain)
   output_params.channels = 1;
   output_params.format = CUBEB_SAMPLE_FLOAT32NE;
   target_rate = 48000;
+  int cb_count = 0;
 
   cubeb_resampler * resampler =
     cubeb_resampler_create((cubeb_stream*)nullptr, nullptr, &output_params, target_rate,
-                           test_drain_data_cb, nullptr,
+                           test_drain_data_cb, &cb_count,
                            CUBEB_RESAMPLER_QUALITY_VOIP);
 
   const long out_frames = 128;
@@ -530,9 +533,9 @@ TEST(cubeb, resampler_drain)
                                out_buffer, out_frames);
   } while (got == out_frames);
 
-  /* If the above is not an infinite loop, the drain was a success, just mark
-   * this test as such. */
-  ASSERT_TRUE(true);
+  /* The callback should be called once but not again after returning <
+   * frame_count. */
+  ASSERT_EQ(cb_count, 1);
 
   cubeb_resampler_destroy(resampler);
 }

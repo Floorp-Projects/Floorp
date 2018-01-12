@@ -161,16 +161,28 @@ def check_schema(schema):
         return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)
 
     def iter(path, sch):
+        def check_identifier(path, k):
+            if k in (basestring, voluptuous.Extra):
+                pass
+            elif isinstance(k, basestring):
+                if not identifier_re.match(k) and not whitelisted(path):
+                    raise RuntimeError(
+                        'YAML schemas should use dashed lower-case identifiers, '
+                        'not {!r} @ {}'.format(k, path))
+            elif isinstance(k, (voluptuous.Optional, voluptuous.Required)):
+                check_identifier(path, k.schema)
+            elif isinstance(k, voluptuous.Any):
+                for v in k.validators:
+                    check_identifier(path, v)
+            elif not whitelisted(path):
+                raise RuntimeError(
+                    'Unexpected type in YAML schema: {} @ {}'.format(
+                        type(k).__name__, path))
+
         if isinstance(sch, collections.Mapping):
             for k, v in sch.iteritems():
                 child = "{}[{!r}]".format(path, k)
-                if isinstance(k, (voluptuous.Optional, voluptuous.Required)):
-                    k = str(k)
-                if isinstance(k, basestring):
-                    if not identifier_re.match(k) and not whitelisted(child):
-                        raise RuntimeError(
-                            'YAML schemas should use dashed lower-case identifiers, '
-                            'not {!r} @ {}'.format(k, child))
+                check_identifier(child, k)
                 iter(child, v)
         elif isinstance(sch, (list, tuple)):
             for i, v in enumerate(sch):

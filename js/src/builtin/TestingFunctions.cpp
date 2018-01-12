@@ -614,9 +614,11 @@ WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
+    uintptr_t stackLimit = GetNativeStackLimit(cx);
+
     wasm::Bytes bytes;
     UniqueChars error;
-    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), &bytes, &error)) {
+    if (!wasm::TextToBinary(twoByteChars.twoByteChars(), stackLimit, &bytes, &error)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_TEXT_FAIL,
                                   error.get() ? error.get() : "out of memory");
         return false;
