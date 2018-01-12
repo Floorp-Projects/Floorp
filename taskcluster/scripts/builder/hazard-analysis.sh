@@ -46,8 +46,8 @@ function build_js_shell () {
     fi
     mkdir -p $HAZARD_SHELL_OBJDIR || true
     cd $HAZARD_SHELL_OBJDIR
-    $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api --with-ccache
-    make -j4
+    $JS_SRCDIR/configure --enable-optimize --disable-debug --enable-ctypes --enable-nspr-build --without-intl-api
+    make -j$(nproc)
     ) # Restore MOZ_OBJDIR and MOZCONFIG
 }
 
