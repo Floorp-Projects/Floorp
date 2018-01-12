@@ -98,6 +98,8 @@ try:
             - 'sm-compacting-win32'
 
 scriptworker:
+    # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
+    scope-prefix: 'project:releng'
     worker-types:
         'scriptworker-prov-v1/signing-linux-v1':
             - 'project:releng:signing:cert:release-signing'
