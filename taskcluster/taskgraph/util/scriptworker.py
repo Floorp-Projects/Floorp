@@ -257,37 +257,9 @@ PUSH_APK_SCOPES = {
     'default': 'project:releng:googleplay:invalid',
 }
 
-# See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
-PUSH_APK_GOOGLE_PLAY_TRACT = {
-    'central': 'beta',
-    'beta': 'rollout',
-    'release': 'rollout',
-    'default': 'invalid',
-}
 
-PUSH_APK_BREAKPOINT_WORKER_TYPE = {
-    'central': 'aws-provisioner-v1/taskcluster-generic',
-    'beta': 'null-provisioner/human-breakpoint',
-    'release': 'null-provisioner/human-breakpoint',
-    'maple': 'aws-provisioner-v1/taskcluster-generic',
-    'default': 'invalid/invalid',
-}
 
-PUSH_APK_COMMIT_OPTION = {
-    'central': True,
-    'beta': True,
-    'maple': False,
-    'release': True,
-    'default': False,
-}
 
-PUSH_APK_ROLLOUT_PERCENTAGE = {
-    # XXX Please make sure to change PUSH_APK_GOOGLE_PLAY_TRACT to 'rollout' if you add a new
-    # supported project
-    'release': 10,
-    'beta': 10,
-    'default': None,
-}
 
 
 # scope functions {{{1
@@ -404,30 +376,6 @@ get_push_apk_scope = functools.partial(
     get_scope_from_project,
     PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
     PUSH_APK_SCOPES
-)
-
-get_push_apk_track = functools.partial(
-    get_scope_from_project,
-    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    PUSH_APK_GOOGLE_PLAY_TRACT
-)
-
-get_push_apk_breakpoint_worker_type = functools.partial(
-    get_scope_from_project,
-    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    PUSH_APK_BREAKPOINT_WORKER_TYPE
-)
-
-get_push_apk_commit_option = functools.partial(
-    get_scope_from_project,
-    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    PUSH_APK_COMMIT_OPTION
-)
-
-get_push_apk_rollout_percentage = functools.partial(
-    get_scope_from_project,
-    PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
-    PUSH_APK_ROLLOUT_PERCENTAGE
 )
 
 
