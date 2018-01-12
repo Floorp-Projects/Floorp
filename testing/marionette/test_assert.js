@@ -169,27 +169,14 @@ add_test(function test_string() {
   run_next_test();
 });
 
-add_test(function test_window() {
-  assert.window({closed: false});
+add_test(function test_open() {
+  assert.open({closed: false});
 
   for (let typ of [null, undefined, {closed: true}]) {
-    Assert.throws(() => assert.window(typ), NoSuchWindowError);
+    Assert.throws(() => assert.open(typ), NoSuchWindowError);
   }
 
-  Assert.throws(() => assert.window(null, "custom"), /custom/);
-
-  run_next_test();
-});
-
-add_test(function test_contentBrowser() {
-  assert.contentBrowser({contentBrowser: 42, window: {closed: false}});
-
-  let closedWindow = {contentBrowser: 42, window: {closed: true}};
-  let noContentBrowser = {contentBrowser: null, window: {closed: false}};
-
-  for (let typ of [null, undefined, closedWindow, noContentBrowser]) {
-    Assert.throws(() => assert.contentBrowser(typ), NoSuchWindowError);
-  }
+  Assert.throws(() => assert.open(null, "custom"), /custom/);
 
   run_next_test();
 });
