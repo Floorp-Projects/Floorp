@@ -467,7 +467,10 @@ WebRenderBridgeParent::RecvUpdateResources(nsTArray<OpUpdateResource>&& aResourc
     IPC_FAIL(this, "Invalid WebRender resource data shmem or address.");
   }
 
-  mApi->UpdateResources(updates);
+  wr::TransactionBuilder txn;
+  txn.UpdateResources(updates);
+  mApi->SendTransaction(txn);
+
   DeallocShmems(aSmallShmems);
   DeallocShmems(aLargeShmems);
   return IPC_OK();
@@ -887,10 +890,13 @@ WebRenderBridgeParent::RecvRemovePipelineIdForCompositable(const wr::PipelineId&
     return IPC_OK();
   }
 
+  wr::TransactionBuilder txn;
+
   wrHost->ClearWrBridge();
-  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId);
+  mAsyncImageManager->RemoveAsyncImagePipeline(aPipelineId, txn);
+  txn.RemovePipeline(aPipelineId);
+  mApi->SendTransaction(txn);
   mAsyncCompositables.Remove(wr::AsUint64(aPipelineId));
-  mApi->RemovePipeline(aPipelineId);
   return IPC_OK();
 }
 
@@ -958,7 +964,9 @@ WebRenderBridgeParent::RecvClearCachedResources()
   mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
 
   // Clear resources
-  mApi->ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
+  wr::TransactionBuilder txn;
+  txn.ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
+  mApi->SendTransaction(txn);
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
   // Remove animations.
@@ -1395,7 +1403,10 @@ WebRenderBridgeParent::ClearResources()
   }
 
   uint32_t wrEpoch = GetNextWrEpoch();
-  mApi->ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+
+  wr::TransactionBuilder txn;
+  txn.ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+
   // Schedule generate frame to clean up Pipeline
   ScheduleGenerateFrame();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
@@ -1407,12 +1418,14 @@ WebRenderBridgeParent::ClearResources()
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     RefPtr<WebRenderImageHost> host = iter.Data();
     host->ClearWrBridge();
-    mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId);
+    mAsyncImageManager->RemoveAsyncImagePipeline(pipelineId, txn);
   }
   mAsyncCompositables.Clear();
 
   mAsyncImageManager->RemovePipeline(mPipelineId, wr::NewEpoch(wrEpoch));
-  mApi->RemovePipeline(mPipelineId);
+  txn.RemovePipeline(mPipelineId);
+
+  mApi->SendTransaction(txn);
 
   for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
     mAnimStorage->ClearById(*iter);

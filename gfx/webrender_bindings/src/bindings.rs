@@ -1080,148 +1080,21 @@ pub extern "C" fn wr_api_send_transaction(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_resources(
-    dh: &mut DocumentHandle,
-    resources: &mut ResourceUpdates
-) {
-    let resource_updates = mem::replace(resources, ResourceUpdates::new());
-    dh.api.update_resources(resource_updates);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_update_pipeline_resources(
-    dh: &mut DocumentHandle,
-    pipeline_id: WrPipelineId,
-    epoch: WrEpoch,
-    resources: &mut ResourceUpdates
-) {
-    let resource_updates = mem::replace(resources, ResourceUpdates::new());
-    dh.api.update_pipeline_resources(resource_updates, dh.document_id, pipeline_id, epoch);
-}
-
-
-#[no_mangle]
-pub extern "C" fn wr_api_set_root_pipeline(dh: &mut DocumentHandle,
-                                           pipeline_id: WrPipelineId) {
-    dh.api.set_root_pipeline(dh.document_id, pipeline_id);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_remove_pipeline(dh: &mut DocumentHandle,
-                                         pipeline_id: WrPipelineId) {
-    dh.api.remove_pipeline(dh.document_id, pipeline_id);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
-                                               width: i32,
-                                               height: i32) {
-    let size = DeviceUintSize::new(width as u32, height as u32);
-    dh.api.set_window_parameters(dh.document_id,
-                                 size,
-                                 DeviceUintRect::new(DeviceUintPoint::new(0, 0), size),
-                                 1.0);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_api_set_display_list(
-    dh: &mut DocumentHandle,
-    color: ColorF,
-    epoch: WrEpoch,
-    viewport_width: f32,
-    viewport_height: f32,
-    pipeline_id: WrPipelineId,
-    content_size: LayoutSize,
-    dl_descriptor: BuiltDisplayListDescriptor,
-    dl_data: &mut WrVecU8,
-    resources: &mut ResourceUpdates,
-) {
-    let resource_updates = mem::replace(resources, ResourceUpdates::new());
-
-    let color = if color.a == 0.0 { None } else { Some(color) };
-
-    // See the documentation of set_display_list in api.rs. I don't think
-    // it makes a difference in gecko at the moment(until APZ is figured out)
-    // but I suppose it is a good default.
-    let preserve_frame_state = true;
-
-    let dl_vec = dl_data.flush_into_vec();
-    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
-
-    dh.api.set_display_list(
-        dh.document_id,
-        epoch,
-        color,
-        LayoutSize::new(viewport_width, viewport_height),
-        (pipeline_id, content_size, dl),
-        preserve_frame_state,
-        resource_updates
-    );
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wr_api_clear_display_list(
-    dh: &mut DocumentHandle,
+pub unsafe extern "C" fn wr_transaction_clear_display_list(
+    txn: &mut Transaction,
     epoch: WrEpoch,
     pipeline_id: WrPipelineId,
 ) {
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
-    let resource_updates = ResourceUpdates::new();
 
-    dh.api.set_display_list(
-        dh.document_id,
+    txn.set_display_list(
         epoch,
         None,
         LayoutSize::new(0.0, 0.0),
         frame_builder.dl_builder.finalize(),
         preserve_frame_state,
-        resource_updates
     );
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_generate_frame(dh: &mut DocumentHandle) {
-    dh.api.generate_frame(dh.document_id, None);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_api_generate_frame_with_properties(dh: &mut DocumentHandle,
-                                                        opacity_array: *const WrOpacityProperty,
-                                                        opacity_count: usize,
-                                                        transform_array: *const WrTransformProperty,
-                                                        transform_count: usize) {
-    let mut properties = DynamicProperties {
-        transforms: Vec::new(),
-        floats: Vec::new(),
-    };
-
-    if transform_count > 0 {
-        let transform_slice = make_slice(transform_array, transform_count);
-
-        for element in transform_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.transform.into(),
-            };
-
-            properties.transforms.push(prop);
-        }
-    }
-
-    if opacity_count > 0 {
-        let opacity_slice = make_slice(opacity_array, opacity_count);
-
-        for element in opacity_slice.iter() {
-            let prop = PropertyValue {
-                key: PropertyBindingKey::new(element.id),
-                value: element.opacity,
-            };
-            properties.floats.push(prop);
-        }
-    }
-
-    dh.api.generate_frame(dh.document_id, Some(properties));
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
