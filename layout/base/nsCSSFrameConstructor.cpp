@@ -6240,7 +6240,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
   if (isGeneratedContent) {
     // We need to keep this alive until the frame takes ownership.
-    NS_ADDREF(item->mContent);
+    // This corresponds to the Release in ConstructFramesFromItem.
+    item->mContent->AddRef();
   }
   item->mIsRootPopupgroup =
     aNameSpaceID == kNameSpaceID_XUL && aTag == nsGkAtoms::popupgroup &&
