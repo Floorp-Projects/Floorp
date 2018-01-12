@@ -9,7 +9,6 @@
 #include "mozilla/net/MemoryDownloader.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
-#include "nsIEventTarget.h"
 #include "nsIInputStreamPump.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
@@ -60,9 +59,6 @@ private:
     nsresult CreateJarInput(nsIZipReaderCache *, nsJARInputThunk **);
     nsresult LookupFile(bool aAllowAsync);
     nsresult OpenLocalFile();
-    nsresult ContinueOpenLocalFile(nsJARInputThunk* aInput);
-    nsresult OnOpenLocalFileComplete(nsresult aResult);
-    nsresult CheckPendingEvents();
     void NotifyError(nsresult aError);
     void FireOnProgress(uint64_t aProgress);
     virtual void OnDownloadComplete(mozilla::net::MemoryDownloader* aDownloader,
@@ -95,15 +91,7 @@ private:
     int64_t                         mContentLength;
     uint32_t                        mLoadFlags;
     nsresult                        mStatus;
-    bool                            mIsPending; // the AsyncOpen is in progress.
-
-    bool                            mEnableOMT;
-    // |Cancel()|, |Suspend()|, and |Resume()| might be called during AsyncOpen.
-    struct {
-        bool isCanceled;
-        uint32_t suspendCount;
-    }                               mPendingEvent;
-
+    bool                            mIsPending;
     bool                            mIsUnsafe;
 
     mozilla::net::MemoryDownloader::Data mTempMem;
@@ -117,9 +105,6 @@ private:
     nsCOMPtr<nsIURI>                mJarBaseURI;
     nsCString                       mJarEntry;
     nsCString                       mInnerJarEntry;
-
-    // use StreamTransportService as background thread
-    nsCOMPtr<nsIEventTarget>        mWorker;
 
     // True if this channel should not download any remote files.
     bool                            mBlockRemoteFiles;
