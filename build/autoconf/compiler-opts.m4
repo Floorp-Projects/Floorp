@@ -198,10 +198,14 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS"; then
     fi
 fi
 
-# bionic in Android < 4.1 doesn't support PIE
 # On OSX, the linker defaults to building PIE programs when targeting OSX 10.7.
 # On other Unix systems, some file managers (Nautilus) can't start PIE programs
-MOZ_PIE=
+if test "$OS_TARGET" = Android; then
+    # bionic in Android >= 4.1 supports PIE, and we target those versions.
+    MOZ_PIE=1
+else
+    MOZ_PIE=
+fi
 
 MOZ_ARG_ENABLE_BOOL(pie,
 [  --enable-pie           Enable Position Independent Executables],

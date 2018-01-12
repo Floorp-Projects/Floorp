@@ -135,7 +135,11 @@ EXTRA_COMPONENTS += [
 ]
 
 if CONFIG['OS_TARGET'] == 'Darwin':
-    if CONFIG['HOST_MAJOR_VERSION'] >= '15':
+    if not CONFIG['HOST_MAJOR_VERSION']:
+        DEFINES.update(
+            HAS_CONNECTX=True,
+        )
+    elif CONFIG['HOST_MAJOR_VERSION'] >= '15':
         DEFINES.update(
             HAS_CONNECTX=True,
         )

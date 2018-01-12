@@ -5,6 +5,7 @@
     "node": ">=6.9.0"
   },
   "scripts": {
+    "preinstall": "cd ../netmonitor && npm install && cd ../webconsole",
     "start": "cross-env NODE_ENV=production node bin/dev-server",
     "dev": "node bin/dev-server",
     "test": "cross-env NODE_ENV=test NODE_PATH=../../../ mocha new-console-output/test/**/*.test.js --compilers js:babel-register -r jsdom-global/register -r ./new-console-output/test/require-helper.js"

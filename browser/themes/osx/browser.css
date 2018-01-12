@@ -846,20 +846,6 @@ html|span.ac-emphasize-text-url {
   }
 }
 
-/**
- * In-tab close button
- */
-
-.tab-close-button > .toolbarbutton-icon {
-  margin-inline-end: 0px !important;
-}
-
-.tab-close-button {
-  border: none !important;
-  background: none;
-  cursor: default;
-}
-
 /* Bookmarks toolbar */
 #PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);

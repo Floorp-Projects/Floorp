@@ -1494,6 +1494,12 @@ public:
   const ClientInfo&
   GetClientInfo() const;
 
+  const ClientState
+  GetClientState() const;
+
+  const Maybe<ServiceWorkerDescriptor>
+  GetController() const;
+
   void
   Control(const ServiceWorkerDescriptor& aServiceWorker);
 

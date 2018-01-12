@@ -128,7 +128,7 @@ class TestTab(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(tab.window, self.browser)
 
         self.assertEqual(tab.tab_element.get_property('localName'), 'tab')
-        self.assertEqual(tab.close_button.get_property('localName'), 'toolbarbutton')
+        self.assertEqual(tab.close_button.get_property('localName'), 'image')
 
     def test_certificate(self):
         url = self.marionette.absolute_url('layout/mozilla.html')

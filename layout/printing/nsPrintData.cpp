@@ -17,7 +17,6 @@
 // PR LOGGING
 #include "mozilla/Logging.h"
 
-#define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
 static mozilla::LazyLogModule gPrintingLog("printing");
 
 #define PR_PL(_p1)  MOZ_LOG(gPrintingLog, mozilla::LogLevel::Debug, _p1);

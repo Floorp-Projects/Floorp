@@ -30,6 +30,7 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::IsPowerOfTwo;
+using mozilla::MakeEnumeratedRange;
 
 // A sanity check.  We have only tested WASM_HUGE_MEMORY on x64, and only tested
 // x64 with WASM_HUGE_MEMORY.
@@ -690,6 +691,75 @@ DebugFrame::leave(JSContext* cx)
     }
 }
 
+bool
+TrapSiteVectorArray::empty() const
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+        if (!(*this)[trap].empty())
+            return false;
+    }
+
+    return true;
+}
+
+void
+TrapSiteVectorArray::clear()
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        (*this)[trap].clear();
+}
+
+void
+TrapSiteVectorArray::swap(TrapSiteVectorArray& rhs)
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        (*this)[trap].swap(rhs[trap]);
+}
+
+void
+TrapSiteVectorArray::podResizeToFit()
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        (*this)[trap].podResizeToFit();
+}
+
+size_t
+TrapSiteVectorArray::serializedSize() const
+{
+    size_t ret = 0;
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        ret += SerializedPodVectorSize((*this)[trap]);
+    return ret;
+}
+
+uint8_t*
+TrapSiteVectorArray::serialize(uint8_t* cursor) const
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        cursor = SerializePodVector(cursor, (*this)[trap]);
+    return cursor;
+}
+
+const uint8_t*
+TrapSiteVectorArray::deserialize(const uint8_t* cursor)
+{
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+        cursor = DeserializePodVector(cursor, &(*this)[trap]);
+        if (!cursor)
+            return nullptr;
+    }
+    return cursor;
+}
+
+size_t
+TrapSiteVectorArray::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    size_t ret = 0;
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        ret += (*this)[trap].sizeOfExcludingThis(mallocSizeOf);
+    return ret;
+}
+
 CodeRange::CodeRange(Kind kind, Offsets offsets)
   : begin_(offsets.begin),
     ret_(0),
@@ -703,6 +773,7 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
       case FarJumpIsland:
       case OutOfBoundsExit:
       case UnalignedExit:
+      case TrapExit:
       case Throw:
       case Interrupt:
         break;

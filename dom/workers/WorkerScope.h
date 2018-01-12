@@ -19,7 +19,9 @@ namespace dom {
 
 class AnyCallback;
 struct ChannelPixelLayout;
+class ClientInfo;
 class Clients;
+class ClientState;
 class Console;
 class Crypto;
 class Function;
@@ -221,6 +223,15 @@ public:
 
   AbstractThread*
   AbstractMainThreadFor(TaskCategory aCategory) override;
+
+  Maybe<ClientInfo>
+  GetClientInfo() const override;
+
+  Maybe<ClientState>
+  GetClientState() const;
+
+  Maybe<ServiceWorkerDescriptor>
+  GetController() const override;
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope

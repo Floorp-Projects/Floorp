@@ -1288,7 +1288,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     } // else if null, leave easing as its default "linear".
 
     if (keyframe.mComposite) {
-      keyframeDict.mComposite.Construct(keyframe.mComposite.value());
+      keyframeDict.mComposite.SetValue(keyframe.mComposite.value());
     }
 
     JS::Rooted<JS::Value> keyframeJSValue(aCx);

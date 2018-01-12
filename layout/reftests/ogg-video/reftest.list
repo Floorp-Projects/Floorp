@@ -1,5 +1,5 @@
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for android below:
-fuzzy(255,5000) random-if(webrender) == 444-1.html 444-1-ref.html
+fuzzy(255,5000) == 444-1.html 444-1-ref.html
 fails-if(Android) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html
 fails-if(Android) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 fails-if(Android) skip-if(gtkWidget) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html

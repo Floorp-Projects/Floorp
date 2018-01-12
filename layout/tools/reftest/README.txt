@@ -49,16 +49,14 @@ must be one of the following:
 
 1. Inclusion of another manifest
 
-   <failure-type>* include <relative_path>
+   <skip-type>* include <relative_path>
 
-   <failure-type> is the same as listed below for a test item.  As for
-   test items, multiple failure types listed on the same line are
-   combined by using the last matching failure type listed on the line.
-   However, the failure type on a manifest is combined with the failure
-   type on the test (or on a nested manifest) with the rule that the
-   last in the following list wins:  fails, random, skip.  (In other
-   words, when combining <failure-type> from the manifest include and
-   the test line, skip always wins, and random beats fails.)
+   <skip-type> is one of the skip or skip-if items (see their definitions
+   in <failure-type> below). If any of the skip types evaluate to true (i.e.
+   they are a plain "skip" or they are a "skip-if" with a condition that
+   evaluates to true), then the include statement is skipped. Otherwise,
+   reftests in the specified manifest are included in the set of reftests
+   that are run.
 
 2. A test item
 

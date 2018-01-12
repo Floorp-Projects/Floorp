@@ -7,7 +7,10 @@
 #ifndef nsIGlobalObject_h__
 #define nsIGlobalObject_h__
 
+#include "mozilla/Maybe.h"
+#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/DispatcherTrait.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
@@ -75,6 +78,12 @@ public:
   void TraverseHostObjectURIs(nsCycleCollectionTraversalCallback &aCb);
 
   virtual bool IsInSyncOperation() { return false; }
+
+  virtual mozilla::Maybe<mozilla::dom::ClientInfo>
+  GetClientInfo() const;
+
+  virtual mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>
+  GetController() const;
 
 protected:
   virtual ~nsIGlobalObject();

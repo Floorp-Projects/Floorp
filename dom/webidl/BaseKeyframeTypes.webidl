@@ -22,13 +22,13 @@ enum CompositeOperation { "replace", "add", "accumulate" };
 dictionary BasePropertyIndexedKeyframe {
   (double? or sequence<double?>) offset = [];
   (DOMString or sequence<DOMString>) easing = [];
-  (CompositeOperation or sequence<CompositeOperation>) composite = [];
+  (CompositeOperation? or sequence<CompositeOperation?>) composite = [];
 };
 
 dictionary BaseKeyframe {
   double? offset = null;
   DOMString easing = "linear";
-  CompositeOperation composite;
+  CompositeOperation? composite = null;
 
   // Non-standard extensions
 

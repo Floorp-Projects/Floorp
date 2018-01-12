@@ -37,6 +37,7 @@ public:
   already_AddRefed<SVGAnimatedTransformList> Transform();
   nsSVGElement* GetNearestViewportElement();
   nsSVGElement* GetFarthestViewportElement();
+  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<SVGIRect> GetBBox(const SVGBoundingBoxOptions& aOptions,
                                      ErrorResult& rv);
   already_AddRefed<SVGMatrix> GetCTM();

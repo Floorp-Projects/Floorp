@@ -1101,6 +1101,11 @@ class AssemblerX86Shared : public AssemblerShared
     void breakpoint() {
         masm.int3();
     }
+    CodeOffset ud2() {
+        CodeOffset off(masm.currentOffset());
+        masm.ud2();
+        return off;
+    }
 
     static bool HasSSE2() { return CPUInfo::IsSSE2Present(); }
     static bool HasSSE3() { return CPUInfo::IsSSE3Present(); }

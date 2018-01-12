@@ -47,6 +47,7 @@ namespace net {
 class HttpBackgroundChannelChild;
 class InterceptedChannelContent;
 class InterceptStreamListener;
+class SyntheticDiversionListener;
 
 class HttpChannelChild final : public PHttpChannelChild
                              , public HttpBaseChannel
@@ -167,6 +168,8 @@ protected:
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
   mozilla::ipc::IPCResult RecvAttachStreamFilter(Endpoint<extensions::PStreamFilterParent>&& aEndpoint) override;
+
+  mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -472,6 +475,7 @@ private:
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
+  friend class SyntheticDiversionListener;
   friend class HttpBackgroundChannelChild;
   friend class NeckoTargetChannelEvent<HttpChannelChild>;
 };

@@ -360,7 +360,6 @@ tabbrowser {
 
 .tab-close-button {
   margin-inline-end: -2px;
-  padding: 0;
   -moz-context-properties: fill, fill-opacity, stroke-opacity;
   stroke-opacity: var(--toolbarbutton-icon-fill-opacity);
 }

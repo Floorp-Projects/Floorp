@@ -3807,15 +3807,6 @@ class BaseCompiler final : public BaseCompilerInterface
 #endif
     }
 
-    void unreachableTrap()
-    {
-        masm.jump(oldTrap(Trap::Unreachable));
-#ifdef DEBUG
-        masm.breakpoint();
-#endif
-    }
-
-
     MOZ_MUST_USE bool
     supportsRoundInstruction(RoundingMode mode)
     {
@@ -4903,6 +4894,10 @@ class BaseCompiler final : public BaseCompilerInterface
 
     BytecodeOffset bytecodeOffset() const {
         return iter_.bytecodeOffset();
+    }
+
+    void trap(Trap t) const {
+        masm.wasmTrap(t, bytecodeOffset());
     }
 
     OldTrapDesc oldTrap(Trap t) const {
@@ -8533,7 +8528,7 @@ BaseCompiler::emitBody()
           case uint16_t(Op::Unreachable):
             CHECK(iter_.readUnreachable());
             if (!deadCode_) {
-                unreachableTrap();
+                trap(Trap::Unreachable);
                 deadCode_ = true;
             }
             NEXT();

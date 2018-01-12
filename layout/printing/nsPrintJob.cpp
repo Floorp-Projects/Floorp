@@ -136,7 +136,8 @@ using namespace mozilla::dom;
 //#define EXTENDED_DEBUG_PRINTING
 #endif
 
-#define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
+// this log level turns on the dumping of each document's layout info
+#define DUMP_LAYOUT_LEVEL (static_cast<mozilla::LogLevel>(9))
 
 #ifndef PR_PL
 static mozilla::LazyLogModule gPrintingLog("printing")
@@ -162,13 +163,15 @@ static nsresult DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc);
 
 #ifdef EXTENDED_DEBUG_PRINTING
 // Forward Declarations
-static void DumpPrintObjectsListStart(const char * aStr, nsTArray<nsPrintObject*> * aDocList);
+static void DumpPrintObjectsListStart(const char * aStr, const nsTArray<nsPrintObject*>& aDocList);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nullptr);
-static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsDeviceContext * aDC, int aLevel= 0, FILE * aFD = nullptr);
+static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
+                                       nsDeviceContext * aDC, int aLevel = 0,
+                                       FILE * aFD = nullptr);
 
 #define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject.get());
-#define DUMP_DOC_TREELAYOUT DumpPrintObjectsTreeLayout(mPrt->mPrintObject.get(), mPrt->mPrintDC);
+#define DUMP_DOC_TREELAYOUT DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
 #else
 #define DUMP_DOC_LIST(_title)
 #define DUMP_DOC_TREE
@@ -600,13 +603,18 @@ nsPrintJob::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount)
 
 // Foward decl for Debug Helper Functions
 #ifdef EXTENDED_DEBUG_PRINTING
+#ifdef XP_WIN
 static int RemoveFilesInDir(const char * aDir);
-static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLStr);
+#endif
+static void GetDocTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
+                              nsACString& aDocStr,
+                              nsACString& aURLStr);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD);
-static void DumpPrintObjectsList(nsTArray<nsPrintObject*> * aDocList);
-static void RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent);
+static void DumpPrintObjectsList(const nsTArray<nsPrintObject*>& aDocList);
+static void RootFrameList(nsPresContext* aPresContext, FILE* out,
+                          const char* aPrefix);
 static void DumpViews(nsIDocShell* aDocShell, FILE* out);
-static void DumpLayoutData(char* aTitleStr, char* aURLStr,
+static void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
                            nsPresContext* aPresContext,
                            nsDeviceContext * aDC, nsIFrame * aRootFrame,
                            nsIDocShell * aDocShell, FILE* aFD);
@@ -1664,7 +1672,7 @@ nsPrintJob::ReconstructAndReflow(bool doSetPixelScale)
 #if defined(XP_WIN) && defined(EXTENDED_DEBUG_PRINTING)
   // We need to clear all the output files here
   // because they will be re-created with second reflow of the docs
-  if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
+  if (MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
     RemoveFilesInDir(".\\");
     gDumpFileNameCnt   = 0;
     gDumpLOFileNameCnt = 0;
@@ -2409,7 +2417,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef EXTENDED_DEBUG_PRINTING
-    if (kPrintingLogMod && kPrintingLogMod->level == DUMP_LAYOUT_LEVEL) {
+    if (MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
       nsAutoCString docStr;
       nsAutoCString urlStr;
       GetDocTitleAndURL(aPO, docStr, urlStr);
@@ -2435,9 +2443,9 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
         } else {
           printf("View is null!\n");
         }
-        if (docShell) {
+        if (aPO->mDocShell) {
           fprintf(fd, "--------------- All Views ----------------\n");
-          DumpViews(docShell, fd);
+          DumpViews(aPO->mDocShell, fd);
           fprintf(fd, "---------------------------------------\n\n");
         }
         fclose(fd);
@@ -2661,7 +2669,7 @@ nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO)
       nsAutoCString urlStr;
       GetDocTitleAndURL(aPO, docStr, urlStr);
       DumpLayoutData(docStr.get(), urlStr.get(), poPresContext,
-                     printData->mPrintDocDC, rootFrame, docShell, nullptr);
+                     printData->mPrintDC, rootFrame, aPO->mDocShell, nullptr);
     }
 #endif
 
@@ -3639,7 +3647,8 @@ int RemoveFilesInDir(const char * aDir)
 /** ---------------------------------------------------
  *  Dumps Frames for Printing
  */
-static void RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
+static void RootFrameList(nsPresContext* aPresContext, FILE* out,
+                          const char* aPrefix)
 {
   if (!aPresContext || !out)
     return;
@@ -3648,7 +3657,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, int32_t aInden
   if (shell) {
     nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if (frame) {
-      frame->List(aPresContext, out, aIndent);
+      frame->List(out, aPrefix);
     }
   }
 }
@@ -3676,7 +3685,7 @@ static void DumpFrames(FILE*                 out,
     child->GetFrameName(tmp);
     fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
     bool isSelected;
-    if (NS_SUCCEEDED(child->IsVisibleForPainting(aPresContext, *aRendContext, true, &isSelected))) {
+    if (child->IsVisibleForPainting()) {
       fprintf(out, " %p %s", child, isSelected?"VIS":"UVS");
       nsRect rect = child->GetRect();
       fprintf(out, "[%d,%d,%d,%d] ", rect.x, rect.y, rect.width, rect.height);
@@ -3700,7 +3709,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 
   if (nullptr != aDocShell) {
     fprintf(out, "docshell=%p \n", aDocShell);
-    nsIPresShell* shell = nsPrintJob::GetPresShellFor(aDocShell);
+    nsIPresShell* shell = aDocShell->GetPresShell();
     if (shell) {
       nsViewManager* vm = shell->GetViewManager();
       if (vm) {
@@ -3731,15 +3740,17 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 /** ---------------------------------------------------
  *  Dumps the Views and Frames
  */
-void DumpLayoutData(char*              aTitleStr,
-                    char*              aURLStr,
-                    nsPresContext*    aPresContext,
-                    nsDeviceContext * aDC,
-                    nsIFrame *         aRootFrame,
-                    nsIDocShekk *      aDocShell,
+void DumpLayoutData(const char*        aTitleStr,
+                    const char*        aURLStr,
+                    nsPresContext*     aPresContext,
+                    nsDeviceContext*   aDC,
+                    nsIFrame*          aRootFrame,
+                    nsIDocShell*       aDocShell,
                     FILE*              aFD = nullptr)
 {
-  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+  if (!MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
+    return;
+  }
 
   if (aPresContext == nullptr || aDC == nullptr) {
     return;
@@ -3765,7 +3776,7 @@ void DumpLayoutData(char*              aTitleStr,
     fprintf(fd, "--------------- Frames ----------------\n");
     //RefPtr<gfxContext> renderingContext =
     //  aDC->CreateRenderingContext();
-    RootFrameList(aPresContext, fd, 0);
+    RootFrameList(aPresContext, fd, "");
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
     fprintf(fd, "---------------------------------------\n\n");
     fprintf(fd, "--------------- Views From Root Frame----------------\n");
@@ -3787,18 +3798,16 @@ void DumpLayoutData(char*              aTitleStr,
 }
 
 //-------------------------------------------------------------
-static void DumpPrintObjectsList(nsTArray<nsPrintObject*> * aDocList)
+static void DumpPrintObjectsList(const nsTArray<nsPrintObject*>& aDocList)
 {
-  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
-
-  NS_ASSERTION(aDocList, "Pointer is null!");
+  if (!MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
+    return;
+  }
 
   const char types[][3] = {"DC", "FR", "IF", "FS"};
   PR_PL(("Doc List\n***************************************************\n"));
   PR_PL(("T  P A H    PO    DocShell   Seq     Page      Root     Page#    Rect\n"));
-  int32_t cnt = aDocList->Length();
-  for (int32_t i=0;i<cnt;i++) {
-    nsPrintObject* po = aDocList->ElementAt(i);
+  for (nsPrintObject* po : aDocList) {
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     nsIFrame* rootFrame = nullptr;
     if (po->mPresShell) {
@@ -3812,16 +3821,18 @@ static void DumpPrintObjectsList(nsTArray<nsPrintObject*> * aDocList)
       }
     }
 
-    PR_PL(("%s %d %d %d %p %p %p %p %p   %d   %d,%d,%d,%d\n", types[po->mFrameType],
-            po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po, po->mDocShell.get(), po->mSeqFrame,
-            po->mPageFrame, rootFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height));
+    PR_PL(("%s %d %d %d %p %p %p\n", types[po->mFrameType],
+            po->IsPrintable(), po->mPrintAsIs, po->mHasBeenPrinted, po,
+            po->mDocShell.get(), rootFrame));
   }
 }
 
 //-------------------------------------------------------------
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD)
 {
-  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+  if (!MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
+    return;
+  }
 
   NS_ASSERTION(aPO, "Pointer is null!");
 
@@ -3831,13 +3842,11 @@ static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel, FILE* aFD)
     fprintf(fd, "DocTree\n***************************************************\n");
     fprintf(fd, "T     PO    DocShell   Seq      Page     Page#    Rect\n");
   }
-  int32_t cnt = aPO->mKids.Length();
-  for (int32_t i=0;i<cnt;i++) {
-    nsPrintObject* po = aPO->mKids.ElementAt(i);
+  for (const auto& po : aPO->mKids) {
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     for (int32_t k=0;k<aLevel;k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[po->mFrameType], po, po->mDocShell.get(), po->mSeqFrame,
-           po->mPageFrame, po->mPageNum, po->mRect.x, po->mRect.y, po->mRect.width, po->mRect.height);
+    fprintf(fd, "%s %p %p\n", types[po->mFrameType], po.get(),
+            po->mDocShell.get());
   }
 }
 
@@ -3848,19 +3857,19 @@ static void GetDocTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
 {
   nsAutoString docTitleStr;
   nsAutoString docURLStr;
-  nsPrintJob::GetDisplayTitleAndURL(aPO,
-                                    docTitleStr, docURLStr,
-                                    nsPrintJob::eDocTitleDefURLDoc);
+  GetDocumentTitleAndURL(aPO->mDocument, docTitleStr, docURLStr);
   aDocStr = NS_ConvertUTF16toUTF8(docTitleStr);
   aURLStr = NS_ConvertUTF16toUTF8(docURLStr);
 }
 
 //-------------------------------------------------------------
-static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
+static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
                                        nsDeviceContext * aDC,
                                        int aLevel, FILE * aFD)
 {
-  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+  if (!MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
+    return;
+  }
 
   NS_ASSERTION(aPO, "Pointer is null!");
   NS_ASSERTION(aDC, "Pointer is null!");
@@ -3881,8 +3890,8 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
       rootFrame = aPO->mPresShell->FrameManager()->GetRootFrame();
     }
     for (int32_t k=0;k<aLevel;k++) fprintf(fd, "  ");
-    fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[aPO->mFrameType], aPO, aPO->mDocShell.get(), aPO->mSeqFrame,
-           aPO->mPageFrame, aPO->mPageNum, aPO->mRect.x, aPO->mRect.y, aPO->mRect.width, aPO->mRect.height);
+    fprintf(fd, "%s %p %p\n", types[aPO->mFrameType], aPO.get(),
+            aPO->mDocShell.get());
     if (aPO->IsPrintable()) {
       nsAutoCString docStr;
       nsAutoCString urlStr;
@@ -3891,9 +3900,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
     }
     fprintf(fd, "<***************************************************>\n");
 
-    int32_t cnt = aPO->mKids.Length();
-    for (int32_t i=0;i<cnt;i++) {
-      nsPrintObject* po = aPO->mKids.ElementAt(i);
+    for (const auto& po : aPO->mKids) {
       NS_ASSERTION(po, "nsPrintObject can't be null!");
       DumpPrintObjectsTreeLayout(po, aDC, aLevel+1, fd);
     }
@@ -3904,25 +3911,19 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
 }
 
 //-------------------------------------------------------------
-static void DumpPrintObjectsListStart(const char * aStr, nsTArray<nsPrintObject*> * aDocList)
+static void DumpPrintObjectsListStart(const char * aStr,
+                                      const nsTArray<nsPrintObject*>& aDocList)
 {
-  if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
+  if (!MOZ_LOG_TEST(gPrintingLog, DUMP_LAYOUT_LEVEL)) {
+    return;
+  }
 
   NS_ASSERTION(aStr, "Pointer is null!");
-  NS_ASSERTION(aDocList, "Pointer is null!");
 
   PR_PL(("%s\n", aStr));
   DumpPrintObjectsList(aDocList);
 }
 
-#define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
-#define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject.get());
-#define DUMP_DOC_TREELAYOUT DumpPrintObjectsTreeLayout(mPrt->mPrintObject.get(), mPrt->mPrintDC);
-
-#else
-#define DUMP_DOC_LIST(_title)
-#define DUMP_DOC_TREE
-#define DUMP_DOC_TREELAYOUT
 #endif
 
 //---------------------------------------------------------------

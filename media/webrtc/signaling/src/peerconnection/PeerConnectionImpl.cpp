@@ -3254,12 +3254,11 @@ PeerConnectionImpl::IceGatheringStateChange(
     return;
   }
   WrappableJSErrorResult rv;
-  RUN_ON_THREAD(mThread,
-                WrapRunnable(pco,
-                             &PeerConnectionObserver::OnStateChange,
-                             PCObserverStateType::IceGatheringState,
-                             rv, static_cast<JSCompartment*>(nullptr)),
-                NS_DISPATCH_NORMAL);
+  mThread->Dispatch(WrapRunnable(pco,
+                                 &PeerConnectionObserver::OnStateChange,
+                                 PCObserverStateType::IceGatheringState,
+                                 rv, static_cast<JSCompartment*>(nullptr)),
+                    NS_DISPATCH_NORMAL);
 
   if (mIceGatheringState == PCImplIceGatheringState::Complete) {
     SendLocalIceCandidateToContent(0, "", "");
