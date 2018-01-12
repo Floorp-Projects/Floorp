@@ -25,6 +25,10 @@ function waitOneEvent(element, name) {
   });
 }
 
+function promiseNextTick() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
 add_task(async function() {
   await waitOneEvent(window, "load");
 
@@ -60,11 +64,15 @@ add_task(async function() {
 
   // Test entering the OS's fullscreen mode.
   var fullScreenEntered = waitOneEvent(win, "sizemodechange");
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenEntered;
   shouldApply("all and (display-mode: fullscreen)");
   shouldNotApply("all and (display-mode: browser)");
   var fullScreenExited = waitOneEvent(win, "sizemodechange");
+  // Need to wait for the next tick to to avoid nested fullscreen change
+  // in different direction. See bug 1415781.
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenExited;
   shouldNotApply("all and (display-mode: fullscreen)");
@@ -95,12 +103,15 @@ add_task(async function() {
   setDisplayMode(Components.interfaces.nsIDocShell.DISPLAY_MODE_MINIMAL_UI);
   shouldApply("all and (display-mode: minimal-ui)");
   shouldNotApply("all and (display-mode: standalone)");
+
+  // Set the display mode back.
+  setDisplayMode(Components.interfaces.nsIDocShell.DISPLAY_MODE_BROWSER);
 });
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1104916">Mozilla Bug 1104916</a>
-<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/media_queries_iframe.html"></iframe>
+<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/chrome/media_queries_iframe.html"></iframe>
 <p id="display"></p>
 <div id="content" style="display: none">
 

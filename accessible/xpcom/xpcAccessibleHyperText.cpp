@@ -270,8 +270,7 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset,
     rect = mIntl.AsProxy()->CharBounds(aOffset, aCoordType);
 #endif
   }
-  *aX = rect.x; *aY = rect.y;
-  *aWidth = rect.width; *aHeight = rect.height;
+  rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -300,8 +299,7 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset, int32_t aEndOffset
     rect = mIntl.AsProxy()->TextBounds(aStartOffset, aEndOffset, aCoordType);
 #endif
   }
-  *aX = rect.x; *aY = rect.y;
-  *aWidth = rect.width; *aHeight = rect.height;
+  rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 

@@ -128,8 +128,8 @@ nsViewManager::CreateView(const nsRect& aBounds,
 {
   auto *v = new nsView(this, aVisibilityFlag);
   v->SetParent(aParent);
-  v->SetPosition(aBounds.x, aBounds.y);
-  nsRect dim(0, 0, aBounds.width, aBounds.height);
+  v->SetPosition(aBounds.X(), aBounds.Y());
+  nsRect dim(0, 0, aBounds.Width(), aBounds.Height());
   v->SetDimensions(dim, false);
   return v;
 }
@@ -165,8 +165,8 @@ nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
   if (nullptr != mRootView) {
     if (mDelayedResize == nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
       nsRect dim = mRootView->GetDimensions();
-      *aWidth = dim.width;
-      *aHeight = dim.height;
+      *aWidth = dim.Width();
+      *aHeight = dim.Height();
     } else {
       *aWidth = mDelayedResize.width;
       *aHeight = mDelayedResize.height;
@@ -188,7 +188,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
     // Don't resize the widget. It is already being set elsewhere.
     mRootView->SetDimensions(newDim, true, false);
     if (mPresShell)
-      mPresShell->ResizeReflow(aWidth, aHeight, oldDim.width, oldDim.height);
+      mPresShell->ResizeReflow(aWidth, aHeight, oldDim.Width(), oldDim.Height());
   }
 }
 

@@ -13,7 +13,8 @@ const Preferences = window.Preferences = (function() {
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-  XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
+  const lazy = {};
+  XPCOMUtils.defineLazyModuleGetter(lazy, "DeferredTask",
                                     "resource://gre/modules/DeferredTask.jsm");
 
   function getElementsByAttribute(name, value) {
@@ -180,7 +181,7 @@ const Preferences = window.Preferences = (function() {
         } else {
           if (!element._deferredValueUpdateTask) {
             element._deferredValueUpdateTask =
-              new DeferredTask(this._deferredValueUpdate.bind(this, element), 1000);
+              new lazy.DeferredTask(this._deferredValueUpdate.bind(this, element), 1000);
             this._deferredValueUpdateElements.add(element);
           } else {
             // Each time the preference is changed, restart the delay.
@@ -613,4 +614,4 @@ const Preferences = window.Preferences = (function() {
   }
 
   return Preferences;
-}.bind({})());
+}());

@@ -1,4 +1,4 @@
-const FILE = "https://example.com/browser/toolkit/content/tests/browser/gizmo.mp4";
+const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 function setup_test_preference(enableUserGesture) {
   let state = enableUserGesture ? "enable" : "disable";
@@ -13,27 +13,26 @@ async function allow_play_for_played_video() {
   info("- open new tab  -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  info("- create video -");
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
-  let video = document.createElement("video");
-  video.src = FILE;
-  video.controls = true;
-  document.body.appendChild(video);
+  tab.linkedBrowser.loadURI(VIDEO_PAGE);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user-click to start video -");
-  let waitForPlayEvent = once(video, "play");
-  await BrowserTestUtils.synthesizeMouseAtCenter(video, {button: 0},
+  await BrowserTestUtils.synthesizeMouseAtCenter("#v", {button: 0},
                                                  tab.linkedBrowser);
-  info("- video starts playing -");
-  await waitForPlayEvent;
 
-  info("- call video play() again -");
-  try {
-    await video.play();
-    ok(true, "success to resolve play promise");
-  } catch (e) {
-    ok(false, "promise should not be rejected");
+  async function play_video_again() {
+    let video = content.document.getElementById("v");
+    ok(!video.paused, "video is playing");
+
+    info("- call video play() again -");
+    try {
+      await video.play();
+      ok(true, "success to resolve play promise");
+    } catch (e) {
+      ok(false, "promise should not be rejected");
+    }
   }
+  await ContentTask.spawn(tab.linkedBrowser, null, play_video_again);
 
   info("- remove tab -");
   await BrowserTestUtils.removeTab(tab);
