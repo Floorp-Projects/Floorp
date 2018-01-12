@@ -247,6 +247,7 @@ linux/opt:
         symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 36000
     run:
         using: mozharness
@@ -274,6 +275,7 @@ linux/debug:
         symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 36000
     run:
         using: mozharness
@@ -302,6 +304,7 @@ linux/pgo:
         symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 36000
     run:
         using: mozharness
@@ -331,6 +334,7 @@ linux-rusttests/opt:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
@@ -364,6 +368,7 @@ linux-rusttests/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
@@ -401,6 +406,7 @@ linux-devedition-nightly/opt:
         symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 36000
     run:
         using: mozharness
@@ -437,6 +443,7 @@ linux-nightly/opt:
         symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: debian7-i386-build}
         max-run-time: 36000
     run:
         using: mozharness
