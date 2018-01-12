@@ -288,6 +288,10 @@ var ctrlTab = {
       this._selectedIndex = selectedIndex;
     }
 
+    if (this.previews[selectedIndex]._tab) {
+      gBrowser.warmupTab(this.previews[selectedIndex]._tab);
+    }
+
     if (this._timer) {
       clearTimeout(this._timer);
       this._timer = null;
@@ -348,6 +352,7 @@ var ctrlTab = {
 
     this.updatePreviews();
     this._selectedIndex = 1;
+    gBrowser.warmupTab(this.selected._tab);
 
     // Add a slight delay before showing the UI, so that a quick
     // "ctrl-tab" keypress just flips back to the MRU tab.

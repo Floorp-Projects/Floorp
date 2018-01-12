@@ -110,10 +110,11 @@ ia2AccessibleText::get_characterExtents(long aOffset,
 
   rect = textAcc->CharBounds(aOffset, geckoCoordType);
 
-  *aX = rect.x;
-  *aY = rect.y;
-  *aWidth = rect.width;
-  *aHeight = rect.height;
+  // Can't use GetRect() because of long vs. int32_t mismatch
+  *aX = rect.X();
+  *aY = rect.Y();
+  *aWidth = rect.Width();
+  *aHeight = rect.Height();
   return S_OK;
 }
 

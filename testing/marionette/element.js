@@ -34,6 +34,15 @@ const {
 const ELEMENT_NODE = 1;
 const DOCUMENT_NODE = 9;
 
+const UNEDITABLE_INPUTS = new Set([
+  "checkbox",
+  "radio",
+  "hidden",
+  "submit",
+  "button",
+  "image",
+]);
+
 const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -656,6 +665,30 @@ function findElements(strategy, selector, document, startNode = undefined) {
 }
 
 /**
+ * Finds the closest parent node of <var>startNode</var> by CSS a
+ * <var>selector</var> expression.
+ *
+ * @param {Node} startNode
+ *     Cyce through <var>startNode</var>'s parent nodes in tree-order
+ *     and return the first match to <var>selector</var>.
+ * @param {string} selector
+ *     CSS selector expression.
+ *
+ * @return {Node=}
+ *     First match to <var>selector</var>, or null if no match was found.
+ */
+element.findClosest = function(startNode, selector) {
+  let node = startNode;
+  while (node.parentNode && node.parentNode.nodeType == ELEMENT_NODE) {
+    node = node.parentNode;
+    if (node.matches(selector)) {
+      return node;
+    }
+  }
+  return null;
+};
+
+/**
  * Determines if <var>obj<var> is an HTML or JS collection.
  *
  * @param {*} seq
@@ -759,6 +792,112 @@ element.isSelected = function(el) {
 };
 
 /**
+ * An element is considered read only if it is an
+ * <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code>
+ * element whose <code>readOnly</code> content IDL attribute is set.
+ *
+ * @param {Element} el
+ *     Element to test is read only.
+ *
+ * @return {boolean}
+ *     True if element is read only.
+ */
+element.isReadOnly = function(el) {
+  return element.isDOMElement(el) &&
+      ["input", "textarea"].includes(el.localName) && el.readOnly;
+};
+
+/**
+ * An element is considered disabled if it is a an element
+ * that can be disabled, or it belongs to a container group which
+ * <code>disabled</code> content IDL attribute affects it.
+ *
+ * @param {Element} el
+ *     Element to test for disabledness.
+ *
+ * @return {boolean}
+ *     True if element, or its container group, is disabled.
+ */
+element.isDisabled = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  switch (el.localName) {
+    case "option":
+    case "optgroup":
+      if (el.disabled) {
+        return true;
+      }
+      let parent = element.findClosest(el, "optgroup,select");
+      return element.isDisabled(parent);
+
+    case "button":
+    case "input":
+    case "select":
+    case "textarea":
+      return el.disabled;
+
+    default:
+      return false;
+  }
+};
+
+/**
+ * An editing host is a node that is either an HTML element with a
+ * <code>contenteditable</code> attribute, or the HTML element child
+ * of a document whose <code>designMode</code> is enabled.
+ *
+ * @param {Element} el
+ *     Element to determine if is an editing host.
+ *
+ * @return {boolean}
+ *     True if editing host, false otherwise.
+ */
+element.isEditingHost = function(el) {
+  return element.isDOMElement(el) &&
+      (el.isContentEditable || el.ownerDocument.designMode == "on");
+};
+
+/**
+ * Determines if an element is editable according to WebDriver.
+ *
+ * An element is considered editable if it is not read-only or
+ * disabled, and one of the following conditions are met:
+ *
+ * <ul>
+ * <li>It is a <code>&lt;textarea&gt;</code> element.
+ *
+ * <li>It is an <code>&lt;input&gt;</code> element that is not of
+ * the <code>checkbox</code>, <code>radio</code>, <code>hidden</code>,
+ * <code>submit</code>, <code>button</code>, or <code>image</code> types.
+ *
+ * <li>It is content-editable.
+ *
+ * <li>It belongs to a document in design mode.
+ * </ul>
+ *
+ * @param {Element}
+ *     Element to test if editable.
+ *
+ * @return {boolean}
+ *     True if editable, false otherwise.
+ */
+element.isEditable = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  if (element.isReadOnly(el) || element.isDisabled(el)) {
+    return false;
+  }
+
+  return (el.localName == "input" && !UNEDITABLE_INPUTS.has(el.type)) ||
+      el.localName == "textarea" ||
+      element.isEditingHost(el);
+};
+
+/**
  * This function generates a pair of coordinates relative to the viewport
  * given a target element and coordinates relative to that element's
  * top-left corner.
@@ -847,31 +986,18 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Element to get the container of.
  *
  * @return {Element}
- *     Container element of |el|.
+ *     Container element of <var>el</var>.
  */
 element.getContainer = function(el) {
-
-  function findAncestralElement(startNode, validAncestors) {
-    let node = startNode;
-    while (node.parentNode) {
-      node = node.parentNode;
-      if (validAncestors.includes(node.localName)) {
-        return node;
-      }
-    }
-
-    return startNode;
-  }
-
-  // Does <option> have a valid context,
+  // Does <option> or <optgroup> have a valid context,
   // meaning is it a child of <datalist> or <select>?
-  if (el.localName === "option") {
-    return findAncestralElement(el, ["datalist", "select"]);
+  if (["option", "optgroup"].includes(el.localName)) {
+    return element.findClosest(el, "datalist,select") || el;
   }
 
   // Child nodes of button will not be part of the element tree for
   // elementsFromPoint until bug 1089326 is fixed.
-  return findAncestralElement(el, ["button"]);
+  return element.findClosest(el, "button") || el;
 };
 
 /**

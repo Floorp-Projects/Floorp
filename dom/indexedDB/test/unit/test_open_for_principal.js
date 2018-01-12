@@ -45,12 +45,8 @@ function* testSteps()
 
   is(event.target.result, data.key, "Got correct key");
 
-  let uri = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService)
-                      .newURI("http://appdata.example.com");
-  let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Components.interfaces.nsIScriptSecurityManager);
-  let principal = ssm.createCodebasePrincipal(uri, {});
+  let uri = Services.io.newURI("http://appdata.example.com");
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
   request = indexedDB.openForPrincipal(principal, name, 1);
   request.onerror = errorHandler;

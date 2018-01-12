@@ -2258,6 +2258,13 @@ APZCTreeManager::GetAPZCAtPointWR(const ScreenPoint& aHitTestPoint,
   RefPtr<AsyncPanZoomController> result;
   RefPtr<wr::WebRenderAPI> wr = GetWebRenderAPI();
   if (!wr) {
+    // If WebRender isn't running, fall back to the root APZC.
+    // This is mostly for the benefit of GTests which do not
+    // run a WebRender instance, but gracefully falling back
+    // here allows those tests which are not specifically
+    // testing the hit-test algorithm to still work.
+    result = FindRootApzcForLayersId(mRootLayersId);
+    *aOutHitResult = CompositorHitTestInfo::eVisibleToHitTest;
     return result.forget();
   }
 

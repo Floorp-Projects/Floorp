@@ -222,7 +222,6 @@ HTMLAreaAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const
   // XXX Areas are screwy; they return their rects as a pair of points, one pair
   // stored into the width and height.
   *aBoundingFrame = frame;
-  bounds.width -= bounds.x;
-  bounds.height -= bounds.y;
+  bounds.SizeTo(bounds.Width() - bounds.X(), bounds.Height() - bounds.Y());
   return bounds;
 }
