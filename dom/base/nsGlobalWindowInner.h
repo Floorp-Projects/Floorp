@@ -348,9 +348,9 @@ public:
   virtual bool IsFrozen() const override;
   void SyncStateFromParentWindow();
 
-  mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
+  mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const override;
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
-  mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
+  mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const override;
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 

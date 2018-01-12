@@ -25,6 +25,7 @@
 # include <mach/mach.h>
 #endif
 #include "threading/Thread.h"
+#include "wasm/WasmTypes.h"
 
 struct JSContext;
 struct JSRuntime;
@@ -78,6 +79,35 @@ class MachExceptionHandler
     bool install(JSContext* cx);
 };
 #endif
+
+// Typed wrappers encapsulating the data saved by the signal handler on async
+// interrupt or trap. On interrupt, the PC at which to resume is saved. On trap,
+// the bytecode offset to be reported in callstacks is saved.
+
+struct InterruptData
+{
+    // The pc to use for unwinding purposes which is kept consistent with fp at
+    // call boundaries.
+    void* unwindPC;
+
+    // The pc at which we should return if the interrupt doesn't stop execution.
+    void* resumePC;
+
+    InterruptData(void* unwindPC, void* resumePC)
+      : unwindPC(unwindPC), resumePC(resumePC)
+    {}
+};
+
+struct TrapData
+{
+    void* pc;
+    Trap trap;
+    uint32_t bytecodeOffset;
+
+    TrapData(void* pc, Trap trap, uint32_t bytecodeOffset)
+      : pc(pc), trap(trap), bytecodeOffset(bytecodeOffset)
+    {}
+};
 
 } // namespace wasm
 } // namespace js

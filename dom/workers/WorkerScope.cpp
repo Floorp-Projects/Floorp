@@ -515,6 +515,28 @@ WorkerGlobalScope::AbstractMainThreadFor(TaskCategory aCategory)
   MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
 }
 
+Maybe<ClientInfo>
+WorkerGlobalScope::GetClientInfo() const
+{
+  Maybe<ClientInfo> info;
+  info.emplace(mWorkerPrivate->GetClientInfo());
+  return Move(info);
+}
+
+Maybe<ClientState>
+WorkerGlobalScope::GetClientState() const
+{
+  Maybe<ClientState> state;
+  state.emplace(mWorkerPrivate->GetClientState());
+  return Move(state);
+}
+
+Maybe<ServiceWorkerDescriptor>
+WorkerGlobalScope::GetController() const
+{
+  return mWorkerPrivate->GetController();
+}
+
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate,
                                                        const nsString& aName)
   : WorkerGlobalScope(aWorkerPrivate)
