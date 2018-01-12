@@ -75,7 +75,7 @@ download_and_check http://dl.winehq.org/wine/source/2.0/ wine-2.0.1.tar.xz.sign
 tar xaf $TMPDIR/wine-2.0.1.tar.xz
 cd wine-2.0.1
 ./configure --prefix=$INSTALL_DIR/
-make
+make -j$(nproc)
 make install
 
 # --------------
