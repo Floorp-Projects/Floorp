@@ -257,6 +257,14 @@ struct ResourceUpdates;
 // Offset in number of tiles.
 struct Tiles;
 
+// A Transaction is a group of commands to apply atomically to a document.
+//
+// This mechanism ensures that:
+//  - no other message can be interleaved between two commands that need to be applied together.
+//  - no redundant work is performed if two commands in the same transaction cause the scene or
+//    the frame to be rebuilt.
+struct Transaction;
+
 // The default unit.
 struct UnknownUnit;
 
@@ -1025,6 +1033,11 @@ void wr_api_send_external_event(DocumentHandle *aDh,
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
+void wr_api_send_transaction(DocumentHandle *aDh,
+                             Transaction *aTransaction)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_set_display_list(DocumentHandle *aDh,
                              ColorF aColor,
                              WrEpoch aEpoch,
@@ -1579,6 +1592,69 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrThreadPool *wr_thread_pool_new()
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_delete(Transaction *aTxn)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+void wr_transaction_generate_frame(Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
+bool wr_transaction_is_empty(const Transaction *aTxn)
+WR_FUNC;
+
+WR_INLINE
+Transaction *wr_transaction_new()
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_remove_pipeline(Transaction *aTxn,
+                                    WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_display_list(Transaction *aTxn,
+                                     WrEpoch aEpoch,
+                                     ColorF aBackground,
+                                     float aViewportWidth,
+                                     float aViewportHeight,
+                                     WrPipelineId aPipelineId,
+                                     LayoutSize aContentSize,
+                                     BuiltDisplayListDescriptor aDlDescriptor,
+                                     WrVecU8 *aDlData)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_root_pipeline(Transaction *aTxn,
+                                      WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_set_window_parameters(Transaction *aTxn,
+                                          int32_t aWindowWidth,
+                                          int32_t aWindowHeight)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_dynamic_properties(Transaction *aTxn,
+                                              const WrOpacityProperty *aOpacityArray,
+                                              size_t aOpacityCount,
+                                              const WrTransformProperty *aTransformArray,
+                                              size_t aTransformCount)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_epoch(Transaction *aTxn,
+                                 WrPipelineId aPipelineId,
+                                 WrEpoch aEpoch)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_update_resources(Transaction *aTxn,
+                                     ResourceUpdates *aResourceUpdates)
 WR_FUNC;
 
 WR_INLINE
