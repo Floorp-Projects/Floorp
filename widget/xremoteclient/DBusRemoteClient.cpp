@@ -89,7 +89,7 @@ DBusRemoteClient::DoSendDBusCommandLine(const char *aProgram, const char *aProfi
   // D-Bus names can contain only [a-z][A-Z][0-9]_
   // characters so adjust the profile string properly.
   nsAutoCString profileName;
-  nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfileName), profileName);
+  nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfile), profileName);
   NS_ENSURE_SUCCESS(rv, rv);
   profileName.ReplaceChar("+/=", '_');
 
