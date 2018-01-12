@@ -26,6 +26,8 @@
 const Services = require("Services");
 const focusManager = Services.focus;
 const {KeyCodes} = require("devtools/client/shared/keycodes");
+const EventEmitter = require("devtools/shared/event-emitter");
+const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 
 loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 
@@ -44,8 +46,10 @@ const MAX_POPUP_ENTRIES = 500;
 const FOCUS_FORWARD = focusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = focusManager.MOVEFOCUS_BACKWARD;
 
-const EventEmitter = require("devtools/shared/event-emitter");
-const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
+const WORD_REGEXP = /\w/;
+const isWordChar = function(str) {
+  return str && WORD_REGEXP.test(str);
+};
 
 /**
  * Helper to check if the provided key matches one of the expected keys.
@@ -1051,6 +1055,10 @@ InplaceEditor.prototype = {
     let key = event.keyCode;
     let input = this.input;
 
+    // We want to autoclose some characters, remember the pressed key in order to process
+    // it later on in maybeSuggestionCompletion().
+    this._pressedKey = event.key;
+
     let multilineNavigation = !this._isSingleLine() &&
       isKeyIn(key, "UP", "DOWN", "LEFT", "RIGHT");
     let isPlainText = this.contentType == CONTENT_TYPES.PLAIN_TEXT;
@@ -1293,6 +1301,7 @@ InplaceEditor.prototype = {
     if (!this.input) {
       return;
     }
+
     let preTimeoutQuery = this.input.value;
 
     // Since we are calling this method from a keypress event handler, the
@@ -1477,10 +1486,56 @@ InplaceEditor.prototype = {
       } else {
         this._hideAutocompletePopup();
       }
+
+      this._autocloseParenthesis();
+
       // This emit is mainly for the purpose of making the test flow simpler.
       this.emit("after-suggest");
       this._doValidation();
     }, 0);
+  },
+
+  /**
+   * Automatically add closing parenthesis and skip closing parenthesis when needed.
+   */
+  _autocloseParenthesis: function() {
+    // Split the current value at the cursor index to rebuild the string.
+    let parts = this._splitStringAt(this.input.value, this.input.selectionStart);
+
+    // Lookup the character following the caret to know if the string should be modified.
+    let nextChar = parts[1][0];
+
+    // Autocomplete closing parenthesis if the last key pressed was "(" and the next
+    // character is not a "word" character.
+    if (this._pressedKey == "(" && !isWordChar(nextChar)) {
+      this._updateValue(parts[0] + ")" + parts[1]);
+    }
+
+    // Skip inserting ")" if the next character is already a ")" (note that we actually
+    // insert and remove the extra ")" here, as the input has already been modified).
+    if (this._pressedKey == ")" && nextChar == ")") {
+      this._updateValue(parts[0] + parts[1].substring(1));
+    }
+
+    this._pressedKey = null;
+  },
+
+  /**
+   * Update the current value of the input while preserving the caret position.
+   */
+  _updateValue: function(str) {
+    let start = this.input.selectionStart;
+    this.input.value = str;
+    this.input.setSelectionRange(start, start);
+    this._updateSize();
+  },
+
+  /**
+   * Split the provided string at the provided index. Returns an array of two strings.
+   * _splitStringAt("1234567", 3) will return ["123", "4567"]
+   */
+  _splitStringAt: function(str, index) {
+    return [str.substring(0, index), str.substring(index, str.length)];
   },
 
   /**
