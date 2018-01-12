@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -33,6 +34,10 @@
 
 using namespace mozilla;
 using namespace std;
+
+#ifdef DEBUG
+static mozilla::LazyLogModule gResistFingerprintingLog("nsResistFingerprinting");
+#endif
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
 #define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
@@ -100,7 +105,13 @@ nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
     return aTime;
   }
   const double resolutionMSec = sResolutionUSec / 1000.0;
-  return floor(aTime / resolutionMSec) * resolutionMSec;
+  double ret = floor(aTime / resolutionMSec) * resolutionMSec;
+#if defined(DEBUG)
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
+      DBL_DIG-1, aTime, DBL_DIG-1, resolutionMSec, DBL_DIG-1, floor(aTime / resolutionMSec), DBL_DIG-1, ret));
+#endif
+  return ret;
 }
 
 /* static */
@@ -110,7 +121,14 @@ nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
   if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
-  return floor(aTime / sResolutionUSec) * sResolutionUSec;
+  double ret = floor(aTime / sResolutionUSec) * sResolutionUSec;
+#if defined(DEBUG)
+  double tmp_sResolutionUSec = sResolutionUSec;
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
+      DBL_DIG-1, aTime, DBL_DIG-1, tmp_sResolutionUSec, DBL_DIG-1, floor(aTime / tmp_sResolutionUSec), DBL_DIG-1, ret));
+#endif
+  return ret;
 }
 
 /* static */
@@ -131,10 +149,22 @@ nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
     // The resolution is smaller than one sec.  Use the reciprocal to avoid
     // floating point error.
     const double resolutionSecReciprocal = 1000000.0 / sResolutionUSec;
-    return floor(aTime * resolutionSecReciprocal) / resolutionSecReciprocal;
+    double ret = floor(aTime * resolutionSecReciprocal) / resolutionSecReciprocal;
+#if defined(DEBUG)
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+    ("Given: %.*f, Reciprocal Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
+      DBL_DIG-1, aTime, DBL_DIG-1, resolutionSecReciprocal, DBL_DIG-1, floor(aTime * resolutionSecReciprocal), DBL_DIG-1, ret));
+#endif
+    return ret;
   }
   const double resolutionSec = sResolutionUSec / 1000000.0;
-  return floor(aTime / resolutionSec) * resolutionSec;
+  double ret = floor(aTime / resolutionSec) * resolutionSec;
+#if defined(DEBUG)
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
+    ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
+      DBL_DIG-1, aTime, DBL_DIG-1, resolutionSec, DBL_DIG-1, floor(aTime / resolutionSec), DBL_DIG-1, ret));
+#endif
+  return ret;
 }
 
 /* static */
