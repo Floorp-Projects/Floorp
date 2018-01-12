@@ -29,9 +29,27 @@ jobs:
             default: scriptworker-prov-v1/dep-pushapk
       worker:
          upstream-artifacts:  # see transforms
-         google-play-track:  # see transforms
+         google-play-track:
+            # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
+            by-project:
+               mozilla-central: 'beta'
+               mozilla-beta: 'rollout'
+               mozilla-release: 'rollout'
+               default: 'invalid'
          implementation: push-apk
-         commit:  # see transforms
+         commit:
+            by-project:
+               mozilla-central: true
+               mozilla-beta: true
+               mozilla-release: true
+               default: false
+         rollout-percentage:
+            by-project:
+               # XXX Please make sure to change PUSH_APK_GOOGLE_PLAY_TRACT to
+               # 'rollout' if you add a new supported project
+               mozilla-release: 10
+               mozilla-beta: 10
+               default: null
       requires: all-resolved
       scopes:  # see transforms
       treeherder:
