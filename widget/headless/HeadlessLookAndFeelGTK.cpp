@@ -278,6 +278,18 @@ HeadlessLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_ContextMenuOffsetHorizontal:
       aResult = 1;
       break;
+    case eIntID_GTKCSDAvailable:
+      aResult = 0;
+      break;
+    case eIntID_GTKCSDMinimizeButton:
+      aResult = 0;
+      break;
+    case eIntID_GTKCSDMaximizeButton:
+      aResult = 0;
+      break;
+    case eIntID_GTKCSDCloseButton:
+      aResult = 1;
+      break;
     default:
       NS_WARNING("HeadlessLookAndFeel::GetIntImpl called with an unrecognized aID");
       aResult = 0;
