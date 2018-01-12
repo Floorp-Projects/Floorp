@@ -1665,7 +1665,6 @@ nsDocumentViewer::Destroy()
   // We also keep the viewer from being cached in session history, since
   // we require all documents there to be sanitized.
   if (mDestroyRefCount != 0) {
-    --mDestroyRefCount;
     return NS_OK;
   }
 
@@ -4469,6 +4468,12 @@ void
 nsDocumentViewer::IncrementDestroyRefCount()
 {
   ++mDestroyRefCount;
+}
+
+void
+nsDocumentViewer::DecrementDestroyRefCount()
+{
+  --mDestroyRefCount;
 }
 
 //------------------------------------------------------------
