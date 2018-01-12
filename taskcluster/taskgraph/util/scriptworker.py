@@ -329,6 +329,24 @@ def get_scope_from_target_method_and_project(alias_to_tasks_map, alias_to_projec
     return aliases_to_scope_map['default']
 
 
+def get_phase_from_target_method(alias_to_tasks_map, alias_to_phase_map, config):
+    """Determine the phase from `config.params['target_tasks_method']`.
+
+    Args:
+        alias_to_tasks_map (list of lists): each list pair contains the
+            alias and the set of target methods that match. This is ordered.
+        alias_to_phase_map (dict): the alias to phase map
+        config (TransformConfig): The configuration for the kind being transformed.
+
+    Returns:
+        string: the phase to use.
+    """
+    for alias, tasks in alias_to_tasks_map:
+        if config.params['target_tasks_method'] in tasks and alias in alias_to_phase_map:
+            return alias_to_phase_map[alias]
+    return alias_to_phase_map['default']
+
+
 get_signing_cert_scope = functools.partial(
     get_scope_from_project,
     SIGNING_SCOPE_ALIAS_TO_PROJECT,
@@ -355,7 +373,7 @@ get_beetmover_action_scope = functools.partial(
 )
 
 get_phase = functools.partial(
-    get_scope_from_target_method,
+    get_phase_from_target_method,
     BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK,
     PHASES
 )
