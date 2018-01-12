@@ -19,6 +19,7 @@
 #include "DeleteTextTransaction.h"      // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"   // for EditAggregateTransaction
 #include "EditorEventListener.h"        // for EditorEventListener
+#include "HTMLEditRules.h"              // for HTMLEditRules
 #include "InsertNodeTransaction.h"      // for InsertNodeTransaction
 #include "InsertTextTransaction.h"      // for InsertTextTransaction
 #include "JoinNodeTransaction.h"        // for JoinNodeTransaction
@@ -1429,7 +1430,7 @@ EditorBase::CreateNode(nsAtom* aTag,
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillCreateNode(nsDependentAtomString(aTag),
@@ -1453,7 +1454,12 @@ EditorBase::CreateNode(nsAtom* aTag,
 
   mRangeUpdater.SelAdjCreateNode(pointToInsert.AsRaw());
 
-  {
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidCreateNode(ret);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidCreateNode(nsDependentAtomString(aTag),
@@ -1494,7 +1500,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
 
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillInsertNode(
@@ -1509,7 +1515,12 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
 
   mRangeUpdater.SelAdjInsertNode(aPointToInsert.AsRaw());
 
-  {
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidInsertNode(aContentToInsert);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidInsertNode(aContentToInsert.AsDOMNode(), rv);
@@ -1557,7 +1568,7 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   // Different from CreateNode(), we need offset at start of right node only
   // for WillSplitNode() since the offset is always same as the length of new
   // left node.
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       // XXX Unfortunately, we need to compute offset here because the container
@@ -1566,6 +1577,11 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
       listener->WillSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
                               aStartOfRightNode.Offset());
     }
+  } else {
+    // XXX Unfortunately, storing offset of the split point in
+    //     SplitNodeTransaction is necessary for now.  We should fix this
+    //     in a follow up bug.
+    Unused << aStartOfRightNode.Offset();
   }
 
   RefPtr<SplitNodeTransaction> transaction =
@@ -1580,7 +1596,12 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.GetContainerAsContent(),
                                 newNode);
 
-  {
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidSplitNode(aStartOfRightNode.GetContainer(), newNode);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
@@ -1622,7 +1643,12 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
   // Find the number of children of the lefthand node
   uint32_t oldLeftNodeLen = aLeftNode.Length();
 
-  {
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->WillJoinNodes(aLeftNode, aRightNode);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
@@ -1642,7 +1668,12 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
                                 (int32_t)oldLeftNodeLen);
 
-  {
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidJoinNodes(aLeftNode, aRightNode);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
@@ -1671,8 +1702,13 @@ EditorBase::DeleteNode(nsINode* aNode)
   AutoRules beginRulesSniffing(this, EditAction::createNode,
                                nsIEditor::ePrevious);
 
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->WillDeleteNode(aNode);
+  }
+
   // save node location for selection updating code.
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillDeleteNode(aNode->AsDOMNode());
@@ -1684,7 +1720,7 @@ EditorBase::DeleteNode(nsINode* aNode)
   nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
                                         NS_ERROR_FAILURE;
 
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidDeleteNode(aNode->AsDOMNode(), rv);
@@ -2810,7 +2846,7 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   }
 
   // Let listeners know what's up
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillInsertText(
@@ -2825,8 +2861,14 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   nsresult rv = DoTransaction(transaction);
   EndUpdateViewBatch();
 
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidInsertText(insertedTextNode, insertedOffset,
+                                 aStringToInsert);
+  }
+
   // let listeners know what happened
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidInsertText(
@@ -2954,7 +2996,7 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
                                nsIEditor::eNext);
 
   // Let listeners know what's up
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       if (length) {
@@ -2989,8 +3031,18 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   mRangeUpdater.SelAdjDeleteText(&aCharData, 0, length);
   mRangeUpdater.SelAdjInsertText(aCharData, 0, aString);
 
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    if (length) {
+      htmlEditRules->DidDeleteText(&aCharData, 0, length);
+    }
+    if (!aString.IsEmpty()) {
+      htmlEditRules->DidInsertText(&aCharData, 0, aString);
+    }
+  }
+
   // Let listeners know what happened
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       if (length) {
@@ -3024,7 +3076,7 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
                                nsIEditor::ePrevious);
 
   // Let listeners know what's up
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->WillDeleteText(
@@ -3035,8 +3087,13 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
 
   nsresult rv = DoTransaction(transaction);
 
+  if (mRules && mRules->AsHTMLEditRules()) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidDeleteText(&aCharData, aOffset, aLength);
+  }
+
   // Let listeners know what happened
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidDeleteText(
@@ -3456,21 +3513,6 @@ EditorBase::GetNodeLocation(nsINode* aChild,
     *aOffset = -1;
   }
   return parent;
-}
-
-/**
- * Returns the number of things inside aNode.  If aNode is text, returns number
- * of characters. If not, returns number of children nodes.
- */
-nsresult
-EditorBase::GetLengthOfDOMNode(nsIDOMNode* aNode,
-                               uint32_t& aCount)
-{
-  aCount = 0;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-  aCount = node->Length();
-  return NS_OK;
 }
 
 nsIContent*
@@ -4381,8 +4423,19 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
 
   nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
   AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
+
+  if (mRules && mRules->AsHTMLEditRules()) {
+    if (!deleteNode) {
+      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+      htmlEditRules->WillDeleteSelection(selection);
+    } else if (!deleteCharData) {
+      RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+      htmlEditRules->WillDeleteNode(deleteNode);
+    }
+  }
+
   // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
-  {
+  if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     if (!deleteNode) {
       for (auto& listener : listeners) {
@@ -4401,6 +4454,11 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
 
   // Delete the specified amount
   nsresult rv = DoTransaction(deleteSelectionTransaction);
+
+  if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
+    RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
+    htmlEditRules->DidDeleteText(deleteNode, deleteCharOffset, 1);
+  }
 
   // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
   {
