@@ -21,7 +21,7 @@ jobs:
             job-name: linux64-valgrind-opt
         treeherder:
             platform: linux64/opt
-            symbol: tc(V)
+            symbol: V
             kind: build
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
