@@ -864,16 +864,21 @@ nsContextMenu.prototype = {
   // View Partial Source
   viewPartialSource(aContext) {
     let inWindow = !Services.prefs.getBoolPref("view_source.tab");
+    let {browser} = this;
     let openSelectionFn = inWindow ? null : function() {
       let tabBrowser = gBrowser;
       // In the case of popups, we need to find a non-popup browser window.
-      if (!tabBrowser || !window.toolbar.visible) {
+      // We might also not have a tabBrowser reference (if this isn't in a
+      // a tabbrowser scope) or might have a fake/stub tabbrowser reference
+      // (in the sidebar). Deal with those cases:
+      if (!tabBrowser || !tabBrowser.loadOneTab || !window.toolbar.visible) {
         // This returns only non-popup browser windows by default.
         let browserWindow = RecentWindow.getMostRecentBrowserWindow();
         tabBrowser = browserWindow.gBrowser;
       }
+      let relatedToCurrent = gBrowser && gBrowser.selectedBrowser == browser;
       let tab = tabBrowser.loadOneTab("about:blank", {
-        relatedToCurrent: true,
+        relatedToCurrent,
         inBackground: false,
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
@@ -881,7 +886,7 @@ nsContextMenu.prototype = {
     };
 
     let target = aContext == "mathml" ? this.target : null;
-    top.gViewSourceUtils.viewPartialSourceInBrowser(gBrowser.selectedBrowser, target, openSelectionFn);
+    top.gViewSourceUtils.viewPartialSourceInBrowser(browser, target, openSelectionFn);
   },
 
   // Open new "view source" window with the frame's URL.
