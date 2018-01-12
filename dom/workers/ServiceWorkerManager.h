@@ -265,10 +265,6 @@ public:
                                 uint32_t aLineNumber = 0,
                                 uint32_t aColumnNumber = 0);
 
-  void
-  FlushReportsToAllClients(const nsACString& aScope,
-                           nsIConsoleReportCollector* aReporter);
-
   // Always consumes the error by reporting to consoles of all controlled
   // documents.
   void
