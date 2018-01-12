@@ -50,6 +50,7 @@ class HTMLEditorEventListener;
 class HTMLEditRules;
 class TypeInState;
 class WSRunObject;
+enum class EditAction : int32_t;
 struct PropItem;
 template<class T> class OwningNonNull;
 namespace dom {

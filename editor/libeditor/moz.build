@@ -16,6 +16,7 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 EXPORTS.mozilla += [
     'ChangeStyleTransaction.h',
     'CSSEditUtils.h',
+    'EditAction.h',
     'EditorBase.h',
     'EditorController.h',
     'EditorDOMPoint.h',
