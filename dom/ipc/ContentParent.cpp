@@ -142,12 +142,10 @@
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISiteSecurityService.h"
-#include "nsISound.h"
 #include "nsISpellChecker.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITimer.h"
 #include "nsIURIFixup.h"
-#include "nsIURL.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
 #include "nsIDOMChromeWindow.h"
@@ -2669,42 +2667,6 @@ ContentParent::RecvClipboardHasType(nsTArray<nsCString>&& aTypes,
                                     aWhichClipboard, aHasType);
 
   delete [] typesChrs;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvPlaySound(const URIParams& aURI)
-{
-  nsCOMPtr<nsIURI> soundURI = DeserializeURI(aURI);
-  bool isChrome = false;
-  // If the check here fails, it can only mean that this message was spoofed.
-  if (!soundURI || NS_FAILED(soundURI->SchemeIs("chrome", &isChrome)) || !isChrome) {
-    KillHard("PlaySound only accepts a valid chrome URI.");
-    return IPC_OK();
-  }
-  nsCOMPtr<nsIURL> soundURL(do_QueryInterface(soundURI));
-  if (!soundURL) {
-    return IPC_OK();
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsISound> sound(do_GetService(NS_SOUND_CID, &rv));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  sound->Play(soundURL);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentParent::RecvBeep()
-{
-  nsresult rv;
-  nsCOMPtr<nsISound> sound(do_GetService(NS_SOUND_CID, &rv));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  sound->Beep();
-
   return IPC_OK();
 }
 
