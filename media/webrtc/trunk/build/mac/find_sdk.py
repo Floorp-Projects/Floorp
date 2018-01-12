@@ -84,11 +84,12 @@ def main():
 
 
 if __name__ == '__main__':
-  if sys.platform == 'darwin':
+  if sys.platform == 'darwin' or os.environ.get('MOZ_AUTOMATION') != '1':
     print main()
   else:
-    # Mozilla builds cross-compile on Linux, so return some fake data to keep
-    # the build system happy. These values aren't used anywhere.
+    # Mozilla builds cross-compile on Linux or install an SDK from tooltool, so
+    # return some fake data to keep the build system happy. These values aren't
+    # used anywhere.
     print "."
     print "."
   sys.exit(0)
