@@ -156,12 +156,6 @@ void
 AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss)
 {
     Telemetry::Accumulate(Telemetry::HTTP_CACHE_DISPOSITION_2_V2, hitOrMiss);
-
-    int32_t experiment = CacheObserver::HalfLifeExperiment();
-    if (experiment > 0 && hitOrMiss == kCacheMissed) {
-        Telemetry::Accumulate(Telemetry::HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2,
-                              experiment - 1);
-    }
 }
 
 // Computes and returns a SHA1 hash of the input buffer. The input buffer

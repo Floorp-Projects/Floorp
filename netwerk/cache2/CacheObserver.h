@@ -56,8 +56,6 @@ class CacheObserver : public nsIObserver
     { return sCompressionLevel; }
   static uint32_t HalfLifeSeconds()
     { return sHalfLifeHours * 60.0F * 60.0F; }
-  static int32_t HalfLifeExperiment()
-    { return sHalfLifeExperiment; }
   static bool ClearCacheOnShutdown()
     { return sSanitizeOnShutdown && sClearCacheOnShutdown; }
   static bool CacheFSReported()
@@ -101,7 +99,6 @@ private:
   static uint32_t sMaxDiskPriorityChunksMemoryUsage;
   static uint32_t sCompressionLevel;
   static float sHalfLifeHours;
-  static int32_t sHalfLifeExperiment;
   static bool sSanitizeOnShutdown;
   static bool sClearCacheOnShutdown;
   static bool sCacheFSReported;
