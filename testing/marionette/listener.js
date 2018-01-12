@@ -46,7 +46,6 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let outerWindowID = null;
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
@@ -447,7 +446,7 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  outerWindowID = winUtil.outerWindowID;
+  let {outerWindowID} = winUtil;
   logger.debug(`Register listener.js for window ${outerWindowID}`);
 
   sandboxes.clear();
