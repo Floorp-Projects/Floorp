@@ -61,11 +61,9 @@ function sorter(a, b) {
   return a.id.toLocaleLowerCase().localeCompare(b.id.toLocaleLowerCase());
 }
 
-Object.defineProperty(FirefoxProfileMigrator.prototype, "sourceProfiles", {
-  get() {
-    return [...this._getAllProfiles().keys()].map(x => ({id: x, name: x})).sort(sorter);
-  },
-});
+FirefoxProfileMigrator.prototype.getSourceProfiles = function() {
+  return [...this._getAllProfiles().keys()].map(x => ({id: x, name: x})).sort(sorter);
+};
 
 FirefoxProfileMigrator.prototype._getFileObject = function(dir, fileName) {
   let file = dir.clone();
