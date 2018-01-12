@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/missingFile.cacheManifest">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/missingFile.cacheManifest">
 <head>
 <title>missing manifest file test</title>
 
@@ -23,8 +23,8 @@ function handleError() {
   // These items are listed in the manifest, but the error should have
   // prevented them from being committed to the cache.
   var entries = [
-    ["http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false],
-    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false]
+    ["https://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false],
+    ["https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false]
   ];
   OfflineTest.checkCacheEntries(entries, finishTest);
 }
