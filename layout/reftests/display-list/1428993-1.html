@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Retained display list test</title>
+<style type="text/css">
+.box {
+    left: 0px;
+    top: 0px;
+    width: 400px;
+    height: 400px;
+}
+
+button {
+    outline: none;
+    background: transparent;
+    border: none;
+}
+
+.red {
+    position: absolute;
+    background-color: red;
+}
+
+#green {
+    position: fixed;
+    background-color: green;
+}
+
+.translate {
+    transform: translateX(0px);
+}
+
+.container {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="box red"></div>
+    <button class="box" id="green"></button>
+</div>
+
+<script type="text/javascript">
+function doTest() {
+  document.getElementById("green").classList.add("translate");
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+
+// setTimeout(doTest, 5000);
+</script>
+</body>
+</html>
