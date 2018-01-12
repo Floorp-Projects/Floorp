@@ -3086,7 +3086,7 @@ nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
     }
   }
 
-  nsRange::GetInnerTextNoFlush(aValue, aError, this, 0, this, GetChildCount());
+  nsRange::GetInnerTextNoFlush(aValue, aError, this);
 }
 
 void
