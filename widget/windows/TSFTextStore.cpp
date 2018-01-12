@@ -6810,6 +6810,7 @@ TSFTextStore::Content::ReplaceTextWith(LONG aStart,
         mMinTextModifiedOffset = firstDifferentOffset =
           mComposition.EndOffset();
       }
+      mLatestCompositionEndOffset = mComposition.EndOffset();
       MOZ_LOG(sTextStoreLog, LogLevel::Debug,
         ("0x%p   TSFTextStore::Content::ReplaceTextWith(aStart=%d, "
          "aLength=%d, aReplaceString=\"%s\"), mComposition={ mStart=%d, "
@@ -6847,6 +6848,8 @@ TSFTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
   mComposition.Start(aCompositionView, aCompStart.mSelectionStart,
     GetSubstring(static_cast<uint32_t>(aCompStart.mSelectionStart),
                  static_cast<uint32_t>(aCompStart.mSelectionLength)));
+  mLatestCompositionStartOffset = mComposition.mStart;
+  mLatestCompositionEndOffset = mComposition.EndOffset();
   if (!aPreserveSelection) {
     // XXX Do we need to set a new writing-mode here when setting a new
     // selection? Currently, we just preserve the existing value.
@@ -6877,6 +6880,8 @@ TSFTextStore::Content::RestoreCommittedComposition(
   mComposition.Start(aCompositionView,
                      aPendingCompositionStart.mSelectionStart,
                      aCanceledCompositionEnd.mData);
+  mLatestCompositionStartOffset = mComposition.mStart;
+  mLatestCompositionEndOffset = mComposition.EndOffset();
 }
 
 void
