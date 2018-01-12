@@ -2282,9 +2282,11 @@ TSFTextStore::FlushPendingActions()
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::FlushPendingActions() "
              "FAILED to dispatch compositionstart event, "
-             "IsComposingInContent()=%s",
-             this, GetBoolName(!IsComposingInContent())));
-          mDeferClearingContentForTSF = !IsComposingInContent();
+             "IsHandlingComposition()=%s",
+             this, GetBoolName(IsHandlingComposition())));
+          // XXX Is this right? If there is a composition in content,
+          //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
+          mDeferClearingContentForTSF = !IsHandlingComposition();
         }
         if (!widget || widget->Destroyed()) {
           break;
@@ -2312,9 +2314,11 @@ TSFTextStore::FlushPendingActions()
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::FlushPendingActions() "
              "FAILED to setting pending composition... "
-             "IsComposingInContent()=%s",
-             this, GetBoolName(IsComposingInContent())));
-          mDeferClearingContentForTSF = !IsComposingInContent();
+             "IsHandlingComposition()=%s",
+             this, GetBoolName(IsHandlingComposition())));
+          // XXX Is this right? If there is a composition in content,
+          //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
+          mDeferClearingContentForTSF = !IsHandlingComposition();
         } else {
           MOZ_LOG(sTextStoreLog, LogLevel::Debug,
             ("0x%p   TSFTextStore::FlushPendingActions() "
@@ -2326,9 +2330,11 @@ TSFTextStore::FlushPendingActions()
             MOZ_LOG(sTextStoreLog, LogLevel::Error,
               ("0x%p   TSFTextStore::FlushPendingActions() "
                "FAILED to dispatch compositionchange event, "
-               "IsComposingInContent()=%s",
-               this, GetBoolName(IsComposingInContent())));
-            mDeferClearingContentForTSF = !IsComposingInContent();
+               "IsHandlingComposition()=%s",
+               this, GetBoolName(IsHandlingComposition())));
+            // XXX Is this right? If there is a composition in content,
+            //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
+            mDeferClearingContentForTSF = !IsHandlingComposition();
           }
           // Be aware, the mWidget might already have been destroyed.
         }
@@ -2341,9 +2347,12 @@ TSFTextStore::FlushPendingActions()
            this, GetEscapedUTF8String(action.mData).get()));
 
         // Dispatching eCompositionCommit causes a DOM text event, then,
-        // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
-        // In this case, we should not clear mContentForTSFuntil we notify
-        // the IME of the composition update.
+        // the IME will be notified of NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED
+        // when focused content actually handles the event.  For example,
+        // when focused content is in a remote process, it's sent when
+        // all dispatched composition events have been handled in the remote
+        // process.  So, until then, we don't have newer content information.
+        // Therefore, we need to put off to clear mContentForTSF.
         mDeferClearingContentForTSF = true;
 
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -2356,9 +2365,11 @@ TSFTextStore::FlushPendingActions()
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("0x%p   TSFTextStore::FlushPendingActions() "
              "FAILED to dispatch compositioncommit event, "
-             "IsComposingInContent()=%s",
-             this, GetBoolName(IsComposingInContent())));
-          mDeferClearingContentForTSF = !IsComposingInContent();
+             "IsHandlingComposition()=%s",
+             this, GetBoolName(IsHandlingComposition())));
+          // XXX Is this right? If there is a composition in content,
+          //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
+          mDeferClearingContentForTSF = !IsHandlingComposition();
         }
         break;
       }
@@ -2630,18 +2641,6 @@ TSFTextStore::DoNotReturnErrorFromGetSelection()
   static bool sTSFMayCrashIfGetSelectionReturnsError =
     IsWindows10BuildOrLater(14393);
   return sTSFMayCrashIfGetSelectionReturnsError;
-}
-
-bool
-TSFTextStore::IsComposingInContent() const
-{
-  if (!mDispatcher) {
-    return false;
-  }
-  if (!mDispatcher->IsInNativeInputTransaction()) {
-    return false;
-  }
-  return mDispatcher->IsComposing();
 }
 
 TSFTextStore::Content&
@@ -5892,9 +5891,9 @@ TSFTextStore::OnUpdateCompositionInternal()
   }
 
   // If composition is completely finished both in TSF/TIP and the focused
-  // editor which may be in a remote process, we can clear the cache until
-  // starting next composition.
-  if (!mComposition.IsComposing() && !IsComposingInContent()) {
+  // editor which may be in a remote process, we can clear the cache and don't
+  // have it until starting next composition.
+  if (!mComposition.IsComposing() && !IsHandlingComposition()) {
     mDeferClearingContentForTSF = false;
   }
   mDeferNotifyingTSF = false;

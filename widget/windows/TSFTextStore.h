@@ -457,12 +457,13 @@ protected:
   Composition mComposition;
 
   /**
-   * IsComposingInContent() returns true if there is a composition in the
-   * focused editor and it's caused by native IME (either TIP of TSF or IME of
-   * IMM).  I.e., returns true between eCompositionStart and
-   * eCompositionCommit(AsIs).
+   * IsHandlingComposition() returns true if there is a composition in the
+   * focused editor.
    */
-  bool IsComposingInContent() const;
+  bool IsHandlingComposition() const
+  {
+    return mDispatcher && mDispatcher->IsHandlingComposition();
+  }
 
   class Selection
   {
