@@ -297,18 +297,48 @@ add_task(async function test_selected_clone_should_equal_selected_option() {
 add_task(async function test_basic_card_simple() {
   let select2 = document.getElementById("select2");
   ok(select2, "basic card select should exist");
-  let selectPopupBox = select2.querySelector(".rich-select-popup-box");
-  ok(selectPopupBox, "basic card popup box exists");
+  let popupBox = select2.querySelector(".rich-select-popup-box");
+  ok(popupBox, "basic card popup box exists");
 
-  is(selectPopupBox.childElementCount, 3, "There should be three children in the popup box");
+  is(popupBox.childElementCount, 3, "There should be three children in the popup box");
 
   let clonedOption = select2.querySelector(".rich-select-selected-clone");
-  let selectedOption = selectPopupBox.firstChild;
+  let selectedOption = popupBox.firstChild;
   for (let attrName of BasicCardOption.observedAttributes) {
     is(clonedOption.attributes[attrName] && clonedOption.attributes[attrName].value,
        selectedOption.attributes[attrName] && selectedOption.attributes[attrName].value,
        "attributes should have matching value; name=" + attrName);
   }
+});
+
+add_task(async function test_option_appended_after_creation() {
+  let select2 = document.getElementById("select2");
+  let select3 = document.createElement("rich-select");
+  select3.id = "select3";
+  select2.parentNode.insertBefore(select3, select2.nextElementSibling);
+
+  is(select3.childElementCount, 1, "There should be a popup child");
+  let popupBox = select3.querySelector(".rich-select-popup-box");
+  ok(popupBox, "The popup box should exist");
+  is(popupBox.childElementCount, 0, "The popup should not have any children");
+
+  let newOption = document.createElement("address-option");
+  newOption.recipient = "Jared FooBar";
+  select3.appendChild(newOption);
+
+  is(select3.childElementCount, 2, "There should now be two children");
+  is(popupBox.childElementCount, 1, "The popup box should have one child");
+  ok(popupBox.children[0].selected, "The only option should be marked selected");
+  let clonedOption = select3.querySelector(".rich-select-selected-clone");
+  ok(clonedOption, "cloned option exists");
+
+  newOption.remove();
+  await asyncElementRendered();
+
+  is(select3.childElementCount, 1, "There should now be one child");
+  is(popupBox.childElementCount, 0, "The popup box should not have any children");
+  clonedOption = select3.querySelector(".rich-select-selected-clone");
+  ok(!clonedOption, "there should be no cloned option");
 });
 
 </script>
