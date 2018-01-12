@@ -990,6 +990,9 @@ private:
                                                        const int32_t& aWhichClipboard,
                                                        bool* aHasType) override;
 
+  virtual mozilla::ipc::IPCResult RecvPlaySound(const URIParams& aURI) override;
+  virtual mozilla::ipc::IPCResult RecvBeep() override;
+
   virtual mozilla::ipc::IPCResult RecvGetSystemColors(const uint32_t& colorsCount,
                                                       InfallibleTArray<uint32_t>* colors) override;
 
