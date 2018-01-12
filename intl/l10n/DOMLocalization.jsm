@@ -297,11 +297,6 @@ class DOMLocalization extends Localization {
 
     // A Set of DOM trees observed by the `MutationObserver`.
     this.roots = new Set();
-    // requestAnimationFrame handler.
-    this.pendingrAF = null;
-    // list of elements pending for translation.
-    this.pendingElements = new Set();
-    this.windowElement = windowElement;
     this.mutationObserver = new windowElement.MutationObserver(
       mutations => this.translateMutations(mutations)
     );
@@ -435,7 +430,7 @@ class DOMLocalization extends Localization {
   translateRoots() {
     const roots = Array.from(this.roots);
     return Promise.all(
-      roots.map(root => this.translateElements(this.getTranslatables(root)))
+      roots.map(root => this.translateFragment(root))
     );
   }
 
@@ -469,33 +464,19 @@ class DOMLocalization extends Localization {
     for (const mutation of mutations) {
       switch (mutation.type) {
         case 'attributes':
-          this.pendingElements.add(mutation.target);
+          this.translateElement(mutation.target);
           break;
         case 'childList':
           for (const addedNode of mutation.addedNodes) {
             if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
               if (addedNode.childElementCount) {
-                for (let element of this.getTranslatables(addedNode)) {
-                  this.pendingElements.add(element);
-                }
+                this.translateFragment(addedNode);
               } else if (addedNode.hasAttribute(L10NID_ATTR_NAME)) {
-                this.pendingElements.add(addedNode);
+                this.translateElement(addedNode);
               }
             }
           }
           break;
-      }
-    }
-
-    // This fragment allows us to coalesce all pending translations into a single
-    // requestAnimationFrame.
-    if (this.pendingElements.size > 0) {
-      if (this.pendingrAF === null) {
-        this.pendingrAF = this.windowElement.requestAnimationFrame(() => {
-          this.translateElements(Array.from(this.pendingElements));
-          this.pendingElements.clear();
-          this.pendingrAF = null;
-        });
       }
     }
   }
@@ -504,16 +485,17 @@ class DOMLocalization extends Localization {
    * Translate a DOM element or fragment asynchronously using this
    * `DOMLocalization` object.
    *
-   * Manually trigger the translation (or re-translation) of a list of elements.
+   * Manually trigger the translation (or re-translation) of a DOM fragment.
    * Use the `data-l10n-id` and `data-l10n-args` attributes to mark up the DOM
    * with information about which translations to use.
    *
    * Returns a `Promise` that gets resolved once the translation is complete.
    *
-   * @param   {Array<Element>} elements - List of elements to be translated
+   * @param   {DOMFragment} frag - Element or DocumentFragment to be translated
    * @returns {Promise}
    */
-  async translateElements(elements) {
+  async translateFragment(frag) {
+    const elements = this.getTranslatables(frag);
     if (!elements.length) {
       return undefined;
     }
@@ -521,6 +503,20 @@ class DOMLocalization extends Localization {
     const keys = elements.map(this.getKeysForElement);
     const translations = await this.formatMessages(keys);
     return this.applyTranslations(elements, translations);
+  }
+
+  /**
+   * Translate a single DOM element asynchronously.
+   *
+   * Returns a `Promise` that gets resolved once the translation is complete.
+   *
+   * @param   {Element} element - HTML element to be translated
+   * @returns {Promise}
+   */
+  async translateElement(element) {
+    const translations =
+      await this.formatMessages([this.getKeysForElement(element)]);
+    return this.applyTranslations([element], translations);
   }
 
   /**
