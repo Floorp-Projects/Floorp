@@ -114,11 +114,15 @@ public class AppConstants {
     false;
 //#endif
 
-    public static final String MOZ_ANDROID_GCM_SENDERID =
+    public static final String MOZ_ANDROID_GCM_SENDERIDS =
+//#ifdef MOZ_MMA_GCM_SENDERID
+    "@MOZ_ANDROID_GCM_SENDERID@,@MOZ_MMA_GCM_SENDERID@";
+//#else
 //#ifdef MOZ_ANDROID_GCM_SENDERID
     "@MOZ_ANDROID_GCM_SENDERID@";
 //#else
     null;
+//#endif
 //#endif
 
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
