@@ -103,6 +103,9 @@ add_task(async function() {
   setDisplayMode(Components.interfaces.nsIDocShell.DISPLAY_MODE_MINIMAL_UI);
   shouldApply("all and (display-mode: minimal-ui)");
   shouldNotApply("all and (display-mode: standalone)");
+
+  // Set the display mode back.
+  setDisplayMode(Components.interfaces.nsIDocShell.DISPLAY_MODE_BROWSER);
 });
   </script>
 </head>
