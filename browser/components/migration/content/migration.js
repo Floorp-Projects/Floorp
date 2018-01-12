@@ -43,7 +43,7 @@ var MigrationWizard = { /* exported MigrationWizard */
       this._autoMigrate = args[3].QueryInterface(kIPStartup);
       this._skipImportSourcePage = args[4];
       if (this._migrator && args[5]) {
-        let sourceProfiles = this._migrator.sourceProfiles;
+        let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
         this._selectedProfile = sourceProfiles.find(profile => profile.id == args[5]);
       }
 
@@ -67,17 +67,35 @@ var MigrationWizard = { /* exported MigrationWizard */
     MigrationUtils.finishMigration();
   },
 
+  spinResolve(promise) {
+    let canAdvance = this._wiz.canAdvance;
+    let canRewind = this._wiz.canRewind;
+    let canCancel = this._canCancel;
+    this._wiz.canAdvance = false;
+    this._wiz.canRewind = false;
+    this._canCancel = false;
+    let result = MigrationUtils.spinResolve(promise);
+    this._wiz.canAdvance = canAdvance;
+    this._wiz.canRewind = canRewind;
+    this._canCancel = canCancel;
+    return result;
+  },
+
+  onWizardCancel() {
+    return this._canCancel;
+  },
+
   // 1 - Import Source
   onImportSourcePageShow() {
     // Show warning message to close the selected browser when needed
-    function toggleCloseBrowserWarning() {
+    let toggleCloseBrowserWarning = () => {
       let visibility = "hidden";
       if (group.selectedItem.id != "nothing") {
-        let migrator = MigrationUtils.getMigrator(group.selectedItem.id);
+        let migrator = this.spinResolve(MigrationUtils.getMigrator(group.selectedItem.id));
         visibility = migrator.sourceLocked ? "visible" : "hidden";
       }
       document.getElementById("closeSourceBrowser").style.visibility = visibility;
-    }
+    };
     this._wiz.canRewind = false;
 
     var selectedMigrator = null;
@@ -88,7 +106,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     for (var i = 0; i < group.childNodes.length; ++i) {
       var migratorKey = group.childNodes[i].id;
       if (migratorKey != "nothing") {
-        var migrator = MigrationUtils.getMigrator(migratorKey);
+        var migrator = this.spinResolve(MigrationUtils.getMigrator(migratorKey));
         if (migrator) {
           // Save this as the first selectable item, if we don't already have
           // one, or if it is the migrator that was passed to us.
@@ -148,7 +166,7 @@ var MigrationWizard = { /* exported MigrationWizard */
 
     if (!this._migrator || (newSource != this._source)) {
       // Create the migrator for the selected source.
-      this._migrator = MigrationUtils.getMigrator(newSource);
+      this._migrator = this.spinResolve(MigrationUtils.getMigrator(newSource));
 
       this._itemsFlags = kIMig.ALL;
       this._selectedProfile = null;
@@ -156,7 +174,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     this._source = newSource;
 
     // check for more than one source profile
-    var sourceProfiles = this._migrator.sourceProfiles;
+    var sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
     if (this._skipImportSourcePage) {
       this._wiz.currentPage.next = "homePageImport";
     } else if (sourceProfiles && sourceProfiles.length > 1) {
@@ -189,7 +207,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     // Note that this block is still reached even if the user chose 'From File'
     // and we canceled the dialog.  When that happens, _migrator will be null.
     if (this._migrator) {
-      var sourceProfiles = this._migrator.sourceProfiles;
+      var sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
 
       for (let profile of sourceProfiles) {
         var item = document.createElement("radio");
@@ -204,14 +222,16 @@ var MigrationWizard = { /* exported MigrationWizard */
 
   onSelectProfilePageRewound() {
     var profiles = document.getElementById("profiles");
-    this._selectedProfile = this._migrator.sourceProfiles.find(
+    let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
+    this._selectedProfile = sourceProfiles.find(
       profile => profile.id == profiles.selectedItem.id
     ) || null;
   },
 
   onSelectProfilePageAdvanced() {
     var profiles = document.getElementById("profiles");
-    this._selectedProfile = this._migrator.sourceProfiles.find(
+    let sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
+    this._selectedProfile = sourceProfiles.find(
       profile => profile.id == profiles.selectedItem.id
     ) || null;
 
@@ -226,7 +246,8 @@ var MigrationWizard = { /* exported MigrationWizard */
     while (dataSources.hasChildNodes())
       dataSources.firstChild.remove();
 
-    var items = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
+    var items = this.spinResolve(this._migrator.getMigrateData(this._selectedProfile,
+                                                               this._autoMigrate));
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
@@ -304,9 +325,9 @@ var MigrationWizard = { /* exported MigrationWizard */
     var appName = MigrationUtils.getBrowserName(this._source);
 
     // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places
-    this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
+    this.spinResolve(this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate));
 
-    var oldHomePageURL = this._migrator.sourceHomePageURL;
+    var oldHomePageURL = this.spinResolve(this._migrator.getSourceHomePageURL());
 
     if (oldHomePageURL && appName) {
       var oldHomePageLabel =
@@ -337,15 +358,18 @@ var MigrationWizard = { /* exported MigrationWizard */
     this._wiz.canAdvance = false;
 
     // When automigrating, show all of the data that can be received from this source.
-    if (this._autoMigrate)
-      this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
+    if (this._autoMigrate) {
+      this._itemsFlags =
+        this.spinResolve(this._migrator.getMigrateData(this._selectedProfile,
+                                                       this._autoMigrate));
+    }
 
     this._listItems("migratingItems");
     setTimeout(() => this.onMigratingMigrate(), 0);
   },
 
-  onMigratingMigrate() {
-    this._migrator.migrate(this._itemsFlags, this._autoMigrate, this._selectedProfile);
+  async onMigratingMigrate() {
+    await this._migrator.migrate(this._itemsFlags, this._autoMigrate, this._selectedProfile);
 
     Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
                       .add(MigrationUtils.getSourceIdForTelemetry(this._source));
