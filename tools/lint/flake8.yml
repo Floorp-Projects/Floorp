@@ -24,6 +24,7 @@ flake8:
         - testing/marionette/puppeteer
         - testing/mochitest
         - testing/mozbase
+        - testing/mozharness/configs
         - testing/mozharness/mozfile
         - testing/mozharness/mozharness/mozilla/mar.py
         - testing/mozharness/mozinfo
