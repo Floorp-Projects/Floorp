@@ -39,6 +39,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/ClientManager.h"
+#include "mozilla/dom/ConsoleUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -1726,148 +1727,12 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                          uint32_t aColumnNumber,
                                          uint32_t aFlags)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv;
-
-  if (!aFilename.IsEmpty()) {
-    rv = NS_NewURI(getter_AddRefs(uri), aFilename);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-  }
-
-  AutoTArray<uint64_t, 16> windows;
-
-  // Report errors to every controlled document.
-  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
-    ServiceWorkerRegistrationInfo* reg = iter.UserData();
-    MOZ_ASSERT(reg);
-    if (!reg->mScope.Equals(aScope)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
-    if (!doc || !doc->IsCurrentActiveDocument() || !doc->GetWindow()) {
-      continue;
-    }
-
-    windows.AppendElement(doc->InnerWindowID());
-
-    nsContentUtils::ReportToConsoleNonLocalized(aMessage,
-                                                aFlags,
-                                                NS_LITERAL_CSTRING("Service Workers"),
-                                                doc,
-                                                uri,
-                                                aLine,
-                                                aLineNumber,
-                                                aColumnNumber,
-                                                nsContentUtils::eOMIT_LOCATION);
-  }
-
-  // Report to any documents that have called .register() for this scope.  They
-  // may not be controlled, but will still want to see error reports.
-  WeakDocumentList* regList = mRegisteringDocuments.Get(aScope);
-  if (regList) {
-    for (int32_t i = regList->Length() - 1; i >= 0; --i) {
-      nsCOMPtr<nsIDocument> doc = do_QueryReferent(regList->ElementAt(i));
-      if (!doc) {
-        regList->RemoveElementAt(i);
-        continue;
-      }
-
-      if (!doc->IsCurrentActiveDocument()) {
-        continue;
-      }
-
-      uint64_t innerWindowId = doc->InnerWindowID();
-      if (windows.Contains(innerWindowId)) {
-        continue;
-      }
-
-      windows.AppendElement(innerWindowId);
-
-      nsContentUtils::ReportToConsoleNonLocalized(aMessage,
-                                                  aFlags,
-                                                  NS_LITERAL_CSTRING("Service Workers"),
-                                                  doc,
-                                                  uri,
-                                                  aLine,
-                                                  aLineNumber,
-                                                  aColumnNumber,
-                                                  nsContentUtils::eOMIT_LOCATION);
-    }
-
-    if (regList->IsEmpty()) {
-      regList = nullptr;
-      mRegisteringDocuments.Remove(aScope);
-    }
-  }
-
-  InterceptionList* intList = mNavigationInterceptions.Get(aScope);
-  if (intList) {
-    nsIConsoleService* consoleService = nullptr;
-    for (uint32_t i = 0; i < intList->Length(); ++i) {
-      nsCOMPtr<nsIInterceptedChannel> channel = intList->ElementAt(i);
-
-      nsCOMPtr<nsIChannel> inner;
-      rv = channel->GetChannel(getter_AddRefs(inner));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
-
-      uint64_t innerWindowId = nsContentUtils::GetInnerWindowID(inner);
-      if (innerWindowId == 0 || windows.Contains(innerWindowId)) {
-        continue;
-      }
-
-      windows.AppendElement(innerWindowId);
-
-      // Unfortunately the nsContentUtils helpers don't provide a convenient
-      // way to log to a window ID without a document.  Use console service
-      // directly.
-      nsCOMPtr<nsIScriptError> errorObject =
-        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
-      }
-
-      rv = errorObject->InitWithWindowID(aMessage,
-                                         aFilename,
-                                         aLine,
-                                         aLineNumber,
-                                         aColumnNumber,
-                                         aFlags,
-                                         NS_LITERAL_CSTRING("Service Workers"),
-                                         innerWindowId);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return;
-      }
-
-      if (!consoleService) {
-        rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &consoleService);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-      }
-
-      consoleService->LogMessage(errorObject);
-    }
-  }
-
-  // If there are no documents to report to, at least report something to the
-  // browser console.
-  if (windows.IsEmpty()) {
-    nsContentUtils::ReportToConsoleNonLocalized(aMessage,
-                                                aFlags,
-                                                NS_LITERAL_CSTRING("Service Workers"),
-                                                nullptr,  // document
-                                                uri,
-                                                aLine,
-                                                aLineNumber,
-                                                aColumnNumber,
-                                                nsContentUtils::eOMIT_LOCATION);
-    return;
-  }
+  ConsoleUtils::ReportForServiceWorkerScope(NS_ConvertUTF8toUTF16(aScope),
+                                            aMessage,
+                                            aFilename,
+                                            aLineNumber,
+                                            aColumnNumber,
+                                            ConsoleUtils::eError);
 }
 
 /* static */
