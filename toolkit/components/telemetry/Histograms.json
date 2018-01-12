@@ -12138,7 +12138,7 @@
   },
   "PERMISSIONS_REMIGRATION_COMPARISON": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["michael@thelayzells.com"],
+    "alert_emails": ["nika@thelayzells.com"],
     "expires_in_version": "44",
     "kind": "enumerated",
     "n_values": 10,
@@ -12146,7 +12146,7 @@
   },
   "PERMISSIONS_MIGRATION_7_ERROR": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["michael@thelayzells.com"],
+    "alert_emails": ["nika@thelayzells.com"],
     "expires_in_version": "44",
     "kind": "boolean",
     "description": "Was there an error while performing the v7 permissions DB migration?"
@@ -13217,9 +13217,9 @@
   },
   "IPC_SYNC_MESSAGE_MANAGER_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["michael@thelayzells.com"],
+    "alert_emails": ["nika@thelayzells.com"],
     "bug_numbers": [1348113],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "low": 32,
     "high": 750,
@@ -13541,9 +13541,9 @@
   },
   "IPC_SYNC_RECEIVE_MS": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["michael@thelayzells.com"],
+    "alert_emails": ["nika@thelayzells.com"],
     "bug_numbers": [1365719],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "low": 32,
     "high": 750,
@@ -13651,9 +13651,9 @@
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["michael@thelayzells.com"],
+    "alert_emails": ["nika@thelayzells.com"],
     "bug_numbers": [1368524],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "low": 3,
     "high": 512,
