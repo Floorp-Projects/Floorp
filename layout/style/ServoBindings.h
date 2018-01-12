@@ -151,7 +151,6 @@ struct FontSizePrefs
 void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
                                      uint32_t total_t, uint32_t parallel_t,
                                      uint32_t total_s, uint32_t parallel_s);
-bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
                               bool text_is_significant,
                               bool whitespace_is_significant);
@@ -413,8 +412,6 @@ const ServoElementSnapshot*
 Gecko_GetElementSnapshot(const mozilla::ServoElementSnapshotTable* table,
                          RawGeckoElementBorrowed element);
 
-void Gecko_DropElementSnapshot(ServoElementSnapshotOwned snapshot);
-
 // Have we seen this pointer before?
 bool
 Gecko_HaveSeenPtr(mozilla::SeenPtrs* table, const void* ptr);
@@ -649,10 +646,6 @@ bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 // because forward-declaring a nested enum/struct is impossible
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
                                         RawGeckoPresContextBorrowed pres_context);
-
-bool Gecko_MatchStringArgPseudo(RawGeckoElementBorrowed element,
-                                mozilla::CSSPseudoClassType type,
-                                const char16_t* ident);
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 
