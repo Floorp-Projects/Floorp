@@ -529,7 +529,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       let mediaRules = [];
       for (let i = 0; i < rules.length; i++) {
         let rule = rules[i];
-        if (rule.type != Ci.nsIDOMCSSRule.MEDIA_RULE) {
+        if (rule.type != CSSRule.MEDIA_RULE) {
           continue;
         }
         let actor = new MediaRuleActor(rule, this);
@@ -554,7 +554,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       if (sheet.cssRules) {
         let rules = sheet.cssRules;
         if (rules.length
-            && rules.item(0).type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
+            && rules.item(0).type == CSSRule.CHARSET_RULE) {
           return rules.item(0).encoding;
         }
       }
@@ -570,7 +570,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       // step 4 (1 of 2): charset of referring stylesheet.
       let parentSheet = sheet.parentStyleSheet;
       if (parentSheet && parentSheet.cssRules &&
-          parentSheet.cssRules[0].type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
+          parentSheet.cssRules[0].type == CSSRule.CHARSET_RULE) {
         return parentSheet.cssRules[0].encoding;
       }
 
@@ -841,7 +841,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
       for (let i = 0; i < rules.length; i++) {
         let rule = rules[i];
-        if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
+        if (rule.type == CSSRule.IMPORT_RULE) {
           // With the Gecko style system, the associated styleSheet may be null
           // if it has already been seen because an import cycle for the same
           // URL.  With Stylo, the styleSheet will exist (which is correct per
@@ -858,7 +858,7 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
           // recurse imports in this stylesheet as well
           let children = yield this._getImported(doc, actor);
           imported = imported.concat(children);
-        } else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+        } else if (rule.type != CSSRule.CHARSET_RULE) {
           // @import rules must precede all others except @charset
           break;
         }

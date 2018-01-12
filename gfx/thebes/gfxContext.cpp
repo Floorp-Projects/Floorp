@@ -603,7 +603,7 @@ gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const
 {
   Rect rect = GetAzureDeviceSpaceClipBounds();
 
-  if (rect.IsZero()) {
+  if (rect.IsZeroArea()) {
     return gfxRect(0, 0, 0, 0);
   }
 

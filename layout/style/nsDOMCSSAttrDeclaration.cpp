@@ -188,13 +188,10 @@ nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment(
   };
 }
 
-NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
+css::Rule*
+nsDOMCSSAttributeDeclaration::GetParentRule()
 {
-  NS_ENSURE_ARG_POINTER(aParent);
-
-  *aParent = nullptr;
-  return NS_OK;
+  return nullptr;
 }
 
 /* virtual */ nsINode*

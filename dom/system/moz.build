@@ -46,7 +46,7 @@ elif toolkit == 'cocoa':
     DIRS += ['mac']
 elif toolkit == 'android':
     DIRS += ['android']
-elif toolkit in ('gtk2', 'gtk3'):
+elif toolkit == 'gtk3':
     DIRS += ['linux']
 
 XPIDL_SOURCES += [

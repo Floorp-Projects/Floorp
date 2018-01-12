@@ -171,8 +171,6 @@ private:
    */
   void MakeSnapshotIfRequired(LayoutDeviceIntSize aSize);
 
-  void ClearLayer(Layer* aLayer);
-
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   nsTArray<wr::ImageKey> mImageKeysToDelete;

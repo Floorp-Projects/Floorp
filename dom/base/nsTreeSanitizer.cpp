@@ -18,7 +18,6 @@
 #include "nsCSSParser.h"
 #include "nsCSSPropertyID.h"
 #include "nsUnicharInputStream.h"
-#include "nsIDOMCSSRule.h"
 #include "nsAttrName.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
@@ -1138,13 +1137,8 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       case mozilla::css::Rule::FONT_FACE_RULE: {
         // Append @namespace and @font-face rules verbatim.
         nsAutoString cssText;
-        nsCOMPtr<nsIDOMCSSRule> styleRule = do_QueryInterface(rule);
-        if (styleRule) {
-          rv = styleRule->GetCssText(cssText);
-          if (NS_SUCCEEDED(rv)) {
-            aSanitized.Append(cssText);
-          }
-        }
+        rule->GetCssText(cssText);
+        aSanitized.Append(cssText);
         break;
       }
       case mozilla::css::Rule::STYLE_RULE: {

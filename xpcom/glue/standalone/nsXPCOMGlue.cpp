@@ -363,15 +363,6 @@ public:
   }
 
   ~GSliceInit() {
-#if MOZ_WIDGET_GTK == 2
-    if (sTop) {
-      auto XRE_GlibInit = (void (*)(void)) GetSymbol(sTop->libHandle,
-        "XRE_GlibInit");
-      // Initialize glib enough for G_SLICE to have an effect before it is unset.
-      // unset.
-      XRE_GlibInit();
-    }
-#endif
     if (!mHadGSlice) {
       unsetenv("G_SLICE");
     }

@@ -16,8 +16,11 @@ class nsRetrievalContextX11 : public nsRetrievalContext
 public:
     enum State { INITIAL, COMPLETED, TIMED_OUT };
 
-    virtual const char* WaitForClipboardContext(const char* aMimeType,
-        int32_t aWhichClipboard, uint32_t* aContentLength) override;
+    virtual const char* GetClipboardData(const char* aMimeType,
+                                         int32_t aWhichClipboard,
+                                         uint32_t* aContentLength) override;
+    virtual void ReleaseClipboardData(const char* aClipboardData) override;
+
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNums) override;
 

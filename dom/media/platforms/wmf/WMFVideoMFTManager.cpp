@@ -558,7 +558,7 @@ MediaResult
 WMFVideoMFTManager::ValidateVideoInfo()
 {
   if (mStreamType != H264 ||
-      gfxPrefs::PDMWMFAllowUnsupportedResolutions()) {
+    gfxPrefs::PDMWMFAllowUnsupportedResolutions()) {
     return NS_OK;
   }
 
@@ -568,12 +568,12 @@ WMFVideoMFTManager::ValidateVideoInfo()
   // might have maximum resolution limitation.
   // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
   const bool Is4KCapable = IsWin8OrLater() || IsWin7H264Decoder4KCapable();
-  static const int32_t MIN_H264_FRAME_DIMENSION = 48;
-  static const int32_t MAX_H264_FRAME_WIDTH = Is4KCapable ? 4096 : 1920;
-  static const int32_t MAX_H264_FRAME_HEIGHT = Is4KCapable ? 2304 : 1088;
+  static const int32_t MAX_H264_PIXEL_COUNT =
+    Is4KCapable ? 4096 * 2304 : 1920 * 1088;
+  const CheckedInt32 pixelCount =
+    CheckedInt32(mVideoInfo.mImage.width) * mVideoInfo.mImage.height;
 
-  if (mVideoInfo.mImage.width > MAX_H264_FRAME_WIDTH  ||
-      mVideoInfo.mImage.height > MAX_H264_FRAME_HEIGHT) {
+  if (!pixelCount.isValid() || pixelCount.value() > MAX_H264_PIXEL_COUNT) {
     mIsValid = false;
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Can't decode H.264 stream because its "
@@ -581,7 +581,6 @@ WMFVideoMFTManager::ValidateVideoInfo()
   }
 
   return NS_OK;
-
 }
 
 already_AddRefed<MFTDecoder>

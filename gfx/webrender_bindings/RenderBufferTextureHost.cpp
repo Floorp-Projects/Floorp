@@ -50,7 +50,7 @@ RenderBufferTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   if (!mLocked) {
     if (!GetBuffer()) {
       // We hit some problems to get the shmem.
-      return RawDataToWrExternalImage(nullptr, 0);
+      return InvalidToWrExternalImage();
     }
     if (mFormat != gfx::SurfaceFormat::YUV) {
       mSurface = gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
@@ -58,11 +58,11 @@ RenderBufferTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
                                                                mSize,
                                                                mFormat);
       if (NS_WARN_IF(!mSurface)) {
-        return RawDataToWrExternalImage(nullptr, 0);
+        return InvalidToWrExternalImage();
       }
       if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mMap))) {
         mSurface = nullptr;
-        return RawDataToWrExternalImage(nullptr, 0);
+        return InvalidToWrExternalImage();
       }
     } else {
       const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
@@ -81,13 +81,13 @@ RenderBufferTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
                                                                  gfx::SurfaceFormat::A8);
       if (NS_WARN_IF(!mYSurface || !mCbSurface || !mCrSurface)) {
         mYSurface = mCbSurface = mCrSurface = nullptr;
-        return RawDataToWrExternalImage(nullptr, 0);
+        return InvalidToWrExternalImage();
       }
       if (NS_WARN_IF(!mYSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mYMap) ||
                      !mCbSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCbMap) ||
                      !mCrSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE, &mCrMap))) {
         mYSurface = mCbSurface = mCrSurface = nullptr;
-        return RawDataToWrExternalImage(nullptr, 0);
+        return InvalidToWrExternalImage();
       }
     }
     mLocked = true;

@@ -408,13 +408,13 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
 
     RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(aExtId));
     if (!host) {
-      NS_ERROR("CompositableHost does not exist");
+      gfxCriticalNote << "CompositableHost does not exist for extId:" << wr::AsUint64(aExtId);
       return false;
     }
     if (!gfxEnv::EnableWebRenderRecording()) {
       TextureHost* texture = host->GetAsTextureHostForComposite();
       if (!texture) {
-        NS_ERROR("TextureHost does not exist");
+        gfxCriticalNote << "TextureHost does not exist for extId:" << wr::AsUint64(aExtId);
         return false;
       }
       WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
@@ -428,13 +428,13 @@ WebRenderBridgeParent::AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey
   }
 
   if (!dSurf) {
-    NS_ERROR("TextureHost does not return DataSourceSurface");
+    gfxCriticalNote << "TextureHost does not return DataSourceSurface for extId:" << wr::AsUint64(aExtId);
     return false;
   }
 
   DataSourceSurface::MappedSurface map;
   if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-    NS_ERROR("DataSourceSurface failed to map");
+    gfxCriticalNote << "DataSourceSurface failed to map for Image for extId:" << wr::AsUint64(aExtId);
     return false;
   }
 

@@ -45,7 +45,6 @@ CSSFontFaceDescriptors::Get(nsCSSFontDesc aFontDescID)
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   // We forward the cycle collection interfaces to ContainingRule(), which is
@@ -241,17 +240,6 @@ nsCSSFontFaceStyleDecl::GetLength(uint32_t *aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  bool found;
-  IndexedGetter(aIndex, found, aReturn);
-  if (!found) {
-    aReturn.Truncate();
-  }
-  return NS_OK;
-}
-
 void
 nsCSSFontFaceStyleDecl::IndexedGetter(uint32_t index, bool& aFound, nsAString & aResult)
 {
@@ -271,11 +259,10 @@ nsCSSFontFaceStyleDecl::IndexedGetter(uint32_t index, bool& aFound, nsAString & 
   aFound = false;
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
+css::Rule*
+nsCSSFontFaceStyleDecl::GetParentRule()
 {
-  NS_IF_ADDREF(*aParentRule = ContainingRule());
-  return NS_OK;
+  return ContainingRule();
 }
 
 NS_IMETHODIMP
@@ -326,9 +313,6 @@ nsCSSFontFaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, mozilla::css::Rule)
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsCSSFontFaceRule,
@@ -366,10 +350,7 @@ nsCSSFontFaceRule::IsCCLeaf() const
   return !mDecl.PreservingWrapper();
 }
 
-// QueryInterface implementation for nsCSSFontFaceRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
-NS_INTERFACE_MAP_END_INHERITING(Rule)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsCSSFontFaceRule, mozilla::css::Rule)
 
 #ifdef DEBUG
 void
@@ -410,7 +391,7 @@ nsCSSFontFaceRule::GetType() const
 uint16_t
 nsCSSFontFaceRule::Type() const
 {
-  return nsIDOMCSSRule::FONT_FACE_RULE;
+  return CSSRuleBinding::FONT_FACE_RULE;
 }
 
 void
@@ -428,13 +409,6 @@ nsICSSDeclaration*
 nsCSSFontFaceRule::Style()
 {
   return &mDecl;
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_IF_ADDREF(*aStyle = &mDecl);
-  return NS_OK;
 }
 
 // Arguably these should forward to nsCSSFontFaceStyleDecl methods.

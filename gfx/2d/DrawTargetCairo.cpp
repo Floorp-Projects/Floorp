@@ -2139,7 +2139,7 @@ DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4
   if (xformBounds.IsEmpty()) {
     return true;
   }
-  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+  fullMat.PostTranslate(-xformBounds.X(), -xformBounds.Y(), 0);
   if (!fullMat.Invert()) {
     return false;
   }
@@ -2150,7 +2150,7 @@ DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4
 
   cairo_surface_t* xformSurf =
     cairo_surface_create_similar(srcSurf, CAIRO_CONTENT_COLOR_ALPHA,
-                                 xformBounds.width, xformBounds.height);
+                                 xformBounds.Width(), xformBounds.Height());
   if (!SupportsXRender(xformSurf)) {
     cairo_surface_destroy(xformSurf);
     return false;
@@ -2178,7 +2178,7 @@ DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4
   XRenderComposite(display, PictOpSrc,
                    srcPict, X11None, dstPict,
                    0, 0, 0, 0, 0, 0,
-                   xformBounds.width, xformBounds.height);
+                   xformBounds.Width(), xformBounds.Height());
 
   XRenderFreePicture(display, srcPict);
   XRenderFreePicture(display, dstPict);
@@ -2192,10 +2192,10 @@ DrawTargetCairo::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4
 
   cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
   cairo_set_antialias(mContext, CAIRO_ANTIALIAS_DEFAULT);
-  cairo_set_source_surface(mContext, xformSurf, xformBounds.x, xformBounds.y);
+  cairo_set_source_surface(mContext, xformSurf, xformBounds.X(), xformBounds.Y());
 
   cairo_new_path(mContext);
-  cairo_rectangle(mContext, xformBounds.x, xformBounds.y, xformBounds.width, xformBounds.height);
+  cairo_rectangle(mContext, xformBounds.X(), xformBounds.Y(), xformBounds.Width(), xformBounds.Height());
   cairo_fill(mContext);
 
   cairo_surface_destroy(xformSurf);

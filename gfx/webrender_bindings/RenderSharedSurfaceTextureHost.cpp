@@ -31,7 +31,7 @@ RenderSharedSurfaceTextureHost::Lock(uint8_t aChannelIndex, gl::GLContext* aGL)
   if (!mLocked) {
     if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,
                                   &mMap))) {
-      return RawDataToWrExternalImage(nullptr, 0);
+      return InvalidToWrExternalImage();
     }
     mLocked = true;
   }

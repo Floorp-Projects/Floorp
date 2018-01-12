@@ -74,7 +74,7 @@ protected:
 private:
   static nsIFile *mPrevDisplayDirectory;
 
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   GtkFileChooserWidget *mFileChooserDelegate;
 #endif
 };

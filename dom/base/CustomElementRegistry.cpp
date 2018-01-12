@@ -333,7 +333,6 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsAtom* aTyp
   nsTArray<nsWeakPtr>* unresolved = mCandidatesMap.LookupOrAdd(typeName);
   nsWeakPtr* elem = unresolved->AppendElement();
   *elem = do_GetWeakReference(aElement);
-  aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
 }
 
 void
@@ -907,8 +906,6 @@ CustomElementRegistry::Upgrade(Element* aElement,
                                CustomElementDefinition* aDefinition,
                                ErrorResult& aRv)
 {
-  aElement->RemoveStates(NS_EVENT_STATE_UNRESOLVED);
-
   RefPtr<CustomElementData> data = aElement->GetCustomElementData();
   MOZ_ASSERT(data, "CustomElementData should exist");
 

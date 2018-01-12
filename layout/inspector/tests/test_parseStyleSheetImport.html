@@ -19,7 +19,7 @@ const InspectorUtils = SpecialPowers.InspectorUtils;
 function do_test() {
   var sheet = document.styleSheets[1];
   var importRule = sheet.cssRules[0];
-  is(importRule.type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+  is(importRule.type, CSSRule.IMPORT_RULE,
      "initial sheet has @import rule");
 
   var importedSheet = importRule.styleSheet;
@@ -34,7 +34,7 @@ function do_test() {
   // Re-parse the style sheet, preserving the imports.
   InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
                                         "@import url('bug1202095-2.css');");
-  is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+  is(sheet.cssRules[0].type, CSSRule.IMPORT_RULE,
      "re-parsed sheet has @import rule");
   is(sheet.cssRules[0].styleSheet, importedSheet,
      "imported sheet has not changed");
@@ -57,7 +57,7 @@ function do_test() {
   // Re-parse the style sheet, adding one import back.  This should
   // not allow reuse.
   InspectorUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');");
-  is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+  is(sheet.cssRules[0].type, CSSRule.IMPORT_RULE,
      "re-re-re-parsed sheet has @import rule");
   isnot(sheet.cssRules[0].styleSheet, importedSheet,
      "imported sheet has changed now");

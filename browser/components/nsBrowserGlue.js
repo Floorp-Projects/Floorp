@@ -1774,7 +1774,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 60;
+    const UI_VERSION = 61;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2263,6 +2263,11 @@ BrowserGlue.prototype = {
       // Set whether search suggestions or history results come first in the
       // urlbar results.
       this._migrateMatchBucketsPrefForUIVersion60();
+    }
+
+    if (currentUIVersion < 61) {
+      // Remove persisted toolbarset from navigator toolbox
+      xulStore.removeValue(BROWSER_DOCURL, "navigator-toolbox", "toolbarset");
     }
 
     // Update the migration version.

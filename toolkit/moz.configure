@@ -146,9 +146,7 @@ def wayland(toolkit):
 
 @depends(toolkit)
 def toolkit(toolkit):
-    if toolkit == 'cairo-gtk2-x11':
-        widget_toolkit = 'gtk2'
-    elif toolkit == 'cairo-gtk3-wayland' :
+    if toolkit == 'cairo-gtk3-wayland':
         widget_toolkit = 'gtk3'
     else:
         widget_toolkit = toolkit.replace('cairo-', '')
@@ -159,16 +157,14 @@ add_old_configure_assignment('MOZ_WIDGET_TOOLKIT', toolkit)
 
 @depends(toolkit)
 def toolkit_gtk(toolkit):
-    if toolkit == 'gtk2':
-        return '2'
-    elif toolkit == 'gtk3':
+    if toolkit == 'gtk3':
         return '3'
 
 set_define('MOZ_WIDGET_GTK', toolkit_gtk)
 
 @depends(toolkit)
 def toolkit_define(toolkit):
-    if toolkit not in ('gtk2', 'gtk3', 'windows'):
+    if toolkit not in ('gtk3', 'windows'):
         return 'MOZ_WIDGET_%s' % toolkit.upper()
 
 set_define(toolkit_define, True)
@@ -181,7 +177,7 @@ def x11(value, toolkit):
     if not value:
         die('--without-x is not supported')
 
-    x11_toolkits = ('gtk2', 'gtk3')
+    x11_toolkits = ('gtk3',)
     if value and value.origin != 'default' and toolkit not in x11_toolkits:
         die('--with-x is only valid with --enable-default-toolkit={%s}',
             ','.join(x11_toolkits))
@@ -240,7 +236,7 @@ set_define(gl_provider_define, True)
 # ==============================================================
 @depends(toolkit)
 def pdf_printing(toolkit):
-    if toolkit in ('windows', 'gtk2', 'gtk3', 'android'):
+    if toolkit in ('windows', 'gtk3', 'android'):
         return True
 
 @depends(pdf_printing)
@@ -262,7 +258,7 @@ option(env='MOZ_INSTRUMENT_EVENT_LOOP',
 
 @depends('MOZ_INSTRUMENT_EVENT_LOOP', toolkit)
 def instrument_event_loop(value, toolkit):
-    if value or (toolkit in ('windows', 'gtk2', 'gtk3', 'cocoa', 'android') and
+    if value or (toolkit in ('windows', 'gtk3', 'cocoa', 'android') and
                  value.origin == 'default'):
         return True
 
@@ -277,7 +273,7 @@ option(env='USE_FC_FREETYPE',
 
 @depends('USE_FC_FREETYPE', toolkit)
 def fc_freetype(value, toolkit):
-    if value or (toolkit in ('gtk2', 'gtk3') and
+    if value or (toolkit == 'gtk3' and
                  value.origin == 'default'):
         return True
 
@@ -874,7 +870,7 @@ set_define('NS_PRINT_PREVIEW', printing)
 # ==============================================================
 @depends(toolkit)
 def no_speechd_on_non_gtk(toolkit):
-    if toolkit not in ('gtk2', 'gtk3'):
+    if toolkit != 'gtk3':
         return False
 
 imply_option('--enable-synth-speechd', no_speechd_on_non_gtk,

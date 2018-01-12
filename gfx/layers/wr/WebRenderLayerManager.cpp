@@ -511,22 +511,6 @@ WebRenderLayerManager::DidComposite(uint64_t aTransactionId,
 }
 
 void
-WebRenderLayerManager::ClearLayer(Layer* aLayer)
-{
-  aLayer->ClearCachedResources();
-  if (aLayer->GetMaskLayer()) {
-    aLayer->GetMaskLayer()->ClearCachedResources();
-  }
-  for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
-    aLayer->GetAncestorMaskLayerAt(i)->ClearCachedResources();
-  }
-  for (Layer* child = aLayer->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    ClearLayer(child);
-  }
-}
-
-void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WrBridge()->BeginClearCachedResources();

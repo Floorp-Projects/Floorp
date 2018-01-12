@@ -13,6 +13,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditRules.h"
+#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
@@ -25,7 +26,6 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsROCSSPrimitiveValue.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -681,17 +681,17 @@ HTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement* aElement,
       nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
       NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
 
-      if (nsIDOMCSSPrimitiveValue::CSS_RGBCOLOR == val->PrimitiveType()) {
+      if (CSSPrimitiveValueBinding::CSS_RGBCOLOR == val->PrimitiveType()) {
         nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
         NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float r = rgbVal->Red()->
-          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
         NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float g = rgbVal->Green()->
-          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
         NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float b = rgbVal->Blue()->
-          GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
+          GetFloatValue(CSSPrimitiveValueBinding::CSS_NUMBER, error);
         NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         if (r >= BLACK_BG_RGB_TRIGGER &&
             g >= BLACK_BG_RGB_TRIGGER &&

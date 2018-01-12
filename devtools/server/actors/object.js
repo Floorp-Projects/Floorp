@@ -1716,7 +1716,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSMediaRule({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSMediaRule)) {
+    if (isWorker || !rawObj || obj.class != "CSSMediaRule") {
       return false;
     }
     grip.preview = {
@@ -1727,7 +1727,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSStyleRule({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSStyleRule)) {
+    if (isWorker || !rawObj || obj.class != "CSSStyleRule") {
       return false;
     }
     grip.preview = {
@@ -1738,8 +1738,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function ObjectWithURL({obj, hooks}, grip, rawObj) {
-    if (isWorker || !rawObj || !(rawObj instanceof Ci.nsIDOMCSSImportRule ||
-                                 rawObj instanceof Ci.nsIDOMCSSStyleSheet ||
+    if (isWorker || !rawObj || !(obj.class == "CSSImportRule" ||
+                                 obj.class == "CSSStyleSheet" ||
                                  obj.class == "Location" ||
                                  rawObj instanceof Ci.nsIDOMWindow)) {
       return false;
@@ -1766,13 +1766,13 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     if (isWorker || !rawObj ||
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
+        obj.class != "CSSRuleList" &&
+        obj.class != "MediaList" &&
+        obj.class != "StyleSheetList" &&
+        obj.class != "CSSValueList" &&
         !(rawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
-          rawObj instanceof Ci.nsIDOMCSSRuleList ||
-          rawObj instanceof Ci.nsIDOMCSSValueList ||
           rawObj instanceof Ci.nsIDOMFileList ||
-          rawObj instanceof Ci.nsIDOMMediaList ||
-          rawObj instanceof Ci.nsIDOMNodeList ||
-          rawObj instanceof Ci.nsIDOMStyleSheetList)) {
+          rawObj instanceof Ci.nsIDOMNodeList)) {
       return false;
     }
 
@@ -1802,7 +1802,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 
   function CSSStyleDeclaration({obj, hooks}, grip, rawObj) {
     if (isWorker || !rawObj ||
-        !(rawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
+        (obj.class != "CSSStyleDeclaration" &&
+         obj.class != "CSS2Properties")) {
       return false;
     }
 

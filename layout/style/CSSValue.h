@@ -37,8 +37,10 @@ public:
   /**
    * Return this as a nsROCSSPrimitiveValue* if its a primitive value, and null
    * otherwise.
+   *
+   * Defined in nsROCSSPrimitiveValue.h.
    */
-  nsROCSSPrimitiveValue *AsPrimitiveValue();
+  inline nsROCSSPrimitiveValue* AsPrimitiveValue();
 };
 
 } // namespace dom

@@ -196,10 +196,10 @@ needs-focus == deselectAll.svg deselectAll-ref.svg
 fuzzy-if(skiaContent,1,250) needs-focus == selectSubString.svg selectSubString-ref.svg
 fuzzy-if(skiaContent,1,600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 fuzzy-if(skiaContent,1,250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
-fuzzy-if(webrender,1-1,237-237) needs-focus == simple-selection.svg simple-selection-ref.html
-fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,1-1,575-575) needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender,1-1,237-237) needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy-if(skiaContent,1,150) fuzzy-if(webrender,1-1,222-222) needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
-fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,934-934) needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
+fuzzy-if(webrender,1-1,294-294) needs-focus == simple-selection.svg simple-selection-ref.html
+fuzzy-if(skiaContent,1,100) fuzzy-if(webrender,1-1,594-594) needs-focus == simple-bidi-selection.svg simple-bidi-selection-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(webrender,1-1,294-294) needs-focus == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+fuzzy-if(skiaContent,1,150) fuzzy-if(webrender,1-1,276-276) needs-focus == simple-underline-selection.svg simple-underline-selection-ref.html
+fuzzy-if(skiaContent,1,300) fuzzy-if(webrender,1-1,1010-1010) needs-focus == multiple-text-selection.svg multiple-text-selection-ref.html
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,1,200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
