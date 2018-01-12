@@ -141,9 +141,6 @@
           if (toolboxId) {
             let toolbox = document.getElementById(toolboxId);
             if (toolbox) {
-              if (toolbox.externalToolbars.indexOf(this) == -1)
-                toolbox.externalToolbars.push(this);
-
               this._toolbox = toolbox;
             }
           }
