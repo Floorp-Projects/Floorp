@@ -20,9 +20,6 @@
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
-#ifdef XP_DARWIN
-# include "wasm/WasmSignalHandlers.h"
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
