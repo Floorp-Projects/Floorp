@@ -2305,6 +2305,7 @@ function webViewerKeyDown(evt) {
           handled = true;
         }
         break;
+      case 13:
       case 40:
       case 34:
       case 32:
@@ -2349,6 +2350,7 @@ function webViewerKeyDown(evt) {
   }
   if (cmd === 4) {
     switch (evt.keyCode) {
+      case 13:
       case 32:
         if (!isViewerInPresentationMode && pdfViewer.currentScaleValue !== 'page-fit') {
           break;

@@ -1936,7 +1936,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '2.0.250';
+  let apiVersion = '2.0.258';
   source.disableRange = (0, _dom_utils.getDefaultSetting)('disableRange');
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
@@ -2144,11 +2144,8 @@ var PDFPageProxy = function PDFPageProxyClosure() {
     get view() {
       return this.pageInfo.view;
     },
-    getViewport: function PDFPageProxy_getViewport(scale, rotate) {
-      if (arguments.length < 2) {
-        rotate = this.rotate;
-      }
-      return new _util.PageViewport(this.view, scale, rotate, 0, 0);
+    getViewport(scale, rotate = this.rotate, dontFlip = false) {
+      return new _util.PageViewport(this.view, scale, rotate, 0, 0, dontFlip);
     },
     getAnnotations: function PDFPageProxy_getAnnotations(params) {
       var intent = params && params.intent || null;
@@ -3233,8 +3230,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.250';
-  exports.build = build = '6b2ed504';
+  exports.version = version = '2.0.258';
+  exports.build = build = '5a52ee0a';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -4621,8 +4618,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '2.0.250';
-var pdfjsBuild = '6b2ed504';
+var pdfjsVersion = '2.0.258';
+var pdfjsBuild = '5a52ee0a';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(12);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -7744,8 +7741,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '2.0.250';
-  PDFJS.build = '6b2ed504';
+  PDFJS.version = '2.0.258';
+  PDFJS.build = '5a52ee0a';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
