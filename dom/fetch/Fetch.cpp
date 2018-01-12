@@ -38,7 +38,6 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/Telemetry.h"
 
 #include "BodyExtractor.h"
@@ -866,13 +865,7 @@ WorkerFetchResolver::FlushConsoleReport()
 
   if (worker->IsServiceWorker()) {
     // Flush to service worker
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      mReporter->FlushReportsToConsole(0);
-      return;
-    }
-
-    swm->FlushReportsToAllClients(worker->ServiceWorkerScope(), mReporter);
+    mReporter->FlushReportsToConsoleForServiceWorkerScope(worker->ServiceWorkerScope());
     return;
   }
 
