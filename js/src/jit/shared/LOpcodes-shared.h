@@ -383,7 +383,7 @@
     _(HasOwnCache)                  \
     _(InstanceOfO)                  \
     _(InstanceOfV)                  \
-    _(CallInstanceOf)               \
+    _(InstanceOfCache)              \
     _(InterruptCheck)               \
     _(Rotate)                       \
     _(RotateI64)                    \
