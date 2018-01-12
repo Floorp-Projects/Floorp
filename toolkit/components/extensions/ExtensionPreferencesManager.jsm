@@ -81,19 +81,28 @@ function initialValueCallback() {
  *
  * @param {Object} setting
  *        An object that represents a setting, which will have a setCallback
- *        property.
+ *        property. If a onPrefsChanged function is provided it will be called
+ *        with item when the preferences change.
  * @param {Object} item
  *        An object that represents an item handed back from the setting store
  *        from which the new pref values can be calculated.
 */
 function setPrefs(setting, item) {
   let prefs = item.initialValue || setting.setCallback(item.value);
+  let changed = false;
   for (let pref in prefs) {
     if (prefs[pref] === undefined) {
-      Preferences.reset(pref);
-    } else {
+      if (Preferences.isSet(pref)) {
+        changed = true;
+        Preferences.reset(pref);
+      }
+    } else if (Preferences.get(pref) != prefs[pref]) {
       Preferences.set(pref, prefs[pref]);
+      changed = true;
     }
+  }
+  if (changed && typeof setting.onPrefsChanged == "function") {
+    setting.onPrefsChanged(item);
   }
 }
 

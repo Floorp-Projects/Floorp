@@ -46,7 +46,9 @@ class ExtensionControlledPopup {
    *                 The type to use for storing a user's confirmation in
    *                 ExtensionSettingsStore.
    * @param {string} opts.observerTopic
-   *                 An observer topic to trigger the popup on with Services.obs.
+   *                 An observer topic to trigger the popup on with Services.obs. If the
+   *                 doorhanger should appear on a specific window include it as the
+   *                 subject in the observer event.
    * @param {string} opts.popupnotificationId
    *                 The id for the popupnotification element in the markup. This
    *                 element should be defined in panelUI.inc.xul.
@@ -78,6 +80,8 @@ class ExtensionControlledPopup {
    *                   A function that is called before disabling an extension when the
    *                   user decides to disable the extension. If this function is async
    *                   then the extension won't be disabled until it is fulfilled.
+   *                   This function gets two arguments, the ExtensionControlledPopup
+   *                   instance for the panel and the window that the popup appears on.
    */
   constructor(opts) {
     this.confirmedType = opts.confirmedType;
@@ -121,7 +125,7 @@ class ExtensionControlledPopup {
     this.removeObserver();
 
     // Do this work in an idle callback to avoid interfering with new tab performance tracking.
-    this.topWindow.requestIdleCallback(() => this.open());
+    this.topWindow.requestIdleCallback(() => this.open(subject));
   }
 
   removeObserver() {
@@ -146,7 +150,7 @@ class ExtensionControlledPopup {
     }
   }
 
-  async open() {
+  async open(targetWindow) {
     await ExtensionSettingsStore.initialize();
 
     // Remove the observer since it would open the same dialog again the next time
@@ -165,10 +169,11 @@ class ExtensionControlledPopup {
     }
 
     // Find the elements we need.
-    let win = this.topWindow;
+    let win = targetWindow || this.topWindow;
     let doc = win.document;
     let panel = doc.getElementById("extension-notification-panel");
     let popupnotification = doc.getElementById(this.popupnotificationId);
+    let urlBarWasFocused = win.gURLBar.focused;
 
     if (!popupnotification) {
       throw new Error(`No popupnotification found for id "${this.popupnotificationId}"`);
@@ -186,10 +191,17 @@ class ExtensionControlledPopup {
         await this.setConfirmation(item.id);
       } else {
         // Secondary action is to restore settings.
-        await this.beforeDisableAddon(this);
+        await this.beforeDisableAddon(this, win);
         addon.userDisabled = true;
       }
-      win.gURLBar.focus();
+
+      // If the page this is appearing on is the New Tab page then the URL bar may
+      // have been focused when the doorhanger stole focus away from it. Once an
+      // action is taken the focus state should be restored to what the user was
+      // expecting.
+      if (urlBarWasFocused) {
+        win.gURLBar.focus();
+      }
     };
     panel.addEventListener("command", handleCommand);
     panel.addEventListener("popuphidden", () => {
