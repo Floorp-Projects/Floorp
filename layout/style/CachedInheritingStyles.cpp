@@ -5,16 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIMemoryReporter.h"
-#include "mozilla/CachedAnonBoxStyles.h"
+#include "mozilla/CachedInheritingStyles.h"
 #include "mozilla/ServoStyleContext.h"
 
 namespace mozilla {
 
 void
-CachedAnonBoxStyles::Insert(ServoStyleContext* aStyle)
+CachedInheritingStyles::Insert(ServoStyleContext* aStyle)
 {
   MOZ_ASSERT(aStyle);
-  MOZ_ASSERT(aStyle->IsInheritingAnonBox());
+  MOZ_ASSERT(aStyle->IsInheritingAnonBox() || aStyle->IsLazilyCascadedPseudoElement());
 
   if (IsEmpty()) {
     RefPtr<ServoStyleContext> s = aStyle;
@@ -32,12 +32,13 @@ CachedAnonBoxStyles::Insert(ServoStyleContext* aStyle)
 }
 
 ServoStyleContext*
-CachedAnonBoxStyles::Lookup(nsAtom* aAnonBox) const
+CachedInheritingStyles::Lookup(nsAtom* aPseudoTag) const
 {
-  MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
+  MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aPseudoTag) ||
+             nsCSSPseudoElements::IsPseudoElement(aPseudoTag));
   if (IsIndirect()) {
     for (auto& style : *AsIndirect()) {
-      if (style->GetPseudo() == aAnonBox) {
+      if (style->GetPseudo() == aPseudoTag) {
         return style;
       }
     }
@@ -46,11 +47,11 @@ CachedAnonBoxStyles::Lookup(nsAtom* aAnonBox) const
   }
 
   ServoStyleContext* direct = AsDirect();
-  return direct && direct->GetPseudo() == aAnonBox ? direct : nullptr;
+  return direct && direct->GetPseudo() == aPseudoTag ? direct : nullptr;
 }
 
 void
-CachedAnonBoxStyles::AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const
+CachedInheritingStyles::AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const
 {
   if (IsIndirect()) {
     for (auto& style : *AsIndirect()) {

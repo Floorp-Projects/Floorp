@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+rich-select:not([open]) > .rich-select-popup-box {
+  display: none;
+}
+
+rich-select[open] {
+  position: relative;
+}
+
+rich-select[open] > .rich-select-popup-box {
+  position: absolute;
+  z-index: 1;
+  top: 1em;
+}
