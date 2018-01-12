@@ -446,8 +446,8 @@ class DeviceManagerADB(DeviceManager):
         self._checkCmd(acmd)
         return outputFile
 
-    def killProcess(self, appname, sig=None):
-        if not sig:
+    def killProcess(self, appname, sig=None, native=False):
+        if not native and not sig:
             try:
                 self.shellCheckOutput(["am", "force-stop", appname], timeout=self.short_timeout)
             except:
