@@ -91,7 +91,7 @@ def make_job_description(config, jobs):
         dependencies.update(signing_dependencies)
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'tc(Nr)')
+        treeherder.setdefault('symbol', 'Nr')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform', "{}/opt".format(dep_th_platform))

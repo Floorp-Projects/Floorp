@@ -77,7 +77,7 @@ jobs:
             job-name: win32-st-an-debug
         treeherder:
             platform: windows2012-32/debug
-            symbol: tc(S)
+            symbol: S
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
@@ -105,7 +105,7 @@ jobs:
             job-name: win32-st-an-opt
         treeherder:
             platform: windows2012-32/opt
-            symbol: tc(S)
+            symbol: S
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
@@ -133,7 +133,7 @@ jobs:
             job-name: win64-st-an-debug
         treeherder:
             platform: windows2012-64/debug
-            symbol: tc(S)
+            symbol: S
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
@@ -161,7 +161,7 @@ jobs:
             job-name: win64-st-an-opt
         treeherder:
             platform: windows2012-64/opt
-            symbol: tc(S)
+            symbol: S
             tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
