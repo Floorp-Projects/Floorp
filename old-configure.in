@@ -1901,6 +1901,34 @@ dnl ========================================================
 MOZ_ZLIB_CHECK([1.2.3])
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
+dnl system BZIP2 Support
+dnl ========================================================
+MOZ_ARG_WITH_STRING(system-bz2,
+[  --with-system-bz2[=PFX]
+                          Use system libbz2 [installed at prefix PFX]],
+    BZ2_DIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+if test -n "${BZ2_DIR}" -a "${BZ2_DIR}" != "yes"; then
+    CFLAGS="-I${BZ2_DIR}/include $CFLAGS"
+    LDFLAGS="-L${BZ2_DIR}/lib $LDFLAGS"
+fi
+if test -z "$BZ2_DIR" -o "$BZ2_DIR" = no; then
+    MOZ_SYSTEM_BZ2=
+else
+    AC_CHECK_LIB(bz2, BZ2_bzread, [MOZ_SYSTEM_BZ2=1 MOZ_BZ2_LIBS="-lbz2"],
+    [MOZ_SYSTEM_BZ2= MOZ_BZ2_CFLAGS= MOZ_BZ2_LIBS=])
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$MOZ_SYSTEM_BZ2" = 1; then
+    MOZ_BZ2_CFLAGS="-I${BZ2_DIR}/include"
+    MOZ_BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
+fi
 
 dnl ========================================================
 dnl system PNG Support
@@ -4608,9 +4636,12 @@ HOST_CXXFLAGS=`echo \
 AC_SUBST(_DEPEND_CFLAGS)
 AC_SUBST(MOZ_SYSTEM_JPEG)
 AC_SUBST(MOZ_SYSTEM_PNG)
+AC_SUBST(MOZ_SYSTEM_BZ2)
 
 AC_SUBST_LIST(MOZ_JPEG_CFLAGS)
 AC_SUBST_LIST(MOZ_JPEG_LIBS)
+AC_SUBST_LIST(MOZ_BZ2_CFLAGS)
+AC_SUBST_LIST(MOZ_BZ2_LIBS)
 AC_SUBST_LIST(MOZ_PNG_CFLAGS)
 AC_SUBST_LIST(MOZ_PNG_LIBS)
 
