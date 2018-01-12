@@ -291,7 +291,6 @@ public:
 
     if (mSignalProxy) {
       mSignalProxy->Shutdown();
-      mSignalProxy = nullptr;
     }
 
     mWorkerHolder = nullptr;
