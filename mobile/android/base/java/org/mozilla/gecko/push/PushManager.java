@@ -57,15 +57,6 @@ public class PushManager {
         this.pushClientFactory = pushClientFactory;
     }
 
-    public static String getSenderIds() {
-        final String mmaSenderId = MmaDelegate.getMmaSenderId();
-        if (mmaSenderId != null && mmaSenderId.length() > 0) {
-            return AppConstants.MOZ_ANDROID_GCM_SENDERID + "," + mmaSenderId;
-        } else {
-            return AppConstants.MOZ_ANDROID_GCM_SENDERID;
-        }
-    }
-
     public PushRegistration registrationForSubscription(String chid) {
         // chids are globally unique, so we're not concerned about finding a chid associated to
         // any particular profile.
@@ -253,7 +244,7 @@ public class PushManager {
     }
 
     protected @NonNull PushRegistration advanceRegistration(final PushRegistration registration, final @NonNull String profileName, final long now) throws AutopushClientException, PushClient.LocalException, GcmTokenClient.NeedsGooglePlayServicesException, IOException {
-        final Fetched gcmToken = gcmClient.getToken(getSenderIds(), registration.debug);
+        final Fetched gcmToken = gcmClient.getToken(AppConstants.MOZ_ANDROID_GCM_SENDERIDS, registration.debug);
 
         final PushClient pushClient = pushClientFactory.getPushClient(registration.autopushEndpoint, registration.debug);
 
@@ -305,7 +296,7 @@ public class PushManager {
     public void startup(long now) {
         try {
             Log.i(LOG_TAG, "Startup: requesting GCM token.");
-            gcmClient.getToken(getSenderIds(), false); // For side-effects.
+            gcmClient.getToken(AppConstants.MOZ_ANDROID_GCM_SENDERIDS, false); // For side-effects.
         } catch (GcmTokenClient.NeedsGooglePlayServicesException e) {
             // Requires user intervention.  At App startup, we don't want to address this.  In
             // response to user activity, we do want to try to have the user address this.
