@@ -21,7 +21,7 @@ const TOPIC_LOCALES_CHANGE = "intl:requested-locales-changed";
 
 // Automated tests ensure packaged locales are in this list. Copied output of:
 // https://github.com/mozilla/activity-stream/blob/master/bin/render-activity-stream-html.js
-const ACTIVITY_STREAM_LOCALES = new Set("en-US ach ar ast az be bg bn-BD bn-IN br bs ca cak cs cy da de dsb el en-GB eo es-AR es-CL es-ES es-MX et eu fa ff fi fr fy-NL ga-IE gd gl gn gu-IN he hi-IN hr hsb hu hy-AM ia id it ja ka kab kk km kn ko lij lo lt ltg lv mk ml mr ms my nb-NO ne-NP nl nn-NO pa-IN pl pt-BR pt-PT rm ro ru si sk sl sq sr sv-SE ta te th tl tr uk ur uz vi zh-CN zh-TW".split(" "));
+const ACTIVITY_STREAM_LOCALES = "en-US ach ar ast az be bg bn-BD bn-IN br bs ca cak cs cy da de dsb el en-GB eo es-AR es-CL es-ES es-MX et eu fa ff fi fr fy-NL ga-IE gd gl gn gu-IN he hi-IN hr hsb hu hy-AM ia id it ja ka kab kk km kn ko lij lo lt ltg lv mk ml mr ms my nb-NO ne-NP nl nn-NO pa-IN pl pt-BR pt-PT rm ro ru si sk sl sq sr sv-SE ta te th tl tr uk ur uz vi zh-CN zh-TW".split(" ");
 
 const ABOUT_URL = "about:newtab";
 
@@ -179,26 +179,14 @@ AboutNewTabService.prototype = {
    */
   updatePrerenderedPath() {
     // Debug files are specially packaged in a non-localized directory
-    let path;
-    if (this._activityStreamDebug) {
-      path = "static";
-    } else {
-      // Use the exact match locale if it's packaged
-      const locale = Services.locale.getRequestedLocale();
-      if (ACTIVITY_STREAM_LOCALES.has(locale)) {
-        path = locale;
-      } else {
-        // Fall back to a shared-language packaged locale
-        const language = locale.split("-")[0];
-        if (ACTIVITY_STREAM_LOCALES.has(language)) {
-          path = language;
-        } else {
-          // Just use the default locale as a final fallback
-          path = "en-US";
-        }
-      }
-    }
-    this._activityStreamPath = `${path}/`;
+    this._activityStreamPath = `${this._activityStreamDebug ? "static" :
+      // Pick the best available locale to match the app locales
+      Services.locale.negotiateLanguages(
+        Services.locale.getAppLocalesAsLangTags(),
+        ACTIVITY_STREAM_LOCALES,
+        // defaultLocale's strings aren't necessarily packaged, but en-US' are
+        "en-US"
+      )[0]}/`;
   },
 
   /*

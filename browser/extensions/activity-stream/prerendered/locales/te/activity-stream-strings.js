@@ -78,7 +78,7 @@ window.gActivityStreamStrings = {
   "edit_topsites_edit_button": "ఈ సైటును మార్చు",
   "edit_topsites_dismiss_button": "ఈ సైటుని తీసివేయి",
   "edit_topsites_add_button": "జోడించు",
-  "topsites_form_add_header": "కొత్త టాప్ సైట్",
+  "topsites_form_add_header": "కొత్త మేటి సైటు",
   "topsites_form_edit_header": "టాప్ సైట్ను సవరించండి",
   "topsites_form_title_placeholder": "శీర్షికను నమోదు చేయండి",
   "topsites_form_url_placeholder": "URL ను టైప్ చేయండి లేదా అతికించండి",
