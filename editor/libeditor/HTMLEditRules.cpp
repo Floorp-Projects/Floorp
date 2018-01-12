@@ -199,7 +199,6 @@ HTMLEditRules::InitFields()
 {
   mHTMLEditor = nullptr;
   mDocChangeRange = nullptr;
-  mListenerEnabled = true;
   mReturnInEmptyLIKillsList = true;
   mDidDeleteSelection = false;
   mDidRangedDelete = false;
@@ -238,19 +237,9 @@ HTMLEditRules::InitStyleCacheArray(StyleCache aStyleCache[SIZE_STYLE_TABLE])
 
 HTMLEditRules::~HTMLEditRules()
 {
-  // remove ourselves as a listener to edit actions
-  // In some cases, we have already been removed by
-  // ~HTMLEditor, in which case we will get a null pointer here
-  // which we ignore.  But this allows us to add the ability to
-  // switch rule sets on the fly if we want.
-  if (mHTMLEditor) {
-    mHTMLEditor->RemoveEditActionListener(this);
-  }
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLEditRules,
-                                             TextEditRules,
-                                             nsIEditActionListener)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLEditRules, TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
                                    mDocChangeRange, mUtilRange, mNewBlock,
@@ -308,16 +297,15 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
     AdjustSpecialBreaks();
   }
 
-  // add ourselves as a listener to edit actions
-  return mHTMLEditor->AddEditActionListener(this);
+  StartToListenToEditActions();
+
+  return NS_OK;
 }
 
 nsresult
 HTMLEditRules::DetachEditor()
 {
-  if (mHTMLEditor) {
-    mHTMLEditor->RemoveEditActionListener(this);
-  }
+  EndListeningToEditActions();
   mHTMLEditor = nullptr;
   return TextEditRules::DetachEditor();
 }
@@ -8803,207 +8791,150 @@ HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillCreateNode(const nsAString& aTag,
-                              nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidCreateNode(const nsAString& aTag,
-                             nsIDOMNode* aNewNode,
-                             nsresult aResult)
+void
+HTMLEditRules::DidCreateNode(Element* aNewElement)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
+  }
+  if (NS_WARN_IF(!aNewElement)) {
+    return;
   }
   // assumption that Join keeps the righthand node
-  nsresult rv = mUtilRange->SelectNode(aNewNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return UpdateDocChangeRange(mUtilRange);
+  IgnoredErrorResult error;
+  mUtilRange->SelectNode(*aNewElement, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return;
+  }
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillInsertNode(nsIDOMNode* aNode,
-                              nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidInsertNode(nsIDOMNode* aNode,
-                             nsresult aResult)
+void
+HTMLEditRules::DidInsertNode(nsIContent& aContent)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
-  nsresult rv = mUtilRange->SelectNode(aNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return UpdateDocChangeRange(mUtilRange);
+  IgnoredErrorResult error;
+  mUtilRange->SelectNode(aContent, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return;
+  }
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillDeleteNode(nsIDOMNode* aChild)
+void
+HTMLEditRules::WillDeleteNode(nsINode* aChild)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
-  nsresult rv = mUtilRange->SelectNode(aChild);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return UpdateDocChangeRange(mUtilRange);
+  if (NS_WARN_IF(!aChild)) {
+    return;
+  }
+  IgnoredErrorResult error;
+  mUtilRange->SelectNode(*aChild, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return;
+  }
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::DidDeleteNode(nsIDOMNode* aChild,
-                             nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::WillSplitNode(nsIDOMNode* aExistingRightNode,
-                             int32_t aOffset)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidSplitNode(nsIDOMNode* aExistingRightNode,
-                            nsIDOMNode* aNewLeftNode)
+void
+HTMLEditRules::DidSplitNode(nsINode* aExistingRightNode,
+                            nsINode* aNewLeftNode)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
-  nsCOMPtr<nsINode> newLeftNode = do_QueryInterface(aNewLeftNode);
-  nsCOMPtr<nsINode> existingRightNode = do_QueryInterface(aExistingRightNode);
-  nsresult rv = mUtilRange->SetStartAndEnd(newLeftNode, 0,
-                                           existingRightNode, 0);
+  nsresult rv = mUtilRange->SetStartAndEnd(aNewLeftNode, 0,
+                                           aExistingRightNode, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return;
   }
-  return UpdateDocChangeRange(mUtilRange);
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillJoinNodes(nsIDOMNode* aLeftNode,
-                             nsIDOMNode* aRightNode,
-                             nsIDOMNode* aParent)
+void
+HTMLEditRules::WillJoinNodes(nsINode& aLeftNode,
+                             nsINode& aRightNode)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
   // remember split point
-  return EditorBase::GetLengthOfDOMNode(aLeftNode, mJoinOffset);
+  mJoinOffset = aLeftNode.Length();
 }
 
-NS_IMETHODIMP
-HTMLEditRules::DidJoinNodes(nsIDOMNode* aLeftNode,
-                            nsIDOMNode* aRightNode,
-                            nsIDOMNode* aParent,
-                            nsresult aResult)
+void
+HTMLEditRules::DidJoinNodes(nsINode& aLeftNode,
+                            nsINode& aRightNode)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
-  nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
   // assumption that Join keeps the righthand node
-  nsresult rv = mUtilRange->CollapseTo(rightNode, mJoinOffset);
+  nsresult rv = mUtilRange->CollapseTo(&aRightNode, mJoinOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return;
   }
-  return UpdateDocChangeRange(mUtilRange);
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillInsertText(nsIDOMCharacterData* aTextNode,
-                              int32_t aOffset,
-                              const nsAString& aString)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidInsertText(nsIDOMCharacterData* aTextNode,
+void
+HTMLEditRules::DidInsertText(nsINode* aTextNode,
                              int32_t aOffset,
-                             const nsAString& aString,
-                             nsresult aResult)
+                             const nsAString& aString)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
   int32_t length = aString.Length();
-  nsCOMPtr<nsINode> theNode = do_QueryInterface(aTextNode);
-  nsresult rv = mUtilRange->SetStartAndEnd(theNode, aOffset,
-                                           theNode, aOffset + length);
+  nsresult rv = mUtilRange->SetStartAndEnd(aTextNode, aOffset,
+                                           aTextNode, aOffset + length);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return;
   }
-  return UpdateDocChangeRange(mUtilRange);
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillDeleteText(nsIDOMCharacterData* aTextNode,
-                              int32_t aOffset,
-                              int32_t aLength)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidDeleteText(nsIDOMCharacterData* aTextNode,
+void
+HTMLEditRules::DidDeleteText(nsINode* aTextNode,
                              int32_t aOffset,
-                             int32_t aLength,
-                             nsresult aResult)
+                             int32_t aLength)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
-  nsCOMPtr<nsINode> theNode = do_QueryInterface(aTextNode);
-  nsresult rv = mUtilRange->CollapseTo(theNode, aOffset);
+  nsresult rv = mUtilRange->CollapseTo(aTextNode, aOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return;
   }
-  return UpdateDocChangeRange(mUtilRange);
+  UpdateDocChangeRange(mUtilRange);
 }
 
-NS_IMETHODIMP
-HTMLEditRules::WillDeleteSelection(nsISelection* aSelection)
+void
+HTMLEditRules::WillDeleteSelection(Selection* aSelection)
 {
   if (!mListenerEnabled) {
-    return NS_OK;
+    return;
   }
   if (NS_WARN_IF(!aSelection)) {
-    return NS_ERROR_INVALID_ARG;
+    return;
   }
-  RefPtr<Selection> selection = aSelection->AsSelection();
-  // get the (collapsed) selection location
-  nsCOMPtr<nsINode> startNode;
-  int32_t startOffset;
-  nsresult rv =
-    EditorBase::GetStartNodeAndOffset(selection,
-                                      getter_AddRefs(startNode), &startOffset);
+  EditorRawDOMPoint startPoint = EditorBase::GetStartPoint(aSelection);
+  if (NS_WARN_IF(!startPoint.IsSet())) {
+    return;
+  }
+  EditorRawDOMPoint endPoint = EditorBase::GetEndPoint(aSelection);
+  if (NS_WARN_IF(!endPoint.IsSet())) {
+    return;
+  }
+  nsresult rv = mUtilRange->SetStartAndEnd(startPoint, endPoint);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return;
   }
-  nsCOMPtr<nsINode> endNode;
-  int32_t endOffset;
-  rv = EditorBase::GetEndNodeAndOffset(selection,
-                                       getter_AddRefs(endNode), &endOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  rv = mUtilRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return UpdateDocChangeRange(mUtilRange);
-}
-
-NS_IMETHODIMP
-HTMLEditRules::DidDeleteSelection(nsISelection *aSelection)
-{
-  return NS_OK;
+  UpdateDocChangeRange(mUtilRange);
 }
 
 // Let's remove all alignment hints in the children of aNode; it can

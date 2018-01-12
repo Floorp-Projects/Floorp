@@ -135,13 +135,8 @@ HTMLEditor::HTMLEditor()
 
 HTMLEditor::~HTMLEditor()
 {
-  // remove the rules as an action listener.  Else we get a bad
-  // ownership loop later on.  it's ok if the rules aren't a listener;
-  // we ignore the error.
-  if (mRules) {
-    nsCOMPtr<nsIEditActionListener> listener =
-      static_cast<nsIEditActionListener*>(mRules->AsHTMLEditRules());
-    RemoveEditActionListener(listener);
+  if (mRules && mRules->AsHTMLEditRules()) {
+    mRules->AsHTMLEditRules()->EndListeningToEditActions();
   }
 
   //the autopointers will clear themselves up.
