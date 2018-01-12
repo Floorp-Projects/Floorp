@@ -140,8 +140,8 @@ ChromeProfileMigrator.prototype.getLastUsedDate =
     });
   };
 
-Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
-  get: function Chrome_sourceProfiles() {
+ChromeProfileMigrator.prototype.getSourceProfiles =
+  async function Chrome_getSourceProfiles() {
     if ("__sourceProfiles" in this)
       return this.__sourceProfiles;
 
@@ -178,11 +178,10 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
       return resources && resources.length > 0;
     }, this);
     return this.__sourceProfiles;
-  },
-});
+  };
 
-Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
-  get: function Chrome_sourceHomePageURL() {
+ChromeProfileMigrator.prototype.getSourceHomePageURL =
+  async function Chrome_getSourceHomePageURL() {
     let prefsFile = this._chromeUserDataFolder.clone();
     prefsFile.append("Preferences");
     if (prefsFile.exists()) {
@@ -200,8 +199,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
       }
     }
     return "";
-  },
-});
+  };
 
 Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
   get: function Chrome_sourceLocked() {

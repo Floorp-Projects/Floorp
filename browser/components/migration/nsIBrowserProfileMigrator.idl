@@ -38,10 +38,10 @@ interface nsIBrowserProfileMigrator : nsISupports
    * @param   aProfile the profile that we are looking for available data
    *          to import
    * @param   aDoingStartup "true" if the profile is not currently being used.
-   * @return  bit field containing profile items (see above)
+   * @return  Promise containing a bit field containing profile items (see above)
    * @note    a return value of 0 represents no items rather than ALL.
    */
-  unsigned short getMigrateData(in jsval aProfile, in boolean aDoingStartup);
+  jsval getMigrateData(in jsval aProfile, in boolean aDoingStartup);
 
   /**
    * Get the last time data from this browser was modified
@@ -50,23 +50,26 @@ interface nsIBrowserProfileMigrator : nsISupports
   jsval getLastUsedDate();
 
   /**
-   * Whether or not there is any data that can be imported from this
+   * Get whether or not there is any data that can be imported from this
    * browser (i.e. whether or not it is installed, and there exists
    * a user profile)
+   * @return a promise that resolves with a boolean.
    */
-  readonly attribute boolean          sourceExists;
+  jsval isSourceAvailable();
 
 
   /**
    * An enumeration of available profiles. If the import source does
    * not support profiles, this attribute is null.
+   * @return a promise that resolves with an array of profiles or null.
    */
-  readonly attribute jsval            sourceProfiles;
+  jsval getSourceProfiles();
 
   /**
    * The import source homepage.  Returns null if not present/available
+   * @return a promise that resolves with a string or null.
    */
-  readonly attribute AUTF8String      sourceHomePageURL;
+  jsval getSourceHomePageURL();
 
 
   /**
