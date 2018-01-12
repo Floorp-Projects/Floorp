@@ -2,18 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals windowTracker */
-
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+                               "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
                                "resource://gre/modules/ExtensionPreferencesManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
+                               "resource:///modules/ExtensionControlledPopup.jsm");
 
 const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
 const ENGINE_ADDED_SETTING_NAME = "engineAdded";
+
+const HOMEPAGE_PREF = "browser.startup.homepage";
+const HOMEPAGE_CONFIRMED_TYPE = "homepageNotification";
+const HOMEPAGE_SETTING_TYPE = "prefs";
+const HOMEPAGE_SETTING_NAME = "homepage_override";
 
 // This promise is used to wait for the search service to be initialized.
 // None of the code in this module requests that initialization. It is assumed
@@ -35,6 +44,65 @@ const searchInitialized = () => {
     }, SEARCH_SERVICE_TOPIC);
   });
 };
+
+XPCOMUtils.defineLazyGetter(this, "homepagePopup", () => {
+  return new ExtensionControlledPopup({
+    confirmedType: HOMEPAGE_CONFIRMED_TYPE,
+    observerTopic: "browser-open-homepage-start",
+    popupnotificationId: "extension-homepage-notification",
+    settingType: HOMEPAGE_SETTING_TYPE,
+    settingKey: HOMEPAGE_SETTING_NAME,
+    descriptionId: "extension-homepage-notification-description",
+    descriptionMessageId: "homepageControlled.message",
+    learnMoreMessageId: "homepageControlled.learnMore",
+    learnMoreLink: "extension-home",
+    async beforeDisableAddon(popup, win) {
+      // Disabling an add-on should remove the tabs that it has open, but we want
+      // to open the new homepage in this tab (which might get closed).
+      //   1. Replace the tab's URL with about:blank, wait for it to change
+      //   2. Now that this tab isn't associated with the add-on, disable the add-on
+      //   3. Trigger the browser's homepage method
+      let gBrowser = win.gBrowser;
+      let tab = gBrowser.selectedTab;
+      await replaceUrlInTab(gBrowser, tab, "about:blank");
+      Services.prefs.addObserver(HOMEPAGE_PREF, async function prefObserver() {
+        Services.prefs.removeObserver(HOMEPAGE_PREF, prefObserver);
+        let loaded = waitForTabLoaded(tab);
+        win.BrowserGoHome();
+        await loaded;
+        // Manually trigger an event in case this is controlled again.
+        popup.open();
+      });
+    },
+  });
+});
+
+// When the browser starts up it will trigger the observer topic we're expecting
+// but that happens before our observer has been registered. To handle the
+// startup case we need to check if the preferences are set to load the homepage
+// and check if the homepage is active, then show the doorhanger in that case.
+async function handleInitialHomepagePopup(extensionId, homepageUrl) {
+  // browser.startup.page == 1 is show homepage.
+  if (Services.prefs.getIntPref("browser.startup.page") == 1) {
+    let {gBrowser} = windowTracker.topWindow;
+    let tab = gBrowser.selectedTab;
+    let currentUrl = gBrowser.currentURI.spec;
+    // When the first window is still loading the URL might be about:blank.
+    // Wait for that the actual page to load before checking the URL, unless
+    // the homepage is set to about:blank.
+    if (currentUrl != homepageUrl && currentUrl == "about:blank") {
+      await waitForTabLoaded(tab);
+      currentUrl = gBrowser.currentURI.spec;
+    }
+    // Once the page has loaded, if necessary and the active tab hasn't changed,
+    // then show the popup now.
+    if (currentUrl == homepageUrl && gBrowser.selectedTab == tab) {
+      homepagePopup.open();
+      return;
+    }
+  }
+  homepagePopup.addObserver(extensionId);
+}
 
 this.chrome_settings_overrides = class extends ExtensionAPI {
   static async processDefaultSearchSetting(action, id) {
@@ -91,7 +159,10 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
   static onUninstall(id) {
     // Note: We do not have to deal with homepage here as it is managed by
     // the ExtensionPreferencesManager.
-    return this.removeSearchSettings(id);
+    return Promise.all([
+      this.removeSearchSettings(id),
+      homepagePopup.clearConfirmation(id),
+    ]);
   }
 
   static onUpdate(id, manifest) {
@@ -113,9 +184,34 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     let {manifest} = extension;
 
     await ExtensionSettingsStore.initialize();
-    if (manifest.chrome_settings_overrides.homepage) {
-      ExtensionPreferencesManager.setSetting(extension.id, "homepage_override",
-                                             manifest.chrome_settings_overrides.homepage);
+
+    let homepageUrl = manifest.chrome_settings_overrides.homepage;
+
+    if (homepageUrl) {
+      let inControl;
+      if (extension.startupReason == "ADDON_INSTALL") {
+        inControl = await ExtensionPreferencesManager.setSetting(
+          extension.id, "homepage_override", homepageUrl);
+      } else {
+        let item = await ExtensionPreferencesManager.getSetting("homepage_override");
+        inControl = item.id == extension.id;
+      }
+      // We need to add the listener here too since onPrefsChanged won't trigger on a
+      // restart (the prefs are already set).
+      if (inControl) {
+        if (extension.startupReason == "APP_STARTUP") {
+          handleInitialHomepagePopup(extension.id, homepageUrl);
+        } else {
+          homepagePopup.addObserver(extension.id);
+        }
+      }
+      extension.callOnClose({
+        close: () => {
+          if (extension.shutdownReason == "ADDON_DISABLE") {
+            homepagePopup.clearConfirmation(extension.id);
+          }
+        },
+      });
     }
     if (manifest.chrome_settings_overrides.search_provider) {
       await searchInitialized();
@@ -238,11 +334,23 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 
 ExtensionPreferencesManager.addSetting("homepage_override", {
   prefNames: [
-    "browser.startup.homepage",
+    HOMEPAGE_PREF,
   ],
+  // ExtensionPreferencesManager will call onPrefsChanged when control changes
+  // and it updates the preferences. We are passed the item from
+  // ExtensionSettingsStore that details what is in control. If there is an id
+  // then control has changed to an extension, if there is no id then control
+  // has been returned to the user.
+  onPrefsChanged(item) {
+    if (item.id) {
+      homepagePopup.addObserver(item.id);
+    } else {
+      homepagePopup.removeObserver();
+    }
+  },
   setCallback(value) {
     return {
-      "browser.startup.homepage": value,
+      [HOMEPAGE_PREF]: value,
     };
   },
 });

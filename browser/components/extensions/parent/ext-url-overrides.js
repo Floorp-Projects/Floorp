@@ -21,26 +21,6 @@ const STORE_TYPE = "url_overrides";
 const NEW_TAB_SETTING_NAME = "newTabURL";
 const NEW_TAB_CONFIRMED_TYPE = "newTabNotification";
 
-function replaceUrlInTab(gBrowser, tab, url) {
-  let loaded = new Promise(resolve => {
-    windowTracker.addListener("progress", {
-      onLocationChange(browser, webProgress, request, locationURI, flags) {
-        if (webProgress.isTopLevel
-            && browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab
-            && locationURI.spec == url) {
-          windowTracker.removeListener(this);
-          resolve();
-        }
-      },
-    });
-  });
-  gBrowser.loadURI(url, {
-    flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
-  });
-  return loaded;
-}
-
-
 XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
   return new ExtensionControlledPopup({
     confirmedType: NEW_TAB_CONFIRMED_TYPE,
@@ -58,14 +38,14 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
     onObserverRemoved() {
       aboutNewTabService.willNotifyUser = false;
     },
-    async beforeDisableAddon(popup) {
+    async beforeDisableAddon(popup, win) {
       // ExtensionControlledPopup will disable the add-on once this function completes.
       // Disabling an add-on should remove the tabs that it has open, but we want
       // to open the new New Tab in this tab (which might get closed).
       //   1. Replace the tab's URL with about:blank
       //   2. Return control to ExtensionControlledPopup once about:blank has loaded
       //   3. Once the New Tab URL has changed, replace the tab's URL with the new New Tab URL
-      let gBrowser = windowTracker.topWindow.gBrowser;
+      let gBrowser = win.gBrowser;
       let tab = gBrowser.selectedTab;
       await replaceUrlInTab(gBrowser, tab, "about:blank");
       Services.obs.addObserver({
