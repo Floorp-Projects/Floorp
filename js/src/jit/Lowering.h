@@ -294,7 +294,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInArray(MInArray* ins) override;
     void visitHasOwnCache(MHasOwnCache* ins) override;
     void visitInstanceOf(MInstanceOf* ins) override;
-    void visitCallInstanceOf(MCallInstanceOf* ins) override;
+    void visitInstanceOfCache(MInstanceOfCache* ins) override;
     void visitIsCallable(MIsCallable* ins) override;
     void visitIsConstructor(MIsConstructor* ins) override;
     void visitIsArray(MIsArray* ins) override;
