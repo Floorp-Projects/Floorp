@@ -123,6 +123,42 @@ protected:
   wr::ResourceUpdates* mUpdates;
 };
 
+class TransactionBuilder {
+public:
+  TransactionBuilder();
+
+  ~TransactionBuilder();
+
+  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
+
+  void SetRootPipeline(PipelineId aPipelineId);
+
+  void RemovePipeline(PipelineId aPipelineId);
+
+  void SetDisplayList(gfx::Color aBgColor,
+                      Epoch aEpoch,
+                      mozilla::LayerSize aViewportSize,
+                      wr::WrPipelineId pipeline_id,
+                      const wr::LayoutSize& content_size,
+                      wr::BuiltDisplayListDescriptor dl_descriptor,
+                      wr::Vec<uint8_t>& dl_data);
+
+  void GenerateFrame();
+
+  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
+
+  void SetWindowParameters(LayoutDeviceIntSize size);
+
+  void UpdateResources(ResourceUpdateQueue& aUpdates);
+
+  bool IsEmpty() const;
+
+  Transaction* Raw() { return mTxn; }
+protected:
+  Transaction* mTxn;
+};
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderAPI);
@@ -148,6 +184,8 @@ public:
                wr::WrPipelineId& aOutPipelineId,
                layers::FrameMetrics::ViewID& aOutScrollId,
                gfx::CompositorHitTestInfo& aOutHitInfo);
+
+  void SendTransaction(TransactionBuilder& aTxn);
 
   void GenerateFrame();
   void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,

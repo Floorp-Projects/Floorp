@@ -811,6 +811,148 @@ pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_new() -> *mut Transaction {
+    Box::into_raw(Box::new(Transaction::new()))
+}
+
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub extern "C" fn wr_transaction_delete(txn: *mut Transaction) {
+    unsafe { let _ = Box::from_raw(txn); }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_is_empty(txn: &Transaction) -> bool {
+    txn.is_empty()
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_update_epoch(
+    txn: &mut Transaction,
+    pipeline_id: WrPipelineId,
+    epoch: WrEpoch,
+) {
+    txn.update_epoch(pipeline_id, epoch);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_set_root_pipeline(
+    txn: &mut Transaction,
+    pipeline_id: WrPipelineId,
+) {
+    txn.set_root_pipeline(pipeline_id);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_remove_pipeline(
+    txn: &mut Transaction,
+    pipeline_id: WrPipelineId,
+) {
+    txn.remove_pipeline(pipeline_id);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_set_display_list(
+    txn: &mut Transaction,
+    epoch: WrEpoch,
+    background: ColorF,
+    viewport_width: f32,
+    viewport_height: f32,
+    pipeline_id: WrPipelineId,
+    content_size: LayoutSize,
+    dl_descriptor: BuiltDisplayListDescriptor,
+    dl_data: &mut WrVecU8,
+) {
+    let color = if background.a == 0.0 { None } else { Some(background) };
+
+    // See the documentation of set_display_list in api.rs. I don't think
+    // it makes a difference in gecko at the moment(until APZ is figured out)
+    // but I suppose it is a good default.
+    let preserve_frame_state = true;
+
+    let dl_vec = dl_data.flush_into_vec();
+    let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
+
+    txn.set_display_list(
+        epoch,
+        color,
+        LayoutSize::new(viewport_width, viewport_height),
+        (pipeline_id, content_size, dl),
+        preserve_frame_state,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_update_resources(
+    txn: &mut Transaction,
+    resource_updates: &mut ResourceUpdates
+) {
+    txn.update_resources(mem::replace(resource_updates, ResourceUpdates::new()));
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_set_window_parameters(
+    txn: &mut Transaction,
+    window_width: i32,
+    window_height: i32,
+) {
+    let size = DeviceUintSize::new(window_width as u32, window_height as u32);
+    txn.set_window_parameters(
+        size,
+        DeviceUintRect::new(DeviceUintPoint::new(0, 0), size),
+        1.0,
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_generate_frame(txn: &mut Transaction) {
+    txn.generate_frame();
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_update_dynamic_properties(
+    txn: &mut Transaction,
+    opacity_array: *const WrOpacityProperty,
+    opacity_count: usize,
+    transform_array: *const WrTransformProperty,
+    transform_count: usize,
+) {
+    debug_assert!(transform_count > 0 || opacity_count > 0);
+
+    let mut properties = DynamicProperties {
+        transforms: Vec::new(),
+        floats: Vec::new(),
+    };
+
+    if transform_count > 0 {
+        let transform_slice = make_slice(transform_array, transform_count);
+
+        for element in transform_slice.iter() {
+            let prop = PropertyValue {
+                key: PropertyBindingKey::new(element.id),
+                value: element.transform.into(),
+            };
+
+            properties.transforms.push(prop);
+        }
+    }
+
+    if opacity_count > 0 {
+        let opacity_slice = make_slice(opacity_array, opacity_count);
+
+        for element in opacity_slice.iter() {
+            let prop = PropertyValue {
+                key: PropertyBindingKey::new(element.id),
+                value: element.opacity,
+            };
+            properties.floats.push(prop);
+        }
+    }
+
+    txn.update_dynamic_properties(properties);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_resource_updates_add_image(
     resources: &mut ResourceUpdates,
     image_key: WrImageKey,
@@ -923,6 +1065,15 @@ pub extern "C" fn wr_resource_updates_delete_image(
     key: WrImageKey
 ) {
     resources.delete_image(key);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_send_transaction(
+    dh: &mut DocumentHandle,
+    transaction: &mut Transaction
+) {
+    let txn = mem::replace(transaction, Transaction::new());
+    dh.api.send_transaction(dh.document_id, txn);
 }
 
 #[no_mangle]

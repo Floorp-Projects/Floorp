@@ -141,6 +141,92 @@ private:
   layers::SynchronousTask* mTask;
 };
 
+
+TransactionBuilder::TransactionBuilder()
+{
+  mTxn = wr_transaction_new();
+}
+
+TransactionBuilder::~TransactionBuilder()
+{
+  wr_transaction_delete(mTxn);
+}
+
+void
+TransactionBuilder::UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch)
+{
+  wr_transaction_update_epoch(mTxn, aPipelineId, aEpoch);
+}
+
+void
+TransactionBuilder::SetRootPipeline(PipelineId aPipelineId)
+{
+  wr_transaction_set_root_pipeline(mTxn, aPipelineId);
+}
+
+void
+TransactionBuilder::RemovePipeline(PipelineId aPipelineId)
+{
+  wr_transaction_remove_pipeline(mTxn, aPipelineId);
+}
+
+void
+TransactionBuilder::SetDisplayList(gfx::Color aBgColor,
+                                   Epoch aEpoch,
+                                   mozilla::LayerSize aViewportSize,
+                                   wr::WrPipelineId pipeline_id,
+                                   const wr::LayoutSize& content_size,
+                                   wr::BuiltDisplayListDescriptor dl_descriptor,
+                                   wr::Vec<uint8_t>& dl_data)
+{
+  wr_transaction_set_display_list(mTxn,
+                                  aEpoch,
+                                  ToColorF(aBgColor),
+                                  aViewportSize.width, aViewportSize.height,
+                                  pipeline_id,
+                                  content_size,
+                                  dl_descriptor,
+                                  &dl_data.inner);
+}
+
+void
+TransactionBuilder::GenerateFrame()
+{
+  wr_transaction_generate_frame(mTxn);
+}
+
+void
+TransactionBuilder::UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                                     const nsTArray<wr::WrTransformProperty>& aTransformArray)
+{
+  wr_transaction_update_dynamic_properties(mTxn,
+                                           aOpacityArray.IsEmpty() ?
+                                             nullptr : aOpacityArray.Elements(),
+                                           aOpacityArray.Length(),
+                                           aTransformArray.IsEmpty() ?
+                                             nullptr : aTransformArray.Elements(),
+                                           aTransformArray.Length());
+}
+
+bool
+TransactionBuilder::IsEmpty() const
+{
+  return wr_transaction_is_empty(mTxn);
+}
+
+void
+TransactionBuilder::SetWindowParameters(LayoutDeviceIntSize size)
+{
+  wr_transaction_set_window_parameters(mTxn, size.width, size.height);
+}
+
+void
+TransactionBuilder::UpdateResources(ResourceUpdateQueue& aUpdates)
+{
+  wr_transaction_update_resources(mTxn, aUpdates.Raw());
+}
+
+
 /*static*/ void
 WebRenderAPI::InitExternalLogHandler()
 {
@@ -218,6 +304,12 @@ WebRenderAPI::~WebRenderAPI()
   }
 
   wr_api_delete(mDocHandle);
+}
+
+void
+WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
+{
+  wr_api_send_transaction(mDocHandle, aTxn.Raw());
 }
 
 void
