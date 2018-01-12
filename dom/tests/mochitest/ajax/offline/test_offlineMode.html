@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" manifest="http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
+<html xmlns="http://www.w3.org/1999/xhtml" manifest="https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs">
 <head>
 <title>Offline mode test</title>
 
@@ -7,6 +7,7 @@
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script class="testbody" type="text/javascript">
+/* globals aFrame */
 
 /**
  * The test loads a manifest and cache it.
@@ -34,27 +35,27 @@ function createURI(urispec)
 
 function manifestUpdated()
 {
-  applicationCache.mozAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
-  OfflineTest.waitForAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
+  applicationCache.mozAdd("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html");
+  OfflineTest.waitForAdd("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", dynamicAdded);
 }
 
 function dynamicAdded()
 {
-  aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+  aFrame.location = "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
 }
 
 // Called by the dynamically added iframe on load
 function notwhitelistOnLoad()
 {
   gGotDynamicVersion = 1;
-  aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs";
+  aFrame.location = "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs";
 }
 
 // Called by the explicit iframe on load
 function frameLoad(version)
 {
   gGotExplicitVersion = version;
-  gImplicitWindow = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
+  gImplicitWindow = window.open("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
 }
 
 // Called by the implicit window on load
@@ -63,7 +64,7 @@ function implicitLoaded(aWindow, errorOccured)
   aWindow.close();
 
   gGotImplicitVersion = 1;
-  OfflineTest.waitForAdd("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", implicitAdded);
+  OfflineTest.waitForAdd("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", implicitAdded);
 }
 
 function implicitAdded()
@@ -89,9 +90,9 @@ function finalize()
     gGotDynamicVersion = 0;
 
     var entries = [
-      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true],
-      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", true],
-      ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true]
+      ["https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html", true],
+      ["https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", true],
+      ["https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html", true]
     ];
     OfflineTest.checkCacheEntries(entries, goOffline);
   }
@@ -122,9 +123,9 @@ function goOffline()
   var cache = Cc["@mozilla.org/network/cache-storage-service;1"]
       .getService(Ci.nsICacheStorageService);
   var storage = cache.diskCacheStorage(LoadContextInfo.default, false);
-  storage.asyncDoomURI(createURI("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html"), "", null);
-  storage.asyncDoomURI(createURI("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs"), "", null);
-  storage.asyncDoomURI(createURI("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html"), "", listener);
+  storage.asyncDoomURI(createURI("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html"), "", null);
+  storage.asyncDoomURI(createURI("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs"), "", null);
+  storage.asyncDoomURI(createURI("https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html"), "", listener);
 }
 
 function goOfflineContinue()
@@ -140,7 +141,7 @@ function goOfflineContinue()
   // is correct to get error message
   applicationCache.onerror = function() {gGotOnError = true;}
 
-  aFrame.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
+  aFrame.location = "https://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/notonwhitelist.html";
   // Starts the chain all over again but in offline mode.
 }
 
