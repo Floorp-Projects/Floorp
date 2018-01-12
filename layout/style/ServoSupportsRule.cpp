@@ -66,19 +66,17 @@ ServoSupportsRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-// nsIDOMCSSConditionRule methods
-
-NS_IMETHODIMP
+void
 ServoSupportsRule::GetConditionText(nsAString& aConditionText)
 {
   Servo_SupportsRule_GetConditionText(mRawRule, &aConditionText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-ServoSupportsRule::SetConditionText(const nsAString& aConditionText)
+void
+ServoSupportsRule::SetConditionText(const nsAString& aConditionText,
+                                    ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 /* virtual */ void

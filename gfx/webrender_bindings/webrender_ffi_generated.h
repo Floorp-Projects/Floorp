@@ -206,8 +206,9 @@ enum class WrAnimationType : uint32_t {
 };
 
 enum class WrExternalImageType : uint32_t {
-  NativeTexture = 0,
-  RawData = 1,
+  RawData = 0,
+  NativeTexture = 1,
+  Invalid = 2,
 
   Sentinel /* this must be last for serialization purposes. */
 };

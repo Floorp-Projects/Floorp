@@ -515,9 +515,6 @@ XRE_InitChildProcess(int aArgc,
 #ifdef MOZ_X11
   XInitThreads();
 #endif
-#if MOZ_WIDGET_GTK == 2
-  XRE_GlibInit();
-#endif
 #ifdef MOZ_WIDGET_GTK
   // Setting the name here avoids the need to pass this through to gtk_init().
   g_set_prgname(aArgv[0]);
@@ -977,7 +974,7 @@ XRE_ShutdownTestShell()
 void
 XRE_InstallX11ErrorHandler()
 {
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   InstallGdkErrorHandler();
 #else
   InstallX11ErrorHandler();

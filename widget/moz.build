@@ -259,13 +259,13 @@ if toolkit in ('cocoa', 'windows'):
         'nsBaseClipboard.cpp',
     ]
 
-if toolkit in {'gtk2', 'gtk3', 'cocoa', 'windows',
+if toolkit in {'gtk3', 'cocoa', 'windows',
                'android', 'uikit'}:
     UNIFIED_SOURCES += [
         'nsBaseFilePicker.cpp',
     ]
 
-if toolkit in ('gtk2', 'gtk3', 'windows', 'cocoa', 'android'):
+if toolkit in ('gtk3', 'windows', 'cocoa', 'android'):
     UNIFIED_SOURCES += [
         'nsNativeTheme.cpp',
     ]
@@ -311,8 +311,7 @@ else:
     ]
 
 widget_dir = toolkit
-if widget_dir in ('gtk3', 'gtk2'):
-    # gtk3 shares includes with gtk2
+if widget_dir == 'gtk3':
     widget_dir = 'gtk'
 
 LOCAL_INCLUDES += [

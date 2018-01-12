@@ -20,16 +20,16 @@ int nsColorPicker::convertGdkRgbaComponent(gdouble color_component) {
   return color_component * 255 + 0.5;
 }
 
-gdouble nsColorPicker::convertToGdkRgbaComponent(int color_component) { 
+gdouble nsColorPicker::convertToGdkRgbaComponent(int color_component) {
   return color_component / 255.0;
-}  
+}
 
 GdkRGBA nsColorPicker::convertToRgbaColor(nscolor color) {
   GdkRGBA result = { convertToGdkRgbaComponent(NS_GET_R(color)),
                      convertToGdkRgbaComponent(NS_GET_G(color)),
                      convertToGdkRgbaComponent(NS_GET_B(color)),
                      convertToGdkRgbaComponent(NS_GET_A(color)) };
-       
+
   return result;
 }
 #else
@@ -95,24 +95,24 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
   nsCString title;
   title.Adopt(ToNewUTF8String(mTitle));
   GtkWindow *parent_window = GTK_WINDOW(mParentWidget->GetNativeData(NS_NATIVE_SHELLWIDGET));
-  
+
 #if defined(ACTIVATE_GTK3_COLOR_PICKER) && GTK_CHECK_VERSION(3,4,0)
   GtkWidget* color_chooser = gtk_color_chooser_dialog_new(title, parent_window);
-    
+
   if (parent_window) {
       gtk_window_set_destroy_with_parent(GTK_WINDOW(color_chooser), TRUE);
   }
-  
+
   gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(color_chooser), FALSE);
-  GdkRGBA color_rgba = convertToRgbaColor(color);    
+  GdkRGBA color_rgba = convertToRgbaColor(color);
   gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(color_chooser),
                              &color_rgba);
-  
+
   g_signal_connect(GTK_COLOR_CHOOSER(color_chooser), "color-activated",
                    G_CALLBACK(OnColorChanged), this);
 #else
   GtkWidget *color_chooser = gtk_color_selection_dialog_new(title.get());
-  
+
   if (parent_window) {
     GtkWindow *window = GTK_WINDOW(color_chooser);
     gtk_window_set_transient_for(window, parent_window);
@@ -122,13 +122,13 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
   GdkColor color_gdk = convertToGdkColor(color);
   gtk_color_selection_set_current_color(WidgetGetColorSelection(color_chooser),
                                         &color_gdk);
-  
+
   g_signal_connect(WidgetGetColorSelection(color_chooser), "color-changed",
                    G_CALLBACK(OnColorChanged), this);
 #endif
 
   NS_ADDREF_THIS();
-  
+
   g_signal_connect(color_chooser, "response", G_CALLBACK(OnResponse), this);
   g_signal_connect(color_chooser, "destroy", G_CALLBACK(OnDestroy), this);
   gtk_widget_show(color_chooser);

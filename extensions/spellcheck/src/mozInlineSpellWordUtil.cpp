@@ -12,7 +12,6 @@
 #include "nsDebug.h"
 #include "nsAtom.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"

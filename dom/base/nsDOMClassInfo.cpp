@@ -68,7 +68,6 @@
 #include "nsIDOMEventTarget.h"
 
 // CSS related includes
-#include "nsIDOMCSSRule.h"
 #include "nsMemory.h"
 
 // includes needed for the prototype chain interfaces

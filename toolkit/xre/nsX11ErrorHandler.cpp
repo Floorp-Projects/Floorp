@@ -57,17 +57,6 @@ X11Error(Display *display, XErrorEvent *event) {
         XFreeExtensionList(extNames);
       }
       XCloseDisplay(tmpDisplay);
-
-#if (MOZ_WIDGET_GTK == 2)
-      // GDK2 calls XCloseDevice the devices that it opened on startup, but
-      // the XI protocol no longer ensures that the devices will still exist.
-      // If they have been removed, then a BadDevice error results.  Ignore
-      // this error.
-      if (message.EqualsLiteral("XInputExtension.4") &&
-          event->error_code == first_error + 0) {
-        return 0;
-      }
-#endif
     }
   }
 

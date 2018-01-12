@@ -582,61 +582,21 @@ impl AlphaBatcher {
         match prim_metadata.prim_kind {
             PrimitiveKind::Brush => {
                 let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
-                let base_instance = BrushInstance {
-                    picture_address: task_address,
-                    prim_address: prim_cache_address,
+
+                self.add_brush_to_batch(
+                    brush,
+                    prim_metadata,
+                    blend_mode,
                     clip_chain_rect_index,
-                    scroll_id,
                     clip_task_address,
+                    item_bounding_rect,
+                    prim_cache_address,
+                    scroll_id,
+                    task_address,
+                    transform_kind,
                     z,
-                    segment_index: 0,
-                    user_data0: 0,
-                    user_data1: 0,
-                };
-
-                match brush.segment_desc {
-                    Some(ref segment_desc) => {
-                        let opaque_batch = self.batch_list.opaque_batch_list.get_suitable_batch(
-                            brush.get_batch_key(
-                                BlendMode::None
-                            ),
-                            item_bounding_rect
-                        );
-                        let alpha_batch = self.batch_list.alpha_batch_list.get_suitable_batch(
-                            brush.get_batch_key(
-                                BlendMode::PremultipliedAlpha
-                            ),
-                            item_bounding_rect
-                        );
-
-                        for (i, segment) in segment_desc.segments.iter().enumerate() {
-                            let is_inner = segment.edge_flags.is_empty();
-                            let needs_blending = !prim_metadata.opacity.is_opaque ||
-                                                 segment.clip_task_id.is_some() ||
-                                                 (!is_inner && transform_kind == TransformedRectKind::Complex);
-
-                            let clip_task_address = segment
-                                .clip_task_id
-                                .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
-
-                            let instance = PrimitiveInstance::from(BrushInstance {
-                                segment_index: i as i32,
-                                clip_task_address,
-                                ..base_instance
-                            });
-
-                            if needs_blending {
-                                alpha_batch.push(instance);
-                            } else {
-                                opaque_batch.push(instance);
-                            }
-                        }
-                    }
-                    None => {
-                        let batch = self.batch_list.get_suitable_batch(brush.get_batch_key(blend_mode), item_bounding_rect);
-                        batch.push(PrimitiveInstance::from(base_instance));
-                    }
-                }
+                    render_tasks,
+                );
             }
             PrimitiveKind::Border => {
                 let border_cpu =
@@ -1020,16 +980,20 @@ impl AlphaBatcher {
                                                     secondary_textures,
                                                 );
                                                 let batch = self.batch_list.get_suitable_batch(key, &item_bounding_rect);
-                                                let device_offset = (offset * LayerToWorldScale::new(1.0) * ctx.device_pixel_scale).round().to_i32();
+                                                let content_rect = prim_metadata.local_rect.translate(&-offset);
+                                                let rect =
+                                                    (content_rect * LayerToWorldScale::new(1.0) * ctx.device_pixel_scale).round()
+                                                                                                                         .to_i32();
+
                                                 let instance = CompositePrimitiveInstance::new(
                                                     task_address,
                                                     secondary_task_address,
                                                     RenderTaskAddress(0),
-                                                    item_bounding_rect.origin.x - device_offset.x,
-                                                    item_bounding_rect.origin.y - device_offset.y,
+                                                    rect.origin.x,
+                                                    rect.origin.y,
                                                     z,
-                                                    item_bounding_rect.size.width,
-                                                    item_bounding_rect.size.height,
+                                                    rect.size.width,
+                                                    rect.size.height,
                                                 );
 
                                                 batch.push(PrimitiveInstance::from(instance));
@@ -1253,6 +1217,78 @@ impl AlphaBatcher {
                     uv_rect_addresses[1],
                     uv_rect_addresses[2],
                 ));
+            }
+        }
+    }
+
+    fn add_brush_to_batch(
+        &mut self,
+        brush: &BrushPrimitive,
+        prim_metadata: &PrimitiveMetadata,
+        blend_mode: BlendMode,
+        clip_chain_rect_index: ClipChainRectIndex,
+        clip_task_address: RenderTaskAddress,
+        item_bounding_rect: &DeviceIntRect,
+        prim_cache_address: GpuCacheAddress,
+        scroll_id: ClipScrollNodeIndex,
+        task_address: RenderTaskAddress,
+        transform_kind: TransformedRectKind,
+        z: i32,
+        render_tasks: &RenderTaskTree,
+    ) {
+        let base_instance = BrushInstance {
+            picture_address: task_address,
+            prim_address: prim_cache_address,
+            clip_chain_rect_index,
+            scroll_id,
+            clip_task_address,
+            z,
+            segment_index: 0,
+            user_data0: 0,
+            user_data1: 0,
+        };
+
+        match brush.segment_desc {
+            Some(ref segment_desc) => {
+                let opaque_batch = self.batch_list.opaque_batch_list.get_suitable_batch(
+                    brush.get_batch_key(
+                        BlendMode::None
+                    ),
+                    item_bounding_rect
+                );
+                let alpha_batch = self.batch_list.alpha_batch_list.get_suitable_batch(
+                    brush.get_batch_key(
+                        BlendMode::PremultipliedAlpha
+                    ),
+                    item_bounding_rect
+                );
+
+                for (i, segment) in segment_desc.segments.iter().enumerate() {
+                    let is_inner = segment.edge_flags.is_empty();
+                    let needs_blending = !prim_metadata.opacity.is_opaque ||
+                                         segment.clip_task_id.is_some() ||
+                                         (!is_inner && transform_kind == TransformedRectKind::Complex);
+
+                    let clip_task_address = segment
+                        .clip_task_id
+                        .map_or(OPAQUE_TASK_ADDRESS, |id| render_tasks.get_task_address(id));
+
+                    let instance = PrimitiveInstance::from(BrushInstance {
+                        segment_index: i as i32,
+                        clip_task_address,
+                        ..base_instance
+                    });
+
+                    if needs_blending {
+                        alpha_batch.push(instance);
+                    } else {
+                        opaque_batch.push(instance);
+                    }
+                }
+            }
+            None => {
+                let batch = self.batch_list.get_suitable_batch(brush.get_batch_key(blend_mode), item_bounding_rect);
+                batch.push(PrimitiveInstance::from(base_instance));
             }
         }
     }

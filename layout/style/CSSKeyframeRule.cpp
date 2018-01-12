@@ -12,21 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(CSSKeyframeRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSKeyframeRule, mozilla::css::Rule)
-
-// QueryInterface implementation for CSSKeyframeRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSKeyframeRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframeRule)
-NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-NS_IMETHODIMP
-CSSKeyframeRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_ADDREF(*aStyle = Style());
-  return NS_OK;
-}
-
 /* virtual */ JSObject*
 CSSKeyframeRule::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)

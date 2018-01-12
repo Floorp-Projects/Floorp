@@ -46,11 +46,10 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(ServoPageRuleDeclaration, Rule())
 
 /* nsDOMCSSDeclaration implementation */
 
-NS_IMETHODIMP
-ServoPageRuleDeclaration::GetParentRule(nsIDOMCSSRule** aParent)
+css::Rule*
+ServoPageRuleDeclaration::GetParentRule()
 {
-  *aParent = do_AddRef(Rule()).take();
-  return NS_OK;
+  return Rule();
 }
 
 nsINode*

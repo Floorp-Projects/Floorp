@@ -199,7 +199,6 @@
 @RESPATH@/components/dom_system.xpt
 @RESPATH@/components/dom_canvas.xpt
 @RESPATH@/components/dom_core.xpt
-@RESPATH@/components/dom_css.xpt
 @RESPATH@/components/dom_events.xpt
 @RESPATH@/components/dom_geolocation.xpt
 @RESPATH@/components/dom_media.xpt
@@ -215,7 +214,6 @@
 @RESPATH@/components/dom_security.xpt
 @RESPATH@/components/dom_sidebar.xpt
 @RESPATH@/components/dom_storage.xpt
-@RESPATH@/components/dom_stylesheets.xpt
 @RESPATH@/components/dom_traversal.xpt
 #ifdef MOZ_WEBSPEECH
 @RESPATH@/components/dom_webspeechrecognition.xpt

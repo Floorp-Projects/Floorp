@@ -23,7 +23,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Rule)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Rule)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -80,48 +79,11 @@ Rule::SetStyleSheet(StyleSheet* aSheet)
   mSheet = aSheet;
 }
 
-NS_IMETHODIMP
-Rule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  NS_IF_ADDREF(*aParentRule = mParentRule);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Rule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  NS_ENSURE_ARG_POINTER(aSheet);
-
-  NS_IF_ADDREF(*aSheet = GetStyleSheet());
-  return NS_OK;
-}
-
-/* virtual */ css::Rule*
-Rule::GetCSSRule()
-{
-  return this;
-}
-
-NS_IMETHODIMP
-Rule::GetType(uint16_t* aType)
-{
-  *aType = Type();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 Rule::SetCssText(const nsAString& aCssText)
 {
   // We used to throw for some rule types, but not all.  Specifically, we did
   // not throw for StyleRule.  Let's just always not throw.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Rule::GetCssText(nsAString& aCssText)
-{
-  GetCssTextImpl(aCssText);
-  return NS_OK;
 }
 
 Rule*

@@ -39,7 +39,7 @@ static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg,
 
 bool nsWinUtils::sWindowEmulationStarted = false;
 
-already_AddRefed<nsIDOMCSSStyleDeclaration>
+already_AddRefed<nsICSSDeclaration>
 nsWinUtils::GetComputedStyleDeclaration(nsIContent* aContent)
 {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aContent);
@@ -52,12 +52,11 @@ nsWinUtils::GetComputedStyleDeclaration(nsIContent* aContent)
     return nullptr;
 
   ErrorResult dummy;
-  nsCOMPtr<nsICSSDeclaration> cssDecl;
   nsCOMPtr<Element> domElement(do_QueryInterface(elm));
-  cssDecl = window->GetComputedStyle(*domElement, EmptyString(), dummy);
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> domDecl = do_QueryInterface(cssDecl);
+  nsCOMPtr<nsICSSDeclaration> cssDecl =
+     window->GetComputedStyle(*domElement, EmptyString(), dummy);
   dummy.SuppressException();
-  return domDecl.forget();
+  return cssDecl.forget();
 }
 
 bool

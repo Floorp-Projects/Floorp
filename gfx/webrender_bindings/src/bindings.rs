@@ -268,8 +268,9 @@ impl Into<WrExternalImageId> for ExternalImageId {
 #[repr(u32)]
 #[allow(dead_code)]
 enum WrExternalImageType {
-    NativeTexture,
     RawData,
+    NativeTexture,
+    Invalid,
 }
 
 #[repr(C)]
@@ -323,6 +324,15 @@ impl ExternalImageHandler for WrExternalImageHandler {
                     u1: image.u1,
                     v1: image.v1,
                     source: ExternalImageSource::RawData(make_slice(image.buff, image.size)),
+                }
+            },
+            WrExternalImageType::Invalid => {
+                ExternalImage {
+                    u0: image.u0,
+                    v0: image.v0,
+                    u1: image.u1,
+                    v1: image.v1,
+                    source: ExternalImageSource::Invalid,
                 }
             },
         }

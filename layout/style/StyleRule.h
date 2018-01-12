@@ -22,7 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
-#include "nsICSSStyleRuleDOMWrapper.h"
 
 class nsAtom;
 struct nsCSSSelectorList;
@@ -318,7 +317,6 @@ namespace css {
 class Declaration;
 
 class StyleRule final : public BindingStyleRule
-                      , public nsICSSStyleRuleDOMWrapper
 {
  public:
   StyleRule(nsCSSSelectorList* aSelector,
@@ -334,11 +332,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StyleRule, Rule)
   bool IsCCLeaf() const override;
 
-  NS_DECL_NSIDOMCSSSTYLERULE
-
-  // nsICSSStyleRuleDOMWrapper
-  NS_IMETHOD GetCSSStyleRule(BindingStyleRule **aResult) override;
-
   uint32_t GetSelectorCount() override;
   nsresult GetSelectorText(uint32_t aSelectorIndex,
                                    nsAString& aText) override;
@@ -353,6 +346,8 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetSelectorText(nsAString& aSelectorText) final;
+  void SetSelectorText(const nsAString& aSelectorText) final;
   nsICSSDeclaration* Style() override;
 
   // null for style attribute
@@ -363,7 +358,6 @@ public:
   void SetDeclaration(Declaration* aDecl);
 
   int32_t GetType() const override;
-  using Rule::GetType;
 
   CSSStyleSheet* GetStyleSheet() const
   {

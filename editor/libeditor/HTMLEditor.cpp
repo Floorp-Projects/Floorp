@@ -32,7 +32,6 @@
 #include "nsIInlineSpellChecker.h"
 
 #include "mozilla/css/Loader.h"
-#include "nsIDOMStyleSheet.h"
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
@@ -2894,7 +2893,8 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL,
   nsCOMPtr<nsIDocument> document = GetDocument();
   sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
 
-  return sheet->SetDisabled(!aEnable);
+  sheet->SetDisabled(!aEnable);
+  return NS_OK;
 }
 
 bool

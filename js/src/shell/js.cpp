@@ -5562,6 +5562,16 @@ IsUnboxedObject(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+HasCopyOnWriteElements(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(args.get(0).isObject() &&
+                           args[0].toObject().isNative() &&
+                           args[0].toObject().as<NativeObject>().denseElementsAreCopyOnWrite());
+    return true;
+}
+
 // Set the profiling stack for each cooperating context in a runtime.
 static bool
 EnsureAllContextProfilingStacks(JSContext* cx)
@@ -7055,6 +7065,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("isUnboxedObject", IsUnboxedObject, 1, 0,
 "isUnboxedObject(o)",
 "  Return true iff the object is an unboxed object."),
+
+    JS_FN_HELP("hasCopyOnWriteElements", HasCopyOnWriteElements, 1, 0,
+"hasCopyOnWriteElements(o)",
+"  Return true iff the object has copy-on-write dense elements."),
 
     JS_FN_HELP("stackPointerInfo", StackPointerInfo, 0, 0,
 "stackPointerInfo()",

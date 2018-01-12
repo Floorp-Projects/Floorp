@@ -165,8 +165,7 @@ MoofParser::BlockingReadNextMoof()
 }
 
 void
-MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
-                            mozilla::MediaByteRange& aMoov)
+MoofParser::ScanForMetadata(mozilla::MediaByteRange& aMoov)
 {
   int64_t length = std::numeric_limits<int64_t>::max();
   mSource->Length(&length);
@@ -176,47 +175,27 @@ MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
-    if (box.IsType("ftyp")) {
-      aFtyp = box.Range();
-      continue;
-    }
     if (box.IsType("moov")) {
       aMoov = box.Range();
       break;
     }
   }
-  mInitRange = aFtyp.Span(aMoov);
-}
-
-bool
-MoofParser::HasMetadata()
-{
-  MediaByteRange ftyp;
-  MediaByteRange moov;
-  ScanForMetadata(ftyp, moov);
-  return !!ftyp.Length() && !!moov.Length();
+  mInitRange = aMoov;
 }
 
 already_AddRefed<mozilla::MediaByteBuffer>
 MoofParser::Metadata()
 {
-  MediaByteRange ftyp;
   MediaByteRange moov;
-  ScanForMetadata(ftyp, moov);
-  CheckedInt<MediaByteBuffer::size_type> ftypLength = ftyp.Length();
+  ScanForMetadata(moov);
   CheckedInt<MediaByteBuffer::size_type> moovLength = moov.Length();
-  if (!ftypLength.isValid() || !moovLength.isValid()
-      || !ftypLength.value() || !moovLength.value()) {
-    // No ftyp or moov, or they cannot be used as array size.
+  if (!moovLength.isValid() || !moovLength.value()) {
+    // No moov, or cannot be used as array size.
     return nullptr;
   }
-  CheckedInt<MediaByteBuffer::size_type> totalLength = ftypLength + moovLength;
-  if (!totalLength.isValid()) {
-    // Addition overflow, or sum cannot be used as array size.
-    return nullptr;
-  }
+
   RefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();
-  if (!metadata->SetLength(totalLength.value(), fallible)) {
+  if (!metadata->SetLength(moovLength.value(), fallible)) {
     LOG(Moof, "OOM");
     return nullptr;
   }
@@ -224,12 +203,7 @@ MoofParser::Metadata()
   RefPtr<BlockingStream> stream = new BlockingStream(mSource);
   size_t read;
   bool rv =
-    stream->ReadAt(ftyp.mStart, metadata->Elements(), ftypLength.value(), &read);
-  if (!rv || read != ftypLength.value()) {
-    return nullptr;
-  }
-  rv =
-    stream->ReadAt(moov.mStart, metadata->Elements() + ftypLength.value(), moovLength.value(), &read);
+    stream->ReadAt(moov.mStart, metadata->Elements(), moovLength.value(), &read);
   if (!rv || read != moovLength.value()) {
     return nullptr;
   }

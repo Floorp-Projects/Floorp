@@ -201,15 +201,7 @@ public:
   void DeleteRule(uint32_t aIndex, ErrorResult& aRv);
 
 protected:
-  // to help implement nsIDOMCSSRule
   void AppendRulesToCssText(nsAString& aCssText) const;
-
-  // to implement common methods on nsIDOMCSSMediaRule and
-  // nsIDOMCSSMozDocumentRule
-  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
-  nsresult InsertRule(const nsAString & aRule, uint32_t aIndex,
-                      uint32_t* _retval);
-  nsresult DeleteRule(uint32_t aIndex);
 
   // Must only be called if this is a Gecko GroupRule.
   IncrementalClearCOMRuleArray& GeckoRules() {
@@ -232,10 +224,7 @@ protected:
   using GroupRule::GroupRule;
 
 public:
-  // GetConditionText signature matches nsIDOMCSSConditionRule, so subclasses
-  // can implement this easily.  The implementations should never return
-  // anything other than NS_OK.
-  NS_IMETHOD GetConditionText(nsAString& aConditionText) = 0;
+  virtual void GetConditionText(nsAString& aConditionText) = 0;
   virtual void SetConditionText(const nsAString& aConditionText,
                                 ErrorResult& aRv) = 0;
 };

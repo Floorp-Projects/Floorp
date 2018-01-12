@@ -10,7 +10,6 @@
 #include "mozilla/css/Rule.h"
 #include "nsCSSValue.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDOMCSSFontFaceRule.h"
 
 namespace mozilla {
 
@@ -75,8 +74,7 @@ private:
   void* operator new(size_t size) CPP_THROW_NEW;
 };
 
-class nsCSSFontFaceRule final : public mozilla::css::Rule,
-                                public nsIDOMCSSFontFaceRule
+class nsCSSFontFaceRule final : public mozilla::css::Rule
 {
 public:
   nsCSSFontFaceRule(uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -99,11 +97,7 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSFontFaceRule interface
-  NS_DECL_NSIDOMCSSFONTFACERULE
 
   void SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue);
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue);

@@ -28,6 +28,23 @@ function run_test() {
   const testHyphenated = 'var testHyphenated = {"prop-A": "res-A"}';
   const testLet = "let foobar = {a: ''}; const blargh = {a: 1};";
 
+  const testGenerators = `
+  // Test with generator using a named function.
+  function* genFunc() {
+    for (let i = 0; i < 10; i++) {
+      yield i;
+    }
+  }
+  let gen1 = genFunc();
+  gen1.next();
+
+  // Test with generator using an anonymous function.
+  let gen2 = (function* () {
+    for (let i = 0; i < 10; i++) {
+      yield i;
+    }
+  })();`;
+
   let sandbox = Components.utils.Sandbox("http://example.com");
   let dbg = new Debugger();
   let dbgObject = dbg.addDebuggee(sandbox);
@@ -36,15 +53,16 @@ function run_test() {
   Components.utils.evalInSandbox(testObject, sandbox);
   Components.utils.evalInSandbox(testHyphenated, sandbox);
   Components.utils.evalInSandbox(testLet, sandbox);
+  Components.utils.evalInSandbox(testGenerators, sandbox);
 
   info("Running tests with dbgObject");
-  runChecks(dbgObject, null);
+  runChecks(dbgObject, null, sandbox);
 
   info("Running tests with dbgEnv");
-  runChecks(null, dbgEnv);
+  runChecks(null, dbgEnv, sandbox);
 }
 
-function runChecks(dbgObject, dbgEnv) {
+function runChecks(dbgObject, dbgEnv, sandbox) {
   info("Test that suggestions are given for 'this'");
   let results = JSPropertyProvider(dbgObject, dbgEnv, "t");
   test_has_result(results, "this");
@@ -145,6 +163,21 @@ function runChecks(dbgObject, dbgEnv) {
   info("Test that suggestions are not given if there is an hyphen in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testHyphenated['prop-A'].");
   Assert.equal(null, results);
+
+  info("Test that we have suggestions for generators.");
+  let gen1Result = Components.utils.evalInSandbox("gen1.next().value", sandbox);
+  results = JSPropertyProvider(dbgObject, dbgEnv, "gen1.");
+  test_has_result(results, "next");
+  info("Test that the generator next() was not executed");
+  let gen1NextResult = Components.utils.evalInSandbox("gen1.next().value", sandbox);
+  Assert.equal(gen1Result + 1, gen1NextResult);
+
+  info("Test with an anonymous generator.");
+  let gen2Result = Components.utils.evalInSandbox("gen2.next().value", sandbox);
+  results = JSPropertyProvider(dbgObject, dbgEnv, "gen2.");
+  test_has_result(results, "next");
+  let gen2NextResult = Components.utils.evalInSandbox("gen2.next().value", sandbox);
+  Assert.equal(gen2Result + 1, gen2NextResult);
 }
 
 /**

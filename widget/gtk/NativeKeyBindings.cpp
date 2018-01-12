@@ -71,7 +71,7 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
 
   bool forward = count > 0;
 
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   // Ignore GTK's Ctrl-K keybinding introduced in GTK 3.14 and removed in
   // 3.18 if the user has custom bindings set. See bug 1176929.
   if (del_type == GTK_DELETE_PARAGRAPH_ENDS && forward && GTK_IS_ENTRY(w) &&
@@ -360,13 +360,8 @@ NativeKeyBindings::GetEditCommandsInternal(const WidgetKeyboardEvent& aEvent,
   gCurrentCommands = &aCommands;
 
   gHandled = false;
-#if (MOZ_WIDGET_GTK == 2)
-  gtk_bindings_activate(GTK_OBJECT(mNativeTarget),
-                        aKeyval, GdkModifierType(modifiers));
-#else
   gtk_bindings_activate(G_OBJECT(mNativeTarget),
                         aKeyval, GdkModifierType(modifiers));
-#endif
 
   gCurrentCommands = nullptr;
 

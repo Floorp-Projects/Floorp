@@ -3,23 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  // If we can't get the profiler component then assume gecko was
-  // built without it and pass all the tests
-  var profilerCc = Cc["@mozilla.org/tools/profiler;1"];
-  if (!profilerCc)
+  if (!AppConstants.MOZ_GECKO_PROFILER) {
     return;
+  }
 
-  var profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-  if (!profiler)
-    return;
+  Assert.ok(!Services.profiler.IsActive());
 
-  Assert.ok(!profiler.IsActive());
+  Services.profiler.StartProfiler(10, 100, [], 0);
 
-  profiler.StartProfiler(10, 100, [], 0);
+  Assert.ok(Services.profiler.IsActive());
 
-  Assert.ok(profiler.IsActive());
+  Services.profiler.StopProfiler();
 
-  profiler.StopProfiler();
-
-  Assert.ok(!profiler.IsActive());
+  Assert.ok(!Services.profiler.IsActive());
 }

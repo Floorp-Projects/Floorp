@@ -460,26 +460,6 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
   dbus_threads_init_default();
 #endif
 
-#if (MOZ_WIDGET_GTK == 2)
-  if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||
-      (gtk_major_version == MIN_GTK_MAJOR_VERSION && gtk_minor_version < MIN_GTK_MINOR_VERSION)) {
-    GtkWidget* versionErrDialog = gtk_message_dialog_new(nullptr,
-                     GtkDialogFlags(GTK_DIALOG_MODAL |
-                                    GTK_DIALOG_DESTROY_WITH_PARENT),
-                     GTK_MESSAGE_ERROR,
-                     GTK_BUTTONS_OK,
-                     UNSUPPORTED_GTK_MSG,
-                     gtk_major_version,
-                     gtk_minor_version,
-                     MIN_GTK_MAJOR_VERSION,
-                     MIN_GTK_MINOR_VERSION);
-    gtk_dialog_run(GTK_DIALOG(versionErrDialog));
-    gtk_widget_destroy(versionErrDialog);
-    MozExpectedExit();
-    exit(0);
-  }
-#endif
-
   *aRetVal = true;
 
 #ifdef MOZ_X11

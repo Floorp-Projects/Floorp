@@ -638,7 +638,7 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateButtonArrowWidget();
     case MOZ_GTK_ENTRY:
       return CreateEntryWidget();
-    case MOZ_GTK_SCROLLED_WINDOW: 
+    case MOZ_GTK_SCROLLED_WINDOW:
       return CreateScrolledWindowWidget();
     case MOZ_GTK_TREEVIEW:
       return CreateTreeViewWidget();
@@ -1074,11 +1074,11 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_SCALE_CONTENTS_VERTICAL:
       style = CreateChildCSSNode("contents",
                                  MOZ_GTK_SCALE_VERTICAL);
-      break; 
+      break;
     case MOZ_GTK_SCALE_TROUGH_HORIZONTAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
                                  MOZ_GTK_SCALE_CONTENTS_HORIZONTAL);
-      break; 
+      break;
     case MOZ_GTK_SCALE_TROUGH_VERTICAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
                                  MOZ_GTK_SCALE_CONTENTS_VERTICAL);
@@ -1113,7 +1113,7 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_NOTEBOOK_HEADER:
     case MOZ_GTK_TABPANELS:
     case MOZ_GTK_TAB_SCROLLARROW:
-    { 
+    {
       // TODO - create from CSS node
       GtkWidget* widget = GetWidget(MOZ_GTK_NOTEBOOK);
       return gtk_widget_get_style_context(widget);
@@ -1258,7 +1258,7 @@ GetWidgetStyleInternal(WidgetNodeType aNodeType)
     case MOZ_GTK_NOTEBOOK_HEADER:
     case MOZ_GTK_TABPANELS:
     case MOZ_GTK_TAB_SCROLLARROW:
-    { 
+    {
       GtkWidget* widget = GetWidget(MOZ_GTK_NOTEBOOK);
       return gtk_widget_get_style_context(widget);
     }

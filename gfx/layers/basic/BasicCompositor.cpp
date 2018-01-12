@@ -259,9 +259,9 @@ BasicCompositor::GetTextureFactoryIdentifier()
 already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZeroArea(), "Trying to create a render target of invalid size");
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 
@@ -289,9 +289,9 @@ already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect, BufferMode aBufferMode)
 {
   MOZ_ASSERT(mDrawTarget);
-  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZeroArea(), "Trying to create a render target of invalid size");
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 

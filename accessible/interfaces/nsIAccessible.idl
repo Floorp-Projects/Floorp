@@ -7,7 +7,6 @@
 #include "nsIArray.idl"
 
 interface nsIPersistentProperties;
-interface nsIDOMCSSPrimitiveValue;
 interface nsIDOMNode;
 interface nsIAccessibleDocument;
 interface nsIAccessibleRelation;

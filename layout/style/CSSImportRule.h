@@ -8,35 +8,27 @@
 #define mozilla_dom_CSSImportRule_h
 
 #include "mozilla/css/Rule.h"
-#include "nsIDOMCSSImportRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSImportRule : public css::Rule
-                    , public nsIDOMCSSImportRule
 {
 protected:
   using Rule::Rule;
   virtual ~CSSImportRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
   bool IsCCLeaf() const final;
 
   int32_t GetType() const final { return css::Rule::IMPORT_RULE; }
-  using Rule::GetType;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override = 0;
 
-  // nsIDOMCSSImportRule interface
-  NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
-  NS_IMETHOD GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet) final;
-
   // WebIDL interface
-  uint16_t Type() const final { return nsIDOMCSSRule::IMPORT_RULE; }
-  // The XPCOM GetHref is fine, since it never fails.
+  uint16_t Type() const final { return CSSRuleBinding::IMPORT_RULE; }
+  virtual void GetHref(nsAString& aHref) const = 0;
   virtual dom::MediaList* GetMedia() const = 0;
   virtual StyleSheet* GetStyleSheet() const = 0;
 

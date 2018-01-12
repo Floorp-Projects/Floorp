@@ -2471,6 +2471,16 @@ impl Renderer {
         let mut debug_target = debug_server::Target::new("A8");
 
         debug_target.add(
+            debug_server::BatchKind::Cache,
+            "Scalings",
+            target.scalings.len(),
+        );
+        debug_target.add(
+            debug_server::BatchKind::Cache,
+            "Zero Clears",
+            target.zero_clears.len(),
+        );
+        debug_target.add(
             debug_server::BatchKind::Clip,
             "Clear",
             target.clip_batcher.border_clears.len(),
@@ -2516,6 +2526,16 @@ impl Renderer {
     fn debug_color_target(target: &ColorRenderTarget) -> debug_server::Target {
         let mut debug_target = debug_server::Target::new("RGBA8");
 
+        debug_target.add(
+            debug_server::BatchKind::Cache,
+            "Scalings",
+            target.scalings.len(),
+        );
+        debug_target.add(
+            debug_server::BatchKind::Cache,
+            "Readbacks",
+            target.readbacks.len(),
+        );
         debug_target.add(
             debug_server::BatchKind::Cache,
             "Vertical Blur",

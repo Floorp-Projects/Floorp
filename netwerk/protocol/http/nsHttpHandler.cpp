@@ -318,6 +318,13 @@ nsHttpHandler::SetFastOpenOSSupport()
     return;
 #elif defined(XP_WIN)
     mFastOpenSupported = IsWindows10BuildOrLater(16299);
+
+    if (mFastOpenSupported) {
+        // We have some problems with lavasoft software and tcp fast open.
+        if (GetModuleHandleW(L"pmls64.dll") || GetModuleHandleW(L"rlls64.dll")) {
+            mFastOpenSupported = false;
+        }
+    }
 #else
 
     nsAutoCString version;
