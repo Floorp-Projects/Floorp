@@ -4280,14 +4280,31 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   mWaitingQueryLayout = false;
 
-  // NOTE: TSF (at least on Win 8.1) doesn't return TS_E_NOLAYOUT to the
-  // caller even if we return it.  It's converted to just E_FAIL.
-  // However, this is fixed on Win 10.
+  // When ITextStoreACP::GetTextExt() returns TS_E_NOLAYOUT, TSF returns E_FAIL
+  // to its caller (typically, active TIP).  Then, most TIPs abort current job
+  // or treat such application as non-GUI apps.  E.g., some of them give up
+  // showing candidate window, some others show candidate window at top-left of
+  // the screen.  For avoiding this issue, when there is composition (until
+  // composition is actually committed in remote content), we should not
+  // return TS_E_NOLAYOUT error for TIPs whose some features are broken by
+  // this issue.
+  // Note that ideally, this issue should be avoided by each TIP since this
+  // won't be fixed at least on non-latest Windows.  Actually, Google Japanese
+  // Input (based on Mozc) does it.  When GetTextExt() returns E_FAIL, TIPs
+  // should try to check result of GetRangeFromPoint() because TSF returns
+  // TS_E_NOLAYOUT correctly in this case. See:
+  // https://github.com/google/mozc/blob/6b878e31fb6ac4347dc9dfd8ccc1080fe718479f/src/win32/tip/tip_range_util.cc#L237-L257
 
   bool dontReturnNoLayoutError = false;
 
-  if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
+  if (IsHandlingComposition() && mContentForTSF.HasOrHadComposition() &&
       mContentForTSF.IsLayoutChangedAt(acpEnd)) {
+    MOZ_ASSERT(!mComposition.IsComposing() ||
+               mComposition.mStart ==
+                 mContentForTSF.LatestCompositionStartOffset());
+    MOZ_ASSERT(!mComposition.IsComposing() ||
+               mComposition.EndOffset() ==
+                 mContentForTSF.LatestCompositionEndOffset());
     const Selection& selectionForTSF = SelectionForTSFRef();
     // The bug of Microsoft Office IME 2010 for Japanese is similar to
     // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
@@ -4350,8 +4367,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
              TSFStaticSink::IsATOKActive() &&
              (!TSFStaticSink::IsATOKReferringNativeCaretActive() ||
               !TSFPrefs::NeedToCreateNativeCaretForLegacyATOK()) &&
-             mComposition.mStart == acpStart &&
-             mComposition.EndOffset() == acpEnd) {
+             mContentForTSF.LatestCompositionStartOffset() == acpStart &&
+             mContentForTSF.LatestCompositionEndOffset() == acpEnd) {
       dontReturnNoLayoutError = true;
     }
     // Free ChangJie 2010 doesn't handle ITfContextView::GetTextExt() properly.
@@ -4359,21 +4376,20 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // necessary on Windows 10 before disabling this on Windows 10.
     else if (TSFPrefs::DoNotReturnNoLayoutErrorToFreeChangJie() &&
              TSFStaticSink::IsFreeChangJieActive()) {
-      acpEnd = mComposition.mStart;
+      acpEnd = mContentForTSF.LatestCompositionStartOffset();
       acpStart = std::min(acpStart, acpEnd);
       dontReturnNoLayoutError = true;
     }
     // Some Chinese TIPs of Microsoft doesn't show candidate window in e10s
     // mode on Win8 or later.
-    else if (
-      IsWin8OrLater() &&
-      ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
-        (TSFStaticSink::IsMSChangJieActive() ||
-         TSFStaticSink::IsMSQuickActive())) ||
-       (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
-         (TSFStaticSink::IsMSPinyinActive() ||
-          TSFStaticSink::IsMSWubiActive())))) {
-      acpEnd = mComposition.mStart;
+    else if (IsWin8OrLater() &&
+             ((TSFPrefs::DoNotReturnNoLayoutErrorToMSTraditionalTIP() &&
+               (TSFStaticSink::IsMSChangJieActive() ||
+                TSFStaticSink::IsMSQuickActive())) ||
+             (TSFPrefs::DoNotReturnNoLayoutErrorToMSSimplifiedTIP() &&
+               (TSFStaticSink::IsMSPinyinActive() ||
+                TSFStaticSink::IsMSWubiActive())))) {
+      acpEnd = mContentForTSF.LatestCompositionStartOffset();
       acpStart = std::min(acpStart, acpEnd);
       dontReturnNoLayoutError = true;
     }
@@ -4401,8 +4417,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       if (mContentForTSF.IsLayoutChangedAt(acpStart)) {
         // If TSF queries text rect in composition string, we should return
         // rect at start of the composition even if its layout is changed.
-        if (acpStart >= mComposition.mStart) {
-          acpStart = mComposition.mStart;
+        if (acpStart >= mContentForTSF.LatestCompositionStartOffset()) {
+          acpStart = mContentForTSF.LatestCompositionStartOffset();
         }
         // Otherwise, use first character's rect.  Even if there is no
         // characters, the query event will return caret rect instead.
@@ -4453,6 +4469,12 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // the position where TSFTextStore believes it at.
     options.mRelativeToInsertionPoint = true;
     startOffset -= mComposition.mStart;
+  } else if (IsHandlingComposition() && mContentForTSF.HasOrHadComposition()) {
+    // If there was a composition and it hasn't been committed in the content
+    // yet, ContentCacheInParent is still open for relative offset query from
+    // the latest composition.
+    options.mRelativeToInsertionPoint = true;
+    startOffset -= mContentForTSF.LatestCompositionStartOffset();
   } else if (!CanAccessActualContentDirectly()) {
     // If TSF/TIP cannot access actual content directly, there may be pending
     // text and/or selection changes which have not been notified TSF yet.
