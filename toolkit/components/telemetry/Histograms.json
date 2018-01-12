@@ -2904,13 +2904,6 @@
     "n_values": 5,
     "description": "HTTP Cache v2 Hit, Reval, Failed-Reval, Miss"
   },
-  "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "HTTP Cache v2 Miss by half-life value (5 min, 15 min, 1 hour, 6 hours)"
-  },
   "HTTP_CACHE_ENTRY_RELOAD_TIME": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
