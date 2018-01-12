@@ -799,6 +799,7 @@ protected:
         mLastCompositionString.Truncate();
       }
       mMinTextModifiedOffset = NOT_MODIFIED;
+      mLatestCompositionStartOffset = mLatestCompositionEndOffset = LONG_MAX;
       mInitialized = true;
     }
 
@@ -850,6 +851,18 @@ protected:
       MOZ_ASSERT(mInitialized);
       return mMinTextModifiedOffset;
     }
+    LONG LatestCompositionStartOffset() const
+    {
+      MOZ_ASSERT(mInitialized);
+      MOZ_ASSERT(HasOrHadComposition());
+      return mLatestCompositionStartOffset;
+    }
+    LONG LatestCompositionEndOffset() const
+    {
+      MOZ_ASSERT(mInitialized);
+      MOZ_ASSERT(HasOrHadComposition());
+      return mLatestCompositionEndOffset;
+    }
 
     // Returns true if layout of the character at the aOffset has not been
     // calculated.
@@ -869,6 +882,13 @@ protected:
       return mInitialized ? mMinTextModifiedOffset : NOT_MODIFIED;
     }
 
+    bool HasOrHadComposition() const
+    {
+      return mInitialized &&
+             mLatestCompositionStartOffset != LONG_MAX &&
+             mLatestCompositionEndOffset != LONG_MAX;
+    }
+
     TSFTextStore::Composition& Composition() { return mComposition; }
     TSFTextStore::Selection& Selection() { return mSelection; }
 
@@ -879,6 +899,11 @@ protected:
     nsString mLastCompositionString;
     TSFTextStore::Composition& mComposition;
     TSFTextStore::Selection& mSelection;
+
+    // The latest composition's start and end offset.  If composition hasn't
+    // been started since this instance is initialized, they are LONG_MAX.
+    LONG mLatestCompositionStartOffset;
+    LONG mLatestCompositionEndOffset;
 
     // The minimum offset of modified part of the text.
     enum : uint32_t
