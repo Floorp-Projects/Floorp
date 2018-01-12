@@ -8,16 +8,8 @@ import os.path
 import sys
 
 def main():
-  sys.stdout.write(_is_dir(sys.argv[1]))
+  sys.stdout.write(str(os.path.isdir(sys.argv[1])))
   return 0
-
-def _is_dir(dir_name):
-  return str(os.path.isdir(dir_name))
-
-def DoMain(args):
-  """Hook to be called from gyp without starting a separate python
-  interpreter."""
-  return _is_dir(args[0])
 
 if __name__ == '__main__':
   sys.exit(main())
