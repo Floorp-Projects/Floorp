@@ -245,6 +245,19 @@ NS_IMPL_ADDREF(HttpChannelChild)
 
 NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release()
 {
+  if (!NS_IsMainThread()) {
+    nsrefcnt count = mRefCnt;
+    nsresult rv = NS_DispatchToMainThread(
+                    NewNonOwningRunnableMethod("HttpChannelChild::Release",
+                                               this,
+                                               &HttpChannelChild::Release));
+
+    // Continue Release procedure if failed to dispatch to main thread.
+    if (!NS_WARN_IF(NS_FAILED(rv))) {
+      return count - 1;
+    }
+  }
+
   nsrefcnt count = --mRefCnt;
   MOZ_ASSERT(int32_t(count) >= 0, "dup release");
   NS_LOG_RELEASE(this, count, "HttpChannelChild");

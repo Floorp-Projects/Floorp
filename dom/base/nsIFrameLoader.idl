@@ -17,8 +17,6 @@ interface nsITabParent;
 interface nsILoadContext;
 interface nsIPrintSettings;
 interface nsIWebProgressListener;
-interface nsIGroupedSHistory;
-interface nsIPartialSHistory;
 
 [builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
 interface nsIFrameLoader : nsISupports
@@ -52,31 +50,6 @@ interface nsIFrameLoader : nsISupports
    * except that this method allows specifying the URI to load.
    */
   void loadURI(in nsIURI aURI, in boolean originalSrc);
-
-  /**
-   * Puts the frameloader in prerendering mode.
-   */
-  void setIsPrerendered();
-
-  /**
-   * Make the prerendered frameloader being active (and clear isPrerendered flag).
-   */
-  void makePrerenderedLoaderActive();
-
-  /**
-   * Append partial session history from another frame loader.
-   *
-   * @return A promise which will be resolved when the navigation is complete.
-   */
-  nsISupports appendPartialSHistoryAndSwap(in nsIFrameLoader aOther);
-
-  /**
-   * If grouped session history is applied, use this function to navigate to
-   * an entry of session history object of another frameloader.
-   *
-   * @return A promise which will be resolved when the navigation is complete.
-   */
-  nsISupports requestGroupedHistoryNavigation(in unsigned long aGlobalIndex);
 
   /**
    * Adds a blocking promise for the current cross process navigation.
@@ -171,11 +144,6 @@ interface nsIFrameLoader : nsISupports
              in nsIWebProgressListener aProgressListener);
 
   /**
-   * Ensure that the current nsIFrameLoader has a GroupedSHistory.
-   */
-  nsIGroupedSHistory ensureGroupedSHistory();
-
-  /**
    * The default event mode automatically forwards the events
    * handled in EventStateManager::HandleCrossProcessEvent to
    * the child content process when these events are targeted to
@@ -245,17 +213,6 @@ interface nsIFrameLoader : nsISupports
   readonly attribute unsigned long lazyHeight;
 
   /**
-   * The partial session history.
-   */
-  readonly attribute nsIPartialSHistory partialSHistory;
-
-  /**
-   * The grouped session history composed of multiple session history objects
-   * across root docshells.
-   */
-  readonly attribute nsIGroupedSHistory groupedSHistory;
-
-  /**
    * Is `true` if the frameloader is dead (destroy has been called on it)
    */
   [infallible] readonly attribute boolean isDead;
@@ -275,11 +232,6 @@ interface nsIFrameLoaderOwner : nsISupports
    */
   [binaryname(FrameLoaderXPCOM)] readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
-
-  /**
-   * Puts the FrameLoaderOwner in prerendering mode.
-   */
-  void setIsPrerendered();
 
   /**
    * This method is used internally by SwapFrameLoaders to set the frame loader

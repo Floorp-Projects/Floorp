@@ -3,7 +3,7 @@
 /*---
 esid: sec-array.prototype.sort
 description: throws on a non-undefined non-function
-info: >
+info: |
   22.1.3.25 Array.prototype.sort ( comparefn )
 
   Upon entry, the following steps are performed to initialize evaluation

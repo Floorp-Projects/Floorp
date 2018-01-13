@@ -9,7 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsExpirationTracker.h"
-#include "nsIPartialSHistoryListener.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsISimpleEnumerator.h"
@@ -182,23 +181,11 @@ private:
   int32_t mLength;
   int32_t mRequestedIndex;
 
-  // The number of entries before this session history object.
-  int32_t mGlobalIndexOffset;
-
-  // The number of entries after this session history object.
-  int32_t mEntriesInFollowingPartialHistories;
-
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;
 
-  // Partial session history listener
-  nsWeakPtr mPartialHistoryListener;
-
   // Weak reference. Do not refcount this.
   nsIDocShell* mRootDocShell;
-
-  // Set to true if attached to a grouped session history.
-  bool mIsPartial;
 
   // Max viewers allowed total, across all SHistory objects
   static int32_t sHistoryMaxTotalViewers;

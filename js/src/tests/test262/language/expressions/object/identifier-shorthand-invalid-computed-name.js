@@ -18,7 +18,7 @@ info: |
     LiteralPropertyName
     ComputedPropertyName
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

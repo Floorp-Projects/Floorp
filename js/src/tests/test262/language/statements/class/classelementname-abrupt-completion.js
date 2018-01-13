@@ -4,7 +4,7 @@
 
 /*---
 description: Class definition should error if evaluation of ClassElementName errors
-esid: runtime-semantics-class-definition-evaluation
+esid: sec-runtime-semantics-classdefinitionevaluation
 info: |
   Runtime Semantics: ClassDefinitionEvaluation
   ...
