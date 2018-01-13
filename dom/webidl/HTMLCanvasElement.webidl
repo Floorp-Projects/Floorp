@@ -45,7 +45,7 @@ partial interface HTMLCanvasElement {
 
            attribute PrintCallback? mozPrintCallback;
 
-  [Throws, UnsafeInPrerendering, Pref="canvas.capturestream.enabled"]
+  [Throws, Pref="canvas.capturestream.enabled"]
   CanvasCaptureMediaStream captureStream(optional double frameRate);
 };
 

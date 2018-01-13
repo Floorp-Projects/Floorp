@@ -5,7 +5,7 @@
 /*---
 esid: sec-typedarray.bytes_per_element
 description: BigInt64Array.BYTES_PER_ELEMENT property descriptor
-info: >
+info: |
   22.2.5.1 TypedArray.BYTES_PER_ELEMENT
 
   The value of TypedArray.BYTES_PER_ELEMENT is the Number value of the

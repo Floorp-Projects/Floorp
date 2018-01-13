@@ -2,7 +2,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-info: >
+info: |
     Two regular expression literals in a program evaluate to
     regular expression objects that never compare as === to each other even
     if the two literals' contents are identical

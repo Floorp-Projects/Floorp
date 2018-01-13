@@ -24,7 +24,7 @@ info: |
 description: >
   A regular expression may not contain a <LF> as a SourceCharacter
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

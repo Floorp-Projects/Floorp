@@ -8,7 +8,7 @@ esid: sec-generator-function-definitions-runtime-semantics-propertydefinitioneva
 features: [default-parameters, generators]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     GeneratorMethod :

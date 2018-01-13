@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "nsPresContext.h"
 #include "RuleNodeCacheConditions.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 namespace dom {

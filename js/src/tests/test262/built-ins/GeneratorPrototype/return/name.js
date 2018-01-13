@@ -5,7 +5,7 @@
 es6id: 25.3.1.3
 description: >
   Generator.prototype.return.name is "return".
-info: >
+info: |
   Generator.prototype.return ( value )
 
   17 ECMAScript Standard Built-in Objects:

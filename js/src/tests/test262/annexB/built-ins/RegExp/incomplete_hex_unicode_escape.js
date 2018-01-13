@@ -3,7 +3,7 @@
 
 /*---
 description: An incomplete HexEscape or UnicodeEscape should be treated as an Identity Escape
-info: >
+info: |
     An incomplete HexEscape (e.g. /\x/) or UnicodeEscape (/\u/) should fall
     through to IdentityEscape
 esid: prod-AtomEscape

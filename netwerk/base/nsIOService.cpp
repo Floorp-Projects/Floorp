@@ -78,7 +78,7 @@ namespace net {
 
 #define MAX_RECURSION_COUNT 50
 
-nsIOService* gIOService = nullptr;
+nsIOService* gIOService;
 static bool gHasWarnedUploadChannel2;
 static bool gCaptivePortalEnabled = false;
 static LazyLogModule gIOServiceLog("nsIOService");
@@ -269,7 +269,10 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    gIOService = nullptr;
+    if (gIOService) {
+        MOZ_ASSERT(gIOService == this);
+        gIOService = nullptr;
+    }
 }
 
 nsresult
@@ -355,13 +358,10 @@ already_AddRefed<nsIOService>
 nsIOService::GetInstance() {
     if (!gIOService) {
         RefPtr<nsIOService> ios = new nsIOService();
-        gIOService = ios.get();
-        if (NS_FAILED(ios->Init())) {
-            gIOService = nullptr;
-            return nullptr;
+        if (NS_SUCCEEDED(ios->Init())) {
+            MOZ_ASSERT(gIOService == ios.get());
+            return ios.forget();
         }
-
-        return ios.forget();
     }
     return do_AddRef(gIOService);
 }

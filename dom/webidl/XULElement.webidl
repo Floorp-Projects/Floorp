@@ -109,9 +109,6 @@ interface MozFrameLoaderOwner {
   [ChromeOnly]
   readonly attribute FrameLoader? frameLoader;
 
-  [ChromeOnly]
-  void setIsPrerendered();
-
   [ChromeOnly, Throws]
   void presetOpenerWindow(WindowProxy? window);
 

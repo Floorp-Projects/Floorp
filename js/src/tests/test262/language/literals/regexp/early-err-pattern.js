@@ -9,7 +9,7 @@ info: |
 description: >
     It is a Syntax Error if BodyText of RegularExpressionLiteral cannot be recognized using the goal symbol Pattern of the ECMAScript RegExp grammar specified in #sec-patterns.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 
