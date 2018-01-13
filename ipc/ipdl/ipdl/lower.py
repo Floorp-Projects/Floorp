@@ -4900,7 +4900,6 @@ def _splitMethodDefn(md, clsname):
     md.decl.name = (clsname +'::'+ md.decl.name)
     md.decl.methodspec = MethodSpec.NONE
     md.decl.warn_unused = 0
-    md.decl.never_inline = 0
     md.decl.only_for_definition = True
     for param in md.decl.params:
         if isinstance(param, Param):
