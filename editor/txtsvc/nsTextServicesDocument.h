@@ -91,37 +91,7 @@ public:
   NS_IMETHOD InsertText(const nsString *aText) override;
 
   /* nsIEditActionListener method implementations. */
-  NS_IMETHOD WillInsertNode(nsIDOMNode* aNode,
-                            nsIDOMNode* aNextSiblingOfNewNode) override;
-  NS_IMETHOD DidInsertNode(nsIDOMNode* aNode, nsresult aResult) override;
-
-  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild) override;
-  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult) override;
-
-  NS_IMETHOD WillSplitNode(nsIDOMNode * aExistingRightNode,
-                           int32_t      aOffset) override;
-  NS_IMETHOD DidSplitNode(nsIDOMNode* aExistingRightNode,
-                          nsIDOMNode* aNewLeftNode) override;
-
-  NS_IMETHOD WillJoinNodes(nsIDOMNode  *aLeftNode,
-                           nsIDOMNode  *aRightNode,
-                           nsIDOMNode  *aParent) override;
-  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode,
-                          nsIDOMNode  *aRightNode,
-                          nsIDOMNode  *aParent,
-                          nsresult     aResult) override;
-  // these listen methods are unused:
-  NS_IMETHOD WillCreateNode(const nsAString& aTag,
-                            nsIDOMNode* aNextSiblingOfNewNode) override;
-  NS_IMETHOD DidCreateNode(const nsAString& aTag,
-                           nsIDOMNode* aNewNode,
-                           nsresult aResult) override;
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString) override;
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult) override;
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength) override;
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult) override;
-  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection) override;
-  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) override;
+  NS_DECL_NSIEDITACTIONLISTENER
 
   /* Helper functions */
   static nsresult GetRangeEndPoints(nsRange* aRange,
