@@ -20,6 +20,8 @@ from itertools import chain, imap
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
                             "tail-call-optimization",
+                            "Array.prototype.flatMap",
+                            "Array.prototype.flatten",
                             "BigInt",
                             "class-fields-public",
                             "class-fields-private",
@@ -28,6 +30,10 @@ UNSUPPORTED_FEATURES = set([
                             "regexp-named-groups",
                             "regexp-unicode-property-escapes",
                        ])
+FEATURE_CHECK_NEEDED = {
+                         "Atomics": "!this.hasOwnProperty('Atomics')",
+                         "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+                       }
 RELEASE_OR_BETA = set()
 
 @contextlib.contextmanager
@@ -225,7 +231,7 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # Negative tests have additional meta-data to specify the error type and
     # when the error is issued (runtime error or early parse error). We're
     # currently ignoring the error phase attribute.
-    # testRec["negative"] == {type=<error name>, phase=early|runtime}
+    # testRec["negative"] == {type=<error name>, phase=parse|resolution|runtime}
     isNegative = "negative" in testRec
     assert not isNegative or type(testRec["negative"]) == dict
     errorType = testRec["negative"]["type"] if isNegative else None
@@ -238,15 +244,18 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     # Skip tests with unsupported features.
     if "features" in testRec:
         unsupported = UNSUPPORTED_FEATURES.intersection(testRec["features"])
-        releaseOrBeta = RELEASE_OR_BETA.intersection(testRec["features"])
         if unsupported:
-            refTestSkip.append(
-              "%s is not supported" % ",".join(list(unsupported)))
-        elif releaseOrBeta:
-            refTestSkipIf.append(
-              ("release_or_beta",
-               "%s is not released yet" % ",".join(list(releaseOrBeta)))
-            )
+            refTestSkip.append("%s is not supported" % ",".join(list(unsupported)))
+        else:
+            releaseOrBeta = RELEASE_OR_BETA.intersection(testRec["features"])
+            if releaseOrBeta:
+                refTestSkipIf.append(("release_or_beta",
+                                      "%s is not released yet" % ",".join(list(releaseOrBeta))))
+
+            featureCheckNeeded = set(FEATURE_CHECK_NEEDED.keys()).intersection(testRec["features"])
+            if featureCheckNeeded:
+                refTestSkipIf.append(("||".join([FEATURE_CHECK_NEEDED[f] for f in featureCheckNeeded]),
+                                      "%s is not enabled unconditionally" % ",".join(list(featureCheckNeeded))))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all
@@ -317,7 +326,6 @@ def process_test262(test262Dir, test262OutDir, strictTests):
     # Additional explicit includes inserted at well-chosen locations to reduce
     # code duplication in shell.js files.
     explicitIncludes = {}
-    explicitIncludes["intl402"] = ["testBuiltInObject.js"]
     explicitIncludes[os.path.join("built-ins", "Atomics")] = ["testAtomics.js",
         "testTypedArray.js"]
     explicitIncludes[os.path.join("built-ins", "DataView")] = ["byteConversionValues.js"]

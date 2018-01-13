@@ -5,7 +5,7 @@
 es6id: 25.3.1.4
 description: >
   Generator.prototype.throw.name is "throw".
-info: >
+info: |
   Generator.prototype.throw ( exception )
 
   17 ECMAScript Standard Built-in Objects:

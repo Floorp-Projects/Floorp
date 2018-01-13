@@ -9,7 +9,7 @@ description: >
     Checking if execution of "continue" with no IterationStatement,
     placed into a block, fails
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

@@ -7570,13 +7570,6 @@ nsGlobalWindowInner::CreateNamedPropertiesObject(JSContext *aCx,
   return WindowNamedPropertiesHandler::Create(aCx, aProto);
 }
 
-bool
-nsGlobalWindowInner::GetIsPrerendered()
-{
-  nsIDocShell* docShell = GetDocShell();
-  return docShell && docShell->GetIsPrerendered();
-}
-
 void
 nsGlobalWindowInner::RedefineProperty(JSContext* aCx, const char* aPropName,
                                       JS::Handle<JS::Value> aValue,

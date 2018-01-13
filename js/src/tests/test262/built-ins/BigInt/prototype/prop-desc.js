@@ -5,7 +5,7 @@
 /*---
 description: The property descriptor BigInt.prototype
 esid: sec-bigint.prototype
-info: >
+info: |
   This property has the attributes { [[Writable]]: false, [[Enumerable]]: false,
   [[Configurable]]: false }.
 features: [BigInt]
