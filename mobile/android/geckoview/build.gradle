@@ -2,8 +2,6 @@ buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
 apply plugin: 'com.android.library'
 
-apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
-
 // This converts MOZ_APP_VERSION into an integer
 // version code.
 //
@@ -40,8 +38,12 @@ def computeVersionCode() {
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
+        defaultPublishConfig 'release'
+        publishNonDefault true
+
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
@@ -101,8 +103,14 @@ android {
         buildConfigField 'boolean', 'MOZILLA_OFFICIAL', mozconfig.substs.MOZILLA_OFFICIAL ? 'true' : 'false';
     }
 
-    project.configureProductFlavors.delegate = it
-    project.configureProductFlavors()
+    buildTypes {
+        withGeckoBinaries {
+            initWith release
+        }
+        withoutGeckoBinaries { // For clarity and consistency throughout the tree.
+            initWith release
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -146,16 +154,21 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
-    implementation "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
 
 android.libraryVariants.all { variant ->
-    // See the notes in mobile/android/app/build.gradle for details on including
-    // Gecko binaries and the Omnijar.
-    if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
+    // Like 'debug', 'release', or 'withGeckoBinaries'.
+    def buildType = variant.buildType.name
+
+    // It would be most natural for :geckoview to always include the Gecko
+    // binaries, but that's difficult; see the notes in
+    // mobile/android/gradle/with_gecko_binaries.gradle.  Instead :app uses
+    // :geckoview:release and handles it's own Gecko binary inclusion.
+    if (buildType.equals('withGeckoBinaries')) {
         configureVariantWithGeckoBinaries(variant)
     }
 
@@ -182,12 +195,12 @@ android.libraryVariants.all { variant ->
         exclude '**/R.java', '**/BuildConfig.java', 'com/googlecode/**'
     }
 
-    def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
+    task "javadocJar${name.capitalize()}"(type: Jar, dependsOn: javadoc) {
         classifier = 'javadoc'
         from javadoc.destinationDir
     }
 
-    def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
+    task "sourcesJar${name.capitalize()}"(type: Jar) {
         classifier 'sources'
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
@@ -196,7 +209,7 @@ android.libraryVariants.all { variant ->
 }
 
 android.libraryVariants.all { variant ->
-    configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    configureVariantWithJNIWrappers(variant, "Generated")
 }
 
 apply plugin: 'maven'
@@ -225,7 +238,7 @@ afterEvaluate {
     // The bundle tasks are only present when the particular configuration is
     // being built, so this task might not exist.  (This is due to the way the
     // Android Gradle plugin defines things during configuration.)
-    def bundleWithGeckoBinaries = tasks.findByName('bundleOfficialWithGeckoBinariesNoMinApiRelease')
+    def bundleWithGeckoBinaries = tasks.findByName('bundleWithGeckoBinaries')
     if (!bundleWithGeckoBinaries) {
         return
     }
@@ -239,10 +252,10 @@ afterEvaluate {
 
     artifacts {
         // Instead of default (release) configuration, publish one with Gecko binaries.
-        archives bundleOfficialWithGeckoBinariesNoMinApiRelease
+        archives bundleWithGeckoBinaries
         // Javadoc and sources for developer ergononomics.
-        archives javadocJarOfficialWithGeckoBinariesNoMinApiRelease
-        archives sourcesJarOfficialWithGeckoBinariesNoMinApiRelease
+        archives javadocJarWithGeckoBinaries
+        archives sourcesJarWithGeckoBinaries
     }
 }
 
