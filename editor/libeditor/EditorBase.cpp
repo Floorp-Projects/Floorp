@@ -1430,14 +1430,6 @@ EditorBase::CreateNode(nsAtom* aTag,
 
   AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      listener->WillCreateNode(nsDependentAtomString(aTag),
-                               GetAsDOMNode(pointToInsert.GetChild()));
-    }
-  }
-
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
@@ -1500,15 +1492,6 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
 
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      listener->WillInsertNode(
-                  aContentToInsert.AsDOMNode(),
-                  GetAsDOMNode(aPointToInsert.GetNextSiblingOfChild()));
-    }
-  }
-
   RefPtr<InsertNodeTransaction> transaction =
     InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
@@ -1565,24 +1548,10 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
 
   AutoRules beginRulesSniffing(this, EditAction::splitNode, nsIEditor::eNext);
 
-  // Different from CreateNode(), we need offset at start of right node only
-  // for WillSplitNode() since the offset is always same as the length of new
-  // left node.
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      // XXX Unfortunately, we need to compute offset here because the container
-      //     may be a data node like text node.  However, nobody implements this
-      //     method actually.  So, we should get rid of this in a follow up bug.
-      listener->WillSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
-                              aStartOfRightNode.Offset());
-    }
-  } else {
-    // XXX Unfortunately, storing offset of the split point in
-    //     SplitNodeTransaction is necessary for now.  We should fix this
-    //     in a follow up bug.
-    Unused << aStartOfRightNode.Offset();
-  }
+  // XXX Unfortunately, storing offset of the split point in
+  //     SplitNodeTransaction is necessary for now.  We should fix this
+  //     in a follow up bug.
+  Unused << aStartOfRightNode.Offset();
 
   RefPtr<SplitNodeTransaction> transaction =
     SplitNodeTransaction::Create(*this, aStartOfRightNode);
@@ -1648,14 +1617,6 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
     htmlEditRules->WillJoinNodes(aLeftNode, aRightNode);
   }
 
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      listener->WillJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
-                              parent->AsDOMNode());
-    }
-  }
-
   nsresult rv = NS_OK;
   RefPtr<JoinNodeTransaction> transaction =
     JoinNodeTransaction::MaybeCreate(*this, aLeftNode, aRightNode);
@@ -1705,14 +1666,6 @@ EditorBase::DeleteNode(nsINode* aNode)
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     htmlEditRules->WillDeleteNode(aNode);
-  }
-
-  // save node location for selection updating code.
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      listener->WillDeleteNode(aNode->AsDOMNode());
-    }
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
@@ -2845,16 +2798,6 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
       InsertTextTransaction::Create(*this, aStringToInsert, aTextNode, aOffset);
   }
 
-  // Let listeners know what's up
-  if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
-      listener->WillInsertText(
-        static_cast<nsIDOMCharacterData*>(insertedTextNode->AsDOMNode()),
-        insertedOffset, aStringToInsert);
-    }
-  }
-
   // XXX We may not need these view batches anymore.  This is handled at a
   // higher level now I believe.
   BeginUpdateViewBatch();
@@ -2996,19 +2939,11 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
                                nsIEditor::eNext);
 
   // Let listeners know what's up
-  if (!mActionListeners.IsEmpty()) {
+  if (!mActionListeners.IsEmpty() && length) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      if (length) {
-        listener->WillDeleteText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          length);
-      }
-      if (!aString.IsEmpty()) {
-        listener->WillInsertText(
-          static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0,
-          aString);
-      }
+      listener->WillDeleteText(
+        static_cast<nsIDOMCharacterData*>(aCharData.AsDOMNode()), 0, length);
     }
   }
 
@@ -4434,20 +4369,17 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
     }
   }
 
-  // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
+  // Notify nsIEditActionListener::WillDelete[Selection|Text]
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
     if (!deleteNode) {
+      AutoActionListenerArray listeners(mActionListeners);
       for (auto& listener : listeners) {
         listener->WillDeleteSelection(selection);
       }
     } else if (deleteCharData) {
+      AutoActionListenerArray listeners(mActionListeners);
       for (auto& listener : listeners) {
         listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
-      }
-    } else {
-      for (auto& listener : listeners) {
-        listener->WillDeleteNode(deleteNode->AsDOMNode());
       }
     }
   }

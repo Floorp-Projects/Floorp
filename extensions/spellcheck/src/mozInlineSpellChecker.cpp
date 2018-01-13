@@ -1039,23 +1039,9 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
 }
 
 NS_IMETHODIMP
-mozInlineSpellChecker::WillCreateNode(const nsAString& aTag,
-                                      nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 mozInlineSpellChecker::DidCreateNode(const nsAString& aTag,
                                      nsIDOMNode* aNewNode,
                                      nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::WillInsertNode(nsIDOMNode* aNode,
-                                      nsIDOMNode* aNextSiblingOfNewNode)
 {
   return NS_OK;
 }
@@ -1067,19 +1053,9 @@ mozInlineSpellChecker::DidInsertNode(nsIDOMNode* aNode,
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteNode(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-mozInlineSpellChecker::WillSplitNode(nsIDOMNode* aExistingRightNode,
-                                     int32_t aOffset)
+mozInlineSpellChecker::DidDeleteNode(nsIDOMNode* aChild,
+                                     nsresult aResult)
 {
   return NS_OK;
 }
@@ -1091,44 +1067,49 @@ mozInlineSpellChecker::DidSplitNode(nsIDOMNode* aExistingRightNode,
   return SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode,
-                                                  nsIDOMNode *aParent, nsresult aResult)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidJoinNodes(nsIDOMNode* aLeftNode,
+                                    nsIDOMNode* aRightNode,
+                                    nsIDOMNode* aParent,
+                                    nsresult aResult)
 {
   return SpellCheckBetweenNodes(aRightNode, 0, aRightNode, 0);
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString & aString)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidInsertText(nsIDOMCharacterData* aTextNode,
+                                     int32_t aOffset,
+                                     const nsAString& aString,
+                                     nsresult aResult)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset,
-                                                   const nsAString & aString, nsresult aResult)
+NS_IMETHODIMP
+mozInlineSpellChecker::WillDeleteText(nsIDOMCharacterData* aTextNode,
+                                      int32_t aOffset,
+                                      int32_t aLength)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidDeleteText(nsIDOMCharacterData* aTextNode,
+                                     int32_t aOffset,
+                                     int32_t aLength,
+                                     nsresult aResult)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult)
+NS_IMETHODIMP
+mozInlineSpellChecker::WillDeleteSelection(nsISelection* aSelection)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteSelection(nsISelection *aSelection)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteSelection(nsISelection *aSelection)
+NS_IMETHODIMP
+mozInlineSpellChecker::DidDeleteSelection(nsISelection* aSelection)
 {
   return NS_OK;
 }
