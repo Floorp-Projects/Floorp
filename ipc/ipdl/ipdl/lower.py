@@ -4908,7 +4908,7 @@ def _splitMethodDefn(md, clsname):
 
 
 def _splitFuncDeclDefn(fun):
-    assert not fun.decl.inline
+    assert not fun.decl.force_inline
     return StmtDecl(fun.decl), fun
 
 

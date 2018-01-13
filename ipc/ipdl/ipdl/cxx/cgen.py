@@ -200,8 +200,6 @@ class CxxCodeGen(CodePrinter, Visitor):
 
         if md.warn_unused:
             self.write('MOZ_MUST_USE ')
-        if md.inline:
-            self.write('inline ')
 
         if md.methodspec == MethodSpec.STATIC:
             self.write('static ')
@@ -285,9 +283,6 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitDestructorDecl(self, dd):
-        if dd.inline:
-            self.write('inline ')
-
         if dd.methodspec == MethodSpec.VIRTUAL:
             self.write('virtual ')
 
