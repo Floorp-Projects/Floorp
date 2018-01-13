@@ -75,7 +75,7 @@ namespace {
 //          0 means no override 1->4 are 1.0, 1.1, 1.2, 1.3, 4->7 unused
 // bits 3-5 (mask 0x38) specify the tls fallback limit
 //          0 means no override, values 1->4 match prefs
-// bit    6 (mask 0x40) specifies use of TLS 1.3 compatibility mode (draft-22)
+// bit    6 (mask 0x40) was used to specify compat mode. Temporarily reserved.
 
 enum {
   kTLSProviderFlagMaxVersion10   = 0x01,
@@ -92,11 +92,6 @@ static uint32_t getTLSProviderFlagMaxVersion(uint32_t flags)
 static uint32_t getTLSProviderFlagFallbackLimit(uint32_t flags)
 {
   return (flags & 0x38) >> 3;
-}
-
-static bool getTLSProviderFlagCompatMode(uint32_t flags)
-{
-  return (flags & 0x40);
 }
 
 #define MAX_ALPN_LENGTH 255
@@ -2580,6 +2575,12 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
+  // Set TLS 1.3 compat mode.
+  if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+            ("[%p] nsSSLIOLayerSetOptions: Setting compat mode failed\n", fd));
+  }
+
   // setting TLS max version
   uint32_t versionFlags =
     getTLSProviderFlagMaxVersion(infoObject->GetProviderTlsFlags());
@@ -2598,17 +2599,6 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
       MOZ_LOG(gPIPNSSLog, LogLevel::Error,
               ("[%p] nsSSLIOLayerSetOptions: unknown version flags %d\n",
                fd, versionFlags));
-    }
-  }
-
-  // enabling alternative handshake
-  if (getTLSProviderFlagCompatMode(infoObject->GetProviderTlsFlags())) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("[%p] nsSSLIOLayerSetOptions: Use Compatible Handshake\n", fd));
-    if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS13_COMPAT_MODE, PR_TRUE)) {
-          MOZ_LOG(gPIPNSSLog, LogLevel::Error,
-                  ("[%p] nsSSLIOLayerSetOptions: Setting compat mode failed\n", fd));
-          // continue on default path
     }
   }
 
