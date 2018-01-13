@@ -179,10 +179,7 @@ treechildren::-moz-tree-progressmeter {
   margin: 2px 4px;
   padding: 1px;
   border: 1px solid;
-  border-top-color: ThreeDShadow;
-  border-right-color: ThreeDHighlight;
-  border-bottom-color: ThreeDHighlight;
-  border-left-color: ThreeDShadow;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   background-color: -moz-Dialog;
   color: ThreeDShadow;
 }
