@@ -528,7 +528,9 @@ var dataProviders = {
 
         // Eagerly free resources.
         let loseExt = gl.getExtension("WEBGL_lose_context");
-        loseExt.loseContext();
+        if (loseExt) {
+             loseExt.loseContext();
+        }
     }
 
     GetWebGLInfo(data, "webgl1", "webgl");
