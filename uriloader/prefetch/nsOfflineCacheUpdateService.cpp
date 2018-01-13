@@ -256,6 +256,7 @@ nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
 
 nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService()
 {
+    MOZ_ASSERT(gOfflineCacheUpdateService == this);
     gOfflineCacheUpdateService = nullptr;
 
     delete mAllowedDomains;
@@ -300,11 +301,9 @@ nsOfflineCacheUpdateService::GetInstance()
 {
     if (!gOfflineCacheUpdateService) {
         auto serv = MakeRefPtr<nsOfflineCacheUpdateService>();
-        gOfflineCacheUpdateService = serv.get();
-        if (NS_FAILED(serv->Init())) {
-            gOfflineCacheUpdateService = nullptr;
-            return nullptr;
-        }
+        if (NS_FAILED(serv->Init()))
+            serv = nullptr;
+        MOZ_ASSERT(gOfflineCacheUpdateService == serv.get());
         return serv.forget();
     }
 

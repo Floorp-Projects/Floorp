@@ -25,7 +25,7 @@ var x = "b";
 
 
 class C {
-  static async m() { return 42; } static ["a"] = 39; [x] = 42; [10] = "meep"; ["not initialized"];
+  static async m() { return 42; } [x] = 42; [10] = "meep"; ["not initialized"];
 
 }
 
@@ -39,16 +39,6 @@ verifyProperty(C, "m", {
   configurable: true,
   writable: true,
 }, {restore: true});
-
-assert.sameValue(Object.hasOwnProperty.call(C.prototype, "a"), false);
-assert.sameValue(Object.hasOwnProperty.call(c, "a"), false);
-
-verifyProperty(C, "a", {
-  value: 39,
-  enumerable: true,
-  writable: true,
-  configurable: true
-});
 
 assert.sameValue(Object.hasOwnProperty.call(C.prototype, "b"), false);
 assert.sameValue(Object.hasOwnProperty.call(C, "b"), false);

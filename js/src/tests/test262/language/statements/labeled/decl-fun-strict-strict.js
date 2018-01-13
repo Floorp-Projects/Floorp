@@ -10,7 +10,7 @@ description: >
     label: Statement
 flags: [onlyStrict]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

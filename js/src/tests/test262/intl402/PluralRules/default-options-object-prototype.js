@@ -6,7 +6,7 @@ esid: sec-initializepluralrules
 description: >
   Monkey-patching Object.prototype does not change the default
   options for PluralRules as a null prototype is used.
-info: >
+info: |
   InitializePluralRules ( collator, locales, options )
 
     1. If _options_ is *undefined*, then

@@ -5,7 +5,7 @@
 /*---
 esid: sec-typedarray.prototype.bytes_per_element
 description: BigInt64Array.prototype.BYTES_PER_ELEMENT property descriptor
-info: >
+info: |
   22.2.5.1 TypedArray.prototype.BYTES_PER_ELEMENT
 
   The value of TypedArray.prototype.BYTES_PER_ELEMENT is the Number

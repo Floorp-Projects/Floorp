@@ -3323,78 +3323,6 @@ nsIDocument::IsScriptTracking(const nsACString& aURL) const
   return mTrackingScripts.Contains(aURL);
 }
 
-bool
-nsIDocument::PrerenderHref(nsIURI* aHref)
-{
-  MOZ_ASSERT(aHref);
-
-  static bool sPrerenderEnabled = false;
-  static bool sPrerenderPrefCached = false;
-  if (!sPrerenderPrefCached) {
-    sPrerenderPrefCached = true;
-    Preferences::AddBoolVarCache(&sPrerenderEnabled,
-                                 "dom.linkPrerender.enabled",
-                                 false);
-  }
-
-  // Check if prerender is enabled
-  if (!sPrerenderEnabled) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> referrer = GetDocumentURI();
-  bool urisMatch = false;
-  aHref->EqualsExceptRef(referrer, &urisMatch);
-  if (urisMatch) {
-    // Prerender current document isn't quite meaningful, and we may not be able
-    // to load it out of process.
-    return false;
-  }
-
-  nsCOMPtr<nsIDocShell> docShell = GetDocShell();
-  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
-  NS_ENSURE_TRUE(webNav, false);
-
-  bool canGoForward = false;
-  nsresult rv = webNav->GetCanGoForward(&canGoForward);
-  if (NS_FAILED(rv) || canGoForward) {
-    // Skip prerender on history navigation as we don't support it yet.
-    // Remove this check once bug 1323650 is implemented.
-    return false;
-  }
-
-  // Check if the document is in prerender state. We don't prerender in a
-  // prerendered document.
-  if (docShell->GetIsPrerendered()) {
-    return false;
-  }
-
-  // We currently do not support prerendering in documents loaded within the
-  // chrome process.
-  if (!XRE_IsContentProcess()) {
-    return false;
-  }
-
-  // Adopting an prerendered document is similar to performing a load within a
-  // different docshell, as the prerendering must have occurred in a different
-  // docshell.
-  if (!docShell->GetIsOnlyToplevelInTabGroup()) {
-    return false;
-  }
-
-  TabChild* tabChild = TabChild::GetFrom(docShell);
-  NS_ENSURE_TRUE(tabChild, false);
-
-  nsCOMPtr<nsIWebBrowserChrome3> wbc3;
-  tabChild->GetWebBrowserChrome(getter_AddRefs(wbc3));
-  NS_ENSURE_TRUE(wbc3, false);
-
-  rv = wbc3->StartPrerenderingDocument(aHref, referrer, NodePrincipal());
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return true;
-}
-
 NS_IMETHODIMP
 nsDocument::GetApplicationCache(nsIApplicationCache **aApplicationCache)
 {
@@ -12355,13 +12283,6 @@ nsDocument::GetVisibilityState() const
   // Otherwise, we're visible.
   if (!IsVisible() || !mWindow || !mWindow->GetOuterWindow() ||
       mWindow->GetOuterWindow()->IsBackground()) {
-
-    // Check if the document is in prerender state.
-    nsCOMPtr<nsIDocShell> docshell = GetDocShell();
-    if (docshell && docshell->GetIsPrerendered()) {
-      return dom::VisibilityState::Prerender;
-    }
-
     return dom::VisibilityState::Hidden;
   }
 

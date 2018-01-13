@@ -7,7 +7,7 @@ description: >
     Defining a typed array element to a value that, when converted to the typed
     array element type, detaches the typed array's underlying buffer, should
     throw a TypeError and not modify the typed array.
-info: >
+info: |
   9.4.5.3 [[DefineOwnProperty]] ( P, Desc )
 
   ...

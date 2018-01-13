@@ -37,7 +37,7 @@ info: |
         { ImportsList }
         { ImportsList , }
 negative:
-  phase: early
+  phase: resolution
   type: ReferenceError
 flags: [module]
 ---*/

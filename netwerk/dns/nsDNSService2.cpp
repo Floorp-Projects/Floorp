@@ -34,10 +34,12 @@
 #include "nsINetworkLinkService.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/ChildDNSService.h"
 #include "mozilla/net/DNSListenerProxy.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -496,7 +498,7 @@ NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
  * nsDNSService impl:
  * singleton instance ctor/dtor methods
  ******************************************************************************/
-static nsDNSService *gDNSService;
+static StaticRefPtr<nsDNSService> gDNSService;
 
 already_AddRefed<nsIDNSService>
 nsDNSService::GetXPCOMSingleton()
@@ -513,18 +515,16 @@ nsDNSService::GetSingleton()
 {
     NS_ASSERTION(!IsNeckoChild(), "not a parent process");
 
-    if (gDNSService) {
-        return do_AddRef(gDNSService);
+    if (!gDNSService) {
+        gDNSService = new nsDNSService();
+        if (NS_SUCCEEDED(gDNSService->Init())) {
+            ClearOnShutdown(&gDNSService);
+        } else {
+            gDNSService = nullptr;
+        }
     }
 
-    auto dns = MakeRefPtr<nsDNSService>();
-    gDNSService = dns.get();
-    if (NS_FAILED(dns->Init())) {
-        gDNSService = nullptr;
-        return nullptr;
-    }
-
-    return dns.forget();
+    return do_AddRef(gDNSService);
 }
 
 NS_IMETHODIMP

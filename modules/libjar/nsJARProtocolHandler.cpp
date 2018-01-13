@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ClearOnShutdown.h"
 #include "nsAutoPtr.h"
 #include "nsJARProtocolHandler.h"
 #include "nsIIOService.h"
@@ -24,7 +25,7 @@ static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 
 //-----------------------------------------------------------------------------
 
-nsJARProtocolHandler *gJarHandler = nullptr;
+StaticRefPtr<nsJARProtocolHandler> gJarHandler;
 
 nsJARProtocolHandler::nsJARProtocolHandler()
 {
@@ -32,10 +33,7 @@ nsJARProtocolHandler::nsJARProtocolHandler()
 }
 
 nsJARProtocolHandler::~nsJARProtocolHandler()
-{
-    MOZ_ASSERT(gJarHandler == this);
-    gJarHandler = nullptr;
-}
+{}
 
 nsresult
 nsJARProtocolHandler::Init()
@@ -67,15 +65,12 @@ already_AddRefed<nsJARProtocolHandler>
 nsJARProtocolHandler::GetSingleton()
 {
     if (!gJarHandler) {
-        auto jar = MakeRefPtr<nsJARProtocolHandler>();
-        gJarHandler = jar.get();
-        if (NS_FAILED(jar->Init())) {
+        gJarHandler = new nsJARProtocolHandler();
+        if (NS_SUCCEEDED(gJarHandler->Init())) {
+            ClearOnShutdown(&gJarHandler);
+        } else {
             gJarHandler = nullptr;
-            return nullptr;
         }
-        // We release this reference on module shutdown.
-        NS_ADDREF(gJarHandler);
-        return jar.forget();
     }
     return do_AddRef(gJarHandler);
 }

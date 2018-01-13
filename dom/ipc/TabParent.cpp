@@ -98,8 +98,6 @@
 #include "UnitTransforms.h"
 #include <algorithm>
 #include "mozilla/WebBrowserPersistDocumentParent.h"
-#include "nsIGroupedSHistory.h"
-#include "PartialSHistory.h"
 #include "ProcessPriorityManager.h"
 #include "nsString.h"
 #include "NullPrincipal.h"
@@ -2904,8 +2902,6 @@ TabParent::GetUseAsyncPanZoom(bool* useAsyncPanZoom)
 NS_IMETHODIMP
 TabParent::SetDocShellIsActive(bool isActive)
 {
-  // docshell is consider prerendered only if not active yet
-  mIsPrerendered &= !isActive;
   mDocShellIsActive = isActive;
   SetRenderLayers(isActive);
   Unused << SendSetDocShellIsActive(isActive);
@@ -2938,13 +2934,6 @@ NS_IMETHODIMP
 TabParent::GetDocShellIsActive(bool* aIsActive)
 {
   *aIsActive = mDocShellIsActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TabParent::GetIsPrerendered(bool* aIsPrerendered)
-{
-  *aIsPrerendered = mIsPrerendered;
   return NS_OK;
 }
 
@@ -3596,45 +3585,6 @@ TabParent::RecvLookUpDictionary(const nsString& aText,
 
   widget->LookUpDictionary(aText, aFontRangeArray, aIsVertical,
                            aPoint - GetChildProcessOffset());
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-TabParent::RecvSHistoryUpdate(const uint32_t& aCount, const uint32_t& aLocalIndex, const bool& aTruncate)
-{
-  RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
-  if (!frameLoader) {
-    // FrameLoader can be nullptr if the it is destroying.
-    // In this case session history change can simply be ignored.
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIPartialSHistory> partialHistory;
-  frameLoader->GetPartialSHistory(getter_AddRefs(partialHistory));
-  if (!partialHistory) {
-    // PartialSHistory is not enabled
-    return IPC_OK();
-  }
-
-  partialHistory->HandleSHistoryUpdate(aCount, aLocalIndex, aTruncate);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-TabParent::RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex)
-{
-  RefPtr<nsFrameLoader> frameLoader(GetFrameLoader());
-  if (!frameLoader) {
-    // FrameLoader can be nullptr if the it is destroying.
-    // In this case we can ignore the request.
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsISupports> promise;
-  if (NS_FAILED(frameLoader->RequestGroupedHistoryNavigation(aGlobalIndex,
-                                                             getter_AddRefs(promise)))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
   return IPC_OK();
 }
 

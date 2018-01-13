@@ -5,7 +5,7 @@
 esid: prod-annexB-ClassAtomNoDash
 description: >
   Character classes containing an invalid control escape behave like [\\c]
-info: >
+info: |
   ClassAtomNoDash :: `\`
 
   The production ClassAtomNoDash :: `\` evaluates as follows:

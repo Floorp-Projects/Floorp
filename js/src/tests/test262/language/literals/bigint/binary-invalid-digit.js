@@ -17,7 +17,7 @@ info: |
 
   NumericLiteralSuffix :: n
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [BigInt]
 ---*/

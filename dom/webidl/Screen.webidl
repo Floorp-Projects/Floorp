@@ -43,16 +43,15 @@ interface Screen : EventTarget {
    * DEPRECATED, use ScreenOrientation API instead.
    * Lock screen orientation to the specified type.
    */
-  [Throws, UnsafeInPrerendering]
+  [Throws]
   boolean mozLockOrientation(DOMString orientation);
-  [Throws, UnsafeInPrerendering]
+  [Throws]
   boolean mozLockOrientation(sequence<DOMString> orientation);
 
   /**
    * DEPRECATED, use ScreenOrientation API instead.
    * Unlock the screen orientation.
    */
-  [UnsafeInPrerendering]
   void mozUnlockOrientation();
 };
 

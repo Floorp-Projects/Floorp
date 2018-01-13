@@ -2872,43 +2872,6 @@ IsNonExposedGlobal(JSContext* aCx, JSObject* aGlobal,
   return false;
 }
 
-void
-HandlePrerenderingViolation(nsPIDOMWindowInner* aWindow)
-{
-  // Freeze the window and its workers, and its children too.
-  aWindow->Freeze();
-
-  // Suspend event handling on the document
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  if (doc) {
-    doc->SuppressEventHandling();
-  }
-}
-
-bool
-EnforceNotInPrerendering(JSContext* aCx, JSObject* aObj)
-{
-  JS::Rooted<JSObject*> thisObj(aCx, js::CheckedUnwrap(aObj));
-  if (!thisObj) {
-    // Without a this object, we cannot check the safety.
-    return true;
-  }
-  nsGlobalWindowInner* window = xpc::WindowGlobalOrNull(thisObj);
-  if (!window) {
-    // Without a window, we cannot check the safety.
-    return true;
-  }
-
-  if (window->GetIsPrerendered()) {
-    HandlePrerenderingViolation(window->AsInner());
-    // When the bindings layer sees a false return value, it returns false form
-    // the JSNative in order to trigger an uncatchable exception.
-    return false;
-  }
-
-  return true;
-}
-
 bool
 GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
