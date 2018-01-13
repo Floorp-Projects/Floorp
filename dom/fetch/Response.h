@@ -120,7 +120,7 @@ public:
 
   static already_AddRefed<Response>
   Constructor(const GlobalObject& aGlobal,
-              const Optional<fetch::ResponseBodyInit>& aBody,
+              const Optional<Nullable<fetch::ResponseBodyInit>>& aBody,
               const ResponseInit& aInit, ErrorResult& rv);
 
   nsIGlobalObject* GetParentObject() const
