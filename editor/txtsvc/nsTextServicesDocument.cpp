@@ -3238,44 +3238,9 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextServicesDocument::WillInsertNode(nsIDOMNode* aNode,
-                                       nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextServicesDocument::WillDeleteNode(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextServicesDocument::WillSplitNode(nsIDOMNode *aExistingRightNode,
-                             int32_t     aOffset)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextServicesDocument::WillJoinNodes(nsIDOMNode  *aLeftNode,
-                             nsIDOMNode  *aRightNode,
-                             nsIDOMNode  *aParent)
-{
-  return NS_OK;
-}
-
 // -------------------------------
 // stubs for unused listen methods
 // -------------------------------
-
-NS_IMETHODIMP
-nsTextServicesDocument::WillCreateNode(const nsAString& aTag,
-                                       nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsTextServicesDocument::DidCreateNode(const nsAString& aTag,
@@ -3286,37 +3251,39 @@ nsTextServicesDocument::DidCreateNode(const nsAString& aTag,
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString)
+nsTextServicesDocument::DidInsertText(nsIDOMCharacterData* aTextNode,
+                                      int32_t aOffset,
+                                      const nsAString& aString,
+                                      nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult)
+nsTextServicesDocument::WillDeleteText(nsIDOMCharacterData* aTextNode,
+                                       int32_t aOffset,
+                                       int32_t aLength)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength)
+nsTextServicesDocument::DidDeleteText(nsIDOMCharacterData* aTextNode,
+                                      int32_t aOffset,
+                                      int32_t aLength,
+                                      nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult)
+nsTextServicesDocument::WillDeleteSelection(nsISelection* aSelection)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextServicesDocument::WillDeleteSelection(nsISelection *aSelection)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextServicesDocument::DidDeleteSelection(nsISelection *aSelection)
+nsTextServicesDocument::DidDeleteSelection(nsISelection* aSelection)
 {
   return NS_OK;
 }
