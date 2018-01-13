@@ -519,7 +519,11 @@ gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
     mozilla::DebugOnly<FT_Error> ftError =
         FT_Load_Glyph(face.get(), aGID, flags);
     MOZ_ASSERT(!ftError);
-    advance = face.get()->glyph->linearHoriAdvance;
+    if (face.get()->face_flags & FT_FACE_FLAG_SCALABLE) {
+        advance = face.get()->glyph->linearHoriAdvance;
+    } else {
+        advance = face.get()->glyph->advance.x << 10; // convert 26.6 to 16.16
+    }
 
     // If freetype emboldening is being used, and it's not a zero-width glyph,
     // adjust the advance to account for the increased width.
