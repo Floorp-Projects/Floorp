@@ -330,6 +330,7 @@ class ProxyScriptAPIManager extends SchemaAPIManager {
 
   lazyInit() {
     if (!this.initialized) {
+      this.initGlobal();
       let entries = XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT);
       for (let [/* name */, value] of entries) {
         this.loadScript(value);
