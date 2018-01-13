@@ -4,7 +4,6 @@
 package org.mozilla.gecko.db;
 
 import android.annotation.SuppressLint;
-import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -45,13 +44,15 @@ public class LocalBrowserDBTest {
     private static final String FOLDER_NAME = "folder1";
 
     private Context context;
-    private ContentProvider provider;
+    private BrowserProvider provider;
     private ContentProviderClient bookmarkClient;
 
     @Before
     public void setUp() throws Exception {
         context = RuntimeEnvironment.application;
-        provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
+        provider = new BrowserProvider();
+        provider.onCreate();
+        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
 
         ShadowContentResolver contentResolver = new ShadowContentResolver();
         bookmarkClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);

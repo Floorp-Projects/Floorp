@@ -226,5 +226,4 @@ public class Highlight implements WebpageRowModel {
 
     // The Highlights cursor automatically notifies of data changes, so nothing needs to be done here.
     @Override
-    public void onStateCommitted() {}
-}
+    public void onStateCommitted() {}}
