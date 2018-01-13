@@ -465,7 +465,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             switch (msg) {
                 case START:
                     flags.add(UpdateFlags.PROGRESS);
-                    updateProgressVisibility(tab, Tab.LOAD_PROGRESS_INIT);
+                    updateProgressBarState(tab, Tab.LOAD_PROGRESS_INIT);
                     break;
                 case ADDED:
                 case LOCATION_CHANGE:
@@ -476,12 +476,12 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
                     if (progressBar.getVisibility() == View.VISIBLE) {
                         progressBar.setProgress(tab.getLoadProgress());
                     }
-                    updateProgressVisibility();
+                    updateProgressBarState();
                     break;
 
                 case SELECTED:
                     flags.add(UpdateFlags.PROGRESS);
-                    updateProgressVisibility();
+                    updateProgressBarState();
                     break;
             }
 
@@ -538,16 +538,24 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
-    private void updateProgressVisibility() {
+    /**
+     * Updates the progress bar percentage and hides/shows it depending on the loading state of the
+     * currently selected tab.
+     */
+    private void updateProgressBarState() {
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         // The selected tab may be null if GeckoApp (and thus the
         // selected tab) are not yet initialized (bug 1090287).
         if (selectedTab != null) {
-            updateProgressVisibility(selectedTab, selectedTab.getLoadProgress());
+            updateProgressBarState(selectedTab, selectedTab.getLoadProgress());
         }
     }
 
-    private void updateProgressVisibility(Tab selectedTab, int progress) {
+    /**
+     * Updates the progress bar to the given <code>progress</code> percentage and hides/shows it
+     * depending on the loading state of the tab passed as <code>selectedTab</code>.
+     */
+    private void updateProgressBarState(Tab selectedTab, int progress) {
         if (!isEditing() && selectedTab.getState() == Tab.STATE_LOADING) {
             progressBar.setProgress(progress);
             progressBar.setPrivateMode(selectedTab.isPrivate());
@@ -805,7 +813,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         setUIMode(UIMode.EDIT);
 
-        updateProgressVisibility();
+        updateProgressBarState();
 
         if (startEditingListener != null) {
             startEditingListener.onStartEditing();
@@ -853,7 +861,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             stopEditingListener.onStopEditing();
         }
 
-        updateProgressVisibility();
+        updateProgressBarState();
         triggerStopEditingTransition();
 
         return url;
