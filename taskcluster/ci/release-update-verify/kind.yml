@@ -338,7 +338,7 @@ jobs:
                by-project:
                   jamun: "aurora-localtest"
                   maple: "aurora-localtest"
-                  mozilla-aurora: "aurora-localtest"
+                  mozilla-beta: "aurora-localtest"
                   mozilla-release: "release-localtest"
                   mozilla-esr52: "esr-localtest"
                   default: "default"
@@ -346,7 +346,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-linux64.cfg"
                   maple: "aurora-devedition-linux64.cfg"
-                  mozilla-aurora: "aurora-devedition-linux64.cfg"
+                  mozilla-beta: "aurora-devedition-linux64.cfg"
                   mozilla-release: "release-devedition-linux64.cfg"
                   mozilla-esr52: "esr-devedition-linux64.cfg"
                   default: "none"
@@ -367,7 +367,7 @@ jobs:
                by-project:
                   jamun: "aurora-localtest"
                   maple: "aurora-localtest"
-                  mozilla-aurora: "aurora-localtest"
+                  mozilla-beta: "aurora-localtest"
                   mozilla-release: "release-localtest"
                   mozilla-esr52: "esr-localtest"
                   default: "default"
@@ -375,7 +375,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-linux.cfg"
                   maple: "aurora-devedition-linux.cfg"
-                  mozilla-aurora: "aurora-devedition-linux.cfg"
+                  mozilla-beta: "aurora-devedition-linux.cfg"
                   mozilla-release: "release-devedition-linux.cfg"
                   mozilla-esr52: "esr-devedition-linux.cfg"
                   default: "none"
@@ -396,7 +396,7 @@ jobs:
                by-project:
                   jamun: "aurora-localtest"
                   maple: "aurora-localtest"
-                  mozilla-aurora: "aurora-localtest"
+                  mozilla-beta: "aurora-localtest"
                   mozilla-release: "release-localtest"
                   mozilla-esr52: "esr-localtest"
                   default: "default"
@@ -404,7 +404,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-win64.cfg"
                   maple: "aurora-devedition-win64.cfg"
-                  mozilla-aurora: "aurora-devedition-win64.cfg"
+                  mozilla-beta: "aurora-devedition-win64.cfg"
                   mozilla-release: "release-devedition-win64.cfg"
                   mozilla-esr52: "esr-devedition-win64.cfg"
                   default: "none"
@@ -425,7 +425,7 @@ jobs:
                by-project:
                   jamun: "aurora-localtest"
                   maple: "aurora-localtest"
-                  mozilla-aurora: "aurora-localtest"
+                  mozilla-beta: "aurora-localtest"
                   mozilla-release: "release-localtest"
                   mozilla-esr52: "esr-localtest"
                   default: "default"
@@ -433,7 +433,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-win32.cfg"
                   maple: "aurora-devedition-win32.cfg"
-                  mozilla-aurora: "aurora-devedition-win32.cfg"
+                  mozilla-beta: "aurora-devedition-win32.cfg"
                   mozilla-release: "release-devedition-win32.cfg"
                   mozilla-esr52: "esr-devedition-win32.cfg"
                   default: "none"
@@ -454,7 +454,7 @@ jobs:
                by-project:
                   jamun: "aurora-localtest"
                   maple: "aurora-localtest"
-                  mozilla-aurora: "aurora-localtest"
+                  mozilla-beta: "aurora-localtest"
                   mozilla-release: "release-localtest"
                   mozilla-esr52: "esr-localtest"
                   default: "default"
@@ -462,7 +462,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-macosx64.cfg"
                   maple: "aurora-devedition-macosx64.cfg"
-                  mozilla-aurora: "aurora-devedition-macosx64.cfg"
+                  mozilla-beta: "aurora-devedition-macosx64.cfg"
                   mozilla-release: "release-devedition-macosx64.cfg"
                   mozilla-esr52: "esr-devedition-macosx64.cfg"
                   default: "none"

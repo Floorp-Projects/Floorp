@@ -129,7 +129,7 @@ jobs:
                by-project:
                   jamun: "aurora"
                   maple: "aurora"
-                  mozilla-aurora: "aurora"
+                  mozilla-beta: "aurora"
                   default: "default"
             repo_path:
                by-project:
