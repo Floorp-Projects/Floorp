@@ -60,7 +60,8 @@ public class AppMenuComponent extends BaseComponent {
     };
 
     public enum PageMenuItem {
-        SAVE_AS_PDF(R.string.save_as_pdf);
+        SAVE_AS_PDF(R.string.save_as_pdf),
+        VIEW_PAGE_SOURCE(R.string.view_page_source);
 
         private static final MenuItem PARENT_MENU = MenuItem.PAGE;
 
