@@ -52,7 +52,7 @@
               "scopes": {
                 "type": "array",
                 "items": {"$ref": "APIParentScope"},
-                "onerror": "warn",
+                "onError": "warn",
                 "optional": true,
                 "default": []
               }
@@ -71,7 +71,7 @@
                 "type": "array",
                 "minItems": 1,
                 "items": {"$ref": "APIChildScope"},
-                "onerror": "warn"
+                "onError": "warn"
               }
             },
             "optional": true
@@ -99,7 +99,7 @@
         "id": "APIEvents",
         "type": "array",
         "items": {"$ref": "APIEvent"},
-        "onerror": "warn"
+        "onError": "warn"
       },
       {
         "id": "APIEvent",
