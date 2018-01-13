@@ -1,0 +1,13 @@
+Index: lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+===================================================================
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp	(revision 322435)
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp	(working copy)
+@@ -271,6 +271,8 @@
+         llvm::sys::path::filename(M.getSourceFileName()));
+   }
+
++  OutStreamer->EmitCFISections(true, true);
++
+   GCModuleInfo *MI = getAnalysisIfAvailable<GCModuleInfo>();
+   assert(MI && "AsmPrinter didn't require GCModuleInfo?");
+   for (auto &I : *MI)
