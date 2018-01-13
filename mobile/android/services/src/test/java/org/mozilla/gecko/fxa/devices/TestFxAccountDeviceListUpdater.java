@@ -3,7 +3,6 @@
 
 package org.mozilla.gecko.fxa.devices;
 
-import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -22,6 +21,7 @@ import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.robolectric.shadows.ShadowContentResolver;
@@ -119,9 +119,12 @@ public class TestFxAccountDeviceListUpdater {
     public void testBrowserProvider() {
         Uri uri = testUri(BrowserContract.RemoteDevices.CONTENT_URI);
 
-        final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
+        BrowserProvider provider = new BrowserProvider();
         Cursor c = null;
         try {
+            provider.onCreate();
+            ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
+
             final ShadowContentResolver cr = new ShadowContentResolver();
             ContentProviderClient remoteDevicesClient = cr.acquireContentProviderClient(BrowserContract.RemoteDevices.CONTENT_URI);
 
