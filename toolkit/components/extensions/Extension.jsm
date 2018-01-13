@@ -632,8 +632,8 @@ class ExtensionData {
 
       // Normalize all patterns to contain a single leading /
       if (manifest.web_accessible_resources) {
-        webAccessibleResources = manifest.web_accessible_resources
-          .map(path => path.replace(/^\/*/, "/"));
+        webAccessibleResources.push(...manifest.web_accessible_resources
+          .map(path => path.replace(/^\/*/, "/")));
       }
     } else if (this.type == "langpack") {
       // Compute the chrome resources to be registered for this langpack
