@@ -118,14 +118,13 @@ public final class TextInputController {
      * {@code View.getHandler()} for the View returning the InputConnection instance, and
      * then call this method from the overridden method.
      *
-     * For example: <pre>{@code
-     * @Override
+     * For example:<pre>
+     * &#64;Override
      * public Handler getHandler() {
-     *     if (Build.VERSION.SDK_INT >= 24) {
+     *     if (Build.VERSION.SDK_INT &gt;= 24) {
      *         return super.getHandler();
      *     }
      *     return getSession().getTextInputController().getHandler(super.getHandler());
-     * }
      * }</pre>
      *
      * @param defHandler Handler returned by the system {@code getHandler} implementation.
@@ -185,7 +184,7 @@ public final class TextInputController {
      * Get an InputConnection instance. For full functionality, call {@link
      * #setView(View)} first before calling this method.
      *
-     * @param outAttrs EditorInfo instance to be filled on return.
+     * @param attrs EditorInfo instance to be filled on return.
      * @return InputConnection instance or null if input method is not active.
      */
     public @Nullable InputConnection onCreateInputConnection(final @NonNull EditorInfo attrs) {
@@ -260,6 +259,7 @@ public final class TextInputController {
      * Process a KeyEvent as a multiple-press event.
      *
      * @param keyCode Key code.
+     * @param repeatCount Key repeat count.
      * @param event KeyEvent instance.
      * @return True if the event was handled.
      */

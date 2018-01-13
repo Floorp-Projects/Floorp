@@ -1163,21 +1163,21 @@ public class GeckoSession extends LayerSession
 
         /**
         * A View has started loading content from the network.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session GeckoSession that initiated the callback.
         * @param url The resource being loaded.
         */
         void onPageStart(GeckoSession session, String url);
 
         /**
         * A View has finished loading content from the network.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session GeckoSession that initiated the callback.
         * @param success Whether the page loaded successfully or an error occurred.
         */
         void onPageStop(GeckoSession session, boolean success);
 
         /**
         * The security status has been updated.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session GeckoSession that initiated the callback.
         * @param securityInfo The new security information.
         */
         void onSecurityChange(GeckoSession session, SecurityInformation securityInfo);
@@ -1187,7 +1187,7 @@ public class GeckoSession extends LayerSession
         /**
         * A page title was discovered in the content or updated after the content
         * loaded.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session The GeckoSession that initiated the callback.
         * @param title The title sent from the content.
         */
         void onTitleChange(GeckoSession session, String title);
@@ -1197,7 +1197,7 @@ public class GeckoSession extends LayerSession
          * would set the Activity containing the GeckoSession to full screen when the page is
          * in full screen mode.
          *
-         * @param view The GeckoSession that initiated the callback.
+         * @param session The GeckoSession that initiated the callback.
          * @param fullScreen True if the page is in full screen mode.
          */
         void onFullScreen(GeckoSession session, boolean fullScreen);
@@ -1208,7 +1208,7 @@ public class GeckoSession extends LayerSession
          * This event is fired on links, (nested) images and (nested) media
          * elements.
          *
-         * @param view The GeckoSession that initiated the callback.
+         * @param session The GeckoSession that initiated the callback.
          * @param screenX The screen coordinates of the press.
          * @param screenY The screen coordinates of the press.
          * @param uri The URI of the pressed link, set for links and
@@ -1223,21 +1223,21 @@ public class GeckoSession extends LayerSession
     public interface NavigationListener {
         /**
         * A view has started loading content from the network.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session The GeckoSession that initiated the callback.
         * @param url The resource being loaded.
         */
         void onLocationChange(GeckoSession session, String url);
 
         /**
         * The view's ability to go back has changed.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session The GeckoSession that initiated the callback.
         * @param canGoBack The new value for the ability.
         */
         void onCanGoBack(GeckoSession session, boolean canGoBack);
 
         /**
         * The view's ability to go forward has changed.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session The GeckoSession that initiated the callback.
         * @param canGoForward The new value for the ability.
         */
         void onCanGoForward(GeckoSession session, boolean canGoForward);
@@ -1288,7 +1288,7 @@ public class GeckoSession extends LayerSession
 
         /**
         * A request to open an URI.
-        * @param view The GeckoSession that initiated the callback.
+        * @param session The GeckoSession that initiated the callback.
         * @param uri The URI to be loaded.
         * @param where The target window.
         *
@@ -1322,21 +1322,29 @@ public class GeckoSession extends LayerSession
              * prompt will include a checkbox to let the user disable future prompts.
              * Although the API allows checkboxes for all prompts, in practice, only
              * alert/button/text/auth prompts will possibly have a checkbox.
+             *
+             * @return True if prompt includes a checkbox.
              */
             boolean hasCheckbox();
 
             /**
              * Return the message label for the optional checkbox.
+             *
+             * @return Checkbox message or null if none.
              */
             String getCheckboxMessage();
 
             /**
              * Return the initial value for the optional checkbox.
+             *
+             * @return Initial checkbox value.
              */
             boolean getCheckboxValue();
 
             /**
              * Set the current value for the optional checkbox.
+             *
+             * @param value New checkbox value.
              */
             void setCheckboxValue(boolean value);
         }
@@ -1344,8 +1352,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a simple message prompt.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
          * @param callback Callback interface.
@@ -1359,6 +1366,8 @@ public class GeckoSession extends LayerSession
             /**
              * Called by the prompt implementation when the button prompt is dismissed by
              * the user pressing one of the buttons.
+             *
+             * @param button Button result; one of BUTTON_TYPE_* constants.
              */
             void confirm(int button);
         }
@@ -1370,8 +1379,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a prompt with up to three buttons.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
          * @param btnMsg Array of 3 elements indicating labels for the individual buttons.
@@ -1392,6 +1400,8 @@ public class GeckoSession extends LayerSession
             /**
              * Called by the prompt implementation when the text prompt is confirmed by
              * the user, for example by pressing the "OK" button.
+             *
+             * @param text Text result.
              */
             void confirm(String text);
         }
@@ -1399,8 +1409,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a prompt for inputting text.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
          * @param value Default input text for the prompt.
@@ -1416,12 +1425,17 @@ public class GeckoSession extends LayerSession
             /**
              * Called by the prompt implementation when a password-only prompt is
              * confirmed by the user.
+             *
+             * @param password Entered password.
              */
             void confirm(String password);
 
             /**
              * Called by the prompt implementation when a username/password prompt is
              * confirmed by the user.
+             *
+             * @param username Entered username.
+             * @param password Entered password.
              */
             void confirm(String username, String password);
         }
@@ -1463,8 +1477,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a prompt for authentication credentials.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param msg Message for the prompt dialog.
          * @param options Bundle containing options for the prompt with keys,
@@ -1535,8 +1548,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a menu prompt or list prompt.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog, or null for no title.
          * @param msg Message for the prompt dialog, or null for no message.
          * @param type One of CHOICE_TYPE_* indicating the type of prompt.
@@ -1560,8 +1572,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a color prompt.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param value Initial color value in HTML color format.
          * @param callback Callback interface; the result passed to confirm() must be in
@@ -1598,8 +1609,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a date/time prompt.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog; currently always null.
          * @param type One of DATETIME_TYPE_* indicating the type of prompt.
          * @param value Initial date/time value in HTML date/time format.
@@ -1640,8 +1650,7 @@ public class GeckoSession extends LayerSession
         /**
          * Display a file prompt.
          *
-         * @param view The GeckoSession that triggered the prompt
-         *             or null if the prompt is a global prompt.
+         * @param session GeckoSession that triggered the prompt
          * @param title Title for the prompt dialog.
          * @param type One of FILE_TYPE_* indicating the prompt type.
          * @param mimeTypes Array of permissible MIME types for the selected files, in
@@ -1661,7 +1670,7 @@ public class GeckoSession extends LayerSession
         /**
          * The scroll position of the content has changed.
          *
-        * @param view The GeckoSession that initiated the callback.
+        * @param session GeckoSession that initiated the callback.
         * @param scrollX The new horizontal scroll position in pixels.
         * @param scrollY The new vertical scroll position in pixels.
         */
@@ -1698,7 +1707,7 @@ public class GeckoSession extends LayerSession
         /**
          * Request Android app permissions.
          *
-         * @param view GeckoSession instance requesting the permissions.
+         * @param session GeckoSession instance requesting the permissions.
          * @param permissions List of permissions to request; possible values are,
          *                    android.Manifest.permission.ACCESS_FINE_LOCATION
          *                    android.Manifest.permission.CAMERA
@@ -1711,7 +1720,7 @@ public class GeckoSession extends LayerSession
         /**
          * Request content permission.
          *
-         * @param view GeckoSession instance requesting the permission.
+         * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param type The type of the requested permission; possible values are,
          *             "geolocation": permission for using the geolocation API
@@ -1762,7 +1771,7 @@ public class GeckoSession extends LayerSession
          * Request content media permissions, including request for which video and/or
          * audio source to use.
          *
-         * @param view GeckoSession instance requesting the permission.
+         * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param video List of video sources, or null if not requesting video.
          *              Each bundle represents a video source, with keys,
