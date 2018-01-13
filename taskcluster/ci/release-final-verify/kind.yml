@@ -101,7 +101,7 @@ jobs:
                by-project:
                   jamun: "aurora-devedition-linux.cfg aurora-devedition-linux64.cfg aurora-devedition-macosx64.cfg aurora-devedition-win32.cfg aurora-devedition-win64.cfg"
                   maple: "aurora-devedition-linux.cfg aurora-devedition-linux64.cfg aurora-devedition-macosx64.cfg aurora-devedition-win32.cfg aurora-devedition-win64.cfg"
-                  mozilla-aurora: "aurora-devedition-linux.cfg aurora-devedition-linux64.cfg aurora-devedition-macosx64.cfg aurora-devedition-win32.cfg aurora-devedition-win64.cfg"
+                  mozilla-beta: "aurora-devedition-linux.cfg aurora-devedition-linux64.cfg aurora-devedition-macosx64.cfg aurora-devedition-win32.cfg aurora-devedition-win64.cfg"
                   mozilla-release: "release-devedition-linux.cfg release-devedition-linux64.cfg release-devedition-macosx64.cfg release-devedition-win32.cfg release-devedition-win64.cfg"
                   mozilla-esr52: "esr-devedition-linux.cfg esr-devedition-linux64.cfg esr-devedition-macosx64.cfg esr-devedition-win32.cfg esr-devedition-win64.cfg"
                   default: ""
