@@ -40,7 +40,7 @@
             android:id="@+id/custom_tabs_action_bar_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
+            android:lines="1"
             android:textColor="?android:textColorPrimary"
             android:textSize="14sp"
             tools:text="Mozilla.org"/>
@@ -49,6 +49,7 @@
             android:id="@+id/custom_tabs_action_bar_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:lines="1"
             android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textSize="10sp"
