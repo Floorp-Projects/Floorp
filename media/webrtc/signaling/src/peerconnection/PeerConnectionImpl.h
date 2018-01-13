@@ -713,7 +713,9 @@ private:
       dom::MediaStreamTrack* aSendTrack,
       ErrorResult& aRv);
 
-  nsresult SetupIceRestart();
+  nsresult SetupIceRestartCredentials();
+  void BeginIceRestart();
+  nsresult ResetIceCredentials();
   nsresult RollbackIceRestart();
   void FinalizeIceRestart();
 
