@@ -202,8 +202,6 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write('MOZ_MUST_USE ')
         if md.inline:
             self.write('inline ')
-        if md.never_inline:
-            self.write('MOZ_NEVER_INLINE ')
 
         if md.methodspec == MethodSpec.STATIC:
             self.write('static ')
