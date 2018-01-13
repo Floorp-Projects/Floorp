@@ -68,7 +68,7 @@ with Files('pyyaml/**'):
 with Files('redo/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
-with Files('requests/**'):
+with Files('requests*/**'):
     BUG_COMPONENT = ('Core', 'Build Config')
 
 with Files('rsa/**'):
