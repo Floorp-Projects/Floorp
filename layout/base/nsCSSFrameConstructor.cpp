@@ -7099,13 +7099,15 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
 
 #ifdef MOZ_XUL
 
-static bool
+static
+bool
 IsXULListBox(nsIContent* aContainer)
 {
-  return aContainer->IsXULElement(nsGkAtoms::listbox);
+  return (aContainer->IsXULElement(nsGkAtoms::listbox));
 }
 
-static nsListBoxBodyFrame*
+static
+nsListBoxBodyFrame*
 MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
 {
   if (!aContainer)
@@ -7615,6 +7617,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     return;
   }
 
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content
+  // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
+  // styles are up-to-date already).
+  if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
+    StyleNewChildRange(aFirstNewContent, nullptr);
+  }
+
   LAYOUT_PHASE_TEMP_EXIT();
   InsertionPoint insertion =
     GetRangeInsertionPoint(aContainer, aFirstNewContent, nullptr);
@@ -7622,13 +7631,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   LAYOUT_PHASE_TEMP_REENTER();
   if (!parentFrame) {
     return;
-  }
-
-  // We couldn't construct lazily. Make Servo eagerly traverse the new content
-  // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
-  // styles are up-to-date already).
-  if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
-    StyleNewChildRange(aFirstNewContent, nullptr);
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7872,32 +7874,42 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 
 #ifdef MOZ_XUL
 
+enum content_operation
+{
+    CONTENT_INSERTED,
+    CONTENT_REMOVED
+};
+
 // Helper function to lookup the listbox body frame and send a notification
-// for removal of content.
-static bool
-MaybeNotifyListBoxBodyOfRemoval(nsPresContext* aPresContext,
-                                nsIContent* aContainer,
-                                nsIContent* aChild,
-                                nsIContent* aOldNextSibling,
-                                nsIFrame* aChildFrame)
+// for insertion or removal of content
+static
+bool NotifyListBoxBody(nsPresContext*    aPresContext,
+                         nsIContent*        aContainer,
+                         nsIContent*        aChild,
+                         // Only used for the removed notification
+                         nsIContent*        aOldNextSibling,
+                         nsIFrame*          aChildFrame,
+                         content_operation  aOperation)
 {
   nsListBoxBodyFrame* listBoxBodyFrame =
     MaybeGetListBoxBodyFrame(aContainer, aChild);
-  if (!listBoxBodyFrame) {
-    return false;
+  if (listBoxBodyFrame) {
+    if (aOperation == CONTENT_REMOVED) {
+      // Except if we have an aChildFrame and its parent is not the right
+      // thing, then we don't do this.  Pseudo frames are so much fun....
+      if (!aChildFrame || aChildFrame->GetParent() == listBoxBodyFrame) {
+        listBoxBodyFrame->OnContentRemoved(aPresContext, aContainer,
+                                           aChildFrame, aOldNextSibling);
+        return true;
+      }
+    } else {
+      listBoxBodyFrame->OnContentInserted(aChild);
+      return true;
+    }
   }
 
-  // Except if we have an aChildFrame and its parent is not the right
-  // thing, then we don't do this.  Pseudo frames are so much fun....
-  if (aChildFrame && aChildFrame->GetParent() != listBoxBodyFrame) {
-    return false;
-  }
-
-  listBoxBodyFrame->OnContentRemoved(
-    aPresContext, aContainer, aChildFrame, aOldNextSibling);
-  return true;
+  return false;
 }
-
 #endif // MOZ_XUL
 
 void
@@ -7996,11 +8008,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 #ifdef MOZ_XUL
   if (aContainer && IsXULListBox(aContainer)) {
     // For XUL list box, we need to style the new children eagerly.
+    styleNewChildRangeEagerly();
     if (isSingleInsert) {
-      if (nsListBoxBodyFrame* listBoxBodyFrame =
-            MaybeGetListBoxBodyFrame(aContainer, aStartChild)) {
-        styleNewChildRangeEagerly();
-        listBoxBodyFrame->OnContentInserted(aStartChild);
+      if (NotifyListBoxBody(mPresShell->GetPresContext(), aContainer,
+                            // The insert case in NotifyListBoxBody
+                            // doesn't use "old next sibling".
+                            aStartChild, nullptr, nullptr, CONTENT_INSERTED)) {
         return;
       }
     } else {
@@ -8089,6 +8102,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
+  // We couldn't construct lazily. Make Servo eagerly traverse the new content
+  // if needed.
+  styleNewChildRangeEagerly();
+
   InsertionPoint insertion;
   if (isSingleInsert) {
     // See if we have an XBL insertion point. If so, then that's our
@@ -8106,11 +8123,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   if (!insertion.mParentFrame) {
     return;
   }
-
-  // We couldn't construct lazily.
-  //
-  // Make Servo eagerly traverse the new content if needed.
-  styleNewChildRangeEagerly();
 
   bool isAppend, isRangeInsertSafe;
   nsIFrame* prevSibling = GetInsertionPrevSibling(&insertion, aStartChild,
@@ -8548,8 +8560,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   }
 
 #ifdef MOZ_XUL
-  if (MaybeNotifyListBoxBodyOfRemoval(
-        presContext, aContainer, aChild, aOldNextSibling, childFrame)) {
+  if (NotifyListBoxBody(presContext, aContainer, aChild, aOldNextSibling,
+                        childFrame, CONTENT_REMOVED)) {
     return false;
   }
 #endif // MOZ_XUL
