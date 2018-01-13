@@ -148,11 +148,8 @@ treechildren::-moz-tree-drop-feedback {
 
 treechildren::-moz-tree-progressmeter {
   margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: #AAAAAA #000000;
-  -moz-border-right-colors: #FFFFFF #000000;
-  -moz-border-bottom-colors: #FFFFFF #000000;
-  -moz-border-left-colors: #AAAAAA #000000;
+  border: 1px solid;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
 }
 
 treechildren::-moz-tree-cell-text(progressmeter) {
