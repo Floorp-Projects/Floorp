@@ -41,7 +41,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
-#include "mozilla/dom/PendingGlobalHistoryEntry.h"
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
@@ -367,7 +366,6 @@ nsDocShell::nsDocShell()
   , mIsOffScreenBrowser(false)
   , mIsActive(true)
   , mDisableMetaRefreshWhenInactive(false)
-  , mIsPrerendered(false)
   , mIsAppTab(false)
   , mUseGlobalHistory(false)
   , mUseRemoteTabs(false)
@@ -1026,7 +1024,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       srcdoc,
                       sourceDocShell,
                       baseURI,
-                      false,
                       nullptr,  // No nsIDocShell
                       nullptr); // No nsIRequest
 }
@@ -2991,12 +2988,8 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     }
     SetAllowContentRetargeting(mAllowContentRetargeting &&
       parentAsDocShell->GetAllowContentRetargetingOnChildren());
-    if (parentAsDocShell->GetIsPrerendered()) {
-      SetIsPrerendered();
-    }
     if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
-      // a prerendered docshell is not active yet
-      SetIsActive(value && !mIsPrerendered);
+      SetIsActive(value);
     }
     if (NS_SUCCEEDED(parentAsDocShell->GetCustomUserAgent(customUserAgent)) &&
         !customUserAgent.IsEmpty()) {
@@ -5024,7 +5017,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
                       nullptr, VoidString(), nullptr, -1, nullptr,
                       LOAD_ERROR_PAGE, nullptr, true, VoidString(), this,
-                      nullptr, false, nullptr, nullptr);
+                      nullptr, nullptr, nullptr);
 }
 
 NS_IMETHODIMP
@@ -5133,7 +5126,6 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       srcdoc,          // srcdoc argument for iframe
                       this,            // For reloads we are the source
                       baseURI,
-                      false,
                       nullptr,         // No nsIDocShell
                       nullptr);        // No nsIRequest
   }
@@ -5846,21 +5838,6 @@ nsDocShell::SetIsActive(bool aIsActive)
   // Keep track ourselves.
   mIsActive = aIsActive;
 
-  // Clear prerender flag if necessary.
-  if (mIsPrerendered && aIsActive) {
-    MOZ_ASSERT(mPrerenderGlobalHistory.get());
-    mIsPrerendered = false;
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
-    nsresult rv = NS_OK;
-    if (history) {
-      rv = mPrerenderGlobalHistory->ApplyChanges(history);
-    } else if (mGlobalHistory) {
-      rv = mPrerenderGlobalHistory->ApplyChanges(mGlobalHistory);
-    }
-    mPrerenderGlobalHistory = nullptr;
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // Tell the PresShell about it.
   nsCOMPtr<nsIPresShell> pshell = GetPresShell();
   if (pshell) {
@@ -5930,24 +5907,6 @@ NS_IMETHODIMP
 nsDocShell::GetIsActive(bool* aIsActive)
 {
   *aIsActive = mIsActive;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetIsPrerendered()
-{
-  MOZ_ASSERT(!mIsPrerendered,
-             "SetIsPrerendered() called on already prerendered docshell");
-  SetIsActive(false);
-  mIsPrerendered = true;
-  mPrerenderGlobalHistory = mozilla::MakeUnique<PendingGlobalHistoryEntry>();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetIsPrerendered(bool* aIsPrerendered)
-{
-  *aIsPrerendered = mIsPrerendered;
   return NS_OK;
 }
 
@@ -8573,8 +8532,7 @@ nsDocShell::RestoreFromHistory()
 
     // this.AddChild(child) calls child.SetDocLoaderParent(this), meaning that
     // the child inherits our state. Among other things, this means that the
-    // child inherits our mIsActive, mIsPrerendered and mPrivateBrowsingId,
-    // which is what we want.
+    // child inherits our mIsActive mPrivateBrowsingId, which is what we want.
     AddChild(childItem);
 
     childShell->SetAllowPlugins(allowPlugins);
@@ -9264,8 +9222,7 @@ public:
                     bool aFirstParty,
                     const nsAString& aSrcdoc,
                     nsIDocShell* aSourceDocShell,
-                    nsIURI* aBaseURI,
-                    bool aCheckForPrerender)
+                    nsIURI* aBaseURI)
     : mozilla::Runnable("InternalLoadEvent")
     , mSrcdoc(aSrcdoc)
     , mDocShell(aDocShell)
@@ -9286,7 +9243,6 @@ public:
     , mFirstParty(aFirstParty)
     , mSourceDocShell(aSourceDocShell)
     , mBaseURI(aBaseURI)
-    , mCheckForPrerender(aCheckForPrerender)
   {
     // Make sure to keep null things null as needed
     if (aTypeHint) {
@@ -9310,7 +9266,7 @@ public:
                                    VoidString(), mPostData, mPostDataLength,
                                    mHeadersData, mLoadType, mSHEntry,
                                    mFirstParty, mSrcdoc, mSourceDocShell,
-                                   mBaseURI, mCheckForPrerender, nullptr,
+                                   mBaseURI, nullptr,
                                    nullptr);
   }
 
@@ -9336,7 +9292,6 @@ private:
   bool mFirstParty;
   nsCOMPtr<nsIDocShell> mSourceDocShell;
   nsCOMPtr<nsIURI> mBaseURI;
-  bool mCheckForPrerender;
 };
 
 /**
@@ -9388,7 +9343,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          const nsAString& aSrcdoc,
                          nsIDocShell* aSourceDocShell,
                          nsIURI* aBaseURI,
-                         bool aCheckForPrerender,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
@@ -9768,7 +9722,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aSrcdoc,
                                         aSourceDocShell,
                                         aBaseURI,
-                                        aCheckForPrerender,
                                         aDocShell,
                                         aRequest);
       if (rv == NS_ERROR_NO_CONTENT) {
@@ -9854,7 +9807,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                               aTriggeringPrincipal, principalToInherit,
                               aFlags, aTypeHint, aPostData, aPostDataLength,
                               aHeadersData, aLoadType, aSHEntry, aFirstParty,
-                              aSrcdoc, aSourceDocShell, aBaseURI, false);
+                              aSrcdoc, aSourceDocShell, aBaseURI);
       return DispatchToTabGroup(TaskCategory::Other, ev.forget());
     }
 
@@ -10229,25 +10182,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     rv = browserChrome3->ShouldLoadURI(this, aURI, aReferrer, !!aPostData,
                                        aTriggeringPrincipal, &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
-      return NS_OK;
-    }
-  }
-
-  if (browserChrome3 && aCheckForPrerender) {
-    nsCOMPtr<nsIRunnable> ev =
-      new InternalLoadEvent(this, aURI, aOriginalURI, aResultPrincipalURI,
-                            aLoadReplace, aReferrer, aReferrerPolicy,
-                            aTriggeringPrincipal, principalToInherit,
-                            aFlags, aTypeHint, aPostData, aPostDataLength,
-                            aHeadersData, aLoadType, aSHEntry, aFirstParty,
-                            aSrcdoc, aSourceDocShell, aBaseURI, false);
-    // We don't need any success handler since in that case
-    // OnPartialSHistoryDeactive would be called, and it would ensure
-    // docshell loads about:blank.
-    bool shouldSwitch = false;
-    rv = browserChrome3->ShouldSwitchToPrerenderedDocument(
-      aURI, mCurrentURI, nullptr, ev, &shouldSwitch);
-    if (NS_SUCCEEDED(rv) && shouldSwitch) {
       return NS_OK;
     }
   }
@@ -12478,7 +12412,6 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     srcdoc,
                     nullptr,            // Source docshell, see comment above
                     baseURI,
-                    false,
                     nullptr,            // No nsIDocShell
                     nullptr);           // No nsIRequest
   return rv;
@@ -12780,7 +12713,7 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
 
   nsCOMPtr<IHistory> history = services::GetHistoryService();
 
-  if (mPrerenderGlobalHistory || history) {
+  if (history) {
     uint32_t visitURIFlags = 0;
 
     if (!IsFrame()) {
@@ -12810,14 +12743,7 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
       visitURIFlags |= IHistory::UNRECOVERABLE_ERROR;
     }
 
-    if (mPrerenderGlobalHistory) {
-      mPrerenderGlobalHistory->VisitURI(aURI,
-                                        aPreviousURI,
-                                        aReferrerURI,
-                                        visitURIFlags);
-    } else {
-      (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
-    }
+    (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
   } else if (mGlobalHistory) {
     // Falls back to sync global history interface.
     (void)mGlobalHistory->AddURI(aURI,
@@ -13785,7 +13711,6 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              VoidString(),              // No srcdoc
                              this,                      // We are the source
                              nullptr,                   // baseURI not needed
-                             true,                      // Check for prerendered doc
                              aDocShell,                 // DocShell out-param
                              aRequest);                 // Request out-param
   if (NS_SUCCEEDED(rv)) {
@@ -14215,9 +14140,7 @@ nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI)
 {
   if (mUseGlobalHistory && !UsePrivateBrowsing()) {
     nsCOMPtr<IHistory> history = services::GetHistoryService();
-    if (mPrerenderGlobalHistory) {
-      mPrerenderGlobalHistory->SetURITitle(aURI, mTitle);
-    } else if (history) {
+    if (history) {
       history->SetURITitle(aURI, mTitle);
     } else if (mGlobalHistory) {
       mGlobalHistory->SetPageTitle(aURI, nsString(mTitle));

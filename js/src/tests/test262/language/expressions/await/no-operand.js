@@ -8,7 +8,7 @@ esid: pending
 description: >
   await requries an operand.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

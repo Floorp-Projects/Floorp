@@ -72,39 +72,4 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
                             in nsIURI aReferrer,
                             in nsIPrincipal aTriggeringPrincipal,
                             in uint32_t aLoadFlags);
-
-  /**
-   * Tell the browser to start prerendering the given document. This prerendering
-   * _must_ be for the toplevel document.
-   *
-   * @param aHref The URI to begin prerendering
-   * @param aReferrer The URI of the document requesting the prerender.
-   * @param aTriggeringPrincipal The Principal that initiated to load aHref
-   */
-  void startPrerenderingDocument(in nsIURI aHref,
-                                 in nsIURI aReferrer,
-                                 in nsIPrincipal aTriggeringPrincipal);
-
-  /**
-   * Check if there's a prerendered document which matches given URI /
-   * referrer, and try to switch to the prerendered document immediately if
-   * there is.
-   *
-   * @param aHref
-   *        The URI which is being loaded.
-   * @param aReferrer
-   *        The referrer for the current load.
-   * @param aSuccess
-   *        (Optional) a runnable which will be run if the swap is successful.
-   * @param aFailure
-   *        (Optional) a runnable which will be run if the swap is not
-   *        successful. Note it's not invoked if the function returns false.
-   *
-   * @return True if there is a matched prerendered document to swap with,
-   *         false otherwise.
-   */
-  bool shouldSwitchToPrerenderedDocument(in nsIURI aHref,
-                                         in nsIURI aReferrer,
-                                         in nsIRunnable aSuccess,
-                                         in nsIRunnable aFailure);
 };

@@ -9,7 +9,7 @@ es6id: 14.4.13
 features: [generators, destructuring-binding, default-parameters]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     GeneratorMethod :

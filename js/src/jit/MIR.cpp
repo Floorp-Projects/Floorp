@@ -1038,10 +1038,18 @@ MConstant::assertInitializedPayload() const
     switch (type()) {
       case MIRType::Int32:
       case MIRType::Float32:
+#if MOZ_LITTLE_ENDIAN
         MOZ_ASSERT((payload_.asBits >> 32) == 0);
+#else
+        MOZ_ASSERT((payload_.asBits << 32) == 0);
+#endif
         break;
       case MIRType::Boolean:
+#if MOZ_LITTLE_ENDIAN
         MOZ_ASSERT((payload_.asBits >> 1) == 0);
+#else
+        MOZ_ASSERT((payload_.asBits & ~(1ULL << 56)) == 0);
+#endif
         break;
       case MIRType::Double:
       case MIRType::Int64:
@@ -1049,7 +1057,11 @@ MConstant::assertInitializedPayload() const
       case MIRType::String:
       case MIRType::Object:
       case MIRType::Symbol:
+#if MOZ_LITTLE_ENDIAN
         MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits >> 32) == 0);
+#else
+        MOZ_ASSERT_IF(JS_BITS_PER_WORD == 32, (payload_.asBits << 32) == 0);
+#endif
         break;
       default:
         MOZ_ASSERT(IsNullOrUndefined(type()) || IsMagicType(type()));

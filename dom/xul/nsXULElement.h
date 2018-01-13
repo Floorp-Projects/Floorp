@@ -411,7 +411,6 @@ public:
 
     nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);
     void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
-    nsresult SetIsPrerendered();
 
     virtual void RecompileScriptEventListeners() override;
 

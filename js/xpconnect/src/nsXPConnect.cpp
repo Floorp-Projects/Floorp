@@ -111,6 +111,7 @@ nsXPConnect::~nsXPConnect()
 
     delete gPrimaryContext;
 
+    MOZ_ASSERT(gSelf == this);
     gSelf = nullptr;
     gOnceAliveNowDead = true;
 }

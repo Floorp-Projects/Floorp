@@ -11,7 +11,7 @@ description: >
     (GeneratorMethod)
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [generators]
 ---*/

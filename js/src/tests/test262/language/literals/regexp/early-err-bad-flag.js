@@ -10,7 +10,7 @@ description: >
   It is a Syntax Error if FlagText of RegularExpressionLiteral contains any code points other than "g", "i", "m", "u", or "y", ...
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

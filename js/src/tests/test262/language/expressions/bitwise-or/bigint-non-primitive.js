@@ -1,3 +1,4 @@
+// |reftest| skip -- BigInt is not supported
 // Copyright (C) 2017 Josh Wolfe. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -5,7 +6,6 @@
 description: Bitwise OR for BigInt non-primitive values
 esid: sec-binary-bitwise-operators-runtime-semantics-evaluation
 info: |
-
   5. Let lnum be ? ToNumeric(lval).
   6. Let rnum be ? ToNumeric(rval).
   ...

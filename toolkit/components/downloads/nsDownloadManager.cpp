@@ -35,16 +35,17 @@ nsDownloadManager::GetSingleton()
   }
 
   auto serv = MakeRefPtr<nsDownloadManager>();
+  // Note: This is cleared in the nsDownloadManager constructor.
   gDownloadManagerService = serv.get();
-  if (NS_FAILED(serv->Init())) {
-    gDownloadManagerService = nullptr;
-    return nullptr;
+  if (NS_SUCCEEDED(serv->Init())) {
+    return serv.forget();
   }
-  return serv.forget();
+  return nullptr;
 }
 
 nsDownloadManager::~nsDownloadManager()
 {
+  MOZ_ASSERT(gDownloadManagerService == this);
   gDownloadManagerService = nullptr;
 }
 

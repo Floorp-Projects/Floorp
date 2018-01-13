@@ -4,7 +4,7 @@
 /*---
 esid: sec-abstract-equality-comparison
 description: Object operands coerced without ToPrimitive hint
-info: >
+info: |
   7.2.14 Abstract Equality Comparison
 
   ...

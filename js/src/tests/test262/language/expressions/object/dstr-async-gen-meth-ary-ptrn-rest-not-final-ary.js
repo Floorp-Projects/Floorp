@@ -8,7 +8,7 @@ esid: sec-asyncgenerator-definitions-propertydefinitionevaluation
 features: [async-iteration]
 flags: [generated, async]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     AsyncGeneratorMethod :

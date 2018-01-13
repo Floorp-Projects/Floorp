@@ -3,7 +3,7 @@
 // See LICENSE for details.
 
 /*---
-info: >
+info: |
  GeneratorMethod early SyntaxError when super is called 
  directly inside generator args
 features: [generators]
@@ -11,7 +11,7 @@ es6id: 14.4.1
 author: Sam Mikes
 description: GeneratorMethod error if HasDirectSuper in args
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 
