@@ -1146,7 +1146,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
                                       ErrorResult& aRv)
 {
     RefPtr<nsAtom> attrAtom(NS_Atomize(aAttribute));
-    void* attrValue = new nsString(aValue);
+    nsAutoPtr<nsString> attrValue = new nsString(aValue);
 
     int32_t nameSpaceId = kNameSpaceID_Wildcard;
     if (!aNamespaceURI.EqualsLiteral("*")) {
@@ -1162,7 +1162,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
-                                            attrValue,
+                                            attrValue.forget(),
                                             true,
                                             attrAtom,
                                             nameSpaceId);
