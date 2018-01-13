@@ -306,6 +306,97 @@ class MachCommands(MachCommandBase):
 
         return ret
 
+    @SubCommand('android', 'geckoview-docs',
+        """Create GeckoView javadoc and optionally upload to Github""")
+    @CommandArgument('--archive', action='store_true',
+        help='Generate a javadoc archive.')
+    @CommandArgument('--upload', metavar='USER/REPO',
+        help='Upload generated javadoc to Github, '
+             'using the specified USER/REPO.')
+    @CommandArgument('--upload-branch', metavar='BRANCH[/PATH]',
+        default='gh-pages/javadoc',
+        help='Use the specified branch/path for commits.')
+    @CommandArgument('--upload-message', metavar='MSG',
+        default='GeckoView docs upload',
+        help='Use the specified message for commits.')
+    @CommandArgument('--variant', default='debug',
+        help='Gradle variant used to generate javadoc.')
+    def android_geckoview_docs(self, archive, upload, upload_branch,
+                               upload_message, variant):
+
+        def capitalize(s):
+            # Can't use str.capitalize because it lower cases trailing letters.
+            return (s[0].upper() + s[1:]) if s else ''
+
+        task = 'geckoview:javadoc' + ('Jar' if archive or upload else '') + capitalize(variant)
+        ret = self.gradle([task], verbose=True)
+        if ret or not upload:
+            return ret
+
+        # Upload to Github.
+        fmt = {
+            'level': os.environ.get('MOZ_SCM_LEVEL', '0'),
+            'project': os.environ.get('MH_BRANCH', 'unknown'),
+            'revision': os.environ.get('GECKO_HEAD_REV', 'tip'),
+        }
+        env = {}
+
+        # In order to push to GitHub from TaskCluster, we store a private key
+        # in the TaskCluster secrets store in the format {"content": "<KEY>"},
+        # and the corresponding public key as a writable deploy key for the
+        # destination repo on GitHub.
+        secret = os.environ.get('GECKOVIEW_DOCS_UPLOAD_SECRET', '').format(**fmt)
+        if secret:
+            # Set up a private key from the secrets store if applicable.
+            import requests
+            req = requests.get('http://taskcluster/secrets/v1/secret/' + secret)
+            req.raise_for_status()
+
+            keyfile = mozpath.abspath('gv-docs-upload-key')
+            with open(keyfile, 'w') as f:
+                os.chmod(keyfile, 0o600)
+                f.write(req.json()['secret']['content'])
+
+            # Turn off strict host key checking so ssh does not complain about
+            # unknown github.com host. We're not pushing anything sensitive, so
+            # it's okay to not check GitHub's host keys.
+            env['GIT_SSH_COMMAND'] = 'ssh -i "%s" -o StrictHostKeyChecking=no' % keyfile
+
+        # Clone remote repo.
+        branch, _, branch_path = upload_branch.partition('/')
+        repo_url = 'git@github.com:%s.git' % upload
+        repo_path = mozpath.abspath('gv-docs-repo')
+        self.run_process(['git', 'clone', '--branch', branch, '--depth', '1',
+                          repo_url, repo_path], append_env=env, pass_thru=True)
+        env['GIT_DIR'] = mozpath.join(repo_path, '.git')
+        env['GIT_WORK_TREE'] = repo_path
+        env['GIT_AUTHOR_NAME'] = env['GIT_COMMITTER_NAME'] = 'GeckoView Docs Bot'
+        env['GIT_AUTHOR_EMAIL'] = env['GIT_COMMITTER_EMAIL'] = 'nobody@mozilla.com'
+
+        # Extract new javadoc to specified directory inside repo.
+        import mozfile
+        src_tar = mozpath.join(self.topobjdir, 'gradle', 'build', 'mobile', 'android',
+                               'geckoview', 'libs', 'geckoview-javadoc.jar')
+        dst_path = mozpath.join(repo_path, branch_path.format(**fmt))
+        mozfile.remove(dst_path)
+        mozfile.extract_zip(src_tar, dst_path)
+
+        # Commit and push.
+        self.run_process(['git', 'add', '--all'], append_env=env, pass_thru=True)
+        if self.run_process(['git', 'diff', '--cached', '--quiet'],
+                            append_env=env, pass_thru=True, ensure_exit_code=False) != 0:
+            # We have something to commit.
+            self.run_process(['git', 'commit',
+                              '--message', upload_message.format(**fmt)],
+                             append_env=env, pass_thru=True)
+            self.run_process(['git', 'push', 'origin', 'gh-pages'],
+                             append_env=env, pass_thru=True)
+
+        mozfile.remove(repo_path)
+        if secret:
+            mozfile.remove(keyfile)
+        return 0
+
 
     @Command('gradle', category='devenv',
         description='Run gradle.',
