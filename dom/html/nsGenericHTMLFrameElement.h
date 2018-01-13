@@ -38,7 +38,6 @@ public:
     , nsBrowserElement()
     , mSrcLoadHappened(false)
     , mNetworkCreated(aFromParser == mozilla::dom::FROM_PARSER_NETWORK)
-    , mIsPrerendered(false)
     , mBrowserFrameListenersRegistered(false)
     , mFrameLoaderCreationDisallowed(false)
     , mReallyIsBrowser(false)
@@ -138,7 +137,6 @@ protected:
    */
   bool mNetworkCreated;
 
-  bool mIsPrerendered;
   bool mBrowserFrameListenersRegistered;
   bool mFrameLoaderCreationDisallowed;
   bool mReallyIsBrowser;

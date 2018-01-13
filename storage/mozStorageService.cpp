@@ -219,13 +219,13 @@ Service::getSingleton()
   // main thread.
   NS_ENSURE_TRUE(NS_IsMainThread(), nullptr);
   RefPtr<Service> service = new Service();
-  gService = service.get();
-  if (NS_FAILED(service->initialize())) {
-    gService = nullptr;
-    return nullptr;
+  if (NS_SUCCEEDED(service->initialize())) {
+    // Note: This is cleared in the Service destructor.
+    gService = service.get();
+    return service.forget();
   }
 
-  return service.forget();
+  return nullptr;
 }
 
 int32_t Service::sSynchronousPref;

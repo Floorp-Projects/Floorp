@@ -1,5 +1,5 @@
-commit 8311965251953d4745aeb68c98fb71fab2eac1d0
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Fri Dec 1 11:16:43 2017 -0800
+commit 73120a5492ce274d551d2a215e65ba30085be7ef
+Author: Rick Waldron <waldron.rick@gmail.com>
+Date:   Wed Jan 10 17:33:03 2018 -0500
 
-    Fix copy-paste bugs in BigInt tests (#1361)
+    Fix: various lint fixes

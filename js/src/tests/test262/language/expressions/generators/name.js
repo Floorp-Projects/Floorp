@@ -4,7 +4,7 @@
 /*---
 es6id: 14.4.1
 description: Assignment of function `name` attribute
-info: >
+info: |
     GeneratorExpression : function * ( FormalParameters ) { GeneratorBody }
 
     1. If the function code for this GeneratorExpression is strict mode code,

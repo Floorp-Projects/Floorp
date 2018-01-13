@@ -42,8 +42,6 @@ public:
   static SpeechDispatcherService* GetInstance(bool create = true);
   static already_AddRefed<SpeechDispatcherService> GetInstanceForService();
 
-  static void Shutdown();
-
   static StaticRefPtr<SpeechDispatcherService> sSingleton;
 
 private:

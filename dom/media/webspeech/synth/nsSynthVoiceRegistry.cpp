@@ -16,6 +16,7 @@
 #include "AudioChannelService.h"
 
 #include "nsString.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -171,6 +172,7 @@ nsSynthVoiceRegistry::GetInstance()
 
   if (!gSynthVoiceRegistry) {
     gSynthVoiceRegistry = new nsSynthVoiceRegistry();
+    ClearOnShutdown(&gSynthVoiceRegistry);
     if (XRE_IsParentProcess()) {
       // Start up all speech synth services.
       NS_CreateServicesFromCategory(NS_SPEECH_SYNTH_STARTED, nullptr,
@@ -187,14 +189,6 @@ nsSynthVoiceRegistry::GetInstanceForService()
   RefPtr<nsSynthVoiceRegistry> registry = GetInstance();
 
   return registry.forget();
-}
-
-void
-nsSynthVoiceRegistry::Shutdown()
-{
-  LOG(LogLevel::Debug, ("[%s] nsSynthVoiceRegistry::Shutdown()",
-                        (XRE_IsContentProcess()) ? "Content" : "Default"));
-  gSynthVoiceRegistry = nullptr;
 }
 
 bool

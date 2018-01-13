@@ -27,7 +27,6 @@
 #include "Units.h"
 #include "nsIWebBrowserPersistable.h"
 #include "nsIFrame.h"
-#include "nsIGroupedSHistory.h"
 #include "nsPluginTags.h"
 
 class nsIURI;
@@ -74,8 +73,6 @@ class nsFrameLoader final : public nsIFrameLoader,
 {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
-  friend class AppendPartialSHistoryAndSwapHelper;
-  friend class RequestGroupedHistoryNavigationHelper;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::TabParent TabParent;
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
@@ -124,16 +121,6 @@ public:
   nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
                    bool aOriginalSrc);
 
-  void SetIsPrerendered(mozilla::ErrorResult& aRv);
-
-  void MakePrerenderedLoaderActive(mozilla::ErrorResult& aRv);
-
-  already_AddRefed<mozilla::dom::Promise>
-  AppendPartialSHistoryAndSwap(nsIFrameLoader& aOther, mozilla::ErrorResult& aRv);
-
-  already_AddRefed<mozilla::dom::Promise>
-  RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, mozilla::ErrorResult& aRv);
-
   void AddProcessChangeBlockingPromise(mozilla::dom::Promise& aPromise, mozilla::ErrorResult& aRv);
 
   void Destroy(mozilla::ErrorResult& aRv);
@@ -173,8 +160,6 @@ public:
              nsIWebProgressListener* aProgressListener,
              mozilla::ErrorResult& aRv);
 
-  already_AddRefed<nsIGroupedSHistory> EnsureGroupedSHistory(mozilla::ErrorResult& aRv);
-
   void StartPersistence(uint64_t aOuterWindowID,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         mozilla::ErrorResult& aRv);
@@ -190,10 +175,6 @@ public:
   uint32_t LazyWidth() const;
 
   uint32_t LazyHeight() const;
-
-  already_AddRefed<nsIPartialSHistory> GetPartialSHistory();
-
-  already_AddRefed<nsIGroupedSHistory> GetGroupedSHistory();
 
   uint64_t ChildID() const { return mChildID; }
 
@@ -485,13 +466,10 @@ private:
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
 
-  nsCOMPtr<nsIPartialSHistory> mPartialSHistory;
-
   // A stack-maintained reference to an array of promises which are blocking
   // grouped history navigation
   nsTArray<RefPtr<mozilla::dom::Promise>>* mBrowserChangingProcessBlockers;
 
-  bool mIsPrerendered : 1;
   bool mDepthTooGreat : 1;
   bool mIsTopLevelContent : 1;
   bool mDestroyCalled : 1;

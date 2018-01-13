@@ -175,10 +175,7 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
       manifest = {};
     }
 
-    let files = data.files;
-    if (!files) {
-      files = {};
-    }
+    let files = Object.assign({}, data.files);
 
     function provide(obj, keys, value, override = false) {
       if (keys.length == 1) {
@@ -383,6 +380,9 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
       id,
       resourceURI: jarURI,
       cleanupFile: file,
+      signedState: data.isPrivileged ? AddonManager.SIGNEDSTATE_PRIVILEGED
+                                     : AddonManager.SIGNEDSTATE_SIGNED,
+      temporarilyInstalled: !!data.temporarilyInstalled,
     });
   }
 };

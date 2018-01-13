@@ -77,7 +77,6 @@ var SessionHistoryInternal = {
     let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
-    let ihistory = history.QueryInterface(Ci.nsISHistory);
 
     let data = {entries: [], userContextId: loadContext.originAttributes.userContextId };
     // We want to keep track how many entries we *could* have collected and
@@ -123,17 +122,7 @@ var SessionHistoryInternal = {
       }
     }
 
-    // Transform the entries from local to global index space.
-    data.index += ihistory.globalIndexOffset;
-    data.fromIdx = aFromIdx + ihistory.globalIndexOffset;
-
-    // If we are not the most recent partialSHistory in our groupedSHistory, we
-    // need to make certain that we don't replace the entries from the following
-    // SHistories - so we replace only the number of entries which our SHistory
-    // takes up.
-    if (ihistory.globalIndexOffset + ihistory.count < ihistory.globalCount) {
-      data.toIdx = data.fromIdx + ihistory.count;
-    }
+    data.fromIdx = aFromIdx;
 
     return data;
   },

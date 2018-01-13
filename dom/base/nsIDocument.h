@@ -3118,8 +3118,6 @@ public:
   void NoteScriptTrackingStatus(const nsACString& aURL, bool isTracking);
   bool IsScriptTracking(const nsACString& aURL) const;
 
-  bool PrerenderHref(nsIURI* aHref);
-
   // For more information on Flash classification, see
   // toolkit/components/url-classifier/flash-block-lists.rst
   virtual mozilla::dom::FlashClassification DocumentFlashClassification() = 0;

@@ -12,7 +12,7 @@ info: |
        b. Let requiredModule be ? HostResolveImportedModule(module, required).
     [...]
 negative:
-  phase: early
+  phase: resolution
   type: SyntaxError
 flags: [module]
 ---*/

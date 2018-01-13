@@ -9,7 +9,7 @@ es6id: 14.1.20
 features: [destructuring-binding, default-parameters]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     FunctionExpression : function ( FormalParameters ) { FunctionBody }

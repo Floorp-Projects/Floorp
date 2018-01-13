@@ -28,7 +28,6 @@ enum OrientationLockType {
   "landscape-secondary"
 };
 
-[UnsafeInPrerendering]
 interface ScreenOrientation : EventTarget {
   [Throws]
   Promise<void> lock(OrientationLockType orientation);

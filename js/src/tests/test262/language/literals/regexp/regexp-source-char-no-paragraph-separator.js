@@ -21,7 +21,7 @@ info: |
 description: >
   A regular expression may not contain a <PS> as a SourceCharacter
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

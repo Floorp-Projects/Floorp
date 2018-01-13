@@ -9,7 +9,7 @@ description: >
     It is a Syntax Error if HasDirectSuper of MethodDefinition is true.
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

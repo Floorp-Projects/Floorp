@@ -4,7 +4,7 @@
 /*---
 description: The body may not re-declare variables declared in the head
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     It is a Syntax Error if any element of the BoundNames of ForDeclaration

@@ -4,7 +4,7 @@
 
 /*---
 description: Object.prototype.toLocaleString called with primitive thisValue
-info: >
+info: |
   19.1.3.5 Object.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] )
 
   ...

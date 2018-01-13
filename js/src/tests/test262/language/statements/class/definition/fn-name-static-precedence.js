@@ -5,7 +5,7 @@
 es6id: 14.5.15
 description: >
     Function `name` attribute not inferred in presence of static `name` method
-info: >
+info: |
     ClassDeclaration : class BindingIdentifier ClassTail
 
     [...]
