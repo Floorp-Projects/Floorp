@@ -50,7 +50,7 @@ public:
 
   virtual already_AddRefed<MediaList> Clone() = 0;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final override;
   nsISupports* GetParentObject() const { return nullptr; }
 
   virtual void GetText(nsAString& aMediaText) = 0;

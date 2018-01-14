@@ -27,7 +27,7 @@ public:
 
 class B : A
 {
-  void f() { }
+  void f() override { }
 public:
   void use() { }
 };

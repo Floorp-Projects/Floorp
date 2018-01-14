@@ -746,7 +746,7 @@ class OutOfLineUndoALUOperation : public OutOfLineCodeBase<CodeGeneratorX86Share
         : ins_(ins)
     { }
 
-    virtual void accept(CodeGeneratorX86Shared* codegen) {
+    virtual void accept(CodeGeneratorX86Shared* codegen) override {
         codegen->visitOutOfLineUndoALUOperation(this);
     }
     LInstruction* ins() const {
@@ -867,7 +867,7 @@ class MulNegativeZeroCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
       : ins_(ins)
     { }
 
-    virtual void accept(CodeGeneratorX86Shared* codegen) {
+    virtual void accept(CodeGeneratorX86Shared* codegen) override {
         codegen->visitMulNegativeZeroCheck(this);
     }
     LMulI* ins() const {
@@ -989,7 +989,7 @@ class ReturnZero : public OutOfLineCodeBase<CodeGeneratorX86Shared>
       : reg_(reg)
     { }
 
-    virtual void accept(CodeGeneratorX86Shared* codegen) {
+    virtual void accept(CodeGeneratorX86Shared* codegen) override {
         codegen->visitReturnZero(this);
     }
     Register reg() const {
@@ -1445,7 +1445,7 @@ class ModOverflowCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
       : ins_(ins), rhs_(rhs)
     { }
 
-    virtual void accept(CodeGeneratorX86Shared* codegen) {
+    virtual void accept(CodeGeneratorX86Shared* codegen) override {
         codegen->visitModOverflowCheck(this);
     }
     Label* done() {
@@ -1807,7 +1807,7 @@ class OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     MTableSwitch* mir_;
     CodeLabel jumpLabel_;
 
-    void accept(CodeGeneratorX86Shared* codegen) {
+    void accept(CodeGeneratorX86Shared* codegen) override {
         codegen->visitOutOfLineTableSwitch(this);
     }
 

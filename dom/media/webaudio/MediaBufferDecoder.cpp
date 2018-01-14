@@ -96,7 +96,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
   bool CreateReader();
   MediaFormatReader* Reader()
   {

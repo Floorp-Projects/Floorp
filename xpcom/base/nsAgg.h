@@ -54,9 +54,10 @@ private:                                                                    \
                                                                             \
         Internal() {}                                                       \
                                                                             \
-        NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);  \
-        NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                  \
-        NS_IMETHOD_(MozExternalRefCountType) Release(void);                 \
+        NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr)   \
+                                  override;                                 \
+        NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;         \
+        NS_IMETHOD_(MozExternalRefCountType) Release(void) override;        \
                                                                             \
         NS_DECL_OWNINGTHREAD                                                \
     };                                                                      \

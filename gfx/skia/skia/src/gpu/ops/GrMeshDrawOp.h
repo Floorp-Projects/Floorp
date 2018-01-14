@@ -65,8 +65,8 @@ protected:
     };
 
 private:
-    void onPrepare(GrOpFlushState* state) final;
-    void onExecute(GrOpFlushState* state) final;
+    void onPrepare(GrOpFlushState* state) final override;
+    void onExecute(GrOpFlushState* state) final override;
 
     virtual void onPrepareDraws(Target*) const = 0;
 

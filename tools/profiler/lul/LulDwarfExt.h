@@ -1242,19 +1242,19 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
 
   virtual bool Entry(size_t offset, uint64 address, uint64 length,
                      uint8 version, const std::string &augmentation,
-                     unsigned return_address);
-  virtual bool UndefinedRule(uint64 address, int reg);
-  virtual bool SameValueRule(uint64 address, int reg);
+                     unsigned return_address) override;
+  virtual bool UndefinedRule(uint64 address, int reg) override;
+  virtual bool SameValueRule(uint64 address, int reg) override;
   virtual bool OffsetRule(uint64 address, int reg,
-                          int base_register, long offset);
+                          int base_register, long offset) override;
   virtual bool ValOffsetRule(uint64 address, int reg,
-                             int base_register, long offset);
-  virtual bool RegisterRule(uint64 address, int reg, int base_register);
+                             int base_register, long offset) override;
+  virtual bool RegisterRule(uint64 address, int reg, int base_register) override;
   virtual bool ExpressionRule(uint64 address, int reg,
-                              const std::string &expression);
+                              const std::string &expression) override;
   virtual bool ValExpressionRule(uint64 address, int reg,
-                                 const std::string &expression);
-  virtual bool End();
+                                 const std::string &expression) override;
+  virtual bool End() override;
 
  private:
   // Return the name to use for register I.

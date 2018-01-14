@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrintOptionsImpl.h"
+#include "nsPrintSettingsService.h"
 
 #include "mozilla/embedding/PPrinting.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
@@ -34,7 +34,7 @@ using namespace mozilla::embedding;
 
 typedef mozilla::layout::RemotePrintJobChild RemotePrintJobChild;
 
-NS_IMPL_ISUPPORTS(nsPrintOptions, nsIPrintSettingsService)
+NS_IMPL_ISUPPORTS(nsPrintSettingsService, nsIPrintSettingsService)
 
 // Pref Constants
 static const char kMarginTop[]       = "print_margin_top";
@@ -86,24 +86,16 @@ static const char kJustRight[]  = "right";
 
 #define NS_PRINTER_ENUMERATOR_CONTRACTID "@mozilla.org/gfx/printerenumerator;1"
 
-nsPrintOptions::nsPrintOptions()
-{
-}
-
-nsPrintOptions::~nsPrintOptions()
-{
-}
-
 nsresult
-nsPrintOptions::Init()
+nsPrintSettingsService::Init()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                     nsIWebBrowserPrint* aWBP,
-                                     PrintData* data)
+nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                             nsIWebBrowserPrint* aWBP,
+                                             PrintData* data)
 {
   nsCOMPtr<nsIPrintSession> session;
   nsresult rv = aSettings->GetPrintSession(getter_AddRefs(session));
@@ -213,8 +205,8 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
 }
 
 NS_IMETHODIMP
-nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
-                                           nsIPrintSettings* settings)
+nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
+                                                   nsIPrintSettings* settings)
 {
   nsCOMPtr<nsIPrintSession> session;
   nsresult rv = settings->GetPrintSession(getter_AddRefs(session));
@@ -304,8 +296,8 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
  *  or "print.printer_<print name>."
  */
 const char*
-nsPrintOptions::GetPrefName(const char * aPrefName,
-                            const nsAString& aPrinterName)
+nsPrintSettingsService::GetPrefName(const char* aPrefName,
+                                    const nsAString& aPrinterName)
 {
   if (!aPrefName || !*aPrefName) {
     NS_ERROR("Must have a valid pref name!");
@@ -362,8 +354,9 @@ GetPrefName((_a2), aPrefName), (_a3));
  *  It is either "print.attr_name" or "print.printer_HPLasr5.attr_name"
  */
 nsresult
-nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
-                          uint32_t aFlags)
+nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
+                                  const nsAString& aPrinterName,
+                                  uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
@@ -673,13 +666,10 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *  @update 1/12/01 rods
- */
 nsresult
-nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
-                           uint32_t aFlags)
+nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
+                                   const nsAString& aPrinterName,
+                                   uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
@@ -952,7 +942,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintSettingsService::_CreatePrintSettings(nsIPrintSettings** _retval)
 {
   // does not initially ref count
   nsPrintSettings * printSettings = new nsPrintSettings();
@@ -972,7 +962,7 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
+nsPrintSettingsService::GetGlobalPrintSettings(nsIPrintSettings** aGlobalPrintSettings)
 {
   nsresult rv;
 
@@ -985,13 +975,13 @@ nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings **aGlobalPrintSettings)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
+nsPrintSettingsService::GetNewPrintSettings(nsIPrintSettings** aNewPrintSettings)
 {
   return _CreatePrintSettings(aNewPrintSettings);
 }
 
 NS_IMETHODIMP
-nsPrintOptions::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
+nsPrintSettingsService::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 {
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> prtEnum =
@@ -1028,8 +1018,8 @@ nsPrintOptions::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
-                                             nsIPrintSettings *aPrintSettings)
+nsPrintSettingsService::InitPrintSettingsFromPrinter(const nsAString& aPrinterName,
+                                                     nsIPrintSettings* aPrintSettings)
 {
   // Don't get print settings from the printer in the child when printing via
   // parent, these will be retrieved in the parent later in the print process.
@@ -1103,8 +1093,9 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 #endif
 
 NS_IMETHODIMP
-nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
-                                           bool aUsePNP, uint32_t aFlags)
+nsPrintSettingsService::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
+                                                   bool aUsePNP,
+                                                   uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
@@ -1147,9 +1138,9 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
  *  printer-specific preferences. Otherwise, save generic ones.
  */
 nsresult
-nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
-                                         bool aUsePrinterNamePrefix,
-                                         uint32_t aFlags)
+nsPrintSettingsService::SavePrintSettingsToPrefs(nsIPrintSettings* aPS,
+                                                 bool aUsePrinterNamePrefix,
+                                                 uint32_t aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
@@ -1180,7 +1171,7 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
 //-- Protected Methods --------------------------------
 //-----------------------------------------------------
 nsresult
-nsPrintOptions::ReadPrefDouble(const char * aPrefId, double& aVal)
+nsPrintSettingsService::ReadPrefDouble(const char* aPrefId, double& aVal)
 {
   NS_ENSURE_ARG_POINTER(aPrefId);
 
@@ -1193,7 +1184,7 @@ nsPrintOptions::ReadPrefDouble(const char * aPrefId, double& aVal)
 }
 
 nsresult
-nsPrintOptions::WritePrefDouble(const char * aPrefId, double aVal)
+nsPrintSettingsService::WritePrefDouble(const char* aPrefId, double aVal)
 {
   NS_ENSURE_ARG_POINTER(aPrefId);
 
@@ -1204,8 +1195,9 @@ nsPrintOptions::WritePrefDouble(const char * aPrefId, double aVal)
 }
 
 void
-nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, int32_t& aTwips,
-                                      const char * aMarginPref)
+nsPrintSettingsService::ReadInchesToTwipsPref(const char* aPrefId,
+                                              int32_t& aTwips,
+                                              const char* aMarginPref)
 {
   nsAutoString str;
   nsresult rv = Preferences::GetString(aPrefId, str);
@@ -1224,7 +1216,8 @@ nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, int32_t& aTwips,
 }
 
 void
-nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, int32_t aTwips)
+nsPrintSettingsService::WriteInchesFromTwipsPref(const char* aPrefId,
+                                                 int32_t aTwips)
 {
   double inches = NS_TWIPS_TO_INCHES(aTwips);
   nsAutoCString inchesStr;
@@ -1234,8 +1227,9 @@ nsPrintOptions::WriteInchesFromTwipsPref(const char * aPrefId, int32_t aTwips)
 }
 
 void
-nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, int32_t& aTwips,
-                                         const char * aMarginPref)
+nsPrintSettingsService::ReadInchesIntToTwipsPref(const char* aPrefId,
+                                                 int32_t& aTwips,
+                                                 const char* aMarginPref)
 {
   int32_t value;
   nsresult rv = Preferences::GetInt(aPrefId, &value);
@@ -1250,15 +1244,17 @@ nsPrintOptions::ReadInchesIntToTwipsPref(const char * aPrefId, int32_t& aTwips,
 }
 
 void
-nsPrintOptions::WriteInchesIntFromTwipsPref(const char * aPrefId, int32_t aTwips)
+nsPrintSettingsService::WriteInchesIntFromTwipsPref(const char* aPrefId,
+                                                    int32_t aTwips)
 {
   Preferences::SetInt(aPrefId,
                       int32_t(NS_TWIPS_TO_INCHES(aTwips) * 100.0f + 0.5f));
 }
 
 void
-nsPrintOptions::ReadJustification(const char * aPrefId, int16_t& aJust,
-                                  int16_t aInitValue)
+nsPrintSettingsService::ReadJustification(const char* aPrefId,
+                                          int16_t& aJust,
+                                          int16_t aInitValue)
 {
   aJust = aInitValue;
   nsAutoString justStr;
@@ -1275,7 +1271,8 @@ nsPrintOptions::ReadJustification(const char * aPrefId, int16_t& aJust,
 
 //---------------------------------------------------
 void
-nsPrintOptions::WriteJustification(const char * aPrefId, int16_t aJust)
+nsPrintSettingsService::WriteJustification(const char* aPrefId,
+                                           int16_t aJust)
 {
   switch (aJust) {
     case nsIPrintSettings::kJustLeft:
@@ -1305,7 +1302,7 @@ Tester::Tester()
 {
   nsCOMPtr<nsIPrintSettings> ps;
   nsresult rv;
-  nsCOMPtr<nsIPrintOptions> printService =
+  nsCOMPtr<nsIPrintSettingsService> printService =
       do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printService->CreatePrintSettings(getter_AddRefs(ps));

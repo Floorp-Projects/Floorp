@@ -84,7 +84,7 @@ class Instrument: public DecoderVisitor {
   void Disable();
 
   // Declare all Visitor functions.
-  #define DECLARE(A) void Visit##A(const Instruction* instr);
+  #define DECLARE(A) void Visit##A(const Instruction* instr) override;
   VISITOR_LIST(DECLARE)
   #undef DECLARE
 

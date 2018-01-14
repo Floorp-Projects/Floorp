@@ -24,24 +24,25 @@ struct FlatPathOp
 class FlattenedPath : public PathSink
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FlattenedPath)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FlattenedPath, override)
+
   FlattenedPath() : mCachedLength(0)
                   , mCalculatedLength(false)
   {
   }
 
-  virtual void MoveTo(const Point &aPoint);
-  virtual void LineTo(const Point &aPoint);
+  virtual void MoveTo(const Point &aPoint) override;
+  virtual void LineTo(const Point &aPoint) override;
   virtual void BezierTo(const Point &aCP1,
                         const Point &aCP2,
-                        const Point &aCP3);
+                        const Point &aCP3) override;
   virtual void QuadraticBezierTo(const Point &aCP1,
-                                 const Point &aCP2);
-  virtual void Close();
+                                 const Point &aCP2) override;
+  virtual void Close() override;
   virtual void Arc(const Point &aOrigin, float aRadius, float aStartAngle,
-                   float aEndAngle, bool aAntiClockwise = false);
+                   float aEndAngle, bool aAntiClockwise = false) override;
 
-  virtual Point CurrentPoint() const { return mPathOps.empty() ? Point() : mPathOps[mPathOps.size() - 1].mPoint; }
+  virtual Point CurrentPoint() const override { return mPathOps.empty() ? Point() : mPathOps[mPathOps.size() - 1].mPoint; }
 
   Float ComputeLength();
   Point ComputePointAtLength(Float aLength, Point *aTangent);

@@ -62,9 +62,9 @@ public:
   nsNativeAppSupportCocoa() :
     mCanShowUI(false) { }
 
-  NS_IMETHOD Start(bool* aRetVal);
-  NS_IMETHOD ReOpen();
-  NS_IMETHOD Enable();
+  NS_IMETHOD Start(bool* aRetVal) override;
+  NS_IMETHOD ReOpen() override;
+  NS_IMETHOD Enable() override;
 
 private:
   bool mCanShowUI;

@@ -263,7 +263,7 @@ class CertErrorRunnable : public SyncRunnableBase
   {
   }
 
-  virtual void RunOnTargetThread();
+  virtual void RunOnTargetThread() override;
   RefPtr<SSLServerCertVerificationResult> mResult; // out
 private:
   SSLServerCertVerificationResult* CheckCertOverrides();

@@ -17,14 +17,14 @@ namespace gfx {
 class ScaledFontCairo : public ScaledFontBase
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontCairo)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontCairo, override)
 
   ScaledFontCairo(cairo_scaled_font_t* aScaledFont,
                   const RefPtr<UnscaledFont>& aUnscaledFont,
                   Float aSize);
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
-  virtual SkTypeface* GetSkTypeface();
+  virtual SkTypeface* GetSkTypeface() override;
 #endif
 };
 

@@ -14,11 +14,11 @@ class nsEscCharSetProber: public nsCharSetProber {
 public:
   nsEscCharSetProber();
   virtual ~nsEscCharSetProber(void);
-  nsProbingState HandleData(const char* aBuf, uint32_t aLen);
-  const char* GetCharSetName() {return mDetectedCharset;}
-  nsProbingState GetState(void) {return mState;}
-  void      Reset(void);
-  float     GetConfidence(void){return (float)0.99;}
+  nsProbingState HandleData(const char* aBuf, uint32_t aLen) override;
+  const char* GetCharSetName() override {return mDetectedCharset;}
+  nsProbingState GetState(void) override {return mState;}
+  void      Reset(void) override;
+  float     GetConfidence(void) override {return (float)0.99;}
 
 protected:
   void      GetDistribution(uint32_t aCharLen, const char* aStr);

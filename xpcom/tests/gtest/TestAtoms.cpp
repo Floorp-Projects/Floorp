@@ -158,7 +158,7 @@ class nsAtomRunner final : public nsIRunnable
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Run() final
+  NS_IMETHOD Run() final override
   {
     for (int i = 0; i < 10000; i++) {
       RefPtr<nsAtom> atom = NS_Atomize(u"A Testing Atom");

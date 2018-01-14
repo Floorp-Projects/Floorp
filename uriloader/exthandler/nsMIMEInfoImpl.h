@@ -166,8 +166,8 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
     virtual ~nsMIMEInfoImpl() {}
 
     // nsIMIMEInfo methods
-    NS_IMETHOD GetHasDefaultHandler(bool *_retval);
-    NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription);
+    NS_IMETHOD GetHasDefaultHandler(bool *_retval) override;
+    NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
 
     // additional methods
     /**
@@ -182,13 +182,13 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
      * The base class implementation is to use LaunchWithIProcess in combination
      * with mDefaultApplication. Subclasses can override that behaviour.
      */
-    virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
+    virtual nsresult LaunchDefaultWithFile(nsIFile* aFile) override;
 
     /**
      * Loads the URI with the OS default app.  This should be overridden by each
      * OS's implementation.
      */
-    virtual nsresult LoadUriInternal(nsIURI *aURI) = 0;
+    virtual nsresult LoadUriInternal(nsIURI *aURI) override = 0;
 
     nsCOMPtr<nsIFile>      mDefaultApplication; ///< default application associated with this type.
 };

@@ -42,7 +42,7 @@ public:
     CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override;
-  virtual int32_t GetMaxTextureSize() const final;
+  virtual int32_t GetMaxTextureSize() const final override;
 
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0)  override {}
 

@@ -112,9 +112,9 @@ public:
   virtual void            SetParent(nsIWidget *aNewParent) override;
   virtual nsIWidget*      GetParent(void) override;
   virtual float           GetDPI() override;
-  double                  GetDefaultScaleInternal() final;
-  int32_t                 LogToPhys(double aValue) final;
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final
+  double                  GetDefaultScaleInternal() final override;
+  int32_t                 LogToPhys(double aValue) final override;
+  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final override
   {
     if (mozilla::widget::WinUtils::IsPerMonitorDPIAware()) {
       return mozilla::DesktopToLayoutDeviceScale(1.0);

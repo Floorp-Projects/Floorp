@@ -284,7 +284,7 @@ struct FixedBuffer final : public mozilla::PrintfTarget
   char buffer[500];
   uint32_t curlen;
 
-  bool append(const char* sp, size_t len);
+  bool append(const char* sp, size_t len) override;
 };
 
 bool

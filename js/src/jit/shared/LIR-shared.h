@@ -33,7 +33,7 @@ class LBox : public LInstructionHelper<BOX_PIECES, 1, 0>
     MIRType type() const {
         return type_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(type_);
     }
 };
@@ -119,7 +119,7 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
         return new(alloc) LMoveGroup(alloc);
     }
 
-    void printOperands(GenericPrinter& out);
+    void printOperands(GenericPrinter& out) override;
 
     // Add a move which takes place simultaneously with all others in the group.
     bool add(LAllocation from, LAllocation to, LDefinition::Type type);
@@ -505,7 +505,7 @@ public:
     MSimdBinaryComp::Operation operation() const {
         return mir_->toSimdBinaryComp()->operation();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MSimdBinaryComp::OperationName(operation());
     }
 };
@@ -561,7 +561,7 @@ class LSimdBinaryArith : public LInstructionHelper<1, 2, 1>
     MSimdBinaryArith::Operation operation() const {
         return this->mir_->toSimdBinaryArith()->operation();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MSimdBinaryArith::OperationName(operation());
     }
 };
@@ -621,7 +621,7 @@ class LSimdBinarySaturating : public LInstructionHelper<1, 2, 0>
     MIRType type() const {
         return mir_->type();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MSimdBinarySaturating::OperationName(operation());
     }
 };
@@ -684,7 +684,7 @@ class LSimdBinaryBitwise : public LInstructionHelper<1, 2, 0>
     MSimdBinaryBitwise::Operation operation() const {
         return mir_->toSimdBinaryBitwise()->operation();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MSimdBinaryBitwise::OperationName(operation());
     }
     MIRType type() const {
@@ -716,7 +716,7 @@ class LSimdShift : public LInstructionHelper<1, 2, 1>
     MSimdShift::Operation operation() const {
         return mir_->toSimdShift()->operation();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MSimdShift::OperationName(operation());
     }
     MSimdShift* mir() const {
@@ -845,7 +845,7 @@ class LPointer : public LInstructionHelper<1, 0, 0>
     Kind kind() const {
         return kind_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return kind_ == GC_THING ? "GC_THING" : "NON_GC_THING";
     }
 
@@ -1009,7 +1009,7 @@ class LNewArray : public LInstructionHelper<1, 0, 1>
         setTemp(0, temp);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isVMCall() ? "VMCall" : nullptr;
     }
 
@@ -1134,7 +1134,7 @@ class LNewObject : public LInstructionHelper<1, 0, 1>
         setTemp(0, temp);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isVMCall() ? "VMCall" : nullptr;
     }
 
@@ -2449,7 +2449,7 @@ class LTestVAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 3>
         setTemp(2, temp2);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->operandMightEmulateUndefined() ? "MightEmulateUndefined" : nullptr;
     }
 
@@ -2506,7 +2506,7 @@ class LObjectGroupDispatch : public LInstructionHelper<0, 1, 1>
   public:
     LIR_HEADER(ObjectGroupDispatch);
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->hasFallback() ? "HasFallback" : "NoFallback";
     }
 
@@ -2551,7 +2551,7 @@ class LCompare : public LInstructionHelper<1, 2, 0>
     MCompare* mir() {
         return mir_->toCompare();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -2579,7 +2579,7 @@ class LCompareI64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0>
     MCompare* mir() {
         return mir_->toCompare();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -2621,7 +2621,7 @@ class LCompareI64AndBranch : public LControlInstructionHelper<2, 2 * INT64_PIECE
     MCompare* cmpMir() const {
         return cmpMir_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -2667,7 +2667,7 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
     MCompare* cmpMir() const {
         return cmpMir_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -3249,7 +3249,7 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
       : op_(op)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled())
             return "ursh:BailoutsDisabled";
         return CodeName[op_];
@@ -3274,7 +3274,7 @@ class LBitOpI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0>
       : op_(op)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[op_];
     }
 
@@ -3302,7 +3302,7 @@ class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
         return jsop_;
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 
@@ -3331,7 +3331,7 @@ class LShiftI : public LBinaryMath<0>
         return mir_->toInstruction();
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[op_];
     }
 };
@@ -3358,7 +3358,7 @@ class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>
         return mir_->toInstruction();
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[op_];
     }
 };
@@ -3451,7 +3451,7 @@ class LMinMaxBase : public LInstructionHelper<1, 2, 0>
     MMinMax* mir() const {
         return mir_->toMinMax();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isMax() ? "Max" : "Min";
     }
 };
@@ -3817,7 +3817,7 @@ class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
     MMathFunction* mir() const {
         return mir_->toMathFunction();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MMathFunction::FunctionName(mir()->function());
     }
 };
@@ -3837,7 +3837,7 @@ class LMathFunctionF : public LCallInstructionHelper<1, 1, 1>
     MMathFunction* mir() const {
         return mir_->toMathFunction();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return MMathFunction::FunctionName(mir()->function());
     }
 };
@@ -3854,11 +3854,11 @@ class LAddI : public LBinaryMath<0>
       : recoversInput_(false)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return snapshot() ? "OverflowCheck" : nullptr;
     }
 
-    virtual bool recoversInput() const {
+    virtual bool recoversInput() const override {
         return recoversInput_;
     }
     void setRecoversInput() {
@@ -3891,11 +3891,11 @@ class LSubI : public LBinaryMath<0>
       : recoversInput_(false)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return snapshot() ? "OverflowCheck" : nullptr;
     }
 
-    virtual bool recoversInput() const {
+    virtual bool recoversInput() const override {
         return recoversInput_;
     }
     void setRecoversInput() {
@@ -3949,7 +3949,7 @@ class LMathD : public LBinaryMath<0>
         return jsop_;
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -3970,7 +3970,7 @@ class LMathF: public LBinaryMath<0>
         return jsop_;
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 };
@@ -3988,7 +3988,7 @@ class LModD : public LBinaryMath<1>
     const LDefinition* temp() {
         return getTemp(0);
     }
-    bool isCall() const {
+    bool isCall() const override {
         return true;
     }
     MMod* mir() const {
@@ -4015,7 +4015,7 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
         return jsop_;
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return CodeName[jsop_];
     }
 
@@ -4342,7 +4342,7 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2>
         setTemp(1, temp1);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mode() == NORMAL ? "Normal" : "Truncate";
     }
 
@@ -5543,7 +5543,7 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
         setOperand(1, index);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
     }
 
@@ -5602,7 +5602,7 @@ class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0>
         setOperand(2, initLength);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
     }
 
@@ -5634,7 +5634,7 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0>
         setOperand(1, index);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->needsHoleCheck() ? "HoleCheck"
                                        : (mir()->loadDoubles() ? "Doubles" : nullptr);
     }
@@ -5765,7 +5765,7 @@ class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
         setBoxOperand(Value, value);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
     }
 
@@ -5797,7 +5797,7 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
         setOperand(2, value);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
     }
 
@@ -5991,7 +5991,7 @@ class LArrayPopShiftV : public LInstructionHelper<BOX_PIECES, 1, 2>
         setTemp(1, temp1);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->mode() == MArrayPopShift::Pop ? "Pop" : "Shift";
     }
 
@@ -6020,7 +6020,7 @@ class LArrayPopShiftT : public LInstructionHelper<1, 1, 2>
         setTemp(1, temp1);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->mode() == MArrayPopShift::Pop ? "Pop" : "Shift";
     }
 
@@ -6804,7 +6804,7 @@ class LGetPropertyPolymorphicV : public LInstructionHelper<BOX_PIECES, 1, 0>
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
     }
-    virtual const char* extraName() const {
+    virtual const char* extraName() const override {
         return PropertyNameToExtraName(mir()->name());
     }
 };
@@ -6829,7 +6829,7 @@ class LGetPropertyPolymorphicT : public LInstructionHelper<1, 1, 1>
     const MGetPropertyPolymorphic* mir() const {
         return mir_->toGetPropertyPolymorphic();
     }
-    virtual const char* extraName() const {
+    virtual const char* extraName() const override {
         return PropertyNameToExtraName(mir()->name());
     }
 };
@@ -6894,7 +6894,7 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     const MSetPropertyPolymorphic* mir() const {
         return mir_->toSetPropertyPolymorphic();
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(valueType_);
     }
 };
@@ -8960,15 +8960,15 @@ class LWasmCall : public LWasmCallBase
     {}
 
     // LInstruction interface
-    size_t numDefs() const {
+    size_t numDefs() const override {
         return def_.isBogusTemp() ? 0 : 1;
     }
-    LDefinition* getDef(size_t index) {
+    LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(numDefs() == 1);
         MOZ_ASSERT(index == 0);
         return &def_;
     }
-    void setDef(size_t index, const LDefinition& def) {
+    void setDef(size_t index, const LDefinition& def) override {
         MOZ_ASSERT(index == 0);
         def_ = def;
     }
@@ -8989,14 +8989,14 @@ class LWasmCallI64 : public LWasmCallBase
     }
 
     // LInstruction interface
-    size_t numDefs() const {
+    size_t numDefs() const override {
         return INT64_PIECES;
     }
-    LDefinition* getDef(size_t index) {
+    LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(index < numDefs());
         return &defs_[index];
     }
-    void setDef(size_t index, const LDefinition& def) {
+    void setDef(size_t index, const LDefinition& def) override {
         MOZ_ASSERT(index < numDefs());
         defs_[index] = def;
     }

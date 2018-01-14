@@ -21,7 +21,7 @@ class LDivI : public LBinaryMath<1>
         setTemp(0, temp);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         if (mir()->isTruncated()) {
             if (mir()->canBeNegativeZero()) {
                 return mir()->canBeNegativeOverflow()
@@ -118,7 +118,7 @@ class LModI : public LBinaryMath<1>
         setTemp(0, temp);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 
@@ -147,7 +147,7 @@ class LUDivOrMod : public LBinaryMath<1>
         return getTemp(0);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 
@@ -341,7 +341,7 @@ class LMulI : public LBinaryMath<0, 1>
         setOperand(2, lhsCopy);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return (mir()->mode() == MMul::Integer)
                ? "Integer"
                : (mir()->canBeNegativeZero() ? "CanBeNegativeZero" : nullptr);

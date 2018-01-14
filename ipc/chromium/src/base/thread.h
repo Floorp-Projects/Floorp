@@ -143,7 +143,7 @@ class Thread : PlatformThread::Delegate {
 
  private:
   // PlatformThread::Delegate methods:
-  virtual void ThreadMain();
+  virtual void ThreadMain() override;
 
   // We piggy-back on the startup_data_ member to know if we successfully
   // started the thread.  This way we know that we need to call Join.

@@ -47,7 +47,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) final
+                            nsISupports* aData, bool aAnonymize) final override
   {
     nsTArray<nsString> fileNames;
     DataStorage::GetAllFileNames(fileNames);

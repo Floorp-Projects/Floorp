@@ -52,7 +52,7 @@ public:
         , wantReturnValue(false)
     { }
 
-    virtual bool Parse() {
+    virtual bool Parse() override {
       return ParseObject("target", &target) &&
              ParseString("charset", charset) &&
              ParseBoolean("ignoreCache", &ignoreCache) &&

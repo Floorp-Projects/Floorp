@@ -23,13 +23,14 @@ class SnapshotLock;
 class SourceSurfaceSkia : public DataSourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceSkia)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceSkia, override)
+
   SourceSurfaceSkia();
   ~SourceSurfaceSkia();
 
-  virtual SurfaceType GetType() const { return SurfaceType::SKIA; }
-  virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const;
+  virtual SurfaceType GetType() const override { return SurfaceType::SKIA; }
+  virtual IntSize GetSize() const override;
+  virtual SurfaceFormat GetFormat() const override;
 
   // This is only ever called by the DT destructor, which can only ever happen
   // from one place at a time. Therefore it doesn't need to hold the ChangeMutex
@@ -48,16 +49,16 @@ public:
                      SurfaceFormat aFormat = SurfaceFormat::UNKNOWN,
                      DrawTargetSkia* aOwner = nullptr);
 
-  virtual uint8_t* GetData();
+  virtual uint8_t* GetData() override;
 
   /**
    * The caller is responsible for ensuring aMappedSurface is not null.
    */
-  virtual bool Map(MapType, MappedSurface *aMappedSurface);
+  virtual bool Map(MapType, MappedSurface *aMappedSurface) override;
 
-  virtual void Unmap();
+  virtual void Unmap() override;
 
-  virtual int32_t Stride() { return mStride; }
+  virtual int32_t Stride() override { return mStride; }
 
 private:
   friend class DrawTargetSkia;
