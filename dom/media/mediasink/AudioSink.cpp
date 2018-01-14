@@ -244,11 +244,11 @@ AudioSink::PopFrames(uint32_t aFrames)
     Chunk(AudioData* aBuffer, uint32_t aFrames, AudioDataValue* aData)
       : mBuffer(aBuffer), mFrames(aFrames), mData(aData) {}
     Chunk() : mFrames(0), mData(nullptr) {}
-    const AudioDataValue* Data() const { return mData; }
-    uint32_t Frames() const { return mFrames; }
-    uint32_t Channels() const { return mBuffer ? mBuffer->mChannels: 0; }
-    uint32_t Rate() const { return mBuffer ? mBuffer->mRate : 0; }
-    AudioDataValue* GetWritable() const { return mData; }
+    const AudioDataValue* Data() const override { return mData; }
+    uint32_t Frames() const override { return mFrames; }
+    uint32_t Channels() const override { return mBuffer ? mBuffer->mChannels: 0; }
+    uint32_t Rate() const override { return mBuffer ? mBuffer->mRate : 0; }
+    AudioDataValue* GetWritable() const override { return mData; }
   private:
     const RefPtr<AudioData> mBuffer;
     const uint32_t mFrames;

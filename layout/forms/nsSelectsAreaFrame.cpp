@@ -74,11 +74,11 @@ class nsOptionEventGrabberWrapper : public nsDisplayWrapper
 public:
   nsOptionEventGrabberWrapper() {}
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
-                                  nsIFrame* aFrame, nsDisplayList* aList) {
+                                  nsIFrame* aFrame, nsDisplayList* aList) override {
     return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, aFrame, aList);
   }
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
-                                  nsDisplayItem* aItem) {
+                                  nsDisplayItem* aItem) override {
     return new (aBuilder) nsDisplayOptionEventGrabber(aBuilder, aItem->Frame(), aItem);
   }
 };

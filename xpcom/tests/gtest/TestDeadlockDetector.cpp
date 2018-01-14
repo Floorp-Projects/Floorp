@@ -56,12 +56,12 @@ extern unsigned int _gdb_sleep_duration;
 class TESTNAME(DeadlockDetectorTest) : public ::testing::Test
 {
 protected:
-  void SetUp() final {
+  void SetUp() final override {
     mOldSleepDuration = ::_gdb_sleep_duration;
     ::_gdb_sleep_duration = 0;
   }
 
-  void TearDown() final {
+  void TearDown() final override {
     ::_gdb_sleep_duration = mOldSleepDuration;
   }
 

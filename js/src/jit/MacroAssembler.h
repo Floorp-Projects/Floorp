@@ -303,7 +303,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             type_(type)
         { }
 
-        void emit(MacroAssembler& masm);
+        void emit(MacroAssembler& masm) override;
     };
 
     /*
@@ -324,7 +324,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             ptr_(ptr)
         { }
 
-        void emit(MacroAssembler& masm);
+        void emit(MacroAssembler& masm) override;
     };
 
     mozilla::Maybe<AutoRooter> autoRooter_;

@@ -796,7 +796,7 @@ class Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
   public:
     static void construct(void *storage, js::jit::JitCode *ptr) { new (storage) Concrete(ptr); }
 
-    CoarseType coarseType() const final { return CoarseType::Script; }
+    CoarseType coarseType() const final override { return CoarseType::Script; }
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
         Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());

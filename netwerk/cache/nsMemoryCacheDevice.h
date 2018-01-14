@@ -23,34 +23,35 @@ public:
     nsMemoryCacheDevice();
     virtual ~nsMemoryCacheDevice();
 
-    virtual nsresult        Init();
-    virtual nsresult        Shutdown();
+    virtual nsresult        Init() override;
+    virtual nsresult        Shutdown() override;
 
-    virtual const char *    GetDeviceID(void);
+    virtual const char *    GetDeviceID(void) override;
 
-    virtual nsresult        BindEntry( nsCacheEntry * entry );
-    virtual nsCacheEntry *  FindEntry( nsCString * key, bool *collision );
-    virtual void            DoomEntry( nsCacheEntry * entry );
-    virtual nsresult        DeactivateEntry( nsCacheEntry * entry );
+    virtual nsresult        BindEntry( nsCacheEntry * entry ) override;
+    virtual nsCacheEntry *  FindEntry( nsCString * key, bool *collision ) override;
+    virtual void            DoomEntry( nsCacheEntry * entry ) override;
+    virtual nsresult        DeactivateEntry( nsCacheEntry * entry ) override;
 
     virtual nsresult OpenInputStreamForEntry(nsCacheEntry *     entry,
                                              nsCacheAccessMode  mode,
                                              uint32_t           offset,
-                                             nsIInputStream **  result);
+                                             nsIInputStream **  result) override;
 
     virtual nsresult OpenOutputStreamForEntry(nsCacheEntry *     entry,
                                               nsCacheAccessMode  mode,
                                               uint32_t           offset,
-                                              nsIOutputStream ** result);
+                                              nsIOutputStream ** result) override;
 
     virtual nsresult GetFileForEntry( nsCacheEntry *    entry,
-                                      nsIFile **        result );
+                                      nsIFile **        result ) override;
 
-    virtual nsresult OnDataSizeChange( nsCacheEntry * entry, int32_t deltaSize );
+    virtual nsresult OnDataSizeChange( nsCacheEntry * entry,
+                                       int32_t deltaSize ) override;
 
-    virtual nsresult Visit( nsICacheVisitor * visitor );
+    virtual nsresult Visit( nsICacheVisitor * visitor ) override;
 
-    virtual nsresult EvictEntries(const char * clientID);
+    virtual nsresult EvictEntries(const char * clientID) override;
     nsresult EvictPrivateEntries();
 
     void             SetCapacity(int32_t  capacity);

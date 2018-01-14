@@ -609,7 +609,7 @@ public:
   }
 
   void
-  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult) override
   {
     // Sub-class PreRun() or WorkerRun() methods could clear our mRegistration.
     if (mRegistration) {

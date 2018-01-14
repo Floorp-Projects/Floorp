@@ -1221,7 +1221,7 @@ class MOZ_RAII AutoRooterGetterSetter
         inline Inner(JSContext* cx, uint8_t attrs, GetterOp* pgetter_, SetterOp* psetter_);
 
       private:
-        virtual void trace(JSTracer* trc);
+        virtual void trace(JSTracer* trc) override;
 
         uint8_t attrs;
         GetterOp* pgetter;

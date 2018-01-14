@@ -1255,7 +1255,7 @@ public:
 
   ~StreamWriter() override { }
 
-  virtual bool writeMetadata(uint64_t timestamp) final {
+  virtual bool writeMetadata(uint64_t timestamp) final override {
     protobuf::Metadata metadata;
     metadata.set_timestamp(timestamp);
     return writeMessage(metadata);

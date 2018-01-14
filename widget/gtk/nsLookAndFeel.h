@@ -20,17 +20,17 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
-    virtual void NativeInit() final;
-    virtual void RefreshImpl();
-    virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-    virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
-    virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+    virtual void NativeInit() final override;
+    virtual void RefreshImpl() override;
+    virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
+    virtual nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
+    virtual nsresult GetFloatImpl(FloatID aID, float &aResult) override;
     virtual bool GetFontImpl(FontID aID, nsString& aFontName,
                              gfxFontStyle& aFontStyle,
-                             float aDevPixPerCSSPixel);
+                             float aDevPixPerCSSPixel) override;
 
-    virtual char16_t GetPasswordCharacterImpl();
-    virtual bool GetEchoPasswordImpl();
+    virtual char16_t GetPasswordCharacterImpl() override;
+    virtual bool GetEchoPasswordImpl() override;
 
     bool IsCSDAvailable() const { return mCSDAvailable; }
 

@@ -98,7 +98,7 @@ if CONFIG['NS_PRINTING']:
         'nsDeviceContextSpecWin.cpp',
         'nsPrintDialogUtil.cpp',
         'nsPrintDialogWin.cpp',
-        'nsPrintOptionsWin.cpp',
+        'nsPrintSettingsServiceWin.cpp',
         'nsPrintSettingsWin.cpp',
     ]
 

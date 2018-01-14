@@ -54,9 +54,9 @@ public:
 
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const override;
-  void GetHref(nsAString& aHref) const final;
-  dom::MediaList* GetMedia() const final;
-  StyleSheet* GetStyleSheet() const final;
+  void GetHref(nsAString& aHref) const final override;
+  dom::MediaList* GetMedia() const final override;
+  StyleSheet* GetStyleSheet() const final override;
 
 private:
   nsString  mURLSpec;

@@ -171,7 +171,7 @@ public:
     , mEventTarget(aEventTarget)
   {}
 
-  void Run()
+  void Run() override
   {
     if (mEventTarget) {
       mEventTarget->Dispatch(new WrappedChannelEvent(mChannelEvent.forget()),
@@ -182,7 +182,7 @@ public:
     mChannelEvent->Run();
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     nsCOMPtr<nsIEventTarget> target = mEventTarget;
     if (!target) {
@@ -211,12 +211,12 @@ class StartEvent : public ChannelEvent
   , mEncrypted(aEncrypted)
   {}
 
-  void Run()
+  void Run() override
   {
     mChild->OnStart(mProtocol, mExtensions, mEffectiveURL, mEncrypted);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     return do_AddRef(GetCurrentThreadEventTarget());
   }
@@ -275,12 +275,12 @@ class StopEvent : public ChannelEvent
   , mStatusCode(aStatusCode)
   {}
 
-  void Run()
+  void Run() override
   {
     mChild->OnStop(mStatusCode);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     return do_AddRef(GetCurrentThreadEventTarget());
   }
@@ -327,7 +327,7 @@ class MessageEvent : public ChannelEvent
   , mBinary(aBinary)
   {}
 
-  void Run()
+  void Run() override
   {
     if (!mBinary) {
       mChild->OnMessageAvailable(mMessage);
@@ -336,7 +336,7 @@ class MessageEvent : public ChannelEvent
     }
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     return do_AddRef(GetCurrentThreadEventTarget());
   }
@@ -409,12 +409,12 @@ class AcknowledgeEvent : public ChannelEvent
   , mSize(aSize)
   {}
 
-  void Run()
+  void Run() override
   {
     mChild->OnAcknowledge(mSize);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     return do_AddRef(GetCurrentThreadEventTarget());
   }
@@ -461,12 +461,12 @@ class ServerCloseEvent : public ChannelEvent
   , mReason(aReason)
   {}
 
-  void Run()
+  void Run() override
   {
     mChild->OnServerClose(mCode, mReason);
   }
 
-  already_AddRefed<nsIEventTarget> GetEventTarget()
+  already_AddRefed<nsIEventTarget> GetEventTarget() override
   {
     return do_AddRef(GetCurrentThreadEventTarget());
   }

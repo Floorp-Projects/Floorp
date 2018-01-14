@@ -25,10 +25,11 @@ class PathRecording;
 class DrawEventRecorderPrivate : public DrawEventRecorder
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate, override)
+
   DrawEventRecorderPrivate();
   virtual ~DrawEventRecorderPrivate() { }
-  virtual void Finish() { ClearResources(); }
+  virtual void Finish() override { ClearResources(); }
   virtual void FlushItem(IntRect) { }
   void DetatchResources() {
     // The iteration is a bit awkward here because our iterator will

@@ -30,7 +30,8 @@ public:
   {
     UnregisterSystemTimezoneChangeObserver(this);
   }
-  void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo)
+
+  void Notify(const SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) override
   {
     JS::ResetTimeZone();
   }

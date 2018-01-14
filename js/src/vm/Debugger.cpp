@@ -2393,11 +2393,11 @@ class MOZ_RAII ExecutionObservableCompartments : public Debugger::ExecutionObser
     typedef HashSet<JSCompartment*>::Range CompartmentRange;
     const HashSet<JSCompartment*>* compartments() const { return &compartments_; }
 
-    const HashSet<Zone*>* zones() const { return &zones_; }
-    bool shouldRecompileOrInvalidate(JSScript* script) const {
+    const HashSet<Zone*>* zones() const override { return &zones_; }
+    bool shouldRecompileOrInvalidate(JSScript* script) const override {
         return script->hasBaselineScript() && compartments_.has(script->compartment());
     }
-    bool shouldMarkAsDebuggee(FrameIter& iter) const {
+    bool shouldMarkAsDebuggee(FrameIter& iter) const override {
         // AbstractFramePtr can't refer to non-remateralized Ion frames or
         // non-debuggee wasm frames, so if iter refers to one such, we know we
         // don't match.
@@ -2423,18 +2423,18 @@ class MOZ_RAII ExecutionObservableFrame : public Debugger::ExecutionObservableSe
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    Zone* singleZone() const {
+    Zone* singleZone() const override {
         // We never inline across compartments, let alone across zones, so
         // frames_'s script's zone is the only one of interest.
         return frame_.script()->compartment()->zone();
     }
 
-    JSScript* singleScriptForZoneInvalidation() const {
+    JSScript* singleScriptForZoneInvalidation() const override {
         MOZ_CRASH("ExecutionObservableFrame shouldn't need zone-wide invalidation.");
         return nullptr;
     }
 
-    bool shouldRecompileOrInvalidate(JSScript* script) const {
+    bool shouldRecompileOrInvalidate(JSScript* script) const override {
         // Normally, *this represents exactly one script: the one frame_ is
         // running.
         //
@@ -2459,7 +2459,7 @@ class MOZ_RAII ExecutionObservableFrame : public Debugger::ExecutionObservableSe
                script == frame_.asRematerializedFrame()->outerScript();
     }
 
-    bool shouldMarkAsDebuggee(FrameIter& iter) const {
+    bool shouldMarkAsDebuggee(FrameIter& iter) const override {
         // AbstractFramePtr can't refer to non-remateralized Ion frames or
         // non-debuggee wasm frames, so if iter refers to one such, we know we
         // don't match.
@@ -2485,12 +2485,12 @@ class MOZ_RAII ExecutionObservableScript : public Debugger::ExecutionObservableS
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    Zone* singleZone() const { return script_->compartment()->zone(); }
-    JSScript* singleScriptForZoneInvalidation() const { return script_; }
-    bool shouldRecompileOrInvalidate(JSScript* script) const {
+    Zone* singleZone() const override { return script_->compartment()->zone(); }
+    JSScript* singleScriptForZoneInvalidation() const override { return script_; }
+    bool shouldRecompileOrInvalidate(JSScript* script) const override {
         return script->hasBaselineScript() && script == script_;
     }
-    bool shouldMarkAsDebuggee(FrameIter& iter) const {
+    bool shouldMarkAsDebuggee(FrameIter& iter) const override {
         // AbstractFramePtr can't refer to non-remateralized Ion frames, and
         // while a non-rematerialized Ion frame may indeed be running script_,
         // we cannot mark them as debuggees until they bail out.

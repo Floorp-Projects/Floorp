@@ -39,7 +39,7 @@ public:
   nsTestCom() {
   }
 
-  NS_IMETHOD Test() {
+  NS_IMETHOD Test() override {
     return NS_OK;
   }
 
@@ -83,7 +83,7 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD LockFactory(bool aLock) {
+  NS_IMETHOD LockFactory(bool aLock) override {
     return NS_OK;
   }
 

@@ -255,7 +255,7 @@ public:
   }
   ~nsMediaEvent() {}
 
-  NS_IMETHOD Run() = 0;
+  NS_IMETHOD Run() override = 0;
 
 protected:
   bool IsCancelled() {
@@ -5279,7 +5279,7 @@ public:
   explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement):
       OnTracksAvailableCallback(), mElement(aElement)
     {}
-  virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
   {
     NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 

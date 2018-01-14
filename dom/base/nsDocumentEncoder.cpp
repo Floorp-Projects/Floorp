@@ -1254,14 +1254,14 @@ public:
   nsHTMLCopyEncoder();
   virtual ~nsHTMLCopyEncoder();
 
-  NS_IMETHOD Init(nsIDOMDocument* aDocument, const nsAString& aMimeType, uint32_t aFlags);
+  NS_IMETHOD Init(nsIDOMDocument* aDocument, const nsAString& aMimeType, uint32_t aFlags) override;
 
   // overridden methods from nsDocumentEncoder
-  NS_IMETHOD SetSelection(nsISelection* aSelection);
+  NS_IMETHOD SetSelection(nsISelection* aSelection) override;
   NS_IMETHOD EncodeToStringWithContext(nsAString& aContextString,
                                        nsAString& aInfoString,
-                                       nsAString& aEncodedString);
-  NS_IMETHOD EncodeToString(nsAString& aOutputString);
+                                       nsAString& aEncodedString) override;
+  NS_IMETHOD EncodeToString(nsAString& aOutputString) override;
 
 protected:
 
@@ -1284,9 +1284,9 @@ protected:
   bool IsFirstNode(nsIDOMNode *aNode);
   bool IsLastNode(nsIDOMNode *aNode);
   bool IsEmptyTextContent(nsIDOMNode* aNode);
-  virtual bool IncludeInContext(nsINode *aNode);
+  virtual bool IncludeInContext(nsINode *aNode) override;
   virtual int32_t
-  GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray);
+  GetImmediateContextCount(const nsTArray<nsINode*>& aAncestorArray) override;
 
   bool mIsTextWidget;
 };

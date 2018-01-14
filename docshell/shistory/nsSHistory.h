@@ -48,7 +48,7 @@ public:
     }
 
   protected:
-    virtual void NotifyExpired(nsSHEntryShared* aObj)
+    virtual void NotifyExpired(nsSHEntryShared* aObj) override
     {
       RemoveObject(aObj);
       mSHistory->EvictExpiredContentViewerForEntry(aObj);

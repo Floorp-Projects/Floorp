@@ -34,7 +34,7 @@
 #include "WakeLockListener.h"
 
 #ifdef NS_PRINTING
-#include "nsPrintOptionsGTK.h"
+#include "nsPrintSettingsServiceGTK.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextSpecG.h"
 #endif
@@ -116,7 +116,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceGTK, Init)
@@ -250,7 +250,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
       Module::MAIN_PROCESS_ONLY },
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
-    { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
+    { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintSettingsServiceGTKConstructor },
     { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
     { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
     { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecGTKConstructor },

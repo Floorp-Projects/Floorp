@@ -1060,13 +1060,13 @@ protected:
 public:
   explicit DOMCSSDeclarationImpl(css::StyleRule *aRule);
 
-  css::Rule* GetParentRule() final { return mRule; }
+  css::Rule* GetParentRule() final override { return mRule; }
   virtual DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(DeclarationBlock* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
   virtual nsIDocument* DocToUpdate() override;
 
   // Override |AddRef| and |Release| for being owned by StyleRule.  Also, we

@@ -27,16 +27,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoImportRule, dom::CSSImportRule)
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
 #endif
-  already_AddRefed<css::Rule> Clone() const final;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
+  already_AddRefed<css::Rule> Clone() const final override;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
 
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const override;
-  void GetHref(nsAString& aHref) const final;
-  dom::MediaList* GetMedia() const final;
-  StyleSheet* GetStyleSheet() const final;
+  void GetHref(nsAString& aHref) const final override;
+  dom::MediaList* GetMedia() const final override;
+  StyleSheet* GetStyleSheet() const final override;
 
 private:
   ~ServoImportRule();

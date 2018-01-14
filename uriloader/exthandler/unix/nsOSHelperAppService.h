@@ -27,20 +27,20 @@ public:
   // method overrides for mime.types and mime.info look up steps
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMimeType,
                                                   const nsACString& aFileExt,
-                                                  bool       *aFound);
+                                                  bool       *aFound) override;
   NS_IMETHOD GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
                                           bool *found,
-                                          nsIHandlerInfo **_retval);
+                                          nsIHandlerInfo **_retval) override;
 
   // override nsIExternalProtocolService methods
-  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists);
-  NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
+  nsresult OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists) override;
+  NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval) override;
 
   // GetFileTokenForPath must be implemented by each platform.
   // platformAppPath --> a platform specific path to an application that we got out of the
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
-  virtual nsresult GetFileTokenForPath(const char16_t * platformAppPath, nsIFile ** aFile);
+  virtual nsresult GetFileTokenForPath(const char16_t * platformAppPath, nsIFile ** aFile) override;
 
 protected:
   already_AddRefed<nsMIMEInfoBase> GetFromType(const nsCString& aMimeType);

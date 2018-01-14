@@ -61,8 +61,8 @@ struct ScalarInfo : BaseScalarInfo {
     , expiration_offset(aExpirationOffset)
   {}
 
-  const char *name() const;
-  const char *expiration() const;
+  const char *name() const override;
+  const char *expiration() const override;
 };
 
 } // namespace

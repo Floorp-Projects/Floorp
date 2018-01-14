@@ -423,7 +423,7 @@ public:
   already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
                                              nsViewManager* aViewManager,
                                              mozilla::StyleSetHandle aStyleSet)
-    final;
+    final override;
   virtual void DeleteShell() override;
 
   virtual bool GetAllowPlugins() override;

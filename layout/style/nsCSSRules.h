@@ -75,11 +75,11 @@ public:
   nsresult SetMedia(nsMediaList* aMedia);
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetConditionText(nsAString& aConditionText) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
-                        ErrorResult& aRv) final;
-  dom::MediaList* Media() final;
+                        ErrorResult& aRv) final override;
+  dom::MediaList* Media() final override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -131,10 +131,10 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetConditionText(nsAString& aConditionText) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
-                        ErrorResult& aRv) final;
+                        ErrorResult& aRv) final override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -166,16 +166,16 @@ public:
   }
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
 #endif
-  already_AddRefed<mozilla::css::Rule> Clone() const final;
+  already_AddRefed<mozilla::css::Rule> Clone() const final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetFontFamily(nsAString& aFamily) final;
-  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final;
-  void GetValueText(nsAString& aValueText) final;
-  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetFontFamily(nsAString& aFamily) final override;
+  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final override;
+  void GetValueText(nsAString& aValueText) final override;
+  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final override;
 
   mozilla::SharedFontList* GetFamilyList() const { return mFamilyList; }
   void SetFamilyList(mozilla::SharedFontList* aFamilyList)
@@ -191,7 +191,7 @@ public:
     return mFeatureValues;
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
 
 protected:
   ~nsCSSFontFeatureValuesRule() {}
@@ -214,7 +214,7 @@ public:
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
   virtual nsIDocument* DocToUpdate() override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -260,10 +260,10 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetKeyText(nsAString& aKeyText) final;
-  void SetKeyText(const nsAString& aKeyText) final;
-  nsICSSDeclaration* Style() final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetKeyText(nsAString& aKeyText) final override;
+  void SetKeyText(const nsAString& aKeyText) final override;
+  nsICSSDeclaration* Style() final override;
 
   const nsTArray<float>& GetKeys() const     { return mKeys; }
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
@@ -301,13 +301,13 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetName(nsAString& aName) const final;
-  void SetName(const nsAString& aName) final;
-  mozilla::dom::CSSRuleList* CssRules() final { return GroupRule::CssRules(); }
-  void AppendRule(const nsAString& aRule) final;
-  void DeleteRule(const nsAString& aKey) final;
-  nsCSSKeyframeRule* FindRule(const nsAString& aKey) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetName(nsAString& aName) const final override;
+  void SetName(const nsAString& aName) final override;
+  mozilla::dom::CSSRuleList* CssRules() final override { return GroupRule::CssRules(); }
+  void AppendRule(const nsAString& aRule) final override;
+  void DeleteRule(const nsAString& aKey) final override;
+  nsCSSKeyframeRule* FindRule(const nsAString& aKey) final override;
 
   const nsAtom* GetName() const { return mName; }
 
@@ -333,7 +333,7 @@ public:
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
   virtual nsIDocument* DocToUpdate() override;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -410,10 +410,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetConditionText(nsAString& aConditionText) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
-                        ErrorResult& aRv) final;
+                        ErrorResult& aRv) final override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 

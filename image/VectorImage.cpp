@@ -268,7 +268,7 @@ public:
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
                           const SamplingFilter aSamplingFilter,
-                          const gfxMatrix& aTransform);
+                          const gfxMatrix& aTransform) override;
 private:
   RefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
   const IntSize                mViewportSize;

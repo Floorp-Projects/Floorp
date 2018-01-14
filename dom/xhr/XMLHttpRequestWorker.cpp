@@ -341,7 +341,7 @@ private:
   { }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     if (mXMLHttpRequestPrivate->SendInProgress()) {
       mXMLHttpRequestPrivate->Unpin();

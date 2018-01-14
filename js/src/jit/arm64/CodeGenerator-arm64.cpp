@@ -264,7 +264,7 @@ class js::jit::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorARM6
     MTableSwitch* mir_;
     Vector<CodeLabel, 8, JitAllocPolicy> codeLabels_;
 
-    void accept(CodeGeneratorARM64* codegen) {
+    void accept(CodeGeneratorARM64* codegen) override {
         codegen->visitOutOfLineTableSwitch(this);
     }
 
@@ -755,4 +755,3 @@ CodeGeneratorARM64::visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArr
         masm.atomicExchangeJS(arrayType, Synchronization::Full(), dest, value, temp, output);
     }
 }
-

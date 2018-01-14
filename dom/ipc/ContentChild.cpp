@@ -474,7 +474,7 @@ class PendingInputEventHangAnnotator final
   : public HangMonitor::Annotator
 {
 public:
-  virtual void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations)
+  virtual void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) override
   {
     int32_t pending = ContentChild::GetSingleton()->GetPendingInputEvents();
     if (pending > 0) {
