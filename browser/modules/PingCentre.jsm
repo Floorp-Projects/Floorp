@@ -21,6 +21,25 @@ const LOGGING_PREF = `${PREF_BRANCH}log`;
 const PRODUCTION_ENDPOINT_PREF = `${PREF_BRANCH}production.endpoint`;
 
 const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
+const BROWSER_SEARCH_REGION_PREF = "browser.search.region";
+
+// Only report region for following regions, to ensure that users in countries
+// with small user population (less than 10000) cannot be uniquely identified.
+// See bug 1421422 for more details.
+const REGION_WHITELIST = new Set([
+  "AE", "AF", "AL", "AM", "AR", "AT", "AU", "AZ", "BA", "BD", "BE", "BF",
+  "BG", "BJ", "BO", "BR", "BY", "CA", "CH", "CI", "CL", "CM", "CN", "CO",
+  "CR", "CU", "CY", "CZ", "DE", "DK", "DO", "DZ", "EC", "EE", "EG", "ES",
+  "ET", "FI", "FR", "GB", "GE", "GH", "GP", "GR", "GT", "HK", "HN", "HR",
+  "HU", "ID", "IE", "IL", "IN", "IQ", "IR", "IS", "IT", "JM", "JO", "JP",
+  "KE", "KH", "KR", "KW", "KZ", "LB", "LK", "LT", "LU", "LV", "LY", "MA",
+  "MD", "ME", "MG", "MK", "ML", "MM", "MN", "MQ", "MT", "MU", "MX", "MY",
+  "MZ", "NC", "NG", "NI", "NL", "NO", "NP", "NZ", "OM", "PA", "PE", "PH",
+  "PK", "PL", "PR", "PS", "PT", "PY", "QA", "RE", "RO", "RS", "RU", "RW",
+  "SA", "SD", "SE", "SG", "SI", "SK", "SN", "SV", "SY", "TG", "TH", "TN",
+  "TR", "TT", "TW", "TZ", "UA", "UG", "US", "UY", "UZ", "VE", "VN", "ZA",
+  "ZM", "ZW"
+]);
 
 /**
  * Observe various notifications and send them to a telemetry endpoint.
@@ -102,6 +121,20 @@ class PingCentre {
     return experimentsString;
   }
 
+  _getRegion() {
+    let region = "UNSET";
+
+    if (Services.prefs.prefHasUserValue(BROWSER_SEARCH_REGION_PREF)) {
+      region = Services.prefs.getStringPref(BROWSER_SEARCH_REGION_PREF);
+      if (region === "") {
+        region = "EMPTY";
+      } else if (!REGION_WHITELIST.has(region)) {
+        region = "OTHER";
+      }
+    }
+    return region;
+  }
+
   async sendPing(data, options) {
     let filter = options && options.filter;
     let experiments = TelemetryEnvironment.getActiveExperiments();
@@ -112,6 +145,8 @@ class PingCentre {
 
     let clientID = data.client_id || await this.telemetryClientId;
     let locale = data.locale || Services.locale.getAppLocalesAsLangTags().pop();
+    let profileCreationDate = TelemetryEnvironment.currentEnvironment.profile.resetDate ||
+      TelemetryEnvironment.currentEnvironment.profile.creationDate;
     const payload = Object.assign({
       locale,
       topic: this._topic,
@@ -122,6 +157,10 @@ class PingCentre {
     if (experimentsString) {
       payload.shield_id = experimentsString;
     }
+    if (profileCreationDate) {
+      payload.profile_creation_date = profileCreationDate;
+    }
+    payload.region = this._getRegion();
 
     if (this.logging) {
       // performance related pings cause a lot of logging, so we mute them

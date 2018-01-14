@@ -47,7 +47,7 @@ window.gActivityStreamStrings = {
   "time_label_less_than_minute": "<1m",
   "time_label_minute": "{number} m",
   "time_label_hour": "{number} h",
-  "time_label_day": "{number}d",
+  "time_label_day": "{number} d",
   "settings_pane_button_label": "Bok wašogo nowego rejtarka pśiměriś",
   "settings_pane_header": "Nastajenja nowego rejtarka składowaś",
   "settings_pane_body2": "Wubjeŕśo, což se na toś tom boku pokazujo.",
