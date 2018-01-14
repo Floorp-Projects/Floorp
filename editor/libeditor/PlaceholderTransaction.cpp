@@ -112,14 +112,6 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
     return NS_ERROR_FAILURE;
   }
 
-  // check to see if aTransaction is one of the editor's
-  // private transactions. If not, we want to avoid merging
-  // the foreign transaction into our placeholder since we
-  // don't know what it does.
-
-  nsCOMPtr<nsPIEditorTransaction> pTxn = do_QueryInterface(aTransaction);
-  NS_ENSURE_TRUE(pTxn, NS_OK); // it's foreign so just bail!
-
   // XXX: hack, not safe!  need nsIEditTransaction!
   EditTransactionBase* editTransactionBase = (EditTransactionBase*)aTransaction;
   // determine if this incoming txn is a placeholder txn
@@ -186,20 +178,6 @@ PlaceholderTransaction::Merge(nsITransaction* aTransaction,
       }
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PlaceholderTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("PlaceholderTransaction: ");
-
-  if (mName) {
-    nsAutoString name;
-    mName->ToString(name);
-    aString += name;
-  }
-
   return NS_OK;
 }
 
