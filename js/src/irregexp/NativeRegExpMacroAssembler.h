@@ -92,54 +92,54 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler final : public RegExpMacroAssem
                                RegExpShared::JitCodeTables& tables);
 
     // Inherited virtual methods.
-    RegExpCode GenerateCode(JSContext* cx, bool match_only);
-    int stack_limit_slack();
-    bool CanReadUnaligned();
-    void AdvanceCurrentPosition(int by);
-    void AdvanceRegister(int reg, int by);
-    void Backtrack();
-    void Bind(jit::Label* label);
-    void CheckAtStart(jit::Label* on_at_start);
-    void CheckCharacter(unsigned c, jit::Label* on_equal);
-    void CheckCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_equal);
-    void CheckCharacterGT(char16_t limit, jit::Label* on_greater);
-    void CheckCharacterLT(char16_t limit, jit::Label* on_less);
-    void CheckGreedyLoop(jit::Label* on_tos_equals_current_position);
-    void CheckNotAtStart(jit::Label* on_not_at_start);
-    void CheckNotBackReference(int start_reg, jit::Label* on_no_match);
-    void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match, bool unicode);
-    void CheckNotCharacter(unsigned c, jit::Label* on_not_equal);
-    void CheckNotCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_not_equal);
+    RegExpCode GenerateCode(JSContext* cx, bool match_only) override;
+    int stack_limit_slack() override;
+    bool CanReadUnaligned() override;
+    void AdvanceCurrentPosition(int by) override;
+    void AdvanceRegister(int reg, int by) override;
+    void Backtrack() override;
+    void Bind(jit::Label* label) override;
+    void CheckAtStart(jit::Label* on_at_start) override;
+    void CheckCharacter(unsigned c, jit::Label* on_equal) override;
+    void CheckCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_equal) override;
+    void CheckCharacterGT(char16_t limit, jit::Label* on_greater) override;
+    void CheckCharacterLT(char16_t limit, jit::Label* on_less) override;
+    void CheckGreedyLoop(jit::Label* on_tos_equals_current_position) override;
+    void CheckNotAtStart(jit::Label* on_not_at_start) override;
+    void CheckNotBackReference(int start_reg, jit::Label* on_no_match) override;
+    void CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match, bool unicode) override;
+    void CheckNotCharacter(unsigned c, jit::Label* on_not_equal) override;
+    void CheckNotCharacterAfterAnd(unsigned c, unsigned and_with, jit::Label* on_not_equal) override;
     void CheckNotCharacterAfterMinusAnd(char16_t c, char16_t minus, char16_t and_with,
-                                        jit::Label* on_not_equal);
+                                        jit::Label* on_not_equal) override;
     void CheckCharacterInRange(char16_t from, char16_t to,
-                               jit::Label* on_in_range);
+                               jit::Label* on_in_range) override;
     void CheckCharacterNotInRange(char16_t from, char16_t to,
-                                  jit::Label* on_not_in_range);
-    void CheckBitInTable(RegExpShared::JitCodeTable table, jit::Label* on_bit_set);
-    void CheckPosition(int cp_offset, jit::Label* on_outside_input);
-    void JumpOrBacktrack(jit::Label* to);
-    bool CheckSpecialCharacterClass(char16_t type, jit::Label* on_no_match);
-    void Fail();
-    void IfRegisterGE(int reg, int comparand, jit::Label* if_ge);
-    void IfRegisterLT(int reg, int comparand, jit::Label* if_lt);
-    void IfRegisterEqPos(int reg, jit::Label* if_eq);
+                                  jit::Label* on_not_in_range) override;
+    void CheckBitInTable(RegExpShared::JitCodeTable table, jit::Label* on_bit_set) override;
+    void CheckPosition(int cp_offset, jit::Label* on_outside_input) override;
+    void JumpOrBacktrack(jit::Label* to) override;
+    bool CheckSpecialCharacterClass(char16_t type, jit::Label* on_no_match) override;
+    void Fail() override;
+    void IfRegisterGE(int reg, int comparand, jit::Label* if_ge) override;
+    void IfRegisterLT(int reg, int comparand, jit::Label* if_lt) override;
+    void IfRegisterEqPos(int reg, jit::Label* if_eq) override;
     void LoadCurrentCharacter(int cp_offset, jit::Label* on_end_of_input,
-                              bool check_bounds = true, int characters = 1);
-    void PopCurrentPosition();
-    void PopRegister(int register_index);
-    void PushCurrentPosition();
-    void PushRegister(int register_index, StackCheckFlag check_stack_limit);
-    void ReadCurrentPositionFromRegister(int reg);
-    void ReadBacktrackStackPointerFromRegister(int reg);
-    void SetCurrentPositionFromEnd(int by);
-    void SetRegister(int register_index, int to);
-    bool Succeed();
-    void WriteCurrentPositionToRegister(int reg, int cp_offset);
-    void ClearRegisters(int reg_from, int reg_to);
-    void WriteBacktrackStackPointerToRegister(int reg);
-    void PushBacktrack(jit::Label* label);
-    void BindBacktrack(jit::Label* label);
+                              bool check_bounds = true, int characters = 1) override;
+    void PopCurrentPosition() override;
+    void PopRegister(int register_index) override;
+    void PushCurrentPosition() override;
+    void PushRegister(int register_index, StackCheckFlag check_stack_limit) override;
+    void ReadCurrentPositionFromRegister(int reg) override;
+    void ReadBacktrackStackPointerFromRegister(int reg) override;
+    void SetCurrentPositionFromEnd(int by) override;
+    void SetRegister(int register_index, int to) override;
+    bool Succeed() override;
+    void WriteCurrentPositionToRegister(int reg, int cp_offset) override;
+    void ClearRegisters(int reg_from, int reg_to) override;
+    void WriteBacktrackStackPointerToRegister(int reg) override;
+    void PushBacktrack(jit::Label* label) override;
+    void BindBacktrack(jit::Label* label) override;
 
     // Compares two-byte strings case insensitively.
     // Called from generated RegExp code.

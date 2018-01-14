@@ -61,10 +61,10 @@ public:
 #define TX_DECL_ACOMPILEOBSERVER \
   nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
                    mozilla::net::ReferrerPolicy aReferrerPolicy, \
-                   txStylesheetCompiler* aCompiler); \
+                   txStylesheetCompiler* aCompiler) override; \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const char16_t *aErrorText = nullptr, \
-                       const char16_t *aParam = nullptr);
+                       const char16_t *aParam = nullptr) override;
 
 class txStylesheetCompilerState : public txIParseContext
 {
@@ -233,7 +233,7 @@ public:
     txStylesheet* getStylesheet();
 
     TX_DECL_ACOMPILEOBSERVER
-    NS_INLINE_DECL_REFCOUNTING(txStylesheetCompiler)
+    NS_INLINE_DECL_REFCOUNTING(txStylesheetCompiler, override)
 
 private:
     // Private destructor, to discourage deletion outside of Release():

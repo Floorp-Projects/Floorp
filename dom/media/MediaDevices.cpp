@@ -31,7 +31,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Notify(nsITimer* aTimer) final
+  NS_IMETHOD Notify(nsITimer* aTimer) final override
   {
     mMediaDevices->DispatchTrustedEvent(NS_LITERAL_STRING("devicechange"));
     return NS_OK;

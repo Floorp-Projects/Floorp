@@ -23,17 +23,17 @@ public:
   TestShellChild();
 
   mozilla::ipc::IPCResult
-  RecvExecuteCommand(const nsString& aCommand);
+  RecvExecuteCommand(const nsString& aCommand) override;
 
   PTestShellCommandChild*
-  AllocPTestShellCommandChild(const nsString& aCommand);
+  AllocPTestShellCommandChild(const nsString& aCommand) override;
 
   mozilla::ipc::IPCResult
   RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
-                                   const nsString& aCommand);
+                                   const nsString& aCommand) override;
 
   bool
-  DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand);
+  DeallocPTestShellCommandChild(PTestShellCommandChild* aCommand) override;
 
 private:
   nsAutoPtr<XPCShellEnvironment> mXPCShell;

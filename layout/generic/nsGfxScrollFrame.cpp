@@ -2027,7 +2027,7 @@ public:
     AgeAllGenerations();
   }
 
-  virtual void NotifyExpired(ScrollFrameHelper *aObject) {
+  virtual void NotifyExpired(ScrollFrameHelper *aObject) override {
     RemoveObject(aObject);
     aObject->MarkNotRecentlyScrolled();
   }

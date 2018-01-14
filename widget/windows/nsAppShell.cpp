@@ -55,7 +55,7 @@ public:
 private:
   ~WinWakeLockListener() {}
 
-  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
+  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
     if (!aTopic.EqualsASCII("screen") &&
         !aTopic.EqualsASCII("audio-playing") &&
         !aTopic.EqualsASCII("video-playing")) {

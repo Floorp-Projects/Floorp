@@ -11980,7 +11980,7 @@ public:
     , mUserInputOrChromeCaller(aUserInputOrChromeCaller)
   {}
 
-  NS_IMETHOD Run() final;
+  NS_IMETHOD Run() final override;
 
 private:
   nsWeakPtr mElement;

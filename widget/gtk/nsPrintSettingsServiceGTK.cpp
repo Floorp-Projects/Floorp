@@ -3,27 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsPrintOptionsGTK.h"
+#include "nsPrintSettingsServiceGTK.h"
 #include "nsPrintSettingsGTK.h"
 
 using namespace mozilla::embedding;
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
- */
-nsPrintOptionsGTK::nsPrintOptionsGTK()
-{
-
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
- */
-nsPrintOptionsGTK::~nsPrintOptionsGTK()
-{
-}
 
 static void
 serialize_gtk_printsettings_to_printdata(const gchar *key,
@@ -38,11 +21,11 @@ serialize_gtk_printsettings_to_printdata(const gchar *key,
 }
 
 NS_IMETHODIMP
-nsPrintOptionsGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                        nsIWebBrowserPrint* aWBP,
-                                        PrintData* data)
+nsPrintSettingsServiceGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                                nsIWebBrowserPrint* aWBP,
+                                                PrintData* data)
 {
-  nsresult rv = nsPrintOptions::SerializeToPrintData(aSettings, aWBP, data);
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPrintSettingsGTK> settingsGTK(do_QueryInterface(aSettings));
@@ -60,13 +43,13 @@ nsPrintOptionsGTK::SerializeToPrintData(nsIPrintSettings* aSettings,
 }
 
 NS_IMETHODIMP
-nsPrintOptionsGTK::DeserializeToPrintSettings(const PrintData& data,
-                                              nsIPrintSettings* settings)
+nsPrintSettingsServiceGTK::DeserializeToPrintSettings(const PrintData& data,
+                                                      nsIPrintSettings* settings)
 {
   nsCOMPtr<nsPrintSettingsGTK> settingsGTK(do_QueryInterface(settings));
   NS_ENSURE_STATE(settingsGTK);
 
-  nsresult rv = nsPrintOptions::DeserializeToPrintSettings(data, settings);
+  nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Instead of re-using the GtkPrintSettings that nsIPrintSettings is
@@ -89,7 +72,7 @@ nsPrintOptionsGTK::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-nsresult nsPrintOptionsGTK::_CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintSettingsServiceGTK::_CreatePrintSettings(nsIPrintSettings** _retval)
 {
   *_retval = nullptr;
   nsPrintSettingsGTK* printSettings = new nsPrintSettingsGTK(); // does not initially ref count

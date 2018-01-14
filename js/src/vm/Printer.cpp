@@ -36,7 +36,7 @@ public:
     {
     }
 
-    bool append(const char* sp, size_t len) {
+    bool append(const char* sp, size_t len) override {
         return printer.put(sp, len);
     }
 

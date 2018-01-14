@@ -166,7 +166,7 @@ static_assert(sizeof(SkString) == sizeof(void*), "SkString_size");
 class SkPDFAtom final : public SkPDFObject {
 public:
     void emitObject(SkWStream* stream,
-                    const SkPDFObjNumMap& objNumMap) final;
+                    const SkPDFObjNumMap& objNumMap) final override;
     void addResources(SkPDFObjNumMap* const final;
     SkPDFAtom(SkPDFUnion&& v) : fValue(std::move(v) {}
 
@@ -334,7 +334,7 @@ public:
     // The SkPDFObject interface.
     void emitObject(SkWStream* stream,
                     const SkPDFObjNumMap& objNumMap) const override;
-    void addResources(SkPDFObjNumMap*) const final;
+    void addResources(SkPDFObjNumMap*) const final override;
     void drop() override;
 
 protected:

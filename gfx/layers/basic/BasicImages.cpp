@@ -80,7 +80,7 @@ public:
   BasicImageFactory() {}
 
   virtual RefPtr<PlanarYCbCrImage>
-  CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecycleBin* aRecycleBin)
+  CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecycleBin* aRecycleBin) override
   {
     return new BasicPlanarYCbCrImage(aScaleHint, gfxPlatform::GetPlatform()->GetOffscreenFormat(), aRecycleBin);
   }

@@ -19,7 +19,7 @@ class PathD2D;
 class PathBuilderD2D : public PathBuilder
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderD2D)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderD2D, override)
   PathBuilderD2D(ID2D1GeometrySink *aSink, ID2D1PathGeometry *aGeom, FillRule aFillRule, BackendType aBackendType)
     : mSink(aSink)
     , mGeometry(aGeom)
@@ -68,7 +68,7 @@ private:
 class PathD2D : public Path
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathD2D)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathD2D, override)
   PathD2D(ID2D1PathGeometry *aGeometry, bool aEndedActive,
           const Point &aEndPoint, FillRule aFillRule, BackendType aBackendType)
     : mGeometry(aGeometry)

@@ -215,7 +215,7 @@ class BoolWrapper : public ARefBase
 {
 public:
     BoolWrapper() : mBool(false) {}
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BoolWrapper)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BoolWrapper, override)
 
 public: // intentional!
     bool mBool;
@@ -465,7 +465,7 @@ class SpeculativeConnectArgs : public ARefBase
 {
 public:
     SpeculativeConnectArgs() { mOverridesOK = false; }
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SpeculativeConnectArgs, override)
 
 public: // intentional!
     RefPtr<NullHttpTransaction> mTrans;
@@ -562,7 +562,7 @@ public:
         : mConn(aConn)
         , mUpgradeListener(aListener) { }
 
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCompleteUpgradeData)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCompleteUpgradeData, override)
 
     RefPtr<nsAHttpConnection> mConn;
     nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
@@ -3016,7 +3016,7 @@ class UINT64Wrapper : public ARefBase
 {
 public:
     explicit UINT64Wrapper(uint64_t aUint64) : mUint64(aUint64) {}
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UINT64Wrapper)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UINT64Wrapper, override)
 
     uint64_t GetValue()
     {

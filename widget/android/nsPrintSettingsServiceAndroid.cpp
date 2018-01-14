@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsPrintOptionsAndroid.h"
+#include "nsPrintSettingsServiceAndroid.h"
 
 #include "nsPrintSettingsImpl.h"
 
@@ -16,16 +16,8 @@ public:
   }
 };
 
-nsPrintOptionsAndroid::nsPrintOptionsAndroid()
-{
-}
-
-nsPrintOptionsAndroid::~nsPrintOptionsAndroid()
-{
-}
-
 nsresult
-nsPrintOptionsAndroid::_CreatePrintSettings(nsIPrintSettings** _retval)
+nsPrintSettingsServiceAndroid::_CreatePrintSettings(nsIPrintSettings** _retval)
 {
   nsPrintSettings * printSettings = new nsPrintSettingsAndroid();
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);

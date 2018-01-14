@@ -25,7 +25,7 @@ public:
                                      uint32_t aTag,
                                      JSPrincipals** aOutPrincipals);
 
-  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final;
+  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final override;
 
   /*
    * Get a weak reference to nsIPrincipal associated with the given JS

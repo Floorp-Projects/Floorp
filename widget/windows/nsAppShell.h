@@ -36,11 +36,11 @@ public:
   static UINT GetTaskbarButtonCreatedMessage();
 
   NS_IMETHOD AfterProcessNextEvent(nsIThreadInternal* thread,
-                                   bool eventWasProcessed) final;
+                                   bool eventWasProcessed) final override;
 
 protected:
-  NS_IMETHOD Run();
-  NS_IMETHOD Exit();
+  NS_IMETHOD Run() override;
+  NS_IMETHOD Exit() override;
 
 #if defined(ACCESSIBILITY)
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,

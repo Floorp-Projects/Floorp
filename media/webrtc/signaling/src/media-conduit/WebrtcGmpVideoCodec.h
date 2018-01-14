@@ -456,7 +456,7 @@ private:
     {
     }
 
-    virtual void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
+    virtual void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost) override
     {
       std::string errorOut;
       int32_t result = mDecoder->GmpInitDone(aGMP, aHost, &errorOut);

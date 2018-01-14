@@ -541,11 +541,11 @@ public:
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
 
-    const CompressedGlyph* GetCharacterGlyphs() const final {
+    const CompressedGlyph* GetCharacterGlyphs() const final override {
         MOZ_ASSERT(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
         return mCharacterGlyphs;
     }
-    CompressedGlyph* GetCharacterGlyphs() final {
+    CompressedGlyph* GetCharacterGlyphs() final override {
         MOZ_ASSERT(mCharacterGlyphs, "failed to initialize mCharacterGlyphs");
         return mCharacterGlyphs;
     }

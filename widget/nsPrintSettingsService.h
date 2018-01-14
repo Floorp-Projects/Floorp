@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrintOptionsImpl_h__
-#define nsPrintOptionsImpl_h__
+#ifndef nsPrintSettingsService_h
+#define nsPrintSettingsService_h
 
 #include "mozilla/embedding/PPrinting.h"
 #include "nsCOMPtr.h"
@@ -16,13 +16,16 @@
 class nsIPrintSettings;
 
 /**
- *   Class nsPrintOptions
+ * Class nsPrintSettingsService.  Base class for the platform specific widget
+ * subclasses to inherit from.
  */
-class nsPrintOptions : public nsIPrintSettingsService
+class nsPrintSettingsService : public nsIPrintSettingsService
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTSETTINGSSERVICE
+
+  nsPrintSettingsService() {}
 
   /**
    * method Init
@@ -32,10 +35,13 @@ public:
    */
   virtual nsresult Init();
 
-  nsPrintOptions();
+private:
+  // Copying is not supported.
+  nsPrintSettingsService(const nsPrintSettingsService& x) = delete;
+  nsPrintSettingsService& operator=(const nsPrintSettingsService& x) = delete;
 
 protected:
-  virtual ~nsPrintOptions();
+  virtual ~nsPrintSettingsService() {}
 
   void ReadBitFieldPref(const char * aPrefId, int32_t anOption);
   void WriteBitFieldPref(const char * aPrefId, int32_t anOption);
@@ -58,17 +64,20 @@ protected:
    * @param aPrinterName the name of the printer for which to read prefs
    * @param aFlags       flag specifying which prefs to read
    */
-  virtual nsresult ReadPrefs(nsIPrintSettings* aPS, const nsAString&
-                             aPrinterName, uint32_t aFlags);
+  virtual nsresult ReadPrefs(nsIPrintSettings* aPS,
+                             const nsAString& aPrinterName,
+                             uint32_t aFlags);
   /**
    * method WritePrefs
    * @param aPS          a pointer to the printer settings
    * @param aPrinterName the name of the printer for which to write prefs
    * @param aFlags       flag specifying which prefs to read
    */
-  virtual nsresult WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrefName,
+  virtual nsresult WritePrefs(nsIPrintSettings* aPS,
+                              const nsAString& aPrinterName,
                               uint32_t aFlags);
-  const char* GetPrefName(const char *     aPrefName,
+
+  const char* GetPrefName(const char* aPrefName,
                           const nsAString&  aPrinterName);
 
   /**
@@ -83,11 +92,6 @@ protected:
   nsCOMPtr<nsIPrintSettings> mGlobalPrintSettings;
 
   nsCString mPrefName;
-
-private:
-  // These are not supported and are not implemented!
-  nsPrintOptions(const nsPrintOptions& x);
-  nsPrintOptions& operator=(const nsPrintOptions& x);
 };
 
-#endif /* nsPrintOptionsImpl_h__ */
+#endif // nsPrintSettingsService_h

@@ -37,7 +37,7 @@ public:
 
   ~SyncRunnable() = default;
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mHasRun) {
       return NS_OK;

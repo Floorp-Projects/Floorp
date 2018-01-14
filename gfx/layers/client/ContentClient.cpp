@@ -639,7 +639,7 @@ public:
     }
   }
 
-  virtual void ProcessReadback(gfx::DataSourceSurface *aSourceSurface)
+  virtual void ProcessReadback(gfx::DataSourceSurface *aSourceSurface) override
   {
     SourceRotatedBuffer rotBuffer(aSourceSurface, nullptr, mBufferRect, mBufferRotation);
 

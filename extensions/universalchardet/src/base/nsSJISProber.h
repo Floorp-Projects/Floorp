@@ -23,11 +23,11 @@ public:
   {mCodingSM = new nsCodingStateMachine(&SJISSMModel);
     Reset();}
   virtual ~nsSJISProber(void){delete mCodingSM;}
-  nsProbingState HandleData(const char* aBuf, uint32_t aLen);
-  const char* GetCharSetName() {return "Shift_JIS";}
-  nsProbingState GetState(void) {return mState;}
-  void      Reset(void);
-  float     GetConfidence(void);
+  nsProbingState HandleData(const char* aBuf, uint32_t aLen) override;
+  const char* GetCharSetName() override {return "Shift_JIS";}
+  nsProbingState GetState(void) override {return mState;}
+  void      Reset(void) override;
+  float     GetConfidence(void) override;
 
 protected:
   nsCodingStateMachine* mCodingSM;
@@ -39,6 +39,4 @@ protected:
   char mLastChar[2];
 };
 
-
 #endif /* nsSJISProber_h__ */
-

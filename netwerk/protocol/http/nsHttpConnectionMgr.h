@@ -513,7 +513,7 @@ private:
             : mTransaction(trans)
         {}
 
-        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PendingTransactionInfo)
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PendingTransactionInfo, override)
 
         void PrintDiagnostics(nsCString &log);
     public: // meant to be public.

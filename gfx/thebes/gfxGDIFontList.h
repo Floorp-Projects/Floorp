@@ -214,7 +214,7 @@ public:
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
 
     bool FilterForFontList(nsAtom* aLangGroup,
-                           const nsACString& aGeneric) const final {
+                           const nsACString& aGeneric) const final override {
         return !IsSymbolFontFamily() &&
                SupportsLangGroup(aLangGroup) &&
                MatchesGenericFamily(aGeneric);

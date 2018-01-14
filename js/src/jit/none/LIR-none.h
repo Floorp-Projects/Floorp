@@ -56,7 +56,7 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     MUnbox* mir() const { MOZ_CRASH(); }
     const LAllocation* payload() { MOZ_CRASH(); }
     const LAllocation* type() { MOZ_CRASH(); }
-    const char* extraName() const { MOZ_CRASH(); }
+    const char* extraName() const override { MOZ_CRASH(); }
 };
 class LDivI : public LBinaryMath<1>
 {
