@@ -271,20 +271,6 @@ ChangeStyleTransaction::RedoTransaction()
   return SetStyle(mRedoAttributeWasSet, mRedoValue);
 }
 
-NS_IMETHODIMP
-ChangeStyleTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("ChangeStyleTransaction: [mRemoveProperty == ");
-
-  if (mRemoveProperty) {
-    aString.AppendLiteral("true] ");
-  } else {
-    aString.AppendLiteral("false] ");
-  }
-  aString += nsDependentAtomString(mProperty);
-  return NS_OK;
-}
-
 // True if the CSS property accepts more than one value
 bool
 ChangeStyleTransaction::AcceptsMoreThanOneValue(nsAtom& aCSSProperty)

@@ -118,14 +118,6 @@ InsertTextTransaction::Merge(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InsertTextTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("InsertTextTransaction: ");
-  aString += mStringToInsert;
-  return NS_OK;
-}
-
 /* ============ private methods ================== */
 
 void
