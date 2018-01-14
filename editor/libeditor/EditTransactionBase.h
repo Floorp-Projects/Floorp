@@ -9,7 +9,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "nsITransaction.h"
-#include "nsPIEditorTransaction.h"
 #include "nscore.h"
 
 namespace mozilla {
@@ -18,7 +17,6 @@ namespace mozilla {
  * Base class for all document editing transactions.
  */
 class EditTransactionBase : public nsITransaction
-                          , public nsPIEditorTransaction
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -36,7 +34,6 @@ protected:
 
 #define NS_DECL_EDITTRANSACTIONBASE \
   NS_IMETHOD DoTransaction() override; \
-  NS_IMETHOD UndoTransaction() override; \
-  NS_IMETHOD GetTxnDescription(nsAString& aTransactionDescription) override;
+  NS_IMETHOD UndoTransaction() override;
 
 #endif // #ifndef mozilla_EditTransactionBase_h
