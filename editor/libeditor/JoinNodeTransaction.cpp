@@ -127,11 +127,4 @@ JoinNodeTransaction::UndoTransaction()
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
-JoinNodeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("JoinNodeTransaction");
-  return NS_OK;
-}
-
 } // namespace mozilla

@@ -107,11 +107,4 @@ DeleteNodeTransaction::RedoTransaction()
   return error.StealNSResult();
 }
 
-NS_IMETHODIMP
-DeleteNodeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("DeleteNodeTransaction");
-  return NS_OK;
-}
-
 } // namespace mozilla
