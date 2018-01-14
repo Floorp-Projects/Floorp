@@ -175,20 +175,6 @@ browser.Context = class {
   }
 
   /**
-   * Checks if the browsing context has been discarded.
-   *
-   * The browsing context will have been discarded if the content
-   * browser, represented by the <code>&lt;xul:browser&gt;</code>,
-   * has been detached.
-   *
-   * @return {boolean}
-   *     True if browsing context has been discarded, false otherwise.
-   */
-  get closed() {
-    return this.contentBrowser === null;
-  }
-
-  /**
    * The current frame ID is managed per browser element on desktop in
    * case the ID needs to be refreshed. The currently selected window is
    * identified by a tab.
