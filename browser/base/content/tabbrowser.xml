@@ -7210,7 +7210,6 @@
             event.originalTarget.localName != "box")
           return;
 
-        // See hack note in the tabbrowser-close-tab-button binding
         if (!this._blockDblClick)
           BrowserOpenTab();
 
@@ -7259,8 +7258,7 @@
          * double-clicks the button, the dblclick event will be dispatched
          * with the tabbar as its event target (and explicit/originalTarget),
          * which treats that as a mouse gesture for opening a new tab.
-         * In this context, we're manually blocking the dblclick event
-         * (see tabbrowser-close-tab-button dblclick handler).
+         * In this context, we're manually blocking the dblclick event.
          */
         if (this._blockDblClick) {
           if (!("_clickedTabBarOnce" in this)) {
@@ -7741,34 +7739,6 @@
     </handlers>
   </binding>
 
-  <!-- close-tab-button binding
-       This binding relies on the structure of the tabbrowser binding.
-       Therefore it should only be used as a child of the tab or the tabs
-       element (in both cases, when they are anonymous nodes of <tabbrowser>).
-  -->
-  <binding id="tabbrowser-close-tab-button">
-    <handlers>
-      <handler event="click" button="0"><![CDATA[
-        var bindingParent = document.getBindingParent(this);
-        var tabContainer = bindingParent.parentNode;
-        tabContainer.tabbrowser.removeTab(bindingParent, {animate: true,
-                byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
-        // This enables double-click protection for the tab container
-        // (see tabbrowser-tabs 'click' handler).
-        tabContainer._blockDblClick = true;
-      ]]></handler>
-
-      <handler event="dblclick" button="0" phase="capturing">
-        // for the one-close-button case
-        event.stopPropagation();
-      </handler>
-
-      <handler event="dragstart">
-        event.stopPropagation();
-      </handler>
-    </handlers>
-  </binding>
-
   <binding id="tabbrowser-tab" display="xul:hbox"
            extends="chrome://global/content/bindings/tabbox.xml#tab">
     <resources>
@@ -8148,22 +8118,30 @@
 
     <handlers>
       <handler event="mouseover"><![CDATA[
-        let anonid = event.originalTarget.getAttribute("anonid");
-        if (anonid == "close-button")
+        if (event.originalTarget.getAttribute("anonid") == "close-button") {
           this.mOverCloseButton = true;
+        }
 
         this._mouseenter();
       ]]></handler>
       <handler event="mouseout"><![CDATA[
-        let anonid = event.originalTarget.getAttribute("anonid");
-        if (anonid == "close-button")
+        if (event.originalTarget.getAttribute("anonid") == "close-button") {
           this.mOverCloseButton = false;
+        }
 
         this._mouseleave();
       ]]></handler>
+
       <handler event="dragstart" phase="capturing">
         this.style.MozUserFocus = "";
       </handler>
+
+      <handler event="dragstart"><![CDATA[
+        if (this.mOverCloseButton) {
+          event.stopPropagation();
+        }
+      ]]></handler>
+
       <handler event="mousedown" phase="capturing">
       <![CDATA[
         if (this.selected) {
@@ -8178,21 +8156,33 @@
       <handler event="mouseup">
         this.style.MozUserFocus = "";
       </handler>
-      <handler event="click">
-      <![CDATA[
-        if (event.button != 0) {
+
+      <handler event="click" button="0"><![CDATA[
+        if (this._overPlayingIcon) {
+          this.toggleMuteAudio();
           return;
         }
 
-        if (this._overPlayingIcon) {
-          this.toggleMuteAudio();
+        if (event.originalTarget.getAttribute("anonid") == "close-button") {
+          let tabContainer = this.parentNode;
+          tabContainer.tabbrowser.removeTab(this, {animate: true,
+                  byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE});
+          // This enables double-click protection for the tab container
+          // (see tabbrowser-tabs 'click' handler).
+          tabContainer._blockDblClick = true;
         }
-      ]]>
-      </handler>
+      ]]></handler>
+
+      <handler event="dblclick" button="0" phase="capturing"><![CDATA[
+        // for the one-close-button case
+        if (event.originalTarget.getAttribute("anonid") == "close-button") {
+          event.stopPropagation();
+        }
+      ]]></handler>
+
       <handler event="animationend">
       <![CDATA[
-        let anonid = event.originalTarget.getAttribute("anonid");
-        if (anonid == "tab-loading-burst") {
+        if (event.originalTarget.getAttribute("anonid") == "tab-loading-burst") {
           this.removeAttribute("bursting");
         }
       ]]>
