@@ -171,7 +171,7 @@ describe("ActivityStream", () => {
     it("should be false with expected geo and unexpected locale", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("no-LOCALE");
+      sandbox.stub(global.Services.locale, "getAppLocaleAsLangTag").returns("no-LOCALE");
 
       as._updateDynamicPrefs();
 
@@ -180,7 +180,7 @@ describe("ActivityStream", () => {
     it("should be true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+      sandbox.stub(global.Services.locale, "getAppLocaleAsLangTag").returns("en-US");
 
       as._updateDynamicPrefs();
 
@@ -193,7 +193,7 @@ describe("ActivityStream", () => {
         .returns("US")
         .onSecondCall()
         .returns("NOGEO");
-      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+      sandbox.stub(global.Services.locale, "getAppLocaleAsLangTag").returns("en-US");
 
       as._updateDynamicPrefs();
       as._updateDynamicPrefs();
@@ -224,7 +224,7 @@ describe("ActivityStream", () => {
     });
     it("should set true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
-      sandbox.stub(global.Services.locale, "getRequestedLocale").returns("en-US");
+      sandbox.stub(global.Services.locale, "getAppLocaleAsLangTag").returns("en-US");
 
       as._updateDynamicPrefs();
       clock.tick(1);
