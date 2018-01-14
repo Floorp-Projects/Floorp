@@ -102,20 +102,6 @@ EditAggregateTransaction::Merge(nsITransaction* aTransaction,
 }
 
 NS_IMETHODIMP
-EditAggregateTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("EditAggregateTransaction: ");
-
-  if (mName) {
-    nsAutoString name;
-    mName->ToString(name);
-    aString += name;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditAggregateTransaction::AppendChild(EditTransactionBase* aTransaction)
 {
   if (!aTransaction) {
