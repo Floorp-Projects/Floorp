@@ -114,6 +114,15 @@ public:
   ~DocumentOrShadowRoot() = default;
 
 protected:
+  nsIContent* Retarget(nsIContent* aContent) const;
+
+  /**
+   * If focused element's subtree root is this document or shadow root, return
+   * focused element, otherwise, get the shadow host recursively until the
+   * shadow host's subtree root is this document or shadow root.
+   */
+  Element* GetRetargetedFocusedElement();
+
   nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheets;
   RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
 
