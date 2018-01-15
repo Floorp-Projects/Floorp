@@ -8598,9 +8598,9 @@
   },
   "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
     "bug_numbers": [1368596],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Counts types of deprecation warnings logged on every successful call to navigator.requestMediaKeySystemAccess(). 0=No warnings logged, 1=MediaEMENoCapabilitiesDeprecatedWarning, 2=MediaEMENoCodecsDeprecatedWarning."
