@@ -2306,6 +2306,11 @@ MediaCacheStream::NotifyClientSuspended(bool aSuspended)
         // mClientSuspended changes the decision of reading streams.
         mMediaCache->QueueUpdate(lock);
         UpdateDownloadStatistics(lock);
+        if (mClientSuspended) {
+          // Download is suspended. Wake up the readers that might be able to
+          // get data from the partial block.
+          lock.NotifyAll();
+        }
       }
     });
   OwnerThread()->Dispatch(r.forget());
