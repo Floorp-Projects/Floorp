@@ -17,15 +17,15 @@ from tryselect.templates import all_templates
 TEMPLATE_TESTS = {
     'artifact': [
         (['--no-artifact'], None),
-        (['--artifact'], {'enabled': '1'}),
+        (['--artifact'], {'artifact': {'enabled': '1'}}),
     ],
     'env': [
         ([], None),
-        (['--env', 'foo=bar', '--env', 'num=10'], {'foo': 'bar', 'num': '10'}),
+        (['--env', 'foo=bar', '--env', 'num=10'], {'env': {'foo': 'bar', 'num': '10'}}),
     ],
     'rebuild': [
         ([], None),
-        (['--rebuild', '10'], 10),
+        (['--rebuild', '10'], {'rebuild': 10}),
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
     ],
