@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1415416
+-->
+<head>
+<title>Test for Bug 1415416</title>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+function runTest() {
+  var text = document.getElementById("text1");
+  text.readOnly = false;
+  text.value = "";
+
+  text = document.getElementById("text2");
+  text.readOnly = false;
+  text.value = "";
+
+  sendKey("TAB");
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="runTest()">
+<input id = "text1" type="text" readonly autofocus value="A" />
+<input id = "text2" type="text" readonly value="B"/>
+</body>
+</html>

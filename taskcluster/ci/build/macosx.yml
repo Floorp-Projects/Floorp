@@ -146,7 +146,6 @@ macosx64-noopt/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
