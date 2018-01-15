@@ -1598,31 +1598,6 @@ EnvironmentCache.prototype = {
   },
 
   /**
-   * Get registered security product information.
-   * @return Object containing the security product data
-   */
-  _getSecurityAppData() {
-    const maxStringLength = 256;
-
-    const keys = [ ["registeredAntiVirus", "antivirus"],
-                   ["registeredAntiSpyware", "antispyware"],
-                   ["registeredFirewall", "firewall"] ];
-
-    let result = {};
-
-    for (let [inKey, outKey] of keys) {
-      let prop = getSysinfoProperty(inKey, null);
-      if (prop) {
-        prop = limitStringToLength(prop, maxStringLength).split(";");
-      }
-
-      result[outKey] = prop;
-    }
-
-    return result;
-  },
-
-  /**
    * Get the GFX information.
    * @return Object containing the GFX data.
    */
@@ -1707,11 +1682,6 @@ EnvironmentCache.prototype = {
       data.isWow64 = getSysinfoProperty("isWow64", null);
     } else if (AppConstants.platform == "android") {
       data.device = this._getDeviceData();
-    }
-
-    // Windows 8+
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-      data.sec = this._getSecurityAppData();
     }
 
     return data;
