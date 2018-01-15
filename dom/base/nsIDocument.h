@@ -3071,15 +3071,12 @@ public:
     return mUserHasInteracted;
   }
 
-  // This would be called when document get activated by specific user gestures.
+  // This would be called when document get activated by specific user gestures
+  // and propagate the user activation flag to its parent.
   void NotifyUserActivation();
 
   // Return true if document has interacted by specific user gestures.
   bool HasBeenUserActivated();
-
-  // Return the first parent document with same pricipal, return nullptr if we
-  // can't find it.
-  nsIDocument* GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal);
 
   bool HasScriptsBlockedBySandbox();
 
@@ -3271,7 +3268,15 @@ protected:
   bool IsPotentiallyScrollable(mozilla::dom::HTMLBodyElement* aBody);
 
   // Return the same type parent docuement if exists, or return null.
-  nsIDocument* GetSameTypeParentDocument(const nsIDocument* aDoc);
+  nsIDocument* GetSameTypeParentDocument();
+
+  // Return the first parent document with same pricipal, return nullptr if we
+  // can't find it.
+  nsIDocument* GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal);
+
+  // Activate the flag 'mUserHasActivatedInteraction' by specific user gestures.
+  void ActivateByUserGesture();
+  void MaybeActivateByUserGesture(nsIPrincipal* aPrincipal);
 
   // Helpers for GetElementsByName.
   static bool MatchNameAttribute(mozilla::dom::Element* aElement,

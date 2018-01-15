@@ -141,7 +141,7 @@ public class FileUtils {
      *
      * Since this is generic, it may not be the most performant for your use case.
      *
-     * @param bufferSize Size of the underlying buffer for read optimizations - must be > 0.
+     * @param bufferSize Size of the underlying buffer for read optimizations - must be &gt; 0.
      */
     public static String readStringFromInputStreamAndCloseStream(final InputStream inputStream, final int bufferSize)
             throws IOException {

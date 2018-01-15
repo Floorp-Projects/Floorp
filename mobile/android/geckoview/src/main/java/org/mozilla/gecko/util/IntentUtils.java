@@ -31,12 +31,9 @@ public class IntentUtils {
 
     /**
      * Returns a list of environment variables and their values. These are parsed from an Intent extra
-     * with the key -> value format:
-     *   env# -> ENV_VAR=VALUE
+     * with the key -&gt; value format: env# -&gt; ENV_VAR=VALUE, where # is an integer starting at 0.
      *
-     * # in env# is expected to be increasing from 0.
-     *
-     * @return A Map of environment variable name to value, e.g. ENV_VAR -> VALUE
+     * @return A Map of environment variable name to value, e.g. ENV_VAR -&gt; VALUE
      */
     public static HashMap<String, String> getEnvVarMap(@NonNull final SafeIntent intent) {
         // Optimization: get matcher for re-use. Pattern.matcher creates a new object every time so it'd be great

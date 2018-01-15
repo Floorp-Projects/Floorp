@@ -1728,17 +1728,6 @@ dnl Internationalization and Locale support is different
 dnl on various UNIX platforms.  Checks for specific i18n
 dnl features go here.
 
-dnl check for LC_MESSAGES
-AC_CACHE_CHECK(for LC_MESSAGES,
-               ac_cv_i18n_lc_messages,
-               [AC_TRY_COMPILE([#include <locale.h>],
-                               [int category = LC_MESSAGES;],
-                               ac_cv_i18n_lc_messages=yes,
-                               ac_cv_i18n_lc_messages=no)])
-if test "$ac_cv_i18n_lc_messages" = yes; then
-   AC_DEFINE(HAVE_I18N_LC_MESSAGES)
-fi
-
 AC_HAVE_FUNCS(localeconv)
 
 fi # ! SKIP_COMPILER_CHECKS
