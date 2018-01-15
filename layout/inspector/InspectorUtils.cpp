@@ -420,14 +420,17 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
   const nsCSSProps::KTableEntry* keywordTable =
     nsCSSProps::kKeywordTableTable[aProperty];
   if (keywordTable) {
-    for (size_t i = 0; keywordTable[i].mKeyword != eCSSKeyword_UNKNOWN; ++i) {
+    for (size_t i = 0; !keywordTable[i].IsSentinel(); ++i) {
       nsCSSKeyword word = keywordTable[i].mKeyword;
 
       // These are extra -moz values which are added while rebuilding
       // the properties db. These values are not relevant and are not
       // documented on MDN, so filter these out
+      // eCSSKeyword_UNKNOWN is ignored because it indicates an
+      // invalid entry; but can still be seen in a table, see bug 1430616.
       if (word != eCSSKeyword__moz_zoom_in && word != eCSSKeyword__moz_zoom_out &&
-          word != eCSSKeyword__moz_grab && word != eCSSKeyword__moz_grabbing) {
+          word != eCSSKeyword__moz_grab && word != eCSSKeyword__moz_grabbing &&
+          word != eCSSKeyword_UNKNOWN) {
           InsertNoDuplicates(aArray,
                   NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(word)));
       }
