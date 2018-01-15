@@ -633,112 +633,6 @@ nsDocumentEncoder::FlushText(nsAString& aString, bool aForce)
   return rv;
 }
 
-#if 0 // This code is really fast at serializing a range, but unfortunately
-      // there are problems with it so we don't use it now, maybe later...
-static nsresult ChildAt(nsIDOMNode* aNode, int32_t aIndex, nsIDOMNode*& aChild)
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-
-  aChild = nullptr;
-
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
-  nsIContent *child = content->GetChildAt_Deprecated(aIndex);
-
-  if (child)
-    return CallQueryInterface(child, &aChild);
-
-  return NS_OK;
-}
-
-static int32_t IndexOf(nsIDOMNode* aParent, nsIDOMNode* aChild)
-{
-  nsCOMPtr<nsIContent> parent(do_QueryInterface(aParent));
-  nsCOMPtr<nsIContent> child(do_QueryInterface(aChild));
-
-  if (!parent)
-    return -1;
-
-  return parent->IndexOf(child);
-}
-
-static inline int32_t GetIndex(nsTArray<int32_t>& aIndexArray)
-{
-  int32_t count = aIndexArray.Length();
-
-  if (count) {
-    return aIndexArray.ElementAt(count - 1);
-  }
-
-  return 0;
-}
-
-static nsresult GetNextNode(nsIDOMNode* aNode, nsTArray<int32_t>& aIndexArray,
-                            nsIDOMNode*& aNextNode,
-                            nsRangeIterationDirection& aDirection)
-{
-  bool hasChildren;
-
-  aNextNode = nullptr;
-
-  aNode->HasChildNodes(&hasChildren);
-
-  if (hasChildren && aDirection == kDirectionIn) {
-    ChildAt(aNode, 0, aNextNode);
-    NS_ENSURE_TRUE(aNextNode, NS_ERROR_FAILURE);
-
-    aIndexArray.AppendElement(0);
-
-    aDirection = kDirectionIn;
-  } else if (aDirection == kDirectionIn) {
-    aNextNode = aNode;
-
-    NS_ADDREF(aNextNode);
-
-    aDirection = kDirectionOut;
-  } else {
-    nsCOMPtr<nsIDOMNode> parent;
-
-    aNode->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-
-    int32_t count = aIndexArray.Length();
-
-    if (count) {
-      int32_t indx = aIndexArray.ElementAt(count - 1);
-
-      ChildAt(parent, indx + 1, aNextNode);
-
-      if (aNextNode)
-        aIndexArray.ElementAt(count - 1) = indx + 1;
-      else
-        aIndexArray.RemoveElementAt(count - 1);
-    } else {
-      int32_t indx = IndexOf(parent, aNode);
-
-      if (indx >= 0) {
-        ChildAt(parent, indx + 1, aNextNode);
-
-        if (aNextNode)
-          aIndexArray.AppendElement(indx + 1);
-      }
-    }
-
-    if (aNextNode) {
-      aDirection = kDirectionIn;
-    } else {
-      aDirection = kDirectionOut;
-
-      aNextNode = parent;
-
-      NS_ADDREF(aNextNode);
-    }
-  }
-
-  return NS_OK;
-}
-#endif
-
 static bool IsTextNode(nsINode *aNode)
 {
   return aNode && aNode->IsNodeOfType(nsINode::eTEXT);
@@ -817,14 +711,12 @@ nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
 
       // do some calculations that will tell us which children of this
       // node are in the range.
-      nsIContent* childAsNode = nullptr;
       int32_t startOffset = 0, endOffset = -1;
       if (startNode == content && mStartRootIndex >= aDepth)
         startOffset = mStartOffsets[mStartRootIndex - aDepth];
       if (endNode == content && mEndRootIndex >= aDepth)
         endOffset = mEndOffsets[mEndRootIndex - aDepth];
       // generated content will cause offset values of -1 to be returned.
-      int32_t j;
       uint32_t childCount = content->GetChildCount();
 
       if (startOffset == -1) startOffset = 0;
@@ -842,17 +734,31 @@ nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
           endOffset++;
         }
       }
-      // serialize the children of this node that are in the range
-      for (j=startOffset; j<endOffset; j++)
-      {
-        childAsNode = content->GetChildAt_Deprecated(j);
 
-        if ((j==startOffset) || (j==endOffset-1))
-          rv = SerializeRangeNodes(aRange, childAsNode, aString, aDepth+1);
-        else
-          rv = SerializeToStringRecursive(childAsNode, aString, false);
+      if (endOffset) {
+        // serialize the children of this node that are in the range
+        nsIContent* childAsNode = content->GetFirstChild();
+        int32_t j = 0;
 
-        NS_ENSURE_SUCCESS(rv, rv);
+        for (; j < startOffset && childAsNode; ++j) {
+          childAsNode = childAsNode->GetNextSibling();
+        }
+
+        NS_ENSURE_TRUE(!!childAsNode, NS_ERROR_FAILURE);
+        MOZ_ASSERT(j == startOffset);
+
+        for (; childAsNode && j < endOffset; ++j)
+        {
+          if ((j==startOffset) || (j==endOffset-1)) {
+            rv = SerializeRangeNodes(aRange, childAsNode, aString, aDepth+1);
+          } else {
+            rv = SerializeToStringRecursive(childAsNode, aString, false);
+          }
+
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          childAsNode = childAsNode->GetNextSibling();
+        }
       }
 
       // serialize the end of this node
