@@ -1117,6 +1117,15 @@ FragmentOrElement::DoGetXBLBinding() const
   return slots ? slots->mXBLBinding.get() : nullptr;
 }
 
+nsIContent*
+nsIContent::GetContainingShadowHost() const
+{
+  if (mozilla::dom::ShadowRoot* shadow = GetContainingShadow()) {
+    return shadow->GetHost();
+  }
+  return nullptr;
+}
+
 void
 nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
