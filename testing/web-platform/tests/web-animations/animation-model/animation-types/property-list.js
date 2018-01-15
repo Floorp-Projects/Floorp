@@ -1519,6 +1519,18 @@ function testAnimationSampleMatrices(animation, idlName, testSamples) {
   }
 }
 
+function testAnimationSampleRotate3d(animation, idlName, testSamples) {
+  const target = animation.effect.target;
+  for (const testSample of testSamples) {
+    animation.currentTime = testSample.time;
+    const actual = getComputedStyle(target)[idlName];
+    const expected = testSample.expected;
+    assert_rotate3d_equals(actual, expected,
+                         `The value should be ${expected} at`
+                         + ` ${testSample.time}ms but got ${actual}`);
+  }
+}
+
 function createTestElement(t, setup) {
   return setup ? setup(t) : createElement(t);
 }
