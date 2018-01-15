@@ -5363,7 +5363,9 @@ gc::ZealModeHelpText),
 "      to specify whether SharedArrayBuffers may be serialized.\n"
 "    'scope' - SameProcessSameThread, SameProcessDifferentThread, or\n"
 "      DifferentProcess. Determines how some values will be serialized.\n"
-"      Clone buffers may only be deserialized with a compatible scope."),
+"      Clone buffers may only be deserialized with a compatible scope.\n"
+"      NOTE - For DifferentProcess, must also set SharedArrayBuffer:'deny'\n"
+"      if data contains any shared memory object."),
 
     JS_FN_HELP("deserialize", Deserialize, 1, 0,
 "deserialize(clonebuffer[, opts])",
