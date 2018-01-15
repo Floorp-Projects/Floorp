@@ -329,31 +329,46 @@ interaction.clearElement = function(el) {
         pprint`Element ${el} could not be scrolled into view`);
   }
 
-  let attr;
   if (element.isEditingHost(el)) {
-    attr = "innerHTML";
+    clearContentEditableElement(el);
   } else {
-    attr = "value";
+    clearResettableElement(el);
+  }
+};
+
+function clearContentEditableElement(el) {
+  if (el.innerHTML === "") {
+    return;
+  }
+  event.focus(el);
+  el.innerHTML = "";
+  event.blur(el);
+}
+
+function clearResettableElement(el) {
+  if (!element.isMutableFormControl(el)) {
+    throw new InvalidElementStateError(pprint`Not an editable form control: ${el}`);
   }
 
+  let isEmpty;
   switch (el.type) {
     case "file":
-      if (el.files.length == 0) {
-        return;
-      }
+      isEmpty = el.files.length == 0;
       break;
 
     default:
-      if (el[attr] === "") {
-        return;
-      }
+      isEmpty = el.value === "";
       break;
   }
 
+  if (el.validity.valid && isEmpty) {
+    return;
+  }
+
   event.focus(el);
-  el[attr] = "";
+  el.value = "";
   event.blur(el);
-};
+}
 
 /**
  * Waits until the event loop has spun enough times to process the
