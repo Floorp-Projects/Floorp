@@ -152,26 +152,32 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
   MOZ_ASSERT(aListID == kPrincipalList || aListID == kNoReflowPrincipalList,
              "unexpected child list");
 
-  // Loop and destroy aOldFrame and all of its continuations.
-  // Request a reflow on the parent frames involved unless we were explicitly
-  // told not to (kNoReflowPrincipalList).
-  bool generateReflowCommand = true;
-  if (kNoReflowPrincipalList == aListID) {
-    generateReflowCommand = false;
+  AutoTArray<nsIFrame*, 10> continuations;
+  {
+    nsIFrame* continuation = aOldFrame;
+    while (continuation) {
+      continuations.AppendElement(continuation);
+      continuation = continuation->GetNextContinuation();
+    }
   }
+
   nsIPresShell* shell = PresShell();
   nsContainerFrame* lastParent = nullptr;
-  AutoPostDestroyData data(PresContext());
-  while (aOldFrame) {
-    nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
-    nsContainerFrame* parent = aOldFrame->GetParent();
-    // Please note that 'parent' may not actually be where 'aOldFrame' lives.
+
+  // Loop and destroy aOldFrame and all of its continuations.
+  //
+  // Request a reflow on the parent frames involved unless we were explicitly
+  // told not to (kNoReflowPrincipalList).
+  const bool generateReflowCommand = (kNoReflowPrincipalList != aListID);
+  for (nsIFrame* continuation : Reversed(continuations)) {
+    nsContainerFrame* parent = continuation->GetParent();
+
+    // Please note that 'parent' may not actually be where 'continuation' lives.
     // We really MUST use StealFrame() and nothing else here.
     // @see nsInlineFrame::StealFrame for details.
-    parent->StealFrame(aOldFrame);
-    aOldFrame->Destroy(data.mData);
-    aOldFrame = oldFrameNextContinuation;
-    if (parent != lastParent && generateReflowCommand) {
+    parent->StealFrame(continuation);
+    continuation->Destroy();
+    if (generateReflowCommand && parent != lastParent) {
       shell->FrameNeedsReflow(parent, nsIPresShell::eTreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
       lastParent = parent;
@@ -1410,8 +1416,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
     for (nsIFrame* f = nextNextInFlow; f; f = f->GetNextInFlow()) {
       frames.AppendElement(f);
     }
-    for (int32_t i = frames.Length() - 1; i >= 0; --i) {
-      nsIFrame* delFrame = frames.ElementAt(i);
+    for (nsIFrame* delFrame : Reversed(frames)) {
       delFrame->GetParent()->
         DeleteNextInFlowChild(delFrame, aDeletingEmptyFrames);
     }
