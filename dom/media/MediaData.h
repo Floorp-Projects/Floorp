@@ -590,7 +590,6 @@ public:
   nsTArray<uint16_t> mPlainSizes;
   nsTArray<uint32_t> mEncryptedSizes;
   nsTArray<uint8_t> mIV;
-  nsTArray<nsCString> mSessionIds;
   nsTArray<nsTArray<uint8_t>> mInitDatas;
   nsString mInitDataType;
 };
