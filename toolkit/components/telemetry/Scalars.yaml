@@ -1311,6 +1311,22 @@ timestamps:
     record_in_processes:
       - main
 
+browser.timings:
+  last_shutdown:
+    bug_numbers:
+      - 1429510
+    description: >
+      The time, in milliseconds, it took to complete the last shutdown.
+      On successful shutdown, Telemetry saves this to disk into Telemetry.ShutdownTime.txt.
+      On the next startup this is loaded and recorded.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
+
 # The following section contains the service worker scalars.
 sw:
   synthesized_res_count:
