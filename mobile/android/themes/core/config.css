@@ -24,8 +24,7 @@ body {
     background-color: #ced7de;
     color: #000000;
     font-weight: bold;
-    border-bottom: 2px solid;
-    -moz-border-bottom-colors: #ff9100 #f27900;
+    border-bottom: 2px solid #f27900;
 }
 
 .toolbar-container {

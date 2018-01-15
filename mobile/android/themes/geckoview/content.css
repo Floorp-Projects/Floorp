@@ -73,10 +73,6 @@ xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
 
 xul|scrollbar xul|thumb {
   background-color: rgba(119, 119, 119, 0.4) !important;
-  -moz-border-top-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-left-colors: none !important;
   border: none;
   border-radius: 4px;
 }
