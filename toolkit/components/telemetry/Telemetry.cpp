@@ -312,6 +312,10 @@ public:
     mTelemetry->mLastShutdownTime =
       ReadLastShutdownDuration(mShutdownTimeFilename);
     mTelemetry->ReadLateWritesStacks(mProfileDir);
+
+    TelemetryScalar::Set(Telemetry::ScalarID::BROWSER_TIMINGS_LAST_SHUTDOWN,
+                         mTelemetry->mLastShutdownTime);
+
     nsCOMPtr<nsIRunnable> e =
       NewRunnableMethod("nsFetchTelemetryData::MainThread",
                         this,
