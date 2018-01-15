@@ -1178,6 +1178,12 @@ FragmentOrElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 }
 
 void
+FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  doRemoveChildAt(IndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
+}
+
+void
 FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
                                           OOMReporter& aError)
 {
