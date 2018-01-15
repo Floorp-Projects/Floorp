@@ -330,6 +330,10 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   let activeTicks = payload.simpleMeasurements.activeTicks;
   Assert.ok(activeTicks >= 0);
 
+  if ("browser.timings.last_shutdown" in payload.processes.parent.scalars) {
+    Assert.equal(payload.processes.parent.scalars["browser.timings.last_shutdown"], SHUTDOWN_TIME);
+  }
+
   Assert.equal(payload.simpleMeasurements.failedProfileLockCount,
               FAILED_PROFILE_LOCK_ATTEMPTS);
   let profileDirectory = Services.dirsvc.get("ProfD", Ci.nsIFile);
