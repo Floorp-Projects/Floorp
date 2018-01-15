@@ -27,8 +27,7 @@ input {
   font-size: 1.1em;
   font-weight: bold;
   background-color: #f5f5f5;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: #0A84FF;
+  border-bottom: 2px solid #0A84FF;
   display: flex;
   flex-direction: row;
   align-items: center;
