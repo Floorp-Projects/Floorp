@@ -87,12 +87,6 @@ nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
-  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-    if (!iter->CanCreateWebRenderCommands()) {
-      return LAYER_NONE;
-    }
-  }
-
   return LAYER_ACTIVE;
 }
 
@@ -121,14 +115,8 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
     return true;
   }
 
-  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-    if (!iter->CanCreateWebRenderCommands()) {
-      return false;
-    }
-  }
-
-  for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
-    iter->CreateWebRenderCommands(this, aBuilder, aResources, aSc);
+  for (auto& renderer : mBorderRenderers) {
+    renderer.CreateWebRenderCommands(this, aBuilder, aResources, aSc);
   }
 
   return true;
