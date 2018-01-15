@@ -723,16 +723,13 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
     }
 
     if (br) {
-      if (!br->CanCreateWebRenderCommands()) {
-        return false;
-      }
       br->CreateWebRenderCommands(aItem, aBuilder, aResources, aSc);
       return true;
     }
   }
 
   // Next try to draw an image border
-  const nsStyleBorder *styleBorder = aForFrame->StyleContext()->StyleBorder();
+  const nsStyleBorder* styleBorder = aForFrame->StyleContext()->StyleBorder();
   const nsStyleImage* image = &styleBorder->mBorderImageSource;
 
   // Filter out unsupported image/border types
@@ -879,7 +876,6 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
                              borderWidths,
                              bgRadii,
                              borderColors,
-                             aStyleBorder.mBorderColors.get(),
                              bgColor,
                              !aForFrame->BackfaceIsHidden(),
                              *aNeedsClip ? Some(NSRectToRect(aBorderArea, oneDevPixel)) : Nothing());
@@ -1161,7 +1157,6 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                          outlineWidths,
                          outlineRadii,
                          outlineColors,
-                         nullptr,
                          bgColor,
                          !aForFrame->BackfaceIsHidden(),
                          Nothing());
@@ -1238,7 +1233,6 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
                          focusWidths,
                          focusRadii,
                          focusColors,
-                         nullptr,
                          NS_RGB(255, 0, 0),
                          true,
                          Nothing());
@@ -2175,8 +2169,6 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
 static bool
 IsOpaqueBorder(const nsStyleBorder& aBorder)
 {
-  if (aBorder.mBorderColors)
-    return false;
   NS_FOR_CSS_SIDES(i) {
     if (!IsOpaqueBorderEdge(aBorder, i))
       return false;
