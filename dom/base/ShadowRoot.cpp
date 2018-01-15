@@ -454,6 +454,12 @@ ShadowRoot::DistributeAllNodes()
   DistributionChanged();
 }
 
+Element*
+ShadowRoot::GetActiveElement()
+{
+  return GetRetargetedFocusedElement();
+}
+
 void
 ShadowRoot::GetInnerHTML(nsAString& aInnerHTML)
 {
@@ -611,5 +617,5 @@ ShadowRoot::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                   bool aPreallocateChildren) const
 {
   *aResult = nullptr;
-  return NS_ERROR_DOM_DATA_CLONE_ERR;
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

@@ -387,7 +387,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     break;
   }
 
-  if (sentContentResponse &&
+  if (sentContentResponse && !isTouchPrevented &&
         aApzResponse == nsEventStatus_eConsumeDoDefault &&
         gfxPrefs::PointerEventsEnabled()) {
     WidgetTouchEvent cancelEvent(aEvent);
