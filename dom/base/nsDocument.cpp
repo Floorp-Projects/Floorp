@@ -3539,21 +3539,9 @@ Element*
 nsIDocument::GetActiveElement()
 {
   // Get the focused element.
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow()) {
-    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-    nsIContent* focusedContent =
-      nsFocusManager::GetFocusedDescendant(window,
-                                           nsFocusManager::eOnlyCurrentWindow,
-                                           getter_AddRefs(focusedWindow));
-    // be safe and make sure the element is from this document
-    if (focusedContent && focusedContent->OwnerDoc() == this) {
-      if (focusedContent->ChromeOnlyAccess()) {
-        focusedContent = focusedContent->FindFirstNonChromeOnlyAccessContent();
-      }
-      if (focusedContent) {
-        return focusedContent->AsElement();
-      }
-    }
+  Element* focusedElement = GetRetargetedFocusedElement();
+  if (focusedElement) {
+    return focusedElement;
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
@@ -6444,12 +6432,6 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
       break;
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    {
-      if (imported->IsShadowRoot()) {
-        break;
-      }
-      MOZ_FALLTHROUGH;
-    }
     case nsIDOMNode::ATTRIBUTE_NODE:
     case nsIDOMNode::ELEMENT_NODE:
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:

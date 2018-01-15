@@ -850,10 +850,11 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
   if (!window)
     return NS_OK;
 
-  // if the content is currently focused in the window, or is an ancestor
-  // of the currently focused element, reset the focus within that window.
+  // if the content is currently focused in the window, or is an
+  // shadow-including inclusive ancestor of the currently focused element,
+  // reset the focus within that window.
   nsIContent* content = window->GetFocusedNode();
-  if (content && nsContentUtils::ContentIsDescendantOf(content, aContent)) {
+  if (content && nsContentUtils::ContentIsHostIncludingDescendantOf(content, aContent)) {
     bool shouldShowFocusRing = window->ShouldShowFocusRing();
     window->SetFocusedNode(nullptr);
 
