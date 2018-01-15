@@ -60,9 +60,6 @@ public:
   void GetKeyStatusesForSession(const nsAString& aSessionId,
                                 nsTArray<KeyStatus>& aOutKeyStatuses);
 
-  void GetSessionIdsForKeyId(const CencKeyId& aKeyId,
-                             nsTArray<nsCString>& aOutSessionIds);
-
   // Ensures all keys for a session are marked as 'unknown', i.e. removed.
   // Returns true if a key status was changed.
   bool RemoveKeysForSession(const nsString& aSessionId);
