@@ -191,8 +191,12 @@ var GCTelemetry = {
   },
 
   observe(subject, topic, arg) {
-    let data = JSON.parse(arg);
+    this.observeRaw(JSON.parse(arg));
+  },
 
+  // We expose this method so unit tests can call it, no need to test JSON
+  // parsing.
+  observeRaw(data) {
     limitSize(data);
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
