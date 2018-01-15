@@ -598,10 +598,15 @@ void
 Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
 {
     // If you change JSON properties here, please update:
-    // Telemetry ping code: toolkit/components/telemetry/GCTelemetry.jsm
-    // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
-    // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
-    // Perf.html: https://github.com/devtools-html/perf.html
+    // Telemetry ping code:
+    //   toolkit/components/telemetry/GCTelemetry.jsm
+    // Telemetry documentation:
+    //   toolkit/components/telemetry/docs/data/main-ping.rst
+    // Telemetry tests:
+    //   toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js,
+    //   toolkit/components/telemetry/tests/unit/test_TelemetryGC.js
+    // Perf.html:
+    //   https://github.com/devtools-html/perf.html
     //
     // Please also number each property to help correctly maintain the Telemetry ping code
 
@@ -651,10 +656,16 @@ void
 Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONPrinter& json) const
 {
     // If you change JSON properties here, please update:
-    // Telemetry ping code: toolkit/components/telemetry/GCTelemetry.jsm
-    // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
-    // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
-    // Perf.html: https://github.com/devtools-html/perf.html
+    // Telemetry ping code:
+    //   toolkit/components/telemetry/GCTelemetry.jsm
+    // Telemetry documentation:
+    //   toolkit/components/telemetry/docs/data/main-ping.rst
+    // Telemetry tests:
+    //   toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js,
+    //   toolkit/components/telemetry/tests/unit/test_TelemetryGC.js
+    // Perf.html:
+    //   https://github.com/devtools-html/perf.html
+    //
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     TimeStamp originTime = TimeStamp::ProcessCreation();
