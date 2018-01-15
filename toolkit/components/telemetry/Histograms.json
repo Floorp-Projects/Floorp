@@ -8590,8 +8590,8 @@
   },
   "MEDIA_EME_SECURE_CONTEXT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
+    "expires_in_version": "63",
     "kind": "boolean",
     "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
     "bug_numbers": [1360438]
