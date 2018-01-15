@@ -8,7 +8,6 @@
 #define MOZILLA_LAYERS_RENDEREROGL_H
 
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/SyncObject.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -25,6 +24,7 @@ class GLContext;
 
 namespace layers {
 class CompositorBridgeParentBase;
+class SyncObjectHost;
 }
 
 namespace widget {
@@ -33,6 +33,7 @@ class CompositorWidget;
 
 namespace wr {
 
+class RenderCompositor;
 class RenderTextureHost;
 
 /// Owns the WebRender renderer and GL context.
@@ -68,8 +69,7 @@ public:
 
   /// This can be called on the render thread only.
   RendererOGL(RefPtr<RenderThread>&& aThread,
-              RefPtr<gl::GLContext>&& aGL,
-              RefPtr<widget::CompositorWidget>&&,
+              UniquePtr<RenderCompositor> aCompositor,
               wr::WindowId aWindowId,
               wr::Renderer* aRenderer,
               layers::CompositorBridgeParentBase* aBridge);
@@ -80,7 +80,7 @@ public:
   /// This can be called on the render thread only.
   bool Resume();
 
-  layers::SyncObjectHost* GetSyncObject() const { return mSyncObject.get(); }
+  layers::SyncObjectHost* GetSyncObject() const;
 
   layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
 
@@ -90,17 +90,17 @@ public:
 
   wr::Renderer* GetRenderer() { return mRenderer; }
 
+  gl::GLContext* gl() const;
+
 protected:
   void NotifyWebRenderError(WebRenderError aError);
 
   RefPtr<RenderThread> mThread;
-  RefPtr<gl::GLContext> mGL;
-  RefPtr<widget::CompositorWidget> mWidget;
+  UniquePtr<RenderCompositor> mCompositor;
   wr::Renderer* mRenderer;
   layers::CompositorBridgeParentBase* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
-  RefPtr<layers::SyncObjectHost> mSyncObject;
   wr::DebugFlags mDebugFlags;
 };
 

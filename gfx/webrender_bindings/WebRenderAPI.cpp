@@ -10,6 +10,7 @@
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
 
@@ -53,26 +54,12 @@ public:
   {
     layers::AutoCompleteTask complete(mTask);
 
-    RefPtr<gl::GLContext> gl;
-    if (gfx::gfxVars::UseWebRenderANGLE()) {
-      gl = gl::GLContextProviderEGL::CreateForCompositorWidget(mCompositorWidget, true);
-      if (!gl || !gl->IsANGLE()) {
-        gfxCriticalNote << "Failed ANGLE GL context creation for WebRender: " << gfx::hexa(gl.get());
-        return;
-      }
-    }
-    if (!gl) {
-      gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
-    }
-    if (!gl || !gl->MakeCurrent()) {
-      gfxCriticalNote << "Failed GL context creation for WebRender: " << gfx::hexa(gl.get());
-      return;
-    }
+    UniquePtr<RenderCompositor> compositor = RenderCompositor::Create(Move(mCompositorWidget));
 
-    *mUseANGLE = gl->IsANGLE();
+    *mUseANGLE = compositor->UseANGLE();
 
     wr::Renderer* wrRenderer = nullptr;
-    if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
+    if (!wr_window_new(aWindowId, mSize.width, mSize.height, compositor->gl(),
                        aRenderThread.ThreadPool().Raw(),
                        mDocHandle, &wrRenderer,
                        mMaxTextureSize)) {
@@ -83,8 +70,7 @@ public:
 
     RefPtr<RenderThread> thread = &aRenderThread;
     auto renderer = MakeUnique<RendererOGL>(Move(thread),
-                                            Move(gl),
-                                            Move(mCompositorWidget),
+                                            Move(compositor),
                                             aWindowId,
                                             wrRenderer,
                                             mBridge);
