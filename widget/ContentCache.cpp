@@ -548,12 +548,12 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
     IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
   }
 
-  // When the widget has composition, we should set mCompositionStart to
-  // *current* composition start offset.  Note that, in strictly speaking,
-  // widget should not use WidgetQueryContentEvent if there are some pending
-  // compositions (i.e., when mPendingCompositionCount is 2 or more).
+  // When this instance allows to query content relative to composition string,
+  // we should modify mCompositionStart with the latest information in the
+  // remote process because now we have the information around the composition
+  // string.
   mCompositionStartInChild = aOther.mCompositionStart;
-  if (mWidgetHasComposition) {
+  if (mWidgetHasComposition || mPendingCommitCount) {
     if (aOther.mCompositionStart != UINT32_MAX) {
       if (mCompositionStart != aOther.mCompositionStart) {
         mCompositionStart = aOther.mCompositionStart;
@@ -566,9 +566,6 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
                            "mCompositionStart shouldn't be invalid offset when "
                            "the widget has composition");
     }
-  } else if (mCompositionStart != UINT32_MAX) {
-    mCompositionStart = UINT32_MAX;
-    mPendingCommitLength = 0;
   }
 
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
@@ -640,7 +637,7 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
            aEvent.mInput.mLength));
         return false;
       }
-    } else if (mWidgetHasComposition) {
+    } else if (mWidgetHasComposition || mPendingCommitCount) {
       if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
                                       mCompositionStart +
                                         mPendingCommitLength))) {
@@ -1142,7 +1139,8 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   mWidgetHasComposition = !aEvent.CausesDOMCompositionEndEvent();
 
   if (!mWidgetHasComposition) {
-    mCompositionStart = UINT32_MAX;
+    // mCompositionStart will be reset when commit event is completely handled
+    // in the remote process.
     if (mPendingCompositionCount == 1) {
       mPendingCommitLength = aEvent.mData.Length();
     }
@@ -1217,11 +1215,11 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
      "aMessage=%s), mPendingEventsNeedingAck=%u, "
-     "mPendingCompositionCount=%" PRIu8 ", mPendingCommitCount=%" PRIu8 ", "
-     "mIsChildIgnoringCompositionEvents=%s",
+     "mWidgetHasComposition=%s, mPendingCompositionCount=%" PRIu8 ", "
+     "mPendingCommitCount=%" PRIu8 ", mIsChildIgnoringCompositionEvents=%s",
      this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck,
-     mPendingCompositionCount, mPendingCommitCount,
-     GetBoolName(mIsChildIgnoringCompositionEvents)));
+     GetBoolName(mWidgetHasComposition), mPendingCompositionCount,
+     mPendingCommitCount, GetBoolName(mIsChildIgnoringCompositionEvents)));
 
 #if MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mReceivedEventMessages.AppendElement(aMessage);
@@ -1300,6 +1298,13 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
     // it starts to ignore following composition events until receiving
     // eCompositionStart event.
     mIsChildIgnoringCompositionEvents = true;
+  }
+
+  // If neither widget (i.e., IME) nor the remote process has composition,
+  // now, we can forget composition string informations.
+  if (!mWidgetHasComposition &&
+      !mPendingCompositionCount && !mPendingCommitCount) {
+    mCompositionStart = UINT32_MAX;
   }
 
   if (NS_WARN_IF(!mPendingEventsNeedingAck)) {
