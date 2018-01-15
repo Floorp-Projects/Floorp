@@ -23,6 +23,13 @@ TEMPLATE_TESTS = {
         ([], None),
         (['--env', 'foo=bar', '--env', 'num=10'], {'env': {'foo': 'bar', 'num': '10'}}),
     ],
+    'path': [
+        ([], None),
+        (['dom/indexedDB'], {'env': {'MOZHARNESS_TEST_PATHS': 'dom/indexedDB'}}),
+        (['dom/indexedDB', 'testing'],
+         {'env': {'MOZHARNESS_TEST_PATHS': 'dom/indexedDB:testing'}}),
+        (['invalid/path'], SystemExit),
+    ],
     'rebuild': [
         ([], None),
         (['--rebuild', '10'], {'rebuild': 10}),
