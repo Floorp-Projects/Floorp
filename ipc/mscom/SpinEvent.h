@@ -31,6 +31,8 @@ public:
 private:
   Atomic<bool, ReleaseAcquire>  mDone;
   nsAutoHandle                  mDoneEvent;
+  static bool InitStatics();
+  static bool sIsMulticore;
 };
 
 } // namespace mscom
