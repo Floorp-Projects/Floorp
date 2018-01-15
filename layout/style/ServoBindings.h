@@ -292,9 +292,6 @@ const uint16_t* Gecko_GetAtomAsUTF16(nsAtom* aAtom, uint32_t* aLength);
 bool Gecko_AtomEqualsUTF8(nsAtom* aAtom, const char* aString, uint32_t aLength);
 bool Gecko_AtomEqualsUTF8IgnoreCase(nsAtom* aAtom, const char* aString, uint32_t aLength);
 
-// Border style
-void Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder);
-
 // Font style
 void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
 void Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames, nsAtom* aName, bool aQuoted);

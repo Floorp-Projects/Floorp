@@ -211,8 +211,6 @@ private:
 
   already_AddRefed<CSSValue> GetPaddingWidthFor(mozilla::Side aSide);
 
-  already_AddRefed<CSSValue> GetBorderColorsFor(mozilla::Side aSide);
-
   already_AddRefed<CSSValue> GetBorderStyleFor(mozilla::Side aSide);
 
   already_AddRefed<CSSValue> GetBorderWidthFor(mozilla::Side aSide);
@@ -394,10 +392,6 @@ private:
   already_AddRefed<CSSValue> DoGetBorderBottomColor();
   already_AddRefed<CSSValue> DoGetBorderLeftColor();
   already_AddRefed<CSSValue> DoGetBorderRightColor();
-  already_AddRefed<CSSValue> DoGetBorderBottomColors();
-  already_AddRefed<CSSValue> DoGetBorderLeftColors();
-  already_AddRefed<CSSValue> DoGetBorderRightColors();
-  already_AddRefed<CSSValue> DoGetBorderTopColors();
   already_AddRefed<CSSValue> DoGetBorderBottomLeftRadius();
   already_AddRefed<CSSValue> DoGetBorderBottomRightRadius();
   already_AddRefed<CSSValue> DoGetBorderTopLeftRadius();
