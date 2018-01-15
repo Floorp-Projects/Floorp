@@ -9,3 +9,4 @@ fuzzy(100,30) == 1149923.html 1149923-ref.html # use fuzzy due to few distorted 
 == 1131264-1.svg pass.svg
 == 1419528.html 1419528-ref.html
 == 1424673.html 1424673-ref.html
+== 1429411.html 1429411-ref.html
