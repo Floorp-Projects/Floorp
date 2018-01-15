@@ -9,6 +9,7 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 
@@ -406,11 +407,14 @@ LoginReputationService::QueryLoginWhitelist(QueryRequest* aRequest)
     return NS_ERROR_ABORT;
   }
 
+  using namespace mozilla::Telemetry;
+  TimeStamp startTimeMs = TimeStamp::Now();
+
   RefPtr<LoginReputationService> self = this;
 
   mLoginWhitelist->QueryLoginWhitelist(aRequest->mParam)->Then(
     GetCurrentThreadSerialEventTarget(), __func__,
-    [self, aRequest](VerdictType aResolveValue) -> void {
+    [self, aRequest, startTimeMs](VerdictType aResolveValue) -> void {
       // Promise is resolved if url is found in google-provided whitelist.
       MOZ_ASSERT(NS_IsMainThread());
       MOZ_ASSERT(aResolveValue == nsILoginReputationVerdictType::SAFE);
@@ -418,21 +422,37 @@ LoginReputationService::QueryLoginWhitelist(QueryRequest* aRequest)
       LR_LOG(("Query login whitelist [request = %p, result = SAFE]",
               aRequest));
 
+      AccumulateDelta_impl<Millisecond>::compute(
+        LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME, startTimeMs);
+
+      Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT,
+        nsILoginReputationVerdictType::SAFE);
+
       self->Finish(aRequest, NS_OK, nsILoginReputationVerdictType::SAFE);
     },
-    [self, aRequest](nsresult rv) -> void {
+    [self, aRequest, startTimeMs](nsresult rv) -> void {
       // Promise is rejected if url cannot be found in google-provided whitelist.
       // or there is an error.
-      if (LR_LOG_ENABLED()) {
-        if (NS_FAILED(rv)) {
+      if (NS_FAILED(rv)) {
+        if (LR_LOG_ENABLED()) {
           nsAutoCString errorName;
           mozilla::GetErrorName(rv, errorName);
           LR_LOG(("Error in QueryLoginWhitelist() [request = %p, rv = %s]",
                   aRequest, errorName.get()));
-        } else {
-          LR_LOG(("Query login whitelist cannot find the URL [request = %p]",
-                  aRequest));
         }
+
+        // Don't record the lookup time when there is an error, only record the
+        // result here.
+        Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT, 2); // 2 is error
+      } else {
+        AccumulateDelta_impl<Millisecond>::compute(
+          LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME, startTimeMs);
+
+        Accumulate(LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT,
+          nsILoginReputationVerdictType::UNSPECIFIED);
+
+        LR_LOG(("Query login whitelist cannot find the URL [request = %p]",
+                aRequest));
       }
 
       // Check trust-based whitelisting if we can't find the url in login whitelist

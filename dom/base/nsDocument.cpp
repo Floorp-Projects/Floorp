@@ -13172,6 +13172,35 @@ nsIDocument::SetUserHasInteracted(bool aUserHasInteracted)
 void
 nsIDocument::NotifyUserActivation()
 {
+  ActivateByUserGesture();
+  // Activate parent document which has same principle on the parent chain.
+  nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
+  nsCOMPtr<nsIDocument> parent = GetSameTypeParentDocument();
+  while (parent) {
+    parent->MaybeActivateByUserGesture(principal);
+    parent = parent->GetSameTypeParentDocument();
+  }
+}
+
+void
+nsIDocument::MaybeActivateByUserGesture(nsIPrincipal* aPrincipal)
+{
+  bool isEqual = false;
+  nsresult rv = aPrincipal->Equals(NodePrincipal(), &isEqual);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // If a child frame is actived, it would always activate the top frame and its
+  // parent frames which has same priciple.
+  if (isEqual || IsTopLevelContentDocument()) {
+    ActivateByUserGesture();
+  }
+}
+
+void
+nsIDocument::ActivateByUserGesture()
+{
   if (mUserHasActivatedInteraction) {
     return;
   }
@@ -13201,7 +13230,7 @@ nsIDocument*
 nsIDocument::GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(aPrincipal);
-  nsIDocument* parent = GetSameTypeParentDocument(this);
+  nsIDocument* parent = GetSameTypeParentDocument();
   while (parent) {
     bool isEqual = false;
     nsresult rv = aPrincipal->Equals(parent->NodePrincipal(), &isEqual);
@@ -13212,17 +13241,16 @@ nsIDocument::GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal)
     if (isEqual) {
       return parent;
     }
-    parent = GetSameTypeParentDocument(parent);
+    parent = parent->GetSameTypeParentDocument();
   }
   MOZ_ASSERT(!parent);
   return nullptr;
 }
 
 nsIDocument*
-nsIDocument::GetSameTypeParentDocument(const nsIDocument* aDoc)
+nsIDocument::GetSameTypeParentDocument()
 {
-  MOZ_ASSERT(aDoc);
-  nsCOMPtr<nsIDocShellTreeItem> current = aDoc->GetDocShell();
+  nsCOMPtr<nsIDocShellTreeItem> current = GetDocShell();
   if (!current) {
     return nullptr;
   }

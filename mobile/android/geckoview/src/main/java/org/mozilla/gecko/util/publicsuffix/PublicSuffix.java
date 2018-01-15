@@ -31,8 +31,8 @@ public class PublicSuffix {
      * Strip the public suffix from the domain. Returns the original domain if no public suffix
      * could be found.
      *
-     * www.mozilla.org -> www.mozilla
-     * independent.co.uk -> independent
+     * www.mozilla.org -&gt; www.mozilla
+     * independent.co.uk -&gt; independent
      */
     @NonNull
     @WorkerThread // This method might need to load data from disk

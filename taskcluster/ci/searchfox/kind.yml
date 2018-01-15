@@ -31,7 +31,6 @@ jobs:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
             using: mozharness
@@ -55,7 +54,6 @@ jobs:
             platform: osx-cross/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
         worker:
-            docker-image: {in-tree: desktop-build}
             max-run-time: 36000
             env:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"

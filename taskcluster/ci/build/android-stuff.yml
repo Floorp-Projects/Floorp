@@ -206,3 +206,47 @@ android-findbugs/opt:
             - "mobile/android/gradle.configure"
             - "mobile/android/**/moz.build"
             - "**/*.gradle"
+
+android-geckoview-docs/opt:
+    description: "Android GeckoView docs"
+    index:
+        product: mobile
+        job-name: android-geckoview-docs
+    treeherder:
+        platform: android-4-0-armv7-api16/opt
+        kind: build
+        tier: 3
+        symbol: tc-A(gv-docs)
+    run-on-projects: [mozilla-central]
+    worker-type: aws-provisioner-v1/gecko-{level}-b-android
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
+            PERFHERDER_EXTRA_OPTIONS: android-geckoview-docs
+            GECKOVIEW_DOCS_UPLOAD_SECRET: "project/releng/gecko/build/level-{level}/geckoview-docs-upload"
+        artifacts:
+            - name: public/android/geckoview-docs/geckoview-javadoc.jar
+              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/libs/geckoview-javadoc.jar
+              type: file
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build]
+        config:
+            - builds/releng_base_android_64_builds.py
+            - disable_signing.py
+            - platform_supports_post_upload_to_latest.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        custom-build-variant-cfg: android-geckoview-docs
+        tooltool-downloads: internal
+    toolchains:
+        - android-gradle-dependencies
+        - android-sdk-linux
+        - proguard-jar
+    optimization:
+        skip-unless-changed:
+            - "mobile/android/**/*.java"
+            - "mobile/android/gradle.configure"
+            - "**/*.gradle"
