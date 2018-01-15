@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>GeckoDriver<span class="signature">(appName, server)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>GeckoDriver<span class="signature">(appId, server)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,7 +41,7 @@
     
 
     
-    <h4 class="name" id="GeckoDriver"><span class="type-signature"></span>new GeckoDriver<span class="signature">(appName, server)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="GeckoDriver"><span class="type-signature"></span>new GeckoDriver<span class="signature">(appId, server)</span><span class="type-signature"></span></h4>
     
 
     
@@ -90,7 +90,7 @@ object.</p>
 
         <tr>
             
-                <td class="name"><code>appName</code></td>
+                <td class="name"><code>appId</code></td>
             
 
             <td class="type">
@@ -106,7 +106,7 @@ object.</p>
 
             
 
-            <td class="description last"><p>Description of the product, for example &quot;Firefox&quot;.</p></td>
+            <td class="description last"><p>Unique identifier of the application.</p></td>
         </tr>
 
     
@@ -170,7 +170,7 @@ object.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line124">line 124</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -332,7 +332,7 @@ marionette.quit() or marionette.restart(), like File -&gt; Quit.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3236">line 3236</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3199">line 3199</a>
     </li></ul></dd>
     
 
@@ -419,7 +419,7 @@ no modal is displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3156">line 3156</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3118">line 3118</a>
     </li></ul></dd>
     
 
@@ -555,7 +555,7 @@ no modal is displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2001">line 2001</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1919">line 1919</a>
     </li></ul></dd>
     
 
@@ -795,7 +795,7 @@ no modal is displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line460">line 460</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line419">line 419</a>
     </li></ul></dd>
     
 
@@ -949,7 +949,7 @@ document's address.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2622">line 2622</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2601">line 2601</a>
     </li></ul></dd>
     
 
@@ -1195,7 +1195,7 @@ document's address.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2569">line 2569</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2540">line 2540</a>
     </li></ul></dd>
     
 
@@ -1218,6 +1218,60 @@ document's address.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -1386,7 +1440,7 @@ document's address.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2178">line 2178</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2100">line 2100</a>
     </li></ul></dd>
     
 
@@ -1409,6 +1463,60 @@ document's address.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -1533,7 +1641,7 @@ handles is empty.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2728">line 2728</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2702">line 2702</a>
     </li></ul></dd>
     
 
@@ -1700,7 +1808,7 @@ list of chrome window handles is empty.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2769">line 2769</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2739">line 2739</a>
     </li></ul></dd>
     
 
@@ -1808,7 +1916,7 @@ list of chrome window handles is empty.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2674">line 2674</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2650">line 2650</a>
     </li></ul></dd>
     
 
@@ -1977,7 +2085,7 @@ list of chrome window handles is empty.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2695">line 2695</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2671">line 2671</a>
     </li></ul></dd>
     
 
@@ -2146,7 +2254,7 @@ list of chrome window handles is empty.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2799">line 2799</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2765">line 2765</a>
     </li></ul></dd>
     
 
@@ -2233,7 +2341,7 @@ no modal is displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3143">line 3143</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3105">line 3105</a>
     </li></ul></dd>
     
 
@@ -2267,7 +2375,7 @@ no modal is displayed.</p>
     
 
     
-    <h4 class="name" id="executeAsyncScript"><span class="type-signature"></span>executeAsyncScript<span class="signature">(script, args, scriptTimeout, sandbox<span class="signature-attributes">opt</span>, newSandbox<span class="signature-attributes">opt</span>, filename<span class="signature-attributes">opt</span>, line<span class="signature-attributes">opt</span>, debug_script<span class="signature-attributes">opt</span>, directInject<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|boolean|number|object|WebElement}</span></h4>
+    <h4 class="name" id="executeAsyncScript"><span class="type-signature"></span>executeAsyncScript<span class="signature">(script, args, scriptTimeout, sandbox<span class="signature-attributes">opt</span>, newSandbox<span class="signature-attributes">opt</span>, filename<span class="signature-attributes">opt</span>, line<span class="signature-attributes">opt</span>, debug_script<span class="signature-attributes">opt</span>, directInject<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|boolean|number|object|<a href="WebElement.html">WebElement</a>}</span></h4>
     
 
     
@@ -2365,7 +2473,7 @@ lasting side-effects.</p>
             <td class="type">
             
                 
-<span class="param-type">Array.&lt;(string|boolean|number|object|WebElement)></span>
+<span class="param-type">Array.&lt;(string|boolean|number|object|<a href="WebElement.html">WebElement</a>)></span>
 
 
             
@@ -2663,7 +2771,7 @@ lasting side-effects.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1013">line 1013</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line951">line 951</a>
     </li></ul></dd>
     
 
@@ -2771,7 +2879,7 @@ lasting side-effects.</p>
 <span class="param-type">object</span>
 |
 
-<span class="param-type">WebElement</span>
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
 
 
     </dd>
@@ -2789,7 +2897,7 @@ lasting side-effects.</p>
     
 
     
-    <h4 class="name" id="executeScript"><span class="type-signature"></span>executeScript<span class="signature">(script, args, scriptTimeout, sandbox<span class="signature-attributes">opt</span>, newSandbox<span class="signature-attributes">opt</span>, filename<span class="signature-attributes">opt</span>, line<span class="signature-attributes">opt</span>, debug_script<span class="signature-attributes">opt</span>, directInject<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|boolean|number|object|WebElement}</span></h4>
+    <h4 class="name" id="executeScript"><span class="type-signature"></span>executeScript<span class="signature">(script, args, scriptTimeout, sandbox<span class="signature-attributes">opt</span>, newSandbox<span class="signature-attributes">opt</span>, filename<span class="signature-attributes">opt</span>, line<span class="signature-attributes">opt</span>, debug_script<span class="signature-attributes">opt</span>, directInject<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|boolean|number|object|<a href="WebElement.html">WebElement</a>}</span></h4>
     
 
     
@@ -2878,7 +2986,7 @@ lasting side-effects.</p>
             <td class="type">
             
                 
-<span class="param-type">Array.&lt;(string|boolean|number|object|WebElement)></span>
+<span class="param-type">Array.&lt;(string|boolean|number|object|<a href="WebElement.html">WebElement</a>)></span>
 
 
             
@@ -3176,7 +3284,7 @@ lasting side-effects.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line936">line 936</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line874">line 874</a>
     </li></ul></dd>
     
 
@@ -3284,7 +3392,7 @@ lasting side-effects.</p>
 <span class="param-type">object</span>
 |
 
-<span class="param-type">WebElement</span>
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
 
 
     </dd>
@@ -3426,7 +3534,7 @@ lasting side-effects.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2063">line 2063</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1978">line 1978</a>
     </li></ul></dd>
     
 
@@ -3640,7 +3748,7 @@ lasting side-effects.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2109">line 2109</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2024">line 2024</a>
     </li></ul></dd>
     
 
@@ -3800,7 +3908,7 @@ lasting side-effects.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1600">line 1600</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1534">line 1534</a>
     </li></ul></dd>
     
 
@@ -3912,7 +4020,7 @@ had done &quot;View &gt; Enter Full Screen&quot;.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3120">line 3120</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3082">line 3082</a>
     </li></ul></dd>
     
 
@@ -4165,7 +4273,7 @@ or the page timeout duration has elapsed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1095">line 1095</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1033">line 1033</a>
     </li></ul></dd>
     
 
@@ -4282,7 +4390,7 @@ or the page timeout duration has elapsed.</p>
     
 
     
-    <h4 class="name" id="getActiveElement"><span class="type-signature"></span>getActiveElement<span class="signature">()</span><span class="type-signature"> &rarr; {WebElement}</span></h4>
+    <h4 class="name" id="getActiveElement"><span class="type-signature"></span>getActiveElement<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="WebElement.html">WebElement</a>}</span></h4>
     
 
     
@@ -4290,7 +4398,7 @@ or the page timeout duration has elapsed.</p>
 
 
 <div class="description">
-    <p>Return the active element on the page.</p>
+    <p>Return the active element in the document.</p>
 </div>
 
 
@@ -4334,7 +4442,7 @@ or the page timeout duration has elapsed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2159">line 2159</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2077">line 2077</a>
     </li></ul></dd>
     
 
@@ -4437,6 +4545,34 @@ or the page timeout duration has elapsed.</p>
 </dl>
 
 </li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If the document does not have an active element, i.e. if
+    its document element has been deleted.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
     </ul>
 
 
@@ -4444,7 +4580,8 @@ or the page timeout duration has elapsed.</p>
 
         
 <div class="param-desc">
-    <p>Active element of the current browsing context's document element.</p>
+    <p>Active element of the current browsing context's document
+    element, if the document element is non-null.</p>
 </div>
 
 
@@ -4455,7 +4592,7 @@ or the page timeout duration has elapsed.</p>
     </dt>
     <dd>
         
-<span class="param-type">WebElement</span>
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
 
 
     </dd>
@@ -4529,7 +4666,7 @@ be used to switch to this window at a later point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1401">line 1401</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1335">line 1335</a>
     </li></ul></dd>
     
 
@@ -4667,7 +4804,7 @@ managing a set of chrome windows and tabs separately.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1419">line 1419</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1353">line 1353</a>
     </li></ul></dd>
     
 
@@ -4723,7 +4860,7 @@ managing a set of chrome windows and tabs separately.</p>
     
 
     
-    <h4 class="name" id="getContext"><span class="type-signature"></span>getContext<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="getContext"><span class="type-signature"></span>getContext<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Context.html">Context</a>}</span></h4>
     
 
     
@@ -4731,7 +4868,10 @@ managing a set of chrome windows and tabs separately.</p>
 
 
 <div class="description">
-    <p>Gets the context of the server, either &quot;chrome&quot; or &quot;content&quot;.</p>
+    <p>Gets the context type that is Marionette's current target for
+browsing context scoped commands.</p>
+<p>You may choose a context through the <code>#setContext</code> command.</p>
+<p>The default browsing context is <code>Context.Content</code>.</p>
 </div>
 
 
@@ -4775,7 +4915,7 @@ managing a set of chrome windows and tabs separately.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line883">line 883</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line821">line 821</a>
     </li></ul></dd>
     
 
@@ -4798,6 +4938,28 @@ managing a set of chrome windows and tabs separately.</p>
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Current context.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Context.html">Context</a></span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -4863,7 +5025,7 @@ parsing the result.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2655">line 2655</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2631">line 2631</a>
     </li></ul></dd>
     
 
@@ -5037,7 +5199,7 @@ of the current resource.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1139">line 1139</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1076">line 1076</a>
     </li></ul></dd>
     
 
@@ -5182,7 +5344,7 @@ was registered.</p>
             <td class="type">
             
                 
-<span class="param-type">Context</span>
+<span class="param-type"><a href="Context.html">Context</a></span>
 
 
             
@@ -5246,7 +5408,7 @@ was registered.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line406">line 406</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line366">line 366</a>
     </li></ul></dd>
     
 
@@ -5426,7 +5588,7 @@ was registered.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2237">line 2237</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2156">line 2156</a>
     </li></ul></dd>
     
 
@@ -5449,6 +5611,60 @@ was registered.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> or <var>name</var> are not strings.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -5662,7 +5878,7 @@ was registered.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2271">line 2271</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2196">line 2196</a>
     </li></ul></dd>
     
 
@@ -5685,6 +5901,60 @@ was registered.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> or <var>name</var> are not strings.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -5822,7 +6092,7 @@ was registered.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2501">line 2501</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2463">line 2463</a>
     </li></ul></dd>
     
 
@@ -5845,6 +6115,60 @@ was registered.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -6013,7 +6337,7 @@ was registered.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2339">line 2339</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2275">line 2275</a>
     </li></ul></dd>
     
 
@@ -6036,6 +6360,60 @@ was registered.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -6227,7 +6605,7 @@ elements.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2304">line 2304</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2235">line 2235</a>
     </li></ul></dd>
     
 
@@ -6250,6 +6628,60 @@ elements.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -6463,7 +6895,7 @@ elements.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2406">line 2406</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2352">line 2352</a>
     </li></ul></dd>
     
 
@@ -6486,6 +6918,60 @@ elements.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> or <var>propertyName</var> are not strings.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -6627,7 +7113,7 @@ elements.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1183">line 1183</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1120">line 1120</a>
     </li></ul></dd>
     
 
@@ -6795,7 +7281,7 @@ landscape-secondary.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2939">line 2939</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2901">line 2901</a>
     </li></ul></dd>
     
 
@@ -6887,7 +7373,7 @@ numerical or string.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line861">line 861</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line785">line 785</a>
     </li></ul></dd>
     
 
@@ -6974,7 +7460,7 @@ a no such alert error if no modal is currently displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3169">line 3169</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3131">line 3131</a>
     </li></ul></dd>
     
 
@@ -7060,7 +7546,7 @@ a no such alert error if no modal is currently displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1157">line 1157</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1094">line 1094</a>
     </li></ul></dd>
     
 
@@ -7296,7 +7782,7 @@ a no such alert error if no modal is currently displayed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line544">line 544</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line502">line 502</a>
     </li></ul></dd>
     
 
@@ -7386,7 +7872,7 @@ be used to switch to this window at a later point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1366">line 1366</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1300">line 1300</a>
     </li></ul></dd>
     
 
@@ -7527,7 +8013,7 @@ however the return array does not have a specified ordering.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1383">line 1383</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1317">line 1317</a>
     </li></ul></dd>
     
 
@@ -7638,7 +8124,7 @@ title bars, etc.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1439">line 1439</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1373">line 1373</a>
     </li></ul></dd>
     
 
@@ -7803,7 +8289,7 @@ title bars, etc.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1165">line 1165</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1102">line 1102</a>
     </li></ul></dd>
     
 
@@ -7890,7 +8376,7 @@ during the session's lifetime.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line300">line 300</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line302">line 302</a>
     </li></ul></dd>
     
 
@@ -7977,7 +8463,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1210">line 1210</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1147">line 1147</a>
     </li></ul></dd>
     
 
@@ -8147,7 +8633,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1253">line 1253</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1189">line 1189</a>
     </li></ul></dd>
     
 
@@ -8365,7 +8851,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2371">line 2371</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2312">line 2312</a>
     </li></ul></dd>
     
 
@@ -8388,6 +8874,60 @@ of the current browsing context.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -8578,7 +9118,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2441">line 2441</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2393">line 2393</a>
     </li></ul></dd>
     
 
@@ -8601,6 +9141,60 @@ of the current browsing context.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -8791,7 +9385,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2475">line 2475</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2432">line 2432</a>
     </li></ul></dd>
     
 
@@ -8814,6 +9408,60 @@ of the current browsing context.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -8913,7 +9561,7 @@ of the current browsing context.</p>
 <div class="description">
     <p>Retrieve the localized string for the specified entity id.</p>
 <p>Example:
-    localizeEntity([&quot;chrome://global/locale/about.dtd&quot;], &quot;about.version&quot;)</p>
+    localizeEntity([&quot;chrome://branding/locale/brand.dtd&quot;], &quot;brandShortName&quot;)</p>
 </div>
 
 
@@ -9029,7 +9677,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3424">line 3424</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3371">line 3371</a>
     </li></ul></dd>
     
 
@@ -9212,7 +9860,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3453">line 3453</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3400">line 3400</a>
     </li></ul></dd>
     
 
@@ -9323,7 +9971,7 @@ the maximize button.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3034">line 3034</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2996">line 2996</a>
     </li></ul></dd>
     
 
@@ -9517,7 +10165,7 @@ the minimize button.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2997">line 2997</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2959">line 2959</a>
     </li></ul></dd>
     
 
@@ -9759,7 +10407,7 @@ the minimize button.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2039">line 2039</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1956">line 1956</a>
     </li></ul></dd>
     
 
@@ -10112,7 +10760,7 @@ beyond type- and bounds checks.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line758">line 758</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line685">line 685</a>
     </li></ul></dd>
     
 
@@ -10298,7 +10946,7 @@ beyond type- and bounds checks.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1956">line 1956</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1874">line 1874</a>
     </li></ul></dd>
     
 
@@ -10538,7 +11186,7 @@ the application to restart after it quits.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3269">line 3269</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3232">line 3232</a>
     </li></ul></dd>
     
 
@@ -10679,7 +11327,7 @@ context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1297">line 1297</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1232">line 1232</a>
     </li></ul></dd>
     
 
@@ -10849,7 +11497,7 @@ their type they are either accepted or ignored.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line565">line 565</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line523">line 523</a>
     </li></ul></dd>
     
 
@@ -10935,7 +11583,7 @@ their type they are either accepted or ignored.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1976">line 1976</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1894">line 1894</a>
     </li></ul></dd>
     
 
@@ -11104,7 +11752,7 @@ their type they are either accepted or ignored.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3492">line 3492</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3439">line 3439</a>
     </li></ul></dd>
     
 
@@ -11138,7 +11786,7 @@ their type they are either accepted or ignored.</p>
     
 
     
-    <h4 class="name" id="sendAsync"><span class="type-signature"></span>sendAsync<span class="signature">(name, msg<span class="signature-attributes">opt</span>, commandID<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="sendAsync"><span class="type-signature"></span>sendAsync<span class="signature">(name, data<span class="signature-attributes">opt</span>, commandID<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -11211,15 +11859,14 @@ when not using the modern dispatching technique.</p>
 
             
 
-            <td class="description last"><p>Suffix of the targetted message listener
-    <tt>Marionette:SUFFIX</tt>.</p></td>
+            <td class="description last"><p>Suffix of the target message handler <tt>Marionette:SUFFIX</tt>.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>msg</code></td>
+                <td class="name"><code>data</code></td>
             
 
             <td class="type">
@@ -11245,7 +11892,7 @@ when not using the modern dispatching technique.</p>
 
             
 
-            <td class="description last"><p>Optional JSON serialisable object to send to the listener.</p></td>
+            <td class="description last"><p>Data that must be serialisable using <a href="evaluate.html#.toJSON"><code>evaluate.toJSON</code></a>.</p></td>
         </tr>
 
     
@@ -11319,7 +11966,7 @@ when not using the modern dispatching technique.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line341">line 341</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line329">line 329</a>
     </li></ul></dd>
     
 
@@ -11340,6 +11987,62 @@ when not using the modern dispatching technique.</p>
 
 
 
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>data</var> could not be marshaled.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="JavaScriptError.html">JavaScriptError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If there is no current target frame.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchWindowError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    </ul>
 
 
 
@@ -11458,7 +12161,7 @@ an element not visible error is returned.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3196">line 3196</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3158">line 3158</a>
     </li></ul></dd>
     
 
@@ -11576,7 +12279,7 @@ an element not visible error is returned.</p>
     
 
     
-    <h4 class="name" id="sendKeysToElement"><span class="type-signature"></span>sendKeysToElement<span class="signature">(id, value)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="sendKeysToElement"><span class="type-signature"></span>sendKeysToElement<span class="signature">(id, text)</span><span class="type-signature"></span></h4>
     
 
     
@@ -11643,7 +12346,7 @@ an element not visible error is returned.</p>
 
         <tr>
             
-                <td class="name"><code>value</code></td>
+                <td class="name"><code>text</code></td>
             
 
             <td class="type">
@@ -11700,7 +12403,7 @@ an element not visible error is returned.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2538">line 2538</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2505">line 2505</a>
     </li></ul></dd>
     
 
@@ -11723,6 +12426,60 @@ an element not visible error is returned.</p>
 
 <h5>Throws:</h5>
 <ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> or <var>text</var> are not strings.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
         <li>
 
 <dl>
@@ -11798,8 +12555,10 @@ an element not visible error is returned.</p>
 
 
 <div class="description">
-    <p>Sets the context of the subsequent commands to be either &quot;chrome&quot; or
-&quot;content&quot;.</p>
+    <p>Sets the context of the subsequent commands.</p>
+<p>All subsequent requests to commands that in some way involve
+interaction with a browsing context will target the chosen browsing
+context.</p>
 </div>
 
 
@@ -11893,7 +12652,7 @@ an element not visible error is returned.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line873">line 873</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line805">line 805</a>
     </li></ul></dd>
     
 
@@ -11914,6 +12673,62 @@ an element not visible error is returned.</p>
 
 
 
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>value</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>value</var> is not a valid browsing context.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="WebDriverError.html">WebDriverError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    </ul>
 
 
 
@@ -11985,7 +12800,7 @@ and &quot;portrait-secondary&quot; as well as &quot;landscape-secondary&quot;.</
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2957">line 2957</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2919">line 2919</a>
     </li></ul></dd>
     
 
@@ -12121,7 +12936,7 @@ and &quot;portrait-secondary&quot; as well as &quot;landscape-secondary&quot;.</
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1919">line 1919</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1837">line 1837</a>
     </li></ul></dd>
     
 
@@ -12237,7 +13052,7 @@ and &quot;portrait-secondary&quot; as well as &quot;landscape-secondary&quot;.</
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3469">line 3469</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3416">line 3416</a>
     </li></ul></dd>
     
 
@@ -12420,7 +13235,7 @@ on the window.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1644">line 1644</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1578">line 1578</a>
     </li></ul></dd>
     
 
@@ -12630,7 +13445,7 @@ window borders.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1475">line 1475</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1409">line 1409</a>
     </li></ul></dd>
     
 
@@ -12822,7 +13637,7 @@ window borders.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1926">line 1926</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1844">line 1844</a>
     </li></ul></dd>
     
 
@@ -13004,7 +13819,7 @@ switch focus to the start frame when it registers.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line485">line 485</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line444">line 444</a>
     </li></ul></dd>
     
 
@@ -13166,7 +13981,7 @@ switch focus to the start frame when it registers.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1730">line 1730</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1661">line 1661</a>
     </li></ul></dd>
     
 
@@ -13256,97 +14071,6 @@ switch focus to the start frame when it registers.</p>
     
 
     
-    <h4 class="name" id="switchToGlobalMessageManager"><span class="type-signature"></span>switchToGlobalMessageManager<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Switches to the global ChromeMessageBroadcaster, potentially replacing
-a frame-specific ChromeMessageSender.  Has no effect if the global
-ChromeMessageBroadcaster is already in use.  If this replaces a
-frame-specific ChromeMessageSender, it removes the message listeners
-from that sender, and then puts the corresponding frame script &quot;to
-sleep&quot;, which removes most of the message listeners from it as well.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line317">line 317</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
     <h4 class="name" id="switchToParentFrame"><span class="type-signature"></span>switchToParentFrame<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
@@ -13400,7 +14124,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1709">line 1709</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1640">line 1640</a>
     </li></ul></dd>
     
 
@@ -13550,7 +14274,7 @@ of the current browsing context.</p>
 
             
 
-            <td class="description last"><p>element id.</p></td>
+            <td class="description last"><p>Reference ID to the element.</p></td>
         </tr>
 
     
@@ -13591,7 +14315,7 @@ of the current browsing context.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2597">line 2597</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2575">line 2575</a>
     </li></ul></dd>
     
 
@@ -13612,6 +14336,62 @@ of the current browsing context.</p>
 
 
 
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>id</var> is not a string.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    
+        <li>
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element represented by reference <var>id</var> is unknown.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">NoSuchElementError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+</li>
+    </ul>
 
 
 
@@ -13772,7 +14552,7 @@ precedence.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1560">line 1560</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1494">line 1494</a>
     </li></ul></dd>
     
 
@@ -14060,7 +14840,7 @@ the entire viewport.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2887">line 2887</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line2847">line 2847</a>
     </li></ul></dd>
     
 
@@ -14172,7 +14952,7 @@ and removes cached canvases.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3514">line 3514</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line3461">line 3461</a>
     </li></ul></dd>
     
 
@@ -14258,7 +15038,7 @@ and removes cached canvases.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1326">line 1326</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line1260">line 1260</a>
     </li></ul></dd>
     
 
@@ -14417,7 +15197,7 @@ Loads the Marionette frame script into the browser if needed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line502">line 502</a>
+        <a href="driver.js.html">driver.js</a>, <a href="driver.js.html#line460">line 460</a>
     </li></ul></dd>
     
 
@@ -14461,13 +15241,13 @@ Loads the Marionette frame script into the browser if needed.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="ChromeWebElement.html">ChromeWebElement</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="ContentWebElement.html">ContentWebElement</a></li><li><a href="ContentWebFrame.html">ContentWebFrame</a></li><li><a href="ContentWebWindow.html">ContentWebWindow</a></li><li><a href="Context.html">Context</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElement.html">WebElement</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#PollPromise">PollPromise</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#truncate">truncate</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li><li><a href="global.html#XUL_CHECKED_ELS">XUL_CHECKED_ELS</a></li><li><a href="global.html#XUL_SELECTED_ELS">XUL_SELECTED_ELS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Oct 04 2017 18:33:34 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

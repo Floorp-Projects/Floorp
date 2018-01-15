@@ -72,7 +72,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line32">line 32</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -111,6 +111,266 @@
     
 
     
+    <h4 class="name" id=".acyclic"><span class="type-signature">(static) </span>acyclic<span class="signature">(obj, error<span class="signature-attributes">opt</span>, message<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Asserts that an arbitrary object, <var>obj</var> is not acyclic.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Object test.  This assertion is only meaningful if passed
+    an actual object or array.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>error</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Error</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    JavaScriptError
+                
+                </td>
+            
+
+            <td class="description last"><p>error
+    Error to throw if assertion fails.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>Message to use for <var>error</var> if assertion fails.  By default
+    it will use the error message provided by
+    <code>JSON.stringify</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line52">line 52</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>obj</var> is cyclic.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="JavaScriptError.html">JavaScriptError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id=".array"><span class="type-signature">(static) </span>array<span class="signature">(obj, msg<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
     
 
@@ -119,7 +379,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is an Array.</p>
+    <p>Asserts that <var>obj</var> is an Array.</p>
 </div>
 
 
@@ -255,7 +515,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line357">line 357</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line384">line 384</a>
     </li></ul></dd>
     
 
@@ -283,7 +543,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not an Array.</p>
+        <p>If <var>obj</var> is not an Array.</p>
         </div>
     </dt>
     <dd></dd>
@@ -311,7 +571,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -348,7 +608,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is a boolean.</p>
+    <p>Asserts that <var>obj</var> is a boolean.</p>
 </div>
 
 
@@ -484,7 +744,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line272">line 272</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line298">line 298</a>
     </li></ul></dd>
     
 
@@ -512,7 +772,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not a boolean.</p>
+        <p>If <var>obj</var> is not a boolean.</p>
         </div>
     </dt>
     <dd></dd>
@@ -540,7 +800,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -577,7 +837,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is callable.</p>
+    <p>Asserts that <var>obj</var> is callable.</p>
 </div>
 
 
@@ -713,7 +973,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line214">line 214</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line240">line 240</a>
     </li></ul></dd>
     
 
@@ -741,7 +1001,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not callable.</p>
+        <p>If <var>obj</var> is not callable.</p>
         </div>
     </dt>
     <dd></dd>
@@ -769,7 +1029,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -806,7 +1066,7 @@
 
 
 <div class="description">
-    <p>Asserts that the current |context| is content.</p>
+    <p>Asserts that the current <var>context</var> is content.</p>
 </div>
 
 
@@ -942,7 +1202,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line96">line 96</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line122">line 122</a>
     </li></ul></dd>
     
 
@@ -970,7 +1230,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |context| is not content.</p>
+        <p>If <var>context</var> is not content.</p>
         </div>
     </dt>
     <dd></dd>
@@ -998,7 +1258,7 @@
 
         
 <div class="param-desc">
-    <p>|context| is returned unaltered.</p>
+    <p><var>context</var> is returned unaltered.</p>
 </div>
 
 
@@ -1171,7 +1431,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line133">line 133</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line159">line 159</a>
     </li></ul></dd>
     
 
@@ -1242,7 +1502,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is defined.</p>
+    <p>Asserts that <var>obj</var> is defined.</p>
 </div>
 
 
@@ -1378,7 +1638,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line176">line 176</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -1406,7 +1666,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not defined.</p>
+        <p>If <var>obj</var> is not defined.</p>
         </div>
     </dt>
     <dd></dd>
@@ -1434,7 +1694,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -1576,7 +1836,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line77">line 77</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -1752,7 +2012,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line63">line 63</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -1823,7 +2083,7 @@
 
 
 <div class="description">
-    <p>Asserts that |prop| is in |obj|.</p>
+    <p>Asserts that <var>prop</var> is in <var>obj</var>.</p>
 </div>
 
 
@@ -1885,7 +2145,7 @@
 
             
 
-            <td class="description last"><p>Own property to test if is in |obj|.</p></td>
+            <td class="description last"><p>Own property to test if is in <var>obj</var>.</p></td>
         </tr>
 
     
@@ -1990,7 +2250,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line336">line 336</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line363">line 363</a>
     </li></ul></dd>
     
 
@@ -2018,7 +2278,8 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |prop| is not in |obj|, or |obj| is not an object.</p>
+        <p>If <var>prop</var> is not in <var>obj</var>, or <var>obj</var>
+    is not an object.</p>
         </div>
     </dt>
     <dd></dd>
@@ -2046,7 +2307,7 @@
 
         
 <div class="param-desc">
-    <p>Value of |obj|'s own property |prop|.</p>
+    <p>Value of <var>obj</var>'s own property <var>prop</var>.</p>
 </div>
 
 
@@ -2083,7 +2344,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is an integer.</p>
+    <p>Asserts that <var>obj</var> is an integer.</p>
 </div>
 
 
@@ -2219,7 +2480,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line233">line 233</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line259">line 259</a>
     </li></ul></dd>
     
 
@@ -2247,7 +2508,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not an integer.</p>
+        <p>If <var>obj</var> is not an integer.</p>
         </div>
     </dt>
     <dd></dd>
@@ -2275,7 +2536,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -2448,7 +2709,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line156">line 156</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line182">line 182</a>
     </li></ul></dd>
     
 
@@ -2519,7 +2780,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is a finite number.</p>
+    <p>Asserts that <var>obj</var> is a finite number.</p>
 </div>
 
 
@@ -2655,7 +2916,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line195">line 195</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line221">line 221</a>
     </li></ul></dd>
     
 
@@ -2683,7 +2944,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not a number.</p>
+        <p>If <var>obj</var> is not a number.</p>
         </div>
     </dt>
     <dd></dd>
@@ -2711,7 +2972,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -2748,7 +3009,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is an object.</p>
+    <p>Asserts that <var>obj</var> is an object.</p>
 </div>
 
 
@@ -2884,7 +3145,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line310">line 310</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line336">line 336</a>
     </li></ul></dd>
     
 
@@ -2912,7 +3173,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not an object.</p>
+        <p>If <var>obj</var> is not an object.</p>
         </div>
     </dt>
     <dd></dd>
@@ -2940,7 +3201,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p>obj| is returned unaltered.</p>
 </div>
 
 
@@ -2977,7 +3238,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is a positive integer.</p>
+    <p>Asserts that <var>obj</var> is a positive integer.</p>
 </div>
 
 
@@ -3113,7 +3374,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line252">line 252</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line278">line 278</a>
     </li></ul></dd>
     
 
@@ -3141,7 +3402,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not a positive integer.</p>
+        <p>If <var>obj</var> is not a positive integer.</p>
         </div>
     </dt>
     <dd></dd>
@@ -3169,7 +3430,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -3342,7 +3603,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line48">line 48</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line74">line 74</a>
     </li></ul></dd>
     
 
@@ -3435,7 +3696,7 @@
 
 
 <div class="description">
-    <p>Asserts that |obj| is a string.</p>
+    <p>Asserts that <var>obj</var> is a string.</p>
 </div>
 
 
@@ -3571,7 +3832,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line291">line 291</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line317">line 317</a>
     </li></ul></dd>
     
 
@@ -3599,7 +3860,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |obj| is not a string.</p>
+        <p>If <var>obj</var> is not a string.</p>
         </div>
     </dt>
     <dd></dd>
@@ -3627,7 +3888,7 @@
 
         
 <div class="param-desc">
-    <p>|obj| is returned unaltered.</p>
+    <p><var>obj</var> is returned unaltered.</p>
 </div>
 
 
@@ -3727,8 +3988,8 @@
             
 
             <td class="description last"><p>Evaluated on calling the return value of this function.  If its
-    return value of the inner function is false, |error| is thrown
-    with |message|.</p></td>
+    return value of the inner function is false, <var>error</var>
+    is thrown with <var>message</var>.</p></td>
         </tr>
 
     
@@ -3835,7 +4096,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line379">line 379</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line406">line 406</a>
     </li></ul></dd>
     
 
@@ -3862,9 +4123,9 @@
 
         
 <div class="param-desc">
-    <p>Function that takes and returns the passed in value unaltered, and
-    which may throw |error| with |message| if |predicate| evaluates
-    to false.</p>
+    <p>Function that takes and returns the passed in value unaltered,
+    and which may throw <var>error</var> with <var>message</var>
+    if <var>predicate</var> evaluates to false.</p>
 </div>
 
 
@@ -4037,7 +4298,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line115">line 115</a>
+        <a href="assert.js.html">assert.js</a>, <a href="assert.js.html#line141">line 141</a>
     </li></ul></dd>
     
 
@@ -4065,7 +4326,7 @@
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If |win| has been closed.</p>
+        <p>If <var>win</var> has been closed.</p>
         </div>
     </dt>
     <dd></dd>
@@ -4093,7 +4354,7 @@
 
         
 <div class="param-desc">
-    <p>|win| is returned unaltered.</p>
+    <p><var>win</var> is returned unaltered.</p>
 </div>
 
 
@@ -4132,13 +4393,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="ChromeWebElement.html">ChromeWebElement</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="ContentWebElement.html">ContentWebElement</a></li><li><a href="ContentWebFrame.html">ContentWebFrame</a></li><li><a href="ContentWebWindow.html">ContentWebWindow</a></li><li><a href="Context.html">Context</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElement.html">WebElement</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#PollPromise">PollPromise</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#truncate">truncate</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li><li><a href="global.html#XUL_CHECKED_ELS">XUL_CHECKED_ELS</a></li><li><a href="global.html#XUL_SELECTED_ELS">XUL_SELECTED_ELS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Oct 04 2017 18:33:34 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

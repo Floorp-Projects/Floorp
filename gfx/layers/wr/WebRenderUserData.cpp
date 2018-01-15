@@ -88,6 +88,10 @@ WebRenderImageData::ClearCachedResources()
     WrBridge()->RemovePipelineIdForCompositable(mPipelineId.ref());
     mPipelineId.reset();
   }
+
+  if (mImageClient) {
+    mImageClient = nullptr;
+  }
 }
 
 Maybe<wr::ImageKey>

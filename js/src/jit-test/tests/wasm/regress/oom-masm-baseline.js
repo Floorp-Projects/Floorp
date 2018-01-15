@@ -1,3 +1,5 @@
+// |jit-test| slow;
+
 if (typeof oomTest === 'undefined')
     quit();
 
