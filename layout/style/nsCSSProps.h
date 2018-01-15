@@ -359,6 +359,11 @@ public:
                     "aValue must be an enum that fits within mValue");
     }
 
+    bool IsSentinel() const
+    {
+      return mKeyword == eCSSKeyword_UNKNOWN && mValue == -1;
+    }
+
     nsCSSKeyword mKeyword;
     int16_t mValue;
   };
