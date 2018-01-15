@@ -514,6 +514,7 @@ void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   WrBridge()->BeginClearCachedResources();
+  mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();
   WrBridge()->EndClearCachedResources();
 }
