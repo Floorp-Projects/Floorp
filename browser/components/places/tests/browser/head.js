@@ -391,8 +391,12 @@ function fillBookmarkTextField(id, text, win, blur = true) {
   let elt = win.document.getElementById(id);
   elt.focus();
   elt.select();
-  for (let c of text.split("")) {
-    EventUtils.synthesizeKey(c, {}, win);
+  if (!text) {
+    EventUtils.synthesizeKey("VK_DELETE", {}, win);
+  } else {
+    for (let c of text.split("")) {
+      EventUtils.synthesizeKey(c, {}, win);
+    }
   }
   if (blur)
     elt.blur();
