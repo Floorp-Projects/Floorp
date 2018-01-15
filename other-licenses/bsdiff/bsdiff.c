@@ -14,9 +14,6 @@
   2005-05-18 - Use the same CRC algorithm as bzip2, and leverage the CRC table
                provided by libbz2.
                  --Darin Fisher <darin@meer.net>
-  2017-11-25 - Use zlib instead of bz2 for the CRC function
-                 --Sylvestre Ledru <s@mozilla.com>
-
 */
 
 #include "bspatch.h"
@@ -34,10 +31,29 @@
 #include <arpa/inet.h>
 #define _O_BINARY 0
 #endif
+
 #undef MIN
 #define MIN(x,y) (((x)<(y)) ? (x) : (y))
 
-#include "zlib.h"
+/*---------------------------------------------------------------------------*/
+
+/* This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
+ * declare it here to avoid including that entire header file.
+ */
+extern unsigned int BZ2_crc32Table[256];
+
+static unsigned int
+crc32(const unsigned char *buf, unsigned int len)
+{
+	unsigned int crc = 0xffffffffL;
+
+	const unsigned char *end = buf + len;
+	for (; buf != end; ++buf)
+		crc = (crc << 8) ^ BZ2_crc32Table[(crc >> 24) ^ *buf];
+
+	crc = ~crc;
+	return crc;
+}
 
 /*---------------------------------------------------------------------------*/
 
@@ -211,7 +227,7 @@ int main(int argc,char *argv[])
 	int32_t dblen,eblen;
 	unsigned char *db,*eb;
 
-	unsigned int scrc = crc32(0L, Z_NULL, 0);
+	unsigned int scrc;
 
 	MBSPatchHeader header = {
 		{'M','B','D','I','F','F','1','0'},
@@ -233,7 +249,7 @@ int main(int argc,char *argv[])
 		(close(fd)==-1))
 		reporterr(1,"%s\n",argv[1]);
 
-        scrc = crc32(scrc, old, oldsize);
+	scrc = crc32(old, oldsize);
 
 	if(((I=(int32_t*) malloc((oldsize+1)*sizeof(int32_t)))==NULL) ||
 		((V=(int32_t*) malloc((oldsize+1)*sizeof(int32_t)))==NULL))
