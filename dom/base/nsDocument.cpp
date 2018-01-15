@@ -3539,21 +3539,9 @@ Element*
 nsIDocument::GetActiveElement()
 {
   // Get the focused element.
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow()) {
-    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-    nsIContent* focusedContent =
-      nsFocusManager::GetFocusedDescendant(window,
-                                           nsFocusManager::eOnlyCurrentWindow,
-                                           getter_AddRefs(focusedWindow));
-    // be safe and make sure the element is from this document
-    if (focusedContent && focusedContent->OwnerDoc() == this) {
-      if (focusedContent->ChromeOnlyAccess()) {
-        focusedContent = focusedContent->FindFirstNonChromeOnlyAccessContent();
-      }
-      if (focusedContent) {
-        return focusedContent->AsElement();
-      }
-    }
+  Element* focusedElement = GetRetargetedFocusedElement();
+  if (focusedElement) {
+    return focusedElement;
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
