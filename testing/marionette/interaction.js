@@ -289,6 +289,26 @@ interaction.selectOption = function(el) {
   event.click(containerEl);
 };
 
+/**
+ * Clears the form control or the editable element, if required.
+ *
+ * Before clearing the element, it will attempt to scroll it into
+ * view if it is not already in the viewport.  An error is raised
+ * if the element cannot be brought into view.
+ *
+ * If the element is a submittable form control and it is empty
+ * (it has no value or it has no files associated with it, in the
+ * case it is a <code>&lt;input type=file&gt;</code> element) or
+ * it is an editing host and its <code>innerHTML</code> content IDL
+ * attribute is empty, this function acts as a no-op.
+ *
+ * @param {Element} el
+ *     Element to clear.
+ *
+ * @throws {InvalidElementStateError}
+ *     If element is disabled, read-only, non-editable, not a submittable
+ *     element or not an editing host, or cannot be scrolled into view.
+ */
 interaction.clearElement = function(el) {
   if (element.isDisabled(el)) {
     throw new InvalidElementStateError(pprint`Element is disabled: ${el}`);
