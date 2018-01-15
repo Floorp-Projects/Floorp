@@ -34,6 +34,7 @@
 #include "archivereader.h"
 #include "readstrings.h"
 #include "errors.h"
+#include "bzlib.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -108,8 +109,6 @@ struct UpdateServerThreadArgs
 #include "prerror.h"
 #endif
 
-#include "crctable.h"
-
 #ifdef XP_WIN
 #ifdef MOZ_MAINTENANCE_SERVICE
 #include "registrycertificates.h"
@@ -137,8 +136,21 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,
 
 //-----------------------------------------------------------------------------
 
-// This BZ2_crc32Table variable lives in libbz2. We just took the
-// data structure from bz2 and created crctables.h
+// This variable lives in libbz2.  It's declared in bzlib_private.h, so we just
+// declare it here to avoid including that entire header file.
+#define BZ2_CRC32TABLE_UNDECLARED
+
+#if MOZ_IS_GCC || defined(__clang__)
+extern "C"  __attribute__((visibility("default"))) unsigned int BZ2_crc32Table[256];
+#undef BZ2_CRC32TABLE_UNDECLARED
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+extern "C" __global unsigned int BZ2_crc32Table[256];
+#undef BZ2_CRC32TABLE_UNDECLARED
+#endif
+#if defined(BZ2_CRC32TABLE_UNDECLARED)
+extern "C" unsigned int BZ2_crc32Table[256];
+#undef BZ2_CRC32TABLE_UNDECLARED
+#endif
 
 static unsigned int
 crc32(const unsigned char *buf, unsigned int len)

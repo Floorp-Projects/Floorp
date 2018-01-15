@@ -1,15 +1,34 @@
-/**
- * This file was part of bzip2/libbzip2.
- * We extracted only this table for bzip2 crc comptability
- */
 
-/**
+/*-------------------------------------------------------------*/
+/*--- Table for doing CRCs                                  ---*/
+/*---                                            crctable.c ---*/
+/*-------------------------------------------------------------*/
+
+/* ------------------------------------------------------------------
+   This file is part of bzip2/libbzip2, a program and library for
+   lossless, block-sorting data compression.
+
+   bzip2/libbzip2 version 1.0.6 of 6 September 2010
+   Copyright (C) 1996-2010 Julian Seward <jseward@bzip.org>
+
+   Please read the WARNING, DISCLAIMER and PATENTS sections in the 
+   README file.
+
+   This program is released under the terms of the license contained
+   in the file LICENSE.
+   ------------------------------------------------------------------ */
+
+
+#include "bzlib_private.h"
+
+/*--
   I think this is an implementation of the AUTODIN-II,
   Ethernet & FDDI 32-bit CRC standard.  Vaguely derived
   from code by Rob Warnock, in Section 51 of the
   comp.compression FAQ.
-*/
-unsigned int BZ2_crc32Table[256] = {
+--*/
+
+UInt32 BZ2_crc32Table[256] = {
 
    /*-- Ugly, innit? --*/
 
@@ -81,5 +100,5 @@ unsigned int BZ2_crc32Table[256] = {
 
 
 /*-------------------------------------------------------------*/
-/*--- end                                        crctable.h ---*/
+/*--- end                                        crctable.c ---*/
 /*-------------------------------------------------------------*/
