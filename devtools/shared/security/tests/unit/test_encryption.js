@@ -13,11 +13,7 @@ function run_test() {
 }
 
 function connectClient(client) {
-  let deferred = defer();
-  client.connect(() => {
-    client.listTabs(deferred.resolve);
-  });
-  return deferred.promise;
+  return client.connect(() => client.listTabs());
 }
 
 add_task(function* () {

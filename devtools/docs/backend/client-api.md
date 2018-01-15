@@ -80,7 +80,7 @@ Attaching to a browser tab requires enumerating the available tabs and attaching
 ```javascript
 function attachToTab() {
   // Get the list of tabs to find the one to attach to.
-  client.listTabs((response) => {
+  client.listTabs().then((response) => {
     // Find the active tab.
     let tab = response.tabs[response.selected];
 
@@ -191,7 +191,7 @@ function shutdownDebugger() {
  */
 function debugTab() {
   // Get the list of tabs to find the one to attach to.
-  client.listTabs(response => {
+  client.listTabs().then(response => {
     // Find the active tab.
     let tab = response.tabs[response.selected];
     // Attach to the tab.

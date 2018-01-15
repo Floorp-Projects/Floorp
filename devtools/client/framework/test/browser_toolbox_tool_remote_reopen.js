@@ -75,7 +75,7 @@ function getClient() {
 function getTarget(client) {
   let deferred = defer();
 
-  client.listTabs(tabList => {
+  client.listTabs().then(tabList => {
     let target = TargetFactory.forRemoteTab({
       client: client,
       form: tabList.tabs[tabList.selected],
