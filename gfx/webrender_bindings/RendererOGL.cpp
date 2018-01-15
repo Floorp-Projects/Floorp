@@ -6,14 +6,13 @@
 
 #include "RendererOGL.h"
 #include "GLContext.h"
-#include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/webrender/RenderBufferTextureHost.h"
-#include "mozilla/webrender/RenderTextureHostOGL.h"
+#include "mozilla/webrender/RenderCompositor.h"
+#include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -28,7 +27,7 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uin
     gfxCriticalNote << "Failed to lock ExternalImage for extId:" << AsUint64(aId);
     return InvalidToWrExternalImage();
   }
-  return texture->Lock(aChannelIndex, renderer->mGL);
+  return texture->Lock(aChannelIndex, renderer->gl());
 }
 
 void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
@@ -43,54 +42,28 @@ void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannel
 }
 
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
-                         RefPtr<gl::GLContext>&& aGL,
-                         RefPtr<widget::CompositorWidget>&& aWidget,
+                         UniquePtr<RenderCompositor> aCompositor,
                          wr::WindowId aWindowId,
                          wr::Renderer* aRenderer,
                          layers::CompositorBridgeParentBase* aBridge)
   : mThread(aThread)
-  , mGL(aGL)
-  , mWidget(aWidget)
+  , mCompositor(Move(aCompositor))
   , mRenderer(aRenderer)
   , mBridge(aBridge)
   , mWindowId(aWindowId)
   , mDebugFlags({ 0 })
 {
   MOZ_ASSERT(mThread);
-  MOZ_ASSERT(mGL);
-  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(mCompositor);
   MOZ_ASSERT(mRenderer);
   MOZ_ASSERT(mBridge);
   MOZ_COUNT_CTOR(RendererOGL);
-
-#ifdef XP_WIN
-  if (aGL->IsANGLE()) {
-    gl::GLLibraryEGL* egl = &gl::sEGLLibrary;
-
-    // Fetch the D3D11 device.
-    EGLDeviceEXT eglDevice = nullptr;
-    egl->fQueryDisplayAttribEXT(egl->Display(), LOCAL_EGL_DEVICE_EXT, (EGLAttrib*)&eglDevice);
-    MOZ_ASSERT(eglDevice);
-    ID3D11Device* device = nullptr;
-    egl->fQueryDeviceAttribEXT(eglDevice, LOCAL_EGL_D3D11_DEVICE_ANGLE, (EGLAttrib*)&device);
-    MOZ_ASSERT(device);
-
-    mSyncObject = layers::SyncObjectHost::CreateSyncObjectHost(device);
-    if (mSyncObject) {
-      if (!mSyncObject->Init()) {
-        // Some errors occur. Clear the mSyncObject here.
-        // Then, there will be no texture synchronization.
-        mSyncObject = nullptr;
-      }
-    }
-  }
-#endif
 }
 
 RendererOGL::~RendererOGL()
 {
   MOZ_COUNT_DTOR(RendererOGL);
-  if (!mGL->MakeCurrent()) {
+  if (!mCompositor->gl()->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current during destroying.";
     // Leak resources!
     return;
@@ -124,41 +97,35 @@ RendererOGL::Render()
     wr_renderer_set_debug_flags(mRenderer, mDebugFlags);
   }
 
-  if (!mGL->MakeCurrent()) {
-    gfxCriticalNote << "Failed to make render context current, can't draw.";
-    NotifyWebRenderError(WebRenderError::MAKE_CURRENT);
-    return false;
-  }
-
   mozilla::widget::WidgetRenderingContext widgetContext;
 
 #if defined(XP_MACOSX)
-  widgetContext.mGL = mGL;
+  widgetContext.mGL = mCompositor->gl();
 // TODO: we don't have a notion of compositor here.
 //#elif defined(MOZ_WIDGET_ANDROID)
 //  widgetContext.mCompositor = mCompositor;
 #endif
 
-  if (!mWidget->PreRender(&widgetContext)) {
+  if (!mCompositor->GetWidget()->PreRender(&widgetContext)) {
     // XXX This could cause oom in webrender since pending_texture_updates is not handled.
     // It needs to be addressed.
     return false;
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
-  auto size = mWidget->GetClientSize();
-
-  if (mSyncObject) {
-    // XXX: if the synchronization is failed, we should handle the device reset.
-    mSyncObject->Synchronize();
+  if (!mCompositor->BeginFrame()) {
+    return false;
   }
+
+  auto size = mCompositor->GetClientSize();
 
   if (!wr_renderer_render(mRenderer, size.width, size.height)) {
     NotifyWebRenderError(WebRenderError::RENDER);
   }
 
-  mGL->SwapBuffers();
-  mWidget->PostRender(&widgetContext);
+  mCompositor->EndFrame();
+
+  mCompositor->GetWidget()->PostRender(&widgetContext);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   if (mFrameStartTime) {
@@ -178,27 +145,25 @@ RendererOGL::Render()
 void
 RendererOGL::Pause()
 {
-#ifdef MOZ_WIDGET_ANDROID
-  if (!mGL || mGL->IsDestroyed()) {
-    return;
-  }
-  // ReleaseSurface internally calls MakeCurrent.
-  mGL->ReleaseSurface();
-#endif
+  mCompositor->Pause();
 }
 
 bool
 RendererOGL::Resume()
 {
-#ifdef MOZ_WIDGET_ANDROID
-  if (!mGL || mGL->IsDestroyed()) {
-    return false;
-  }
-  // RenewSurface internally calls MakeCurrent.
-  return mGL->RenewSurface(mWidget);
-#else
-  return true;
-#endif
+  return mCompositor->Resume();
+}
+
+layers::SyncObjectHost*
+RendererOGL::GetSyncObject() const
+{
+  return mCompositor->GetSyncObject();
+}
+
+gl::GLContext*
+RendererOGL::gl() const
+{
+  return mCompositor->gl();
 }
 
 void
