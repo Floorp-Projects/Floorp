@@ -137,6 +137,8 @@ public:
 
   // WebIDL methods.
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
+
+  Element* GetActiveElement();
   void GetInnerHTML(nsAString& aInnerHTML);
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
   void StyleSheetChanged();
