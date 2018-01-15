@@ -104,9 +104,9 @@ class BaseTryParser(ArgumentParser):
 
         if self.templates:
             args.templates = {}
-            for name, cls in self.templates.iteritems():
+            for cls in self.templates.itervalues():
                 context = cls.context(**vars(args))
                 if context is not None:
-                    args.templates[name] = context
+                    args.templates.update(context)
 
         return args, remainder
