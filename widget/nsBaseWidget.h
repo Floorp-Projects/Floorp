@@ -602,6 +602,8 @@ protected:
 
   bool UseAPZ();
 
+  bool AllowWebRenderForThisWindow();
+
   /**
    * For widgets that support synthesizing native touch events, this function
    * can be used to manage the current state of synthetic pointers. Each widget
