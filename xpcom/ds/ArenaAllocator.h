@@ -175,9 +175,7 @@ private:
     {
       MOZ_ASSERT(aSize <= Available());
       char* p = reinterpret_cast<char*>(header.offset);
-      MOZ_RELEASE_ASSERT(p);
       header.offset += aSize;
-      canary.Check();
       MOZ_MAKE_MEM_UNDEFINED(p, aSize);
       return p;
     }
