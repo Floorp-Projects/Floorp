@@ -22,9 +22,8 @@ NS_IMPL_ADDREF(nsPrintProgress)
 NS_IMPL_RELEASE(nsPrintProgress)
 
 NS_INTERFACE_MAP_BEGIN(nsPrintProgress)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintStatusFeedback)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintProgress)
    NS_INTERFACE_MAP_ENTRY(nsIPrintProgress)
-   NS_INTERFACE_MAP_ENTRY(nsIPrintStatusFeedback)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -239,35 +238,5 @@ nsresult nsPrintProgress::ReleaseListeners()
   m_listenerList.Clear();
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsPrintProgress::ShowStatusString(const char16_t *status)
-{
-  return OnStatusChange(nullptr, nullptr, NS_OK, status);
-}
-
-NS_IMETHODIMP nsPrintProgress::StartMeteors()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPrintProgress::StopMeteors()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPrintProgress::ShowProgress(int32_t percent)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPrintProgress::SetDocShell(nsIDocShell *shell, mozIDOMWindowProxy *window)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsPrintProgress::CloseWindow()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
