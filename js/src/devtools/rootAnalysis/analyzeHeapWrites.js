@@ -239,7 +239,6 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_CopyAlternateValuesFrom", "aDest", null],
         ["Gecko_CounterStyle_GetName", "aResult", null],
         ["Gecko_CounterStyle_GetSingleString", "aResult", null],
-        ["Gecko_EnsureMozBorderColors", "aBorder", null],
         ["Gecko_nsTArray_FontFamilyName_AppendNamed", "aNames", null],
         ["Gecko_nsTArray_FontFamilyName_AppendGeneric", "aNames", null],
     ];
@@ -1349,18 +1348,7 @@ function isSafeMemberPointer(containerType, memberType)
     if (memberType.Kind != 'Pointer')
         return false;
 
-    const {Type: {Kind: pointeeKind, Name: pointeeTypeName}} = memberType;
-
-    // nsStyleBorder has a member mBorderColors of type nsBorderColors**. It is
-    // lazily initialized to an array of 4 nsBorderColors, and should inherit
-    // the safety of its container.
-    if (containerType == 'nsStyleBorder' &&
-        pointeeKind == 'CSU' &&
-        pointeeTypeName == 'nsBorderColors')
-    {
-        return true;
-    }
-
+    // Special-cases go here :)
     return false;
 }
 
