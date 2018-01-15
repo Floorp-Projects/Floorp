@@ -2787,7 +2787,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   /* Returns whether the element has the -moz-transform property
    * or a related property. */
   bool HasTransformStyle() const {
-    return mSpecifiedTransform != nullptr ||
+    return mSpecifiedTransform ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
