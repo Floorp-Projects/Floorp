@@ -663,6 +663,11 @@ nsGenericDOMDataNode::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
 }
 
+void
+nsGenericDOMDataNode::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+}
+
 nsXBLBinding *
 nsGenericDOMDataNode::DoGetXBLBinding() const
 {
