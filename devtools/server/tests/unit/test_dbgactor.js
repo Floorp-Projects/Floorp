@@ -16,7 +16,7 @@ function run_test() {
   let transport = DebuggerServer.connectPipe();
   gClient = new DebuggerClient(transport);
   gClient.addListener("connected", function (event, type, traits) {
-    gClient.listTabs((response) => {
+    gClient.listTabs().then((response) => {
       Assert.ok("tabs" in response);
       for (let tab of response.tabs) {
         if (tab.title == "test-1") {

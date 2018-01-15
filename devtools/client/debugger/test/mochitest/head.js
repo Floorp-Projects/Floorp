@@ -161,7 +161,7 @@ function removeAddon(aAddon) {
 function getTabActorForUrl(aClient, aUrl) {
   let deferred = promise.defer();
 
-  aClient.listTabs(aResponse => {
+  aClient.listTabs().then(aResponse => {
     let tabActor = aResponse.tabs.filter(aGrip => aGrip.url == aUrl).pop();
     deferred.resolve(tabActor);
   });

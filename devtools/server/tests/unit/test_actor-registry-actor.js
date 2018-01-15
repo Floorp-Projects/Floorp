@@ -25,7 +25,7 @@ function run_test() {
 }
 
 function getRegistry() {
-  gClient.listTabs((response) => {
+  gClient.listTabs().then((response) => {
     gRegistryFront = ActorRegistryFront(gClient, response);
     registerNewActor();
   });
@@ -49,7 +49,7 @@ function registerNewActor() {
 }
 
 function talkToNewActor() {
-  gClient.listTabs(({ helloActor }) => {
+  gClient.listTabs().then(({ helloActor }) => {
     Assert.ok(!!helloActor);
     gClient.request({
       to: helloActor,
@@ -72,7 +72,7 @@ function unregisterNewActor() {
 }
 
 function testActorIsUnregistered() {
-  gClient.listTabs(({ helloActor }) => {
+  gClient.listTabs().then(({ helloActor }) => {
     Assert.ok(!helloActor);
 
     Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", gOldPref);

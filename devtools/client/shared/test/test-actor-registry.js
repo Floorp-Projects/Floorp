@@ -9,7 +9,6 @@
 
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const { fetch } = require("devtools/shared/DevToolsUtils");
-  const defer = require("devtools/shared/defer");
   const { Task } = require("devtools/shared/task");
 
   const TEST_URL_ROOT = "http://example.com/browser/devtools/client/shared/test/";
@@ -18,9 +17,7 @@
   // Register a test actor that can operate on the remote document
   exports.registerTestActor = Task.async(function* (client) {
     // First, instanciate ActorRegistryFront to be able to dynamically register an actor
-    let deferred = defer();
-    client.listTabs(deferred.resolve);
-    let response = yield deferred.promise;
+    let response = yield client.listTabs();
     let { ActorRegistryFront } = require("devtools/shared/fronts/actor-registry");
     let registryFront = ActorRegistryFront(client, response);
 
