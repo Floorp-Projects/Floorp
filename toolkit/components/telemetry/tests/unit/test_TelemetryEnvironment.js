@@ -666,25 +666,6 @@ function checkSystemSection(data) {
   } else {
     Assert.ok(checkNullOrString(data.system.appleModelId));
   }
-
-  // This feature is only available on Windows 8+
-  if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-    Assert.ok("sec" in data.system, "sec must be available under data.system");
-
-    let SEC_FIELDS = ["antivirus", "antispyware", "firewall"];
-    for (let f of SEC_FIELDS) {
-      Assert.ok(f in data.system.sec, f + " must be available under data.system.sec");
-
-      let value = data.system.sec[f];
-      // value is null on Windows Server
-      Assert.ok(value === null || Array.isArray(value), f + " must be either null or an array");
-      if (Array.isArray(value)) {
-        for (let product of value) {
-          Assert.equal(typeof product, "string", "Each element of " + f + " must be a string");
-        }
-      }
-    }
-  }
 }
 
 function checkActiveAddon(data, partialRecord) {
