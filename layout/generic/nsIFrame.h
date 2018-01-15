@@ -684,15 +684,7 @@ public:
    */
   void Destroy() {
     AutoPostDestroyData data(PresContext());
-    Destroy(data.mData);
-    // Note that |this| is deleted at this point.
-  }
-
-  /**
-   * Pretty much like Destroy() but with a provided PostDestroyData.
-   */
-  void Destroy(PostDestroyData& aPostDestroyData) {
-    DestroyFrom(this, aPostDestroyData);
+    DestroyFrom(this, data.mData);
     // Note that |this| is deleted at this point.
   }
 
