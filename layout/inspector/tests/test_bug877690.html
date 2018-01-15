@@ -229,6 +229,11 @@ function do_test() {
     ok(testValues(values, expected), "property " + prop + "'s values.");
   }
 
+  // Regression test for bug 1430616
+  var prop = "text-align";
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
+  ok(values.includes("match-parent"), "property text-align includes match-parent");
+
   SimpleTest.finish();
 }
 
