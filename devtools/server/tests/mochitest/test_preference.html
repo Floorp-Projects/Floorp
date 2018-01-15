@@ -32,7 +32,7 @@ function runTests() {
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(function onListTabs(response) {
+    client.listTabs().then(function onListTabs(response) {
       let p = getPreferenceFront(client, response);
 
       let prefs = {};

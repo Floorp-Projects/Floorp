@@ -22,7 +22,7 @@ function test() {
 
       let registry = ActorRegistryFront(gClient, response);
       registry.registerActor(actorURL, options).then(actorFront => {
-        gClient.listTabs(res => {
+        gClient.listTabs().then(res => {
           let tab = res.tabs[res.selected];
           ok(!!tab.helloActor, "Hello actor must exist");
 
