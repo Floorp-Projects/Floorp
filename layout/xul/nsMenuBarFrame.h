@@ -85,7 +85,7 @@ public:
   nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
 
   // Used to handle ALT+key combos
-  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent);
+  nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool aPeek);
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
