@@ -955,7 +955,7 @@ waitForAllPaints(() => {
     }
   );
 
-  // Tests that additive animations don't throttle at all.
+  // Tests that missing keyframes animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
     var div = addDiv(null, { style: 'transform: translateY(-400px);' });
     var animation =
