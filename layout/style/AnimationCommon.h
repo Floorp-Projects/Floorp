@@ -168,6 +168,13 @@ public:
     aPseudoType = mTarget.mPseudoType;
   }
 
+  const NonOwningAnimationTarget& Target() const { return mTarget; }
+
+  nsPresContext* GetPresContext() const
+  {
+    return nsContentUtils::GetContextForContent(mTarget.mElement);
+  }
+
 private:
   NonOwningAnimationTarget mTarget;
 };

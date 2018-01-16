@@ -41,14 +41,13 @@ struct AnimationEventInfo {
   InternalAnimationEvent mEvent;
   TimeStamp mTimeStamp;
 
-  AnimationEventInfo(dom::Element* aElement,
-                     CSSPseudoElementType aPseudoType,
+  AnimationEventInfo(const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage,
                      nsAtom* aAnimationName,
                      const StickyTimeDuration& aElapsedTime,
                      const TimeStamp& aTimeStamp,
                      dom::Animation* aAnimation)
-    : mElement(aElement)
+    : mElement(aTarget.mElement)
     , mAnimation(aAnimation)
     , mEvent(true, aMessage)
     , mTimeStamp(aTimeStamp)
@@ -58,7 +57,8 @@ struct AnimationEventInfo {
     mEvent.mElapsedTime =
       nsRFPService::ReduceTimePrecisionAsSecs(aElapsedTime.ToSeconds());
     mEvent.mPseudoElement =
-      AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(aPseudoType);
+      AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(
+        aTarget.mPseudoType);
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
