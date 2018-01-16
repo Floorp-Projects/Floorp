@@ -23,8 +23,9 @@
 class RacyThreadInfo final : public PseudoStack
 {
 public:
-  RacyThreadInfo()
+  explicit RacyThreadInfo(int aThreadId)
     : PseudoStack()
+    , mThreadId(aThreadId)
     , mSleep(AWAKE)
   {
     MOZ_COUNT_CTOR(RacyThreadInfo);
@@ -113,9 +114,15 @@ public:
 
   bool IsSleeping() { return mSleep != AWAKE; }
 
+  int ThreadId() const { return mThreadId; }
+
 private:
   // A list of pending markers that must be moved to the circular buffer.
   ProfilerSignalSafeLinkedList<ProfilerMarker> mPendingMarkers;
+
+  // mThreadId contains the thread ID of the current thread. It is safe to read
+  // this from multiple threads concurrently, as it will never be mutated.
+  const int mThreadId;
 
   // mSleep tracks whether the thread is sleeping, and if so, whether it has
   // been previously observed. This is used for an optimization: in some cases,
@@ -173,7 +180,10 @@ public:
   ~ThreadInfo();
 
   const char* Name() const { return mName.get(); }
-  int ThreadId() const { return mThreadId; }
+
+  // This is a safe read even when the target thread is not blocked, as this
+  // thread id is never mutated.
+  int ThreadId() const { return RacyInfo()->ThreadId(); }
 
   bool IsMainThread() const { return mIsMainThread; }
 
@@ -196,7 +206,6 @@ private:
   mozilla::UniqueFreePtr<char> mName;
   mozilla::TimeStamp mRegisterTime;
   mozilla::TimeStamp mUnregisterTime;
-  int mThreadId;
   const bool mIsMainThread;
 
   // The thread's RacyThreadInfo. This is an owning pointer. It could be an
