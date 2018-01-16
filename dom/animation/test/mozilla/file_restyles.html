@@ -995,8 +995,7 @@ waitForAllPaints(() => {
 
   // Tests that additive animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled ||
-        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
@@ -1017,8 +1016,7 @@ waitForAllPaints(() => {
 
   // Counter part of the above test.
   add_task(async function no_restyling_discrete_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled ||
-        !SpecialPowers.getBoolPref('dom.animations-api.core.enabled')) {
+    if (!offscreenThrottlingEnabled) {
       return;
     }
 
