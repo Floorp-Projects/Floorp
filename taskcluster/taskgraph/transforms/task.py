@@ -1454,10 +1454,7 @@ def build_task(config, tasks):
                 'description': task['description'],
                 'name': task['label'],
                 'owner': config.params['owner'],
-                'source': '{}/file/{}/{}'.format(
-                    config.params['head_repository'],
-                    config.params['head_rev'],
-                    config.path),
+                'source': config.params.file_url(config.path),
             },
             'extra': extra,
             'tags': tags,
