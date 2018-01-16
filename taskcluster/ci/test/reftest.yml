@@ -64,6 +64,7 @@ jsreftest:
             windows10-64-ccov/debug: 5
             linux64-ccov/.*: 5
             linux64-qr/.*: 4
+            linux32/debug: 5
             macosx.*: 2
             default: 3
     e10s:

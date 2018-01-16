@@ -95,6 +95,14 @@ HTMLOptGroupElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
   nsGenericHTMLElement::RemoveChildAt_Deprecated(aIndex, aNotify);
 }
 
+void
+HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  SafeOptionListMutation safeMutation(GetSelect(), this, nullptr, IndexOf(aKid),
+                                      aNotify);
+  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
+}
+
 nsresult
 HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                   const nsAttrValue* aValue,
