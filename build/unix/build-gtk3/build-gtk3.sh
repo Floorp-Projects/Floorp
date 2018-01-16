@@ -38,7 +38,7 @@ build() {
 	pkg=$(echo $name | tr '+-' '__')
 	version=$(eval echo \$${pkg}_version)
 	url=$(eval echo \$${pkg}_url)
-	wget -c -P $root_dir $url
+	wget -c --progress=dot:mega -P $root_dir $url
 	tar -axf $root_dir/$name-$version.tar.*
 	mkdir -p build/$name
 	cd build/$name
