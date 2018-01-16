@@ -4,7 +4,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["HeadlessShell"];
+var EXPORTED_SYMBOLS = ["HeadlessShell"];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
