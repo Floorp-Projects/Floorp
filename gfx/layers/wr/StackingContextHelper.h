@@ -30,6 +30,7 @@ public:
   StackingContextHelper(const StackingContextHelper& aParentSC,
                         wr::DisplayListBuilder& aBuilder,
                         const nsTArray<wr::WrFilterOp>& aFilters = nsTArray<wr::WrFilterOp>(),
+                        const LayoutDeviceRect& aBounds = LayoutDeviceRect(),
                         const gfx::Matrix4x4* aBoundTransform = nullptr,
                         const wr::WrAnimationProperty* aAnimation = nullptr,
                         float* aOpacityPtr = nullptr,
