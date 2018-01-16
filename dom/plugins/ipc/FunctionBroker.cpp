@@ -134,10 +134,18 @@ struct GetOpenFileNameWFB::Response::Info::ShouldMarshal<0> { static const bool 
 typedef FunctionBroker<ID_InternetOpenA,
                        decltype(InternetOpenA)> InternetOpenAFB;
 
+template<>
+ShouldHookFunc* const
+InternetOpenAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 /* InternetConnectA */
 
 typedef FunctionBroker<ID_InternetConnectA,
                              decltype(InternetConnectA)> InternetConnectAFB;
+
+template<>
+ShouldHookFunc* const
+InternetConnectAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef InternetConnectAFB::Request ICAReqHandler;
 
@@ -156,6 +164,10 @@ bool ICAReqHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h,
 typedef FunctionBroker<ID_InternetCloseHandle,
                        decltype(InternetCloseHandle)> InternetCloseHandleFB;
 
+template<>
+ShouldHookFunc* const
+InternetCloseHandleFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef InternetCloseHandleFB::Request ICHReqHandler;
 
 template<>
@@ -171,6 +183,10 @@ bool ICHReqHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h)
 
 typedef FunctionBroker<ID_InternetQueryDataAvailable,
                        decltype(InternetQueryDataAvailable)> InternetQueryDataAvailableFB;
+
+template<>
+ShouldHookFunc* const
+InternetQueryDataAvailableFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef InternetQueryDataAvailableFB::Request IQDAReq;
 
@@ -219,6 +235,10 @@ struct InternetQueryDataAvailableFB::Response::Info::ShouldMarshal<1> { static c
 
 typedef FunctionBroker<ID_InternetReadFile,
                        decltype(InternetReadFile)> InternetReadFileFB;
+
+template<>
+ShouldHookFunc* const
+InternetReadFileFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef InternetReadFileFB::Request IRFRequestHandler;
 typedef struct RequestHandler<ID_InternetReadFile,
@@ -304,6 +324,10 @@ bool IRFResponseHandler::Unmarshal(const IpdlTuple& aTuple, BOOL& ret, HINTERNET
 typedef FunctionBroker<ID_InternetWriteFile,
                        decltype(InternetWriteFile)> InternetWriteFileFB;
 
+template<>
+ShouldHookFunc* const
+InternetWriteFileFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef InternetWriteFileFB::Request IWFReqHandler;
 typedef RequestHandler<ID_InternetWriteFile,
                        int HOOK_CALL (HINTERNET, nsDependentCSubstring)> IWFDelegateReqHandler;
@@ -351,6 +375,10 @@ struct InternetWriteFileFB::Response::Info::ShouldMarshal<3> { static const bool
 typedef FunctionBroker<ID_InternetSetOptionA,
                        decltype(InternetSetOptionA)> InternetSetOptionAFB;
 
+template<>
+ShouldHookFunc* const
+InternetSetOptionAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef InternetSetOptionAFB::Request ISOAReqHandler;
 typedef RequestHandler<ID_InternetSetOptionA,
                        BOOL HOOK_CALL (HINTERNET, DWORD, nsDependentCSubstring)> ISOADelegateReqHandler;
@@ -392,6 +420,10 @@ bool ISOAReqHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h, const D
 typedef FunctionBroker<ID_HttpAddRequestHeadersA,
                        decltype(HttpAddRequestHeadersA)> HttpAddRequestHeadersAFB;
 
+template<>
+ShouldHookFunc* const
+HttpAddRequestHeadersAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef HttpAddRequestHeadersAFB::Request HARHAReqHandler;
 
 template<>
@@ -409,6 +441,10 @@ bool HARHAReqHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h,
 
 typedef FunctionBroker<ID_HttpOpenRequestA,
                        decltype(HttpOpenRequestA)> HttpOpenRequestAFB;
+
+template<>
+ShouldHookFunc* const
+HttpOpenRequestAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef HttpOpenRequestAFB::Request HORAReqHandler;
 typedef RequestHandler<ID_HttpOpenRequestA,
@@ -473,6 +509,10 @@ bool HORAReqHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h,
 
 typedef FunctionBroker<ID_HttpQueryInfoA,
                        decltype(HttpQueryInfoA)> HttpQueryInfoAFB;
+
+template<>
+ShouldHookFunc* const
+HttpQueryInfoAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef HttpQueryInfoAFB::Request HQIARequestHandler;
 typedef RequestHandler<ID_HttpQueryInfoA,
@@ -594,6 +634,10 @@ bool HQIAResponseHandler::Unmarshal(const IpdlTuple& aTuple, BOOL& ret, HINTERNE
 typedef FunctionBroker<ID_HttpSendRequestA,
                        decltype(HttpSendRequestA)> HttpSendRequestAFB;
 
+template<>
+ShouldHookFunc* const
+HttpSendRequestAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef HttpSendRequestAFB::Request HSRARequestHandler;
 typedef RequestHandler<ID_HttpSendRequestA,
                        BOOL HOOK_CALL (HINTERNET, nsDependentCSubstring,
@@ -668,6 +712,10 @@ bool HSRARequestHandler::ShouldBroker(Endpoint endpoint, const HINTERNET& h,
 typedef FunctionBroker<ID_HttpSendRequestExA,
                        decltype(HttpSendRequestExA)> HttpSendRequestExAFB;
 
+template<>
+ShouldHookFunc* const
+HttpSendRequestExAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef RequestInfo<ID_HttpSendRequestExA> HSRExAReqInfo;
 
 template<> template<>
@@ -687,6 +735,10 @@ const DWORD_PTR HSRExAReqInfo::FixedValue<4>::value = 0;
 
 typedef FunctionBroker<ID_InternetQueryOptionA,
                        decltype(InternetQueryOptionA)> InternetQueryOptionAFB;
+
+template<>
+ShouldHookFunc* const
+InternetQueryOptionAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef InternetQueryOptionAFB::Request IQOARequestHandler;
 typedef RequestHandler<ID_InternetQueryOptionA,
@@ -771,6 +823,10 @@ bool IQOAResponseHandler::Unmarshal(const IpdlTuple& aTuple, BOOL& ret, HINTERNE
 typedef FunctionBroker<ID_InternetErrorDlg,
                        decltype(InternetErrorDlg)> InternetErrorDlgFB;
 
+template<>
+ShouldHookFunc* const
+InternetErrorDlgFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 typedef RequestInfo<ID_InternetErrorDlg> IEDReqInfo;
 
 template<> template<>
@@ -799,6 +855,10 @@ bool IEDReqHandler::ShouldBroker(Endpoint endpoint, const HWND& hwnd,
 
 typedef FunctionBroker<ID_AcquireCredentialsHandleA,
                        decltype(AcquireCredentialsHandleA)> AcquireCredentialsHandleAFB;
+
+template<>
+ShouldHookFunc* const
+AcquireCredentialsHandleAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef RequestInfo<ID_AcquireCredentialsHandleA> ACHAReqInfo;
 
@@ -875,10 +935,18 @@ struct ACHARspInfo::ShouldMarshal<8> { static const bool value = true; };
 typedef FunctionBroker<ID_QueryCredentialsAttributesA,
                        decltype(QueryCredentialsAttributesA)> QueryCredentialsAttributesAFB;
 
+template<>
+ShouldHookFunc* const
+QueryCredentialsAttributesAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
 /* FreeCredentialsHandle */
 
 typedef FunctionBroker<ID_FreeCredentialsHandle,
                        decltype(FreeCredentialsHandle)> FreeCredentialsHandleFB;
+
+template<>
+ShouldHookFunc* const
+FreeCredentialsHandleFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
 
 typedef FreeCredentialsHandleFB::Request FCHReq;
 
