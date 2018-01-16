@@ -912,78 +912,198 @@ MacroAssembler::wasmTrapInstruction()
     MOZ_CRASH("NYI");
 }
 
+// FCVTZU behaves as follows:
+//
+// on NaN it produces zero
+// on too large it produces UINT_MAX (for appropriate type)
+// on too small it produces zero
+//
+// FCVTZS behaves as follows:
+//
+// on NaN it produces zero
+// on too large it produces INT_MAX (for appropriate type)
+// on too small it produces INT_MIN (ditto)
+
 void
-MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input_, Register output_,
                                            bool isSaturating, Label* oolEntry)
 {
-    MOZ_CRASH("NYI");
+    ARMRegister output(output_, 32);
+    ARMFPRegister input(input_, 64);
+    Fcvtzu(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, -1, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+    }
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output,
-                                          bool isSaturating, Label* oolEntry)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output,
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input_, Register output_,
                                             bool isSaturating, Label* oolEntry)
 {
-    MOZ_CRASH("NYI");
+    ARMRegister output(output_, 32);
+    ARMFPRegister input(input_, 32);
+    Fcvtzu(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, -1, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+    }
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input_, Register output_,
+                                          bool isSaturating, Label* oolEntry)
+{
+    ARMRegister output(output_, 32);
+    ARMFPRegister input(input_, 64);
+    Fcvtzs(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, INT32_MAX, vixl::ZFlag, Assembler::NotEqual);
+        Ccmp(output, INT32_MIN, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+    }
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input_, Register output_,
                                            bool isSaturating, Label* oolEntry)
 {
-    MOZ_CRASH("NYI");
+    ARMRegister output(output_, 32);
+    ARMFPRegister input(input_, 32);
+    Fcvtzs(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, INT32_MAX, vixl::ZFlag, Assembler::NotEqual);
+        Ccmp(output, INT32_MIN, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+    }
 }
 
 void
-MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output,
-                                          bool isSaturating, Label* oolEntry,
-                                          Label* oolRejoin, FloatRegister tempDouble)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output,
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input_, Register64 output_,
                                            bool isSaturating, Label* oolEntry,
                                            Label* oolRejoin, FloatRegister tempDouble)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(tempDouble == InvalidFloatReg);
+
+    ARMRegister output(output_.reg, 64);
+    ARMFPRegister input(input_, 64);
+    Fcvtzu(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, -1, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+        bind(oolRejoin);
+    }
 }
 
 void
-MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output,
-                                           bool isSaturating, Label* oolEntry,
-                                           Label* oolRejoin, FloatRegister tempDouble)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output,
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input_, Register64 output_,
                                             bool isSaturating, Label* oolEntry,
                                             Label* oolRejoin, FloatRegister tempDouble)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(tempDouble == InvalidFloatReg);
+
+    ARMRegister output(output_.reg, 64);
+    ARMFPRegister input(input_, 32);
+    Fcvtzu(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, -1, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+        bind(oolRejoin);
+    }
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input_, Register64 output_,
+                                          bool isSaturating, Label* oolEntry,
+                                          Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_ASSERT(tempDouble == InvalidFloatReg);
+
+    ARMRegister output(output_.reg, 64);
+    ARMFPRegister input(input_, 64);
+    Fcvtzs(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, INT64_MAX, vixl::ZFlag, Assembler::NotEqual);
+        Ccmp(output, INT64_MIN, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+        bind(oolRejoin);
+    }
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input_, Register64 output_,
+                                           bool isSaturating, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
+{
+    ARMRegister output(output_.reg, 64);
+    ARMFPRegister input(input_, 32);
+    Fcvtzs(output, input);
+    if (!isSaturating) {
+        Cmp(output, 0);
+        Ccmp(output, INT64_MAX, vixl::ZFlag, Assembler::NotEqual);
+        Ccmp(output, INT64_MIN, vixl::ZFlag, Assembler::NotEqual);
+        B(oolEntry, Assembler::Equal);
+        bind(oolRejoin);
+    }
 }
 
 void
 MacroAssembler::oolWasmTruncateCheckF32ToI32(FloatRegister input, Register output, TruncFlags flags,
                                              wasm::BytecodeOffset off, Label* rejoin)
 {
-    MOZ_CRASH("NYI");
+    Label notNaN;
+    branchFloat(Assembler::DoubleOrdered, input, input, &notNaN);
+    wasmTrap(wasm::Trap::InvalidConversionToInteger, off);
+    bind(&notNaN);
+
+    Label isOverflow;
+    const float two_31 = -float(INT32_MIN);
+    if (flags & TRUNC_UNSIGNED) {
+        loadConstantFloat32(two_31 * 2, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, &isOverflow);
+        loadConstantFloat32(-1.0f, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThan, input, ScratchFloat32Reg, rejoin);
+    } else {
+        loadConstantFloat32(two_31, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, &isOverflow);
+        loadConstantFloat32(-two_31, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, rejoin);
+    }
+    bind(&isOverflow);
+    wasmTrap(wasm::Trap::IntegerOverflow, off);
 }
 
 void
 MacroAssembler::oolWasmTruncateCheckF64ToI32(FloatRegister input, Register output, TruncFlags flags,
                                              wasm::BytecodeOffset off, Label* rejoin)
 {
-    MOZ_CRASH("NYI");
+    Label notNaN;
+    branchDouble(Assembler::DoubleOrdered, input, input, &notNaN);
+    wasmTrap(wasm::Trap::InvalidConversionToInteger, off);
+    bind(&notNaN);
+
+    Label isOverflow;
+    const double two_31 = -double(INT32_MIN);
+    if (flags & TRUNC_UNSIGNED) {
+        loadConstantDouble(two_31 * 2, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isOverflow);
+        loadConstantDouble(-1.0, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    } else {
+        loadConstantDouble(two_31, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isOverflow);
+        loadConstantDouble(-two_31 - 1, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    }
+    bind(&isOverflow);
+    wasmTrap(wasm::Trap::IntegerOverflow, off);
 }
 
 void
@@ -991,7 +1111,26 @@ MacroAssembler::oolWasmTruncateCheckF32ToI64(FloatRegister input, Register64 out
                                              TruncFlags flags, wasm::BytecodeOffset off,
                                              Label* rejoin)
 {
-    MOZ_CRASH("NYI");
+    Label notNaN;
+    branchFloat(Assembler::DoubleOrdered, input, input, &notNaN);
+    wasmTrap(wasm::Trap::InvalidConversionToInteger, off);
+    bind(&notNaN);
+
+    Label isOverflow;
+    const float two_63 = -float(INT64_MIN);
+    if (flags & TRUNC_UNSIGNED) {
+        loadConstantFloat32(two_63 * 2, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, &isOverflow);
+        loadConstantFloat32(-1.0f, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThan, input, ScratchFloat32Reg, rejoin);
+    } else {
+        loadConstantFloat32(two_63, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, &isOverflow);
+        loadConstantFloat32(-two_63, ScratchFloat32Reg);
+        branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchFloat32Reg, rejoin);
+    }
+    bind(&isOverflow);
+    wasmTrap(wasm::Trap::IntegerOverflow, off);
 }
 
 void
@@ -999,7 +1138,26 @@ MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 out
                                              TruncFlags flags, wasm::BytecodeOffset off,
                                              Label* rejoin)
 {
-    MOZ_CRASH("NYI");
+    Label notNaN;
+    branchDouble(Assembler::DoubleOrdered, input, input, &notNaN);
+    wasmTrap(wasm::Trap::InvalidConversionToInteger, off);
+    bind(&notNaN);
+
+    Label isOverflow;
+    const double two_63 = -double(INT64_MIN);
+    if (flags & TRUNC_UNSIGNED) {
+        loadConstantDouble(two_63 * 2, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isOverflow);
+        loadConstantDouble(-1.0, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, rejoin);
+    } else {
+        loadConstantDouble(two_63, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isOverflow);
+        loadConstantDouble(-two_63, ScratchDoubleReg);
+        branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, rejoin);
+    }
+    bind(&isOverflow);
+    wasmTrap(wasm::Trap::IntegerOverflow, off);
 }
 
 // ========================================================================
