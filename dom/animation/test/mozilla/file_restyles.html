@@ -955,6 +955,25 @@ waitForAllPaints(() => {
     }
   );
 
+  add_task(
+    async function no_throttling_additive_animations_out_of_view_element() {
+      var div = addDiv(null, { style: 'transform: translateY(-400px);' });
+      var animation =
+        div.animate([{ visibility: 'visible' }],
+                    { duration: 100 * MS_PER_SEC, composite: 'add' });
+
+      await animation.ready;
+
+      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
+      var markers = await observeStyling(5);
+
+      is(markers.length, expectedRestyleCount,
+         'Additive animation has no keyframe whose offset is 0 or 1 in an ' +
+         'out-of-view element should not be throttled');
+      await ensureElementRemoval(div);
+    }
+  );
+
   // Tests that missing keyframes animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
     var div = addDiv(null, { style: 'transform: translateY(-400px);' });
