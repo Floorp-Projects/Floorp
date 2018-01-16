@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string>
-#include <unordered_set>
-
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -66,29 +63,6 @@ GetCspContextLog()
 #define CSPCONTEXTLOGENABLED() MOZ_LOG_TEST(GetCspContextLog(), mozilla::LogLevel::Debug)
 
 static const uint32_t CSP_CACHE_URI_CUTOFF_SIZE = 512;
-
-#ifdef DEBUG
-/**
- * This function is only used for verification purposes within
- * GatherSecurityPolicyViolationEventData.
- */
-static bool
-ValidateDirectiveName(const nsAString& aDirective)
-{
-  static const auto directives = [] () {
-    std::unordered_set<std::string> directives;
-    constexpr size_t dirLen = sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]);
-    for (size_t i = 0; i < dirLen; ++i) {
-      directives.insert(CSPStrDirectives[i]);
-    }
-    return directives;
-  } ();
-
-  nsAutoString directive(aDirective);
-  auto itr = directives.find(NS_ConvertUTF16toUTF8(directive).get());
-  return itr != directives.end();
-}
-#endif // DEBUG
 
 /**
  * Creates a key for use in the ShouldLoad cache.
@@ -895,8 +869,6 @@ nsCSPContext::GatherSecurityPolicyViolationEventData(
 {
   NS_ENSURE_ARG_MAX(aViolatedPolicyIndex, mPolicies.Length() - 1);
 
-  MOZ_ASSERT(ValidateDirectiveName(aViolatedDirective), "Invalid directive name");
-
   nsresult rv;
 
   // document-uri
@@ -928,14 +900,11 @@ nsCSPContext::GatherSecurityPolicyViolationEventData(
     aViolationEventInit.mBlockedURI = NS_ConvertUTF8toUTF16(reportBlockedURI);
   }
 
-  // effective-directive
-  // The name of the policy directive that was violated.
-  aViolationEventInit.mEffectiveDirective = aViolatedDirective;
-
   // violated-directive
-  // In CSP2, the policy directive that was violated, as it appears in the policy.
-  // In CSP3, the same as effective-directive.
   aViolationEventInit.mViolatedDirective = aViolatedDirective;
+
+  // effective-directive
+  aViolationEventInit.mEffectiveDirective = aViolatedDirective;
 
   // original-policy
   nsAutoString originalPolicy;
@@ -1247,21 +1216,18 @@ class CSPReportSenderRunnable final : public Runnable
     {
       MOZ_ASSERT(NS_IsMainThread());
 
-      nsresult rv;
-
       // 0) prepare violation data
       mozilla::dom::SecurityPolicyViolationEventInit init;
-      rv = mCSPContext->GatherSecurityPolicyViolationEventData(
+      mCSPContext->GatherSecurityPolicyViolationEventData(
         mBlockedContentSource, mOriginalURI,
         mViolatedDirective, mViolatedPolicyIndex,
         mSourceFile, mScriptSample, mLineNum,
         init);
-      NS_ENSURE_SUCCESS(rv, rv);
 
       // 1) notify observers
       nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
       NS_ASSERTION(observerService, "needs observer service");
-      rv = observerService->NotifyObservers(mObserverSubject,
+      nsresult rv = observerService->NotifyObservers(mObserverSubject,
                                                      CSP_VIOLATION_TOPIC,
                                                      mViolatedDirective.get());
       NS_ENSURE_SUCCESS(rv, rv);
