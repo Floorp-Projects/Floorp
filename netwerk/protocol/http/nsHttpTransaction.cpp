@@ -1665,9 +1665,6 @@ nsHttpTransaction::HandleContentStart()
             if ((mEarlyDataDisposition == EARLY_425) && !mDoNotTryEarlyData) {
                 mDoNotTryEarlyData = true;
                 mForceRestart = true; // force restart has built in loop protection
-                if (mConnection->Version() = HTTP_VERSION_2) {
-                    mReuseOnRestart = true;
-                }
                 return NS_ERROR_NET_RESET;
             }
             break;
