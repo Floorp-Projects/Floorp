@@ -100,6 +100,13 @@ SVGSwitchElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
   MaybeInvalidate();
 }
 
+void
+SVGSwitchElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  SVGSwitchElementBase::RemoveChildNode(aKid, aNotify);
+  MaybeInvalidate();
+}
+
 //----------------------------------------------------------------------
 // nsIContent methods
 

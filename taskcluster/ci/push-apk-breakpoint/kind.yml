@@ -20,6 +20,12 @@ jobs:
         shipping-phase: ship
         shipping-product: fennec
         worker-type:  # see transforms
+            by-project:
+                mozilla-central: aws-provisioner-v1/taskcluster-generic
+                mozilla-beta: null-provisioner/human-breakpoint
+                mozilla-release: null-provisioner/human-breakpoint
+                maple: aws-provisioner-v1/taskcluster-generic
+                default: invalid/invalid
         worker:
             implementation: push-apk-breakpoint
         treeherder:
