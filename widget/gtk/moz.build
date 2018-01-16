@@ -16,6 +16,12 @@ with Files("*WindowSurface*"):
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     DIRS += ['mozgtk']
 
+if CONFIG['MOZ_WAYLAND']:
+    if CONFIG['GLIB_LIBS']:
+        DIRS += ['mozwayland']
+    else:
+        error('We support Wayland on glibc systems only, see Bug 1409707 for reference.')
+
 EXPORTS += [
     'mozcontainer.h',
     'nsGTKToolkit.h',

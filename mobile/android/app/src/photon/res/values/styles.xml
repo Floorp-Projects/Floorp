@@ -25,8 +25,6 @@
 
     <style name="Widget.BaseTextView" parent="android:style/Widget.TextView"/>
 
-    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.ProgressBar.Horizontal"/>
-
     <!--
         Application styles. All customizations that are not specific
         to a particular API level can go here.
@@ -63,10 +61,6 @@
         <item name="android:horizontalSpacing">0dip</item>
         <item name="android:cacheColorHint">@android:color/transparent</item>
         <item name="android:listSelector">@drawable/action_bar_button</item>
-    </style>
-
-    <style name="Widget.Home.HomeList">
-        <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>
 
     <style name="Widget.ListItem">
@@ -216,12 +210,6 @@
       <item name="android:scaleType">centerCrop</item>
     </style>
 
-    <style name="Widget.TopSitesGridItemPin">
-      <item name="android:minWidth">30dip</item>
-      <item name="android:minHeight">30dip</item>
-      <item name="android:padding">0dip</item>
-    </style>
-
     <style name="Widget.TopSitesGridItemTitle">
       <item name="android:textColor">@color/top_sites_grid_item_title</item>
       <item name="android:textSize">12sp</item>
@@ -295,7 +283,8 @@
     <!--
         We are overriding the snackbar message style to guarantee a consistent style across Android versions (bug 1217416).
     -->
-    <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance" tools:override="true">
+    <style name="TextAppearance.Design.Snackbar.Message" parent="android:TextAppearance" tools:override="true"
+           tools:ignore="UnusedResources">
         <item name="android:textSize">@dimen/design_snackbar_text_size</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
@@ -370,7 +359,8 @@
         <item name="android:textColor">?android:attr/textColorTertiary</item>
     </style>
 
-    <style name="TextAppearance.Micro.Inverse">
+    <style name="TextAppearance.Micro.Inverse"
+           tools:ignore="UnusedResources">
         <item name="android:textColor">?android:attr/textColorTertiaryInverse</item>
         <item name="android:textColorHint">?android:attr/textColorHintInverse</item>
         <item name="android:textColorHighlight">@color/text_color_highlight_inverse</item>
@@ -400,7 +390,8 @@
         <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="TextAppearance.Widget.Home" />
+    <style name="TextAppearance.Widget.Home"
+           tools:ignore="UnusedResources" />
 
     <style name="TextAppearance.Widget.Home.Header" parent="TextAppearance.Small">
         <item name="android:textColor">@color/disabled_grey</item>
@@ -436,7 +427,8 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
-    <style name="TextAppearance.DoorHanger.Small">
+    <style name="TextAppearance.DoorHanger.Small"
+           tools:ignore="UnusedResources">
         <item name="android:textSize">14sp</item>
     </style>
 
@@ -527,30 +519,21 @@
         <item name="android:layout_marginRight">6dp</item>
     </style>
 
-    <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
-
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
         <item name="android:background">@color/about_page_header_grey</item>
     </style>
 
-    <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
-        <item name="android:childDivider">@color/toolbar_divider_grey</item>
-    </style>
-
-    <style name="Widget.HistoryListView" parent="Widget.HomeListView">
-        <item name="android:childDivider">@color/toolbar_divider_grey</item>
-        <item name="android:drawSelectorOnTop">true</item>
-    </style>
-
     <!-- TabsLayout Row -->
-    <style name="TabLayoutItemTextAppearance">
+    <style name="TabLayoutItemTextAppearance"
+           tools:ignore="UnusedResources">
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
     </style>
 
     <!-- TabsLayout RemoteTabs Row Url -->
-    <style name="TabLayoutItemTextAppearance.Url">
+    <style name="TabLayoutItemTextAppearance.Url"
+           tools:ignore="UnusedResources">
         <item name="android:textColor">#FFA4A7A9</item>
     </style>
 
@@ -579,8 +562,8 @@
     </style>
 
     <style name="PopupAnimation">
-        <item name="@android:windowEnterAnimation">@anim/popup_show</item>
-        <item name="@android:windowExitAnimation">@anim/popup_hide</item>
+        <item name="android:windowEnterAnimation">@anim/popup_show</item>
+        <item name="android:windowExitAnimation">@anim/popup_hide</item>
     </style>
 
     <style name="ToastBase">
@@ -737,7 +720,8 @@
         <item name="android:background">@drawable/tab_indicator_background</item>
     </style>
 
-    <style name="TabInput.Tab">
+    <style name="TabInput.Tab"
+           tools:ignore="UnusedResources">
         <item name="android:background">@drawable/tabs_strip_indicator</item>
         <item name="android:gravity">center</item>
         <item name="android:minHeight">@dimen/menu_item_row_height</item>
@@ -798,7 +782,8 @@
         <item name="android:layout_marginBottom">8dp</item>
     </style>
 
-    <style name="RemoteTabsPanelItem.TextAppearance.Linkified">
+    <style name="RemoteTabsPanelItem.TextAppearance.Linkified"
+           tools:ignore="UnusedResources">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textColor">#0092DB</item>
@@ -820,8 +805,6 @@
         <item name="textAllCaps">false</item>
     </style>
 
-    <style name="TabQueueActivity" parent="android:style/Theme.NoDisplay" />
-
     <style name="ActivityStreamContextMenuText">
         <item name="android:textSize">16sp</item>
     </style>
@@ -831,7 +814,8 @@
         <item name="android:listDivider">@drawable/as_contextmenu_divider</item>
     </style>
 
-    <style name="ActivityStreamButton" parent="Widget.AppCompat.Button.Colored">
+    <style name="ActivityStreamButton" parent="Widget.AppCompat.Button.Colored"
+           tools:ignore="UnusedResources">
         <item name="colorButtonNormal">@color/link_blue</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
