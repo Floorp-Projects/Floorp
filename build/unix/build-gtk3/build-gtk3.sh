@@ -11,6 +11,7 @@ cairo_version=1.10.2
 pango_version=1.30.1
 atk_version=2.2.0
 gtk__version=3.4.4
+pulseaudio_version=2.0
 
 fontconfig_url=http://www.freedesktop.org/software/fontconfig/release/fontconfig-${fontconfig_version}.tar.gz
 libffi_url=ftp://sourceware.org/pub/libffi/libffi-${libffi_version}.tar.gz
@@ -21,11 +22,15 @@ cairo_url=http://cairographics.org/releases/cairo-${cairo_version}.tar.gz
 pango_url=http://ftp.gnome.org/pub/GNOME/sources/pango/${pango_version%.*}/pango-${pango_version}.tar.xz
 atk_url=http://ftp.gnome.org/pub/GNOME/sources/atk/${atk_version%.*}/atk-${atk_version}.tar.xz
 gtk__url=http://ftp.gnome.org/pub/gnome/sources/gtk+/${gtk__version%.*}/gtk+-${gtk__version}.tar.xz
+pulseaudio_url=https://freedesktop.org/software/pulseaudio/releases/pulseaudio-${pulseaudio_version}.tar.xz
 
 root_dir=$(mktemp -d)
 cd $root_dir
 
 make_flags=-j$(nproc)
+
+# Install a few packages for pulseaudio.
+yum install -y libtool-ltdl-devel libtool-ltdl-devel.i686 json-c-devel json-c-devel.i686 libsndfile-devel libsndfile-devel.i686
 
 build() {
 	name=$1
@@ -72,6 +77,7 @@ build pango
 build atk
 make_flags="$make_flags GLIB_COMPILE_SCHEMAS=glib-compile-schemas"
 build gtk+
+build pulseaudio --disable-nls
 
 done
 
