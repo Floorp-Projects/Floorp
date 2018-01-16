@@ -87,6 +87,11 @@ public:
    */
   void GetStack(HangStack& aStack, nsACString& aRunnableName, bool aStackWalk);
 
+  /**
+   * Retrieve the thread's profiler thread ID.
+   */
+  int GetThreadId() const { return mThreadId; }
+
 protected:
   /**
    * ProfilerStackCollector
