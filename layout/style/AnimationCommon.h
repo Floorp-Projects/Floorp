@@ -76,12 +76,12 @@ public:
   }
 
   /**
-   * Add a pending event.
+   * Add pending events.
    */
-  void QueueEvent(AnimationEventType&& aEventInfo)
+  void QueueEvents(nsTArray<AnimationEventType>&& aEvents)
   {
-    mEventDispatcher.QueueEvent(
-      mozilla::Forward<AnimationEventType>(aEventInfo));
+    mEventDispatcher.QueueEvents(
+      mozilla::Forward<nsTArray<AnimationEventType>>(aEvents));
   }
 
   void SortEvents()      { mEventDispatcher.SortEvents(); }
@@ -185,9 +185,9 @@ class DelayedEventDispatcher
 public:
   DelayedEventDispatcher() : mIsSorted(true) { }
 
-  void QueueEvent(EventInfo&& aEventInfo)
+  void QueueEvents(nsTArray<EventInfo>&& aEvents)
   {
-    mPendingEvents.AppendElement(Forward<EventInfo>(aEventInfo));
+    mPendingEvents.AppendElements(Forward<nsTArray<EventInfo>>(aEvents));
     mIsSorted = false;
   }
 

@@ -202,8 +202,6 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
   if (!presContext) {
     return;
   }
-  // Get the nsAnimationManager so we can queue events on it
-  nsAnimationManager* manager = presContext->AnimationManager();
 
   const StickyTimeDuration zeroDuration;
   uint64_t currentIteration = 0;
@@ -308,13 +306,21 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
   mPreviousPhase = currentPhase;
   mPreviousIteration = currentIteration;
 
-  for (const AnimationEventParams& event : events){
-    manager->QueueEvent(
-               AnimationEventInfo(mOwningElement.Target(),
-                                  event.mMessage, mAnimationName,
-                                  event.mElapsedTime, event.mTimeStamp,
-                                  this));
+  if (events.IsEmpty()) {
+    return;
   }
+
+  AutoTArray<AnimationEventInfo, 2> animationEvents;
+  for (const AnimationEventParams& event : events){
+    animationEvents.AppendElement(
+      AnimationEventInfo(mOwningElement.Target(),
+                         event.mMessage,
+                         mAnimationName,
+                         event.mElapsedTime,
+                         event.mTimeStamp,
+                         this));
+  }
+  presContext->AnimationManager()->QueueEvents(Move(animationEvents));
 }
 
 void
