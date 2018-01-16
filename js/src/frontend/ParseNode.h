@@ -43,7 +43,6 @@ class FunctionBox;
 class ObjectBox;
 
 #define FOR_EACH_PARSE_NODE_KIND(F) \
-    F(Nop) \
     F(EmptyStatement) \
     F(ExpressionStatement) \
     F(Comma) \
