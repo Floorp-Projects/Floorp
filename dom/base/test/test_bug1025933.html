@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1025933
   function test() {
     SpecialPowers.pushPrefEnv({
       set: [
-        ["dom.webcomponents.enabled", true]
+        ["dom.webcomponents.shadowdom.enabled", true]
       ]
     }, function() {
       var iframe = document.createElement('iframe');

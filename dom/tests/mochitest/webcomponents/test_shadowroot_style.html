@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 var content = '<div class="tall" id="bodydiv"></div>' +
               '<div id="container"></div>';
-setWebComponentsPrefAndCreateIframe(content)
+setShadowDOMPrefAndCreateIframe(content)
   .then((aDocument) => {
     var iframeWin = aDocument.defaultView;
 

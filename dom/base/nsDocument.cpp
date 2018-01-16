@@ -1526,7 +1526,7 @@ nsIDocument::nsIDocument()
 
   // Set this when document is created and value stays the same for the lifetime
   // of the document.
-  mIsWebComponentsEnabled = nsContentUtils::IsWebComponentsEnabled();
+  mIsShadowDOMEnabled = nsContentUtils::IsShadowDOMEnabled();
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -2668,7 +2668,7 @@ nsDocument::IsSynthesized() {
 }
 
 bool
-nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
+nsDocument::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
 {
   JS::Rooted<JSObject*> obj(aCx, aObject);
 
@@ -2682,13 +2682,13 @@ nsDocument::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
     return false;
   }
 
-  return doc->IsWebComponentsEnabled();
+  return doc->IsShadowDOMEnabled();
 }
 
 bool
-nsDocument::IsWebComponentsEnabled(const nsINode* aNode)
+nsDocument::IsShadowDOMEnabled(const nsINode* aNode)
 {
-  return aNode->OwnerDoc()->IsWebComponentsEnabled();
+  return aNode->OwnerDoc()->IsShadowDOMEnabled();
 }
 
 nsresult
