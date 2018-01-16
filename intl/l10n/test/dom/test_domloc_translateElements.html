@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test DOMLocalization.prototype.translateElement</title>
+  <title>Test DOMLocalization.prototype.translateElements</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
@@ -31,10 +31,9 @@
     const p1 = document.querySelectorAll('p')[0];
     const link1 = document.querySelectorAll('a')[0];
 
-    await domLoc.translateElement(p1);
-    is(p1.textContent, "Hello World");
+    await domLoc.translateElements([p1, link1]);
 
-    await domLoc.translateElement(link1);
+    is(p1.textContent, "Hello World");
     is(link1.getAttribute('title'), "Click me");
 
     SimpleTest.finish();

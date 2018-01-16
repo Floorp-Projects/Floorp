@@ -599,7 +599,9 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     this.text = text;
 
-    this._notifyPropertyChanged("ruleCount");
+    if (kind != UPDATE_PRESERVING_RULES) {
+      this._notifyPropertyChanged("ruleCount");
+    }
 
     if (transition) {
       this._startTransition(kind);
