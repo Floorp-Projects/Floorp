@@ -550,16 +550,17 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
     MOZ_ASSERT(subDocView);
 
     nsIFrame* subDocFrame = subDocView->GetFrame();
-    MOZ_ASSERT(subDocFrame);
-    nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
-    MOZ_ASSERT(subdocumentFrame);
+    if (subDocFrame) {
+      nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
+      MOZ_ASSERT(subdocumentFrame);
 
-    presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
-      data->builder->IsIgnoringPaintSuppression() ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION : 0);
-    nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
+      presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
+        data->builder->IsIgnoringPaintSuppression() ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION : 0);
+      nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
 
-    if (rootFrame) {
-      TakeAndAddModifiedFramesFromRootFrame(data->modifiedFrames, rootFrame);
+      if (rootFrame) {
+        TakeAndAddModifiedFramesFromRootFrame(data->modifiedFrames, rootFrame);
+      }
     }
   }
 
