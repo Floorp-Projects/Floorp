@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1087460
 SimpleTest.waitForExplicitFinish();
 
 var content = '<div id="container"></div>';
-setWebComponentsPrefAndCreateIframe(content)
+setShadowDOMPrefAndCreateIframe(content)
   .then((aDocument) => {
 
     // Test callback for custom element when used after registration.

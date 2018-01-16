@@ -140,7 +140,7 @@ function EnableCertApps() {
     "echo 'user_pref(\"devtools.debugger.forbid-certified-apps\", false);' >> prefs.js && " +
     "echo 'user_pref(\"dom.apps.developer_mode\", true);' >> prefs.js && " +
     "echo 'user_pref(\"network.disable.ipc.security\", true);' >> prefs.js && " +
-    "echo 'user_pref(\"dom.webcomponents.enabled\", true);' >> prefs.js && " +
+    "echo 'user_pref(\"dom.webcomponents.shadowdom.enabled\", true);' >> prefs.js && " +
     "start b2g"
   );
 }
