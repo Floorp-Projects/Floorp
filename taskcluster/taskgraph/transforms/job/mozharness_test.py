@@ -147,7 +147,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
     if 'actions' in mozharness:
         env['MOZHARNESS_ACTIONS'] = ' '.join(mozharness['actions'])
 
-    if 'try' in config.params['project']:
+    if config.params.is_try():
         env['TRY_COMMIT_MSG'] = config.params['message']
 
     # handle some of the mozharness-specific options
@@ -315,7 +315,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
                 if isinstance(c, basestring) and c.startswith('--test-suite'):
                     mh_command[i] += suffix
 
-    if 'try' in config.params['project']:
+    if config.params.is_try():
         env['TRY_COMMIT_MSG'] = config.params['message']
 
     worker['mounts'] = [{
