@@ -120,6 +120,12 @@ class Parameters(ReadOnlyDict):
         except KeyError:
             raise KeyError("taskgraph parameter {!r} not found".format(k))
 
+    def is_try(self):
+        """
+        Determine whether this graph is being built on a try project.
+        """
+        return 'try' in self['project']
+
 
 def load_parameters_file(filename, strict=True):
     """
