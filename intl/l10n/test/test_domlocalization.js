@@ -7,8 +7,8 @@ const { DOMLocalization } =
 add_task(function test_methods_presence() {
   equal(typeof DOMLocalization.prototype.getAttributes, "function");
   equal(typeof DOMLocalization.prototype.setAttributes, "function");
-  equal(typeof DOMLocalization.prototype.translateElement, "function");
   equal(typeof DOMLocalization.prototype.translateFragment, "function");
+  equal(typeof DOMLocalization.prototype.translateElements, "function");
   equal(typeof DOMLocalization.prototype.connectRoot, "function");
   equal(typeof DOMLocalization.prototype.disconnectRoot, "function");
   equal(typeof DOMLocalization.prototype.translateRoots, "function");

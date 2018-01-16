@@ -523,6 +523,11 @@ NetworkResponseListener.prototype = {
    * https://developer.mozilla.org/En/NsIRequestObserver
    */
   onStopRequest: function () {
+    // Bug 1429365: onStopRequest may be called after onComplete for resources loaded
+    // from bytecode cache.
+    if (!this.httpActivity) {
+      return;
+    }
     this._findOpenResponse();
     this.sink.outputStream.close();
   },
