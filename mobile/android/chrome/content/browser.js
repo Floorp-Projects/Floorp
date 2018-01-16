@@ -2725,8 +2725,8 @@ var NativeWindow = {
     _getContextType: function(element) {
       // For anchor nodes, we try to use the scheme to pick a string
       if (ChromeUtils.getClassName(element) === "HTMLAnchorElement") {
-        let uri = this.makeURI(this._getLinkURL(element));
         try {
+          let uri = this.makeURI(this._getLinkURL(element));
           return Strings.browser.GetStringFromName("browser.menu.context." + uri.scheme);
         } catch(ex) { }
       }
