@@ -260,6 +260,9 @@ CSP_ContentTypeToDirective(nsContentPolicyType aType)
     case nsIContentPolicy::TYPE_CSP_REPORT:
       return nsIContentSecurityPolicy::NO_DIRECTIVE;
 
+    case nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD:
+      return nsIContentSecurityPolicy::NO_DIRECTIVE;
+
     // Fall through to error for all other directives
     default:
       MOZ_ASSERT(false, "Can not map nsContentPolicyType to CSPDirective");
