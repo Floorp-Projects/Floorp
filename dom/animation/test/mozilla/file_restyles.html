@@ -132,8 +132,6 @@ var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
-var offscreenThrottlingEnabled =
-  SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
 var hasConformantPromiseHandling;
 
 function add_task_if_omta_enabled(test) {
@@ -321,10 +319,6 @@ waitForAllPaints(() => {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var div = addDiv(null,
       { style: 'animation: opacity 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -341,10 +335,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function no_restyling_main_thread_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var div = addDiv(null,
       { style: 'animation: background-color 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
@@ -359,10 +349,6 @@ waitForAllPaints(() => {
   });
 
   add_task_if_omta_enabled(async function no_restyling_compositor_animations_in_scrolled_out_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -384,10 +370,6 @@ waitForAllPaints(() => {
   add_task(
     async function restyling_transform_animations_in_scrolled_out_element() {
       if (hasConformantPromiseHandling) {
-        return;
-      }
-
-      if (!offscreenThrottlingEnabled) {
         return;
       }
 
@@ -442,10 +424,6 @@ waitForAllPaints(() => {
         return;
       }
 
-      if (!offscreenThrottlingEnabled) {
-        return;
-      }
-
       await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
 
       // Make sure we start from the state right after requestAnimationFrame.
@@ -491,10 +469,6 @@ waitForAllPaints(() => {
   );
 
   add_task(async function restyling_main_thread_animations_in_scrolled_out_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -524,10 +498,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_main_thread_animations_in_nested_scrolled_out_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var grandParent = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var parentElement = addDiv(null,
@@ -578,10 +548,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_main_thread_animations_move_out_of_view_by_scrolling() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 200px;' });
     var div = addDiv(null,
@@ -609,10 +575,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function restyling_main_thread_animations_moved_in_view_by_resizing() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
     var div = addDiv(null,
@@ -995,10 +957,6 @@ waitForAllPaints(() => {
 
   // Tests that additive animations don't throttle at all.
   add_task(async function no_throttling_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var div = addDiv(null, { style: 'transform: translateY(-400px);' });
     var animation =
       div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
@@ -1016,10 +974,6 @@ waitForAllPaints(() => {
 
   // Counter part of the above test.
   add_task(async function no_restyling_discrete_animations_out_of_view_element() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var div = addDiv(null, { style: 'transform: translateY(-400px);' });
     var animation =
       div.animate({ visibility: ['visible', 'hidden'] }, 100 * MS_PER_SEC);
@@ -1074,10 +1028,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function throttling_animations_out_of_view_svg() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var div = addDiv(null, { style: 'overflow: scroll;' +
                                     'height: 100px; width: 100px;' });
     var svg = addSVGElement(div, 'svg', { viewBox: '-10 -10 0.1 0.1',
@@ -1119,10 +1069,6 @@ waitForAllPaints(() => {
   });
 
   add_task(async function throttling_animations_out_of_view_css_transform() {
-    if (!offscreenThrottlingEnabled) {
-      return;
-    }
-
     var scrollDiv = addDiv(null, { style: 'overflow: scroll;' +
                                           'height: 100px; width: 100px;' });
     var targetDiv = addDiv(null,
@@ -1143,10 +1089,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function throttling_animations_in_out_of_view_position_absolute_element() {
-      if (!offscreenThrottlingEnabled) {
-        return;
-      }
-
       var parentDiv = addDiv(null,
                              { style: 'position: absolute; top: -1000px;' });
       var targetDiv = addDiv(null,
@@ -1167,10 +1109,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function throttling_animations_on_out_of_view_position_absolute_element() {
-      if (!offscreenThrottlingEnabled) {
-        return;
-      }
-
       var div = addDiv(null,
                        { style: 'animation: background-color 100s; ' +
                                 'position: absolute; top: -1000px;' });
@@ -1189,10 +1127,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function throttling_animations_in_out_of_view_position_fixed_element() {
-      if (!offscreenThrottlingEnabled) {
-        return;
-      }
-
       var parentDiv = addDiv(null,
                              { style: 'position: fixed; top: -1000px;' });
       var targetDiv = addDiv(null,
@@ -1213,10 +1147,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function throttling_animations_on_out_of_view_position_fixed_element() {
-      if (!offscreenThrottlingEnabled) {
-        return;
-      }
-
       var div = addDiv(null,
                        { style: 'animation: background-color 100s; ' +
                                 'position: fixed; top: -1000px;' });
