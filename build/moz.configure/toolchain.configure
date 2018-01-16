@@ -1344,6 +1344,11 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
     if hardening_flag and compiler_is_gccish and not asan:
         flags.append("-fstack-protector-strong")
 
+    # fno-common -----------------------------------------
+    # Do not merge variables for ASAN; can detect some subtle bugs
+    if asan:
+        flags.append("-fno-common")
+
     return namespace(
         flags=flags,
         js_flags=js_flags,
