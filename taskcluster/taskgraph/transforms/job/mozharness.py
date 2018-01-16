@@ -193,7 +193,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     # Retry if mozharness returns TBPL_RETRY
-    worker['retry-exit-status'] = 4
+    worker['retry-exit-status'] = [4]
 
     docker_worker_setup_secrets(config, job, taskdesc)
 
