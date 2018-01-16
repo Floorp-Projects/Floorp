@@ -1926,6 +1926,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         return value;
     }
 
+    void wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase,
+                      Register ptr, Register ptrScratch, AnyRegister outany,
+                      Register64 out64);
+    void wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister valany,
+                       Register64 val64, Register memoryBase, Register ptr,
+                       Register ptrScratch);
+
     // Emit a BLR or NOP instruction. ToggleCall can be used to patch
     // this instruction.
     CodeOffset toggledCall(JitCode* target, bool enabled) {

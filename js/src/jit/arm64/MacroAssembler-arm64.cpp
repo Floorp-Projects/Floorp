@@ -242,6 +242,147 @@ MacroAssemblerCompat::breakpoint()
     Brk((code++) & 0xffff);
 }
 
+// Either `any` is valid or `sixtyfour` is valid.  Return a 32-bit ARMRegister
+// in the first case and an ARMRegister of the desired size in the latter case.
+
+static inline ARMRegister
+SelectGPReg(AnyRegister any, Register64 sixtyfour, unsigned size = 64)
+{
+    MOZ_ASSERT(any.isValid() != (sixtyfour != Register64::Invalid()));
+
+    if (sixtyfour == Register64::Invalid())
+        return ARMRegister(any.gpr(), 32);
+
+    return ARMRegister(sixtyfour.reg, size);
+}
+
+// Assert that `sixtyfour` is invalid and then return an FP register from `any`
+// of the desired size.
+
+static inline ARMFPRegister
+SelectFPReg(AnyRegister any, Register64 sixtyfour, unsigned size)
+{
+    MOZ_ASSERT(sixtyfour == Register64::Invalid());
+    return ARMFPRegister(any.fpu(), size);
+}
+
+void
+MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register memoryBase_,
+                                   Register ptr_, Register ptrScratch_, AnyRegister outany,
+                                   Register64 out64)
+{
+    uint32_t offset = access.offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    MOZ_ASSERT(ptr_ == ptrScratch_);
+
+    ARMRegister memoryBase(memoryBase_, 64);
+    ARMRegister ptr(ptr_, 64);
+    if (offset)
+        Add(ptr, ptr, Operand(offset));
+
+    asMasm().memoryBarrierBefore(access.sync());
+
+    MemOperand srcAddr(memoryBase, ptr);
+    size_t loadOffset = asMasm().currentOffset();
+    switch (access.type()) {
+      case Scalar::Int8:
+        Ldrsb(SelectGPReg(outany, out64), srcAddr);
+        break;
+      case Scalar::Uint8:
+        Ldrb(SelectGPReg(outany, out64), srcAddr);
+        break;
+      case Scalar::Int16:
+        Ldrsh(SelectGPReg(outany, out64), srcAddr);
+        break;
+      case Scalar::Uint16:
+        Ldrh(SelectGPReg(outany, out64), srcAddr);
+        break;
+      case Scalar::Int32:
+        if (out64 != Register64::Invalid())
+            Ldrsw(SelectGPReg(outany, out64), srcAddr);
+        else
+            Ldr(SelectGPReg(outany, out64, 32), srcAddr);
+        break;
+      case Scalar::Uint32:
+        Ldr(SelectGPReg(outany, out64, 32), srcAddr);
+        break;
+      case Scalar::Int64:
+        Ldr(SelectGPReg(outany, out64), srcAddr);
+        break;
+      case Scalar::Float32:
+        Ldr(SelectFPReg(outany, out64, 32), srcAddr);
+        break;
+      case Scalar::Float64:
+        Ldr(SelectFPReg(outany, out64, 64), srcAddr);
+        break;
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+        MOZ_CRASH("unexpected array type");
+    }
+    append(access, loadOffset, framePushed());
+
+    asMasm().memoryBarrierAfter(access.sync());
+}
+
+void
+MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegister valany,
+                                    Register64 val64, Register memoryBase_, Register ptr_,
+                                    Register ptrScratch_)
+{
+    uint32_t offset = access.offset();
+    MOZ_ASSERT(offset < wasm::OffsetGuardLimit);
+
+    MOZ_ASSERT(ptr_ == ptrScratch_);
+
+    ARMRegister memoryBase(memoryBase_, 64);
+    ARMRegister ptr(ptr_, 64);
+    if (offset)
+        Add(ptr, ptr, Operand(offset));
+
+    asMasm().memoryBarrierBefore(access.sync());
+
+    MemOperand dstAddr(memoryBase, ptr);
+    size_t storeOffset = asMasm().currentOffset();
+    switch (access.type()) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+        Strb(SelectGPReg(valany, val64), dstAddr);
+        break;
+      case Scalar::Int16:
+      case Scalar::Uint16:
+        Strh(SelectGPReg(valany, val64), dstAddr);
+        break;
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        Str(SelectGPReg(valany, val64), dstAddr);
+        break;
+      case Scalar::Int64:
+        Str(SelectGPReg(valany, val64), dstAddr);
+        break;
+      case Scalar::Float32:
+        Str(SelectFPReg(valany, val64, 32), dstAddr);
+        break;
+      case Scalar::Float64:
+        Str(SelectFPReg(valany, val64, 64), dstAddr);
+        break;
+      case Scalar::Float32x4:
+      case Scalar::Int32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Uint8Clamped:
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected array type");
+    }
+    append(access, storeOffset, framePushed());
+
+    asMasm().memoryBarrierAfter(access.sync());
+}
+
 void
 MacroAssembler::reserveStack(uint32_t amount)
 {
@@ -1158,6 +1299,34 @@ MacroAssembler::oolWasmTruncateCheckF64ToI64(FloatRegister input, Register64 out
     }
     bind(&isOverflow);
     wasmTrap(wasm::Trap::IntegerOverflow, off);
+}
+
+void
+MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                         Register ptrScratch, AnyRegister output)
+{
+    wasmLoadImpl(access, memoryBase, ptr, ptrScratch, output, Register64::Invalid());
+}
+
+void
+MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
+                            Register ptrScratch, Register64 output)
+{
+    wasmLoadImpl(access, memoryBase, ptr, ptrScratch, AnyRegister(), output);
+}
+
+void
+MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value,
+                          Register memoryBase, Register ptr, Register ptrScratch)
+{
+    wasmStoreImpl(access, value, Register64::Invalid(), memoryBase, ptr, ptrScratch);
+}
+
+void
+MacroAssembler::wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value,
+                             Register memoryBase, Register ptr, Register ptrScratch)
+{
+    wasmStoreImpl(access, AnyRegister(), value, memoryBase, ptr, ptrScratch);
 }
 
 // ========================================================================
