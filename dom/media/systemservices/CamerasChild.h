@@ -148,7 +148,7 @@ class CamerasChild final : public PCamerasChild
 public:
   // We are owned by the PBackground thread only. CamerasSingleton
   // takes a non-owning reference.
-  NS_INLINE_DECL_REFCOUNTING(CamerasChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CamerasChild)
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
