@@ -45,7 +45,7 @@ add_task(async function() {
   // not over a particular item.
   await startCustomizing();
   let homeButton = document.getElementById("home-button");
-  simulateItemDrag(homeButton, navbar.customizationTarget);
+  simulateItemDrag(homeButton, navbar.customizationTarget, "end");
 
   await endCustomizing();
 

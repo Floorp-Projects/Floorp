@@ -42,12 +42,14 @@
 #include "GeckoProfilerReporter.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Scheduler.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "ThreadInfo.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
@@ -1544,6 +1546,41 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
     if (!NS_FAILED(res))
       aWriter.StringProperty("product", string.Data());
   }
+
+  aWriter.StartObjectProperty("extensions");
+  {
+    {
+      JSONSchemaWriter schema(aWriter);
+      schema.WriteField("id");
+      schema.WriteField("name");
+      schema.WriteField("baseURL");
+    }
+
+    aWriter.StartArrayProperty("data");
+    {
+      nsTArray<RefPtr<WebExtensionPolicy>> exts;
+      ExtensionPolicyService::GetSingleton().GetAll(exts);
+
+      for (auto& ext : exts) {
+        aWriter.StartArrayElement(JSONWriter::SingleLineStyle);
+
+        nsAutoString id;
+        ext->GetId(id);
+        aWriter.StringElement(NS_ConvertUTF16toUTF8(id).get());
+
+        aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()).get());
+
+        auto url = ext->GetURL(NS_LITERAL_STRING(""));
+        if (url.isOk()) {
+          aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()).get());
+        }
+
+        aWriter.EndArray();
+      }
+    }
+    aWriter.EndArray();
+  }
+  aWriter.EndObject();
 }
 
 #if defined(GP_OS_android)

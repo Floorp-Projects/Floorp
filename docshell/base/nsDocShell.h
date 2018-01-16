@@ -71,7 +71,6 @@ namespace dom {
 class ClientInfo;
 class ClientSource;
 class EventTarget;
-class PendingGlobalHistoryEntry;
 typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
@@ -911,7 +910,6 @@ private: // data members
   nsTObserverArray<nsWeakPtr> mReflowObservers;
   nsTObserverArray<nsWeakPtr> mScrollObservers;
   mozilla::OriginAttributes mOriginAttributes;
-  mozilla::UniquePtr<mozilla::dom::PendingGlobalHistoryEntry> mPrerenderGlobalHistory;
   mozilla::UniquePtr<mozilla::dom::ClientSource> mInitialClientSource;
   RefPtr<nsDOMNavigationTiming> mTiming;
   RefPtr<nsDSURIContentListener> mContentListener;
@@ -1113,7 +1111,6 @@ private: // data members
   bool mIsOffScreenBrowser : 1;
   bool mIsActive : 1;
   bool mDisableMetaRefreshWhenInactive : 1;
-  bool mIsPrerendered : 1;
   bool mIsAppTab : 1;
   bool mUseGlobalHistory : 1;
   bool mUseRemoteTabs : 1;

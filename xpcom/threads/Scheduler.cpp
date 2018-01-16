@@ -44,25 +44,25 @@ public:
   {}
 
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventPriority aPriority) final;
+                EventPriority aPriority) final override;
 
-  void Disconnect(const MutexAutoLock& aProofOfLock) final {}
+  void Disconnect(const MutexAutoLock& aProofOfLock) final override {}
 
   already_AddRefed<nsIRunnable> GetEvent(bool aMayWait,
-                                         EventPriority* aPriority) final;
-  bool HasPendingEvent() final;
+                                         EventPriority* aPriority) final override;
+  bool HasPendingEvent() final override;
   bool HasPendingEvent(const MutexAutoLock& aProofOfLock);
 
-  bool ShutdownIfNoPendingEvents() final;
+  bool ShutdownIfNoPendingEvents() final override;
 
-  already_AddRefed<nsIThreadObserver> GetObserver() final;
-  already_AddRefed<nsIThreadObserver> GetObserverOnThread() final;
-  void SetObserver(nsIThreadObserver* aObserver) final;
+  already_AddRefed<nsIThreadObserver> GetObserver() final override;
+  already_AddRefed<nsIThreadObserver> GetObserverOnThread() final override;
+  void SetObserver(nsIThreadObserver* aObserver) final override;
 
-  void EnableInputEventPrioritization() final;
-  void FlushInputEventPrioritization() final;
-  void SuspendInputEventPrioritization() final;
-  void ResumeInputEventPrioritization() final;
+  void EnableInputEventPrioritization() final override;
+  void FlushInputEventPrioritization() final override;
+  void SuspendInputEventPrioritization() final override;
+  void ResumeInputEventPrioritization() final override;
 
   bool UseCooperativeScheduling() const;
   void SetScheduler(SchedulerImpl* aScheduler);

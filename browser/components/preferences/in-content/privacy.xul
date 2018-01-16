@@ -323,41 +323,55 @@
     <hbox align="start">
       <vbox flex="1">
         <description>
-          &trackingProtection2.description;
+          &trackingProtection3.description;
+          <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore2.label;</label>
         </description>
       </vbox>
       <spacer flex="1"/>
     </hbox>
     <hbox>
       <vbox id="trackingProtectionBox" flex="1" hidden="true">
-        <description id="trackingProtectionDesc"
-                     control="trackingProtectionRadioGroup">
-           <label class="tail-with-learn-more">&trackingProtection2.radioGroupLabel;</label>
-           <label id="trackingProtectionLearnMore" class="learnMore text-link">&trackingProtectionLearnMore.label;</label>
-        </description>
-        <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
-          <radio value="always"
-                 label="&trackingProtectionAlways.label;"
-                 accesskey="&trackingProtectionAlways.accesskey;"/>
-          <radio value="private"
-                 label="&trackingProtectionPrivate.label;"
-                 accesskey="&trackingProtectionPrivate.accesskey;"/>
-          <radio value="never"
-                 label="&trackingProtectionNever.label;"
-                 accesskey="&trackingProtectionNever.accesskey;"/>
-        </radiogroup>
+        <vbox>
+          <hbox id="trackingProtectionExtensionContentLabel" align="center" hidden="true">
+            <description control="disableTrackingProtectionExtension" flex="1"/>
+          </hbox>
+          <vbox>
+            <description id="trackingProtectionDesc"
+                         control="trackingProtectionRadioGroup">
+               <label>&trackingProtection3.radioGroupLabel;</label>
+            </description>
+            <radiogroup id="trackingProtectionRadioGroup" aria-labelledby="trackingProtectionDesc">
+              <radio value="always"
+                     label="&trackingProtectionAlways.label;"
+                     accesskey="&trackingProtectionAlways.accesskey;"/>
+              <radio value="private"
+                     label="&trackingProtectionPrivate.label;"
+                     accesskey="&trackingProtectionPrivate.accesskey;"/>
+              <radio value="never"
+                     label="&trackingProtectionNever.label;"
+                     accesskey="&trackingProtectionNever.accesskey;"/>
+            </radiogroup>
+          </vbox>
+        </vbox>
       </vbox>
       <vbox id="trackingProtectionPBMBox" flex="1">
-        <hbox align="center">
+        <hbox id="trackingProtectionPBMExtensionContentLabel" align="center" hidden="true">
+          <description control="disableTrackingProtectionExtension" flex="1"/>
+        </hbox>
+        <hbox align="start">
           <checkbox id="trackingProtectionPBM"
                     preference="privacy.trackingprotection.pbmode.enabled"
                     accesskey="&trackingProtectionPBM6.accesskey;"/>
-          <label flex="1">&trackingProtectionPBM6.label;<spacer class="tail-with-learn-more" /><label id="trackingProtectionPBMLearnMore"
-                 class="learnMore text-link">&trackingProtectionPBMLearnMore.label;</label>
-          </label>
+          <label id="trackingProtectionPBMLabel" flex="1">&trackingProtectionPBM6.label;</label>
         </hbox>
       </vbox>
       <vbox id="trackingProtectionAdvancedSettings">
+        <hbox id="trackingProtectionExtensionContentButton" hidden="true">
+          <button id="disableTrackingProtectionExtension"
+                  class="extension-controlled-button accessory-button"
+                  flex="1"
+                  label="&disableExtension.label;"/>
+        </hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
           <button id="trackingProtectionExceptions"

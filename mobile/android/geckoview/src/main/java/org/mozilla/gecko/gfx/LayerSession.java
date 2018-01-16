@@ -319,7 +319,7 @@ public class LayerSession {
      * map these bounds to surface or screen coordinates, respectively.
      *
      * @param rect RectF to be replaced by the client bounds in client coordinates.
-     * @see getSurfaceBounds(Rect)
+     * @see #getSurfaceBounds(Rect)
      */
     public void getClientBounds(@NonNull final RectF rect) {
         ThreadUtils.assertOnUiThread();

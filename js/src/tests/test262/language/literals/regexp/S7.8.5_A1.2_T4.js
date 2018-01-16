@@ -18,7 +18,7 @@ info: |
 
 description: A regular expression may not be empty.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

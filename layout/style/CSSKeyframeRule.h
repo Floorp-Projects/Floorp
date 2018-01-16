@@ -19,18 +19,18 @@ protected:
   virtual ~CSSKeyframeRule() {}
 
 public:
-  int32_t GetType() const final { return Rule::KEYFRAME_RULE; }
+  int32_t GetType() const final override { return Rule::KEYFRAME_RULE; }
   bool IsCCLeaf() const override { return Rule::IsCCLeaf(); }
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::KEYFRAME_RULE; }
+  uint16_t Type() const final override { return CSSRuleBinding::KEYFRAME_RULE; }
   virtual void GetKeyText(nsAString& aKey) = 0;
   virtual void SetKeyText(const nsAString& aKey) = 0;
   virtual nsICSSDeclaration* Style() = 0;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override = 0;
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final override;
 };
 
 } // namespace dom

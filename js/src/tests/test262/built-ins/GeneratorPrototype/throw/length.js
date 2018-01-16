@@ -5,7 +5,7 @@
 es6id: 25.3.1.4
 description: >
   Generator.prototype.throw.length is 1.
-info: >
+info: |
   Generator.prototype.throw ( exception )
 
   17 ECMAScript Standard Built-in Objects:

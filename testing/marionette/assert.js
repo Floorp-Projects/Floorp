@@ -9,6 +9,7 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   InvalidArgumentError,
@@ -19,6 +20,11 @@ const {
   UnsupportedOperationError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
+
+XPCOMUtils.defineLazyGetter(this, "browser", () => {
+  const {browser} = Cu.import("chrome://marionette/content/browser.js", {});
+  return browser;
+});
 
 this.EXPORTED_SYMBOLS = ["assert"];
 
@@ -125,45 +131,36 @@ assert.content = function(context, msg = "") {
 };
 
 /**
- * Asserts that |win| is open.
+ * Asserts that the {@link ChromeWindow} is open or that the {@link
+ * browser.Context} has a content browser attached.
  *
- * @param {ChromeWindow} win
- *     Chrome window to test.
- * @param {string=} msg
- *     Custom error message.
+ * When passed in a {@link ChromeContext} this is equivalent to
+ * testing that the associated <code>window</code> global is open,
+ * and when given {@link browser.Context} it will test that the content
+ * frame, represented by <code>&lt;xul:browser&gt;</code>, is
+ * connected.
  *
- * @return {ChromeWindow}
- *     <var>win</var> is returned unaltered.
- *
- * @throws {NoSuchWindowError}
- *     If <var>win</var> has been closed.
- */
-assert.window = function(win, msg = "") {
-  msg = msg || "Unable to locate window";
-  return assert.that(w => w && !w.closed,
-      msg,
-      NoSuchWindowError)(win);
-};
-
-/**
- * Asserts that |context| is a valid browsing context.
- *
- * @param {browser.Context} context
+ * @param {(ChromeWindow|browser.Context)} context
  *     Browsing context to test.
  * @param {string=} msg
  *     Custom error message.
  *
+ * @return {(ChromeWindow|browser.Context)}
+ *     <var>context</var> is returned unaltered.
+ *
  * @throws {NoSuchWindowError}
- *     If |context| is invalid.
+ *     If <var>context</var>'s <code>window</code> has been closed.
  */
-assert.contentBrowser = function(context, msg = "") {
+assert.open = function(context, msg = "") {
   // TODO: The contentBrowser uses a cached tab, which is only updated when
   // switchToTab is called. Because of that an additional check is needed to
   // make sure that the chrome window has not already been closed.
-  assert.window(context && context.window);
+  if (context instanceof browser.Context) {
+    assert.open(context.window);
+  }
 
-  msg = msg || "Current window does not have a content browser";
-  assert.that(c => c.contentBrowser,
+  msg = msg || "Browsing context has been discarded";
+  return assert.that(ctx => ctx && !ctx.closed,
       msg,
       NoSuchWindowError)(context);
 };

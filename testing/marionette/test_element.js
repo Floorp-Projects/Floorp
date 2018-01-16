@@ -31,6 +31,13 @@ class Element {
 
   get nodeType() { return 1; }
   get ELEMENT_NODE() { return 1; }
+
+  // this is a severely limited CSS selector
+  // that only supports lists of tag names
+  matches(selector) {
+    let tags = selector.split(",");
+    return tags.includes(this.localName);
+  }
 }
 
 class DOMElement extends Element {
@@ -38,6 +45,9 @@ class DOMElement extends Element {
     super(tagName, attrs);
 
     this.namespaceURI = XHTMLNS;
+    if (typeof this.ownerDocument == "undefined") {
+      this.ownerDocument = {designMode: "off"};
+    }
 
     if (this.localName == "option") {
       this.selected = false;
@@ -93,6 +103,17 @@ const domWin = new WindowProxy();
 const domFrame = new class extends WindowProxy {
   get parent() { return domWin; }
 };
+
+add_test(function test_findClosest() {
+  equal(element.findClosest(domEl, "foo"), null);
+
+  let foo = new DOMElement("foo");
+  let bar = new DOMElement("bar");
+  bar.parentNode = foo;
+  equal(element.findClosest(bar, "foo"), foo);
+
+  run_next_test();
+});
 
 add_test(function test_isSelected() {
   let checkbox = new DOMElement("input", {type: "checkbox"});
@@ -172,6 +193,67 @@ add_test(function test_isDOMWindow() {
   for (let typ of [true, 42, {}, [], undefined, null]) {
     ok(!element.isDOMWindow(typ));
   }
+
+  run_next_test();
+});
+
+add_test(function test_isReadOnly() {
+  ok(!element.isReadOnly(null));
+  ok(!element.isReadOnly(domEl));
+  ok(!element.isReadOnly(new DOMElement("p", {readOnly: true})));
+  ok(element.isReadOnly(new DOMElement("input", {readOnly: true})));
+  ok(element.isReadOnly(new DOMElement("textarea", {readOnly: true})));
+
+  run_next_test();
+});
+
+add_test(function test_isDisabled() {
+  ok(!element.isDisabled(new DOMElement("p")));
+  ok(!element.isDisabled(new SVGElement("rect", {disabled: true})));
+  ok(!element.isDisabled(new XULElement("browser", {disabled: true})));
+
+  let select = new DOMElement("select", {disabled: true});
+  let option = new DOMElement("option");
+  option.parentNode = select;
+  ok(element.isDisabled(option));
+
+  let optgroup = new DOMElement("optgroup", {disabled: true});
+  option.parentNode = optgroup;
+  optgroup.parentNode = select;
+  select.disabled = false;
+  ok(element.isDisabled(option));
+
+  ok(element.isDisabled(new DOMElement("button", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("input", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("select", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("textarea", {disabled: true})));
+
+  run_next_test();
+});
+
+add_test(function test_isEditingHost() {
+  ok(!element.isEditingHost(null));
+  ok(element.isEditingHost(new DOMElement("p", {isContentEditable: true})));
+  ok(element.isEditingHost(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+
+  run_next_test();
+});
+
+add_test(function test_isEditable() {
+  ok(!element.isEditable(null));
+  ok(!element.isEditable(domEl));
+  ok(!element.isEditable(new DOMElement("textarea", {readOnly: true})));
+  ok(!element.isEditable(new DOMElement("textarea", {disabled: true})));
+
+  for (let type of ["checkbox", "radio", "hidden", "submit", "button", "image"]) {
+    ok(!element.isEditable(new DOMElement("input", {type})));
+  }
+  ok(element.isEditable(new DOMElement("input", {type: "text"})));
+  ok(element.isEditable(new DOMElement("input")));
+
+  ok(element.isEditable(new DOMElement("textarea")));
+  ok(element.isEditable(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+  ok(element.isEditable(new DOMElement("p", {isContentEditable: true})));
 
   run_next_test();
 });

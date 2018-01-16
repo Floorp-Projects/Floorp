@@ -49,7 +49,7 @@ public:
 
   NS_IMETHOD Init(mozIDOMWindowProxy* parent, const nsAString& title,
                   const nsAString& aInitialColor);
-  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback);
+  NS_IMETHOD Open(nsIColorPickerShownCallback* aCallback) override;
 
 private:
   COLORREF mInitialColor;

@@ -213,8 +213,8 @@ HTMLSelectOptionAccessible::NativeState()
     if (listAcc) {
       nsIntRect optionRect = Bounds();
       nsIntRect listRect = listAcc->Bounds();
-      if (optionRect.y < listRect.y ||
-          optionRect.y + optionRect.height > listRect.y + listRect.height) {
+      if (optionRect.Y() < listRect.Y() ||
+          optionRect.YMost() > listRect.YMost()) {
         state |= states::OFFSCREEN;
       }
     }

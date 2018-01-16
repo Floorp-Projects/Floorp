@@ -578,6 +578,7 @@ static const char* sObserverTopics[] = {
   "child-gc-request",
   "child-cc-request",
   "child-mmu-request",
+  "child-ghost-request",
   "last-pb-context-exited",
   "file-watcher-update",
 #ifdef ACCESSIBILITY
@@ -2847,6 +2848,9 @@ ContentParent::Observe(nsISupports* aSubject,
   }
   else if (!strcmp(aTopic, "child-mmu-request")){
     Unused << SendMinimizeMemoryUsage();
+  }
+  else if (!strcmp(aTopic, "child-ghost-request")){
+    Unused << SendUnlinkGhosts();
   }
   else if (!strcmp(aTopic, "last-pb-context-exited")) {
     Unused << SendLastPrivateDocShellDestroyed();

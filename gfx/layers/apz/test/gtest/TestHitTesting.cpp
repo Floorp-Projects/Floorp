@@ -104,6 +104,8 @@ protected:
 
 // A simple hit testing test that doesn't involve any transforms on layers.
 TEST_F(APZHitTestingTester, HitTesting1) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   CreateHitTesting1LayerTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
 
@@ -169,6 +171,7 @@ TEST_F(APZHitTestingTester, HitTesting1) {
 
 // A more involved hit testing test that involves css and async transforms.
 TEST_F(APZHitTestingTester, HitTesting2) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
   SCOPED_GFX_PREF(APZVelocityBias, float, 0.0); // Velocity bias can cause extra repaint requests
 
   CreateHitTesting2LayerTree();
@@ -279,6 +282,8 @@ TEST_F(APZHitTestingTester, HitTesting2) {
 }
 
 TEST_F(APZHitTestingTester, HitTesting3) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   const char* layerTreeSyntax = "c(t)";
   // LayerID                     0 1
   nsIntRegion layerVisibleRegions[] = {
@@ -303,6 +308,8 @@ TEST_F(APZHitTestingTester, HitTesting3) {
 }
 
 TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   CreateComplexMultiLayerTree();
   ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
   manager->UpdateHitTestingTree(0, root, false, 0, 0);
@@ -441,7 +448,7 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   ApzcPanNoFling(apzcroot, 100, 50);
   check.Call("post-second-fling");
   ApzcPanNoFling(apzcroot, 100, 50);
-
+  
   // Ensure that a touch start again doesn't get untransformed by flushing
   // a repaint
   mti.mType = MultiTouchInput::MULTITOUCH_START;

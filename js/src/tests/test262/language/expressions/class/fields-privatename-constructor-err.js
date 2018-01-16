@@ -7,7 +7,7 @@ description: Private class fields early error with StringValue "#constructor"
 esid: sec-class-definitions-static-semantics-early-errors
 features: [class, class-fields-private]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
   ClassElementName : PrivateName;

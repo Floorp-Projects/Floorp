@@ -95,18 +95,18 @@ public:
 private:
   mozilla::ipc::IPCResult RecvObserve(const nsCString& aTopic,
                                       const nsString& aOriginAttributesPattern,
-                                      const nsCString& aOriginScope);
+                                      const nsCString& aOriginScope) override;
   mozilla::ipc::IPCResult RecvLoadItem(const nsCString& aOriginSuffix,
                                        const nsCString& aOriginNoSuffix,
                                        const nsString& aKey,
-                                       const nsString& aValue);
+                                       const nsString& aValue) override;
   mozilla::ipc::IPCResult RecvLoadDone(const nsCString& aOriginSuffix,
                                        const nsCString& aOriginNoSuffix,
-                                       const nsresult& aRv);
-  mozilla::ipc::IPCResult RecvOriginsHavingData(nsTArray<nsCString>&& aOrigins);
+                                       const nsresult& aRv) override;
+  mozilla::ipc::IPCResult RecvOriginsHavingData(nsTArray<nsCString>&& aOrigins) override;
   mozilla::ipc::IPCResult RecvLoadUsage(const nsCString& aOriginNoSuffix,
-                                        const int64_t& aUsage);
-  mozilla::ipc::IPCResult RecvError(const nsresult& aRv);
+                                        const int64_t& aUsage) override;
+  mozilla::ipc::IPCResult RecvError(const nsresult& aRv) override;
 
   nsTHashtable<nsCStringHashKey>& OriginsHavingData();
 
@@ -167,22 +167,22 @@ public:
     virtual ~CacheParentBridge() {}
 
     // LocalStorageCacheBridge
-    virtual const nsCString Origin() const;
-    virtual const nsCString& OriginNoSuffix() const
+    virtual const nsCString Origin() const override;
+    virtual const nsCString& OriginNoSuffix() const override
       { return mOriginNoSuffix; }
-    virtual const nsCString& OriginSuffix() const
+    virtual const nsCString& OriginSuffix() const override
       { return mOriginSuffix; }
-    virtual bool Loaded()
+    virtual bool Loaded() override
       { return mLoaded; }
-    virtual uint32_t LoadedCount()
+    virtual uint32_t LoadedCount() override
       { return mLoadedCount; }
 
-    virtual bool LoadItem(const nsAString& aKey, const nsString& aValue);
-    virtual void LoadDone(nsresult aRv);
-    virtual void LoadWait();
+    virtual bool LoadItem(const nsAString& aKey, const nsString& aValue) override;
+    virtual void LoadDone(nsresult aRv) override;
+    virtual void LoadWait() override;
 
     NS_IMETHOD_(void)
-    Release(void);
+    Release(void) override;
 
   private:
     void
@@ -207,11 +207,11 @@ public:
     virtual ~UsageParentBridge() {}
 
     // StorageUsageBridge
-    virtual const nsCString& OriginScope() { return mOriginScope; }
-    virtual void LoadUsage(const int64_t usage);
+    virtual const nsCString& OriginScope() override { return mOriginScope; }
+    virtual void LoadUsage(const int64_t usage) override;
 
     NS_IMETHOD_(MozExternalRefCountType)
-    Release(void);
+    Release(void) override;
 
   private:
     void

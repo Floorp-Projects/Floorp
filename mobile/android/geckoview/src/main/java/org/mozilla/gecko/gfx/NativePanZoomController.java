@@ -149,7 +149,7 @@ public final class NativePanZoomController extends JNIObject {
      * Set the current scroll factor. The scroll factor is the maximum scroll amount that
      * one scroll event may generate, in device pixels.
      *
-     * @return Scroll factor.
+     * @param factor Scroll factor.
      */
     public void setScrollFactor(final float factor) {
         ThreadUtils.assertOnUiThread();

@@ -162,11 +162,10 @@ protected:
 class nsBinaryDetector : public nsUnknownDecoder
 {
 protected:
-  virtual void DetermineContentType(nsIRequest* aRequest);
+  virtual void DetermineContentType(nsIRequest* aRequest) override;
 };
 
 #define NS_BINARYDETECTOR_CATEGORYENTRY \
   { NS_CONTENT_SNIFFER_CATEGORY, "Binary Detector", NS_BINARYDETECTOR_CONTRACTID }
 
 #endif /* nsUnknownDecoder_h__ */
-

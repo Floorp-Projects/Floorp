@@ -514,8 +514,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   // we return |this| if the point is within it, otherwise nullptr.
   Accessible* fallbackAnswer = nullptr;
   nsIntRect rect = Bounds();
-  if (aX >= rect.x && aX < rect.x + rect.width &&
-      aY >= rect.y && aY < rect.y + rect.height)
+  if (rect.Contains(aX, aY))
     fallbackAnswer = this;
 
   if (nsAccUtils::MustPrune(this))  // Do not dig any further
@@ -543,7 +542,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   WidgetMouseEvent dummyEvent(true, eMouseMove, rootWidget,
                               WidgetMouseEvent::eSynthesized);
-  dummyEvent.mRefPoint = LayoutDeviceIntPoint(aX - rootRect.x, aY - rootRect.y);
+  dummyEvent.mRefPoint = LayoutDeviceIntPoint(aX - rootRect.X(), aY - rootRect.Y());
 
   nsIFrame* popupFrame = nsLayoutUtils::
     GetPopupFrameForEventCoordinates(accDocument->PresContext()->GetRootPresContext(),
@@ -565,8 +564,8 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
 
   nsPresContext* presContext = startFrame->PresContext();
   nsRect screenRect = startFrame->GetScreenRectInAppUnits();
-    nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.x,
-                   presContext->DevPixelsToAppUnits(aY) - screenRect.y);
+  nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.X(),
+                 presContext->DevPixelsToAppUnits(aY) - screenRect.Y());
   nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(startFrame, offset);
 
   nsIContent* content = nullptr;
@@ -617,8 +616,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
     Accessible* child = accessible->GetChildAt(childIdx);
 
     nsIntRect childRect = child->Bounds();
-    if (aX >= childRect.x && aX < childRect.x + childRect.width &&
-        aY >= childRect.y && aY < childRect.y + childRect.height &&
+    if (childRect.Contains(aX, aY) &&
         (child->State() & states::INVISIBLE) == 0) {
 
       if (aWhichChild == eDeepestChild)
@@ -681,17 +679,16 @@ Accessible::Bounds() const
 
   nsIntRect screenRect;
   nsPresContext* presContext = mDoc->PresContext();
-  screenRect.x = presContext->AppUnitsToDevPixels(unionRectTwips.x);
-  screenRect.y = presContext->AppUnitsToDevPixels(unionRectTwips.y);
-  screenRect.width = presContext->AppUnitsToDevPixels(unionRectTwips.width);
-  screenRect.height = presContext->AppUnitsToDevPixels(unionRectTwips.height);
+  screenRect.SetRect(presContext->AppUnitsToDevPixels(unionRectTwips.X()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Y()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Width()),
+                     presContext->AppUnitsToDevPixels(unionRectTwips.Height()));
 
   // We have the union of the rectangle, now we need to put it in absolute
   // screen coords.
   nsIntRect orgRectPixels = boundingFrame->GetScreenRectInAppUnits().
     ToNearestPixels(presContext->AppUnitsPerDevPixel());
-  screenRect.x += orgRectPixels.x;
-  screenRect.y += orgRectPixels.y;
+  screenRect.MoveBy(orgRectPixels.X(), orgRectPixels.Y());
 
   return screenRect;
 }

@@ -31,6 +31,10 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace layers {
 
+struct RefCountedShmem {
+  Shmem buffer;
+};
+
 union OptionalTransform {
   Matrix4x4;
   void_t;

@@ -224,7 +224,12 @@ HTMLSelectElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
   nsGenericHTMLFormElementWithState::RemoveChildAt_Deprecated(aIndex, aNotify);
 }
 
-
+void
+HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  SafeOptionListMutation safeMutation(this, this, nullptr, IndexOf(aKid), aNotify);
+  nsGenericHTMLFormElementWithState::RemoveChildNode(aKid, aNotify);
+}
 
 void
 HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,

@@ -12,9 +12,9 @@
 
 interface AudioScheduledSourceNode : AudioNode {
                     attribute EventHandler onended;
-    [Throws, UnsafeInPrerendering]
+    [Throws]
     void start (optional double when = 0);
 
-    [Throws, UnsafeInPrerendering]
+    [Throws]
     void stop (optional double when = 0);
 };

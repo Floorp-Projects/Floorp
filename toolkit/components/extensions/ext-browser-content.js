@@ -327,13 +327,6 @@ var WebBrowserChrome = {
   reloadInFreshProcess(docShell, URI, referrer, triggeringPrincipal, loadFlags) {
     return false;
   },
-
-  startPrerenderingDocument(href, referrer, triggeringPrincipal) {
-  },
-
-  shouldSwitchToPrerenderedDocument(href, referrer, success, failure) {
-    return false;
-  },
 };
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {

@@ -8,7 +8,7 @@ esid: sec-generator-function-definitions-runtime-semantics-instantiatefunctionob
 features: [default-parameters, generators]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     GeneratorDeclaration : function * ( FormalParameters ) { GeneratorBody }

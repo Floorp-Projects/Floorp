@@ -161,7 +161,7 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<UnbarrieredKey>, HeapPtr<JSObjec
 
   private:
     /* Override sweep method to also update our edge cache. */
-    void sweep() {
+    void sweep() override {
         MOZ_ASSERT(CurrentThreadIsPerformingGC());
         for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
             if (gc::IsAboutToBeFinalized(&e.front().mutableKey())) {

@@ -39,15 +39,17 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/assert.js");
 const {
-  error,
+  element,
+  WebElement,
+} = Cu.import("chrome://marionette/content/element.js", {});
+const {
   JavaScriptError,
   ScriptTimeoutError,
-  WebDriverError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 
-const logger = Log.repository.getLogger("Marionette");
+const log = Log.repository.getLogger("Marionette");
 
 this.EXPORTED_SYMBOLS = ["evaluate", "sandbox", "Sandboxes"];
 
@@ -57,8 +59,6 @@ const COMPLETE = "__webDriverComplete";
 const DEFAULT_TIMEOUT = 10000; // ms
 const FINISH = "finish";
 const MARIONETTE_SCRIPT_FINISHED = "marionetteScriptFinished";
-const ELEMENT_KEY = "element";
-const W3C_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf";
 
 /** @namespace */
 this.evaluate = {};
@@ -219,18 +219,25 @@ evaluate.sandbox = function(sb, script, args = [],
  *
  * @param {Object} obj
  *     Arbitrary object containing web elements.
- * @param {element.Store} seenEls
- *     Element store to use for lookup of web element references.
- * @param {Window} win
- *     Window.
- * @param {ShadowRoot} shadowRoot
- *     Shadow root.
+ * @param {element.Store=} seenEls
+ *     Known element store to look up web elements from.  If undefined,
+ *     the web element references are returned instead.
+ * @param {WindowProxy=} window
+ *     Current browsing context, if &lt;var>seenEls&lt;/var> is provided.
  *
  * @return {Object}
  *     Same object as provided by &lt;var>obj&lt;/var> with the web elements
  *     replaced by DOM elements.
+ *
+ * @throws {NoSuchElementError}
+ *     If &lt;var>seenEls&lt;/var> is given and the web element reference
+ *     has not been seen before.
+ * @throws {StaleElementReferenceError}
+ *     If &lt;var>seenEls&lt;/var> is given and the element has gone stale,
+ *     indicating it is no longer attached to the DOM, or its node
+ *     document is no longer the active document.
  */
-evaluate.fromJSON = function(obj, seenEls, win, shadowRoot = undefined) {
+evaluate.fromJSON = function(obj, seenEls = undefined, window = undefined) {
   switch (typeof obj) {
     case "boolean":
     case "number":
@@ -244,37 +251,58 @@ evaluate.fromJSON = function(obj, seenEls, win, shadowRoot = undefined) {
 
       // arrays
       } else if (Array.isArray(obj)) {
-        return obj.map(e => evaluate.fromJSON(e, seenEls, win, shadowRoot));
+        return obj.map(e => evaluate.fromJSON(e, seenEls, window));
 
       // web elements
-      } else if (Object.keys(obj).includes(element.Key) ||
-          Object.keys(obj).includes(element.LegacyKey)) {
-        /* eslint-disable */
-        let uuid = obj[element.Key] || obj[element.LegacyKey];
-        let el = seenEls.get(uuid);
-        /* eslint-enable */
-        if (!el) {
-          throw new WebDriverError(`Unknown element: ${uuid}`);
+      } else if (WebElement.isReference(obj)) {
+        let webEl = WebElement.fromJSON(obj);
+        if (seenEls) {
+          return seenEls.get(webEl, window);
         }
-        return el;
-
+        return webEl;
       }
 
       // arbitrary objects
       let rv = {};
       for (let prop in obj) {
-        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, win, shadowRoot);
+        rv[prop] = evaluate.fromJSON(obj[prop], seenEls, window);
       }
       return rv;
   }
 };
 
 /**
- * Convert arbitrary objects to JSON-safe primitives that can be
+ * Marshal arbitrary objects to JSON-safe primitives that can be
  * transported over the Marionette protocol.
  *
- * Any DOM elements are converted to web elements by looking them up
- * and/or adding them to the element store provided.
+ * The marshaling rules are as follows:
+ *
+ * &lt;ul>
+ *
+ * &lt;li>
+ * Primitives are returned as is.
+ *
+ * &lt;li>
+ * Collections, such as &lt;code>Array&lt;/code>, &lt;code>NodeList&lt;/code>,
+ * &lt;code>HTMLCollection&lt;/code> et al. are expanded to arrays and
+ * then recursed.
+ *
+ * &lt;li>
+ * Elements that are not known web elements are added to the
+ * &lt;var>seenEls&lt;/var> element store.  Once known, the elements'
+ * associated web element representation is returned.
+ *
+ * &lt;li>
+ * Objects with custom JSON representations, i.e. if they have a
+ * callable &lt;code>toJSON&lt;/code> function, are returned verbatim.
+ * This means their internal integrity &lt;em>are not&lt;/em> checked.
+ * Be careful.
+ *
+ * &lt;li>
+ * Other arbitrary objects are first tested for cyclic references
+ * and then recursed into.
+ *
+ * &lt;/ul>
  *
  * @param {Object} obj
  *     Object to be marshaled.
@@ -284,6 +312,9 @@ evaluate.fromJSON = function(obj, seenEls, win, shadowRoot = undefined) {
  * @return {Object}
  *     Same object as provided by &lt;var>obj&lt;/var> with the elements
  *     replaced by web elements.
+ *
+ * @throws {JavaScriptError}
+ *     If an object contains cyclic references.
  */
 evaluate.toJSON = function(obj, seenEls) {
   const t = Object.prototype.toString.call(obj);
@@ -292,7 +323,7 @@ evaluate.toJSON = function(obj, seenEls) {
   if (t == "[object Undefined]" || t == "[object Null]") {
     return null;
 
-  // literals
+  // primitives
   } else if (t == "[object Boolean]" ||
       t == "[object Number]" ||
       t == "[object String]") {
@@ -300,12 +331,17 @@ evaluate.toJSON = function(obj, seenEls) {
 
   // Array, NodeList, HTMLCollection, et al.
   } else if (element.isCollection(obj)) {
+    assert.acyclic(obj);
     return [...obj].map(el => evaluate.toJSON(el, seenEls));
 
-  // HTMLElement
-  } else if ("nodeType" in obj &amp;&amp; obj.nodeType == obj.ELEMENT_NODE) {
-    let uuid = seenEls.add(obj);
-    return element.makeWebElement(uuid);
+  // WebElement
+  } else if (WebElement.isReference(obj)) {
+    return obj;
+
+  // Element (HTMLElement, SVGElement, XULElement, et al.)
+  } else if (element.isElement(obj)) {
+    let webEl = seenEls.add(obj);
+    return webEl.toJSON();
 
   // custom JSON representation
   } else if (typeof obj.toJSON == "function") {
@@ -316,11 +352,13 @@ evaluate.toJSON = function(obj, seenEls) {
   // arbitrary objects + files
   let rv = {};
   for (let prop in obj) {
+    assert.acyclic(obj[prop]);
+
     try {
       rv[prop] = evaluate.toJSON(obj[prop], seenEls);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-        logger.debug(`Skipping ${prop}: ${e.message}`);
+        log.debug(`Skipping ${prop}: ${e.message}`);
       } else {
         throw e;
       }
@@ -521,13 +559,13 @@ this.Sandboxes = class {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="ChromeWebElement.html">ChromeWebElement</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="ContentWebElement.html">ContentWebElement</a></li><li><a href="ContentWebFrame.html">ContentWebFrame</a></li><li><a href="ContentWebWindow.html">ContentWebWindow</a></li><li><a href="Context.html">Context</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElement.html">WebElement</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#PollPromise">PollPromise</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#truncate">truncate</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li><li><a href="global.html#XUL_CHECKED_ELS">XUL_CHECKED_ELS</a></li><li><a href="global.html#XUL_SELECTED_ELS">XUL_SELECTED_ELS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Oct 04 2017 18:33:34 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -835,7 +835,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HasMoreElements(bool* aResult)
+  NS_IMETHOD HasMoreElements(bool* aResult) override
   {
     nsresult rv;
     if (!mNext && mDir) {
@@ -874,7 +874,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetNext(nsISupports** aResult)
+  NS_IMETHOD GetNext(nsISupports** aResult) override
   {
     nsresult rv;
     bool hasMore;
@@ -890,7 +890,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetNextFile(nsIFile** aResult)
+  NS_IMETHOD GetNextFile(nsIFile** aResult) override
   {
     *aResult = nullptr;
     bool hasMore = false;
@@ -904,7 +904,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Close()
+  NS_IMETHOD Close() override
   {
     if (mDir) {
       nsresult rv = CloseDir(mDir);

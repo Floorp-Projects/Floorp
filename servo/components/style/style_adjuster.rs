@@ -193,7 +193,16 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
 
         if our_writing_mode != parent_writing_mode &&
            self.style.get_box().clone_display() == Display::Inline {
-            self.style.mutate_box().set_display(Display::InlineBlock);
+            // TODO(emilio): Figure out if we can just set the adjusted display
+            // on Gecko too and unify this code path.
+            if cfg!(feature = "servo") {
+                self.style.mutate_box().set_adjusted_display(
+                    Display::InlineBlock,
+                    false,
+                );
+            } else {
+                self.style.mutate_box().set_display(Display::InlineBlock);
+            }
         }
     }
 
@@ -411,6 +420,21 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
         }
     }
 
+    /// Computes the used text decoration for Servo.
+    ///
+    /// FIXME(emilio): This is a layout tree concept, should move away from
+    /// style, since otherwise we're going to have the same subtle bugs WebKit
+    /// and Blink have with this very same thing.
+    #[cfg(feature = "servo")]
+    fn adjust_for_text_decorations_in_effect(&mut self) {
+        use values::computed::text::TextDecorationsInEffect;
+
+        let decorations_in_effect = TextDecorationsInEffect::from_style(&self.style);
+        if self.style.get_inheritedtext().text_decorations_in_effect != decorations_in_effect {
+            self.style.mutate_inheritedtext().text_decorations_in_effect = decorations_in_effect;
+        }
+    }
+
     #[cfg(feature = "gecko")]
     fn should_suppress_linebreak(
         &self,
@@ -470,7 +494,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
             if !flags.contains(CascadeFlags::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP) {
                 let inline_display = self_display.inlinify();
                 if self_display != inline_display {
-                    self.style.mutate_box().set_display(inline_display);
+                    self.style.mutate_box().set_adjusted_display(inline_display, false);
                 }
             }
         }
@@ -604,6 +628,10 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
         #[cfg(feature = "gecko")]
         {
             self.adjust_for_ruby(layout_parent_style, flags);
+        }
+        #[cfg(feature = "servo")]
+        {
+            self.adjust_for_text_decorations_in_effect();
         }
         self.set_bits();
     }

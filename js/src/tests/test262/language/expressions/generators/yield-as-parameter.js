@@ -8,7 +8,7 @@ description: >
     not be used as the binding identifier of a parameter.
 es6id: 12.1.1
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [generators]
 ---*/

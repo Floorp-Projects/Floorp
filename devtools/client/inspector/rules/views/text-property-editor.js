@@ -412,9 +412,6 @@ TextPropertyEditor.prototype = {
           if (usedFontFamilies.includes(authoredFont)) {
             span.classList.add("used-font");
             foundMatchingFamily = true;
-            // We found the span to style, no need to continue with
-            // the remaining ones
-            break;
           }
         }
 

@@ -9,7 +9,7 @@ esid: prod-GeneratorMethod
 features: [object-spread, generators]
 flags: [generated, onlyStrict]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     ClassElement :

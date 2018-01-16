@@ -12,7 +12,7 @@ info: |
   Catch[Yield, Await, Return]:
     catch ( CatchParameter[?Yield, ?Await] ) Block[?Yield, ?Await, ?Return]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

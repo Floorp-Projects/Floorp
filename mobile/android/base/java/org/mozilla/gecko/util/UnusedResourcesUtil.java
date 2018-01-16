@@ -101,4 +101,8 @@ final class UnusedResourcesUtil {
     public static final int[] USED_IN_PAGE_ACTION = {
             R.drawable.add_to_homescreen
     };
+
+    public static final int[] USED_IN_LEANPLUM_EXPANDABLE_LIST_ACTIVITY = {
+            R.style.Widget_ExpandableListView,
+    };
 }

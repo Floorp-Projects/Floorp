@@ -68,6 +68,17 @@ jobs:
                -e "s/__DATE__/$(date --rfc-2822)/" \
                -e "s/__CODENAME__/wheezy/" debian/changelog
 
+  deb7-git:
+    description: "Modern git for Debian wheezy"
+    treeherder:
+      symbol: Deb7(git)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20160317T100542Z/pool/main/g/git/git_2.8.0%7Erc3-1.dsc
+        sha256: 6e81a318fb4eb5cca0333b7b6ff0c70dd0097e9fe711b159d5eac4b9f47c6c27
+      patch: git-wheezy.diff
+
   deb7-valgrind:
     description: "Valgrind for Debian Wheezy"
     treeherder:

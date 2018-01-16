@@ -23,7 +23,7 @@ struct StringWriteFunc : public JSONWriteFunc
 
   StringWriteFunc() : mPtr(mBuf) {}
 
-  void Write(const char* aStr)
+  void Write(const char* aStr) override
   {
     char* last = mPtr + strlen(aStr);    // where the nul will be added
 

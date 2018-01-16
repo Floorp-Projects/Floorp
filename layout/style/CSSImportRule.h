@@ -19,15 +19,15 @@ protected:
   virtual ~CSSImportRule() {}
 
 public:
-  bool IsCCLeaf() const final;
+  bool IsCCLeaf() const final override;
 
-  int32_t GetType() const final { return css::Rule::IMPORT_RULE; }
+  int32_t GetType() const final override { return css::Rule::IMPORT_RULE; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override = 0;
 
   // WebIDL interface
-  uint16_t Type() const final { return CSSRuleBinding::IMPORT_RULE; }
+  uint16_t Type() const final override { return CSSRuleBinding::IMPORT_RULE; }
   virtual void GetHref(nsAString& aHref) const = 0;
   virtual dom::MediaList* GetMedia() const = 0;
   virtual StyleSheet* GetStyleSheet() const = 0;

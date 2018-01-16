@@ -304,7 +304,7 @@ private:
     void removeRefs() const override { GrResourceIOProcessor::removeRefs(); }
     void pendingIOComplete() const override { GrResourceIOProcessor::pendingIOComplete(); }
 
-    void notifyRefCntIsZero() const final;
+    void notifyRefCntIsZero() const final override;
 
     virtual GrColor4f constantOutputForConstantInput(GrColor4f /* inputColor */) const {
         SkFAIL("Subclass must override this if advertising this optimization.");

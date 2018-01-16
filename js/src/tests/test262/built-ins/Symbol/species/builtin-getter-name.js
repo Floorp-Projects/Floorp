@@ -2,7 +2,7 @@
 // See LICENSE for details.
 
 /*---
-info: >
+info: |
  ES6 spec 'get [Symbol.species]'
 es6id: 21.2.4.2, 22.1.2.5, 22.2.2.4, 23.1.2.2, 23.2.2.2
 author: Sam Mikes

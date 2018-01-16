@@ -6,12 +6,14 @@
 #ifndef mozilla_ExtensionPolicyService_h
 #define mozilla_ExtensionPolicyService_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsIAddonPolicyService.h"
 #include "nsAtom.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISupports.h"
@@ -33,6 +35,7 @@ using extensions::WebExtensionPolicy;
 
 class ExtensionPolicyService final : public nsIAddonPolicyService
                                    , public nsIObserver
+                                   , public nsIMemoryReporter
 {
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ExtensionPolicyService,
@@ -40,6 +43,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIADDONPOLICYSERVICE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
 
   static ExtensionPolicyService& GetSingleton();
 
@@ -79,7 +83,7 @@ public:
   bool IsExtensionProcess() const;
 
 protected:
-  virtual ~ExtensionPolicyService() = default;
+  virtual ~ExtensionPolicyService();
 
 private:
   ExtensionPolicyService();

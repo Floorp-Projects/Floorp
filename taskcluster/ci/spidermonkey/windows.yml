@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+job-defaults:
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+
+sm-plain-win32/debug:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-win32-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: SM-tc(p)
+    run:
+        spidermonkey-variant: plaindebug
+
+sm-plain-win32/opt:
+    description: "Spidermonkey Plain"
+    index:
+        job-name: sm-plain-win32-opt
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: SM-tc(p)
+    run:
+        spidermonkey-variant: plain
+
+sm-compacting-win32/debug:
+    description: "Spidermonkey Compacting"
+    index:
+        job-name: sm-compacting-win32-debug
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: SM-tc(cgc)
+    run:
+        spidermonkey-variant: compacting

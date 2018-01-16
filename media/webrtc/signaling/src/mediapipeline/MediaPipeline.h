@@ -195,8 +195,8 @@ public:
     void Detach() { mPipeline = nullptr; }
     MediaPipeline* Pipeline() const { return mPipeline; }
 
-    virtual nsresult SendRtpPacket(const uint8_t* aData, size_t aLen);
-    virtual nsresult SendRtcpPacket(const uint8_t* aData, size_t aLen);
+    virtual nsresult SendRtpPacket(const uint8_t* aData, size_t aLen) override;
+    virtual nsresult SendRtcpPacket(const uint8_t* aData, size_t aLen) override;
 
   private:
     nsresult SendRtpRtcpPacket_s(nsAutoPtr<DataBuffer> aData, bool aIsRtp);

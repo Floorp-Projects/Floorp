@@ -148,9 +148,9 @@ ImageAccessible::DoAction(uint8_t aIndex)
 nsIntPoint
 ImageAccessible::Position(uint32_t aCoordType)
 {
-  nsIntRect rect = Bounds();
-  nsAccUtils::ConvertScreenCoordsTo(&rect.x, &rect.y, aCoordType, this);
-  return rect.TopLeft();
+  nsIntPoint point = Bounds().TopLeft();
+  nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
+  return point;
 }
 
 nsIntSize

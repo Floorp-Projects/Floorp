@@ -18,6 +18,8 @@ ac_add_options --enable-clang-plugin
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
+if [ -f /etc/redhat-release ]; then
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
+fi
 
 . "$topsrcdir/build/mozconfig.common.override"

@@ -597,11 +597,7 @@ Selection::GetTableCellLocationFromRange(nsRange* aRange,
   // Get the child content (the cell) pointed to by starting node of range
   // We do minimal checking since GetTableSelectionType assures
   //   us that this really is a table cell
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aRange->GetStartContainer());
-  if (!content)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> child = content->GetChildAt_Deprecated(aRange->StartOffset());
+  nsCOMPtr<nsIContent> child = aRange->GetChildAtStartOffset();
   if (!child)
     return NS_ERROR_FAILURE;
 
@@ -688,12 +684,12 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
   // Not a single selected node
   if (startNode != endNode) return NS_OK;
 
-  int32_t startOffset = range->StartOffset();
-  int32_t endOffset = range->EndOffset();
+  nsIContent* child = range->GetChildAtStartOffset();
 
   // Not a single selected node
-  if ((endOffset - startOffset) != 1)
+  if (!child || child != range->GetChildAtEndOffset()) {
     return NS_OK;
+  }
 
   nsIContent* startContent = static_cast<nsIContent*>(startNode);
   if (!(startNode->IsElement() && startContent->IsHTMLElement())) {
@@ -708,10 +704,6 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
   }
   else //check to see if we are selecting a table or row (column and all cells not done yet)
   {
-    nsIContent *child = startNode->GetChildAt_Deprecated(startOffset);
-    if (!child)
-      return NS_ERROR_FAILURE;
-
     if (child->IsHTMLElement(nsGkAtoms::table))
       *aTableSelectionType = nsISelectionPrivate::TABLESELECTION_TABLE;
     else if (child->IsHTMLElement(nsGkAtoms::tr))

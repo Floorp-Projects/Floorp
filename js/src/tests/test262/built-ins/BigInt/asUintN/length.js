@@ -4,7 +4,7 @@
 /*---
 esid: pending
 description: BigInt.asUintN.length descriptor
-info: >
+info: |
   BigInt.asUintN ( bits, bigint )
 
   17 ECMAScript Standard Built-in Objects

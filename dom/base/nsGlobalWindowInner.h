@@ -1166,8 +1166,6 @@ public:
 
   void FireOfflineStatusEventIfChanged();
 
-  bool GetIsPrerendered();
-
 public:
   // Inner windows only.
   nsresult ScheduleNextIdleObserverCallback();

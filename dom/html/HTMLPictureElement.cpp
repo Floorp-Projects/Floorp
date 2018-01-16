@@ -58,6 +58,30 @@ HTMLPictureElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
   nsGenericHTMLElement::RemoveChildAt_Deprecated(aIndex, aNotify);
 }
 
+void
+HTMLPictureElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  if (aKid && aKid->IsHTMLElement(nsGkAtoms::img)) {
+    HTMLImageElement* img = HTMLImageElement::FromContent(aKid);
+    if (img) {
+      img->PictureSourceRemoved(aKid->AsContent());
+    }
+  } else if (aKid && aKid->IsHTMLElement(nsGkAtoms::source)) {
+    // Find all img siblings after this <source> to notify them of its demise
+    nsCOMPtr<nsIContent> nextSibling = aKid->GetNextSibling();
+    if (nextSibling && nextSibling->GetParentNode() == this) {
+      do {
+        HTMLImageElement* img = HTMLImageElement::FromContent(nextSibling);
+        if (img) {
+          img->PictureSourceRemoved(aKid->AsContent());
+        }
+      } while ( (nextSibling = nextSibling->GetNextSibling()) );
+    }
+  }
+
+  nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
+}
+
 nsresult
 HTMLPictureElement::InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify)
 {

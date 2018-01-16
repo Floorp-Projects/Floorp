@@ -51,7 +51,7 @@ class CrossProcessCpowHolder : public CpowHolder
 
     ~CrossProcessCpowHolder();
 
-    bool ToObject(JSContext* cx, JS::MutableHandleObject objp);
+    bool ToObject(JSContext* cx, JS::MutableHandleObject objp) override;
 
   private:
     CPOWManager* js_;

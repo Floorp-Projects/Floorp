@@ -22,7 +22,7 @@ function parseOptions(opts) {
   }
 
   // Parse platforms.
-  let allPlatforms = ["linux", "linux64", "linux64-asan",
+  let allPlatforms = ["linux", "linux64", "linux64-asan", "linux64-fips",
                       "win", "win64", "win-make", "win64-make",
                       "linux64-make", "linux-make", "linux-fuzz",
                       "linux64-fuzz", "aarch64", "mac"];
@@ -111,6 +111,7 @@ function filter(opts) {
         "linux": "linux32",
         "linux-fuzz": "linux32",
         "linux64-asan": "linux64",
+        "linux64-fips": "linux64",
         "linux64-fuzz": "linux64",
         "linux64-make": "linux64",
         "linux-make": "linux32",
@@ -126,6 +127,8 @@ function filter(opts) {
       // Additional checks.
       if (platform == "linux64-asan") {
         keep &= coll("asan");
+      } else if (platform == "linux64-fips") {
+        keep &= coll("fips");
       } else if (platform == "linux64-make" || platform == "linux-make" ||
                  platform == "win64-make" || platform == "win-make") {
         keep &= coll("make");

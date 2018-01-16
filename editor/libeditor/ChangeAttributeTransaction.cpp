@@ -101,18 +101,4 @@ ChangeAttributeTransaction::RedoTransaction()
   return mElement->SetAttr(kNameSpaceID_None, mAttribute, mValue, true);
 }
 
-NS_IMETHODIMP
-ChangeAttributeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("ChangeAttributeTransaction: [mRemoveAttribute == ");
-
-  if (mRemoveAttribute) {
-    aString.AppendLiteral("true] ");
-  } else {
-    aString.AppendLiteral("false] ");
-  }
-  aString += nsDependentAtomString(mAttribute);
-  return NS_OK;
-}
-
 } // namespace mozilla

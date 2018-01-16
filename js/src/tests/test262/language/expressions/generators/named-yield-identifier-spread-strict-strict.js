@@ -9,7 +9,7 @@ esid: prod-GeneratorExpression
 features: [object-spread, generators]
 flags: [generated, onlyStrict]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     14.4 Generator Function Definitions

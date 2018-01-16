@@ -18,13 +18,14 @@ add_task(async function() {
   navbar.customizationTarget.appendChild(skippedItem);
   let libraryButton = document.getElementById("library-button");
   await startCustomizing();
+  await waitForElementShown(skippedItem);
   ok(CustomizableUI.inDefaultState, "Should still be in default state");
-  simulateItemDrag(skippedItem, libraryButton);
+  simulateItemDrag(skippedItem, libraryButton, "start");
   ok(CustomizableUI.inDefaultState, "Should still be in default state");
   let skippedItemWrapper = skippedItem.parentNode;
   is(skippedItemWrapper.nextSibling && skippedItemWrapper.nextSibling.id,
      libraryButton.parentNode.id, "Should be next to library button");
-  simulateItemDrag(libraryButton, skippedItem);
+  simulateItemDrag(libraryButton, skippedItem, "start");
   let libraryWrapper = libraryButton.parentNode;
   is(libraryWrapper.nextSibling && libraryWrapper.nextSibling.id,
      skippedItem.parentNode.id, "Should be next to skipintoolbarset item");

@@ -21,7 +21,7 @@ public:
   explicit nsShutdownThread(nsIThread *aThread);
   ~nsShutdownThread();
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
 
 /**
  * Shutdown ensures that aThread->Shutdown() is called on a main thread

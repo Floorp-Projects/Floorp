@@ -81,6 +81,8 @@ add_task(async function test_privacy() {
     }
   });
 
+  await promiseStartupManager();
+
   // Create an array of extensions to install.
   let testExtensions = [
     ExtensionTestUtils.loadExtension({
@@ -99,8 +101,6 @@ add_task(async function test_privacy() {
       useAddonManager: "temporary",
     }),
   ];
-
-  await promiseStartupManager();
 
   for (let extension of testExtensions) {
     await extension.startup();
@@ -219,6 +219,8 @@ add_task(async function test_privacy() {
 });
 
 add_task(async function test_privacy_other_prefs() {
+  const cookieSvc = Ci.nsICookieService;
+
   // Create an object to hold the values to which we will initialize the prefs.
   const SETTINGS = {
     "network.webRTCIPHandlingPolicy": {
@@ -240,6 +242,10 @@ add_task(async function test_privacy_other_prefs() {
     },
     "websites.firstPartyIsolate": {
       "privacy.firstparty.isolate": true,
+    },
+    "websites.cookieConfig": {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
   };
 
@@ -276,6 +282,8 @@ add_task(async function test_privacy_other_prefs() {
     }
   });
 
+  await promiseStartupManager();
+
   let extension = ExtensionTestUtils.loadExtension({
     background,
     manifest: {
@@ -284,13 +292,12 @@ add_task(async function test_privacy_other_prefs() {
     useAddonManager: "temporary",
   });
 
-  await promiseStartupManager();
   await extension.startup();
 
-  async function testSetting(setting, value, expected) {
+  async function testSetting(setting, value, expected, expectedValue = value) {
     extension.sendMessage("set", {value: value}, setting);
     let data = await extension.awaitMessage("settingData");
-    equal(data.value, value);
+    deepEqual(data.value, expectedValue);
     for (let pref in expected) {
       equal(Preferences.get(pref), expected[pref], `${pref} set correctly for ${value}`);
     }
@@ -398,6 +405,80 @@ add_task(async function test_privacy_other_prefs() {
     {
       "signon.rememberSignons": true,
     });
+
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "reject_third_party", nonPersistentCookies: true},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_FOREIGN,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
+    },
+  );
+  // A missing nonPersistentCookies property should default to false.
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "reject_third_party"},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_FOREIGN,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "reject_third_party", nonPersistentCookies: false},
+  );
+  // A missing behavior property should reset the pref.
+  await testSetting(
+    "websites.cookieConfig",
+    {nonPersistentCookies: true},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
+    },
+    {behavior: "allow_all", nonPersistentCookies: true},
+  );
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "reject_all"},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "reject_all", nonPersistentCookies: false},
+  );
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "allow_visited"},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_LIMIT_FOREIGN,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "allow_visited", nonPersistentCookies: false},
+  );
+  await testSetting(
+    "websites.cookieConfig",
+    {behavior: "allow_all"},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "allow_all", nonPersistentCookies: false},
+  );
+  await testSetting(
+    "websites.cookieConfig",
+    {nonPersistentCookies: true},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
+    },
+    {behavior: "allow_all", nonPersistentCookies: true},
+  );
+  await testSetting(
+    "websites.cookieConfig",
+    {nonPersistentCookies: false},
+    {
+      "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
+      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
+    },
+    {behavior: "allow_all", nonPersistentCookies: false},
+  );
 
   await extension.unload();
 

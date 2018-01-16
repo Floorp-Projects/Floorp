@@ -10,7 +10,7 @@ es6id: 14.4
 features: [generators]
 flags: [noStrict]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

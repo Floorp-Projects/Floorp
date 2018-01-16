@@ -73,7 +73,7 @@ public:
   nsCString                  mHost;
   int32_t                    mPort;
 
-  NS_IMETHOD Run(void);     /* Runnable */
+  NS_IMETHOD Run(void) override;     /* Runnable */
 
 private:
   nsPACMan                  *mPACMan;  // weak reference

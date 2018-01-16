@@ -136,9 +136,12 @@ StreamFilterParent::Create(dom::ContentParent* aContentParent, uint64_t aChannel
   RefPtr<nsHttpChannel> chan = do_QueryObject(channel);
   NS_ENSURE_TRUE(chan, false);
 
+  auto channelPid = chan->ProcessId();
+  NS_ENSURE_TRUE(channelPid, false);
+
   Endpoint<PStreamFilterParent> parent;
   Endpoint<PStreamFilterChild> child;
-  nsresult rv = PStreamFilter::CreateEndpoints(chan->ProcessId(),
+  nsresult rv = PStreamFilter::CreateEndpoints(channelPid,
                                                aContentParent ? aContentParent->OtherPid()
                                                               : base::GetCurrentProcId(),
                                                &parent, &child);

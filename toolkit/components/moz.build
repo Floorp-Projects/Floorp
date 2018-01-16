@@ -90,9 +90,6 @@ if CONFIG['MOZ_FEEDS']:
 if CONFIG['MOZ_XUL']:
     DIRS += ['autocomplete', 'printingui', 'satchel']
 
-if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    DIRS += ['filepicker']
-
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
     DIRS += ['search']
 

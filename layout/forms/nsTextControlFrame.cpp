@@ -952,6 +952,9 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
       if (child->IsHTMLElement(nsGkAtoms::br)) {
         child = child->GetPreviousSibling();
         --numChildren;
+      } else if (child->IsNodeOfType(nsINode::eTEXT) && !child->Length()) {
+        // Editor won't remove text node when empty value.
+        --numChildren;
       }
     }
     if (!aSelect && numChildren) {

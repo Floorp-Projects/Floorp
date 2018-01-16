@@ -42,12 +42,9 @@ toolbarpaletteitem {
   cursor: grab;
 }
 
-toolbar[iconsize="small"] toolbarpaletteitem[type="spacer"] {
+toolbarpaletteitem[type="spacer"],
+toolbarspacer {
   min-width: 24px !important;
-}
-
-toolbarpaletteitem[type="spacer"] {
-  min-width: 32px !important;
 }
 
 .toolbarpaletteitem-box[type="spacer"] {
@@ -106,13 +103,5 @@ toolbarpaletteitem[dragover="left"] {
 
 toolbarpaletteitem[dragover="right"] {
   border-right-color: #000000;
-}
-
-toolbar[iconsize="small"] toolbarspacer {
-  min-width: 24px !important;
-}
-
-toolbarspacer {
-  min-width: 32px !important;
 }
 

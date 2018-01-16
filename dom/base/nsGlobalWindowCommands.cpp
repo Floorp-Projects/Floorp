@@ -137,7 +137,7 @@ class nsSelectMoveScrollCommand : public nsSelectionCommandsBase
 {
 public:
 
-  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext);
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext) override;
 
   // no member variables, please, we're stateless!
 };
@@ -147,7 +147,7 @@ class nsPhysicalSelectMoveScrollCommand : public nsSelectionCommandsBase
 {
 public:
 
-  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext);
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext) override;
 
   // no member variables, please, we're stateless!
 };
@@ -157,7 +157,7 @@ class nsSelectCommand : public nsSelectionCommandsBase
 {
 public:
 
-  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext);
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext) override;
 
   // no member variables, please, we're stateless!
 };
@@ -167,7 +167,7 @@ class nsPhysicalSelectCommand : public nsSelectionCommandsBase
 {
 public:
 
-  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext);
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandContext) override;
 
   // no member variables, please, we're stateless!
 };
@@ -697,9 +697,11 @@ class _cmd : public nsSelectionCommand                                          
 protected:                                                                                  \
                                                                                             \
   virtual nsresult    IsClipboardCommandEnabled(const char* aCommandName,                   \
-                                  nsIContentViewerEdit* aEdit, bool *outCmdEnabled);        \
+                                                nsIContentViewerEdit* aEdit,                \
+                                                bool *outCmdEnabled) override;              \
   virtual nsresult    DoClipboardCommand(const char* aCommandName,                          \
-                                  nsIContentViewerEdit* aEdit, nsICommandParams* aParams);  \
+                                         nsIContentViewerEdit* aEdit,                       \
+                                         nsICommandParams* aParams) override;               \
   /* no member variables, please, we're stateless! */                                       \
 };
 

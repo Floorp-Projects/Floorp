@@ -45,7 +45,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
         AnyRegister dest() const { return dest_; }
         Scalar::Type viewType() const { return viewType_; }
-        void accept(CodeGeneratorX86Shared* codegen) {
+        void accept(CodeGeneratorX86Shared* codegen) override {
             codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this);
         }
     };
@@ -70,7 +70,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         LInstruction* ins() const { return ins_; }
         wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 
-        void accept(CodeGeneratorX86Shared* codegen) {
+        void accept(CodeGeneratorX86Shared* codegen) override {
             codegen->visitOutOfLineSimdFloatToIntCheck(this);
         }
     };
@@ -185,132 +185,132 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
-    virtual void visitDouble(LDouble* ins);
-    virtual void visitFloat32(LFloat32* ins);
-    virtual void visitMinMaxD(LMinMaxD* ins);
-    virtual void visitMinMaxF(LMinMaxF* ins);
-    virtual void visitAbsD(LAbsD* ins);
-    virtual void visitAbsF(LAbsF* ins);
-    virtual void visitClzI(LClzI* ins);
-    virtual void visitCtzI(LCtzI* ins);
-    virtual void visitPopcntI(LPopcntI* ins);
-    virtual void visitPopcntI64(LPopcntI64* lir);
-    virtual void visitSqrtD(LSqrtD* ins);
-    virtual void visitSqrtF(LSqrtF* ins);
-    virtual void visitPowHalfD(LPowHalfD* ins);
-    virtual void visitAddI(LAddI* ins);
-    virtual void visitAddI64(LAddI64* ins);
-    virtual void visitSubI(LSubI* ins);
-    virtual void visitSubI64(LSubI64* ins);
-    virtual void visitMulI(LMulI* ins);
-    virtual void visitMulI64(LMulI64* ins);
-    virtual void visitDivI(LDivI* ins);
-    virtual void visitDivPowTwoI(LDivPowTwoI* ins);
-    virtual void visitDivOrModConstantI(LDivOrModConstantI* ins);
-    virtual void visitModI(LModI* ins);
-    virtual void visitModPowTwoI(LModPowTwoI* ins);
-    virtual void visitBitNotI(LBitNotI* ins);
-    virtual void visitBitOpI(LBitOpI* ins);
-    virtual void visitBitOpI64(LBitOpI64* ins);
-    virtual void visitShiftI(LShiftI* ins);
-    virtual void visitShiftI64(LShiftI64* ins);
-    virtual void visitUrshD(LUrshD* ins);
-    virtual void visitTestIAndBranch(LTestIAndBranch* test);
-    virtual void visitTestDAndBranch(LTestDAndBranch* test);
-    virtual void visitTestFAndBranch(LTestFAndBranch* test);
-    virtual void visitCompare(LCompare* comp);
-    virtual void visitCompareAndBranch(LCompareAndBranch* comp);
-    virtual void visitCompareD(LCompareD* comp);
-    virtual void visitCompareDAndBranch(LCompareDAndBranch* comp);
-    virtual void visitCompareF(LCompareF* comp);
-    virtual void visitCompareFAndBranch(LCompareFAndBranch* comp);
-    virtual void visitBitAndAndBranch(LBitAndAndBranch* baab);
-    virtual void visitNotI(LNotI* comp);
-    virtual void visitNotD(LNotD* comp);
-    virtual void visitNotF(LNotF* comp);
-    virtual void visitMathD(LMathD* math);
-    virtual void visitMathF(LMathF* math);
-    virtual void visitFloor(LFloor* lir);
-    virtual void visitFloorF(LFloorF* lir);
-    virtual void visitCeil(LCeil* lir);
-    virtual void visitCeilF(LCeilF* lir);
-    virtual void visitRound(LRound* lir);
-    virtual void visitRoundF(LRoundF* lir);
-    virtual void visitNearbyInt(LNearbyInt* lir);
-    virtual void visitNearbyIntF(LNearbyIntF* lir);
-    virtual void visitGuardShape(LGuardShape* guard);
-    virtual void visitGuardObjectGroup(LGuardObjectGroup* guard);
-    virtual void visitGuardClass(LGuardClass* guard);
-    virtual void visitEffectiveAddress(LEffectiveAddress* ins);
-    virtual void visitUDivOrMod(LUDivOrMod* ins);
-    virtual void visitUDivOrModConstant(LUDivOrModConstant *ins);
-    virtual void visitWasmStackArg(LWasmStackArg* ins);
-    virtual void visitWasmStackArgI64(LWasmStackArgI64* ins);
-    virtual void visitWasmSelect(LWasmSelect* ins);
-    virtual void visitWasmReinterpret(LWasmReinterpret* lir);
-    virtual void visitMemoryBarrier(LMemoryBarrier* ins);
-    virtual void visitWasmAddOffset(LWasmAddOffset* lir);
-    virtual void visitWasmTruncateToInt32(LWasmTruncateToInt32* lir);
-    virtual void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
-    virtual void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
-    virtual void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
-    virtual void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
-    virtual void visitCopySignD(LCopySignD* lir);
-    virtual void visitCopySignF(LCopySignF* lir);
-    virtual void visitRotateI64(LRotateI64* lir);
+    virtual void visitDouble(LDouble* ins) override;
+    virtual void visitFloat32(LFloat32* ins) override;
+    virtual void visitMinMaxD(LMinMaxD* ins) override;
+    virtual void visitMinMaxF(LMinMaxF* ins) override;
+    virtual void visitAbsD(LAbsD* ins) override;
+    virtual void visitAbsF(LAbsF* ins) override;
+    virtual void visitClzI(LClzI* ins) override;
+    virtual void visitCtzI(LCtzI* ins) override;
+    virtual void visitPopcntI(LPopcntI* ins) override;
+    virtual void visitPopcntI64(LPopcntI64* lir) override;
+    virtual void visitSqrtD(LSqrtD* ins) override;
+    virtual void visitSqrtF(LSqrtF* ins) override;
+    virtual void visitPowHalfD(LPowHalfD* ins) override;
+    virtual void visitAddI(LAddI* ins) override;
+    virtual void visitAddI64(LAddI64* ins) override;
+    virtual void visitSubI(LSubI* ins) override;
+    virtual void visitSubI64(LSubI64* ins) override;
+    virtual void visitMulI(LMulI* ins) override;
+    virtual void visitMulI64(LMulI64* ins) override;
+    virtual void visitDivI(LDivI* ins) override;
+    virtual void visitDivPowTwoI(LDivPowTwoI* ins) override;
+    virtual void visitDivOrModConstantI(LDivOrModConstantI* ins) override;
+    virtual void visitModI(LModI* ins) override;
+    virtual void visitModPowTwoI(LModPowTwoI* ins) override;
+    virtual void visitBitNotI(LBitNotI* ins) override;
+    virtual void visitBitOpI(LBitOpI* ins) override;
+    virtual void visitBitOpI64(LBitOpI64* ins) override;
+    virtual void visitShiftI(LShiftI* ins) override;
+    virtual void visitShiftI64(LShiftI64* ins) override;
+    virtual void visitUrshD(LUrshD* ins) override;
+    virtual void visitTestIAndBranch(LTestIAndBranch* test) override;
+    virtual void visitTestDAndBranch(LTestDAndBranch* test) override;
+    virtual void visitTestFAndBranch(LTestFAndBranch* test) override;
+    virtual void visitCompare(LCompare* comp) override;
+    virtual void visitCompareAndBranch(LCompareAndBranch* comp) override;
+    virtual void visitCompareD(LCompareD* comp) override;
+    virtual void visitCompareDAndBranch(LCompareDAndBranch* comp) override;
+    virtual void visitCompareF(LCompareF* comp) override;
+    virtual void visitCompareFAndBranch(LCompareFAndBranch* comp) override;
+    virtual void visitBitAndAndBranch(LBitAndAndBranch* baab) override;
+    virtual void visitNotI(LNotI* comp) override;
+    virtual void visitNotD(LNotD* comp) override;
+    virtual void visitNotF(LNotF* comp) override;
+    virtual void visitMathD(LMathD* math) override;
+    virtual void visitMathF(LMathF* math) override;
+    virtual void visitFloor(LFloor* lir) override;
+    virtual void visitFloorF(LFloorF* lir) override;
+    virtual void visitCeil(LCeil* lir) override;
+    virtual void visitCeilF(LCeilF* lir) override;
+    virtual void visitRound(LRound* lir) override;
+    virtual void visitRoundF(LRoundF* lir) override;
+    virtual void visitNearbyInt(LNearbyInt* lir) override;
+    virtual void visitNearbyIntF(LNearbyIntF* lir) override;
+    virtual void visitGuardShape(LGuardShape* guard) override;
+    virtual void visitGuardObjectGroup(LGuardObjectGroup* guard) override;
+    virtual void visitGuardClass(LGuardClass* guard) override;
+    virtual void visitEffectiveAddress(LEffectiveAddress* ins) override;
+    virtual void visitUDivOrMod(LUDivOrMod* ins) override;
+    virtual void visitUDivOrModConstant(LUDivOrModConstant *ins) override;
+    virtual void visitWasmStackArg(LWasmStackArg* ins) override;
+    virtual void visitWasmStackArgI64(LWasmStackArgI64* ins) override;
+    virtual void visitWasmSelect(LWasmSelect* ins) override;
+    virtual void visitWasmReinterpret(LWasmReinterpret* lir) override;
+    virtual void visitMemoryBarrier(LMemoryBarrier* ins) override;
+    virtual void visitWasmAddOffset(LWasmAddOffset* lir) override;
+    virtual void visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) override;
+    virtual void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir) override;
+    virtual void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir) override;
+    virtual void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir) override;
+    virtual void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir) override;
+    virtual void visitCopySignD(LCopySignD* lir) override;
+    virtual void visitCopySignF(LCopySignF* lir) override;
+    virtual void visitRotateI64(LRotateI64* lir) override;
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
 
-    void visitNegI(LNegI* lir);
-    void visitNegD(LNegD* lir);
-    void visitNegF(LNegF* lir);
+    void visitNegI(LNegI* lir) override;
+    void visitNegD(LNegD* lir) override;
+    void visitNegF(LNegF* lir) override;
 
-    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
+    void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool) override;
 
     // SIMD operators
-    void visitSimdValueInt32x4(LSimdValueInt32x4* lir);
-    void visitSimdValueFloat32x4(LSimdValueFloat32x4* lir);
-    void visitSimdSplatX16(LSimdSplatX16* lir);
-    void visitSimdSplatX8(LSimdSplatX8* lir);
-    void visitSimdSplatX4(LSimdSplatX4* lir);
-    void visitSimd128Int(LSimd128Int* ins);
-    void visitSimd128Float(LSimd128Float* ins);
-    void visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4* ins);
-    void visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins);
-    void visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins);
-    void visitSimdReinterpretCast(LSimdReinterpretCast* lir);
-    void visitSimdExtractElementB(LSimdExtractElementB* lir);
-    void visitSimdExtractElementI(LSimdExtractElementI* lir);
-    void visitSimdExtractElementU2D(LSimdExtractElementU2D* lir);
-    void visitSimdExtractElementF(LSimdExtractElementF* lir);
-    void visitSimdInsertElementI(LSimdInsertElementI* lir);
-    void visitSimdInsertElementF(LSimdInsertElementF* lir);
-    void visitSimdSwizzleI(LSimdSwizzleI* lir);
-    void visitSimdSwizzleF(LSimdSwizzleF* lir);
-    void visitSimdShuffleX4(LSimdShuffleX4* lir);
-    void visitSimdShuffle(LSimdShuffle* lir);
-    void visitSimdUnaryArithIx16(LSimdUnaryArithIx16* lir);
-    void visitSimdUnaryArithIx8(LSimdUnaryArithIx8* lir);
-    void visitSimdUnaryArithIx4(LSimdUnaryArithIx4* lir);
-    void visitSimdUnaryArithFx4(LSimdUnaryArithFx4* lir);
-    void visitSimdBinaryCompIx16(LSimdBinaryCompIx16* lir);
-    void visitSimdBinaryCompIx8(LSimdBinaryCompIx8* lir);
-    void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir);
-    void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir);
-    void visitSimdBinaryArithIx16(LSimdBinaryArithIx16* lir);
-    void visitSimdBinaryArithIx8(LSimdBinaryArithIx8* lir);
-    void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir);
-    void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir);
-    void visitSimdBinarySaturating(LSimdBinarySaturating* lir);
-    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir);
-    void visitSimdShift(LSimdShift* lir);
-    void visitSimdSelect(LSimdSelect* ins);
-    void visitSimdAllTrue(LSimdAllTrue* ins);
-    void visitSimdAnyTrue(LSimdAnyTrue* ins);
+    void visitSimdValueInt32x4(LSimdValueInt32x4* lir) override;
+    void visitSimdValueFloat32x4(LSimdValueFloat32x4* lir) override;
+    void visitSimdSplatX16(LSimdSplatX16* lir) override;
+    void visitSimdSplatX8(LSimdSplatX8* lir) override;
+    void visitSimdSplatX4(LSimdSplatX4* lir) override;
+    void visitSimd128Int(LSimd128Int* ins) override;
+    void visitSimd128Float(LSimd128Float* ins) override;
+    void visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4* ins) override;
+    void visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins) override;
+    void visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins) override;
+    void visitSimdReinterpretCast(LSimdReinterpretCast* lir) override;
+    void visitSimdExtractElementB(LSimdExtractElementB* lir) override;
+    void visitSimdExtractElementI(LSimdExtractElementI* lir) override;
+    void visitSimdExtractElementU2D(LSimdExtractElementU2D* lir) override;
+    void visitSimdExtractElementF(LSimdExtractElementF* lir) override;
+    void visitSimdInsertElementI(LSimdInsertElementI* lir) override;
+    void visitSimdInsertElementF(LSimdInsertElementF* lir) override;
+    void visitSimdSwizzleI(LSimdSwizzleI* lir) override;
+    void visitSimdSwizzleF(LSimdSwizzleF* lir) override;
+    void visitSimdShuffleX4(LSimdShuffleX4* lir) override;
+    void visitSimdShuffle(LSimdShuffle* lir) override;
+    void visitSimdUnaryArithIx16(LSimdUnaryArithIx16* lir) override;
+    void visitSimdUnaryArithIx8(LSimdUnaryArithIx8* lir) override;
+    void visitSimdUnaryArithIx4(LSimdUnaryArithIx4* lir) override;
+    void visitSimdUnaryArithFx4(LSimdUnaryArithFx4* lir) override;
+    void visitSimdBinaryCompIx16(LSimdBinaryCompIx16* lir) override;
+    void visitSimdBinaryCompIx8(LSimdBinaryCompIx8* lir) override;
+    void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir) override;
+    void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir) override;
+    void visitSimdBinaryArithIx16(LSimdBinaryArithIx16* lir) override;
+    void visitSimdBinaryArithIx8(LSimdBinaryArithIx8* lir) override;
+    void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir) override;
+    void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir) override;
+    void visitSimdBinarySaturating(LSimdBinarySaturating* lir) override;
+    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir) override;
+    void visitSimdShift(LSimdShift* lir) override;
+    void visitSimdSelect(LSimdSelect* ins) override;
+    void visitSimdAllTrue(LSimdAllTrue* ins) override;
+    void visitSimdAnyTrue(LSimdAnyTrue* ins) override;
 
     template <class T, class Reg> void visitSimdGeneralShuffle(LSimdGeneralShuffleBase* lir, Reg temp);
-    void visitSimdGeneralShuffleI(LSimdGeneralShuffleI* lir);
-    void visitSimdGeneralShuffleF(LSimdGeneralShuffleF* lir);
+    void visitSimdGeneralShuffleI(LSimdGeneralShuffleI* lir) override;
+    void visitSimdGeneralShuffleF(LSimdGeneralShuffleF* lir) override;
 
     // Out of line visitors.
     void visitOutOfLineBailout(OutOfLineBailout* ool);
@@ -337,7 +337,7 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
       : snapshot_(snapshot)
     { }
 
-    void accept(CodeGeneratorX86Shared* codegen);
+    void accept(CodeGeneratorX86Shared* codegen) override;
 
     LSnapshot* snapshot() const {
         return snapshot_;

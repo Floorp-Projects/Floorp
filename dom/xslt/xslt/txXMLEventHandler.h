@@ -120,25 +120,25 @@ public:
 #define TX_DECL_TXAXMLEVENTHANDLER                                           \
     virtual nsresult attribute(nsAtom* aPrefix, nsAtom* aLocalName,        \
                                nsAtom* aLowercaseLocalName, int32_t aNsID,  \
-                               const nsString& aValue);                      \
+                               const nsString& aValue) override;             \
     virtual nsresult attribute(nsAtom* aPrefix,                             \
                                const nsAString& aLocalName,                  \
                                const int32_t aNsID,                          \
-                               const nsString& aValue);                      \
-    virtual nsresult characters(const nsAString& aData, bool aDOE);          \
-    virtual nsresult comment(const nsString& aData);                         \
-    virtual nsresult endDocument(nsresult aResult = NS_OK);                  \
-    virtual nsresult endElement();                                           \
+                               const nsString& aValue) override;             \
+    virtual nsresult characters(const nsAString& aData, bool aDOE) override; \
+    virtual nsresult comment(const nsString& aData) override;                \
+    virtual nsresult endDocument(nsresult aResult = NS_OK) override;         \
+    virtual nsresult endElement() override;                                  \
     virtual nsresult processingInstruction(const nsString& aTarget,          \
-                                           const nsString& aData);           \
-    virtual nsresult startDocument();                                        \
+                                           const nsString& aData) override;  \
+    virtual nsresult startDocument() override;                               \
     virtual nsresult startElement(nsAtom* aPrefix,                          \
                                   nsAtom* aLocalName,                       \
                                   nsAtom* aLowercaseLocalName,              \
-                                  int32_t aNsID);                            \
+                                  int32_t aNsID) override;                   \
     virtual nsresult startElement(nsAtom* aPrefix,                          \
                                   const nsAString& aName,                    \
-                                  const int32_t aNsID);
+                                  const int32_t aNsID) override;
 
 
 class txAOutputXMLEventHandler : public txAXMLEventHandler
@@ -153,7 +153,7 @@ public:
 };
 
 #define TX_DECL_TXAOUTPUTXMLEVENTHANDLER                        \
-    virtual void getOutputDocument(nsIDOMDocument** aDocument);
+    virtual void getOutputDocument(nsIDOMDocument** aDocument) override;
 
 /**
  * Interface used to create the appropriate outputhandler
@@ -189,10 +189,10 @@ public:
 
 #define TX_DECL_TXAOUTPUTHANDLERFACTORY                        \
     nsresult createHandlerWith(txOutputFormat* aFormat,        \
-                               txAXMLEventHandler** aHandler); \
+                               txAXMLEventHandler** aHandler) override; \
     nsresult createHandlerWith(txOutputFormat* aFormat,        \
                                const nsAString& aName,         \
                                int32_t aNsID,                  \
-                               txAXMLEventHandler** aHandler);
+                               txAXMLEventHandler** aHandler) override;
 
 #endif

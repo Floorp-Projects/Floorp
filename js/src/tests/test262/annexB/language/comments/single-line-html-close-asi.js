@@ -3,7 +3,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-html-like-comments
-es6id: B1.3
+esid: sec-html-like-comments
 description: >
     A SingleLineHTMLCloseComment is considered to be a LineTerminator for
     purposes of parsing by the syntactic grammar.

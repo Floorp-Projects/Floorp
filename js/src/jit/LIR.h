@@ -783,10 +783,10 @@ class LNode
     virtual void accept(LElementVisitor* visitor) = 0;
 
 #define LIR_HEADER(opcode)                                                  \
-    Opcode op() const {                                                     \
+    Opcode op() const override {                                            \
         return LInstruction::LOp_##opcode;                                  \
     }                                                                       \
-    void accept(LElementVisitor* visitor) {                                 \
+    void accept(LElementVisitor* visitor) override {                        \
         visitor->setElement(this);                                          \
         visitor->visit##opcode(this);                                       \
     }
@@ -920,44 +920,44 @@ class LPhi final : public LNode
         setMir(ins);
     }
 
-    size_t numDefs() const {
+    size_t numDefs() const override {
         return 1;
     }
-    LDefinition* getDef(size_t index) {
+    LDefinition* getDef(size_t index) override {
         MOZ_ASSERT(index == 0);
         return &def_;
     }
-    void setDef(size_t index, const LDefinition& def) {
+    void setDef(size_t index, const LDefinition& def) override {
         MOZ_ASSERT(index == 0);
         def_ = def;
     }
-    size_t numOperands() const {
+    size_t numOperands() const override {
         return mir_->toPhi()->numOperands();
     }
-    LAllocation* getOperand(size_t index) {
+    LAllocation* getOperand(size_t index) override {
         MOZ_ASSERT(index < numOperands());
         return &inputs_[index];
     }
-    void setOperand(size_t index, const LAllocation& a) {
+    void setOperand(size_t index, const LAllocation& a) override {
         MOZ_ASSERT(index < numOperands());
         inputs_[index] = a;
     }
-    size_t numTemps() const {
+    size_t numTemps() const override {
         return 0;
     }
-    LDefinition* getTemp(size_t index) {
+    LDefinition* getTemp(size_t index) override {
         MOZ_CRASH("no temps");
     }
-    void setTemp(size_t index, const LDefinition& temp) {
+    void setTemp(size_t index, const LDefinition& temp) override {
         MOZ_CRASH("no temps");
     }
-    size_t numSuccessors() const {
+    size_t numSuccessors() const override {
         return 0;
     }
-    MBasicBlock* getSuccessor(size_t i) const {
+    MBasicBlock* getSuccessor(size_t i) const override {
         MOZ_CRASH("no successors");
     }
-    void setSuccessor(size_t i, MBasicBlock*) {
+    void setSuccessor(size_t i, MBasicBlock*) override {
         MOZ_CRASH("no successors");
     }
 };
@@ -1191,7 +1191,7 @@ template <size_t Defs, size_t Operands, size_t Temps>
 class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 {
   public:
-    virtual bool isCall() const {
+    virtual bool isCall() const override {
         return true;
     }
 };

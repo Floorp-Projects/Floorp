@@ -5,7 +5,7 @@
 /*---
 esid: sec-bigint.prototype.tostring
 description: BigInt.prototype.toString property descriptor
-info: >
+info: |
   BigInt.prototype.toString ( [ radix ] )
 
   17 ECMAScript Standard Built-in Objects

@@ -7,7 +7,7 @@ description: ASI test in field declarations -- error when generator interpreted 
 esid: sec-automatic-semicolon-insertion
 features: [class, class-fields-public, generators]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

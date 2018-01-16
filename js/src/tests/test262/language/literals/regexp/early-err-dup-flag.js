@@ -10,7 +10,7 @@ description: >
   It is a Syntax Error if FlagText of RegularExpressionLiteral contains ... the same code point more than once.
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

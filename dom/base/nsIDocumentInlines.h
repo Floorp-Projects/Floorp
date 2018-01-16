@@ -62,9 +62,6 @@ inline void
 nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
 {
   MOZ_ASSERT(aRoot);
-  MOZ_ASSERT(aDirtyBits);
-  MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
-  MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) == mServoRestyleRootDirtyBits);
 
   // NOTE(emilio): The !aRoot->IsElement() check allows us to handle cases where
   // we change the restyle root during unbinding of a subtree where the root is
@@ -90,7 +87,21 @@ nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
              nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(mServoRestyleRoot, aRoot));
   MOZ_ASSERT(aRoot == aRoot->OwnerDocAsNode() || aRoot->IsElement());
   mServoRestyleRoot = aRoot;
+  SetServoRestyleRootDirtyBits(aDirtyBits);
+}
+
+// Note: we break this out of SetServoRestyleRoot so that callers can add
+// bits without doing a no-op assignment to the restyle root, which would
+// involve cycle-collected refcount traffic.
+inline void
+nsIDocument::SetServoRestyleRootDirtyBits(uint32_t aDirtyBits)
+{
+  MOZ_ASSERT(aDirtyBits);
+  MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
+  MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) == mServoRestyleRootDirtyBits);
+  MOZ_ASSERT(mServoRestyleRoot);
   mServoRestyleRootDirtyBits = aDirtyBits;
 }
+
 
 #endif // nsIDocumentInlines_h

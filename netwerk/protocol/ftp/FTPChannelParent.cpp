@@ -254,7 +254,7 @@ public:
   {
   }
 
-  void Run()
+  void Run() override
   {
     mParent->DivertOnDataAvailable(mData, mOffset, mCount);
   }
@@ -341,7 +341,8 @@ public:
   {
   }
 
-  void Run() {
+  void Run() override
+  {
     mParent->DivertOnStopRequest(mStatusCode);
   }
 
@@ -399,7 +400,8 @@ public:
   {
   }
 
-  void Run() {
+  void Run() override
+  {
     mParent->DivertComplete();
   }
 
@@ -930,4 +932,3 @@ FTPChannelParent::SetErrorMsg(const char *aMsg, bool aUseUTF8)
 //---------------------
 } // namespace net
 } // namespace mozilla
-

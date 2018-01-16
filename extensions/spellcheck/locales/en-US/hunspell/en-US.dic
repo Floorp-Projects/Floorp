@@ -1,4 +1,4 @@
-52463
+52500
 0/nm
 0th/pt
 1/n1
@@ -1113,6 +1113,7 @@ Bahama/SM
 Bahamanian
 Bahamas/M
 Bahamian/MS
+Bahasa/M
 Bahia/M
 Bahrain/M
 Baikal/M
@@ -1895,6 +1896,7 @@ Buddhism/SM
 Buddhist/SM
 Buddy/M
 Budweiser/M
+Buenos
 Buffalo/M
 Buffy/M
 Buford/M
@@ -6002,6 +6004,7 @@ Isuzu/M
 It
 Itaipu/M
 Ital
+Italia/M
 Italian/SM
 Italianate
 Italy/M
@@ -8589,6 +8592,7 @@ Mueller/M
 Muenster/MS
 Mugabe/M
 Muhammad/M
+Muhammad/M
 Muhammadan/MS
 Muhammadanism/SM
 Muir/M
@@ -8828,6 +8832,7 @@ Ned/M
 Neda/M
 Nedda/M
 Neddy/M
+Nederland/MS
 Neel/M
 Neely/M
 Nefertiti/M
@@ -9812,6 +9817,7 @@ Pollux/M
 Polly/M
 Pollyanna/M
 Polo/M
+Polska
 Poltava/M
 Polyhymnia/M
 Polynesia/M
@@ -10208,7 +10214,7 @@ Realtor/M
 Reasoner/M
 Reba/M
 Rebeca/M
-Rebecca's
+Rebecca/M
 Rebecka/M
 Rebekah/M
 Recife/M
@@ -10686,6 +10692,8 @@ SJ
 SJW
 SK
 SLR
+SME/MS
+SMEs/M
 SNP/SM
 SO/S
 SOB/M
@@ -11625,6 +11633,7 @@ Sunni/SM
 Sunnite/MS
 Sunny's
 Sunnyvale/M
+Suomi/M
 Superbowl/M
 Superfund/M
 Superglue/M
@@ -15509,6 +15518,7 @@ austere/RYT
 austerity/SM
 austral
 auteur's
+auteur/MS
 auteurs
 authentic/IU
 authentically
@@ -16657,6 +16667,7 @@ binning
 binocular/MS
 binomial/SM
 bio/SM
+biochem
 biochemical/SMY
 biochemist/MS
 biochemistry/M
@@ -20038,6 +20049,7 @@ combativeness/M
 combed/U
 comber/M
 combination/SM
+combinatorics
 combine's
 combine/ADSG
 combined/U
@@ -21031,6 +21043,7 @@ cortege/MS
 cortex/M
 cortical
 cortices
+cortisol
 cortisone/M
 cortège/SM
 corundum/M
@@ -21500,6 +21513,7 @@ cropper/MS
 cropping
 croquet/M
 croquette/SM
+crore/MS
 crosier/MS
 cross's
 cross/AUGTSD
@@ -21611,6 +21625,7 @@ cryptic
 cryptically
 cryptogram/SM
 cryptographer/SM
+cryptographic
 cryptography/M
 cryptologist/MS
 cryptosystem/S
@@ -21848,6 +21863,7 @@ cynosure/MS
 cypher/M
 cypress/MS
 cyst/MS
+cysteine/MS
 cystic
 cystitis
 cytokine/SM
@@ -23807,6 +23823,7 @@ duelist/SM
 duenna/MS
 duet/MS
 duff/MDRZGS
+duffel/S
 duffer/M
 dug
 dugout/MS
@@ -27658,6 +27675,7 @@ genning
 genocidal
 genocide/MS
 genome/MS
+genomic/MS
 genomics
 genre/SM
 gent/AMS
@@ -28260,6 +28278,7 @@ granola/M
 grant/SMDRZG
 grantee/MS
 granter/M
+grantor/MS
 grantsmanship/M
 granular
 granularity/M
@@ -29424,6 +29443,7 @@ hexagonal
 hexagram/SM
 hexameter/SM
 hexane's
+hexane/MS
 hexanes
 hey
 heyday/SM
@@ -29955,6 +29975,7 @@ howitzer/SM
 howl/MDRSZG
 howler/M
 howsoever
+howto/MS
 hoyden/MS
 hoydenish
 hp
@@ -30324,6 +30345,7 @@ igloo/SM
 igneous
 ignitable
 ignite/AGDS
+igniter/MS
 ignition/MS
 ignoble
 ignobly
@@ -31199,7 +31221,7 @@ installment/SM
 instance/GD
 instant/MRYS
 instantaneous/Y
-instantiate/DSG
+instantiate/DSGNX
 instar
 instate/AGDS
 instead
@@ -31453,6 +31475,7 @@ intimation/M
 intimidate/GNDS
 intimidating/Y
 intimidation/M
+intl
 intonation/SM
 intoxicant/SM
 intoxicate/DSGN
@@ -31774,6 +31797,7 @@ japan/SM
 japanned
 japanning
 jape/MGDS
+japonica
 jar/SM
 jardiniere/SM
 jardinière/SM
@@ -32545,6 +32569,7 @@ landsmen
 landward/S
 lane/MS
 language/MS
+langue/MS
 languid/PY
 languidness/M
 languish/DSG
@@ -32749,6 +32774,7 @@ learn/AUGDS
 learnedly
 learner/MS
 learning's
+learnt
 lease/ADSMG
 leaseback/SM
 leasehold/MRSZ
@@ -34831,7 +34857,7 @@ mimicker/SM
 mimicking
 mimicry/SM
 mimosa/SM
-min
+min/S
 minaret/MS
 minatory
 mince/DRSMZG
@@ -36154,6 +36180,7 @@ neuron/MS
 neuronal
 neurophysiology's
 neuroscience's
+neuroscience/MS
 neurosciences
 neuroscientist/MS
 neuroses
@@ -37275,6 +37302,7 @@ openhandedness/M
 openhearted
 opening/M
 openness/M
+opensource
 openwork/M
 opera/MS
 operable/I
@@ -39023,6 +39051,7 @@ pharaoh/M
 pharaohs
 pharisaic
 pharisee/SM
+pharma/MS
 pharmaceutic/MS
 pharmaceutical/SM
 pharmaceutics/M
@@ -39086,6 +39115,7 @@ phisher/M
 phlebitis/M
 phlebotomist/MS
 phlebotomize/GDS
+phlebotomy
 phlegm/M
 phlegmatic
 phlegmatically
@@ -39817,6 +39847,7 @@ polynomial/MS
 polynucleotide/SM
 polyp/MS
 polypeptide's
+polypeptide/MS
 polyphonic
 polyphony/M
 polypropylene/M
@@ -39951,6 +39982,7 @@ porticoes
 portiere/MS
 portion/KSGMD
 portière/MS
+portlet/MS
 portliness/M
 portly/RPT
 portmanteau/MS
@@ -40419,6 +40451,7 @@ prettily
 prettiness/M
 pretty/TGDRSMP
 pretzel/MS
+prev
 prevail/DGS
 prevalence/M
 prevalent
@@ -41809,7 +41842,7 @@ reconcile/GDSB
 reconciliation/S
 recondite
 reconfiguration
-reconfigure/D
+reconfigure/DB
 reconnaissance/MS
 reconnoiter/DGS
 reconstruct/V
@@ -42844,7 +42877,7 @@ rot/SM
 rota/S
 rotary/SM
 rotatably
-rotate/DSGNX
+rotate/DSGNXB
 rotation/M
 rotational
 rotatory
@@ -43697,6 +43730,7 @@ scrofula/M
 scrofulous
 scrog/S
 scroll/GSMD
+scrollbar/S
 scrooge/MS
 scrota
 scrotal
@@ -44121,6 +44155,7 @@ sequin/SMD
 sequinned
 sequitur
 sequoia/MS
+sera
 seraglio/MS
 serape/SM
 seraph/M
@@ -46804,6 +46839,7 @@ stropping
 stroppy/TRP
 strove
 struck
+struct/MS
 structural/Y
 structuralism
 structuralist/S
@@ -49145,6 +49181,7 @@ transcribe/ZGDRS
 transcriber/M
 transcript/MS
 transcription/SM
+transcriptional
 transducer/MS
 transect/DSG
 transept/MS

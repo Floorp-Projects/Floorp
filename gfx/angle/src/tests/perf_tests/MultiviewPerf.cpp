@@ -121,7 +121,7 @@ class MultiviewBenchmark : public ANGLERenderTest,
     }
 
     void initializeBenchmark() override;
-    void drawBenchmark() final;
+    void drawBenchmark() final override;
 
     void overrideWorkaroundsD3D(WorkaroundsD3D *workarounds) override
     {

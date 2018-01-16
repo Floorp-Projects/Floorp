@@ -367,6 +367,7 @@ public:
                                 bool aCompileEventHandlers) override;
     virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
     virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
+    virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
     virtual void DestroyContent() override;
 
 #ifdef DEBUG
@@ -380,7 +381,7 @@ public:
                                   bool aIsTrustedEvent) override;
     void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
-    nsIContent* GetBindingParent() const final
+    nsIContent* GetBindingParent() const final override
     {
       return mBindingParent;
     }
@@ -411,7 +412,6 @@ public:
 
     nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);
     void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
-    nsresult SetIsPrerendered();
 
     virtual void RecompileScriptEventListeners() override;
 

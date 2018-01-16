@@ -2355,7 +2355,7 @@ public:
   }
   virtual ~CounterStyleCleaner() {}
 
-  void DidRefresh() final
+  void DidRefresh() final override
   {
     mRefreshDriver->RemovePostRefreshObserver(this);
     mCounterStyleManager->CleanRetiredStyles();

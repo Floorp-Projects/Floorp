@@ -18,14 +18,14 @@ namespace gfx {
 class NativeFontResourceFontconfig final : public NativeFontResource
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFontconfig)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFontconfig, override)
 
   static already_AddRefed<NativeFontResourceFontconfig>
     Create(uint8_t *aFontData, uint32_t aDataLength, FT_Library aFTLibrary = nullptr);
 
   already_AddRefed<UnscaledFont>
     CreateUnscaledFont(uint32_t aIndex,
-                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
+                       const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final override;
 
   ~NativeFontResourceFontconfig();
 

@@ -886,6 +886,12 @@ bool nsBaseWidget::IsSmallPopup() const
 bool
 nsBaseWidget::ComputeShouldAccelerate()
 {
+  if (gfx::gfxVars::UseWebRender() && !AllowWebRenderForThisWindow()) {
+    // If WebRender is enabled, non-WebRender widgets use the basic compositor
+    // (at least for now), even though they would get an accelerated compositor
+    // if WebRender wasn't enabled.
+    return false;
+  }
   return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING) &&
          WidgetTypeSupportsAcceleration();
 }
@@ -898,6 +904,12 @@ nsBaseWidget::UseAPZ()
            WindowType() == eWindowType_child ||
            (WindowType() == eWindowType_popup && HasRemoteContent() &&
             gfxPrefs::APZPopupsEnabled())));
+}
+
+bool
+nsBaseWidget::AllowWebRenderForThisWindow()
+{
+  return WindowType() == eWindowType_toplevel || HasRemoteContent();
 }
 
 void nsBaseWidget::CreateCompositor()
@@ -1276,7 +1288,8 @@ nsBaseWidget::CreateCompositorSession(int aWidth,
     // If widget type does not supports acceleration, we use ClientLayerManager
     // even when gfxVars::UseWebRender() is true. WebRender could coexist only
     // with BasicCompositor.
-    bool enableWR = gfx::gfxVars::UseWebRender() && WidgetTypeSupportsAcceleration();
+    bool enableWR = gfx::gfxVars::UseWebRender() && WidgetTypeSupportsAcceleration()
+      && AllowWebRenderForThisWindow();
     bool enableAPZ = UseAPZ();
     CompositorOptions options(enableAPZ, enableWR);
 

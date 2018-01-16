@@ -7,7 +7,7 @@ description: >
     `yield` expressions are not LogicalOrExpressions.
 es6id: 12.1.1
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [generators]
 ---*/

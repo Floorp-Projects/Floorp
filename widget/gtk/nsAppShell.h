@@ -20,8 +20,8 @@ public:
 
     // nsBaseAppShell overrides:
     nsresult Init();
-    virtual void ScheduleNativeEventCallback();
-    virtual bool ProcessNextNativeEvent(bool mayWait);
+    virtual void ScheduleNativeEventCallback() override;
+    virtual bool ProcessNextNativeEvent(bool mayWait) override;
 
 private:
     virtual ~nsAppShell();

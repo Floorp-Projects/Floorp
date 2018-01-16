@@ -69,6 +69,30 @@
         "type": "string",
         "enum": ["always", "never", "private_browsing"],
         "description": "The mode for tracking protection."
+      },
+      {
+        "id": "CookieConfig",
+        "type": "object",
+        "description": "The settings for cookies.",
+        "properties": {
+          "behavior": {
+            "type": "string",
+            "optional": true,
+            "enum": [
+              "allow_all",
+              "reject_all",
+              "reject_third_party",
+              "allow_visited"
+            ],
+            "description": "The type of cookies to allow."
+          },
+          "nonPersistentCookies": {
+            "type": "boolean",
+            "optional": true,
+            "default": false,
+            "description": "Whether to create all cookies as nonPersistent (i.e., session) cookies."
+          }
+        }
       }
     ],
     "properties": {
@@ -101,6 +125,10 @@
       "trackingProtectionMode": {
         "$ref": "types.Setting",
         "description": "Allow users to specify the mode for tracking protection. This setting's value is of type TrackingProtectionModeOption, defaulting to <code>private_browsing_only</code>."
+      },
+      "cookieConfig": {
+        "$ref": "types.Setting",
+        "description": "Allow users to specify the default settings for allowing cookies, as well as whether all cookies should be created as non-persistent cookies. This setting's value is of type CookieConfig."
       }
     }
   }

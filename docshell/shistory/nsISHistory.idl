@@ -8,7 +8,6 @@
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsISimpleEnumerator;
-interface nsIPartialSHistoryListener;
 
 /**
  * An interface to the primary properties of the Session History
@@ -42,20 +41,6 @@ interface nsISHistory: nsISupports
   const long VIEWER_WINDOW = 3;
 
   /**
-   * An attribute denoting whether the nsISHistory is associated to a grouped
-   * session history.
-   *
-   * The abstraction of grouped session history is implemented at
-   * nsIWebNavigation level, so those canGoBack / canGoForward / gotoIndex
-   * functions work transparently;
-   *
-   * On the other hand, nsISHistory works on partial session history directly.
-   * Unless otherwise specified, count / index attributes and parameters all
-   * indicate local count / index, so we won't mess up docshell.
-   */
-   readonly attribute bool isPartial;
-
-  /**
    * A readonly property of the interface that returns 
    * the number of toplevel documents currently available
    * in session history.
@@ -63,28 +48,10 @@ interface nsISHistory: nsISupports
    readonly attribute long count;
 
   /**
-   * If isPartial, globalCount denotes the total number of entries in the
-   * grouped session history; Otherwise it has the same value as count.
-   */
-   readonly attribute long globalCount;
-
-  /**
-   * A readonly property which represents the difference between global indices
-   * of grouped session history and local indices of this particular session
-   * history object.
-   */
-   readonly attribute long globalIndexOffset;
-
-  /**
    * A readonly property of the interface that returns
    * the index of the current document in session history.
    */
    readonly attribute long index;
-
-  /**
-   * A readonly property which equals index + globalIndexOffset.
-   */
-   readonly attribute long globalIndex;
 
   /**
    * A readonly property of the interface that returns
@@ -174,12 +141,6 @@ interface nsISHistory: nsISupports
    void removeSHistoryListener(in nsISHistoryListener aListener);
 
   /**
-   * Set the listener to handle cross nsISHistory navigation when it works
-   * in "partial" mode.
-   */
-   void setPartialSHistoryListener(in nsIPartialSHistoryListener aListener);
-
-  /**
    * Called to obtain a enumerator for all the  documents stored in
    * session history. The enumerator object thus returned by this method
    * can be traversed using nsISimpleEnumerator. 
@@ -215,28 +176,4 @@ interface nsISHistory: nsISupports
    *                          index for the given history entry.
    */
    long getIndexOfEntry(in nsISHEntry aEntry);
-
-  /**
-   * Called when this nsISHistory has became the active history of a grouped
-   * session history.
-   *
-   * @param globalLength      The up to date number of entries in the grouped
-   *                          session history.
-   * @param targetIndex       The local index to navigate to.
-   */
-   void onPartialSHistoryActive(in long globalLength, in long targetIndex);
-
-  /**
-   * Called when this nsISHistory has became inactive history of a grouped
-   * session history.
-   */
-   void onPartialSHistoryDeactive();
-
-  /**
-   * Called when it's attached to a nsIGroupedSHistory instance.
-   *
-   * @param offset            The number of entries in the grouped session
-   *                          history before this session history object.
-   */
-   void onAttachGroupedSHistory(in long offset);
 };

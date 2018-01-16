@@ -157,8 +157,8 @@ this.TopSitesFeed = class TopSitesFeed {
       // Broadcast an update to all open content pages
       this.store.dispatch(ac.BroadcastToContent(newAction));
     } else {
-      // Don't broadcast only update the state.
-      this.store.dispatch(ac.SendToMain(newAction));
+      // Don't broadcast only update the state and update the preloaded tab.
+      this.store.dispatch(ac.SendToPreloaded(newAction));
     }
   }
 

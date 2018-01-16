@@ -7,7 +7,7 @@ description: >
     `yield` expressions bind weakly
 es6id: 14.4
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [generators]
 ---*/

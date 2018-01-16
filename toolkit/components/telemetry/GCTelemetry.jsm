@@ -23,6 +23,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Log.jsm");
 
 this.EXPORTED_SYMBOLS = ["GCTelemetry"];
 
@@ -114,18 +115,40 @@ const MAX_GC_KEYS = 24;
 const MAX_SLICES = 4;
 const MAX_SLICE_KEYS = 12;
 const MAX_PHASES = 65;
+const LOGGER_NAME = "Toolkit.Telemetry";
 
-function limitProperties(obj, count) {
-  // If there are too many properties, just delete them all. We don't
+function limitProperties(name, obj, count, log) {
+  log.trace("limitProperties");
+
+  // If there are too many properties delete all/most of them. We don't
   // expect this ever to happen.
-  if (Object.keys(obj).length > count) {
+  if (Object.keys(obj).length >= count) {
     for (let key of Object.keys(obj)) {
+      // If this is the main GC object then save some of the critical
+      // properties.
+      if (name === "data" && (
+          key === "max_pause" ||
+          key === "num_slices" ||
+          key === "slices_list" ||
+          key === "status" ||
+          key === "timestamp" ||
+          key === "total_time" ||
+          key === "totals")) {
+        continue;
+      }
+
       delete obj[key];
     }
+    log.warn("Number of properties exceeded in the GC telemetry " +
+        name + " ping");
   }
 }
 
-function limitSize(data) {
+/*
+ * Reduce the size of the object by limiting the number of slices or times
+ * etc.
+ */
+function limitSize(data, log) {
   // Store the number of slices so we know if we lost any at the end.
   data.num_slices = data.slices_list.length;
 
@@ -144,14 +167,14 @@ function limitSize(data) {
 
   data.slices_list.sort((a, b) => a.slice - b.slice);
 
-  limitProperties(data, MAX_GC_KEYS);
+  limitProperties("data", data, MAX_GC_KEYS, log);
 
   for (let slice of data.slices_list) {
-    limitProperties(slice, MAX_SLICE_KEYS);
-    limitProperties(slice.times, MAX_PHASES);
+    limitProperties("slice", slice, MAX_SLICE_KEYS, log);
+    limitProperties("slice.times", slice.times, MAX_PHASES, log);
   }
 
-  limitProperties(data.totals, MAX_PHASES);
+  limitProperties("data.totals", data.totals, MAX_PHASES, log);
 }
 
 let processData = new Map();
@@ -168,6 +191,9 @@ var GCTelemetry = {
     }
 
     this.initialized = true;
+    this._log = Log.repository.getLoggerWithMessagePrefix(
+      LOGGER_NAME, "GCTelemetry::");
+
     Services.obs.addObserver(this, "garbage-collection-statistics");
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
@@ -191,9 +217,13 @@ var GCTelemetry = {
   },
 
   observe(subject, topic, arg) {
-    let data = JSON.parse(arg);
+    this.observeRaw(JSON.parse(arg));
+  },
 
-    limitSize(data);
+  // We expose this method so unit tests can call it, no need to test JSON
+  // parsing.
+  observeRaw(data) {
+    limitSize(data, this._log);
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
       processData.get("main").record(data);

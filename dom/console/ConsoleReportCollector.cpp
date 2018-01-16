@@ -6,11 +6,14 @@
 
 #include "mozilla/ConsoleReportCollector.h"
 
+#include "ConsoleUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
+
+using mozilla::dom::ConsoleUtils;
 
 NS_IMPL_ISUPPORTS(ConsoleReportCollector, nsIConsoleReportCollector)
 
@@ -91,6 +94,63 @@ ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
                                               EmptyString(),
                                               report.mLineNumber,
                                               report.mColumnNumber);
+  }
+}
+
+void
+ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
+                                                                   ReportAction aAction)
+{
+  nsTArray<PendingReport> reports;
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (aAction == ReportAction::Forget) {
+      mPendingReports.SwapElements(reports);
+    } else {
+      reports = mPendingReports;
+    }
+  }
+
+  for (uint32_t i = 0; i < reports.Length(); ++i) {
+    PendingReport& report = reports[i];
+
+    nsAutoString errorText;
+    nsresult rv;
+    if (!report.mStringParams.IsEmpty()) {
+      rv = nsContentUtils::FormatLocalizedString(report.mPropertiesFile,
+                                                 report.mMessageName.get(),
+                                                 report.mStringParams,
+                                                 errorText);
+    } else {
+      rv = nsContentUtils::GetLocalizedString(report.mPropertiesFile,
+                                              report.mMessageName.get(),
+                                              errorText);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    ConsoleUtils::Level level = ConsoleUtils::eLog;
+    switch (report.mErrorFlags) {
+      case nsIScriptError::errorFlag:
+      case nsIScriptError::exceptionFlag:
+        level = ConsoleUtils::eError;
+        break;
+      case nsIScriptError::warningFlag:
+        level = ConsoleUtils::eWarning;
+        break;
+      default:
+        // default to log otherwise
+        break;
+    }
+
+    ConsoleUtils::ReportForServiceWorkerScope(NS_ConvertUTF8toUTF16(aScope),
+                                              errorText,
+                                              NS_ConvertUTF8toUTF16(report.mSourceFileURI),
+                                              report.mLineNumber,
+                                              report.mColumnNumber,
+                                              level);
   }
 }
 

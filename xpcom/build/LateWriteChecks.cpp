@@ -103,7 +103,8 @@ public:
     mProfileDirectory = nullptr;
   }
 
-  void Observe(IOInterposeObserver::Observation& aObservation);
+  void Observe(IOInterposeObserver::Observation& aObservation) override;
+
 private:
   char* mProfileDirectory;
 };

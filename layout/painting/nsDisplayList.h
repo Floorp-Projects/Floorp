@@ -5147,7 +5147,19 @@ public:
     : nsDisplayBlendMode(aBuilder, aFrame, aList, aBlendMode, aActiveScrolledRoot, aIndex)
     , mAncestorFrame(aAncestorFrame)
     , mTableType(GetTableTypeFromFrame(aAncestorFrame))
-  { }
+  {}
+
+  nsDisplayTableBlendMode(nsDisplayListBuilder* aBuilder,
+                          const nsDisplayTableBlendMode& aOther)
+    : nsDisplayBlendMode(aBuilder, aOther)
+    , mAncestorFrame(aOther.mAncestorFrame)
+    , mTableType(aOther.mTableType)
+  {}
+
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    return new (aBuilder) nsDisplayTableBlendMode(aBuilder, *this);
+  }
 
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
@@ -5239,6 +5251,12 @@ public:
                                nsDisplayList* aList,
                                const ActiveScrolledRoot* aActiveScrolledRoot,
                                nsIFrame* aAncestorFrame);
+
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    return new (aBuilder) nsDisplayTableBlendContainer(aBuilder, *this);
+  }
+
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
   virtual uint32_t GetPerFrameKey() const override {
@@ -5256,7 +5274,14 @@ protected:
     : nsDisplayBlendContainer(aBuilder, aFrame, aList, aActiveScrolledRoot, aIsForBackground)
     , mAncestorFrame(aAncestorFrame)
     , mTableType(GetTableTypeFromFrame(aAncestorFrame))
-  { }
+  {}
+
+  nsDisplayTableBlendContainer(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayTableBlendContainer& aOther)
+    : nsDisplayBlendContainer(aBuilder, aOther)
+    , mAncestorFrame(aOther.mAncestorFrame)
+    , mTableType(aOther.mTableType)
+  {}
 
   nsIFrame* mAncestorFrame;
   TableType mTableType;
@@ -5505,7 +5530,9 @@ public:
     , mAnimatedGeometryRootForScrollMetadata(aOther.mAnimatedGeometryRootForScrollMetadata)
     , mIndex(aOther.mIndex)
     , mIsFixedBackground(aOther.mIsFixedBackground)
-  {}
+  {
+    MOZ_COUNT_CTOR(nsDisplayFixedPosition);
+  }
 
   static nsDisplayFixedPosition* CreateForFixedBackground(nsDisplayListBuilder* aBuilder,
                                                           nsIFrame* aFrame,
@@ -5519,7 +5546,6 @@ public:
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
   {
-    MOZ_COUNT_CTOR(nsDisplayFixedPosition);
     return new (aBuilder) nsDisplayFixedPosition(aBuilder, *this);
   }
 
@@ -5576,6 +5602,11 @@ public:
                                                                uint32_t aIndex,
                                                                nsIFrame* aAncestorFrame);
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    return new (aBuilder) nsDisplayTableFixedPosition(aBuilder, *this);
+  }
+
   virtual nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
   virtual uint32_t GetPerFrameKey() const override {
@@ -5587,7 +5618,16 @@ public:
   NS_DISPLAY_DECL_NAME("TableFixedPosition", TYPE_TABLE_FIXED_POSITION)
 protected:
   nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                              nsDisplayList* aList, uint32_t aIndex, nsIFrame* aAncestorFrame);
+                              nsDisplayList* aList, uint32_t aIndex,
+                              nsIFrame* aAncestorFrame);
+
+  nsDisplayTableFixedPosition(nsDisplayListBuilder* aBuilder,
+                              const nsDisplayTableFixedPosition& aOther)
+    : nsDisplayFixedPosition(aBuilder, aOther)
+    , mAncestorFrame(aOther.mAncestorFrame)
+    , mTableType(aOther.mTableType)
+  {}
+
 
   nsIFrame* mAncestorFrame;
   TableType mTableType;

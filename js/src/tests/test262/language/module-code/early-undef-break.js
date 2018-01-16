@@ -8,7 +8,7 @@ description: >
     argument « » is true.
 flags: [module]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

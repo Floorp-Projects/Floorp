@@ -24,7 +24,7 @@ public:
   }
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
-                                          void** aResult) const
+                                          void** aResult) const override
   {
     nsresult status = mRawPtr ? mRawPtr->QueryInterface(aIID, aResult)
                               : NS_ERROR_NULL_POINTER;
@@ -44,7 +44,7 @@ public:
   }
 
   virtual nsresult NS_FASTCALL operator()(const nsIID& aIID,
-                                          void** aResult) const
+                                          void** aResult) const override
   {
     nsresult status = mRawPtr ? mRawPtr->QueryInterface(aIID, aResult)
                               : NS_ERROR_NULL_POINTER;

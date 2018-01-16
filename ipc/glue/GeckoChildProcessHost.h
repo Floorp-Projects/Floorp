@@ -74,14 +74,14 @@ public:
 
   virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector());
 
-  virtual void OnChannelConnected(int32_t peer_pid);
-  virtual void OnMessageReceived(IPC::Message&& aMsg);
-  virtual void OnChannelError();
-  virtual void GetQueuedMessages(std::queue<IPC::Message>& queue);
+  virtual void OnChannelConnected(int32_t peer_pid) override;
+  virtual void OnMessageReceived(IPC::Message&& aMsg) override;
+  virtual void OnChannelError() override;
+  virtual void GetQueuedMessages(std::queue<IPC::Message>& queue) override;
 
   virtual void InitializeChannel();
 
-  virtual bool CanShutdown() { return true; }
+  virtual bool CanShutdown() override { return true; }
 
   IPC::Channel* GetChannel() {
     return channelp();

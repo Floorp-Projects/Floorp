@@ -21,8 +21,7 @@ namespace mozilla {
 namespace dom {
 
 TabContext::TabContext()
-  : mIsPrerendered(false)
-  , mInitialized(false)
+  : mInitialized(false)
   , mIsMozBrowserElement(false)
   , mJSPluginID(-1)
   , mShowAccelerators(UIStateChangeType_NoChange)
@@ -119,7 +118,6 @@ TabContext::ShowFocusRings() const
 
 bool
 TabContext::SetTabContext(bool aIsMozBrowserElement,
-                          bool aIsPrerendered,
                           UIStateChangeType aShowAccelerators,
                           UIStateChangeType aShowFocusRings,
                           const OriginAttributes& aOriginAttributes,
@@ -132,7 +130,6 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
 
   mInitialized = true;
   mIsMozBrowserElement = aIsMozBrowserElement;
-  mIsPrerendered = aIsPrerendered;
   mOriginAttributes = aOriginAttributes;
   mPresentationURL = aPresentationURL;
   mShowAccelerators = aShowAccelerators;
@@ -159,7 +156,6 @@ TabContext::AsIPCTabContext() const
 
   return IPCTabContext(FrameIPCTabContext(mOriginAttributes,
                                           mIsMozBrowserElement,
-                                          mIsPrerendered,
                                           mPresentationURL,
                                           mShowAccelerators,
                                           mShowFocusRings));
@@ -169,7 +165,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   : mInvalidReason(nullptr)
 {
   bool isMozBrowserElement = false;
-  bool isPrerendered = false;
   int32_t jsPluginId = -1;
   OriginAttributes originAttributes;
   nsAutoString presentationURL;
@@ -235,7 +230,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         aParams.get_FrameIPCTabContext();
 
       isMozBrowserElement = ipcContext.isMozBrowserElement();
-      isPrerendered = ipcContext.isPrerendered();
       presentationURL = ipcContext.presentationURL();
       showAccelerators = ipcContext.showAccelerators();
       showFocusRings = ipcContext.showFocusRings();
@@ -264,7 +258,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
   } else {
     rv = mTabContext.SetTabContext(isMozBrowserElement,
-                                   isPrerendered,
                                    showAccelerators,
                                    showFocusRings,
                                    originAttributes,

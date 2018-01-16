@@ -9,6 +9,7 @@
 #include "nsISimpleEnumerator.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPtr.h"
 
 #include "WorkerPrivate.h"
 
@@ -69,8 +70,7 @@ private:
   }
 };
 
-// Does not hold an owning reference.
-static WorkerDebuggerManager* gWorkerDebuggerManager;
+static StaticRefPtr<WorkerDebuggerManager> gWorkerDebuggerManager;
 
 } /* anonymous namespace */
 
@@ -143,10 +143,11 @@ WorkerDebuggerManager::GetOrCreate()
   if (!gWorkerDebuggerManager) {
     // The observer service now owns us until shutdown.
     gWorkerDebuggerManager = new WorkerDebuggerManager();
-    if (NS_FAILED(gWorkerDebuggerManager->Init())) {
+    if (NS_SUCCEEDED(gWorkerDebuggerManager->Init())) {
+      ClearOnShutdown(&gWorkerDebuggerManager);
+    } else {
       NS_WARNING("Failed to initialize worker debugger manager!");
       gWorkerDebuggerManager = nullptr;
-      return nullptr;
     }
   }
 

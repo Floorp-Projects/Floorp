@@ -89,7 +89,7 @@ public:
     }
   }
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet)
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) override
   {
     nsCOMPtr<mozIStorageRow> row;
     while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {

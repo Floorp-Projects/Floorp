@@ -172,11 +172,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(DrawSurfaceCommand)(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
@@ -210,11 +211,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(DrawSurfaceWithShadowCommand)(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->DrawSurfaceWithShadow(mSurface, mDest, mColor, mOffset, mSigma, mOperator);
   }
@@ -241,11 +243,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(DrawFilterCommand)(mFilter, mSourceRect, mDestPoint, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     RefPtr<FilterNode> filter = mFilter;
     if (mFilter->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
@@ -272,11 +275,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(ClearRectCommand)(mRect);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->ClearRect(mRect);
   }
@@ -300,11 +304,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(CopySurfaceCommand)(mSurface, mSourceRect, mDestination);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const override
   {
     MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
     Point dest(Float(mDestination.x), Float(mDestination.y));
@@ -335,16 +340,17 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(FillRectCommand)(mRect, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->FillRect(mRect, mPattern, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
   {
     aDeviceRect = aTransform.TransformBounds(mRect);
     return true;
@@ -372,11 +378,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(StrokeRectCommand)(mRect, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
@@ -405,11 +412,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(StrokeLineCommand)(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
@@ -436,16 +444,17 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(FillCommand)(mPath, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Fill(mPath, mPattern, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
   {
     aDeviceRect = mPath->GetBounds(aTransform);
     return true;
@@ -514,16 +523,17 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(StrokeCommand)(mPath, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
   }
 
-  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const override
   {
     aDeviceRect = PathExtentsToMaxStrokeExtents(mStrokeOptions, mPath->GetBounds(aTransform), aTransform);
     return true;
@@ -554,7 +564,8 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     GlyphBuffer glyphs = {
       mGlyphs.data(),
       (uint32_t)mGlyphs.size(),
@@ -562,7 +573,7 @@ public:
     CLONE_INTO(FillGlyphsCommand)(mFont, glyphs, mPattern, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -597,7 +608,8 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     GlyphBuffer glyphs = {
       mGlyphs.data(),
       (uint32_t)mGlyphs.size(),
@@ -605,7 +617,7 @@ public:
     CLONE_INTO(StrokeGlyphsCommand)(mFont, glyphs, mPattern, mStrokeOptions, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -635,11 +647,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(MaskCommand)(mSource, mMask, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
@@ -667,11 +680,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(MaskSurfaceCommand)(mSource, mMask, mOffset, mOptions);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
@@ -694,11 +708,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(PushClipCommand)(mPath);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushClip(mPath);
   }
@@ -718,11 +733,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(PushClipRectCommand)(mRect);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushClipRect(mRect);
   }
@@ -752,11 +768,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(PushLayerCommand)(mOpaque, mOpacity, mMask, mMaskTransform, mBounds, mCopyBackground);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PushLayer(mOpaque, mOpacity, mMask,
                    mMaskTransform, mBounds, mCopyBackground);
@@ -781,11 +798,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(PopClipCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PopClip();
   }
@@ -801,11 +819,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(PopLayerCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->PopLayer();
   }
@@ -823,11 +842,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(SetTransformCommand)(mTransform);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const override
   {
     if (aMatrix) {
       aDT->SetTransform(mTransform * (*aMatrix));
@@ -852,11 +872,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(SetPermitSubpixelAACommand)(mPermitSubpixelAA);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const override
   {
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
   }
@@ -875,11 +896,12 @@ public:
   {
   }
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(FlushCommand)();
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
   {
     aDT->Flush();
   }
@@ -895,11 +917,13 @@ public:
    , mBlur(aBlur)
   {}
 
-  void CloneInto(CaptureCommandList* aList) {
+  void CloneInto(CaptureCommandList* aList) override
+  {
     CLONE_INTO(BlurCommand)(mBlur);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const {
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const override
+  {
     aDT->Blur(mBlur);
   }
 

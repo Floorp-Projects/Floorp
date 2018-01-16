@@ -44,6 +44,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aChild, uint32_t aIndex,
                                      bool aNotify) override;
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
+  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
   // nsIFormControl
   NS_IMETHOD Reset() override;

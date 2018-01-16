@@ -1146,12 +1146,6 @@ nsObjectLoadingContent::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, mozilla:
   aRv.Throw(NS_ERROR_FAILURE);
 }
 
-NS_IMETHODIMP
-nsObjectLoadingContent::SetIsPrerendered()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 nsObjectLoadingContent::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
 {

@@ -602,14 +602,6 @@ ChromiumCDMProxy::Decrypt(MediaRawData* aSample)
 }
 
 void
-ChromiumCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
-                                        nsTArray<nsCString>& aSessionIds)
-{
-  auto caps = Capabilites().Lock();
-  caps->GetSessionIdsForKeyId(aKeyId, aSessionIds);
-}
-
-void
 ChromiumCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
                                      const nsAString& aMinHdcpVersion)
 {

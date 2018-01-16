@@ -194,8 +194,7 @@ void nsView::Destroy()
 
 void nsView::SetPosition(nscoord aX, nscoord aY)
 {
-  mDimBounds.x += aX - mPosX;
-  mDimBounds.y += aY - mPosY;
+  mDimBounds.MoveBy(aX - mPosX, aY - mPosY);
   mPosX = aX;
   mPosY = aY;
 
@@ -291,8 +290,8 @@ LayoutDeviceIntRect nsView::CalcWidgetBounds(nsWindowType aType)
 
   // Compute where the top-left of our widget ended up relative to the parent
   // widget, in appunits.
-  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.x, p2a),
-                        NSIntPixelsToAppUnits(newBounds.y, p2a));
+  nsPoint roundedOffset(NSIntPixelsToAppUnits(newBounds.X(), p2a),
+                        NSIntPixelsToAppUnits(newBounds.Y(), p2a));
 
   // mViewToWidgetOffset is added to coordinates relative to the view origin
   // to get coordinates relative to the widget.
@@ -365,15 +364,15 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   DesktopRect deskRect = newBounds / scale;
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      widget->ResizeClient(deskRect.x, deskRect.y,
-                           deskRect.width, deskRect.height,
+      widget->ResizeClient(deskRect.X(), deskRect.Y(),
+                           deskRect.Width(), deskRect.Height(),
                            aInvalidateChangedSize);
     } else {
-      widget->MoveClient(deskRect.x, deskRect.y);
+      widget->MoveClient(deskRect.X(), deskRect.Y());
     }
   } else {
     if (changedSize && !aMoveOnly) {
-      widget->ResizeClient(deskRect.width, deskRect.height,
+      widget->ResizeClient(deskRect.Width(), deskRect.Height(),
                            aInvalidateChangedSize);
     } // else do nothing!
   }
@@ -812,12 +811,12 @@ void nsView::List(FILE* out, int32_t aIndent) const
     int32_t Z = mWindow->GetZIndex();
     fprintf(out, "(widget=%p[%" PRIuPTR "] z=%d pos={%d,%d,%d,%d}) ",
             (void*)mWindow, widgetRefCnt, Z,
-            nonclientBounds.x, nonclientBounds.y,
-            windowBounds.width, windowBounds.height);
+            nonclientBounds.X(), nonclientBounds.Y(),
+            windowBounds.Width(), windowBounds.Height());
   }
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
-          brect.x, brect.y, brect.width, brect.height);
+          brect.X(), brect.Y(), brect.Width(), brect.Height());
   fprintf(out, " z=%d vis=%d frame=%p <\n",
           mZIndex, mVis, static_cast<void*>(mFrame));
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {

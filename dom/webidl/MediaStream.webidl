@@ -38,7 +38,7 @@ interface MediaStream : EventTarget {
     MediaStream                clone ();
     readonly    attribute boolean      active;
                 attribute EventHandler onaddtrack;
-    //             attribute EventHandler onremovetrack;
+                attribute EventHandler onremovetrack;
     readonly attribute double currentTime;
 
     [ChromeOnly, Throws]

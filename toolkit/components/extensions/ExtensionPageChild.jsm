@@ -100,13 +100,14 @@ function getFrameData(global) {
 
 var apiManager = new class extends SchemaAPIManager {
   constructor() {
-    super("addon");
+    super("addon", Schemas);
     this.initialized = false;
   }
 
   lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
+      this.initGlobal();
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
         this.loadScript(value);
       }
@@ -116,13 +117,14 @@ var apiManager = new class extends SchemaAPIManager {
 
 var devtoolsAPIManager = new class extends SchemaAPIManager {
   constructor() {
-    super("devtools");
+    super("devtools", Schemas);
     this.initialized = false;
   }
 
   lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
+      this.initGlobal();
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
         this.loadScript(value);
       }
@@ -172,7 +174,7 @@ class ExtensionBaseContextChild extends BaseContext {
 
     Schemas.exportLazyGetter(contentWindow, "browser", () => {
       let browserObj = Cu.createObjectIn(contentWindow);
-      Schemas.inject(browserObj, this.childManager);
+      this.childManager.inject(browserObj);
       return browserObj;
     });
 
@@ -181,7 +183,7 @@ class ExtensionBaseContextChild extends BaseContext {
       chromeApiWrapper.isChromeCompat = true;
 
       let chromeObj = Cu.createObjectIn(contentWindow);
-      Schemas.inject(chromeObj, chromeApiWrapper);
+      chromeApiWrapper.inject(chromeObj);
       return chromeObj;
     });
   }
@@ -272,10 +274,10 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
-  apiManager.lazyInit();
+  this.extension.apiManager.lazyInit();
 
   let localApis = {};
-  let can = new CanOfAPIs(this, apiManager, localApis);
+  let can = new CanOfAPIs(this, this.extension.apiManager, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "addon_parent",
@@ -345,6 +347,8 @@ ExtensionPageChild = {
   extensionContexts: new Map(),
 
   initialized: false,
+
+  apiManager,
 
   _init() {
     if (this.initialized) {

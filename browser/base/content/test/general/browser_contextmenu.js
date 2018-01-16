@@ -984,6 +984,65 @@ add_task(async function test_svg_link() {
   );
 });
 
+add_task(async function test_svg_relative_link() {
+  await test_contextmenu("#svg-with-relative-link > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---",                   null,
+     "context-sendlinktodevice", true, [], null,
+    ]
+  );
+
+  await test_contextmenu("#svg-with-relative-link2 > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---",                   null,
+     "context-sendlinktodevice", true, [], null,
+    ]
+  );
+
+  await test_contextmenu("#svg-with-relative-link3 > a",
+    ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the containers submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
+     "context-openlink",      true,
+     "context-openlinkprivate", true,
+     "---",                   null,
+     "context-bookmarklink",  true,
+     "context-savelink",      true,
+     ...(hasPocket ? ["context-savelinktopocket", true] : []),
+     "context-copylink",      true,
+     "context-searchselect",  true,
+     "---",                   null,
+     "context-sendlinktodevice", true, [], null,
+    ]
+  );
+});
+
 add_task(async function test_cleanup_html() {
   gBrowser.removeCurrentTab();
 });

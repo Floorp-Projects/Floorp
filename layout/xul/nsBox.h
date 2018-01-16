@@ -43,7 +43,7 @@ public:
   virtual nsresult XULRelayoutChildAtOrdinal(nsIFrame* aChild) override;
 
 #ifdef DEBUG_LAYOUT
-  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
+  NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox) override;
   virtual nsresult GetXULDebug(bool& aDebug) override;
   virtual nsresult SetXULDebug(nsBoxLayoutState& aState, bool aDebug) override;
 

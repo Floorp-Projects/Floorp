@@ -8,7 +8,7 @@ description: >
     StrictMode - a Use Strict Directive embedded in a directive
     prologue followed by a strict mode violation
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [raw]
 ---*/

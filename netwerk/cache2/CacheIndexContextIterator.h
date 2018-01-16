@@ -20,7 +20,7 @@ public:
   virtual ~CacheIndexContextIterator();
 
 private:
-  virtual void AddRecord(CacheIndexRecord *aRecord);
+  virtual void AddRecord(CacheIndexRecord *aRecord) override;
   virtual void AddRecords(const nsTArray<CacheIndexRecord *> &aRecords);
 
   nsCOMPtr<nsILoadContextInfo> mInfo;

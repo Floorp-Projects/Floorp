@@ -2980,6 +2980,13 @@ HttpBaseChannel::FlushReportsToConsole(uint64_t aInnerWindowID,
 }
 
 void
+HttpBaseChannel::FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
+                                                            ReportAction aAction)
+{
+  mReportCollector->FlushReportsToConsoleForServiceWorkerScope(aScope, aAction);
+}
+
+void
 HttpBaseChannel::FlushConsoleReports(nsIDocument* aDocument,
                                      ReportAction aAction)
 {

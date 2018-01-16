@@ -4,7 +4,7 @@
 /*---
 description: The declaration may not contain a binding for `let`
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     It is a Syntax Error if the BoundNames of ForDeclaration contains "let".

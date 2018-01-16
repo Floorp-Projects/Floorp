@@ -12,7 +12,7 @@ info: |
   It is a Syntax Error if the goal symbol of the syntactic grammar is Module and
   the StringValue of IdentifierName is "await".
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [module]
 ---*/

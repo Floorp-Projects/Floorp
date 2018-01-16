@@ -294,14 +294,14 @@ class SectionsFeed {
   onUpdateSection(event, id, options, shouldBroadcast = false) {
     if (options) {
       const action = {type: at.SECTION_UPDATE, data: Object.assign(options, {id})};
-      this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : action);
+      this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.SendToPreloaded(action));
     }
   }
 
   onUpdateSectionCard(event, id, url, options, shouldBroadcast = false) {
     if (options) {
       const action = {type: at.SECTION_UPDATE_CARD, data: {id, url, options}};
-      this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : action);
+      this.store.dispatch(shouldBroadcast ? ac.BroadcastToContent(action) : ac.SendToPreloaded(action));
     }
   }
 

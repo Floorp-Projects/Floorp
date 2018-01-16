@@ -55,8 +55,6 @@
 #include "nsMappedAttributes.h"
 #include "nsView.h"
 #include "nsBaseWidget.h"
-#include "GroupedSHistory.h"
-#include "PartialSHistory.h"
 #include "nsQueryObject.h"
 
 #include "nsIURI.h"
@@ -97,9 +95,9 @@
 
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/WebBrowserPersistLocalDocument.h"
-#include "mozilla/dom/GroupedHistoryEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/GroupedHistoryEvent.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -148,8 +146,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader,
                                       mDocShell,
                                       mMessageManager,
                                       mChildMessageManager,
-                                      mOpener,
-                                      mPartialSHistory)
+                                      mOpener)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -170,7 +167,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
   , mJSPluginID(aJSPluginID)
   , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
   , mBrowserChangingProcessBlockers(nullptr)
-  , mIsPrerendered(false)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
   , mDestroyCalled(false)
@@ -369,135 +365,6 @@ nsFrameLoader::LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
   return rv;
 }
 
-void
-nsFrameLoader::SetIsPrerendered(ErrorResult& aRv)
-{
-  nsresult rv = SetIsPrerendered();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SetIsPrerendered()
-{
-  MOZ_ASSERT(!mDocShell, "Please call SetIsPrerendered before docShell is created");
-  mIsPrerendered = true;
-
-  return NS_OK;
-}
-
-void
-nsFrameLoader::MakePrerenderedLoaderActive(ErrorResult& aRv)
-{
-  nsresult rv = MakePrerenderedLoaderActive();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::MakePrerenderedLoaderActive()
-{
-  MOZ_ASSERT(mIsPrerendered, "This frameloader was not in prerendered mode.");
-
-  mIsPrerendered = false;
-  if (IsRemoteFrame()) {
-    if (!mRemoteBrowser) {
-      NS_WARNING("Missing remote browser.");
-      return NS_ERROR_FAILURE;
-    }
-
-    mRemoteBrowser->SetDocShellIsActive(true);
-  } else {
-    if (!mDocShell) {
-      NS_WARNING("Missing docshell.");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsresult rv = mDocShell->SetIsActive(true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-already_AddRefed<nsIPartialSHistory>
-nsFrameLoader::GetPartialSHistory()
-{
-  nsCOMPtr<nsIPartialSHistory> partialSHistory;
-  MOZ_ALWAYS_SUCCEEDS(GetPartialSHistory(getter_AddRefs(partialSHistory)));
-  return partialSHistory.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetPartialSHistory(nsIPartialSHistory** aResult)
-{
-  if (mRemoteBrowser && !mPartialSHistory) {
-    // For remote case we can lazy initialize PartialSHistory since
-    // it doens't need to be registered as a listener to nsISHistory directly.
-    mPartialSHistory = new PartialSHistory(this);
-  }
-
-  nsCOMPtr<nsIPartialSHistory> partialHistory(mPartialSHistory);
-  partialHistory.forget(aResult);
-  return NS_OK;
-}
-
-already_AddRefed<nsIGroupedSHistory>
-nsFrameLoader::EnsureGroupedSHistory(ErrorResult& aRv)
-{
-  nsCOMPtr<nsIGroupedSHistory> result;
-  nsresult rv = EnsureGroupedSHistory(getter_AddRefs(result));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-  return result.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::EnsureGroupedSHistory(nsIGroupedSHistory** aResult)
-{
-  nsCOMPtr<nsIPartialSHistory> partialHistory;
-  GetPartialSHistory(getter_AddRefs(partialHistory));
-  MOZ_ASSERT(partialHistory);
-
-  nsCOMPtr<nsIGroupedSHistory> groupedHistory;
-  partialHistory->GetGroupedSHistory(getter_AddRefs(groupedHistory));
-  if (!groupedHistory) {
-    groupedHistory = new GroupedSHistory();
-    groupedHistory->AppendPartialSHistory(partialHistory);
-
-#ifdef DEBUG
-    nsCOMPtr<nsIGroupedSHistory> test;
-    GetGroupedSHistory(getter_AddRefs(test));
-    MOZ_ASSERT(test == groupedHistory, "GroupedHistory must match");
-#endif
-  }
-
-  groupedHistory.forget(aResult);
-  return NS_OK;
-}
-
-already_AddRefed<nsIGroupedSHistory>
-nsFrameLoader::GetGroupedSHistory()
-{
-  nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-  MOZ_ALWAYS_SUCCEEDS(GetGroupedSHistory(getter_AddRefs(groupedSHistory)));
-  return groupedSHistory.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetGroupedSHistory(nsIGroupedSHistory** aResult)
-{
-  nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-  if (mPartialSHistory) {
-    mPartialSHistory->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
-  }
-  groupedSHistory.forget(aResult);
-  return NS_OK;
-}
-
 bool
 nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
 {
@@ -535,193 +402,6 @@ nsFrameLoader::SwapBrowsersAndNotify(nsFrameLoader* aOther)
   return true;
 }
 
-class AppendPartialSHistoryAndSwapHelper : public PromiseNativeHandler
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(AppendPartialSHistoryAndSwapHelper)
-
-  AppendPartialSHistoryAndSwapHelper(nsFrameLoader* aThis,
-                                     nsFrameLoader* aOther,
-                                     Promise* aPromise)
-    : mThis(aThis), mOther(aOther), mPromise(aPromise) {}
-
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    nsCOMPtr<nsIGroupedSHistory> otherGroupedHistory;
-    mOther->GetGroupedSHistory(getter_AddRefs(otherGroupedHistory));
-    MOZ_ASSERT(!otherGroupedHistory,
-               "Cannot append a GroupedSHistory owner to another.");
-    if (otherGroupedHistory) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Append ourselves.
-    nsresult rv;
-    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-    rv = mThis->EnsureGroupedSHistory(getter_AddRefs(groupedSHistory));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Append the other.
-    nsCOMPtr<nsIPartialSHistory> otherPartialSHistory;
-    MOZ_ALWAYS_SUCCEEDS(mOther->GetPartialSHistory(getter_AddRefs(otherPartialSHistory)));
-    rv = groupedSHistory->AppendPartialSHistory(otherPartialSHistory);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Swap the browsers and fire the BrowserChangedProcess event.
-    if (mThis->SwapBrowsersAndNotify(mOther)) {
-      mPromise->MaybeResolveWithUndefined();
-    } else {
-      mPromise->MaybeRejectWithUndefined();
-    }
-  }
-
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    mPromise->MaybeRejectWithUndefined();
-  }
-
-private:
-  ~AppendPartialSHistoryAndSwapHelper() {}
-  RefPtr<nsFrameLoader> mThis;
-  RefPtr<nsFrameLoader> mOther;
-  RefPtr<Promise> mPromise;
-};
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AppendPartialSHistoryAndSwapHelper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AppendPartialSHistoryAndSwapHelper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AppendPartialSHistoryAndSwapHelper)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION(AppendPartialSHistoryAndSwapHelper,
-                         mThis, mPromise)
-
-class RequestGroupedHistoryNavigationHelper : public PromiseNativeHandler
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(RequestGroupedHistoryNavigationHelper)
-
-  RequestGroupedHistoryNavigationHelper(nsFrameLoader* aThis,
-                                        uint32_t aGlobalIndex,
-                                        Promise* aPromise)
-    : mThis(aThis), mGlobalIndex(aGlobalIndex), mPromise(aPromise) {}
-
-  void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    if (NS_WARN_IF(!mThis->mOwnerContent)) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-    mThis->GetGroupedSHistory(getter_AddRefs(groupedSHistory));
-    if (NS_WARN_IF(!groupedSHistory)) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Navigate the loader to the new index
-    nsCOMPtr<nsIFrameLoader> otherLoader;
-    nsresult rv = groupedSHistory->GotoIndex(mGlobalIndex, getter_AddRefs(otherLoader));
-
-    // Check if the gotoIndex failed because the target frameloader is dead. We
-    // need to perform a navigateAndRestoreByIndex and then return to recover.
-    if (rv == NS_ERROR_NOT_AVAILABLE) {
-      // Get the nsIXULBrowserWindow so that we can call NavigateAndRestoreByIndex on it.
-      nsCOMPtr<nsIDocShell> docShell = mThis->mOwnerContent->OwnerDoc()->GetDocShell();
-      if (NS_WARN_IF(!docShell)) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      docShell->GetTreeOwner(getter_AddRefs(treeOwner));
-      if (NS_WARN_IF(!treeOwner)) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-
-      nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
-      if (NS_WARN_IF(!window)) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-
-      nsCOMPtr<nsIXULBrowserWindow> xbw;
-      window->GetXULBrowserWindow(getter_AddRefs(xbw));
-      if (NS_WARN_IF(!xbw)) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-
-      nsCOMPtr<nsIBrowser> ourBrowser = do_QueryInterface(mThis->mOwnerContent);
-      if (NS_WARN_IF(!ourBrowser)) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-
-      rv = xbw->NavigateAndRestoreByIndex(ourBrowser, mGlobalIndex);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        mPromise->MaybeRejectWithUndefined();
-        return;
-      }
-      mPromise->MaybeResolveWithUndefined();
-      return;
-    }
-
-    // Check for any other type of failure
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Perform the swap.
-    nsFrameLoader* other = static_cast<nsFrameLoader*>(otherLoader.get());
-    if (!other || other == mThis) {
-      mPromise->MaybeRejectWithUndefined();
-      return;
-    }
-
-    // Swap the browsers and fire the BrowserChangedProcess event.
-    if (mThis->SwapBrowsersAndNotify(other)) {
-      mPromise->MaybeResolveWithUndefined();
-    } else {
-      mPromise->MaybeRejectWithUndefined();
-    }
-  }
-
-  void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
-  {
-    mPromise->MaybeRejectWithUndefined();
-  }
-
-private:
-  ~RequestGroupedHistoryNavigationHelper() {}
-  RefPtr<nsFrameLoader> mThis;
-  uint32_t mGlobalIndex;
-  RefPtr<Promise> mPromise;
-};
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(RequestGroupedHistoryNavigationHelper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(RequestGroupedHistoryNavigationHelper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RequestGroupedHistoryNavigationHelper)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION(RequestGroupedHistoryNavigationHelper,
-                         mThis, mPromise)
-
 already_AddRefed<Promise>
 nsFrameLoader::FireWillChangeProcessEvent()
 {
@@ -756,94 +436,6 @@ nsFrameLoader::FireWillChangeProcessEvent()
   ErrorResult rv;
   RefPtr<Promise> allPromise = Promise::All(global, blockers, rv);
   return allPromise.forget();
-}
-
-already_AddRefed<Promise>
-nsFrameLoader::AppendPartialSHistoryAndSwap(nsIFrameLoader& aOther, ErrorResult& aRv)
-{
-  nsresult rv = SetIsPrerendered();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  if (&aOther == this) {
-    return nullptr;
-  }
-
-  RefPtr<nsFrameLoader> otherLoader = static_cast<nsFrameLoader*>(&aOther);
-
-  RefPtr<Promise> ready = FireWillChangeProcessEvent();
-  if (NS_WARN_IF(!ready)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // This promise will be resolved when the swap has finished, we return it now
-  // and pass it to our helper so our helper can resolve it.
-  RefPtr<Promise> complete = Promise::Create(mOwnerContent->GetOwnerGlobal(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  // Attach our handler to the ready promise, and make it fulfil the complete
-  // promise when we are done.
-  RefPtr<AppendPartialSHistoryAndSwapHelper> helper =
-    new AppendPartialSHistoryAndSwapHelper(this, otherLoader, complete);
-  ready->AppendNativeHandler(helper);
-  return complete.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::AppendPartialSHistoryAndSwap(nsIFrameLoader* aOther, nsISupports** aPromise)
-{
-  if (!aOther) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> complete = AppendPartialSHistoryAndSwap(*aOther, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-  complete.forget(aPromise);
-  return NS_OK;
-}
-
-already_AddRefed<Promise>
-nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, ErrorResult& aRv)
-{
-  RefPtr<Promise> ready = FireWillChangeProcessEvent();
-  if (NS_WARN_IF(!ready)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // This promise will be resolved when the swap has finished, we return it now
-  // and pass it to our helper so our helper can resolve it.
-  RefPtr<Promise> complete = Promise::Create(mOwnerContent->GetOwnerGlobal(), aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  // Attach our handler to the ready promise, and make it fulfil the complete
-  // promise when we are done.
-  RefPtr<RequestGroupedHistoryNavigationHelper> helper =
-    new RequestGroupedHistoryNavigationHelper(this, aGlobalIndex, complete);
-  ready->AppendNativeHandler(helper);
-  return complete.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::RequestGroupedHistoryNavigation(uint32_t aGlobalIndex, nsISupports** aPromise)
-{
-  ErrorResult rv;
-  RefPtr<Promise> complete = RequestGroupedHistoryNavigation(aGlobalIndex, rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-  complete.forget(aPromise);
-  return NS_OK;
 }
 
 void
@@ -2222,19 +1814,6 @@ nsFrameLoader::StartDestroy()
     }
   }
 
-  // Destroy the other frame loader owners now that we are being destroyed.
-  if (mPartialSHistory &&
-      mPartialSHistory->GetActiveState() == nsIPartialSHistory::STATE_ACTIVE) {
-    nsCOMPtr<nsIGroupedSHistory> groupedSHistory;
-    GetGroupedSHistory(getter_AddRefs(groupedSHistory));
-    if (groupedSHistory) {
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "nsFrameLoader::StartDestroy", [groupedSHistory]() {
-          groupedSHistory->CloseInactiveFrameLoaderOwners();
-        }));
-    }
-  }
-
   nsCOMPtr<nsIRunnable> destroyRunnable = new nsFrameLoaderDestroyRunnable(this);
   if (mNeedsAsyncDestroy || !doc ||
       NS_FAILED(doc->FinalizeFrameLoader(this, destroyRunnable))) {
@@ -2517,11 +2096,6 @@ nsFrameLoader::MaybeCreateDocShell()
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
-  if (mIsPrerendered) {
-    nsresult rv = mDocShell->SetIsPrerendered();
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   if (!mNetworkCreated) {
     if (mDocShell) {
       mDocShell->SetCreatedDynamically(true);
@@ -2626,15 +2200,6 @@ nsFrameLoader::MaybeCreateDocShell()
 
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     webNav->SetSessionHistory(sessionHistory);
-
-
-    if (GroupedSHistory::GroupedHistoryEnabled()) {
-      mPartialSHistory = new PartialSHistory(this);
-      nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(mPartialSHistory));
-      nsCOMPtr<nsIPartialSHistoryListener> partialListener(do_QueryInterface(mPartialSHistory));
-      sessionHistory->AddSHistoryListener(listener);
-      sessionHistory->SetPartialSHistoryListener(partialListener);
-    }
   }
 
   OriginAttributes attrs;
@@ -4046,7 +3611,6 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   bool tabContextUpdated =
     aTabContext->SetTabContext(OwnerIsMozBrowserFrame(),
-                               mIsPrerendered,
                                showAccelerators,
                                showFocusRings,
                                attrs,

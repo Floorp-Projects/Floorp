@@ -944,6 +944,9 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
                                JS::Handle<JS::Value> aEventData,
                                JSContext* cx)
 {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "Events can only be registered in the parent process");
+
   if (!IsValidIdentifierString(aCategory, 30, true, false)) {
     JS_ReportErrorASCII(cx, "Category parameter should match the identifier pattern.");
     return NS_ERROR_INVALID_ARG;

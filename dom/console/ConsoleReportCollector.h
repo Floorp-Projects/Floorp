@@ -31,6 +31,10 @@ public:
                         ReportAction aAction = ReportAction::Forget) override;
 
   void
+  FlushReportsToConsoleForServiceWorkerScope(const nsACString& aScope,
+                                             ReportAction aAction = ReportAction::Forget) override;
+
+  void
   FlushConsoleReports(nsIDocument* aDocument,
                       ReportAction aAction = ReportAction::Forget) override;
 

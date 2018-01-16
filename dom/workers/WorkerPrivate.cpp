@@ -1491,7 +1491,7 @@ public:
   { }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->CycleCollectInternal(mCollectChildren);
     return true;
@@ -1508,7 +1508,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->OfflineStatusChangeEventInternal(mIsOffline);
     return true;
@@ -1526,7 +1526,7 @@ public:
   {}
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     aWorkerPrivate->MemoryPressureInternal();
     return true;
@@ -1593,7 +1593,7 @@ public:
     : WorkerHolder("SimpleWorkerHolder")
   {}
 
-  virtual bool Notify(Status aStatus) { return true; }
+  virtual bool Notify(Status aStatus) override { return true; }
 };
 
 } /* anonymous namespace */

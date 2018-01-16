@@ -92,7 +92,7 @@ window.gActivityStreamStrings = {
   "pocket_description": "Descubra conteúdo de alta qualidade que você poderia ter perdido, com a ajuda do Pocket, agora parte da Mozilla.",
   "highlights_empty_state": "Comece a navegar e nós mostraremos aqui alguns ótimos artigos, vídeos e outras páginas que você favoritou ou visitou recentemente.",
   "topstories_empty_state": "Você já viu tudo. Volte mais tarde para mais histórias do {provider}. Não consegue esperar? Escolha um assunto popular para encontrar mais grandes histórias através da web.",
-  "manual_migration_explanation2": "Experimente o Firefox com os favoritos, histórico e senhas salvas em outros navegador.",
+  "manual_migration_explanation2": "Experimente o Firefox com os favoritos, histórico e senhas salvas em outro navegador.",
   "manual_migration_cancel_button": "Não, obrigado",
   "manual_migration_import_button": "Importar agora"
 };

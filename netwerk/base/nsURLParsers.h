@@ -118,7 +118,7 @@ class nsStdURLParser : public nsAuthURLParser
 public:
     void ParseAfterScheme(const char *spec, int32_t specLen,
                           uint32_t *authPos, int32_t *authLen,
-                          uint32_t *pathPos, int32_t *pathLen);
+                          uint32_t *pathPos, int32_t *pathLen) override;
 };
 
 #endif // nsURLParsers_h__

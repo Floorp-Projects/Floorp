@@ -157,7 +157,7 @@ Required Fields
   - ``main``;
   - ``content``;
   - ``gpu``;
-  - ``all_children`` (record in all the child processes);
+  - ``all_child`` (record in all the child processes);
   - ``all`` (record in all the processes).
 
 Optional Fields

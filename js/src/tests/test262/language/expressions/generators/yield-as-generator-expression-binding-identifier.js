@@ -8,7 +8,7 @@ description: >
 es6id: 12.1.1
 flags: [noStrict]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [generators]
 ---*/

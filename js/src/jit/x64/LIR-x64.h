@@ -34,7 +34,7 @@ class LUnbox : public LUnboxBase {
       : LUnboxBase(input)
     { }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(mir()->type());
     }
 };
@@ -53,7 +53,7 @@ class LUnboxFloatingPoint : public LUnboxBase {
     MIRType type() const {
         return type_;
     }
-    const char* extraName() const {
+    const char* extraName() const override {
         return StringFromMIRType(type_);
     }
 };
@@ -135,7 +135,7 @@ class LUDivOrModI64 : public LBinaryMath<1>
         return getTemp(0);
     }
 
-    const char* extraName() const {
+    const char* extraName() const override {
         return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 

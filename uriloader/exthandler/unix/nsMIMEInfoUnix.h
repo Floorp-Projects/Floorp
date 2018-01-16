@@ -19,11 +19,11 @@ public:
   static bool HandlerExists(const char *aProtocolScheme);
 
 protected:
-  NS_IMETHOD GetHasDefaultHandler(bool *_retval);
+  NS_IMETHOD GetHasDefaultHandler(bool *_retval) override;
 
-  virtual nsresult LoadUriInternal(nsIURI *aURI);
+  virtual nsresult LoadUriInternal(nsIURI *aURI) override;
 
-  virtual nsresult LaunchDefaultWithFile(nsIFile *aFile);
+  virtual nsresult LaunchDefaultWithFile(nsIFile *aFile) override;
 };
 
 #endif // nsMIMEInfoUnix_h_

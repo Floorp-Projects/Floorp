@@ -1724,7 +1724,6 @@ class IDLInterface(IDLInterfaceOrNamespace):
                   identifier == "OverrideBuiltins" or
                   identifier == "ChromeOnly" or
                   identifier == "Unforgeable" or
-                  identifier == "UnsafeInPrerendering" or
                   identifier == "LegacyEventInit" or
                   identifier == "ProbablyShortLivingWrapper" or
                   identifier == "LegacyUnenumerableNamedProperties" or
@@ -4351,7 +4350,6 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "SecureContext" or
               identifier == "Frozen" or
               identifier == "NewObject" or
-              identifier == "UnsafeInPrerendering" or
               identifier == "NeedsSubjectPrincipal" or
               identifier == "SetterNeedsSubjectPrincipal" or
               identifier == "GetterNeedsSubjectPrincipal" or
@@ -5080,7 +5078,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "CanOOM" or
               identifier == "NewObject" or
               identifier == "ChromeOnly" or
-              identifier == "UnsafeInPrerendering" or
               identifier == "Pref" or
               identifier == "Deprecated" or
               identifier == "Func" or

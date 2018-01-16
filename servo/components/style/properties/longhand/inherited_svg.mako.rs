@@ -114,19 +114,19 @@ ${helpers.single_keyword("clip-rule", "nonzero evenodd",
 
 ${helpers.predefined_type("marker-start", "UrlOrNone", "Either::Second(None_)",
                           products="gecko",
-                          boxed="True" if product == "gecko" else "False",
+                          boxed= product == "gecko",
                           animation_value_type="discrete",
                           spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties")}
 
 ${helpers.predefined_type("marker-mid", "UrlOrNone", "Either::Second(None_)",
                           products="gecko",
-                          boxed="True" if product == "gecko" else "False",
+                          boxed= product == "gecko",
                           animation_value_type="discrete",
                           spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties")}
 
 ${helpers.predefined_type("marker-end", "UrlOrNone", "Either::Second(None_)",
                           products="gecko",
-                          boxed="True" if product == "gecko" else "False",
+                          boxed= product == "gecko",
                           animation_value_type="discrete",
                           spec="https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties")}
 
@@ -136,24 +136,11 @@ ${helpers.predefined_type("paint-order", "SVGPaintOrder", "computed::SVGPaintOrd
                           gecko_pref="svg.paint-order.enabled",
                           spec="https://www.w3.org/TR/SVG2/painting.html#PaintOrder")}
 
-<%helpers:vector_longhand name="-moz-context-properties"
-                   animation_value_type="none"
-                   products="gecko"
-                   spec="Nonstandard (Internal-only)"
-                   allow_empty="True">
-    use values::CustomIdent;
-
-    pub type SpecifiedValue = CustomIdent;
-
-    pub mod computed_value {
-        pub type T = super::SpecifiedValue;
-    }
-
-
-    pub fn parse<'i, 't>(_context: &ParserContext, input: &mut Parser<'i, 't>)
-                         -> Result<SpecifiedValue, ParseError<'i>> {
-        let location = input.current_source_location();
-        let i = input.expect_ident()?;
-        CustomIdent::from_ident(location, i, &["all", "none", "auto"])
-    }
-</%helpers:vector_longhand>
+${helpers.predefined_type("-moz-context-properties",
+                          "MozContextProperties",
+                          initial_value=None,
+                          vector=True,
+                          animation_value_type="none",
+                          products="gecko",
+                          spec="Nonstandard (https://developer.mozilla.org/en-US/docs/Web/CSS/-moz-context-properties)",
+                          allow_empty=True)}

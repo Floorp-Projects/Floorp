@@ -71,7 +71,7 @@ public:
   }
 
   void AddAsyncImagePipeline(const wr::PipelineId& aPipelineId, WebRenderImageHost* aImageHost);
-  void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId);
+  void RemoveAsyncImagePipeline(const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn);
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 const LayoutDeviceRect& aScBounds,

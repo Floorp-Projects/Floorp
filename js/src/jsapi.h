@@ -3754,9 +3754,9 @@ class JS_FRIEND_API(ReadOnlyCompileOptions) : public TransitiveCompileOptions
     const char* filename() const { return filename_; }
     const char* introducerFilename() const { return introducerFilename_; }
     const char16_t* sourceMapURL() const { return sourceMapURL_; }
-    virtual JSObject* element() const = 0;
-    virtual JSString* elementAttributeName() const = 0;
-    virtual JSScript* introductionScript() const = 0;
+    virtual JSObject* element() const override = 0;
+    virtual JSString* elementAttributeName() const override = 0;
+    virtual JSScript* introductionScript() const override = 0;
 
     // POD options.
     unsigned lineno;

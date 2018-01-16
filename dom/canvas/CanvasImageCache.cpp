@@ -166,7 +166,7 @@ public:
   ImageCache();
   ~ImageCache();
 
-  virtual void NotifyExpired(ImageCacheEntryData* aObject)
+  virtual void NotifyExpired(ImageCacheEntryData* aObject) override
   {
     mTotal -= aObject->SizeInBytes();
     RemoveObject(aObject);

@@ -1757,7 +1757,7 @@ public:
     mValues.push_back(entry);
   }
 
-  virtual void Serialize(std::ostream& os) const;
+  virtual void Serialize(std::ostream& os) const override;
 
   std::vector<std::string> mValues;
 };
@@ -1778,7 +1778,7 @@ public:
 
   void Load(const std::string& value);
 
-  virtual void Serialize(std::ostream& os) const;
+  virtual void Serialize(std::ostream& os) const override;
 
   std::vector<std::string> mValues;
 };

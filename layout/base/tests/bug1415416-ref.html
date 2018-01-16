@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1415416
+-->
+<head>
+<title>Test for Bug 1415416</title>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+function runTest()
+{
+  sendKey("TAB");
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="runTest()">
+<input id = "text1" type="text" autofocus value=""/>
+<input id = "text2" type="text" value=""/>
+</body>
+</html>

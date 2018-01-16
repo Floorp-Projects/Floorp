@@ -252,10 +252,10 @@ class nsMediaList final : public mozilla::dom::MediaList
 public:
   nsMediaList();
 
-  void GetText(nsAString& aMediaText) final;
-  void SetText(const nsAString& aMediaText) final;
+  void GetText(nsAString& aMediaText) final override;
+  void SetText(const nsAString& aMediaText) final override;
 
-  bool Matches(nsPresContext* aPresContext) const final {
+  bool Matches(nsPresContext* aPresContext) const final override {
     return Matches(aPresContext, nullptr);
   }
 
@@ -265,7 +265,7 @@ public:
                nsMediaQueryResultCacheKey* aKey) const;
 
 #ifdef DEBUG
-  bool IsServo() const final { return false; }
+  bool IsServo() const final override { return false; }
 #endif
 
   void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
@@ -273,21 +273,21 @@ public:
     mArray.AppendElement(aQuery.forget());
   }
 
-  already_AddRefed<mozilla::dom::MediaList> Clone() final;
+  already_AddRefed<mozilla::dom::MediaList> Clone() final override;
 
   nsMediaQuery* MediumAt(int32_t aIndex) { return mArray[aIndex]; }
   void Clear() { mArray.Clear(); }
 
   // WebIDL
-  uint32_t Length() final { return mArray.Length(); }
+  uint32_t Length() final override { return mArray.Length(); }
   void IndexedGetter(uint32_t aIndex, bool& aFound,
-                     nsAString& aReturn) final;
+                     nsAString& aReturn) final override;
 
 protected:
   ~nsMediaList();
 
-  nsresult Delete(const nsAString & aOldMedium) final;
-  nsresult Append(const nsAString & aOldMedium) final;
+  nsresult Delete(const nsAString & aOldMedium) final override;
+  nsresult Append(const nsAString & aOldMedium) final override;
 
   InfallibleTArray<nsAutoPtr<nsMediaQuery> > mArray;
 };

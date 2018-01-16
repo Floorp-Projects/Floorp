@@ -57,7 +57,7 @@ public:
 
   bool Init();
 
-  void Observe(Observation& aObservation);
+  void Observe(Observation& aObservation) override;
 
 private:
   static void sIOThreadFunc(void* aArg);
@@ -231,4 +231,3 @@ Init()
 } // namespace MainThreadIOLogger
 
 } // namespace mozilla
-

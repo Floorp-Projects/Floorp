@@ -35,7 +35,9 @@ BROWSER_CHROME_MANIFESTS += ['browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test.chrome += [
+    'chrome/display_mode_reflow_iframe.html',
     'chrome/moz_document_helper.html',
+    'media_queries_iframe.html',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [

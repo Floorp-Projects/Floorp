@@ -25,11 +25,9 @@ function* testSteps()
 
   let transaction2;
 
-  let comp = this.window ? SpecialPowers.wrap(Components) : Components;
-  let tm = comp.classes["@mozilla.org/thread-manager;1"]
-               .getService(comp.interfaces.nsIThreadManager);
-
   let eventHasRun;
+
+  let tm = SpecialPowers.Services ? SpecialPowers.Services.tm : Services.tm;
 
   tm.dispatchToMainThread(function() {
     eventHasRun = true;

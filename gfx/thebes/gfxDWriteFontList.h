@@ -47,23 +47,23 @@ public:
         mIsSystemFontFamily(aIsSystemFontFamily), mForceGDIClassic(false) {}
     virtual ~gfxDWriteFontFamily();
     
-    void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) final;
+    void FindStyleVariations(FontInfoData *aFontInfoData = nullptr) final override;
 
-    void LocalizedName(nsAString& aLocalizedName) final;
+    void LocalizedName(nsAString& aLocalizedName) final override;
 
     void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
                        bool aNeedFullnamePostscriptNames,
-                       FontInfoData *aFontInfoData = nullptr) final;
+                       FontInfoData *aFontInfoData = nullptr) final override;
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
     void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                FontListSizes* aSizes) const final;
+                                FontListSizes* aSizes) const final override;
     void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                FontListSizes* aSizes) const final;
+                                FontListSizes* aSizes) const final override;
 
     bool FilterForFontList(nsAtom* aLangGroup,
-                           const nsACString& aGeneric) const final {
+                           const nsACString& aGeneric) const final override {
         return !IsSymbolFontFamily();
     }
 

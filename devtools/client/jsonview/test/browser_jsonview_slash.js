@@ -6,11 +6,11 @@
 "use strict";
 
 add_task(function* () {
-  info("Test JSON with NUL started.");
+  info("Test JSON with slash started.");
 
   const TEST_JSON_URL = "data:application/json,{\"a/b\":[1,2],\"a\":{\"b\":[3,4]}}";
   yield addJsonViewTab(TEST_JSON_URL);
 
   let countBefore = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
-  ok(countBefore == 7, "There must be seven rows");
+  is(countBefore, 7, "There must be seven rows");
 });

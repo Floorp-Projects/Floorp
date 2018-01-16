@@ -127,7 +127,7 @@ class ScopedMatchPairs : public MatchPairs
     { }
 
   protected:
-    bool allocOrExpandArray(size_t pairCount);
+    bool allocOrExpandArray(size_t pairCount) override;
 };
 
 /*
@@ -145,7 +145,7 @@ class VectorMatchPairs : public MatchPairs
 
   protected:
     friend class RegExpStatics;
-    bool allocOrExpandArray(size_t pairCount);
+    bool allocOrExpandArray(size_t pairCount) override;
 };
 
 } /* namespace js */

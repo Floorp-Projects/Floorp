@@ -35,10 +35,7 @@
 
     let fileHandle2;
 
-    let comp = SpecialPowers.wrap(SpecialPowers.Components);
-    let thread = comp.classes["@mozilla.org/thread-manager;1"]
-                     .getService(comp.interfaces.nsIThreadManager)
-                     .currentThread;
+    let thread = SpecialPowers.Services.tm.currentThread;
 
     let eventHasRun;
 

@@ -22,34 +22,35 @@ public:
 
     // txIEvalContext
     nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
-                         txAExprResult*& aResult)
+                         txAExprResult*& aResult) override
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode,
+                                 bool& aAllowed) override
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
-    void* getPrivateContext()
+    void* getPrivateContext() override
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
-    txResultRecycler* recycler()
+    txResultRecycler* recycler() override
     {
         return mRecycler;
     }
-    void receiveError(const nsAString& aMsg, nsresult aRes)
+    void receiveError(const nsAString& aMsg, nsresult aRes) override
     {
     }
-    const txXPathNode& getContextNode()
-    {
-        MOZ_CRASH("shouldn't depend on this context");
-    }
-    uint32_t size()
+    const txXPathNode& getContextNode() override
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
-    uint32_t position()
+    uint32_t size() override
+    {
+        MOZ_CRASH("shouldn't depend on this context");
+    }
+    uint32_t position() override
     {
         MOZ_CRASH("shouldn't depend on this context");
     }
@@ -57,7 +58,6 @@ public:
 private:
     txResultRecycler* mRecycler;
 };
-
 
 nsresult
 txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)

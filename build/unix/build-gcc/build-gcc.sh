@@ -112,12 +112,34 @@ build_binutils() {
 build_gcc() {
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --disable-initfini-array --with-sysroot=/
+  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro --with-sysroot=/
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
   cd $root_dir/tools
   ln -s gcc gcc/bin/cc
+
+  if [ -f /etc/debian_version ]; then
+    cp -v /usr/lib32/crt*.o /usr/lib32/lib*_nonshared.a gcc/lib32
+    cp -v /usr/lib/x86_64-linux-gnu/crt*.o /usr/lib/x86_64-linux-gnu/lib*_nonshared.a gcc/lib64
+    cat > gcc/lib32/libc.so <<-EOF
+	OUTPUT_FORMAT(elf32-i386)
+	GROUP ( libc.so.6 libc_nonshared.a  AS_NEEDED ( ld-linux.so.2 ) )
+	EOF
+    cat > gcc/lib32/libpthread.so <<-EOF
+	OUTPUT_FORMAT(elf32-i386)
+	GROUP ( libpthread.so.0 libpthread_nonshared.a )
+	EOF
+    cat > gcc/lib64/libc.so <<-EOF
+	OUTPUT_FORMAT(elf64-x86-64)
+	GROUP ( libc.so.6 libc_nonshared.a  AS_NEEDED ( ld-linux-x86-64.so.2 ) )
+	EOF
+    cat > gcc/lib64/libpthread.so <<-EOF
+	OUTPUT_FORMAT(elf64-x86-64)
+	GROUP ( libpthread.so.0 libpthread_nonshared.a )
+	EOF
+  fi
+
   tar caf $root_dir/gcc.tar.xz gcc/
   popd
 }

@@ -740,12 +740,19 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     let ccNumberReason = "";
     let hasCCNumber = false;
     let hasExpiryDate = false;
+    let hasCCName = false;
 
     for (let detail of this.fieldDetails) {
       switch (detail.fieldName) {
         case "cc-number":
           hasCCNumber = true;
           ccNumberReason = detail._reason;
+          break;
+        case "cc-name":
+        case "cc-given-name":
+        case "cc-additional-name":
+        case "cc-family-name":
+          hasCCName = true;
           break;
         case "cc-exp":
         case "cc-exp-month":
@@ -755,7 +762,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       }
     }
 
-    return hasCCNumber && (ccNumberReason == "autocomplete" || hasExpiryDate);
+    return hasCCNumber && (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName);
   }
 
   isEnabled() {

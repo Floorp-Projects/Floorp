@@ -103,7 +103,7 @@ win64-rust-1.22:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: toolchain-build}
         max-run-time: 7200
         env:
             UPLOAD_DIR: artifacts
@@ -128,7 +128,7 @@ win64-rust-1.19:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: toolchain-build}
         max-run-time: 7200
         env:
             UPLOAD_DIR: artifacts
@@ -151,7 +151,7 @@ win32-rust-1.23.0-beta.2:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: toolchain-build}
         max-run-time: 7200
         env:
             UPLOAD_DIR: artifacts
@@ -175,7 +175,7 @@ mingw32-rust-1.22:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: toolchain-build}
         max-run-time: 7200
         env:
             UPLOAD_DIR: artifacts

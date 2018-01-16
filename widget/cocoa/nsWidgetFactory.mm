@@ -35,7 +35,7 @@
 #include "OSXNotificationCenter.h"
 
 #include "nsDeviceContextSpecX.h"
-#include "nsPrintOptionsX.h"
+#include "nsPrintSettingsServiceX.h"
 #include "nsPrintDialogX.h"
 #include "nsPrintSession.h"
 #include "nsToolkitCompsCID.h"
@@ -75,7 +75,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceX, nsIdleServiceX::GetInstance)
@@ -164,7 +164,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     mozilla::Module::MAIN_PROCESS_ONLY },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecXConstructor },
   { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
-  { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsXConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintSettingsServiceXConstructor },
   { &kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceXConstructor },
   { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceXConstructor },
   { &kNS_SYSTEMALERTSSERVICE_CID, false, NULL, OSXNotificationCenterConstructor },

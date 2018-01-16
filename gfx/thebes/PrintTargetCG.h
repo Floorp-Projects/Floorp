@@ -27,14 +27,14 @@ public:
   virtual nsresult BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName,
                                  int32_t aStartPage,
-                                 int32_t aEndPage) final;
-  virtual nsresult EndPrinting() final;
-  virtual nsresult AbortPrinting() final;
-  virtual nsresult BeginPage() final;
-  virtual nsresult EndPage() final;
+                                 int32_t aEndPage) final override;
+  virtual nsresult EndPrinting() final override;
+  virtual nsresult AbortPrinting() final override;
+  virtual nsresult BeginPage() final override;
+  virtual nsresult EndPage() final override;
 
   virtual already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
+  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final override;
 
 private:
   PrintTargetCG(PMPrintSession aPrintSession,

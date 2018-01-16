@@ -65,7 +65,7 @@ public:
 
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
+  NS_IMETHOD GetFrameName(nsString& aResult) const override {
     return MakeFrameName("GroupBoxFrameInner", aResult);
   }
 #endif

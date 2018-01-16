@@ -30,7 +30,6 @@ jobs:
             platform: linux64/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
             using: mozharness
@@ -55,7 +54,6 @@ jobs:
             platform: linux64/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
-            docker-image: {in-tree: desktop-build}
             max-run-time: 36000
         run:
             using: mozharness
