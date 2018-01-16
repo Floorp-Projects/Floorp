@@ -68,7 +68,7 @@ public:
     // Add 1 pixel of dirty area around clip rect to allow us to paint
     // antialiased pixels beyond the measured text extents.
     layoutClipRect.Inflate(1);
-    mClipRect = aSc.ToRelativeLayoutRect(layoutClipRect);
+    mClipStack.AppendElement(layoutClipRect);
 
     mBackfaceVisible = !aItem->BackfaceIsHidden();
 
@@ -171,27 +171,27 @@ public:
     glyphOptions.render_mode = wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
     glyphOptions.flags = mWRGlyphFlags;
 
-    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont,
-                                     color, mSc, mBoundsRect, mClipRect,
-                                     mBackfaceVisible, &glyphOptions);
+    mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont, color, mSc,
+                                     mBoundsRect, ClipRect(), mBackfaceVisible,
+                                     &glyphOptions);
   }
 
   void
   PushClipRect(const Rect &aRect) override {
-    auto rect = mSc.ToRelativeLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
-    auto clipId = mBuilder.DefineClip(Nothing(), Nothing(), rect);
-    mBuilder.PushClip(clipId);
+    LayoutDeviceRect rect = LayoutDeviceRect::FromUnknownRect(aRect);
+    rect = rect.Intersect(mClipStack.LastElement());
+    mClipStack.AppendElement(rect);
   }
 
   void
   PopClip() override {
-    mBuilder.PopClip();
+    mClipStack.RemoveElementAt(mClipStack.Length() - 1);
   }
 
   void
   AppendShadow(const wr::Shadow& aShadow)
   {
-    mBuilder.PushShadow(mBoundsRect, mClipRect, mBackfaceVisible, aShadow);
+    mBuilder.PushShadow(mBoundsRect, ClipRect(), mBackfaceVisible, aShadow);
     mHasShadows = true;
   }
 
@@ -209,7 +209,7 @@ public:
   {
     auto rect = wr::ToLayoutRect(aRect);
     auto color = wr::ToColorF(aColor);
-    mBuilder.PushRect(rect, mClipRect, mBackfaceVisible, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
   }
 
 
@@ -271,7 +271,7 @@ public:
         MOZ_CRASH("TextDrawTarget received unsupported line style");
     }
 
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, decoration);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, decoration);
   }
 
   // Seperated out from AppendDecoration because Wavy Lines are completely
@@ -294,10 +294,14 @@ public:
       : wr::LineOrientation::Horizontal;
     decoration.style = wr::LineStyle::Wavy;
 
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, decoration);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, decoration);
   }
 
 private:
+  wr::LayerRect ClipRect()
+  {
+    return mSc.ToRelativeLayoutRect(mClipStack.LastElement());
+  }
   // Whether anything unsupported was encountered. Currently:
   //
   // * Synthetic bold/italics
@@ -319,7 +323,7 @@ private:
 
   // Computed facts
   wr::LayerRect mBoundsRect;
-  wr::LayerRect mClipRect;
+  nsTArray<LayoutDeviceRect> mClipStack;
   bool mBackfaceVisible;
 
   wr::FontInstanceFlags mWRGlyphFlags = {0};
@@ -403,7 +407,7 @@ public:
 
     auto rect = mSc.ToRelativeLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
-    mBuilder.PushRect(rect, mClipRect, mBackfaceVisible, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
   }
 
   void StrokeRect(const Rect &aRect,
@@ -423,24 +427,24 @@ public:
     LayoutDeviceSize horiSize(aRect.width, aStrokeOptions.mLineWidth);
     line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(top, horiSize));
     line.orientation = wr::LineOrientation::Horizontal;
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Bottom horizontal line
     LayoutDevicePoint bottom(aRect.x, aRect.YMost() - aStrokeOptions.mLineWidth / 2);
     line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(bottom, horiSize));
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Left vertical line
     LayoutDevicePoint left(aRect.x + aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
     LayoutDeviceSize vertSize(aStrokeOptions.mLineWidth, aRect.height - aStrokeOptions.mLineWidth);
     line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(left, vertSize));
     line.orientation = wr::LineOrientation::Vertical;
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Right vertical line
     LayoutDevicePoint right(aRect.XMost() - aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
     line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(right, vertSize));
-    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+    mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
   }
 
   void StrokeLine(const Point &aStart,
