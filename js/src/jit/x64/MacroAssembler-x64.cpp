@@ -73,92 +73,6 @@ MacroAssemblerX64::loadConstantSimd128Float(const SimdConstant&v, FloatRegister 
 }
 
 void
-MacroAssemblerX64::convertInt64ToDouble(Register64 input, FloatRegister output)
-{
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    zeroDouble(output);
-
-    vcvtsq2sd(input.reg, output, output);
-}
-
-void
-MacroAssemblerX64::convertInt64ToFloat32(Register64 input, FloatRegister output)
-{
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    zeroFloat32(output);
-
-    vcvtsq2ss(input.reg, output, output);
-}
-
-bool
-MacroAssemblerX64::convertUInt64ToDoubleNeedsTemp()
-{
-    return true;
-}
-
-void
-MacroAssemblerX64::convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp)
-{
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    zeroDouble(output);
-
-    // If the input's sign bit is not set we use vcvtsq2sd directly.
-    // Else, we divide by 2 and keep the LSB, convert to double, and multiply
-    // the result by 2.
-    Label done;
-    Label isSigned;
-
-    testq(input.reg, input.reg);
-    j(Assembler::Signed, &isSigned);
-    vcvtsq2sd(input.reg, output, output);
-    jump(&done);
-
-    bind(&isSigned);
-
-    ScratchRegisterScope scratch(asMasm());
-    mov(input.reg, scratch);
-    mov(input.reg, temp);
-    shrq(Imm32(1), scratch);
-    andq(Imm32(1), temp);
-    orq(temp, scratch);
-
-    vcvtsq2sd(scratch, output, output);
-    vaddsd(output, output, output);
-
-    bind(&done);
-}
-
-void
-MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
-{
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    zeroFloat32(output);
-
-    // See comment in convertUInt64ToDouble.
-    Label done;
-    Label isSigned;
-
-    testq(input.reg, input.reg);
-    j(Assembler::Signed, &isSigned);
-    vcvtsq2ss(input.reg, output, output);
-    jump(&done);
-
-    bind(&isSigned);
-
-    ScratchRegisterScope scratch(asMasm());
-    mov(input.reg, scratch);
-    mov(input.reg, temp);
-    shrq(Imm32(1), scratch);
-    andq(Imm32(1), temp);
-    orq(temp, scratch);
-
-    vcvtsq2ss(scratch, output, output);
-    vaddss(output, output, output);
-
-    bind(&done);
-}
-
-void
 MacroAssemblerX64::bindOffsets(const MacroAssemblerX86Shared::UsesVector& uses)
 {
     for (CodeOffset use : uses) {
@@ -921,6 +835,95 @@ MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 outp
     or64(Imm64(0x8000000000000000), output);
 
     bind(oolRejoin);
+}
+
+// ========================================================================
+// Convert floating point.
+
+void
+MacroAssembler::convertInt64ToDouble(Register64 input, FloatRegister output)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    vcvtsq2sd(input.reg, output, output);
+}
+
+void
+MacroAssembler::convertInt64ToFloat32(Register64 input, FloatRegister output)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroFloat32(output);
+
+    vcvtsq2ss(input.reg, output, output);
+}
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return true;
+}
+
+void
+MacroAssembler::convertUInt64ToDouble(Register64 input, FloatRegister output, Register temp)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    // If the input's sign bit is not set we use vcvtsq2sd directly.
+    // Else, we divide by 2 and keep the LSB, convert to double, and multiply
+    // the result by 2.
+    Label done;
+    Label isSigned;
+
+    testq(input.reg, input.reg);
+    j(Assembler::Signed, &isSigned);
+    vcvtsq2sd(input.reg, output, output);
+    jump(&done);
+
+    bind(&isSigned);
+
+    ScratchRegisterScope scratch(*this);
+    mov(input.reg, scratch);
+    mov(input.reg, temp);
+    shrq(Imm32(1), scratch);
+    andq(Imm32(1), temp);
+    orq(temp, scratch);
+
+    vcvtsq2sd(scratch, output, output);
+    vaddsd(output, output, output);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroFloat32(output);
+
+    // See comment in convertUInt64ToDouble.
+    Label done;
+    Label isSigned;
+
+    testq(input.reg, input.reg);
+    j(Assembler::Signed, &isSigned);
+    vcvtsq2ss(input.reg, output, output);
+    jump(&done);
+
+    bind(&isSigned);
+
+    ScratchRegisterScope scratch(*this);
+    mov(input.reg, scratch);
+    mov(input.reg, temp);
+    shrq(Imm32(1), scratch);
+    andq(Imm32(1), temp);
+    orq(temp, scratch);
+
+    vcvtsq2ss(scratch, output, output);
+    vaddss(output, output, output);
+
+    bind(&done);
 }
 
 // ========================================================================

@@ -1000,9 +1000,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         moveToDoubleHi(zero, reg);
     }
 
-    static bool convertUInt64ToDoubleNeedsTemp();
-    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp);
-
     void breakpoint();
 
     void checkStackAlignment();

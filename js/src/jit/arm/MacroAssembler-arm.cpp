@@ -96,29 +96,6 @@ MacroAssemblerARM::convertUInt32ToDouble(Register src, FloatRegister dest_)
 
 static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
 
-bool
-MacroAssemblerARMCompat::convertUInt64ToDoubleNeedsTemp()
-{
-    return false;
-}
-
-void
-MacroAssemblerARMCompat::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
-{
-    MOZ_ASSERT(temp == Register::Invalid());
-    ScratchDoubleScope scratchDouble(asMasm());
-
-    convertUInt32ToDouble(src.high, dest);
-    {
-        ScratchRegisterScope scratch(asMasm());
-        movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), scratch);
-        ma_vldr(Operand(Address(scratch, 0)).toVFPAddr(), scratchDouble);
-    }
-    asMasm().mulDouble(scratchDouble, dest);
-    convertUInt32ToDouble(src.low, scratchDouble);
-    asMasm().addDouble(scratchDouble, dest);
-}
-
 void
 MacroAssemblerARM::convertUInt32ToFloat32(Register src, FloatRegister dest_)
 {
@@ -5620,6 +5597,31 @@ MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Regist
     AtomicFetchOp64(*this, sync, op, value, mem, temp, output);
 }
 
+// ========================================================================
+// Convert floating point.
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return false;
+}
+
+void
+MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    ScratchDoubleScope scratchDouble(*this);
+
+    convertUInt32ToDouble(src.high, dest);
+    {
+        ScratchRegisterScope scratch(*this);
+        movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), scratch);
+        ma_vldr(Operand(Address(scratch, 0)).toVFPAddr(), scratchDouble);
+    }
+    mulDouble(scratchDouble, dest);
+    convertUInt32ToDouble(src.low, scratchDouble);
+    addDouble(scratchDouble, dest);
+}
 
 //}}} check_macroassembler_style
 
