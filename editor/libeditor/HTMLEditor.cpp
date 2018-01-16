@@ -9,6 +9,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsCRT.h"

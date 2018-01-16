@@ -27,6 +27,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 EXPORTS.mozilla += [
+     'mozInlineSpellChecker.h',
      'mozSpellChecker.h',
 ]
 
