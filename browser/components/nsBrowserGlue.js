@@ -2590,11 +2590,16 @@ BrowserGlue.prototype = {
         } else {
           title = bundle.GetStringFromName("tabArrivingNotification.title");
         }
-        // Use the page URL as the body. We strip the fragment and query to
-        // reduce size, and also format it the same way that the url bar would.
-        body = URIs[0].uri.replace(/[?#].*$/, "");
+        // Use the page URL as the body. We strip the fragment and query (after
+        // the `?` and `#` respectively) to reduce size, and also format it the
+        // same way that the url bar would.
+        body = URIs[0].uri.replace(/([?#]).*$/, "$1");
+        let wasTruncated = body.length < URIs[0].uri.length;
         if (win.gURLBar) {
           body = win.gURLBar.trimValue(body);
+        }
+        if (wasTruncated) {
+          body = bundle.formatStringFromName("singleTabArrivingWithTruncatedURL.body", [body], 1);
         }
       } else {
         title = bundle.GetStringFromName("multipleTabsArrivingNotification.title");
