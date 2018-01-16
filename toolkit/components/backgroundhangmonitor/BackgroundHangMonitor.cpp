@@ -26,12 +26,12 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "GeckoProfiler.h"
-#ifdef MOZ_GECKO_PROFILER
-#include "mozilla/TimeStamp.h"
-#include "ProfilerMarkerPayload.h"
-#endif
 #include "nsNetCID.h"
 #include "HangDetails.h"
+
+#ifdef MOZ_GECKO_PROFILER
+#include "ProfilerMarkerPayload.h"
+#endif
 
 #include <algorithm>
 
@@ -218,7 +218,7 @@ public:
 
   // Report a hang; aManager->mLock IS locked. The hang will be processed
   // off-main-thread, and will then be submitted back.
-  void ReportHang(PRIntervalTime aHangTime, TimeStamp aHangEndTime);
+  void ReportHang(PRIntervalTime aHangTime);
   // Report a permanent hang; aManager->mLock IS locked
   void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
@@ -390,7 +390,7 @@ BackgroundHangManager::RunMonitorThread()
       } else {
         if (MOZ_LIKELY(interval != currentThread->mHangStart)) {
           // A hang ended
-          currentThread->ReportHang(intervalNow - currentThread->mHangStart, TimeStamp::Now());
+          currentThread->ReportHang(intervalNow - currentThread->mHangStart);
           currentThread->mHanging = false;
         }
       }
@@ -468,13 +468,12 @@ BackgroundHangThread::~BackgroundHangThread()
 }
 
 void
-BackgroundHangThread::ReportHang(PRIntervalTime aHangTime, TimeStamp aHangEndTime)
+BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
 {
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
   HangDetails hangDetails(aHangTime,
-                          aHangEndTime,
                           XRE_GetProcessType(),
                           mThreadName,
                           mRunnableName,
@@ -492,6 +491,18 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime, TimeStamp aHangEndTim
     RefPtr<nsHangDetails> hd = new nsHangDetails(Move(hangDetails));
     hd->Submit();
   }
+
+  // If the profiler is enabled, add a marker.
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    TimeStamp endTime = TimeStamp::Now();
+    TimeStamp startTime = endTime - TimeDuration::FromMilliseconds(aHangTime);
+    profiler_add_marker_for_thread(
+      mStackHelper.GetThreadId(),
+      "BHR-detected hang",
+      MakeUnique<HangMarkerPayload>(startTime, endTime));
+  }
+#endif
 }
 
 void
@@ -506,7 +517,7 @@ BackgroundHangThread::ReportPermaHang()
   //
   // We currently don't look at hang reports outside of nightly, and already
   // collect native stacks eagerly on nightly, so this should be OK.
-  ReportHang(mMaxTimeout, TimeStamp::Now());
+  ReportHang(mMaxTimeout);
 }
 
 MOZ_ALWAYS_INLINE void

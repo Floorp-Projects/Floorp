@@ -32,7 +32,6 @@ class HangDetails
 public:
   HangDetails()
     : mDuration(0)
-    , mEndTime(TimeStamp::Now())
     , mProcess(GeckoProcessType_Invalid)
     , mRemoteType(VoidString())
   {}
@@ -40,14 +39,12 @@ public:
   HangDetails(const HangDetails& aOther) = default;
   HangDetails(HangDetails&& aOther) = default;
   HangDetails(uint32_t aDuration,
-              TimeStamp aEndTime,
               GeckoProcessType aProcess,
               const nsACString& aThreadName,
               const nsACString& aRunnableName,
               HangStack&& aStack,
               HangMonitor::HangAnnotations&& aAnnotations)
     : mDuration(aDuration)
-    , mEndTime(aEndTime)
     , mProcess(aProcess)
     , mRemoteType(VoidString())
     , mThreadName(aThreadName)
@@ -57,7 +54,6 @@ public:
   {}
 
   uint32_t mDuration;
-  TimeStamp mEndTime;
   GeckoProcessType mProcess;
   // NOTE: mRemoteType is set in nsHangDetails::Submit before the HangDetails
   // object is sent to the parent process.
