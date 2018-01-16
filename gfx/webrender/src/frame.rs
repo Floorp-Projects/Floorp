@@ -74,6 +74,24 @@ impl<'a> FlattenContext<'a> {
             .collect()
     }
 
+    fn get_clip_chain_items(
+        &self,
+        pipeline_id: PipelineId,
+        items: ItemRange<ClipId>,
+    ) -> Vec<ClipId> {
+        if items.is_empty() {
+            return vec![];
+        }
+
+        self.scene
+            .pipelines
+            .get(&pipeline_id)
+            .expect("No display list?")
+            .display_list
+            .get(items)
+            .collect()
+    }
+
     fn flatten_root(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
@@ -405,6 +423,7 @@ impl<'a> FlattenContext<'a> {
                             None,
                             info.image_key,
                             info.image_rendering,
+                            info.alpha_type,
                             None,
                         );
                     }
@@ -558,6 +577,10 @@ impl<'a> FlattenContext<'a> {
                     clip_region,
                 );
             }
+            SpecificDisplayItem::ClipChain(ref info) => {
+                let items = self.get_clip_chain_items(pipeline_id, item.clip_chain_items());
+                self.clip_scroll_tree.add_clip_chain_descriptor(info.id, info.parent, items);
+            },
             SpecificDisplayItem::ScrollFrame(ref info) => {
                 let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
                 let clip_region = ClipRegion::create_for_clip_node(
@@ -915,6 +938,7 @@ impl<'a> FlattenContext<'a> {
                 None,
                 info.image_key,
                 info.image_rendering,
+                info.alpha_type,
                 Some(tile_offset),
             );
         }

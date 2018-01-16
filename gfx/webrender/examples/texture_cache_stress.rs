@@ -147,6 +147,7 @@ impl Example for App {
                 image_size,
                 LayoutSize::zero(),
                 ImageRendering::Auto,
+                AlphaType::PremultipliedAlpha,
                 *key,
             );
         }
@@ -162,6 +163,7 @@ impl Example for App {
                 image_size,
                 LayoutSize::zero(),
                 ImageRendering::Auto,
+                AlphaType::PremultipliedAlpha,
                 image_key,
             );
         }
@@ -177,6 +179,7 @@ impl Example for App {
             image_size,
             LayoutSize::zero(),
             ImageRendering::Auto,
+            AlphaType::PremultipliedAlpha,
             swap_key,
         );
         self.swap_index = 1 - self.swap_index;
