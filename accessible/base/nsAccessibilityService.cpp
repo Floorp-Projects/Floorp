@@ -1342,9 +1342,6 @@ nsAccessibilityService::Init()
   }
 #endif // defined(XP_WIN)
 
-  static const char16_t kInitIndicator[] = { '1', 0 };
-  observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", kInitIndicator);
-
   // Subscribe to EventListenerService.
   nsCOMPtr<nsIEventListenerService> eventListenerService =
     do_GetService("@mozilla.org/eventlistenerservice;1");
@@ -1406,6 +1403,9 @@ nsAccessibilityService::Init()
 
   statistics::A11yInitialized();
 
+  static const char16_t kInitIndicator[] = { '1', 0 };
+  observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", kInitIndicator);
+
   return true;
 }
 
@@ -1425,9 +1425,6 @@ nsAccessibilityService::Shutdown()
       mozilla::services::GetObserverService();
   if (observerService) {
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-    static const char16_t kShutdownIndicator[] = { '0', 0 };
-    observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", kShutdownIndicator);
   }
 
   // Stop accessible document loader.
@@ -1457,6 +1454,11 @@ nsAccessibilityService::Shutdown()
 
   NS_RELEASE(gAccessibilityService);
   gAccessibilityService = nullptr;
+
+  if (observerService) {
+    static const char16_t kShutdownIndicator[] = { '0', 0 };
+    observerService->NotifyObservers(nullptr, "a11y-init-or-shutdown", kShutdownIndicator);
+  }
 }
 
 already_AddRefed<Accessible>
