@@ -779,6 +779,17 @@ public:
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) = 0;
 
   /**
+   * Remove a child from this node.  This method handles calling UnbindFromTree
+   * on the child appropriately.
+   *
+   * @param aKid the content to remove
+   * @param aNotify whether to notify the document (current document for
+   *        nsIContent, and |this| for nsIDocument) that the remove has
+   *        occurred
+   */
+  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) = 0;
+
+  /**
    * Get a property associated with this node.
    *
    * @param aPropertyName  name of property to get.

@@ -11,8 +11,7 @@ import functools
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
-from taskgraph.util.schema import Schema
-from taskgraph.util.scriptworker import get_push_apk_breakpoint_worker_type
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 from taskgraph.util.push_apk import fill_labels_tranform, validate_jobs_schema_transform_partial, \
     validate_dependent_tasks_transform, delete_non_required_fields_transform, generate_dependencies
 from voluptuous import Required
@@ -32,7 +31,7 @@ push_apk_breakpoint_description_schema = Schema({
     Required('description'): basestring,
     Required('job-from'): basestring,
     Required('attributes'): object,
-    Required('worker-type'): None,
+    Required('worker-type'): optionally_keyed_by('project', basestring),
     Required('worker'): object,
     Required('treeherder'): object,
     Required('run-on-projects'): list,
@@ -57,10 +56,12 @@ def make_task_description(config, jobs):
     for job in jobs:
         job['dependencies'] = generate_dependencies(job['dependent-tasks'])
 
-        worker_type = get_push_apk_breakpoint_worker_type(config)
-        job['worker-type'] = worker_type
+        resolve_keyed_by(
+            job, 'worker-type', item_name=job['name'],
+            project=config.params['project']
+        )
 
-        job['worker']['payload'] = {} if 'human' in worker_type else {
+        job['worker']['payload'] = {} if 'human' in job['worker-type'] else {
                 'image': 'ubuntu:16.10',
                 'command': [
                     '/bin/bash',
