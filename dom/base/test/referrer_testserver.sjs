@@ -7,25 +7,30 @@
 
 Components.utils.importGlobalProperties(["URLSearchParams"]);
 const SJS = "referrer_testserver.sjs?";
-const BASE_URL = "example.com/tests/dom/base/test/" + SJS;
+const SJS_PATH = "/tests/dom/base/test/";
+const BASE_ORIGIN = "example.com"
+const BASE_URL = BASE_ORIGIN + SJS_PATH + SJS;
 const SHARED_KEY = SJS;
-const SAME_ORIGIN = "mochi.test:8888/tests/dom/base/test/" + SJS;
-const CROSS_ORIGIN = "test1.example.com/tests/dom/base/test/" + SJS;
+const SAME_ORIGIN = "mochi.test:8888" + SJS_PATH + SJS;
+const CROSS_ORIGIN_URL = "test1.example.com" + SJS_PATH + SJS;
 
 const IMG_BYTES = atob(
   "iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12" +
   "P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==");
 
-function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo) {
+function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo, crossOrigin) {
   var schemeTo = aSchemeTo || "http";
   var schemeFrom = aSchemeFrom || "http";
-  return schemeTo + "://" + BASE_URL +
+  var url = schemeTo + "://";
+  url += (crossOrigin ? CROSS_ORIGIN_URL : BASE_URL);
+  url +=
          "ACTION=" + aAction + "&" +
          "policy=" + aPolicy + "&" +
          "NAME=" + aName + "&" +
          "type=" + aType + "&" +
          "SCHEME_FROM=" + schemeFrom;
-}
+  return url
+  }
 
 // test page using iframe referrer attribute
 // if aParams are set this creates a test where the iframe url is a redirect
@@ -46,7 +51,7 @@ function createIframeTestPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAt
   if (aParams) {
     aParams.delete("ACTION");
     aParams.append("ACTION", "redirectIframe");
-    iframeUrl = "http://" + CROSS_ORIGIN + aParams.toString();
+    iframeUrl = "http://" + CROSS_ORIGIN_URL + aParams.toString();
   } else {
     iframeUrl = createTestUrl(aAttributePolicy, "test", aName, "iframe", aSchemeFrom, aSchemeTo);
   }
@@ -132,7 +137,7 @@ function createRedirectImgTestCase(aParams, aAttributePolicy) {
   }
   aParams.delete("ACTION");
   aParams.append("ACTION", "redirectImg");
-  var imgUrl = "http://" + CROSS_ORIGIN + aParams.toString();
+  var imgUrl = "http://" + CROSS_ORIGIN_URL + aParams.toString();
 
   return `<!DOCTYPE HTML>
           <html>
@@ -187,8 +192,8 @@ function createLinkPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttribut
            </html>`;
 }
 
-function createFetchUserControlRPTestCase(aName, aSchemeFrom, aSchemeTo) {
-  var srcUrl = createTestUrl("", "test", aName, "iframe", aSchemeFrom, aSchemeTo);
+function createFetchUserControlRPTestCase(aName, aSchemeFrom, aSchemeTo, crossOrigin) {
+  var srcUrl = createTestUrl("", "test", aName, "fetch", aSchemeFrom, aSchemeTo, crossOrigin);
 
   return `<!DOCTYPE HTML>
           <html>
@@ -237,6 +242,7 @@ function handleRequest(request, response) {
   var action = params.get("ACTION");
   var schemeFrom = params.get("SCHEME_FROM") || "http";
   var schemeTo = params.get("SCHEME_TO") || "http";
+  var crossOrigin = params.get("CROSS_ORIGIN") || false;
 
   response.setHeader("Access-Control-Allow-Origin", "*", false);
 
@@ -262,7 +268,7 @@ function handleRequest(request, response) {
     params.append("type", "img");
     // 302 found, 301 Moved Permanently, 303 See Other, 307 Temporary Redirect
     response.setStatusLine("1.1", 302, "found");
-    response.setHeader("Location",  "http://" + CROSS_ORIGIN + params.toString(), false);
+    response.setHeader("Location",  "http://" + CROSS_ORIGIN_URL + params.toString(), false);
     return;
   }
   if (action === "redirectIframe"){
@@ -271,7 +277,7 @@ function handleRequest(request, response) {
     params.append("type", "iframe");
     // 302 found, 301 Moved Permanently, 303 See Other, 307 Temporary Redirect
     response.setStatusLine("1.1", 302, "found");
-    response.setHeader("Location",  "http://" + CROSS_ORIGIN + params.toString(), false);
+    response.setHeader("Location",  "http://" + CROSS_ORIGIN_URL + params.toString(), false);
     return;
   }
   if (action === "test") {
@@ -414,7 +420,7 @@ function handleRequest(request, response) {
   }
 
   if (action === "generate-fetch-user-control-policy-test") {
-    response.write(createFetchUserControlRPTestCase(name, schemeFrom, schemeTo));
+    response.write(createFetchUserControlRPTestCase(name, schemeFrom, schemeTo, crossOrigin));
     return;
   }
 
