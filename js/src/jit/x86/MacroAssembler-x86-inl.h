@@ -266,18 +266,17 @@ MacroAssembler::addConstantDouble(double d, FloatRegister dest)
 }
 
 CodeOffset
-MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    if (src != dest)
-        movePtr(src, dest);
+    moveStackPtrTo(dest);
     addlWithPatch(Imm32(0), dest);
     return CodeOffset(currentOffset());
 }
 
 void
-MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    patchAddl(offset, imm.value);
+    patchAddl(offset, -imm.value);
 }
 
 void

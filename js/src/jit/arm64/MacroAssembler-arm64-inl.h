@@ -355,15 +355,15 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 }
 
 CodeOffset
-MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    MOZ_CRASH("NYI - add32ToPtrWithPatch");
+    MOZ_CRASH("NYI - sub32FromStackPtrWithPatch");
 }
 
 void
-MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    MOZ_CRASH("NYI - patchAdd32ToPtr");
+    MOZ_CRASH("NYI - patchSub32FromStackPtr");
 }
 
 void
@@ -1788,68 +1788,139 @@ MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCh
 //}}} check_macroassembler_style
 // ===============================================================
 
-template <typename T>
 void
-MacroAssemblerCompat::addToStackPtr(T t)
+MacroAssemblerCompat::addToStackPtr(Register src)
 {
-    asMasm().addPtr(t, getStackPointer());
+    Add(GetStackPointer64(), GetStackPointer64(), ARMRegister(src, 64));
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::addStackPtrTo(T t)
+MacroAssemblerCompat::addToStackPtr(Imm32 imm)
 {
-    asMasm().addPtr(getStackPointer(), t);
+    Add(GetStackPointer64(), GetStackPointer64(), Operand(imm.value));
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::subFromStackPtr(T t)
+MacroAssemblerCompat::addToStackPtr(const Address& src)
 {
-    asMasm().subPtr(t, getStackPointer()); syncStackPtr();
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch = temps.AcquireX();
+    Ldr(scratch, toMemOperand(src));
+    Add(GetStackPointer64(), GetStackPointer64(), scratch);
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::subStackPtrFrom(T t)
+MacroAssemblerCompat::addStackPtrTo(Register dest)
 {
-    asMasm().subPtr(getStackPointer(), t);
+    Add(ARMRegister(dest, 64), ARMRegister(dest, 64), GetStackPointer64());
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::andToStackPtr(T t)
+MacroAssemblerCompat::subFromStackPtr(Register src)
 {
-    asMasm().andPtr(t, getStackPointer());
+    Sub(GetStackPointer64(), GetStackPointer64(), ARMRegister(src, 64));
     syncStackPtr();
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::andStackPtrTo(T t)
+MacroAssemblerCompat::subFromStackPtr(Imm32 imm)
 {
-    asMasm().andPtr(getStackPointer(), t);
+    Sub(GetStackPointer64(), GetStackPointer64(), Operand(imm.value));
+    syncStackPtr();
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::branchStackPtr(Condition cond, T rhs, Label* label)
+MacroAssemblerCompat::subStackPtrFrom(Register dest)
 {
-    asMasm().branchPtr(cond, getStackPointer(), rhs, label);
+    Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), GetStackPointer64());
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::branchStackPtrRhs(Condition cond, T lhs, Label* label)
+MacroAssemblerCompat::andToStackPtr(Imm32 imm)
 {
-    asMasm().branchPtr(cond, lhs, getStackPointer(), label);
+    if (sp.Is(GetStackPointer64())) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch = temps.AcquireX();
+        Mov(scratch, sp);
+        And(sp, scratch, Operand(imm.value));
+        // syncStackPtr() not needed since our SP is the real SP.
+    } else {
+        And(GetStackPointer64(), GetStackPointer64(), Operand(imm.value));
+        syncStackPtr();
+    }
 }
 
-template <typename T>
 void
-MacroAssemblerCompat::branchTestStackPtr(Condition cond, T t, Label* label)
+MacroAssemblerCompat::andStackPtrTo(Register dest)
 {
-    asMasm().branchTestPtr(cond, getStackPointer(), t, label);
+    And(ARMRegister(dest, 64), ARMRegister(dest, 64), GetStackPointer64());
+}
+
+void
+MacroAssemblerCompat::moveToStackPtr(Register src)
+{
+    Mov(GetStackPointer64(), ARMRegister(src, 64));
+    syncStackPtr();
+}
+
+void
+MacroAssemblerCompat::moveStackPtrTo(Register dest)
+{
+    Mov(ARMRegister(dest, 64), GetStackPointer64());
+}
+
+void
+MacroAssemblerCompat::loadStackPtr(const Address& src)
+{
+    Ldr(GetStackPointer64(), toMemOperand(src));
+    syncStackPtr();
+}
+
+void
+MacroAssemblerCompat::storeStackPtr(const Address& dest)
+{
+    Str(GetStackPointer64(), toMemOperand(dest));
+}
+
+void
+MacroAssemblerCompat::branchTestStackPtr(Condition cond, Imm32 rhs, Label* label)
+{
+    if (sp.Is(GetStackPointer64())) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch = temps.AcquireX();
+        Mov(scratch, sp);
+        Tst(scratch, Operand(rhs.value));
+    } else {
+        Tst(GetStackPointer64(), Operand(rhs.value));
+    }
+    B(label, cond);
+}
+
+void
+MacroAssemblerCompat::branchStackPtr(Condition cond, Register rhs_, Label* label)
+{
+    ARMRegister rhs(rhs_, 64);
+    if (sp.Is(GetStackPointer64())) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch = temps.AcquireX();
+        Mov(scratch, sp);
+        Cmp(scratch, rhs);
+    } else {
+        Cmp(GetStackPointer64(), rhs);
+    }
+    B(label, cond);
+}
+
+void
+MacroAssemblerCompat::branchStackPtrRhs(Condition cond, Address lhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch = temps.AcquireX();
+    Ldr(scratch, toMemOperand(lhs));
+    // Cmp disallows SP as the rhs, so flip the operands and invert the
+    // condition.
+    Cmp(GetStackPointer64(), scratch);
+    B(label, Assembler::InvertCondition(cond));
 }
 
 // If source is a double, load into dest.
