@@ -180,8 +180,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
       // into the same parent. This is necessary as multiple rules
       // may generate results which get placed in different locations.
       items[i].parent = parent;
-      int32_t index = parent->IndexOf(child);
-      parent->RemoveChildAt_Deprecated(index, true);
+      parent->RemoveChildNode(child, true);
     }
   }
 
