@@ -20,6 +20,7 @@ treeherder:
         'T-e10s': 'Talos performance tests with e10s'
         'Tsd-e10s': 'Talos performance tests with e10s, Stylo disabled'
         'Tss-e10s': 'Talos performance tests with e10s, Stylo sequential'
+        'T-P-e10s': 'Talos performance tests with e10s and gecko profiling'
         'tt-c': 'Telemetry client marionette tests'
         'tt-c-e10s': 'Telemetry client marionette tests with e10s'
         'SY-e10s': 'Are we slim yet tests by TaskCluster with e10s'
