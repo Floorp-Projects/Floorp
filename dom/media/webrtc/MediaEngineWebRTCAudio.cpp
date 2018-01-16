@@ -70,7 +70,6 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mExtendedFilter(aExtendedFilter)
   , mTrackID(TRACK_NONE)
   , mStarted(false)
-  , mSampleFrequency(MediaEngine::USE_GRAPH_RATE)
   , mTotalFrames(0)
   , mLastLogFrames(0)
   , mSkipProcessing(false)
@@ -481,9 +480,7 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   }
 
   AudioSegment* segment = new AudioSegment();
-  if (mSampleFrequency == MediaEngine::USE_GRAPH_RATE) {
-    mSampleFrequency = aStream->GraphRate();
-  }
+
   aStream->AddAudioTrack(aID, aStream->GraphRate(), 0, segment, SourceMediaStream::ADDTRACK_QUEUED);
 
   // XXX Make this based on the pref.
@@ -773,7 +770,7 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
 
   if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
     mTotalFrames += aFrames;
-    if (mTotalFrames > mLastLogFrames + mSampleFrequency) { // ~ 1 second
+    if (mTotalFrames > mLastLogFrames + mSources[0]->GraphRate()) { // ~ 1 second
       MOZ_LOG(AudioLogModule(), LogLevel::Debug,
               ("%p: Inserting %zu samples into graph, total frames = %" PRIu64,
                (void*)this, aFrames, mTotalFrames));
@@ -894,9 +891,6 @@ MediaEngineWebRTCMicrophoneSource::FreeChannel()
 bool
 MediaEngineWebRTCMicrophoneSource::AllocChannel()
 {
-  mSampleFrequency = MediaEngine::USE_GRAPH_RATE;
-  LOG(("%s: sampling rate %u", __FUNCTION__, mSampleFrequency));
-
   mState = kAllocated;
   sChannelsOpen++;
   return true;
