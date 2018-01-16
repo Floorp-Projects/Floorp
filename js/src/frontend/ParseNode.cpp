@@ -183,7 +183,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
     switch (pn->getKind()) {
       // Trivial nodes that refer to no nodes, are referred to by nothing
       // but their parents, are never used, and are never a definition.
-      case ParseNodeKind::Nop:
       case ParseNodeKind::EmptyStatement:
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:

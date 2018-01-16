@@ -1217,8 +1217,6 @@ BinASTParser::parseVariableDeclarationAux(const BinKind kind, const BinFields& f
             return raiseMissingField("VariableDeclaration", BinField::Declarations);
 
         result->setKind(pnk);
-
-        MOZ_ASSERT(!result->isKind(ParseNodeKind::Nop));
     }
 
     return result;

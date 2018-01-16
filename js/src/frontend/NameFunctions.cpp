@@ -388,7 +388,6 @@ class NameResolver
         switch (cur->getKind()) {
           // Nodes with no children that might require name resolution need no
           // further work.
-          case ParseNodeKind::Nop:
           case ParseNodeKind::EmptyStatement:
           case ParseNodeKind::String:
           case ParseNodeKind::TemplateString:
