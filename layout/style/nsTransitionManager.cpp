@@ -341,15 +341,21 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
   }
   mPreviousTransitionPhase = currentPhase;
 
-  nsTransitionManager* manager = presContext->TransitionManager();
-  for (const TransitionEventParams& evt : events) {
-    manager->QueueEvent(TransitionEventInfo(mOwningElement.Target(),
-                                            evt.mMessage,
-                                            TransitionProperty(),
-                                            evt.mElapsedTime,
-                                            evt.mTimeStamp,
-                                            this));
+  if (events.IsEmpty()) {
+    return;
   }
+
+  AutoTArray<TransitionEventInfo, 3> transitionEvents;
+  for (const TransitionEventParams& evt : events) {
+    transitionEvents.AppendElement(
+      TransitionEventInfo(mOwningElement.Target(),
+                          evt.mMessage,
+                          TransitionProperty(),
+                          evt.mElapsedTime,
+                          evt.mTimeStamp,
+                          this));
+  }
+  presContext->TransitionManager()->QueueEvents(Move(transitionEvents));
 }
 
 void
