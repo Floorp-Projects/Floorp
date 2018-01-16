@@ -259,6 +259,10 @@ var gPrivacyPane = {
       gPrivacyPane._updateSanitizeSettingsButton.bind(gPrivacyPane));
     Preferences.get("browser.privatebrowsing.autostart").on("change",
       gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane));
+    Preferences.get("privacy.trackingprotection.enabled").on("change",
+      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
+    Preferences.get("privacy.trackingprotection.pbmode.enabled").on("change",
+      gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
     setEventListener("historyMode", "command", function() {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
