@@ -1567,6 +1567,9 @@ HttpBaseChannel::GetReferrer(nsIURI **referrer)
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrer(nsIURI *referrer)
 {
+  if (mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0) {
+    return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy(true));
+  }
   return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy());
 }
 

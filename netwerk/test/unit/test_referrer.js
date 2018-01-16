@@ -1,14 +1,13 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-function getTestReferrer(server_uri, referer_uri) {
+function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   var uri = NetUtil.newURI(server_uri)
   let referrer = NetUtil.newURI(referer_uri);
-  let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(referrer, {});
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(referrer, {privateBrowsingId: isPrivate ? 1 : 0});
   var chan = NetUtil.newChannel({
     uri: uri,
-    loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    triggeringPrincipal: triggeringPrincipal,
+    loadingPrincipal: principal,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
   });
 
@@ -62,6 +61,22 @@ function run_test() {
   prefs.setIntPref("network.http.referer.defaultPolicy", 3);
   Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
   Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https));
+
+  // tests for referer.defaultPolicy
+  prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 0);
+  Assert.equal(null, getTestReferrer(server_uri, referer_uri, true));
+  prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 1);
+  Assert.equal(null, getTestReferrer(server_uri, referer_uri, true));
+  Assert.equal(getTestReferrer(server_uri, referer_uri_2, true), referer_uri_2);
+  prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 2);
+  Assert.equal(null, getTestReferrer(server_uri, referer_uri_https, true));
+  Assert.equal(getTestReferrer(server_uri_https, referer_uri_https, true), referer_uri_https);
+  Assert.equal(getTestReferrer(server_uri_https, referer_uri_2_https, true), "https://bar.examplesite.com/");
+  Assert.equal(getTestReferrer(server_uri, referer_uri_2, true), referer_uri_2);
+  Assert.equal(getTestReferrer(server_uri, referer_uri, true), "http://foo.example.com/");
+  prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 3);
+  Assert.equal(getTestReferrer(server_uri, referer_uri, true), referer_uri);
+  Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https, true));
 
   // tests for referer.spoofSource
   prefs.setBoolPref("network.http.referer.spoofSource", true);
