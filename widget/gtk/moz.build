@@ -98,6 +98,7 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['MOZ_WAYLAND']:
     UNIFIED_SOURCES += [
+        'nsClipboardWayland.cpp',
         'WindowSurfaceWayland.cpp',
     ]
 
