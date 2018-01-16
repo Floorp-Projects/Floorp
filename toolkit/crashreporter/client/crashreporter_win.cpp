@@ -1566,6 +1566,7 @@ void UIPruneSavedDumps(const std::string& directory)
 
     dumpfiles.pop_back();
   }
+  FindClose(dirlist);
 }
 
 bool UIRunProgram(const string& exename,

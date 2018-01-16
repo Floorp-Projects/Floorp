@@ -2087,6 +2087,9 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
 
   mDownloadStatistics.AddBytes(aCount);
 
+  // True if we commit any blocks to the cache.
+  bool cacheUpdated = false;
+
   auto source = MakeSpan<const uint8_t>(aData, aCount);
 
   // We process the data one block (or part of a block) at a time
@@ -2115,6 +2118,7 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
         source.First(remaining));
       source = source.From(remaining);
       mChannelOffset += remaining;
+      cacheUpdated = true;
     } else {
       // The buffer to be filled in the partial block.
       auto buf = MakeSpan<uint8_t>(mPartialBlockBuffer.get() + partial.Length(),
@@ -2134,10 +2138,12 @@ MediaCacheStream::NotifyDataReceived(uint32_t aLoadID,
     stream->mClient->CacheClientNotifyDataReceived();
   }
 
-  // Notify in case there's a waiting reader
   // XXX it would be fairly easy to optimize things a lot more to
   // avoid waking up reader threads unnecessarily
-  lock.NotifyAll();
+  if (cacheUpdated) {
+    // Wake up the reader who is waiting for the committed blocks.
+    lock.NotifyAll();
+  }
 }
 
 void
@@ -2300,6 +2306,11 @@ MediaCacheStream::NotifyClientSuspended(bool aSuspended)
         // mClientSuspended changes the decision of reading streams.
         mMediaCache->QueueUpdate(lock);
         UpdateDownloadStatistics(lock);
+        if (mClientSuspended) {
+          // Download is suspended. Wake up the readers that might be able to
+          // get data from the partial block.
+          lock.NotifyAll();
+        }
       }
     });
   OwnerThread()->Dispatch(r.forget());
