@@ -56,7 +56,7 @@ void WindowSurfaceProvider::Initialize(
 #ifdef MOZ_WAYLAND
 void WindowSurfaceProvider::Initialize(nsWindow *aWidget)
 {
-  MOZ_ASSERT(!aWidget->IsX11Display(),
+  MOZ_ASSERT(aWidget->GetWaylandDisplay(),
              "We are supposed to have a Wayland display!");
 
   mWidget = aWidget;
