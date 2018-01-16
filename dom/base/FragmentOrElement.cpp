@@ -1180,6 +1180,8 @@ FragmentOrElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 void
 FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
+  // Let's keep the node alive.
+  nsCOMPtr<nsIContent> kungFuDeathGrip = aKid;
   doRemoveChildAt(IndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
 }
 
@@ -2307,10 +2309,9 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, true);
 
   // Remove childnodes.
-  uint32_t childCount = target->GetChildCount();
   nsAutoMutationBatch mb(target, true, false);
-  for (uint32_t i = 0; i < childCount; ++i) {
-    target->RemoveChildAt_Deprecated(0, true);
+  while (target->HasChildren()) {
+    target->RemoveChildNode(target->GetFirstChild(), true);
   }
   mb.RemovalDone();
 
