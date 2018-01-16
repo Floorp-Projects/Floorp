@@ -38,7 +38,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseCommandController)
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
 #ifdef NS_PRINTING
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintingPromptService, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPrintingPromptService,
+                                         nsPrintingPromptService::GetSingleton)
 #ifdef PROXY_PRINTING
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPrintingProxy,
                                          nsPrintingProxy::GetInstance)
