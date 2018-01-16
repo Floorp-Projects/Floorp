@@ -44,9 +44,10 @@ StyleSetHandle::Ptr::Delete()
 }
 
 void
-StyleSetHandle::Ptr::Init(nsPresContext* aPresContext)
+StyleSetHandle::Ptr::Init(nsPresContext* aPresContext,
+                          nsBindingManager* aBindingManager)
 {
-  FORWARD(Init, (aPresContext));
+  FORWARD(Init, (aPresContext, aBindingManager));
 }
 
 void
