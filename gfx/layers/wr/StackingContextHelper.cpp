@@ -22,7 +22,6 @@ StackingContextHelper::StackingContextHelper()
 StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParentSC,
                                              wr::DisplayListBuilder& aBuilder,
                                              const nsTArray<wr::WrFilterOp>& aFilters,
-                                             const LayoutDeviceRect& aBounds,
                                              const gfx::Matrix4x4* aBoundTransform,
                                              const wr::WrAnimationProperty* aAnimation,
                                              float* aOpacityPtr,
@@ -45,7 +44,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     mScale = mInheritedTransform.ScaleFactors(true);
   }
 
-  mBuilder->PushStackingContext(wr::ToLayoutRect(aBounds),
+  mBuilder->PushStackingContext(wr::LayoutRect(),
                                 aAnimation,
                                 aOpacityPtr,
                                 aTransformPtr,
