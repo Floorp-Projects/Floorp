@@ -3068,6 +3068,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
     switch (pn->getKind()) {
       // Trivial cases with no side effects.
       case ParseNodeKind::Nop:
+      case ParseNodeKind::EmptyStatement:
       case ParseNodeKind::String:
       case ParseNodeKind::TemplateString:
       case ParseNodeKind::RegExp:
@@ -3199,12 +3200,9 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         return checkSideEffects(expr, answer);
       }
 
-      case ParseNodeKind::Semi:
+      case ParseNodeKind::ExpressionStatement:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
-        if (ParseNode* expr = pn->pn_kid)
-            return checkSideEffects(expr, answer);
-        *answer = false;
-        return true;
+        return checkSideEffects(pn->pn_kid, answer);
 
       // Binary cases with obvious side effects.
       case ParseNodeKind::Assign:
@@ -8714,13 +8712,9 @@ BytecodeEmitter::emitStatementList(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitStatement(ParseNode* pn)
+BytecodeEmitter::emitExpressionStatement(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isKind(ParseNodeKind::Semi));
-
-    ParseNode* pn2 = pn->pn_kid;
-    if (!pn2)
-        return true;
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::ExpressionStatement));
 
     if (!updateSourceCoordNotes(pn->pn_pos.begin))
         return false;
@@ -8742,8 +8736,9 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
         useful = wantval = !script->noScriptRval();
 
     /* Don't eliminate expressions with side effects. */
+    ParseNode* expr = pn->pn_kid;
     if (!useful) {
-        if (!checkSideEffects(pn2, &useful))
+        if (!checkSideEffects(expr, &useful))
             return false;
 
         /*
@@ -8762,8 +8757,8 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
     if (useful) {
         JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
         ValueUsage valueUsage = wantval ? ValueUsage::WantValue : ValueUsage::IgnoreValue;
-        MOZ_ASSERT_IF(pn2->isKind(ParseNodeKind::Assign), pn2->isOp(JSOP_NOP));
-        if (!emitTree(pn2, valueUsage))
+        MOZ_ASSERT_IF(expr->isKind(ParseNodeKind::Assign), expr->isOp(JSOP_NOP));
+        if (!emitTree(expr, valueUsage))
             return false;
         if (!emit1(op))
             return false;
@@ -8789,11 +8784,11 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
             }
 
             if (directive) {
-                if (!reportExtraWarning(pn2, JSMSG_CONTRARY_NONDIRECTIVE, directive))
+                if (!reportExtraWarning(expr, JSMSG_CONTRARY_NONDIRECTIVE, directive))
                     return false;
             }
         } else {
-            if (!reportExtraWarning(pn2, JSMSG_USELESS_EXPR))
+            if (!reportExtraWarning(expr, JSMSG_USELESS_EXPR))
                 return false;
         }
     }
@@ -10742,8 +10737,11 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
             return false;
         break;
 
-      case ParseNodeKind::Semi:
-        if (!emitStatement(pn))
+      case ParseNodeKind::EmptyStatement:
+        break;
+
+      case ParseNodeKind::ExpressionStatement:
+        if (!emitExpressionStatement(pn))
             return false;
         break;
 
