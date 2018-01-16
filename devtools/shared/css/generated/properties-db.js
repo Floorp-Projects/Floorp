@@ -1164,6 +1164,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "bottom",
+      "calc",
       "center",
       "inherit",
       "initial",
@@ -2486,6 +2487,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "bottom",
+      "calc",
       "center",
       "inherit",
       "initial",
@@ -7427,6 +7429,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "bottom",
+      "calc",
       "center",
       "inherit",
       "initial",
@@ -7991,6 +7994,7 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "bottom",
+      "calc",
       "center",
       "inherit",
       "initial",

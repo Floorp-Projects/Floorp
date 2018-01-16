@@ -234,6 +234,14 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   ok(values.includes("match-parent"), "property text-align includes match-parent");
 
+  // Regression test for bug 1255402.
+  var expected = [ "inherit", "initial", "unset", "left", "right",
+                   "top", "center", "bottom", "calc" ];
+  for (prop of ["object-position", "perspective-origin"]) {
+    var values = InspectorUtils.getCSSValuesForProperty(prop);
+    ok(testValues(values, expected), "property " + prop + "'s values");
+  }
+
   SimpleTest.finish();
 }
 
