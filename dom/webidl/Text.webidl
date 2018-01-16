@@ -19,7 +19,7 @@ interface Text : CharacterData {
 };
 
 partial interface Text {
-  [BinaryName="assignedSlotByMode", Func="nsTextNode::IsWebComponentsEnabled"]
+  [BinaryName="assignedSlotByMode", Func="nsTextNode::IsShadowDOMEnabled"]
   readonly attribute HTMLSlotElement? assignedSlot;
 };
 

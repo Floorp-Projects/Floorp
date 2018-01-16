@@ -52,7 +52,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
   SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.webcomponents.enabled", true]
+      ["dom.webcomponents.shadowdom.enabled", true]
     ]
   }, runTests);
 });

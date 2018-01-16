@@ -65,7 +65,7 @@ user_pref("media.gmp-manager.updateEnabled", false);
 user_pref("media.hls.server.url", "http://%(server)s/tests/dom/media/test/hls");
 user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("layout.accessiblecaret.enabled_on_touch", false);
-user_pref("dom.webcomponents.enabled", false);
+user_pref("dom.webcomponents.shadowdom.enabled", false);
 user_pref("dom.webcomponents.customelements.enabled", true);
 // Existing tests assume there is no font size inflation.
 user_pref("font.size.inflation.emPerLine", 0);
