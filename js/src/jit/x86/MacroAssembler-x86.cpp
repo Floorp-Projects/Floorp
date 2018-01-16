@@ -22,95 +22,6 @@
 using namespace js;
 using namespace js::jit;
 
-// vpunpckldq requires 16-byte boundary for memory operand.
-// See convertUInt64ToDouble for the details.
-MOZ_ALIGNED_DECL(static const uint64_t, 16) TO_DOUBLE[4] = {
-    0x4530000043300000LL,
-    0x0LL,
-    0x4330000000000000LL,
-    0x4530000000000000LL
-};
-
-static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
-
-bool
-MacroAssemblerX86::convertUInt64ToDoubleNeedsTemp()
-{
-    return HasSSE3();
-}
-
-void
-MacroAssemblerX86::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
-{
-    // SUBPD needs SSE2, HADDPD needs SSE3.
-    if (!HasSSE3()) {
-        MOZ_ASSERT(temp == Register::Invalid());
-
-        // Zero the dest register to break dependencies, see convertInt32ToDouble.
-        zeroDouble(dest);
-
-        asMasm().Push(src.high);
-        asMasm().Push(src.low);
-        fild(Operand(esp, 0));
-
-        Label notNegative;
-        asMasm().branch32(Assembler::NotSigned, src.high, Imm32(0), &notNegative);
-        double add_constant = 18446744073709551616.0; // 2^64
-        store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
-        fld(Operand(esp, 0));
-        faddp();
-        bind(&notNegative);
-
-        fstp(Operand(esp, 0));
-        vmovsd(Address(esp, 0), dest);
-        asMasm().freeStack(2 * sizeof(intptr_t));
-        return;
-    }
-
-    // Following operation uses entire 128-bit of dest XMM register.
-    // Currently higher 64-bit is free when we have access to lower 64-bit.
-    MOZ_ASSERT(dest.size() == 8);
-    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Simd128);
-
-    // Assume that src is represented as following:
-    //   src      = 0x HHHHHHHH LLLLLLLL
-
-    // Move src to dest (=dest128) and ScratchInt32x4Reg (=scratch):
-    //   dest     = 0x 00000000 00000000  00000000 LLLLLLLL
-    //   scratch  = 0x 00000000 00000000  00000000 HHHHHHHH
-    vmovd(src.low, dest128);
-    vmovd(src.high, ScratchSimd128Reg);
-
-    // Unpack and interleave dest and scratch to dest:
-    //   dest     = 0x 00000000 00000000  HHHHHHHH LLLLLLLL
-    vpunpckldq(ScratchSimd128Reg, dest128, dest128);
-
-    // Unpack and interleave dest and a constant C1 to dest:
-    //   C1       = 0x 00000000 00000000  45300000 43300000
-    //   dest     = 0x 45300000 HHHHHHHH  43300000 LLLLLLLL
-    // here, each 64-bit part of dest represents following double:
-    //   HI(dest) = 0x 1.00000HHHHHHHH * 2**84 == 2**84 + 0x HHHHHHHH 00000000
-    //   LO(dest) = 0x 1.00000LLLLLLLL * 2**52 == 2**52 + 0x 00000000 LLLLLLLL
-    movePtr(ImmWord((uintptr_t)TO_DOUBLE), temp);
-    vpunpckldq(Operand(temp, 0), dest128, dest128);
-
-    // Subtract a constant C2 from dest, for each 64-bit part:
-    //   C2       = 0x 45300000 00000000  43300000 00000000
-    // here, each 64-bit part of C2 represents following double:
-    //   HI(C2)   = 0x 1.0000000000000 * 2**84 == 2**84
-    //   LO(C2)   = 0x 1.0000000000000 * 2**52 == 2**52
-    // after the operation each 64-bit part of dest represents following:
-    //   HI(dest) = double(0x HHHHHHHH 00000000)
-    //   LO(dest) = double(0x 00000000 LLLLLLLL)
-    vsubpd(Operand(temp, sizeof(uint64_t) * 2), dest128, dest128);
-
-    // Add HI(dest) and LO(dest) in double and store it into LO(dest),
-    //   LO(dest) = double(0x HHHHHHHH 00000000) + double(0x 00000000 LLLLLLLL)
-    //            = double(0x HHHHHHHH LLLLLLLL)
-    //            = double(src)
-    vhaddpd(dest128, dest128);
-}
-
 void
 MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 {
@@ -1199,58 +1110,131 @@ MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 outp
 }
 
 
-//}}} check_macroassembler_style
+// ========================================================================
+// Convert floating point.
+
+// vpunpckldq requires 16-byte boundary for memory operand.
+// See convertUInt64ToDouble for the details.
+MOZ_ALIGNED_DECL(static const uint64_t, 16) TO_DOUBLE[4] = {
+    0x4530000043300000LL,
+    0x0LL,
+    0x4330000000000000LL,
+    0x4530000000000000LL
+};
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return HasSSE3();
+}
 
 void
-MacroAssemblerX86::convertInt64ToDouble(Register64 input, FloatRegister output)
+MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    // SUBPD needs SSE2, HADDPD needs SSE3.
+    if (!HasSSE3()) {
+        MOZ_ASSERT(temp == Register::Invalid());
+
+        // Zero the dest register to break dependencies, see convertInt32ToDouble.
+        zeroDouble(dest);
+
+        Push(src.high);
+        Push(src.low);
+        fild(Operand(esp, 0));
+
+        Label notNegative;
+        branch32(Assembler::NotSigned, src.high, Imm32(0), &notNegative);
+        double add_constant = 18446744073709551616.0; // 2^64
+        store64(Imm64(mozilla::BitwiseCast<uint64_t>(add_constant)), Address(esp, 0));
+        fld(Operand(esp, 0));
+        faddp();
+        bind(&notNegative);
+
+        fstp(Operand(esp, 0));
+        vmovsd(Address(esp, 0), dest);
+        freeStack(2 * sizeof(intptr_t));
+        return;
+    }
+
+    // Following operation uses entire 128-bit of dest XMM register.
+    // Currently higher 64-bit is free when we have access to lower 64-bit.
+    MOZ_ASSERT(dest.size() == 8);
+    FloatRegister dest128 = FloatRegister(dest.encoding(), FloatRegisters::Simd128);
+
+    // Assume that src is represented as following:
+    //   src      = 0x HHHHHHHH LLLLLLLL
+
+    // Move src to dest (=dest128) and ScratchInt32x4Reg (=scratch):
+    //   dest     = 0x 00000000 00000000  00000000 LLLLLLLL
+    //   scratch  = 0x 00000000 00000000  00000000 HHHHHHHH
+    vmovd(src.low, dest128);
+    vmovd(src.high, ScratchSimd128Reg);
+
+    // Unpack and interleave dest and scratch to dest:
+    //   dest     = 0x 00000000 00000000  HHHHHHHH LLLLLLLL
+    vpunpckldq(ScratchSimd128Reg, dest128, dest128);
+
+    // Unpack and interleave dest and a constant C1 to dest:
+    //   C1       = 0x 00000000 00000000  45300000 43300000
+    //   dest     = 0x 45300000 HHHHHHHH  43300000 LLLLLLLL
+    // here, each 64-bit part of dest represents following double:
+    //   HI(dest) = 0x 1.00000HHHHHHHH * 2**84 == 2**84 + 0x HHHHHHHH 00000000
+    //   LO(dest) = 0x 1.00000LLLLLLLL * 2**52 == 2**52 + 0x 00000000 LLLLLLLL
+    movePtr(ImmWord((uintptr_t)TO_DOUBLE), temp);
+    vpunpckldq(Operand(temp, 0), dest128, dest128);
+
+    // Subtract a constant C2 from dest, for each 64-bit part:
+    //   C2       = 0x 45300000 00000000  43300000 00000000
+    // here, each 64-bit part of C2 represents following double:
+    //   HI(C2)   = 0x 1.0000000000000 * 2**84 == 2**84
+    //   LO(C2)   = 0x 1.0000000000000 * 2**52 == 2**52
+    // after the operation each 64-bit part of dest represents following:
+    //   HI(dest) = double(0x HHHHHHHH 00000000)
+    //   LO(dest) = double(0x 00000000 LLLLLLLL)
+    vsubpd(Operand(temp, sizeof(uint64_t) * 2), dest128, dest128);
+
+    // Add HI(dest) and LO(dest) in double and store it into LO(dest),
+    //   LO(dest) = double(0x HHHHHHHH 00000000) + double(0x 00000000 LLLLLLLL)
+    //            = double(0x HHHHHHHH LLLLLLLL)
+    //            = double(src)
+    vhaddpd(dest128, dest128);
+}
+
+void
+MacroAssembler::convertInt64ToDouble(Register64 input, FloatRegister output)
 {
     // Zero the output register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
-    asMasm().Push(input.high);
-    asMasm().Push(input.low);
+    Push(input.high);
+    Push(input.low);
     fild(Operand(esp, 0));
 
     fstp(Operand(esp, 0));
     vmovsd(Address(esp, 0), output);
-    asMasm().freeStack(2 * sizeof(intptr_t));
+    freeStack(2 * sizeof(intptr_t));
 }
 
 void
-MacroAssemblerX86::convertInt64ToFloat32(Register64 input, FloatRegister output)
-{
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    zeroDouble(output);
-
-    asMasm().Push(input.high);
-    asMasm().Push(input.low);
-    fild(Operand(esp, 0));
-
-    fstp32(Operand(esp, 0));
-    vmovss(Address(esp, 0), output);
-    asMasm().freeStack(2 * sizeof(intptr_t));
-}
-
-void
-MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
+MacroAssembler::convertUInt64ToFloat32(Register64 input, FloatRegister output, Register temp)
 {
     // Zero the dest register to break dependencies, see convertInt32ToDouble.
     zeroDouble(output);
 
     // Set the FPU precision to 80 bits.
-    asMasm().reserveStack(2 * sizeof(intptr_t));
+    reserveStack(2 * sizeof(intptr_t));
     fnstcw(Operand(esp, 0));
     load32(Operand(esp, 0), temp);
     orl(Imm32(0x300), temp);
     store32(temp, Operand(esp, sizeof(intptr_t)));
     fldcw(Operand(esp, sizeof(intptr_t)));
 
-    asMasm().Push(input.high);
-    asMasm().Push(input.low);
+    Push(input.high);
+    Push(input.low);
     fild(Operand(esp, 0));
 
     Label notNegative;
-    asMasm().branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
+    branch32(Assembler::NotSigned, input.high, Imm32(0), &notNegative);
     double add_constant = 18446744073709551616.0; // 2^64
     uint64_t add_constant_u64 = mozilla::BitwiseCast<uint64_t>(add_constant);
     store64(Imm64(add_constant_u64), Address(esp, 0));
@@ -1261,10 +1245,27 @@ MacroAssemblerX86::convertUInt64ToFloat32(Register64 input, FloatRegister output
 
     fstp32(Operand(esp, 0));
     vmovss(Address(esp, 0), output);
-    asMasm().freeStack(2 * sizeof(intptr_t));
+    freeStack(2 * sizeof(intptr_t));
 
     // Restore FPU precision to the initial value.
     fldcw(Operand(esp, 0));
-    asMasm().freeStack(2 * sizeof(intptr_t));
+    freeStack(2 * sizeof(intptr_t));
 }
+
+void
+MacroAssembler::convertInt64ToFloat32(Register64 input, FloatRegister output)
+{
+    // Zero the output register to break dependencies, see convertInt32ToDouble.
+    zeroDouble(output);
+
+    Push(input.high);
+    Push(input.low);
+    fild(Operand(esp, 0));
+
+    fstp32(Operand(esp, 0));
+    vmovss(Address(esp, 0), output);
+    freeStack(2 * sizeof(intptr_t));
+}
+
+//}}} check_macroassembler_style
 

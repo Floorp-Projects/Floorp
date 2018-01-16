@@ -911,6 +911,41 @@ MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 outp
 }
 
 // ========================================================================
+// Convert floating point.
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return false;
+}
+
+void
+MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest)
+{
+    Scvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertUInt64ToFloat32(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    Ucvtf(ARMFPRegister(dest, 32), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertInt64ToFloat32(Register64 src, FloatRegister dest)
+{
+    Scvtf(ARMFPRegister(dest, 32), ARMRegister(src.reg, 64));
+}
+
+// ========================================================================
 // Primitive atomic operations.
 
 void

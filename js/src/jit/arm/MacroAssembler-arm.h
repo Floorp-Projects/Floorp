@@ -1161,9 +1161,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmpPtr(const Address& lhs, ImmGCPtr rhs);
     void cmpPtr(const Address& lhs, Imm32 rhs);
 
-    static bool convertUInt64ToDoubleNeedsTemp();
-    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp);
-
     void setStackArg(Register reg, uint32_t arg);
 
     void breakpoint();
