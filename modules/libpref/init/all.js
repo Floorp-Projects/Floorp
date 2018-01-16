@@ -3343,8 +3343,12 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
-// Don't use a native event loop in the content process.
+// Whether a native event loop should be used in the content process.
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+pref("dom.ipc.useNativeEventProcessing.content", false);
+#else
 pref("dom.ipc.useNativeEventProcessing.content", true);
+#endif
 
 // Quantum DOM scheduling:
 pref("dom.ipc.scheduler", false);
