@@ -74,6 +74,7 @@ jobs:
             - linux64-clang
             - linux64-hfsplus
             - linux64-libdmg
+            - linux64-llvm-dsymutil
             - linux64-rust-macos
 
     # NOTE: Windows Searchfox jobs aren't working quite yet (bug 1418415).
