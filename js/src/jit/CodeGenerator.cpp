@@ -8317,7 +8317,7 @@ CodeGenerator::visitSinCos(LSinCos *lir)
     FloatRegister outputCos = ToFloatRegister(lir->outputCos());
 
     masm.reserveStack(sizeof(double) * 2);
-    masm.movePtr(masm.getStackPointer(), params);
+    masm.moveStackPtrTo(params);
 
     const MathCache* mathCache = lir->mir()->cache();
 

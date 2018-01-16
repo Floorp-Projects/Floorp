@@ -72,7 +72,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     bool oom() const {
         return Assembler::oom() || !enoughMemory_;
     }
-    static MemOperand toMemOperand(Address& a) {
+    static MemOperand toMemOperand(const Address& a) {
         return MemOperand(ARMRegister(a.base, 64), a.offset);
     }
     void doBaseIndex(const vixl::CPURegister& rt, const BaseIndex& addr, vixl::LoadStoreOp op) {
@@ -959,32 +959,28 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void storeUnalignedSimd128Float(FloatRegister dest, const BaseIndex& addr) { MOZ_CRASH("NYI"); }
 
     // StackPointer manipulation.
-    template <typename T> void addToStackPtr(T t);
-    template <typename T> void addStackPtrTo(T t);
+    inline void addToStackPtr(Register src);
+    inline void addToStackPtr(Imm32 imm);
+    inline void addToStackPtr(const Address& src);
+    inline void addStackPtrTo(Register dest);
 
-    template <typename T> inline void subFromStackPtr(T t);
-    template <typename T> inline void subStackPtrFrom(T t);
+    inline void subFromStackPtr(Register src);
+    inline void subFromStackPtr(Imm32 imm);
+    inline void subStackPtrFrom(Register dest);
 
-    template <typename T> void andToStackPtr(T t);
-    template <typename T> void andStackPtrTo(T t);
+    inline void andToStackPtr(Imm32 t);
+    inline void andStackPtrTo(Register dest);
 
-    template <typename T>
-    void moveToStackPtr(T t) { movePtr(t, getStackPointer()); syncStackPtr(); }
-    template <typename T>
-    void moveStackPtrTo(T t) { movePtr(getStackPointer(), t); }
+    inline void moveToStackPtr(Register src);
+    inline void moveStackPtrTo(Register dest);
 
-    template <typename T>
-    void loadStackPtr(T t) { loadPtr(t, getStackPointer()); syncStackPtr(); }
-    template <typename T>
-    void storeStackPtr(T t) { storePtr(getStackPointer(), t); }
+    inline void loadStackPtr(const Address& src);
+    inline void storeStackPtr(const Address& dest);
 
     // StackPointer testing functions.
-    template <typename T>
-    inline void branchTestStackPtr(Condition cond, T t, Label* label);
-    template <typename T>
-    void branchStackPtr(Condition cond, T rhs, Label* label);
-    template <typename T>
-    void branchStackPtrRhs(Condition cond, T lhs, Label* label);
+    inline void branchTestStackPtr(Condition cond, Imm32 rhs, Label* label);
+    inline void branchStackPtr(Condition cond, Register rhs, Label* label);
+    inline void branchStackPtrRhs(Condition cond, Address lhs, Label* label);
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));

@@ -4782,8 +4782,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skip);
         masm.loadJSContext(scratchReg);
         masm.loadPtr(Address(scratchReg, JSContext::offsetOfProfilingActivation()), scratchReg);
-        masm.storePtr(masm.getStackPointer(),
-                      Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()));
+        masm.storeStackPtr(Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()));
         masm.bind(&skip);
     }
 
