@@ -298,10 +298,12 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
     case kReleased:
       MOZ_ASSERT(aHandle);
       mHandleId = aHandle->mId;
+      LOG(("ChooseCapability(kFitness) for mTargetCapability and mCapability ++"));
       if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability, kFitness)) {
         *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
         return NS_ERROR_FAILURE;
       }
+      LOG(("ChooseCapability(kFitness) for mTargetCapability and mCapability --"));
       mTargetCapability = mCapability;
 
       if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
@@ -323,11 +325,13 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
           index = mHandleIds.IndexOf(mHandleId);
         }
 
+        LOG(("ChooseCapability(kFitness) for mTargetCapability ++"));
         if (!ChooseCapability(aNewConstraint, aPrefs, aDeviceId, mTargetCapability,
                               kFitness)) {
           *aOutBadConstraint = FindBadConstraint(aNewConstraint, *this, aDeviceId);
           return NS_ERROR_FAILURE;
         }
+        LOG(("ChooseCapability(kFitness) for mTargetCapability --"));
 
         if (index != mHandleIds.NoIndex) {
           MonitorAutoLock lock(mMonitor);
@@ -338,11 +342,13 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
           MOZ_ASSERT(mSources.Length() == mImages.Length());
         }
 
+        LOG(("ChooseCapability(kFeasibility) for mCapability ++"));
         if (!ChooseCapability(aNetConstraints, aPrefs, aDeviceId, mCapability,
                               kFeasibility)) {
           *aOutBadConstraint = FindBadConstraint(aNetConstraints, *this, aDeviceId);
           return NS_ERROR_FAILURE;
         }
+        LOG(("ChooseCapability(kFeasibility) for mCapability --"));
 
         if (mCapability != mLastCapability) {
           camera::GetChildAndCall(&camera::CamerasChild::StopCapture,

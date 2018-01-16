@@ -37,12 +37,6 @@ static const mozilla::Module::CategoryEntry kCategories[] = {
   { nullptr }
 };
 
-static void
-UnloadSpeechDispatcherModule()
-{
-  SpeechDispatcherService::Shutdown();
-}
-
 static const mozilla::Module kModule = {
   mozilla::Module::kVersion,
   kCIDs,
@@ -50,7 +44,7 @@ static const mozilla::Module kModule = {
   kCategories,
   nullptr,
   nullptr,
-  UnloadSpeechDispatcherModule
+  nullptr,
 };
 
 NSMODULE_DEFN(synthspeechdispatcher) = &kModule;

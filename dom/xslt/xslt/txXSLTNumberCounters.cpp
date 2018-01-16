@@ -16,7 +16,7 @@ public:
     txDecimalCounter(int32_t aMinLength, int32_t aGroupSize,
                      const nsAString& mGroupSeparator);
 
-    virtual void appendNumber(int32_t aNumber, nsAString& aDest);
+    virtual void appendNumber(int32_t aNumber, nsAString& aDest) override;
 
 private:
     int32_t mMinLength;
@@ -30,7 +30,7 @@ public:
     {
     }
 
-    virtual void appendNumber(int32_t aNumber, nsAString& aDest);
+    virtual void appendNumber(int32_t aNumber, nsAString& aDest) override;
 
 private:
     char16_t mOffset;
@@ -42,7 +42,7 @@ public:
     {
     }
 
-    void appendNumber(int32_t aNumber, nsAString& aDest);
+    void appendNumber(int32_t aNumber, nsAString& aDest) override;
 
 private:
     int32_t mTableOffset;

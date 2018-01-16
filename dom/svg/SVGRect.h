@@ -32,7 +32,7 @@ public:
     return mX;
   }
 
-  virtual void SetX(float aX, ErrorResult& aRv) final
+  virtual void SetX(float aX, ErrorResult& aRv) final override
   {
     mX = aX;
   }
@@ -42,7 +42,7 @@ public:
     return mY;
   }
 
-  virtual void SetY(float aY, ErrorResult& aRv) final
+  virtual void SetY(float aY, ErrorResult& aRv) final override
   {
     mY = aY;
   }
@@ -52,7 +52,7 @@ public:
     return mWidth;
   }
 
-  virtual void SetWidth(float aWidth, ErrorResult& aRv) final
+  virtual void SetWidth(float aWidth, ErrorResult& aRv) final override
   {
     mWidth = aWidth;
   }
@@ -62,7 +62,7 @@ public:
     return mHeight;
   }
 
-  virtual void SetHeight(float aHeight, ErrorResult& aRv) final
+  virtual void SetHeight(float aHeight, ErrorResult& aRv) final override
   {
     mHeight = aHeight;
   }

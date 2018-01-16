@@ -649,9 +649,9 @@ public:
 
   virtual ~LayerComposite();
 
-  virtual void SetLayerManager(HostLayerManager* aManager);
+  virtual void SetLayerManager(HostLayerManager* aManager) override;
 
-  virtual LayerComposite* GetFirstChildComposite()
+  virtual LayerComposite* GetFirstChildComposite() override
   {
     return nullptr;
   }
@@ -674,7 +674,7 @@ public:
   virtual void RenderLayer(const gfx::IntRect& aClipRect,
                            const Maybe<gfx::Polygon>& aGeometry) = 0;
 
-  virtual bool SetCompositableHost(CompositableHost*)
+  virtual bool SetCompositableHost(CompositableHost*) override
   {
     // We must handle this gracefully, see bug 967824
     NS_WARNING("called SetCompositableHost for a layer type not accepting a compositable");

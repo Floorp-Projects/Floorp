@@ -1,5 +1,8 @@
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
+
 function popPrefs() {
   return SpecialPowers.popPrefEnv();
 }
@@ -13,6 +16,11 @@ const ACTIVITY_STREAM_PREF = "browser.newtabpage.activity-stream.enabled";
 pushPrefs([ACTIVITY_STREAM_PREF, true]);
 gBrowser.removePreloadedBrowser();
 
+async function clearHistoryAndBookmarks() { // eslint-disable-line no-unused-vars
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+}
+
 /**
  * Helper to wait for potentially preloaded browsers to "load" where a preloaded
  * page has already loaded and won't trigger "load", and a "load"ed page might
@@ -23,6 +31,36 @@ async function waitForPreloaded(browser) {
   if (readyState !== "complete") {
     await BrowserTestUtils.browserLoaded(browser);
   }
+}
+
+/**
+ * Helper to force the HighlightsFeed to update.
+ */
+function refreshHighlightsFeed() {
+  // Toggling the pref will clear the feed cache and force a places query.
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.section.highlights", false);
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
+}
+
+/**
+ * Helper to populate the Highlights section with bookmark cards.
+ * @param count Number of items to add.
+ */
+async function addHighlightsBookmarks(count) { // eslint-disable-line no-unused-vars
+  const bookmarks = new Array(count).fill(null).map((entry, i) => ({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "foo",
+    url: `https://mozilla${i}.com/nowNew`
+  }));
+
+  for (let placeInfo of bookmarks) {
+    await PlacesUtils.bookmarks.insert(placeInfo);
+    // Bookmarks need at least one visit to show up as highlights.
+    await PlacesTestUtils.addVisits(placeInfo.url);
+  }
+
+  // Force HighlightsFeed to make a request for the new items.
+  refreshHighlightsFeed();
 }
 
 /**

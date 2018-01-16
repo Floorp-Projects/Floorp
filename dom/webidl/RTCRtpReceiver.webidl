@@ -14,4 +14,13 @@ interface RTCRtpReceiver {
   Promise<RTCStatsReport>               getStats();
   sequence<RTCRtpContributingSource>    getContributingSources();
   sequence<RTCRtpSynchronizationSource> getSynchronizationSources();
+
+  [ChromeOnly]
+  void setStreamIds(sequence<DOMString> streamIds);
+  [ChromeOnly]
+  void setRemoteSendBit(boolean sendBit);
+  [ChromeOnly]
+  void processTrackAdditionsAndRemovals(
+      RTCRtpTransceiver transceiver,
+      object postProcessing);
 };

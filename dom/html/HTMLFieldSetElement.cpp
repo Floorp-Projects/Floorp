@@ -196,6 +196,32 @@ HTMLFieldSetElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 }
 
 void
+HTMLFieldSetElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  bool firstLegendHasChanged = false;
+
+  if (mFirstLegend && aKid == mFirstLegend) {
+    // If we are removing the first legend we have to found another one.
+    nsIContent* child = mFirstLegend->GetNextSibling();
+    mFirstLegend = nullptr;
+    firstLegendHasChanged = true;
+
+    for (; child; child = child->GetNextSibling()) {
+      if (child->IsHTMLElement(nsGkAtoms::legend)) {
+        mFirstLegend = child;
+        break;
+      }
+    }
+  }
+
+  nsGenericHTMLFormElement::RemoveChildNode(aKid, aNotify);
+
+  if (firstLegendHasChanged) {
+    NotifyElementsForFirstLegendChange(aNotify);
+  }
+}
+
+void
 HTMLFieldSetElement::AddElement(nsGenericHTMLFormElement* aElement)
 {
   mDependentElements.AppendElement(aElement);

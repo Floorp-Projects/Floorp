@@ -51,11 +51,9 @@ job-template:
          android-api-16-nightly: 18000
    docker-image:
       by-build-platform:
-         default:
-            in-tree: desktop-build
          android-api-16-nightly:
             in-tree: android-build
-         win.*: null
+         default: null
    secrets:
       by-build-platform:
          default: false

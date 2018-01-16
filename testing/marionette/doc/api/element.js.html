@@ -38,17 +38,60 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 const {
+  InvalidArgumentError,
   InvalidSelectorError,
   NoSuchElementError,
-  pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/wait.js");
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
+const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
-this.EXPORTED_SYMBOLS = ["element"];
+this.EXPORTED_SYMBOLS = [
+  "ChromeWebElement",
+  "ContentWebElement",
+  "ContentWebFrame",
+  "ContentWebWindow",
+  "element",
+  "WebElement",
+];
 
-const XMLNS = "http://www.w3.org/1999/xhtml";
+const {
+  FIRST_ORDERED_NODE_TYPE,
+  ORDERED_NODE_ITERATOR_TYPE,
+} = Ci.nsIDOMXPathResult;
+const ELEMENT_NODE = 1;
+const DOCUMENT_NODE = 9;
+
+const UNEDITABLE_INPUTS = new Set([
+  "checkbox",
+  "radio",
+  "hidden",
+  "submit",
+  "button",
+  "image",
+]);
+
+const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/** XUL elements that support checked property. */
+const XUL_CHECKED_ELS = new Set([
+  "button",
+  "checkbox",
+  "listitem",
+  "toolbarbutton",
+]);
+
+/** XUL elements that support selected property. */
+const XUL_SELECTED_ELS = new Set([
+  "listitem",
+  "menu",
+  "menuitem",
+  "menuseparator",
+  "radio",
+  "richlistitem",
+  "tab",
+]);
 
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
@@ -73,9 +116,6 @@ const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
  */
 this.element = {};
 
-element.Key = "element-6066-11e4-a52e-4f735466cecf";
-element.LegacyKey = "ELEMENT";
-
 element.Strategy = {
   ClassName: "class name",
   Selector: "css selector",
@@ -93,8 +133,8 @@ element.Strategy = {
  * Stores known/seen elements and their associated web element
  * references.
  *
- * Elements are added by calling |add(el)| or |addAll(elements)|, and
- * may be queried by their web element reference using |get(element)|.
+ * Elements are added by calling {@link #add()} or {@link addAll()},
+ * and may be queried by their web element reference using {@link get()}.
  *
  * @class
  * @memberof element
@@ -102,7 +142,6 @@ element.Strategy = {
 element.Store = class {
   constructor() {
     this.els = {};
-    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   }
 
   clear() {
@@ -120,7 +159,7 @@ element.Store = class {
    *
    * @return {Array.&lt;WebElement>}
    *     List of the web element references associated with each element
-   *     from |els|.
+   *     from &lt;var>els&lt;/var>.
    */
   addAll(els) {
     let add = this.add.bind(this);
@@ -130,13 +169,27 @@ element.Store = class {
   /**
    * Make an element seen.
    *
-   * @param {Element} el
+   * @param {(Element|WindowProxy|XULElement)} el
    *    Element to add to set of seen elements.
    *
-   * @return {string}
+   * @return {WebElement}
    *     Web element reference associated with element.
+   *
+   * @throws {TypeError}
+   *     If &lt;var>el&lt;/var> is not an {@link Element} or a {@link XULElement}.
    */
   add(el) {
+    const isDOMElement = element.isDOMElement(el);
+    const isDOMWindow = element.isDOMWindow(el);
+    const isXULElement = element.isXULElement(el);
+    const context = isXULElement ? "chrome" : "content";
+
+    if (!(isDOMElement || isDOMWindow || isXULElement)) {
+      throw new TypeError(
+          "Expected an element or WindowProxy, " +
+          pprint`got: ${el}`);
+    }
+
     for (let i in this.els) {
       let foundEl;
       try {
@@ -145,7 +198,7 @@ element.Store = class {
 
       if (foundEl) {
         if (new XPCNativeWrapper(foundEl) == new XPCNativeWrapper(el)) {
-          return i;
+          return WebElement.fromUUID(i, context);
         }
 
       // cleanup reference to gc'd element
@@ -154,34 +207,51 @@ element.Store = class {
       }
     }
 
-    let id = element.generateUUID();
-    this.els[id] = Cu.getWeakReference(el);
-    return id;
+    let webEl = WebElement.from(el);
+    this.els[webEl.uuid] = Cu.getWeakReference(el);
+    return webEl;
   }
 
   /**
    * Determine if the provided web element reference has been seen
    * before/is in the element store.
    *
-   * @param {string} uuid
+   * Unlike when getting the element, a staleness check is not
+   * performed.
+   *
+   * @param {WebElement} webEl
    *     Element's associated web element reference.
    *
    * @return {boolean}
    *     True if element is in the store, false otherwise.
+   *
+   * @throws {TypeError}
+   *     If &lt;var>webEl&lt;/var> is not a {@link WebElement}.
    */
-  has(uuid) {
-    return Object.keys(this.els).includes(uuid);
+  has(webEl) {
+    if (!(webEl instanceof WebElement)) {
+      throw new TypeError(
+          pprint`Expected web element, got: ${webEl}`);
+    }
+    return Object.keys(this.els).includes(webEl.uuid);
   }
 
   /**
-   * Retrieve a DOM element by its unique web element reference/UUID.
+   * Retrieve a DOM {@link Element} or a {@link XULElement} by its
+   * unique {@link WebElement} reference.
    *
-   * @param {string} uuid
-   *     Web element reference, or UUID.
+   * @param {WebElement} webEl
+   *     Web element reference to find the associated {@link Element}
+   *     of.
+   * @param {WindowProxy} window
+   *     Current browsing context, which may differ from the associate
+   *     browsing context of &lt;var>el&lt;/var>.
    *
-   * @returns {Element}
+   * @returns {(Element|XULElement)}
    *     Element associated with reference.
    *
+   * @throws {TypeError}
+   *     If &lt;var>webEl&lt;/var> is not a {@link WebElement}.
    * @throws {NoSuchElementError}
    *     If the web element reference &lt;var>uuid&lt;/var> has not been
    *     seen before.
@@ -190,24 +260,29 @@ element.Store = class {
    *     attached to the DOM, or its node document is no longer the
    *     active document.
    */
-  get(uuid) {
-    if (!this.has(uuid)) {
+  get(webEl, window) {
+    if (!(webEl instanceof WebElement)) {
+      throw new TypeError(
+          pprint`Expected web element, got: ${webEl}`);
+    }
+    if (!this.has(webEl)) {
       throw new NoSuchElementError(
-          "Web element reference not seen before: " + uuid);
+          "Web element reference not seen before: " + webEl.uuid);
     }
 
     let el;
-    let ref = this.els[uuid];
+    let ref = this.els[webEl.uuid];
     try {
       el = ref.get();
     } catch (e) {
-      delete this.els[uuid];
+      delete this.els[webEl.uuid];
     }
 
-    if (element.isStale(el)) {
+    if (element.isStale(el, window)) {
       throw new StaleElementReferenceError(
-          pprint`The element reference of ${el || uuid} stale; ` +
-              "either the element is no longer attached to the DOM " +
+          pprint`The element reference of ${el || webEl.uuid} is stale; ` +
+              "either the element is no longer attached to the DOM, " +
+              "it is not in the current frame context, " +
               "or the document has been refreshed");
     }
 
@@ -220,11 +295,11 @@ element.Store = class {
  * document root or a given node.
  *
  * If |timeout| is above 0, an implicit search technique is used.
- * This will wait for the duration of |timeout| for the element
- * to appear in the DOM.
+ * This will wait for the duration of &lt;var>timeout&lt;/var> for the
+ * element to appear in the DOM.
  *
- * See the |element.Strategy| enum for a full list of supported
- * search strategies that can be passed to |strategy|.
+ * See the {@link element.Strategy} enum for a full list of supported
+ * search strategies that can be passed to &lt;var>strategy&lt;/var>.
  *
  * Available flags for &lt;var>opts&lt;/var>:
  *
@@ -266,8 +341,9 @@ element.Store = class {
  *     element is not found.
  */
 element.find = function(container, strategy, selector, opts = {}) {
-  opts.all = !!opts.all;
-  opts.timeout = opts.timeout || 0;
+  let all = !!opts.all;
+  let timeout = opts.timeout || 0;
+  let startNode = opts.startNode;
 
   let searchFn;
   if (opts.all) {
@@ -277,14 +353,15 @@ element.find = function(container, strategy, selector, opts = {}) {
   }
 
   return new Promise((resolve, reject) => {
-    let findElements = wait.until((resolve, reject) => {
-      let res = find_(container, strategy, selector, searchFn, opts);
+    let findElements = new PollPromise((resolve, reject) => {
+      let res = find_(container, strategy, selector, searchFn,
+          {all, startNode});
       if (res.length > 0) {
         resolve(Array.from(res));
       } else {
         reject([]);
       }
-    }, opts.timeout);
+    }, {timeout});
 
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
@@ -312,13 +389,11 @@ element.find = function(container, strategy, selector, opts = {}) {
   });
 };
 
-function find_(container, strategy, selector, searchFn, opts) {
+function find_(container, strategy, selector, searchFn,
+    {startNode = null, all = false} = {}) {
   let rootNode = container.shadowRoot || container.frame.document;
-  let startNode;
 
-  if (opts.startNode) {
-    startNode = opts.startNode;
-  } else {
+  if (!startNode) {
     switch (strategy) {
       // For anonymous nodes the start node needs to be of type
       // DOMElement, which will refer to :root in case of a DOMDocument.
@@ -343,7 +418,7 @@ function find_(container, strategy, selector, searchFn, opts) {
   }
 
   if (res) {
-    if (opts.all) {
+    if (all) {
       return res;
     }
     return [res];
@@ -354,153 +429,169 @@ function find_(container, strategy, selector, searchFn, opts) {
 /**
  * Find a single element by XPath expression.
  *
- * @param {DOMElement} root
- *     Document root
- * @param {DOMElement} startNode
+ * @param {HTMLDocument} document
+ *     Document root.
+ * @param {Element} startNode
  *     Where in the DOM hiearchy to begin searching.
- * @param {string} expr
+ * @param {string} expression
  *     XPath search expression.
  *
- * @return {DOMElement}
- *     First element matching expression.
+ * @return {Node}
+ *     First element matching &lt;var>expression&lt;/var>.
  */
-element.findByXPath = function(root, startNode, expr) {
-  let iter = root.evaluate(expr, startNode, null,
-      Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null);
+element.findByXPath = function(document, startNode, expression) {
+  let iter = document.evaluate(
+      expression, startNode, null, FIRST_ORDERED_NODE_TYPE, null);
   return iter.singleNodeValue;
 };
 
 /**
  * Find elements by XPath expression.
  *
- * @param {DOMElement} root
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement} startNode
+ * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
- * @param {string} expr
+ * @param {string} expression
  *     XPath search expression.
  *
- * @return {Array.&lt;DOMElement>}
- *     Sequence of found elements matching expression.
+ * @return {Iterable.&lt;Node>}
+ *     Iterator over elements matching &lt;var>expression&lt;/var>.
  */
-element.findByXPathAll = function(root, startNode, expr) {
-  let rv = [];
-  let iter = root.evaluate(expr, startNode, null,
-      Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+element.findByXPathAll = function* (document, startNode, expression) {
+  let iter = document.evaluate(
+      expression, startNode, null, ORDERED_NODE_ITERATOR_TYPE, null);
   let el = iter.iterateNext();
   while (el) {
-    rv.push(el);
+    yield el;
     el = iter.iterateNext();
   }
-  return rv;
 };
 
 /**
- * Find all hyperlinks dscendant of |node| which link text is |s|.
+ * Find all hyperlinks descendant of &lt;var>startNode&lt;/var> which
+ * link text is &lt;var>linkText&lt;/var>.
  *
- * @param {DOMElement} node
- *     Where in the DOM hierarchy to being searching.
- * @param {string} s
- *     Link text to search for.
- *
- * @return {Array.&lt;DOMAnchorElement>}
- *     Sequence of link elements which text is |s|.
- */
-element.findByLinkText = function(node, s) {
-  return filterLinks(node, link => link.text.trim() === s);
-};
-
-/**
- * Find all hyperlinks descendant of |node| which link text contains |s|.
- *
- * @param {DOMElement} node
- *     Where in the DOM hierachy to begin searching.
- * @param {string} s
- *     Link text to search for.
- *
- * @return {Array.&lt;DOMAnchorElement>}
- *     Sequence of link elements which text containins |s|.
- */
-element.findByPartialLinkText = function(node, s) {
-  return filterLinks(node, link => link.text.indexOf(s) != -1);
-};
-
-/**
- * Filters all hyperlinks that are descendant of |node| by |predicate|.
- *
- * @param {DOMElement} node
+ * @param {Element} startNode
  *     Where in the DOM hierarchy to begin searching.
- * @param {function(DOMAnchorElement): boolean} predicate
+ * @param {string} linkText
+ *     Link text to search for.
+ *
+ * @return {Iterable.&lt;HTMLAnchorElement>}
+ *     Sequence of link elements which text is &lt;var>s&lt;/var>.
+ */
+element.findByLinkText = function(startNode, linkText) {
+  return filterLinks(startNode, link => link.text.trim() === linkText);
+};
+
+/**
+ * Find all hyperlinks descendant of &lt;var>startNode&lt;/var> which
+ * link text contains &lt;var>linkText&lt;/var>.
+ *
+ * @param {Element} startNode
+ *     Where in the DOM hierachy to begin searching.
+ * @param {string} linkText
+ *     Link text to search for.
+ *
+ * @return {Iterable.&lt;HTMLAnchorElement>}
+ *     Iterator of link elements which text containins
+ *     &lt;var>linkText&lt;/var>.
+ */
+element.findByPartialLinkText = function(startNode, linkText) {
+  return filterLinks(startNode, link => link.text.includes(linkText));
+};
+
+/**
+ * Find anonymous nodes of &lt;var>node&lt;/var>.
+ *
+ * @param {XULDocument} document
+ *     Root node of the document.
+ * @param {XULElement} node
+ *     Where in the DOM hierarchy to begin searching.
+ *
+ * @return {Iterable.&lt;XULElement>}
+ *     Iterator over anonymous elements.
+ */
+element.findAnonymousNodes = function* (document, node) {
+  let anons = document.getAnonymousNodes(node) || [];
+  for (let node of anons) {
+    yield node;
+  }
+};
+
+/**
+ * Filters all hyperlinks that are descendant of &lt;var>startNode&lt;/var>
+ * by &lt;var>predicate&lt;/var>.
+ *
+ * @param {Element} startNode
+ *     Where in the DOM hierarchy to begin searching.
+ * @param {function(HTMLAnchorElement): boolean} predicate
  *     Function that determines if given link should be included in
  *     return value or filtered away.
  *
- * @return {Array.&lt;DOMAnchorElement>}
- *     Sequence of link elements matching |predicate|.
+ * @return {Iterable.&lt;HTMLAnchorElement>}
+ *     Iterator of link elements matching &lt;var>predicate&lt;/var>.
  */
-function filterLinks(node, predicate) {
-  let rv = [];
-  for (let link of node.getElementsByTagName("a")) {
+function* filterLinks(startNode, predicate) {
+  for (let link of startNode.getElementsByTagName("a")) {
     if (predicate(link)) {
-      rv.push(link);
+      yield link;
     }
   }
-  return rv;
 }
 
 /**
  * Finds a single element.
  *
- * @param {element.Strategy} using
+ * @param {element.Strategy} strategy
  *     Selector strategy to use.
- * @param {string} value
+ * @param {string} selector
  *     Selector expression.
- * @param {DOMElement} rootNode
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement=} startNode
+ * @param {Element=} startNode
  *     Optional node from which to start searching.
  *
- * @return {DOMElement}
+ * @return {Element}
  *     Found elements.
  *
  * @throws {InvalidSelectorError}
- *     If strategy |using| is not recognised.
+ *     If strategy &lt;var>using&lt;/var> is not recognised.
  * @throws {Error}
- *     If selector expression |value| is malformed.
+ *     If selector expression &lt;var>selector&lt;/var> is malformed.
  */
-function findElement(using, value, rootNode, startNode) {
-  switch (using) {
+function findElement(strategy, selector, document, startNode = undefined) {
+  switch (strategy) {
     case element.Strategy.ID:
       {
         if (startNode.getElementById) {
-          return startNode.getElementById(value);
+          return startNode.getElementById(selector);
         }
-        let expr = `.//*[@id="${value}"]`;
-        return element.findByXPath( rootNode, startNode, expr);
+        let expr = `.//*[@id="${selector}"]`;
+        return element.findByXPath(document, startNode, expr);
       }
 
     case element.Strategy.Name:
       {
         if (startNode.getElementsByName) {
-          return startNode.getElementsByName(value)[0];
+          return startNode.getElementsByName(selector)[0];
         }
-        let expr = `.//*[@name="${value}"]`;
-        return element.findByXPath(rootNode, startNode, expr);
+        let expr = `.//*[@name="${selector}"]`;
+        return element.findByXPath(document, startNode, expr);
       }
 
     case element.Strategy.ClassName:
-      // works for >= Firefox 3
-      return startNode.getElementsByClassName(value)[0];
+      return startNode.getElementsByClassName(selector)[0];
 
     case element.Strategy.TagName:
-      // works for all elements
-      return startNode.getElementsByTagName(value)[0];
+      return startNode.getElementsByTagName(selector)[0];
 
     case element.Strategy.XPath:
-      return element.findByXPath(rootNode, startNode, value);
+      return element.findByXPath(document, startNode, selector);
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (link.text.trim() === value) {
+        if (link.text.trim() === selector) {
           return link;
         }
       }
@@ -508,7 +599,7 @@ function findElement(using, value, rootNode, startNode) {
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (link.text.indexOf(value) != -1) {
+        if (link.text.includes(selector)) {
           return link;
         }
       }
@@ -516,92 +607,124 @@ function findElement(using, value, rootNode, startNode) {
 
     case element.Strategy.Selector:
       try {
-        return startNode.querySelector(value);
+        return startNode.querySelector(selector);
       } catch (e) {
-        throw new InvalidSelectorError(`${e.message}: "${value}"`);
+        throw new InvalidSelectorError(`${e.message}: "${selector}"`);
       }
 
     case element.Strategy.Anon:
-      return rootNode.getAnonymousNodes(startNode);
+      return element.findAnonymousNodes(document, startNode).next().value;
 
     case element.Strategy.AnonAttribute:
-      let attr = Object.keys(value)[0];
-      return rootNode.getAnonymousElementByAttribute(
-          startNode, attr, value[attr]);
+      let attr = Object.keys(selector)[0];
+      return document.getAnonymousElementByAttribute(
+          startNode, attr, selector[attr]);
   }
 
-  throw new InvalidSelectorError(`No such strategy: ${using}`);
+  throw new InvalidSelectorError(`No such strategy: ${strategy}`);
 }
 
 /**
  * Find multiple elements.
  *
- * @param {element.Strategy} using
+ * @param {element.Strategy} strategy
  *     Selector strategy to use.
- * @param {string} value
+ * @param {string} selector
  *     Selector expression.
- * @param {DOMElement} rootNode
+ * @param {HTMLDocument} document
  *     Document root.
- * @param {DOMElement=} startNode
+ * @param {Element=} startNode
  *     Optional node from which to start searching.
  *
- * @return {DOMElement}
+ * @return {Array.&lt;Element>}
  *     Found elements.
  *
  * @throws {InvalidSelectorError}
- *     If strategy |using| is not recognised.
+ *     If strategy &lt;var>strategy&lt;/var> is not recognised.
  * @throws {Error}
- *     If selector expression |value| is malformed.
+ *     If selector expression &lt;var>selector&lt;/var> is malformed.
  */
-function findElements(using, value, rootNode, startNode) {
-  switch (using) {
+function findElements(strategy, selector, document, startNode = undefined) {
+  switch (strategy) {
     case element.Strategy.ID:
-      value = `.//*[@id="${value}"]`;
+      selector = `.//*[@id="${selector}"]`;
 
     // fall through
     case element.Strategy.XPath:
-      return element.findByXPathAll(rootNode, startNode, value);
+      return [...element.findByXPathAll(document, startNode, selector)];
 
     case element.Strategy.Name:
       if (startNode.getElementsByName) {
-        return startNode.getElementsByName(value);
+        return startNode.getElementsByName(selector);
       }
-      return element.findByXPathAll(
-          rootNode, startNode, `.//*[@name="${value}"]`);
+      return [...element.findByXPathAll(
+          document, startNode, `.//*[@name="${selector}"]`)];
 
     case element.Strategy.ClassName:
-      return startNode.getElementsByClassName(value);
+      return startNode.getElementsByClassName(selector);
 
     case element.Strategy.TagName:
-      return startNode.getElementsByTagName(value);
+      return startNode.getElementsByTagName(selector);
 
     case element.Strategy.LinkText:
-      return element.findByLinkText(startNode, value);
+      return [...element.findByLinkText(startNode, selector)];
 
     case element.Strategy.PartialLinkText:
-      return element.findByPartialLinkText(startNode, value);
+      return [...element.findByPartialLinkText(startNode, selector)];
 
     case element.Strategy.Selector:
-      return startNode.querySelectorAll(value);
+      return startNode.querySelectorAll(selector);
 
     case element.Strategy.Anon:
-      return rootNode.getAnonymousNodes(startNode);
+      return [...element.findAnonymousNodes(document, startNode)];
 
     case element.Strategy.AnonAttribute:
-      let attr = Object.keys(value)[0];
-      let el = rootNode.getAnonymousElementByAttribute(
-          startNode, attr, value[attr]);
+      let attr = Object.keys(selector)[0];
+      let el = document.getAnonymousElementByAttribute(
+          startNode, attr, selector[attr]);
       if (el) {
         return [el];
       }
       return [];
 
     default:
-      throw new InvalidSelectorError(`No such strategy: ${using}`);
+      throw new InvalidSelectorError(`No such strategy: ${strategy}`);
   }
 }
 
-/** Determines if |obj| is an HTML or JS collection. */
+/**
+ * Finds the closest parent node of &lt;var>startNode&lt;/var> by CSS a
+ * &lt;var>selector&lt;/var> expression.
+ *
+ * @param {Node} startNode
+ *     Cyce through &lt;var>startNode&lt;/var>'s parent nodes in tree-order
+ *     and return the first match to &lt;var>selector&lt;/var>.
+ * @param {string} selector
+ *     CSS selector expression.
+ *
+ * @return {Node=}
+ *     First match to &lt;var>selector&lt;/var>, or null if no match was found.
+ */
+element.findClosest = function(startNode, selector) {
+  let node = startNode;
+  while (node.parentNode &amp;&amp; node.parentNode.nodeType == ELEMENT_NODE) {
+    node = node.parentNode;
+    if (node.matches(selector)) {
+      return node;
+    }
+  }
+  return null;
+};
+
+/**
+ * Determines if &lt;var>obj&lt;var> is an HTML or JS collection.
+ *
+ * @param {*} seq
+ *     Type to determine.
+ *
+ * @return {boolean}
+ *     True if &lt;var>seq&lt;/va> is collection.
+ */
 element.isCollection = function(seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
@@ -619,57 +742,187 @@ element.isCollection = function(seq) {
   }
 };
 
-element.makeWebElement = function(uuid) {
-  return {
-    [element.Key]: uuid,
-    [element.LegacyKey]: uuid,
-  };
-};
-
-/**
- * Checks if |ref| has either |element.Key| or |element.LegacyKey|
- * as properties.
- *
- * @param {Object.&lt;string, string>} ref
- *     Object that represents a web element reference.
- * @return {boolean}
- *     True if |ref| has either expected property.
- */
-element.isWebElementReference = function(ref) {
-  let properties = Object.getOwnPropertyNames(ref);
-  return properties.includes(element.Key) ||
-      properties.includes(element.LegacyKey);
-};
-
-element.generateUUID = function() {
-  let uuid = uuidGen.generateUUID().toString();
-  return uuid.substring(1, uuid.length - 1);
-};
-
 /**
  * Determines if &lt;var>el&lt;/var> is stale.
  *
  * A stale element is an element no longer attached to the DOM or which
- * node document is not the active document.
+ * node document is not the active document of the current browsing
+ * context.
  *
- * @param {Element} el
- *     DOM element to check for staleness.
+ * The currently selected browsing context, specified through
+ * &lt;var>window&lt;var>, is a WebDriver concept defining the target
+ * against which commands will run.  As the current browsing context
+ * may differ from &lt;var>el&lt;/var>'s associated context, an element is
+ * considered stale even if it is connected to a living (not discarded)
+ * browsing context such as an &lt;tt>&amp;lt;iframe&amp;gt;&lt;/tt>.
+ *
+ * @param {Element=} el
+ *     DOM element to check for staleness.  If null, which may be
+ *     the case if the element has been unwrapped from a weak
+ *     reference, it is always considered stale.
+ * @param {WindowProxy=} window
+ *     Current browsing context, which may differ from the associate
+ *     browsing context of &lt;var>el&lt;/var>.  When retrieving XUL
+ *     elements, this is optional.
  *
  * @return {boolean}
  *     True if &lt;var>el&lt;/var> is stale, false otherwise.
  */
-element.isStale = function(el) {
-  if (!el) {
-    return true;
+element.isStale = function(el, window = undefined) {
+  if (typeof window == "undefined") {
+    window = el.ownerGlobal;
   }
 
-  let doc = el.ownerDocument;
-  let win = doc.defaultView;
-  if (!win || el.ownerDocument !== win.document) {
+  if (el === null ||
+      !el.ownerGlobal ||
+      el.ownerDocument !== window.document) {
     return true;
   }
 
   return !el.isConnected;
+};
+
+/**
+ * Determine if &lt;var>el&lt;/var> is selected or not.
+ *
+ * This operation only makes sense on
+ * &lt;tt>&amp;lt;input type=checkbox&amp;gt;&lt;/tt>,
+ * &lt;tt>&amp;lt;input type=radio&amp;gt;&lt;/tt>,
+ * and &lt;tt>&amp;gt;option&amp;gt;&lt;/tt> elements.
+ *
+ * @param {(DOMElement|XULElement)} el
+ *     Element to test if selected.
+ *
+ * @return {boolean}
+ *     True if element is selected, false otherwise.
+ */
+element.isSelected = function(el) {
+  if (!el) {
+    return false;
+  }
+
+  if (element.isXULElement(el)) {
+    if (XUL_CHECKED_ELS.has(el.tagName)) {
+      return el.checked;
+    } else if (XUL_SELECTED_ELS.has(el.tagName)) {
+      return el.selected;
+    }
+
+  } else if (element.isDOMElement(el)) {
+    if (el.localName == "input" &amp;&amp; ["checkbox", "radio"].includes(el.type)) {
+      return el.checked;
+    } else if (el.localName == "option") {
+      return el.selected;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * An element is considered read only if it is an
+ * &lt;code>&amp;lt;input&amp;gt;&lt;/code> or &lt;code>&amp;lt;textarea&amp;gt;&lt;/code>
+ * element whose &lt;code>readOnly&lt;/code> content IDL attribute is set.
+ *
+ * @param {Element} el
+ *     Element to test is read only.
+ *
+ * @return {boolean}
+ *     True if element is read only.
+ */
+element.isReadOnly = function(el) {
+  return element.isDOMElement(el) &amp;&amp;
+      ["input", "textarea"].includes(el.localName) &amp;&amp; el.readOnly;
+};
+
+/**
+ * An element is considered disabled if it is a an element
+ * that can be disabled, or it belongs to a container group which
+ * &lt;code>disabled&lt;/code> content IDL attribute affects it.
+ *
+ * @param {Element} el
+ *     Element to test for disabledness.
+ *
+ * @return {boolean}
+ *     True if element, or its container group, is disabled.
+ */
+element.isDisabled = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  switch (el.localName) {
+    case "option":
+    case "optgroup":
+      if (el.disabled) {
+        return true;
+      }
+      let parent = element.findClosest(el, "optgroup,select");
+      return element.isDisabled(parent);
+
+    case "button":
+    case "input":
+    case "select":
+    case "textarea":
+      return el.disabled;
+
+    default:
+      return false;
+  }
+};
+
+/**
+ * An editing host is a node that is either an HTML element with a
+ * &lt;code>contenteditable&lt;/code> attribute, or the HTML element child
+ * of a document whose &lt;code>designMode&lt;/code> is enabled.
+ *
+ * @param {Element} el
+ *     Element to determine if is an editing host.
+ *
+ * @return {boolean}
+ *     True if editing host, false otherwise.
+ */
+element.isEditingHost = function(el) {
+  return element.isDOMElement(el) &amp;&amp;
+      (el.isContentEditable || el.ownerDocument.designMode == "on");
+};
+
+/**
+ * Determines if an element is editable according to WebDriver.
+ *
+ * An element is considered editable if it is not read-only or
+ * disabled, and one of the following conditions are met:
+ *
+ * &lt;ul>
+ * &lt;li>It is a &lt;code>&amp;lt;textarea&amp;gt;&lt;/code> element.
+ *
+ * &lt;li>It is an &lt;code>&amp;lt;input&amp;gt;&lt;/code> element that is not of
+ * the &lt;code>checkbox&lt;/code>, &lt;code>radio&lt;/code>, &lt;code>hidden&lt;/code>,
+ * &lt;code>submit&lt;/code>, &lt;code>button&lt;/code>, or &lt;code>image&lt;/code> types.
+ *
+ * &lt;li>It is content-editable.
+ *
+ * &lt;li>It belongs to a document in design mode.
+ * &lt;/ul>
+ *
+ * @param {Element}
+ *     Element to test if editable.
+ *
+ * @return {boolean}
+ *     True if editable, false otherwise.
+ */
+element.isEditable = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  if (element.isReadOnly(el) || element.isDisabled(el)) {
+    return false;
+  }
+
+  return (el.localName == "input" &amp;&amp; !UNEDITABLE_INPUTS.has(el.type)) ||
+      el.localName == "textarea" ||
+      element.isEditingHost(el);
 };
 
 /**
@@ -690,7 +943,7 @@ element.isStale = function(el) {
  *     X- and Y coordinates.
  *
  * @throws TypeError
- *     If |xOffset| or |yOffset| are not numbers.
+ *     If &lt;var>xOffset&lt;/var> or &lt;var>yOffset&lt;/var> are not numbers.
  */
 element.coordinates = function(
     node, xOffset = undefined, yOffset = undefined) {
@@ -727,7 +980,7 @@ element.coordinates = function(
  *     the target's bounding box.
  *
  * @return {boolean}
- *     True if if |el| is in viewport, false otherwise.
+ *     True if if &lt;var>el&lt;/var> is in viewport, false otherwise.
  */
 element.inViewport = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
@@ -749,9 +1002,10 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  * Gets the element's container element.
  *
  * An element container is defined by the WebDriver
- * specification to be an &lt;option> element in a valid element context
- * (https://html.spec.whatwg.org/#concept-element-contexts), meaning
- * that it has an ancestral element that is either &lt;datalist> or &lt;select>.
+ * specification to be an &lt;tt>&amp;lt;option&amp;gt;&lt;/tt> element in a
+ * &lt;a href="https://html.spec.whatwg.org/#concept-element-contexts">valid
+ * element context&lt;/a>, meaning that it has an ancestral element
+ * that is either &lt;tt>&amp;lt;datalist&amp;gt;&lt;/tt> or &lt;tt>&amp;lt;select&amp;gt;&lt;/tt>.
  *
  * If the element does not have a valid context, its container element
  * is itself.
@@ -760,28 +1014,18 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Element to get the container of.
  *
  * @return {Element}
- *     Container element of |el|.
+ *     Container element of &lt;var>el&lt;/var>.
  */
 element.getContainer = function(el) {
-  if (el.localName != "option") {
-    return el;
-  }
-
-  function validContext(ctx) {
-    return ctx.localName == "datalist" || ctx.localName == "select";
-  }
-
-  // does &lt;option> have a valid context,
+  // Does &lt;option> or &lt;optgroup> have a valid context,
   // meaning is it a child of &lt;datalist> or &lt;select>?
-  let parent = el;
-  while (parent.parentNode &amp;&amp; !validContext(parent)) {
-    parent = parent.parentNode;
+  if (["option", "optgroup"].includes(el.localName)) {
+    return element.findClosest(el, "datalist,select") || el;
   }
 
-  if (!validContext(parent)) {
-    return el;
-  }
-  return parent;
+  // Child nodes of button will not be part of the element tree for
+  // elementsFromPoint until bug 1089326 is fixed.
+  return element.findClosest(el, "button") || el;
 };
 
 /**
@@ -790,25 +1034,34 @@ element.getContainer = function(el) {
  *
  * This means an element is considered to be in view, but not necessarily
  * pointer-interactable, if it is found somewhere in the
- * |elementsFromPoint| list at |el|'s in-view centre coordinates.
+ * &lt;code>elementsFromPoint&lt;/code> list at &lt;var>el&lt;/var>'s in-view
+ * centre coordinates.
  *
- * Before running the check, we change |el|'s pointerEvents style property
- * to "auto", since elements without pointer events enabled do not turn
- * up in the paint tree we get from document.elementsFromPoint.  This is
- * a specialisation that is only relevant when checking if the element is
- * in view.
+ * Before running the check, we change &lt;var>el&lt;/var>'s pointerEvents
+ * style property to "auto", since elements without pointer events
+ * enabled do not turn up in the paint tree we get from
+ * document.elementsFromPoint.  This is a specialisation that is only
+ * relevant when checking if the element is in view.
  *
  * @param {Element} el
  *     Element to check if is in view.
  *
  * @return {boolean}
- *     True if |el| is inside the viewport, or false otherwise.
+ *     True if &lt;var>el&lt;/var> is inside the viewport, or false otherwise.
  */
 element.isInView = function(el) {
   let originalPointerEvents = el.style.pointerEvents;
+
   try {
     el.style.pointerEvents = "auto";
     const tree = element.getPointerInteractablePaintTree(el);
+
+    // Bug 1413493 - &lt;tr> is not part of the returned paint tree yet. As
+    // workaround check the visibility based on the first contained cell.
+    if (el.localName === "tr" &amp;&amp; el.cells &amp;&amp; el.cells.length > 0) {
+      return tree.includes(el.cells[0]);
+    }
+
     return tree.includes(el);
   } finally {
     el.style.pointerEvents = originalPointerEvents;
@@ -834,8 +1087,7 @@ element.isInView = function(el) {
 element.isVisible = function(el, x = undefined, y = undefined) {
   let win = el.ownerGlobal;
 
-  // Bug 1094246: webdriver's isShown doesn't work with content xul
-  if (!element.isXULElement(el) &amp;&amp; !atom.isElementDisplayed(el, win)) {
+  if (!atom.isElementDisplayed(el, win)) {
     return false;
   }
 
@@ -952,9 +1204,7 @@ element.getPointerInteractablePaintTree = function(el) {
 
 // TODO(ato): Not implemented.
 // In fact, it's not defined in the spec.
-element.isKeyboardInteractable = function(el) {
-  return true;
-};
+element.isKeyboardInteractable = () => true;
 
 /**
  * Attempts to scroll into view |el|.
@@ -968,8 +1218,73 @@ element.scrollIntoView = function(el) {
   }
 };
 
-element.isXULElement = function(el) {
-  return el.namespaceURI === XULNS;
+/**
+ * Ascertains whether &lt;var>node&lt;/var> is a DOM-, SVG-, or XUL element.
+ *
+ * @param {*} node
+ *     Element thought to be an &lt;code>Element&lt;/code> or
+ *     &lt;code>XULElement&lt;/code>.
+ *
+ * @return {boolean}
+ *     True if &lt;var>node&lt;/var> is an element, false otherwise.
+ */
+element.isElement = function(node) {
+  return element.isDOMElement(node) || element.isXULElement(node);
+};
+
+/**
+ * Ascertains whether &lt;var>node&lt;/var> is a DOM element.
+ *
+ * @param {*} node
+ *     Element thought to be an &lt;code>Element&lt;/code>.
+ *
+ * @return {boolean}
+ *     True if &lt;var>node&lt;/var> is a DOM element, false otherwise.
+ */
+element.isDOMElement = function(node) {
+  return typeof node == "object" &amp;&amp;
+      node !== null &amp;&amp;
+      "nodeType" in node &amp;&amp;
+      [ELEMENT_NODE, DOCUMENT_NODE].includes(node.nodeType) &amp;&amp;
+      !element.isXULElement(node);
+};
+
+/**
+ * Ascertains whether &lt;var>el&lt;/var> is a XUL- or XBL element.
+ *
+ * @param {*} node
+ *     Element thought to be a XUL- or XBL element.
+ *
+ * @return {boolean}
+ *     True if &lt;var>node&lt;/var> is a XULElement or XBLElement,
+ *     false otherwise.
+ */
+element.isXULElement = function(node) {
+  return typeof node == "object" &amp;&amp;
+      node !== null &amp;&amp;
+      "nodeType" in node &amp;&amp;
+      node.nodeType === node.ELEMENT_NODE &amp;&amp;
+      [XBLNS, XULNS].includes(node.namespaceURI);
+};
+
+/**
+ * Ascertains whether &lt;var>node&lt;/var> is a &lt;code>WindowProxy&lt;/code>.
+ *
+ * @param {*} node
+ *     Node thought to be a &lt;code>WindowProxy&lt;/code>.
+ *
+ * @return {boolean}
+ *     True if &lt;var>node&lt;/var> is a DOM window.
+ */
+element.isDOMWindow = function(node) {
+  // TODO(ato): This should use Object.prototype.toString.call(node)
+  // but it's not clear how to write a good xpcshell test for that,
+  // seeing as we stub out a WindowProxy.
+  return typeof node == "object" &amp;&amp;
+      node !== null &amp;&amp;
+      typeof node.toString == "function" &amp;&amp;
+      node.toString() == "[object Window]" &amp;&amp;
+      node.self === node;
 };
 
 const boolEls = {
@@ -1007,7 +1322,7 @@ const boolEls = {
  * Tests if the attribute is a boolean attribute on element.
  *
  * @param {DOMElement} el
- *     Element to test if |attr| is a boolean attribute on.
+ *     Element to test if &lt;var>attr&lt;/var> is a boolean attribute on.
  * @param {string} attr
  *     Attribute to test is a boolean attribute.
  *
@@ -1015,7 +1330,7 @@ const boolEls = {
  *     True if the attribute is boolean, false otherwise.
  */
 element.isBooleanAttribute = function(el, attr) {
-  if (el.namespaceURI !== XMLNS) {
+  if (!element.isDOMElement(el)) {
     return false;
   }
 
@@ -1031,6 +1346,295 @@ element.isBooleanAttribute = function(el, attr) {
   }
   return boolEls[el.localName].includes(attr);
 };
+
+/**
+ * A web element is an abstraction used to identify an element when
+ * it is transported via the protocol, between remote- and local ends.
+ *
+ * In Marionette this abstraction can represent DOM elements,
+ * WindowProxies, and XUL elements.
+ */
+class WebElement {
+  /**
+   * @param {string} uuid
+   *     Identifier that must be unique across all browsing contexts
+   *     for the contract to be upheld.
+   */
+  constructor(uuid) {
+    this.uuid = assert.string(uuid);
+  }
+
+  /**
+   * Performs an equality check between this web element and
+   * &lt;var>other&lt;/var>.
+   *
+   * @param {WebElement} other
+   *     Web element to compare with this.
+   *
+   * @return {boolean}
+   *     True if this and &lt;var>other&lt;/var> are the same.  False
+   *     otherwise.
+   */
+  is(other) {
+    return other instanceof WebElement &amp;&amp; this.uuid === other.uuid;
+  }
+
+  toString() {
+    return `[object ${this.constructor.name} uuid=${this.uuid}]`;
+  }
+
+  /**
+   * Returns a new {@link WebElement} reference for a DOM element,
+   * &lt;code>WindowProxy&lt;/code>, or XUL element.
+   *
+   * @param {(Element|WindowProxy|XULElement)} node
+   *     Node to construct a web element reference for.
+   *
+   * @return {(ContentWebElement|ChromeWebElement)}
+   *     Web element reference for &lt;var>el&lt;/var>.
+   *
+   * @throws {InvalidArgumentError}
+   *     If &lt;var>node&lt;/var> is neither a &lt;code>WindowProxy&lt;/code>,
+   *     DOM element, or a XUL element.
+   */
+  static from(node) {
+    const uuid = WebElement.generateUUID();
+
+    if (element.isDOMElement(node)) {
+      return new ContentWebElement(uuid);
+    } else if (element.isDOMWindow(node)) {
+      if (node.parent === node) {
+        return new ContentWebWindow(uuid);
+      }
+      return new ContentWebFrame(uuid);
+    } else if (element.isXULElement(node)) {
+      return new ChromeWebElement(uuid);
+    }
+
+    throw new InvalidArgumentError("Expected DOM window/element " +
+        pprint`or XUL element, got: ${node}`);
+  }
+
+  /**
+   * Unmarshals a JSON Object to one of {@link ContentWebElement},
+   * {@link ContentWebWindow}, {@link ContentWebFrame}, or
+   * {@link ChromeWebElement}.
+   *
+   * @param {Object.&lt;string, string>} json
+   *     Web element reference, which is supposed to be a JSON Object
+   *     where the key is one of the {@link WebElement} concrete
+   *     classes' UUID identifiers.
+   *
+   * @return {WebElement}
+   *     Representation of the web element.
+   *
+   * @throws {InvalidArgumentError}
+   *     If &lt;var>json&lt;/var> is not a web element reference.
+   */
+  static fromJSON(json) {
+    assert.object(json);
+    let keys = Object.keys(json);
+
+    for (let key of keys) {
+      switch (key) {
+        case ContentWebElement.Identifier:
+        case ContentWebElement.LegacyIdentifier:
+          return ContentWebElement.fromJSON(json);
+
+        case ContentWebWindow.Identifier:
+          return ContentWebWindow.fromJSON(json);
+
+        case ContentWebFrame.Identifier:
+          return ContentWebFrame.fromJSON(json);
+
+        case ChromeWebElement.Identifier:
+          return ChromeWebElement.fromJSON(json);
+      }
+    }
+
+    throw new InvalidArgumentError(
+        pprint`Expected web element reference, got: ${json}`);
+  }
+
+  /**
+   * Constructs a {@link ContentWebElement} or {@link ChromeWebElement}
+   * from a a string &lt;var>uuid&lt;/var>.
+   *
+   * This whole function is a workaround for the fact that clients
+   * to Marionette occasionally pass &lt;code>{id: &lt;uuid>}&lt;/code> JSON
+   * Objects instead of web element representations.  For that reason
+   * we need the &lt;var>context&lt;/var> argument to determine what kind of
+   * {@link WebElement} to return.
+   *
+   * @param {string} uuid
+   *     UUID to be associated with the web element.
+   * @param {Context} context
+   *     Context, which is used to determine if the returned type
+   *     should be a content web element or a chrome web element.
+   *
+   * @return {WebElement}
+   *     One of {@link ContentWebElement} or {@link ChromeWebElement},
+   *     based on &lt;var>context&lt;/var>.
+   *
+   * @throws {InvalidArgumentError}
+   *     If &lt;var>uuid&lt;/var> is not a string or &lt;var>context&lt;/var>
+   *     is an invalid context.
+   */
+  static fromUUID(uuid, context) {
+    assert.string(uuid);
+
+    switch (context) {
+      case "chrome":
+        return new ChromeWebElement(uuid);
+
+      case "content":
+        return new ContentWebElement(uuid);
+
+      default:
+        throw new InvalidArgumentError("Unknown context: " + context);
+    }
+  }
+
+  /**
+   * Checks if &lt;var>ref&lt;var> is a {@link WebElement} reference,
+   * i.e. if it has {@link ContentWebElement.Identifier},
+   * {@link ContentWebElement.LegacyIdentifier}, or
+   * {@link ChromeWebElement.Identifier} as properties.
+   *
+   * @param {Object.&lt;string, string>} obj
+   *     Object that represents a reference to a {@link WebElement}.
+   * @return {boolean}
+   *     True if &lt;var>obj&lt;/var> is a {@link WebElement}, false otherwise.
+   */
+  static isReference(obj) {
+    if (Object.prototype.toString.call(obj) != "[object Object]") {
+      return false;
+    }
+
+    if ((ContentWebElement.Identifier in obj) ||
+        (ContentWebElement.LegacyIdentifier in obj) ||
+        (ContentWebWindow.Identifier in obj) ||
+        (ContentWebFrame.Identifier in obj) ||
+        (ChromeWebElement.Identifier in obj)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Generates a unique identifier.
+   *
+   * @return {string}
+   *     UUID.
+   */
+  static generateUUID() {
+    let uuid = uuidGen.generateUUID().toString();
+    return uuid.substring(1, uuid.length - 1);
+  }
+}
+this.WebElement = WebElement;
+
+/**
+ * DOM elements are represented as web elements when they are
+ * transported over the wire protocol.
+ */
+class ContentWebElement extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    const {Identifier, LegacyIdentifier} = ContentWebElement;
+
+    if (!(Identifier in json) &amp;&amp; !(LegacyIdentifier in json)) {
+      throw new InvalidArgumentError(
+          pprint`Expected web element reference, got: ${json}`);
+    }
+
+    let uuid = json[Identifier] || json[LegacyIdentifier];
+    return new ContentWebElement(uuid);
+  }
+}
+ContentWebElement.Identifier = "element-6066-11e4-a52e-4f735466cecf";
+ContentWebElement.LegacyIdentifier = "ELEMENT";
+this.ContentWebElement = ContentWebElement;
+
+/**
+ * Top-level browsing contexts, such as &lt;code>WindowProxy&lt;/code>
+ * whose &lt;code>opener&lt;/code> is null, are represented as web windows
+ * over the wire protocol.
+ */
+class ContentWebWindow extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebWindow.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ContentWebWindow.Identifier in json)) {
+      throw new InvalidArgumentError(
+          pprint`Expected web window reference, got: ${json}`);
+    }
+    let uuid = json[ContentWebWindow.Identifier];
+    return new ContentWebWindow(uuid);
+  }
+}
+ContentWebWindow.Identifier = "window-fcc6-11e5-b4f8-330a88ab9d7f";
+this.ContentWebWindow = ContentWebWindow;
+
+/**
+ * Nested browsing contexts, such as the &lt;code>WindowProxy&lt;/code>
+ * associated with &lt;tt>&amp;lt;frame&amp;gt;&lt;/tt> and &lt;tt>&amp;lt;iframe&amp;gt;&lt;/tt>,
+ * are represented as web frames over the wire protocol.
+ */
+class ContentWebFrame extends WebElement {
+  toJSON() {
+    return {
+      [ContentWebFrame.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ContentWebFrame.Identifier in json)) {
+      throw new InvalidArgumentError(
+          pprint`Expected web frame reference, got: ${json}`);
+    }
+    let uuid = json[ContentWebFrame.Identifier];
+    return new ContentWebFrame(uuid);
+  }
+}
+ContentWebFrame.Identifier = "frame-075b-4da1-b6ba-e579c2d3230a";
+this.ContentWebFrame = ContentWebFrame;
+
+/**
+ * XUL elements in chrome space are represented as chrome web elements
+ * over the wire protocol.
+ */
+class ChromeWebElement extends WebElement {
+  toJSON() {
+    return {
+      [ChromeWebElement.Identifier]: this.uuid,
+      [ContentWebElement.LegacyIdentifier]: this.uuid,
+    };
+  }
+
+  static fromJSON(json) {
+    if (!(ChromeWebElement.Identifier in json)) {
+      throw new InvalidArgumentError("Expected chrome element reference " +
+          pprint`for XUL/XBL element, got: ${json}`);
+    }
+    let uuid = json[ChromeWebElement.Identifier];
+    return new ChromeWebElement(uuid);
+  }
+}
+ChromeWebElement.Identifier = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
+this.ChromeWebElement = ChromeWebElement;
 </code></pre>
         </article>
     </section>
@@ -1041,13 +1645,13 @@ element.isBooleanAttribute = function(el, attr) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="ChromeWebElement.html">ChromeWebElement</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="ContentWebElement.html">ContentWebElement</a></li><li><a href="ContentWebFrame.html">ContentWebFrame</a></li><li><a href="ContentWebWindow.html">ContentWebWindow</a></li><li><a href="Context.html">Context</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElement.html">WebElement</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#PollPromise">PollPromise</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#truncate">truncate</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li><li><a href="global.html#XUL_CHECKED_ELS">XUL_CHECKED_ELS</a></li><li><a href="global.html#XUL_SELECTED_ELS">XUL_SELECTED_ELS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Oct 04 2017 18:33:34 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

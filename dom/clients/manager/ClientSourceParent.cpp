@@ -43,7 +43,7 @@ public:
   }
 
   NS_IMETHOD
-  Run()
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mContentParent->KillHard("invalid ClientSourceParent actor");

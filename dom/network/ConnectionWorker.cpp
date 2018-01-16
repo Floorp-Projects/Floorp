@@ -96,7 +96,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     hal::RegisterNetworkObserver(mProxy);
@@ -123,7 +123,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     hal::UnregisterNetworkObserver(mProxy);

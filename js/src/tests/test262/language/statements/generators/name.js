@@ -4,7 +4,7 @@
 /*---
 description: Assignment of function `name` attribute
 es6id: 14.4.12
-info: >
+info: |
     GeneratorDeclaration :
         function * BindingIdentifier ( FormalParameters ) { GeneratorBody }
 

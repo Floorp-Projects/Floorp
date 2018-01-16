@@ -240,6 +240,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
   SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
 
   CreateScrollHandoffLayerTree1();
 
@@ -278,6 +279,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
   SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
 
   CreateScrollHandoffLayerTree1();
 
@@ -345,6 +347,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202a) {
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1240202b) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
 
   CreateScrollHandoffLayerTree1();
 
@@ -408,6 +411,8 @@ TEST_F(APZScrollHandoffTester, OpposingConstrainedAxes_Bug1201098) {
 // handed off to the parent, while the original APZC continues flinging in the
 // other direction.
 TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
+
   CreateScrollHandoffLayerTree1();
 
   // Fling up and to the left. The child APZC has room to scroll up, but not
@@ -494,12 +499,14 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
   SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
   TestFlingAcceleration();
 }
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
   SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+  SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
   TestFlingAcceleration();
 }

@@ -3,6 +3,7 @@
 
 package org.mozilla.gecko.db;
 
+import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -17,11 +18,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.robolectric.shadows.ShadowContentResolver;
-
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,8 +41,9 @@ import static org.mozilla.gecko.db.BrowserProviderGeneralTest.INVALID_TIMESTAMP;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.assertVersionsForSelection;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.bookmarksTestSyncUri;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.bookmarksTestUri;
-import static org.mozilla.gecko.db.BrowserProviderGeneralTest.getBookmarksTestSyncIncrementLocalVersionUri;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.getBookmarkIdFromGuid;
+import static org.mozilla.gecko.db.BrowserProviderGeneralTest
+        .getBookmarksTestSyncIncrementLocalVersionUri;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.insertBookmark;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.withDeleted;
 import static org.mozilla.gecko.db.BrowserProviderGeneralTest.withSync;
@@ -53,13 +54,11 @@ import static org.mozilla.gecko.db.BrowserProviderGeneralTest.withSync;
 @RunWith(TestRunner.class)
 public class BrowserProviderBookmarksTest {
     private ContentProviderClient bookmarksClient;
-    private BrowserProvider provider;
+    private ContentProvider provider;
 
     @Before
     public void setUp() throws Exception {
-        provider = new BrowserProvider();
-        provider.onCreate();
-        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
+        provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
 
         ShadowContentResolver contentResolver = new ShadowContentResolver();
         bookmarksClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);

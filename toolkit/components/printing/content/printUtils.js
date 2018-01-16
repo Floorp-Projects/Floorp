@@ -669,10 +669,11 @@ var PrintUtils = {
       }
 
       // copy the window close handler
-      if (document.documentElement.hasAttribute("onclose"))
+      if (document.documentElement.hasAttribute("onclose")) {
         this._closeHandlerPP = document.documentElement.getAttribute("onclose");
-      else
+      } else {
         this._closeHandlerPP = null;
+      }
       document.documentElement.setAttribute("onclose", "PrintUtils.exitPrintPreview(); return false;");
 
       // disable chrome shortcuts...
@@ -699,7 +700,11 @@ var PrintUtils = {
     window.removeEventListener("keypress", this.onKeyPressPP, true);
 
     // restore the old close handler
-    document.documentElement.setAttribute("onclose", this._closeHandlerPP);
+    if (this._closeHandlerPP) {
+      document.documentElement.setAttribute("onclose", this._closeHandlerPP);
+    } else {
+      document.documentElement.removeAttribute("onclose");
+    }
     this._closeHandlerPP = null;
 
     // remove the print preview toolbar

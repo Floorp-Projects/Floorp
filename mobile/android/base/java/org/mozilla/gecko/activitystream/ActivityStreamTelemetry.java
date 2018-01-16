@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.activitystream;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -216,8 +217,7 @@ public class ActivityStreamTelemetry {
                         break;
                     // While we also have a "blank" type, it is not used by Activity Stream.
                     case BrowserContract.TopSites.TYPE_BLANK:
-                    default:
-                        throw new IllegalStateException("Unknown top site type: " + topSite.getType());
+                        throw new IllegalStateException("Unknown top site type :" + (int) topSite.getType());
                 }
 
                 return this;

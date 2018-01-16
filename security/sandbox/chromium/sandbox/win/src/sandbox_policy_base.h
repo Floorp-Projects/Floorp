@@ -42,7 +42,7 @@ class PolicyBase final : public TargetPolicy {
   ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) override;
   TokenLevel GetInitialTokenLevel() const override;
   TokenLevel GetLockdownTokenLevel() const override;
-  void SetDoNotUseRestrictingSIDs() final;
+  void SetDoNotUseRestrictingSIDs() final override;
   ResultCode SetJobLevel(JobLevel job_level, uint32_t ui_exceptions) override;
   JobLevel GetJobLevel() const override;
   ResultCode SetJobMemoryLimit(size_t memory_limit) override;

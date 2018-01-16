@@ -31,10 +31,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizationService",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
+  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
+
+XPCOMUtils.defineLazyGetter(
+  this, "processScript",
+  () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
+          .getService().wrappedJSObject);
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -559,6 +565,10 @@ class BrowserExtensionContent extends EventEmitter {
     this.uuid = data.uuid;
     this.instanceId = data.instanceId;
 
+    this.childModules = data.childModules;
+    this.dependencies = data.dependencies;
+    this.schemaURLs = data.schemaURLs;
+
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
@@ -571,6 +581,8 @@ class BrowserExtensionContent extends EventEmitter {
     this.permissions = data.permissions;
     this.optionalPermissions = data.optionalPermissions;
     this.principal = data.principal;
+
+    this.apiManager = this.getAPIManager();
 
     this.localeData = new LocaleData(data.localeData);
 
@@ -629,6 +641,30 @@ class BrowserExtensionContent extends EventEmitter {
     /* eslint-enable mozilla/balanced-listeners */
 
     ExtensionManager.extensions.set(this.id, this);
+  }
+
+  getAPIManager() {
+    let apiManagers = [ExtensionPageChild.apiManager];
+
+    for (let id of this.dependencies) {
+      let extension = processScript.getExtensionChild(id);
+      if (extension) {
+        apiManagers.push(extension.experimentAPIManager);
+      }
+    }
+
+    if (this.childModules) {
+      this.experimentAPIManager =
+        new ExtensionCommon.LazyAPIManager("addon", this.childModules, this.schemaURLs);
+
+      apiManagers.push(this.experimentAPIManager);
+    }
+
+    if (apiManagers.length == 1) {
+      return apiManagers[0];
+    }
+
+    return new ExtensionCommon.MultiAPIManager("addon", apiManagers.reverse());
   }
 
   shutdown() {
@@ -775,6 +811,7 @@ class ChildAPIManager {
     // delegated to the ParentAPIManager.
     this.localApis = localAPICan.root;
     this.apiCan = localAPICan;
+    this.schema = this.apiCan.apiManager.schema;
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
@@ -816,6 +853,10 @@ class ChildAPIManager {
       this.context.extension.on("add-permissions", this.updatePermissions);
       this.context.extension.on("remove-permissions", this.updatePermissions);
     }
+  }
+
+  inject(obj) {
+    this.schema.inject(obj, this);
   }
 
   receiveMessage({name, messageName, data}) {

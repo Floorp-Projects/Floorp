@@ -92,7 +92,7 @@ class FilePickerParent : public PFilePickerParent
                bool aIsDirectory);
 
     bool Dispatch();
-    NS_IMETHOD Run();
+    NS_IMETHOD Run() override;
     void Destroy();
   };
 

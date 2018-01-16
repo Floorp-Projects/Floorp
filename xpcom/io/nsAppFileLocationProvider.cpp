@@ -469,7 +469,7 @@ public:
   {
   }
 
-  NS_IMETHOD HasMoreElements(bool* aResult)
+  NS_IMETHOD HasMoreElements(bool* aResult) override
   {
     if (mEndPath)
       while (!mNext && *mEndPath) {

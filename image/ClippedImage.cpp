@@ -114,7 +114,7 @@ public:
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
                           const SamplingFilter aSamplingFilter,
-                          const gfxMatrix& aTransform)
+                          const gfxMatrix& aTransform) override
   {
     MOZ_ASSERT(aTransform.IsIdentity(),
                "Caller is probably CreateSamplingRestrictedDrawable, "

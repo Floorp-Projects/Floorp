@@ -221,7 +221,7 @@ class MOZ_STACK_CLASS SavedFrame::AutoLookupVector : public JS::CustomAutoRooter
   private:
     LookupVector lookups;
 
-    virtual void trace(JSTracer* trc) {
+    virtual void trace(JSTracer* trc) override {
         for (size_t i = 0; i < lookups.length(); i++)
             lookups[i].trace(trc);
     }

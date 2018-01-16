@@ -75,7 +75,7 @@ public:
   nsASDOMWindowEnumerator(const char16_t* aTypeString,
                           nsWindowMediator& inMediator);
   virtual ~nsASDOMWindowEnumerator();
-  NS_IMETHOD GetNext(nsISupports **retval);
+  NS_IMETHOD GetNext(nsISupports **retval) override;
 };
 
 class nsASXULWindowEnumerator : public nsAppShellWindowEnumerator {
@@ -84,7 +84,7 @@ public:
   nsASXULWindowEnumerator(const char16_t* aTypeString,
                           nsWindowMediator& inMediator);
   virtual ~nsASXULWindowEnumerator();
-  NS_IMETHOD GetNext(nsISupports **retval);
+  NS_IMETHOD GetNext(nsISupports **retval) override;
 };
 
 //
@@ -100,7 +100,7 @@ public:
   virtual ~nsASDOMWindowEarlyToLateEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowEarlyToLateEnumerator : public nsASXULWindowEnumerator {
@@ -112,7 +112,7 @@ public:
   virtual ~nsASXULWindowEarlyToLateEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASDOMWindowFrontToBackEnumerator : public nsASDOMWindowEnumerator {
@@ -124,7 +124,7 @@ public:
   virtual ~nsASDOMWindowFrontToBackEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowFrontToBackEnumerator : public nsASXULWindowEnumerator {
@@ -136,7 +136,7 @@ public:
   virtual ~nsASXULWindowFrontToBackEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASDOMWindowBackToFrontEnumerator : public nsASDOMWindowEnumerator {
@@ -148,7 +148,7 @@ public:
   virtual ~nsASDOMWindowBackToFrontEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 class nsASXULWindowBackToFrontEnumerator : public nsASXULWindowEnumerator {
@@ -160,7 +160,7 @@ public:
   virtual ~nsASXULWindowBackToFrontEnumerator();
 
 protected:
-  virtual nsWindowInfo *FindNext();
+  virtual nsWindowInfo *FindNext() override;
 };
 
 #endif

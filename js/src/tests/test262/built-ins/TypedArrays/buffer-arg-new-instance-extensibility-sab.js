@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -5,7 +6,7 @@
 esid: sec-typedarray-buffer-byteoffset-length
 description: >
   The new typedArray instance from a buffer argument is extensible
-info: >
+info: |
   22.2.4.5 TypedArray ( buffer [ , byteOffset [ , length ] ] )
 
   ...

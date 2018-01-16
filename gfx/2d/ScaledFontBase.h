@@ -28,29 +28,30 @@ namespace gfx {
 class ScaledFontBase : public ScaledFont
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontBase)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontBase, override)
+
   ScaledFontBase(const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
   virtual ~ScaledFontBase();
 
-  virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
+  virtual already_AddRefed<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget) override;
 
-  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint);
+  virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint) override;
 
-  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics);
+  virtual void GetGlyphDesignMetrics(const uint16_t* aGlyphIndices, uint32_t aNumGlyphs, GlyphMetrics* aGlyphMetrics) override;
 
-  virtual Float GetSize() const { return mSize; }
+  virtual Float GetSize() const override { return mSize; }
 
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface() { return mTypeface; }
 #endif
 
   // Not true, but required to instantiate a ScaledFontBase.
-  virtual FontType GetType() const { return FontType::SKIA; }
+  virtual FontType GetType() const override { return FontType::SKIA; }
 
 #ifdef USE_CAIRO_SCALED_FONT
   bool PopulateCairoScaledFont();
-  virtual cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
-  virtual void SetCairoScaledFont(cairo_scaled_font_t* font);
+  virtual cairo_scaled_font_t* GetCairoScaledFont() override { return mScaledFont; }
+  virtual void SetCairoScaledFont(cairo_scaled_font_t* font) override;
 #endif
 
 protected:

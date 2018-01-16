@@ -17,9 +17,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 XPCOMUtils.defineLazyModuleGetter(this, "SiteDataManager",
   "resource:///modules/SiteDataManager.jsm");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "trackingprotectionUiEnabled",
+                                      "privacy.trackingprotection.ui.enabled");
+
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+
+const TRACKING_PROTECTION_KEY = "websites.trackingProtectionMode";
+const TRACKING_PROTECTION_PREFS = ["privacy.trackingprotection.enabled",
+                                   "privacy.trackingprotection.pbmode.enabled"];
 
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
@@ -133,7 +140,7 @@ var gPrivacyPane = {
    * privacy.trackingprotection.ui.enabled pref, and linkify its Learn More link
    */
   _initTrackingProtection() {
-    if (!Services.prefs.getBoolPref("privacy.trackingprotection.ui.enabled")) {
+    if (!trackingprotectionUiEnabled) {
       return;
     }
 
@@ -153,9 +160,71 @@ var gPrivacyPane = {
    * Protection UI.
    */
   _initTrackingProtectionPBM() {
-    let link = document.getElementById("trackingProtectionPBMLearnMore");
+    if (trackingprotectionUiEnabled) {
+      return;
+    }
+
+    let link = document.getElementById("trackingProtectionLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection-pbm";
     link.setAttribute("href", url);
+
+    this._updateTrackingProtectionUI();
+  },
+
+  /**
+   * Update the tracking protection UI to deal with extension control.
+   */
+  _updateTrackingProtectionUI() {
+    let isLocked = TRACKING_PROTECTION_PREFS.some(
+      pref => Services.prefs.prefIsLocked(pref));
+
+    function setInputsDisabledState(isControlled) {
+      let disabled = isLocked || isControlled;
+      if (trackingprotectionUiEnabled) {
+        document.querySelectorAll("#trackingProtectionRadioGroup > radio")
+          .forEach((element) => {
+            element.disabled = disabled;
+          });
+        document.querySelector("#trackingProtectionDesc > label")
+          .disabled = disabled;
+      } else {
+        document.getElementById("trackingProtectionPBM").disabled = disabled;
+        document.getElementById("trackingProtectionPBMLabel")
+          .disabled = disabled;
+      }
+    }
+
+    if (isLocked) {
+      // An extension can't control this setting if either pref is locked.
+      hideControllingExtension(TRACKING_PROTECTION_KEY);
+      setInputsDisabledState(false);
+    } else {
+      handleControllingExtension(
+        PREF_SETTING_TYPE,
+        TRACKING_PROTECTION_KEY)
+          .then(setInputsDisabledState);
+    }
+  },
+
+  /**
+   * Set up handlers for showing and hiding controlling extension info
+   * for tracking protection.
+   */
+  _initTrackingProtectionExtensionControl() {
+    let trackingProtectionObserver = {
+      observe(subject, topic, data) {
+        gPrivacyPane._updateTrackingProtectionUI();
+      },
+    };
+
+    for (let pref of TRACKING_PROTECTION_PREFS) {
+      Services.prefs.addObserver(pref, trackingProtectionObserver);
+    }
+    window.addEventListener("unload", () => {
+      for (let pref of TRACKING_PROTECTION_PREFS) {
+        Services.prefs.removeObserver(pref, trackingProtectionObserver);
+      }
+    });
   },
 
   /**
@@ -183,6 +252,7 @@ var gPrivacyPane = {
     this.initAutoStartPrivateBrowsingReverter();
     this._initTrackingProtection();
     this._initTrackingProtectionPBM();
+    this._initTrackingProtectionExtensionControl();
     this._initAutocomplete();
 
     Preferences.get("privacy.sanitize.sanitizeOnShutdown").on("change",
@@ -227,6 +297,9 @@ var gPrivacyPane = {
       gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
       gPrivacyPane.showClearPrivateDataSettings);
+    setEventListener("disableTrackingProtectionExtension", "command",
+      makeDisableControllingExtension(
+        PREF_SETTING_TYPE, TRACKING_PROTECTION_KEY));
     setEventListener("trackingProtectionRadioGroup", "command",
       gPrivacyPane.trackingProtectionWritePrefs);
     setEventListener("trackingProtectionExceptions", "command",
@@ -418,6 +491,8 @@ var gPrivacyPane = {
     let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
     let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
     let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+
+    this._updateTrackingProtectionUI();
 
     // Global enable takes precedence over enabled in Private Browsing.
     if (enabledPref.value) {

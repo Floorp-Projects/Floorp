@@ -41,6 +41,24 @@
     return {finish: finishCollecting};
   };
 
+  let collectAddTrackEvents = stream => {
+    let checkEvent = e => {
+      ok(e.track, "Track is set on event");
+      ok(stream.getTracks().includes(e.track),
+        "track in addtrack event is in the stream");
+    };
+    return collectEvents(stream, "addtrack", checkEvent);
+  };
+
+  let collectRemoveTrackEvents = stream => {
+    let checkEvent = e => {
+      ok(e.track, "Track is set on event");
+      ok(!stream.getTracks().includes(e.track),
+        "track in removetrack event is not in the stream");
+    };
+    return collectEvents(stream, "removetrack", checkEvent);
+  };
+
   let collectTrackEvents = pc => {
     let checkEvent = e => {
       ok(e.track, "Track is set on event");
@@ -767,6 +785,127 @@
     stopTracks(stream);
   };
 
+  let checkRemoveTrackNegotiation = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    let stream = await getUserMedia({audio: true, video: true});
+    let audio = stream.getAudioTracks()[0];
+    pc1.addTrack(audio, stream);
+    let video = stream.getVideoTracks()[0];
+    pc1.addTrack(video, stream);
+    // We want both a sendrecv and sendonly transceiver to test that the
+    // appropriate direction changes happen.
+    pc1.getTransceivers()[1].direction = "sendonly";
+
+    let offer = await pc1.createOffer();
+
+    // Get a reference to the stream
+    let trackEventCollector = collectTrackEvents(pc2);
+    await pc2.setRemoteDescription(offer);
+    let pc2TrackEvents = trackEventCollector.finish();
+    hasProps(pc2TrackEvents,
+      [
+        {streams: [{id: stream.id}]},
+        {streams: [{id: stream.id}]}
+      ]);
+    let receiveStream = pc2TrackEvents[0].streams[0];
+
+    // Verify that rollback causes onremovetrack to fire for the added tracks
+    let removetrackEventCollector = collectRemoveTrackEvents(receiveStream);
+    await pc2.setRemoteDescription({type: "rollback"});
+    let removedtracks = removetrackEventCollector.finish().map(e => e.track);
+    is(removedtracks.length, 2, "Rollback should have removed two tracks");
+    ok(removedtracks.includes(pc2TrackEvents[0].track), "First track should be removed");
+    ok(removedtracks.includes(pc2TrackEvents[1].track), "Second track should be removed");
+
+    offer = await pc1.createOffer();
+
+    let addtrackEventCollector = collectAddTrackEvents(receiveStream);
+    trackEventCollector = collectTrackEvents(pc2);
+    await pc2.setRemoteDescription(offer);
+    pc2TrackEvents = trackEventCollector.finish();
+    let addedtracks = addtrackEventCollector.finish().map(e => e.track);
+    is(addedtracks.length, 2,
+      "pc2.setRemoteDescription(offer) should have added two tracks to the receive stream");
+    ok(addedtracks.includes(pc2TrackEvents[0].track), "First track should be added");
+    ok(addedtracks.includes(pc2TrackEvents[1].track), "Second track should be added");
+
+    await pc1.setLocalDescription(offer);
+    let answer = await pc2.createAnswer();
+    await pc1.setRemoteDescription(answer);
+    await pc2.setLocalDescription(answer);
+    pc1.removeTrack(pc1.getSenders()[0]);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          sender: {track: null},
+          direction: "recvonly"
+        },
+        {
+          sender: {track: video},
+          direction: "sendonly"
+        }
+      ]);
+
+    await negotiationNeeded(pc1);
+
+    pc1.removeTrack(pc1.getSenders()[1]);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          sender: {track: null},
+          direction: "recvonly"
+        },
+        {
+          sender: {track: null},
+          direction: "inactive"
+        }
+      ]);
+
+    // pc1 as offerer
+    offer = await pc1.createOffer();
+
+    removetrackEventCollector = collectRemoveTrackEvents(receiveStream);
+    await pc2.setRemoteDescription(offer);
+    removedtracks = removetrackEventCollector.finish().map(e => e.track);
+    is(removedtracks.length, 2, "Should have two removed tracks");
+    ok(removedtracks.includes(pc2TrackEvents[0].track), "First track should be removed");
+    ok(removedtracks.includes(pc2TrackEvents[1].track), "Second track should be removed");
+
+    addtrackEventCollector = collectAddTrackEvents(receiveStream);
+    await pc2.setRemoteDescription({type: "rollback"});
+    addedtracks = addtrackEventCollector.finish().map(e => e.track);
+    is(addedtracks.length, 2, "Rollback should have added two tracks");
+
+    // pc2 as offerer
+    offer = await pc2.createOffer();
+    await pc2.setLocalDescription(offer);
+    await pc1.setRemoteDescription(offer);
+    answer = await pc1.createAnswer();
+    await pc1.setLocalDescription(answer);
+
+    removetrackEventCollector = collectRemoveTrackEvents(receiveStream);
+    await pc2.setRemoteDescription(answer);
+    removedtracks = removetrackEventCollector.finish().map(e => e.track);
+    is(removedtracks.length, 2, "Should have two removed tracks");
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {
+          currentDirection: "inactive"
+        },
+        {
+          currentDirection: "inactive"
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
   let checkSetDirection = async () => {
     let pc = new RTCPeerConnection();
     pc.addTransceiver("audio");
@@ -1036,15 +1175,15 @@
     pc1.getTransceivers()[0].direction = "inactive";
     pc1.getTransceivers()[1].direction = "inactive";
     offer = await pc1.createOffer();
-    await pc2.setRemoteDescription(offer);
-    await pc1.setLocalDescription(offer);
-    answer = await pc2.createAnswer();
     let gotMuteAudio2 = gotMuteEvent(pc2.getTransceivers()[0].receiver.track);
     let gotMuteVideo2 = gotMuteEvent(pc2.getTransceivers()[1].receiver.track);
-    await pc1.setRemoteDescription(answer);
-    await pc2.setLocalDescription(answer);
+    await pc2.setRemoteDescription(offer);
     await gotMuteAudio2;
     await gotMuteVideo2;
+    await pc1.setLocalDescription(offer);
+    answer = await pc2.createAnswer();
+    await pc1.setRemoteDescription(answer);
+    await pc2.setLocalDescription(answer);
 
     // Check whether onunmute fires when we turn everything on again
     pc1.getTransceivers()[0].direction = "sendrecv";
@@ -2059,6 +2198,7 @@
     await checkAddTrackPairs();
     await checkReplaceTrackNullDoesntPreventPairing();
     await checkRemoveAndReadd();
+    await checkRemoveTrackNegotiation();
     await checkMute();
     await checkOnAddStream();
     await checkStop();

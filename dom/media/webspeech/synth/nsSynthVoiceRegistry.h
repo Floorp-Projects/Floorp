@@ -67,8 +67,6 @@ public:
 
   static void RecvNotifyVoicesChanged();
 
-  static void Shutdown();
-
 private:
   virtual ~nsSynthVoiceRegistry();
 

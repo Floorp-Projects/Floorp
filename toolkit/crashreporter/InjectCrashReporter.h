@@ -16,7 +16,7 @@ class InjectCrashRunnable : public Runnable
 public:
   explicit InjectCrashRunnable(DWORD pid);
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
 
 private:
   DWORD mPID;

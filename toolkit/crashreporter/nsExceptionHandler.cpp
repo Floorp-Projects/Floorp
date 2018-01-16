@@ -305,7 +305,7 @@ class ReportInjectedCrash : public Runnable
 public:
   explicit ReportInjectedCrash(uint32_t pid) : Runnable("ReportInjectedCrash"), mPID(pid) { }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
 
 private:
   uint32_t mPID;

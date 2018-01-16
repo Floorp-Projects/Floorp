@@ -706,7 +706,7 @@ protected:
 class PathBuilder : public PathSink
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilder)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilder, override)
   /** Finish writing to the path and return a Path object that can be used for
    * drawing. Future use of the builder results in a crash!
    */
@@ -1445,7 +1445,7 @@ protected:
 class DrawTargetCapture : public DrawTarget
 {
 public:
-  virtual bool IsCaptureDT() const { return true; }
+  virtual bool IsCaptureDT() const override { return true; }
 
   /**
    * Returns true if the recording only contains FillGlyph calls with

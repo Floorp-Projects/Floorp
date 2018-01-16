@@ -77,21 +77,12 @@ const global = this;
 // This object loads the ext-*.js scripts that define the extension API.
 let apiManager = new class extends SchemaAPIManager {
   constructor() {
-    super("main");
+    super("main", Schemas);
     this.initialized = null;
 
     /* eslint-disable mozilla/balanced-listeners */
     this.on("startup", (e, extension) => {
-      let promises = [];
-      for (let apiName of this.eventModules.get("startup")) {
-        promises.push(this.asyncGetAPI(apiName, extension).then(api => {
-          if (api) {
-            api.onStartup();
-          }
-        }));
-      }
-
-      return Promise.all(promises);
+      return extension.apiManager.onStartup(extension);
     });
 
     this.on("update", async (e, {id, resourceURI}) => {
@@ -144,6 +135,7 @@ let apiManager = new class extends SchemaAPIManager {
 
       this.initModuleData(await modulesPromise);
 
+      this.initGlobal();
       for (let script of scripts) {
         script.executeInGlobal(this.global);
       }
@@ -475,7 +467,7 @@ class ProxyContextParent extends BaseContext {
 
 defineLazyGetter(ProxyContextParent.prototype, "apiCan", function() {
   let obj = {};
-  let can = new CanOfAPIs(this, apiManager, obj);
+  let can = new CanOfAPIs(this, this.extension.apiManager, obj);
   GlobalManager.injectInObject(this, false, obj);
   return can;
 });

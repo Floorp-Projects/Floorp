@@ -48,10 +48,10 @@ interface XULControllers;
   [Replaceable, Throws] readonly attribute BarProp statusbar;
   [Replaceable, Throws] readonly attribute BarProp toolbar;
   [Throws] attribute DOMString status;
-  [Throws, CrossOriginCallable, UnsafeInPrerendering] void close();
+  [Throws, CrossOriginCallable] void close();
   [Throws, CrossOriginReadable] readonly attribute boolean closed;
   [Throws] void stop();
-  [Throws, CrossOriginCallable, UnsafeInPrerendering] void focus();
+  [Throws, CrossOriginCallable] void focus();
   [Throws, CrossOriginCallable] void blur();
 
   // other browsing contexts
@@ -64,7 +64,7 @@ interface XULControllers;
   [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy? parent;
   [Throws, NeedsSubjectPrincipal] readonly attribute Element? frameElement;
   //[Throws] WindowProxy? open(optional USVString url = "about:blank", optional DOMString target = "_blank", [TreatNullAs=EmptyString] optional DOMString features = "");
-  [Throws, UnsafeInPrerendering] WindowProxy? open(optional DOMString url = "", optional DOMString target = "", [TreatNullAs=EmptyString] optional DOMString features = "");
+  [Throws] WindowProxy? open(optional DOMString url = "", optional DOMString target = "", [TreatNullAs=EmptyString] optional DOMString features = "");
   getter object (DOMString name);
 
   // the user agent
@@ -75,11 +75,11 @@ interface XULControllers;
   [Throws, Pref="browser.cache.offline.enable"] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
-  [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] void alert();
-  [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] void alert(DOMString message);
-  [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
-  [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
-  [Throws, UnsafeInPrerendering, Func="nsGlobalWindowInner::IsWindowPrintEnabled"]
+  [Throws, NeedsSubjectPrincipal] void alert();
+  [Throws, NeedsSubjectPrincipal] void alert(DOMString message);
+  [Throws, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
+  [Throws, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
+  [Throws, Func="nsGlobalWindowInner::IsWindowPrintEnabled"]
   void print();
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
@@ -154,10 +154,10 @@ partial interface Window {
   //[Throws] void moveBy(double x, double y);
   //[Throws] void resizeTo(double x, double y);
   //[Throws] void resizeBy(double x, double y);
-  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveTo(long x, long y);
-  [Throws, UnsafeInPrerendering, NeedsCallerType] void moveBy(long x, long y);
-  [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeTo(long x, long y);
-  [Throws, UnsafeInPrerendering, NeedsCallerType] void resizeBy(long x, long y);
+  [Throws, NeedsCallerType] void moveTo(long x, long y);
+  [Throws, NeedsCallerType] void moveBy(long x, long y);
+  [Throws, NeedsCallerType] void resizeTo(long x, long y);
+  [Throws, NeedsCallerType] void resizeBy(long x, long y);
 
   // viewport
   // These are writable because we allow chrome to write them.  And they need
@@ -248,7 +248,7 @@ partial interface Window {
   /**
    * Method for sizing this window to the content in the window.
    */
-  [Throws, UnsafeInPrerendering, NeedsCallerType] void sizeToContent();
+  [Throws, NeedsCallerType] void sizeToContent();
 
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute XULControllers controllers;
@@ -269,11 +269,11 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute long   scrollMaxX;
   [Replaceable, Throws] readonly attribute long   scrollMaxY;
 
-  [Throws, UnsafeInPrerendering] attribute boolean fullScreen;
+  [Throws] attribute boolean fullScreen;
 
-  [Throws, ChromeOnly, UnsafeInPrerendering] void back();
-  [Throws, ChromeOnly, UnsafeInPrerendering] void forward();
-  [Throws, ChromeOnly, UnsafeInPrerendering, NeedsSubjectPrincipal] void home();
+  [Throws, ChromeOnly] void back();
+  [Throws, ChromeOnly] void forward();
+  [Throws, ChromeOnly, NeedsSubjectPrincipal] void home();
 
   // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(DOMString action,
@@ -289,13 +289,13 @@ partial interface Window {
    * @param searchInFrames: should we search through all frames
    * @param showDialog: should we show the Find dialog
    */
-  [Throws, UnsafeInPrerendering] boolean    find(optional DOMString str = "",
-                                                 optional boolean caseSensitive = false,
-                                                 optional boolean backwards = false,
-                                                 optional boolean wrapAround = false,
-                                                 optional boolean wholeWord = false,
-                                                 optional boolean searchInFrames = false,
-                                                 optional boolean showDialog = false);
+  [Throws] boolean    find(optional DOMString str = "",
+                           optional boolean caseSensitive = false,
+                           optional boolean backwards = false,
+                           optional boolean wrapAround = false,
+                           optional boolean wholeWord = false,
+                           optional boolean searchInFrames = false,
+                           optional boolean showDialog = false);
 
   /**
    * Returns the number of times this document for this window has
@@ -324,10 +324,10 @@ partial interface Window {
    * arguments, plus any additional arguments are passed on as
    * arguments on the dialog's window object (window.arguments).
    */
-  [Throws, ChromeOnly, UnsafeInPrerendering] WindowProxy? openDialog(optional DOMString url = "",
-                                                                   optional DOMString name = "",
-                                                                   optional DOMString options = "",
-                                                                   any... extraArguments);
+  [Throws, ChromeOnly] WindowProxy? openDialog(optional DOMString url = "",
+                                               optional DOMString name = "",
+                                               optional DOMString options = "",
+                                               any... extraArguments);
 
   [
 #ifdef NIGHTLY_BUILD
@@ -408,11 +408,11 @@ partial interface Window {
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      setCursor(DOMString cursor);
 
-  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      maximize();
-  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      minimize();
-  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow", UnsafeInPrerendering]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void                      restore();
 
   /**

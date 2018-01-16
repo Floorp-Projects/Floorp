@@ -143,7 +143,7 @@ public:
   {
   }
   explicit Edts(Box& aBox);
-  virtual bool IsValid()
+  virtual bool IsValid() override
   {
     // edts is optional
     return true;

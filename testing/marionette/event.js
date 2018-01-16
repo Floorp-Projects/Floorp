@@ -1389,6 +1389,15 @@ event.focus = function(el, opts = {}) {
   el.dispatchEvent(ev);
 };
 
+event.blur = function(el, {canBubble = true} = {}) {
+  let doc = el.ownerDocument || el.document;
+  let win = doc.defaultView;
+
+  let ev = new win.FocusEvent(el);
+  ev.initEvent("blur", canBubble, true);
+  el.dispatchEvent(ev);
+};
+
 event.mouseover = function(el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseover", el, modifiers, opts);
 };

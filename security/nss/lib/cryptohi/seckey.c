@@ -1984,13 +1984,14 @@ sec_GetHashMechanismByOidTag(SECOidTag tag)
             return CKM_SHA384;
         case SEC_OID_SHA256:
             return CKM_SHA256;
+        case SEC_OID_SHA224:
+            return CKM_SHA224;
+        case SEC_OID_SHA1:
+            return CKM_SHA_1;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-        /* fallthrough */
-        case SEC_OID_SHA1:
-            break;
+            return CKM_INVALID_MECHANISM;
     }
-    return CKM_SHA_1;
 }
 
 static CK_RSA_PKCS_MGF_TYPE
@@ -2003,13 +2004,14 @@ sec_GetMgfTypeByOidTag(SECOidTag tag)
             return CKG_MGF1_SHA384;
         case SEC_OID_SHA256:
             return CKG_MGF1_SHA256;
+        case SEC_OID_SHA224:
+            return CKG_MGF1_SHA224;
+        case SEC_OID_SHA1:
+            return CKG_MGF1_SHA1;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-        /* fallthrough */
-        case SEC_OID_SHA1:
-            break;
+            return 0;
     }
-    return CKG_MGF1_SHA1;
 }
 
 SECStatus
@@ -2019,6 +2021,7 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
     SECStatus rv = SECSuccess;
     SECOidTag hashAlgTag;
     unsigned long saltLength;
+    unsigned long trailerField;
 
     PORT_Memset(mech, 0, sizeof(CK_RSA_PKCS_PSS_PARAMS));
 
@@ -2028,6 +2031,9 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
         hashAlgTag = SEC_OID_SHA1; /* default, SHA-1 */
     }
     mech->hashAlg = sec_GetHashMechanismByOidTag(hashAlgTag);
+    if (mech->hashAlg == CKM_INVALID_MECHANISM) {
+        return SECFailure;
+    }
 
     if (params->maskAlg) {
         SECAlgorithmID maskHashAlg;
@@ -2050,6 +2056,9 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
         }
         maskHashAlgTag = SECOID_GetAlgorithmTag(&maskHashAlg);
         mech->mgf = sec_GetMgfTypeByOidTag(maskHashAlgTag);
+        if (mech->mgf == 0) {
+            return SECFailure;
+        }
     } else {
         mech->mgf = CKG_MGF1_SHA1; /* default, MGF1 with SHA-1 */
     }
@@ -2063,6 +2072,19 @@ sec_RSAPSSParamsToMechanism(CK_RSA_PKCS_PSS_PARAMS *mech,
         saltLength = 20; /* default, 20 */
     }
     mech->sLen = saltLength;
+
+    if (params->trailerField.data) {
+        rv = SEC_ASN1DecodeInteger((SECItem *)&params->trailerField, &trailerField);
+        if (rv != SECSuccess) {
+            return rv;
+        }
+        if (trailerField != 1) {
+            /* the value must be 1, which represents the trailer field
+             * with hexadecimal value 0xBC */
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+            return SECFailure;
+        }
+    }
 
     return rv;
 }

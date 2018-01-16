@@ -41,7 +41,7 @@ public:
   bool IsFinished(double aSmallestVisibleIncrement);
 
 protected:
-  virtual double Acceleration(const State &aState);
+  virtual double Acceleration(const State &aState) override;
 
 private:
 

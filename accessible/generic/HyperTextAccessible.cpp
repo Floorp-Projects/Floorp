@@ -141,8 +141,8 @@ HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
     rv = frame->GetPointFromOffset(startContentOffset + frameSubStringLength, &frameTextEndPoint);
     NS_ENSURE_SUCCESS(rv, nsIntRect());
 
-    frameScreenRect.x += std::min(frameTextStartPoint.x, frameTextEndPoint.x);
-    frameScreenRect.width = mozilla::Abs(frameTextStartPoint.x - frameTextEndPoint.x);
+    frameScreenRect.SetRectX(frameScreenRect.X() + std::min(frameTextStartPoint.x, frameTextEndPoint.x),
+                             mozilla::Abs(frameTextStartPoint.x - frameTextEndPoint.x));
 
     screenRect.UnionRect(frameScreenRect, screenRect);
 
@@ -1177,8 +1177,8 @@ HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
   if (!frameScreenRect.Contains(coordsInAppUnits.x, coordsInAppUnits.y))
     return -1; // Not found
 
-  nsPoint pointInHyperText(coordsInAppUnits.x - frameScreenRect.x,
-                           coordsInAppUnits.y - frameScreenRect.y);
+  nsPoint pointInHyperText(coordsInAppUnits.x - frameScreenRect.X(),
+                           coordsInAppUnits.y - frameScreenRect.Y());
 
   // Go through the frames to check if each one has the point.
   // When one does, add up the character offsets until we have a match
@@ -1267,7 +1267,10 @@ HyperTextAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
     offset1 = 0;
   }
 
-  nsAccUtils::ConvertScreenCoordsTo(&bounds.x, &bounds.y, aCoordType, this);
+  auto boundsX = bounds.X();
+  auto boundsY = bounds.Y();
+  nsAccUtils::ConvertScreenCoordsTo(&boundsX, &boundsY, aCoordType, this);
+  bounds.MoveTo(boundsX, boundsY);
   return bounds;
 }
 
@@ -1522,8 +1525,7 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   nsIntRect charRect = CharBounds(CaretOffset(),
                                   nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
   if (!charRect.IsEmpty()) {
-    caretRect.height -= charRect.y - caretRect.y;
-    caretRect.y = charRect.y;
+    caretRect.SetTopEdge(charRect.Y());
   }
   return caretRect;
 }
@@ -1714,8 +1716,8 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
         // Scroll substring to the given point. Turn the point into percents
         // relative scrollable area to use nsCoreUtils::ScrollSubstringTo.
         nsRect frameRect = parentFrame->GetScreenRectInAppUnits();
-        nscoord offsetPointX = coordsInAppUnits.x - frameRect.x;
-        nscoord offsetPointY = coordsInAppUnits.y - frameRect.y;
+        nscoord offsetPointX = coordsInAppUnits.x - frameRect.X();
+        nscoord offsetPointY = coordsInAppUnits.y - frameRect.Y();
 
         nsSize size(parentFrame->GetSize());
 

@@ -243,7 +243,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason);
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override;
 
 private:
   const char* mTopic;
@@ -262,7 +262,7 @@ public:
   {
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason);
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override;
 
 private:
   const Telemetry::HistogramID mHistogramId;

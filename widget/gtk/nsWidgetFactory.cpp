@@ -34,12 +34,10 @@
 #include "WakeLockListener.h"
 
 #ifdef NS_PRINTING
-#include "nsPrintOptionsGTK.h"
+#include "nsPrintSettingsServiceGTK.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextSpecG.h"
 #endif
-
-#include "mozilla/Preferences.h"
 
 #include "nsImageToPixbuf.h"
 #include "nsPrintDialogGTK.h"
@@ -60,12 +58,6 @@
 
 using namespace mozilla;
 using namespace mozilla::widget;
-
-/* from nsFilePicker.js */
-#define XULFILEPICKER_CID \
-  { 0x54ae32f8, 0x1dd2, 0x11b2, \
-    { 0xa2, 0x09, 0xdf, 0x7c, 0x50, 0x53, 0x70, 0xf8} }
-static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
@@ -124,7 +116,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecGTK)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsGTK, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceGTK, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceGTK, Init)
@@ -139,19 +131,7 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  bool allowPlatformPicker =
-      Preferences::GetBool("ui.allow_platform_file_picker", true);
-
-  nsCOMPtr<nsIFilePicker> picker;
-  if (allowPlatformPicker) {
-      picker = new nsFilePicker;
-  } else {
-    picker = do_CreateInstance(kXULFilePickerCID);
-  }
-
-  if (!picker) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsCOMPtr<nsIFilePicker> picker = new nsFilePicker;
 
   return picker->QueryInterface(aIID, aResult);
 }
@@ -270,7 +250,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
       Module::MAIN_PROCESS_ONLY },
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
-    { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
+    { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintSettingsServiceGTKConstructor },
     { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
     { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
     { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecGTKConstructor },

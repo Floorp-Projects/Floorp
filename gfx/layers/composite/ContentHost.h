@@ -55,7 +55,7 @@ class ContentHost : public CompositableHost
 public:
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack) = 0;
+                            const nsIntRegion& aOldValidRegionBack) override = 0;
 
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
   bool PaintWillResample() { return mPaintWillResample; }
@@ -68,7 +68,8 @@ public:
     MOZ_ASSERT_UNREACHABLE("Must be implemented in derived class");
     return gfx::IntRect();
   }
-  virtual ContentHost* AsContentHost() { return this; }
+
+  virtual ContentHost* AsContentHost() override { return this; }
 
 protected:
   explicit ContentHost(const TextureInfo& aTextureInfo)
@@ -213,11 +214,11 @@ public:
 
   virtual ~ContentHostDoubleBuffered() {}
 
-  virtual CompositableType GetType() { return CompositableType::CONTENT_DOUBLE; }
+  virtual CompositableType GetType() override { return CompositableType::CONTENT_DOUBLE; }
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack);
+                            const nsIntRegion& aOldValidRegionBack) override;
 
 protected:
   nsIntRegion mValidRegionForNextBackBuffer;
@@ -235,11 +236,11 @@ public:
   {}
   virtual ~ContentHostSingleBuffered() {}
 
-  virtual CompositableType GetType() { return CompositableType::CONTENT_SINGLE; }
+  virtual CompositableType GetType() override { return CompositableType::CONTENT_SINGLE; }
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack);
+                            const nsIntRegion& aOldValidRegionBack) override;
 };
 
 } // namespace layers

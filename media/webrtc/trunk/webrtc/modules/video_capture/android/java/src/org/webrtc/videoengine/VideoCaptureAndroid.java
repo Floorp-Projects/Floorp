@@ -248,11 +248,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       error = e;
     }
     Log.e(TAG, "startCapture failed", error);
-    if (camera != null) {
-      Exchanger<Boolean> resultDropper = new Exchanger<Boolean>();
-      stopCaptureOnCameraThread(resultDropper);
-      exchange(resultDropper, false);
-    }
+    // For some devices, camera.setParameters(parameters) would throw
+    // an exception when a specific resolution is set. Originally,
+    // stopCaptureOnCameraThread() is called here to clear up the state.
+    // However, stopCaptureOnCameraThread(), which uses Exchanger to
+    // synchronize and swap data with MediaManager thread, is supposed to be
+    // called by MediaManager thread like we did at stopCapture(). Calling
+    // this function directly in CameraThread will cause deadlock.
     exchange(result, false);
     return;
   }

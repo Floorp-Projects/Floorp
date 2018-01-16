@@ -24,12 +24,12 @@ public:
 
     void reset(const SkClipStack* stack) { fStack = stack; }
 
-    bool quickContains(const SkRect&) const final;
-    bool quickContains(const SkRRect&) const final;
+    bool quickContains(const SkRect&) const final override;
+    bool quickContains(const SkRRect&) const final override;
     void getConservativeBounds(int width, int height, SkIRect* devResult,
-                               bool* isIntersectionOfRects) const final;
+                               bool* isIntersectionOfRects) const final override;
     bool apply(GrContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
-               GrAppliedClip* out, SkRect* bounds) const final;
+               GrAppliedClip* out, SkRect* bounds) const final override;
 
     bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const override;
 

@@ -269,7 +269,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() override;
   nsresult AddPathRunnableMethod(PathRunnablesParametersWrapper* aWrappedParameters);
   nsresult RemovePathRunnableMethod(PathRunnablesParametersWrapper* aWrappedParameters);
   nsresult DeactivateRunnableMethod();

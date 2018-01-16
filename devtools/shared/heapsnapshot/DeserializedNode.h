@@ -252,13 +252,13 @@ public:
     new (storage) Concrete(ptr);
   }
 
-  CoarseType coarseType() const final { return get().coarseType; }
+  CoarseType coarseType() const final override { return get().coarseType; }
   Id identifier() const override { return get().id; }
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;
   Node::Size size(mozilla::MallocSizeOf mallocSizeof) const override;
   const char* jsObjectClassName() const override { return get().jsObjectClassName; }
-  const char* scriptFilename() const final { return get().scriptFilename; }
+  const char* scriptFilename() const final override { return get().scriptFilename; }
 
   bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
   StackFrame allocationStack() const override;

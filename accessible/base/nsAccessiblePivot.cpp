@@ -586,8 +586,7 @@ nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule,
       nsIntRect childRect = child->Bounds();
       // Double-check child's bounds since the deepest child may have been out
       // of bounds. This assures we don't return a false positive.
-      if (aX >= childRect.x && aX < childRect.x + childRect.width &&
-          aY >= childRect.y && aY < childRect.y + childRect.height)
+      if (childRect.Contains(aX, aY))
         match = child;
     }
 

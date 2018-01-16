@@ -93,7 +93,7 @@ public:
     // Override the nsIClassInfo method GetClassIDNoAlloc to make sure our
     // nsISerializable impl works right.
     NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc) override;
-    //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr );
+    //NS_IMETHOD QueryInterface( const nsIID& aIID, void** aInstancePtr ) override;
 
 protected:
     virtual ~nsJSURI() {}

@@ -1465,9 +1465,6 @@ nsresult
 DOMMediaStream::DispatchTrackEvent(const nsAString& aName,
                                    const RefPtr<MediaStreamTrack>& aTrack)
 {
-  MOZ_ASSERT(aName == NS_LITERAL_STRING("addtrack"),
-             "Only 'addtrack' is supported at this time");
-
   MediaStreamTrackEventInit init;
   init.mTrack = aTrack;
 

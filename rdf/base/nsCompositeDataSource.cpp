@@ -321,10 +321,10 @@ public:
     virtual ~CompositeArcsInOutEnumeratorImpl();
 
     virtual nsresult
-    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
+    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult) override;
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult);
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult) override;
 
     CompositeArcsInOutEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
                                      nsIRDFNode* aNode,
@@ -391,10 +391,10 @@ class CompositeAssertionEnumeratorImpl : public CompositeEnumeratorImpl
 {
 public:
     virtual nsresult
-    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult);
+    GetEnumerator(nsIRDFDataSource* aDataSource, nsISimpleEnumerator** aResult) override;
 
     virtual nsresult
-    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult);
+    HasNegation(nsIRDFDataSource* aDataSource, nsIRDFNode* aNode, bool* aResult) override;
 
     CompositeAssertionEnumeratorImpl(CompositeDataSourceImpl* aCompositeDataSource,
                                      nsIRDFResource* aSource,

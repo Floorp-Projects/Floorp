@@ -625,7 +625,7 @@ var gEditItemOverlay = {
 
     // Here we update either the item title or its cached static title
     let newTitle = this._namePicker.value;
-    if (!newTitle && this._paneInfo.parentGuid == PlacesUtils.bookmarks.tagsGuid) {
+    if (!newTitle && this._paneInfo.isTag) {
       // We don't allow setting an empty title for a tag, restore the old one.
       this._initNamePicker();
     } else {
@@ -1108,8 +1108,6 @@ var gEditItemOverlay = {
   },
 
   _onItemTitleChange(aItemId, aNewTitle) {
-    if (!this._paneInfo.isBookmark)
-      return;
     if (aItemId == this._paneInfo.itemId) {
       this._paneInfo.title = aNewTitle;
       this._initTextField(this._namePicker, aNewTitle);
@@ -1126,10 +1124,12 @@ var gEditItemOverlay = {
       }
     }
     // We need to also update title of recent folders.
-    for (let folder of this._recentFolders) {
-      if (folder.folderId == aItemId) {
-        folder.title = aNewTitle;
-        break;
+    if (this._recentFolders) {
+      for (let folder of this._recentFolders) {
+        if (folder.folderId == aItemId) {
+          folder.title = aNewTitle;
+          break;
+        }
       }
     }
   },
@@ -1141,7 +1141,7 @@ var gEditItemOverlay = {
       this._onTagsChange(aGuid).catch(Components.utils.reportError);
       return;
     }
-    if (aProperty == "title" && this._paneInfo.isItem) {
+    if (aProperty == "title" && (this._paneInfo.isItem || this._paneInfo.isTag)) {
       // This also updates titles of folders in the folder menu list.
       this._onItemTitleChange(aItemId, aValue);
       return;

@@ -17,7 +17,8 @@ class DrawTargetCairo;
 class SourceSurfaceCairo : public SourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCairo)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCairo, override)
+
   // Create a SourceSurfaceCairo. The surface will not be copied, but simply
   // referenced.
   // If aDrawTarget is non-nullptr, it is assumed that this is a snapshot source
@@ -28,10 +29,10 @@ public:
                      DrawTargetCairo* aDrawTarget = nullptr);
   virtual ~SourceSurfaceCairo();
 
-  virtual SurfaceType GetType() const { return SurfaceType::CAIRO; }
-  virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const;
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface();
+  virtual SurfaceType GetType() const override { return SurfaceType::CAIRO; }
+  virtual IntSize GetSize() const override;
+  virtual SurfaceFormat GetFormat() const override;
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
   cairo_surface_t* GetSurface() const;
 
@@ -49,15 +50,16 @@ private: // data
 class DataSourceSurfaceCairo : public DataSourceSurface
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCairo)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCairo, override)
+
   explicit DataSourceSurfaceCairo(cairo_surface_t* imageSurf);
   virtual ~DataSourceSurfaceCairo();
-  virtual unsigned char *GetData();
-  virtual int32_t Stride();
+  virtual unsigned char *GetData() override;
+  virtual int32_t Stride() override;
 
-  virtual SurfaceType GetType() const { return SurfaceType::CAIRO_IMAGE; }
-  virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const;
+  virtual SurfaceType GetType() const override { return SurfaceType::CAIRO_IMAGE; }
+  virtual IntSize GetSize() const override;
+  virtual SurfaceFormat GetFormat() const override;
 
   cairo_surface_t* GetSurface() const;
 

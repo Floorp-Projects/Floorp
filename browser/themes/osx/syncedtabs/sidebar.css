@@ -106,18 +106,7 @@
   font-size: 12px;
   cursor: text;
   margin: 4px;
-  border-width: 3px;
-  border-style: solid;
-  border-color: currentcolor;
-  border-image: none;
-  -moz-border-top-colors: transparent #888 #000;
-  -moz-border-right-colors: transparent #FFF #000;
-  -moz-border-bottom-colors: transparent #FFF #000;
-  -moz-border-left-colors: transparent #888 #000;
-  border-top-right-radius: 2px;
-  border-bottom-left-radius: 2px;
-  background-color: #FFF;
-  color: #000;
+  color: -moz-fieldText;
   -moz-user-select: text;
   text-shadow: none;
 }
@@ -128,13 +117,6 @@
   background-size: 11px 11px;
   width: 11px;
   height: 11px;
-}
-
-.search-box[focused="true"] {
-  -moz-border-top-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-right-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-bottom-colors: -moz-mac-focusring -moz-mac-focusring #000000;
-  -moz-border-left-colors: -moz-mac-focusring -moz-mac-focusring #000000;
 }
 
 .search-box.compact {

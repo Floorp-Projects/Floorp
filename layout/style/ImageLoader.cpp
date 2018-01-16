@@ -57,37 +57,22 @@ ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
 
   MOZ_ASSERT(observer == this);
 
-  FrameSet* frameSet = nullptr;
-  if (mRequestToFrameMap.Get(aRequest, &frameSet)) {
-    NS_ASSERTION(frameSet, "This should never be null!");
-  }
+  FrameSet* frameSet =
+    mRequestToFrameMap.LookupForAdd(aRequest).OrInsert([=]() {
+      nsPresContext* presContext = GetPresContext();
+      if (presContext) {
+        nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
+                                                      aRequest,
+                                                      nullptr);
+      }
+      return new FrameSet();
+    });
 
-  if (!frameSet) {
-    nsAutoPtr<FrameSet> newFrameSet(new FrameSet());
-
-    mRequestToFrameMap.Put(aRequest, newFrameSet);
-    frameSet = newFrameSet.forget();
-
-    nsPresContext* presContext = GetPresContext();
-    if (presContext) {
-      nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,
-                                                    aRequest,
-                                                    nullptr);
-    }
-  }
-
-  RequestSet* requestSet = nullptr;
-  if (mFrameToRequestMap.Get(aFrame, &requestSet)) {
-    NS_ASSERTION(requestSet, "This should never be null");
-  }
-
-  if (!requestSet) {
-    nsAutoPtr<RequestSet> newRequestSet(new RequestSet());
-
-    mFrameToRequestMap.Put(aFrame, newRequestSet);
-    requestSet = newRequestSet.forget();
-    aFrame->SetHasImageRequest(true);
-  }
+  RequestSet* requestSet =
+    mFrameToRequestMap.LookupForAdd(aFrame).OrInsert([=]() {
+      aFrame->SetHasImageRequest(true);
+      return new RequestSet();
+    });
 
   // Add these to the sets, but only if they're not already there.
   uint32_t i = frameSet->IndexOfFirstElementGt(aFrame);
@@ -247,8 +232,8 @@ ImageLoader::ClearFrames(nsPresContext* aPresContext)
 
     if (aPresContext) {
       nsLayoutUtils::DeregisterImageRequest(aPresContext,
-					    request,
-					    nullptr);
+                                            request,
+                                            nullptr);
     }
   }
 
@@ -374,10 +359,7 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
 
-  FrameSet::size_type length = aFrameSet->Length();
-  for (FrameSet::size_type i = 0; i < length; i++) {
-    nsIFrame* frame = aFrameSet->ElementAt(i);
-
+  for (nsIFrame* frame : *aFrameSet) {
     if (frame->StyleVisibility()->IsVisible()) {
       if (frame->IsFrameOfType(nsIFrame::eTablePart)) {
         // Tables don't necessarily build border/background display items
@@ -451,15 +433,12 @@ ImageLoader::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
 
-  FrameSet* frameSet = nullptr;
-  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
+  FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
+  if (!frameSet) {
     return NS_OK;
   }
 
-  FrameSet::size_type length = frameSet->Length();
-  for (FrameSet::size_type i = 0; i < length; i++) {
-    nsIFrame* frame = frameSet->ElementAt(i);
-
+  for (nsIFrame* frame : *frameSet) {
     if (frame->StyleVisibility()->IsVisible()) {
       frame->MarkNeedsDisplayItemRebuild();
     }
@@ -475,8 +454,8 @@ ImageLoader::OnImageIsAnimated(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  FrameSet* frameSet = nullptr;
-  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
+  FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
+  if (!frameSet) {
     return NS_OK;
   }
 
@@ -499,12 +478,10 @@ ImageLoader::OnFrameComplete(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  FrameSet* frameSet = nullptr;
-  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
+  FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
+  if (!frameSet) {
     return NS_OK;
   }
-
-  NS_ASSERTION(frameSet, "This should never be null!");
 
   // Since we just finished decoding a frame, we always want to paint, in case
   // we're now able to paint an image that we couldn't paint before (and hence
@@ -521,12 +498,10 @@ ImageLoader::OnFrameUpdate(imgIRequest* aRequest)
     return NS_OK;
   }
 
-  FrameSet* frameSet = nullptr;
-  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
+  FrameSet* frameSet = mRequestToFrameMap.Get(aRequest);
+  if (!frameSet) {
     return NS_OK;
   }
-
-  NS_ASSERTION(frameSet, "This should never be null!");
 
   DoRedraw(frameSet, /* aForcePaint = */ false);
 

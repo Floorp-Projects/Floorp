@@ -12,6 +12,7 @@
 #include <direct.h>
 #include <io.h>
 #include <windows.h>
+#include "StringOperations.h"
 #else
 #include <sys/file.h>
 #include <sys/time.h>
@@ -50,7 +51,7 @@ void ensurePath(std::string Path) {
 
 #if defined(_WIN32) || defined(_WIN64)
 AutoLockFile::AutoLockFile(const std::string &Filename) {
-  std::string Hash = Hash(filename);
+  std::string Hash = hash(Filename);
   std::string MutexName = std::string("Local\\searchfox-") + Hash;
   std::wstring WideMutexName;
   WideMutexName.assign(MutexName.begin(), MutexName.end());
@@ -85,7 +86,7 @@ bool AutoLockFile::truncateFile(size_t Length) {
 }
 
 std::string getAbsolutePath(const std::string &Filename) {
-  char full[_MAX_PATH];
+  char Full[_MAX_PATH];
   if (!_fullpath(Full, Filename.c_str(), _MAX_PATH)) {
     return std::string("");
   }

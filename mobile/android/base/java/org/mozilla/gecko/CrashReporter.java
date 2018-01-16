@@ -46,7 +46,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
-@SuppressLint("Registered") // This activity is only registered in the manifest if MOZ_CRASHREPORTER is set
+// Registered: This activity is only registered in the manifest if MOZ_CRASHREPORTER is set.
+// CutPasteId: This lint is not worth fixing.  To fix it, cache all the findViewById results.
+@SuppressLint("Registered,CutPasteId")
 public class CrashReporter extends AppCompatActivity
 {
     private static final String LOGTAG = "GeckoCrashReporter";

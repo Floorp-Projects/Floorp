@@ -32,14 +32,9 @@ CMD ["/bin/bash", "--login"]
 # Set apt sources list to a snapshot.
 COPY sources.list /etc/apt/
 
-# We need i386 packages for the Android SDK.
-# Once https://bugzilla.mozilla.org/show_bug.cgi?id=1370119 is in-tree, we
-# will have 64-bit builds of everything, and we can then remove this and
-# the :i386 packages we install below.
-RUN dpkg --add-architecture i386
-
 # rsync is required for l10n single locale repacks.  less, screen, and
 # vim, help debugging interactive tasks in Task Cluster.
+# git and openssh-client are used to upload GeckoView javadoc to Github.
 RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
       autoconf2.13 \
@@ -50,9 +45,11 @@ RUN apt-get update -q && \
       cmake \
       curl \
       file \
+      git \
       gnupg \
       less \
       make \
+      openssh-client \
       procps \
       python \
       python-cryptography \
@@ -71,10 +68,6 @@ RUN apt-get update -q && \
       xz-utils \
       yasm \
       zip \
-      libstdc++6:i386 \
-      libgcc1:i386 \
-      zlib1g:i386 \
-      libncurses5:i386 \
     && \
     apt-get clean
 

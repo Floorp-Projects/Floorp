@@ -144,8 +144,8 @@ class JavaScriptShared : public CPOWManager
     void decref();
     void incref();
 
-    bool Unwrap(JSContext* cx, const InfallibleTArray<CpowEntry>& aCpows, JS::MutableHandleObject objp);
-    bool Wrap(JSContext* cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry>* outCpows);
+    bool Unwrap(JSContext* cx, const InfallibleTArray<CpowEntry>& aCpows, JS::MutableHandleObject objp) override;
+    bool Wrap(JSContext* cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry>* outCpows) override;
 
   protected:
     bool toVariant(JSContext* cx, JS::HandleValue from, JSVariant* to);

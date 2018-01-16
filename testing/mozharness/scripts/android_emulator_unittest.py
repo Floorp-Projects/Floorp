@@ -667,6 +667,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 if bogomips < 250:
                     self.fatal('INFRA-ERROR: insufficient Android bogomips (%d < 250)' % bogomips,
                                EXIT_STATUS_DICT[TBPL_RETRY])
+                self.info("Found Android bogomips: %d" % bogomips)
                 break
 
     def verify_emulator(self):

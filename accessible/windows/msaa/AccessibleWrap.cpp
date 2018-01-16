@@ -902,10 +902,10 @@ AccessibleWrap::accLocation(
 
   nsIntRect rect = Bounds();
 
-  *pxLeft = rect.x;
-  *pyTop = rect.y;
-  *pcxWidth = rect.width;
-  *pcyHeight = rect.height;
+  *pxLeft = rect.X();
+  *pyTop = rect.Y();
+  *pcxWidth = rect.Width();
+  *pcyHeight = rect.Height();
   return S_OK;
 }
 
@@ -1661,12 +1661,12 @@ AccessibleWrap::UpdateSystemCaretFor(HWND aCaretWnd,
 
   // Create invisible bitmap for caret, otherwise its appearance interferes
   // with Gecko caret
-  nsAutoBitmap caretBitMap(CreateBitmap(1, aCaretRect.height, 1, 1, nullptr));
-  if (::CreateCaret(aCaretWnd, caretBitMap, 1, aCaretRect.height)) {  // Also destroys the last caret
+  nsAutoBitmap caretBitMap(CreateBitmap(1, aCaretRect.Height(), 1, 1, nullptr));
+  if (::CreateCaret(aCaretWnd, caretBitMap, 1, aCaretRect.Height())) {  // Also destroys the last caret
     ::ShowCaret(aCaretWnd);
     RECT windowRect;
     ::GetWindowRect(aCaretWnd, &windowRect);
-    ::SetCaretPos(aCaretRect.x - windowRect.left, aCaretRect.y - windowRect.top);
+    ::SetCaretPos(aCaretRect.X() - windowRect.left, aCaretRect.Y() - windowRect.top);
   }
 }
 

@@ -20,7 +20,7 @@ info: |
       in strict mode code and the StringValue of Identifier is "arguments" or
       "eval".
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [module]
 ---*/

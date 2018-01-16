@@ -1417,7 +1417,7 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
         bytecodeOffset_(bytecodeOffset)
     { }
 
-    void accept(CodeGeneratorShared* codegen) {
+    void accept(CodeGeneratorShared* codegen) override {
         codegen->visitOutOfLineTruncateSlow(this);
     }
     FloatRegister src() const {

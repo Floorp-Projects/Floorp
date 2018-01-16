@@ -5,7 +5,7 @@
 /*---
 esid: sec-get-regexp.prototype.flags
 description: Boolean coercion of the dotAll property
-info: >
+info: |
   get RegExp.prototype.flags
 
   ...

@@ -10,7 +10,7 @@ description: >
     No parens around ArrowParameters
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

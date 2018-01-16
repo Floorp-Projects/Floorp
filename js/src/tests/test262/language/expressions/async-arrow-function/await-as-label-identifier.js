@@ -8,7 +8,7 @@ esid: prod-AsyncArrowFunction
 features: [async-functions]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     Async Arrow Function Definitions

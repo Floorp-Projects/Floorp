@@ -60,6 +60,11 @@ add_task(async function() {
       // Check the shortcut's title.
       Assert.equal(tree.selectedNode.title, "tag2", "The node has the correct title");
 
+      // Try to set an empty title, it should restore the previous one.
+      fillBookmarkTextField("editBMPanel_namePicker", "", dialogWin);
+      Assert.equal(namepicker.value, "tag2", "Title has not been changed");
+      Assert.equal(tree.selectedNode.title, "tag2", "The node has the correct title");
+
       // Check the tags have been edited.
       let tags = PlacesUtils.tagging.getTagsForURI(uri);
       Assert.equal(tags.length, 1, "Found the right number of tags");

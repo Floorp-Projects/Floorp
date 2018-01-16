@@ -28,12 +28,12 @@ public:
   }
 
   bool PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventPriority aPriority) final
+                EventPriority aPriority) final override
   {
     return mOwner->PutEventInternal(Move(aEvent), aPriority, this);
   }
 
-  void Disconnect(const MutexAutoLock& aProofOfLock) final
+  void Disconnect(const MutexAutoLock& aProofOfLock) final override
   {
     mQueue = nullptr;
   }

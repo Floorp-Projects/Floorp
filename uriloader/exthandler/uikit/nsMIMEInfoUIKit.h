@@ -19,7 +19,7 @@ public:
     : nsMIMEInfoImpl(aType, aClass)
   {}
 
-  NS_IMETHOD LaunchWithFile(nsIFile* aFile);
+  NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
 
 protected:
   virtual nsresult LoadUriInternal(nsIURI* aURI);

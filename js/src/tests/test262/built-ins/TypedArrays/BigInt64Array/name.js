@@ -5,7 +5,7 @@
 /*---
 esid: sec-properties-of-the-typedarray-constructors
 description: BigInt64Array.name property descriptor
-info: >
+info: |
   22.2.5 Properties of the TypedArray Constructors
 
   [...]

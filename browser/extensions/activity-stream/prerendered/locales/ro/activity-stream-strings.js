@@ -65,7 +65,7 @@ window.gActivityStreamStrings = {
   "settings_pane_highlights_options_bookmarks": "Marcaje",
   "settings_pane_highlights_options_visited": "Site-uri vizitate",
   "settings_pane_snippets_header": "Fragmente",
-  "settings_pane_snippets_body": "Citește actualizări scurte de la Mozilla despre Firefox, cultura internetului și meme-ul ocazional.",
+  "settings_pane_snippets_body": "Citește actualizări scurte de la Mozilla despre Firefox, cultura internetului și meme-ul ocazional aleatoriu.",
   "settings_pane_done_button": "Gata",
   "settings_pane_topstories_options_sponsored": "Arată articolele sponsorizate",
   "edit_topsites_button_text": "Editează",

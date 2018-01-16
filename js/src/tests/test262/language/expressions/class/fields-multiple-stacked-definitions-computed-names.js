@@ -25,7 +25,7 @@ var x = "b";
 
 
 var C = class {
-  static ["a"] = 39; [x] = 42; [10] = "meep"; ["not initialized"]
+  [x] = 42; [10] = "meep"; ["not initialized"]
   foo = "foobar"
   bar = "barbaz";
 
@@ -53,16 +53,6 @@ verifyProperty(c, "bar", {
   enumerable: true,
   configurable: true,
   writable: true,
-});
-
-assert.sameValue(Object.hasOwnProperty.call(C.prototype, "a"), false);
-assert.sameValue(Object.hasOwnProperty.call(c, "a"), false);
-
-verifyProperty(C, "a", {
-  value: 39,
-  enumerable: true,
-  writable: true,
-  configurable: true
 });
 
 assert.sameValue(Object.hasOwnProperty.call(C.prototype, "b"), false);

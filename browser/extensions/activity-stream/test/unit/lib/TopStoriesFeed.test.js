@@ -32,7 +32,6 @@ describe("Top Stories Feed", () => {
     FakePrefs.prototype.prefs.apiKeyPref = "test-api-key";
 
     globals = new GlobalOverrider();
-    globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}, obs: {addObserver: () => {}, removeObserver: () => {}}});
     globals.set("PlacesUtils", {history: {}});
     clock = sinon.useFakeTimers();
     shortURLStub = sinon.stub().callsFake(site => site.url);
@@ -129,8 +128,6 @@ describe("Top Stories Feed", () => {
       assert.called(Components.utils.reportError);
     });
     it("should report error for missing api key", () => {
-      let fakeServices = {prefs: {getCharPref: sinon.spy()}, locale: {getRequestedLocale: sinon.spy()}};
-      globals.set("Services", fakeServices);
       globals.sandbox.spy(global.Components.utils, "reportError");
       sectionsManagerStub.sections.set("topstories", {
         options: {

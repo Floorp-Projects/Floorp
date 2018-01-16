@@ -1064,3 +1064,21 @@ button.button-link:not([disabled="true"]):active:hover {
   display: -moz-box;
   visibility: hidden;
 }
+
+/*** Reset PopupAutoComplete richlistbox styles ***/
+
+#PopupAutoComplete richlistbox,
+#PopupAutoComplete listbox {
+  -moz-appearance: initial;
+  margin-inline-start: 0;
+  border: none;
+  border-radius: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .ac-type-icon,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-tags,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-separator,
+#PopupAutoComplete > richlistbox > richlistitem > .ac-url {
+  display: none;
+}

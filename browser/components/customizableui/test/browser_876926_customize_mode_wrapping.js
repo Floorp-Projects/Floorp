@@ -14,17 +14,23 @@ function checkWrapper(id) {
   is(document.querySelectorAll("#wrapper-" + id).length, 1, "There should be exactly 1 wrapper for " + id + " in the customizing window.");
 }
 
-async function ensureVisibleIfInPalette(node) {
-    if (node.parentNode.parentNode == gNavToolbox.palette) {
-      node.scrollIntoView();
-      window.QueryInterface(Ci.nsIInterfaceRequestor);
-      let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
-      await BrowserTestUtils.waitForCondition(() => {
-        let nodeBounds = dwu.getBoundsWithoutFlushing(node);
-        let paletteBounds = dwu.getBoundsWithoutFlushing(gNavToolbox.palette);
-        return nodeBounds.top >= paletteBounds.top && nodeBounds.bottom <= paletteBounds.bottom;
-      });
+async function ensureVisible(node) {
+  let isInPalette = node.parentNode.parentNode == gNavToolbox.palette;
+  if (isInPalette) {
+    node.scrollIntoView();
+  }
+  window.QueryInterface(Ci.nsIInterfaceRequestor);
+  let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+  await BrowserTestUtils.waitForCondition(() => {
+    let nodeBounds = dwu.getBoundsWithoutFlushing(node);
+    if (isInPalette) {
+      let paletteBounds = dwu.getBoundsWithoutFlushing(gNavToolbox.palette);
+      if (!(nodeBounds.top >= paletteBounds.top && nodeBounds.bottom <= paletteBounds.bottom)) {
+        return false;
+      }
     }
+    return nodeBounds.height && nodeBounds.width;
+  });
 }
 
 var move = {
@@ -34,8 +40,9 @@ var move = {
       targetNode = targetNode.customizationTarget;
     }
     let nodeToMove = document.getElementById(id);
-    await ensureVisibleIfInPalette(nodeToMove);
-    simulateItemDrag(nodeToMove, targetNode);
+    await ensureVisible(nodeToMove);
+
+    simulateItemDrag(nodeToMove, targetNode, "end");
   },
   "dragToItem": async function(id, target) {
     let targetNode = document.getElementById(target);
@@ -49,8 +56,8 @@ var move = {
       targetNode = items[0];
     }
     let nodeToMove = document.getElementById(id);
-    await ensureVisibleIfInPalette(nodeToMove);
-    simulateItemDrag(nodeToMove, targetNode);
+    await ensureVisible(nodeToMove);
+    simulateItemDrag(nodeToMove, targetNode, "start");
   },
   "API": function(id, target) {
     if (target == kVisiblePalette) {
@@ -150,6 +157,11 @@ async function checkPalette(id, method) {
   ok(CustomizableUI.inDefaultState, "Should end in default state");
   let visibleChildren = gCustomizeMode.visiblePalette.children;
   let expectedChild = method == "dragToItem" ? visibleChildren[0] : visibleChildren[visibleChildren.length - 1];
+  // Items dragged to the end of the palette should be the final item. That they're the penultimate
+  // item when dragged is tracked in bug 1395950. Once that's fixed, this hack can be removed.
+  if (method == "drag") {
+    expectedChild = expectedChild.previousElementSibling;
+  }
   is(expectedChild.firstChild.id, id, "Widget " + id + " was moved using " + method + " and should now be wrapped in palette in customizing window.");
   if (id == kXULWidgetId) {
     ok(otherWin.gNavToolbox.palette.querySelector("#" + id), "Widget " + id + " should be in invisible palette in other window.");

@@ -1117,6 +1117,15 @@ FragmentOrElement::DoGetXBLBinding() const
   return slots ? slots->mXBLBinding.get() : nullptr;
 }
 
+nsIContent*
+nsIContent::GetContainingShadowHost() const
+{
+  if (mozilla::dom::ShadowRoot* shadow = GetContainingShadow()) {
+    return shadow->GetHost();
+  }
+  return nullptr;
+}
+
 void
 nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
@@ -1166,6 +1175,12 @@ FragmentOrElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
   if (oldKid) {
     doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
   }
+}
+
+void
+FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+  doRemoveChildAt(IndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
 }
 
 void

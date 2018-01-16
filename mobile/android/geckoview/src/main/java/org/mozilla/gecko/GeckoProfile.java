@@ -434,7 +434,7 @@ public final class GeckoProfile {
      * persist it from FHR and, if that fails, we attempt to create a new one ourselves.
      *
      * This method assumes the client ID is located in a file at a hard-coded path within the profile. The format of
-     * this file is a JSONObject which at the bottom level contains a String -> String mapping containing the client ID.
+     * this file is a JSONObject which at the bottom level contains a String -&gt; String mapping containing the client ID.
      *
      * WARNING: the platform provides a JSM to retrieve the client ID [1] and this would be a
      * robust way to access it. However, we don't want to rely on Gecko running in order to get

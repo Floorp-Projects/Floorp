@@ -54,7 +54,7 @@ protected:
     }
 
 private:
-    void onPrepare(GrOpFlushState*) final {}
+    void onPrepare(GrOpFlushState*) final override {}
 
     SkMatrix fViewMatrix;
     GrColor fInputColor;

@@ -5,7 +5,7 @@
 /*---
 esid: sec-dataview.prototype.getbigint64
 description: DataView.prototype.getBigInt64.name property descriptor
-info: >
+info: |
   DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] )
 
   17 ECMAScript Standard Built-in Objects

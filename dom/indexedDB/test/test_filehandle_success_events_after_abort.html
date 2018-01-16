@@ -54,10 +54,7 @@
     is(sawError, true, "Saw getMetadata() error");
 
     // Make sure the success event isn't queued somehow.
-    let comp = SpecialPowers.wrap(SpecialPowers.Components);
-    var thread = comp.classes["@mozilla.org/thread-manager;1"]
-                     .getService(comp.interfaces.nsIThreadManager)
-                     .currentThread;
+    var thread = SpecialPowers.Services.tm.currentThread;
     while (thread.hasPendingEvents()) {
       thread.processNextEvent(false);
     }

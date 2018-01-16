@@ -19,6 +19,7 @@
 #include "imgIContainer.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIReflowCallback.h"
 #include "nsTObserverArray.h"
 
@@ -132,7 +133,7 @@ public:
   static void ReleaseGlobals() {
     if (gIconLoad) {
       gIconLoad->Shutdown();
-      NS_RELEASE(gIconLoad);
+      gIconLoad = nullptr;
     }
     NS_IF_RELEASE(sIOService);
   }
@@ -395,7 +396,8 @@ private:
   };
 
 public:
-  static IconLoad* gIconLoad; // singleton pattern: one LoadIcons instance is used
+  // singleton pattern: one LoadIcons instance is used
+  static mozilla::StaticRefPtr<IconLoad> gIconLoad;
 
   friend class nsDisplayImage;
 };

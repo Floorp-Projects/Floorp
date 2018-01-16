@@ -25,6 +25,10 @@ function waitOneEvent(element, name) {
   });
 }
 
+function promiseNextTick() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
 add_task(async function() {
   await waitOneEvent(window, "load");
 
@@ -39,10 +43,14 @@ add_task(async function() {
 
   // Test entering the OS's fullscreen mode.
   var fullScreenEntered = waitOneEvent(win, "sizemodechange");
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenEntered;
   ok(offsetTop !== secondDiv.offsetTop, "offset top changes");
   var fullScreenExited = waitOneEvent(win, "sizemodechange");
+  // Need to wait for the next tick to to avoid nested fullscreen change
+  // in different direction. See bug 1415781.
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenExited;
   ok(offsetTop === secondDiv.offsetTop, "offset top returns to original value");
@@ -62,7 +70,7 @@ add_task(async function() {
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1256084">Mozilla Bug 1256084</a>
-<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/display_mode_reflow_iframe.html"></iframe>
+<iframe id="subdoc" src="http://mochi.test:8888/tests/layout/style/test/chrome/display_mode_reflow_iframe.html"></iframe>
 <p id="display"></p>
 <div id="content" style="display: none">
 

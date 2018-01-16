@@ -247,7 +247,7 @@ public:
     {
         NS_ASSERTION(aValue, "missing value");
     }
-    nsresult getValue(txAExprResult** aValue)
+    nsresult getValue(txAExprResult** aValue) override
     {
         NS_ASSERTION(mValue || mTxValue, "variablevalue is null");
 
@@ -428,58 +428,58 @@ public:
     }
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID)
+    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override
     {
         aID = mResolver->lookupNamespace(aPrefix);
         return aID == kNameSpaceID_Unknown ? NS_ERROR_DOM_NAMESPACE_ERR :
                                              NS_OK;
     }
     nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
-                                 FunctionCall** aFunction)
+                                 FunctionCall** aFunction) override
     {
         return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
     }
-    bool caseInsensitiveNameTests()
+    bool caseInsensitiveNameTests() override
     {
         return false;
     }
-    void SetErrorOffset(uint32_t aOffset)
+    void SetErrorOffset(uint32_t aOffset) override
     {
     }
 
     // txIEvalContext
     nsresult getVariable(int32_t aNamespace, nsAtom* aLName,
-                         txAExprResult*& aResult)
+                         txAExprResult*& aResult) override
     {
         aResult = nullptr;
         return NS_ERROR_INVALID_ARG;
     }
-    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed)
+    nsresult isStripSpaceAllowed(const txXPathNode& aNode, bool& aAllowed) override
     {
         aAllowed = false;
 
         return NS_OK;
     }
-    void* getPrivateContext()
+    void* getPrivateContext() override
     {
         return nullptr;
     }
-    txResultRecycler* recycler()
+    txResultRecycler* recycler() override
     {
         return mRecycler;
     }
-    void receiveError(const nsAString& aMsg, nsresult aRes)
+    void receiveError(const nsAString& aMsg, nsresult aRes) override
     {
     }
-    const txXPathNode& getContextNode()
+    const txXPathNode& getContextNode() override
     {
       return mContext;
     }
-    uint32_t size()
+    uint32_t size() override
     {
       return 1;
     }
-    uint32_t position()
+    uint32_t position() override
     {
       return 1;
     }

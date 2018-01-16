@@ -10,7 +10,7 @@ description: >
     The SV of EscapeSequence :: HexEscapeSequence is the SV of the
     HexEscapeSequence.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [onlyStrict]
 ---*/

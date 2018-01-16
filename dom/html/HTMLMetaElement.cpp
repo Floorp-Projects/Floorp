@@ -8,9 +8,14 @@
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLMetaElementBinding.h"
 #include "mozilla/dom/nsCSPService.h"
+#include "mozilla/Logging.h"
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
 #include "nsIContentSecurityPolicy.h"
+
+static mozilla::LazyLogModule gMetaElementLog("nsMetaElement");
+#define LOG(msg) MOZ_LOG(gMetaElementLog, mozilla::LogLevel::Debug, msg)
+#define LOG_ENABLED() MOZ_LOG_TEST(gMetaElementLog, mozilla::LogLevel::Debug)
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 
@@ -117,6 +122,17 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
       principal->EnsureCSP(domDoc, getter_AddRefs(csp));
       if (csp) {
+        if (LOG_ENABLED()) {
+          nsAutoCString documentURIspec;
+          nsIURI* documentURI = aDocument->GetDocumentURI();
+          if (documentURI) {
+            documentURI->GetAsciiSpec(documentURIspec);
+          }
+
+          LOG(("HTMLMetaElement %p sets CSP '%s' on document=%p, document-uri=%s",
+               this, NS_ConvertUTF16toUTF8(content).get(), aDocument, documentURIspec.get()));
+        }
+
         // Multiple CSPs (delivered through either header of meta tag) need to be
         // joined together, see:
         // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element

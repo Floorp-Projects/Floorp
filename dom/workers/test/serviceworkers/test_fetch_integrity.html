@@ -20,15 +20,13 @@ let security_localizer =
 function expect_security_console_message(/* msgId, args, ... */) {
   let expectations = [];
   // process repeated paired arguments of: msgId, args
-  for (let i = 0; i < arguments.length; i += 4) {
+  for (let i = 0; i < arguments.length; i += 3) {
     let msgId = arguments[i];
     let args = arguments[i + 1];
     let filename = arguments[i + 2];
-    let windowId = arguments[i + 3];
     expectations.push({
       errorMessage: security_localizer.formatStringFromName(msgId, args, args.length),
       sourceName: filename,
-      windowID: windowId
     });
   }
   return new Promise(resolve => {
@@ -61,28 +59,21 @@ add_task(async function test_integrity_serviceWorker() {
   // The client_win will reload to another URL after opening filename2.
   let client_win = window.open(filename2);
 
-  // XXX windowID should be innerWindowID
-  let mainWindowID = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
-  let clientWindowID = SpecialPowers.getDOMWindowUtils(client_win).outerWindowID;
   let expectedMessage = expect_security_console_message(
     "MalformedIntegrityHash",
     ["abc"],
     filename,
-    mainWindowID,
     "NoValidMetadata",
     [""],
     filename,
-    mainWindowID
   );
   let expectedMessage2 = expect_security_console_message(
     "MalformedIntegrityHash",
     ["abc"],
     filename,
-    clientWindowID,
     "NoValidMetadata",
     [""],
     filename,
-    clientWindowID
   );
 
   info("Test for mControlledDocuments and report error message to console.");
@@ -128,28 +119,21 @@ add_task(async function test_integrity_sharedWorker() {
   });
   await waitForBothConnected;
 
-  // XXX windowID should be innerWindowID
-  let mainWindowID = SpecialPowers.getDOMWindowUtils(window).outerWindowID;
-  let clientWindowID = SpecialPowers.getDOMWindowUtils(client_win).outerWindowID;
   let expectedMessage = expect_security_console_message(
     "MalformedIntegrityHash",
     ["abc"],
     filename,
-    mainWindowID,
     "NoValidMetadata",
     [""],
     filename,
-    mainWindowID
   );
   let expectedMessage2 = expect_security_console_message(
     "MalformedIntegrityHash",
     ["abc"],
     filename,
-    clientWindowID,
     "NoValidMetadata",
     [""],
     filename,
-    clientWindowID
   );
 
   info("Start to fetch a URL with wrong integrity.")

@@ -5,7 +5,7 @@
 /*---
 esid: sec-typedarray-constructors
 description: BigUint64Array is a constructor function
-info: >
+info: |
   22.2.4 The TypedArray Constructors
 
   [...]

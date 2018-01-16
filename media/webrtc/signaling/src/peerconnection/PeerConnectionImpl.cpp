@@ -1507,6 +1507,7 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 
   CSFLogDebug(LOGTAG, "CreateOffer()");
 
+  bool iceRestartPrimed = false;
   nsresult nrv;
   if (restartIce &&
       !mJsepSession->GetLocalDescription(kJsepDescriptionCurrent).empty()) {
@@ -1525,13 +1526,14 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
     }
 
     CSFLogInfo(LOGTAG, "Offerer restarting ice");
-    nrv = SetupIceRestart();
+    nrv = SetupIceRestartCredentials();
     if (NS_FAILED(nrv)) {
       CSFLogError(LOGTAG, "%s: SetupIceRestart failed, res=%u",
                            __FUNCTION__,
                            static_cast<unsigned>(nrv));
       return nrv;
     }
+    iceRestartPrimed = true;
   }
 
   nrv = ConfigureJsepSessionCodecs();
@@ -1559,8 +1561,20 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
 
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s",
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
+
+    if (iceRestartPrimed) {
+      // reset the ice credentials because CreateOffer failed
+      ResetIceCredentials();
+    }
+
     pco->OnCreateOfferError(error, ObString(errorString.c_str()), rv);
   } else {
+    // wait until we know CreateOffer succeeds before we actually start
+    // the ice restart gears turning.
+    if (iceRestartPrimed) {
+      BeginIceRestart();
+    }
+
     UpdateSignalingState();
     pco->OnCreateOfferSuccess(ObString(offer.c_str()), rv);
   }
@@ -1580,6 +1594,7 @@ PeerConnectionImpl::CreateAnswer()
 
   CSFLogDebug(LOGTAG, "CreateAnswer()");
 
+  bool iceRestartPrimed = false;
   nsresult nrv;
   if (mJsepSession->RemoteIceIsRestarting()) {
     if (mMedia->GetIceRestartState() ==
@@ -1587,13 +1602,14 @@ PeerConnectionImpl::CreateAnswer()
       FinalizeIceRestart();
     } else if (!mMedia->IsIceRestarting()) {
       CSFLogInfo(LOGTAG, "Answerer restarting ice");
-      nrv = SetupIceRestart();
+      nrv = SetupIceRestartCredentials();
       if (NS_FAILED(nrv)) {
         CSFLogError(LOGTAG, "%s: SetupIceRestart failed, res=%u",
                              __FUNCTION__,
                              static_cast<unsigned>(nrv));
         return nrv;
       }
+      iceRestartPrimed = true;
     }
   }
 
@@ -1618,8 +1634,20 @@ PeerConnectionImpl::CreateAnswer()
 
     CSFLogError(LOGTAG, "%s: pc = %s, error = %s",
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
+
+    if (iceRestartPrimed) {
+      // reset the ice credentials because CreateAnswer failed
+      ResetIceCredentials();
+    }
+
     pco->OnCreateAnswerError(error, ObString(errorString.c_str()), rv);
   } else {
+    // wait until we know CreateAnswer succeeds before we actually start
+    // the ice restart gears turning.
+    if (iceRestartPrimed) {
+      BeginIceRestart();
+    }
+
     UpdateSignalingState();
     pco->OnCreateAnswerSuccess(ObString(answer.c_str()), rv);
   }
@@ -1628,7 +1656,7 @@ PeerConnectionImpl::CreateAnswer()
 }
 
 nsresult
-PeerConnectionImpl::SetupIceRestart()
+PeerConnectionImpl::SetupIceRestartCredentials()
 {
   if (mMedia->IsIceRestarting()) {
     CSFLogError(LOGTAG, "%s: ICE already restarting",
@@ -1648,7 +1676,6 @@ PeerConnectionImpl::SetupIceRestart()
   // hold on to the current ice creds in case of rollback
   mPreviousIceUfrag = mJsepSession->GetUfrag();
   mPreviousIcePwd = mJsepSession->GetPwd();
-  mMedia->BeginIceRestart(ufrag, pwd);
 
   nsresult nrv = mJsepSession->SetIceCredentials(ufrag, pwd);
   if (NS_FAILED(nrv)) {
@@ -1661,24 +1688,37 @@ PeerConnectionImpl::SetupIceRestart()
   return NS_OK;
 }
 
-nsresult
-PeerConnectionImpl::RollbackIceRestart()
+void
+PeerConnectionImpl::BeginIceRestart()
 {
-  mMedia->RollbackIceRestart();
-  // put back the previous ice creds
-  nsresult nrv = mJsepSession->SetIceCredentials(mPreviousIceUfrag,
-                                                 mPreviousIcePwd);
+  mMedia->BeginIceRestart(mJsepSession->GetUfrag(), mJsepSession->GetPwd());
+}
+
+nsresult
+PeerConnectionImpl::ResetIceCredentials()
+{
+  nsresult nrv = mJsepSession->SetIceCredentials(mPreviousIceUfrag, mPreviousIcePwd);
+  mPreviousIceUfrag = "";
+  mPreviousIcePwd = "";
+
   if (NS_FAILED(nrv)) {
-    CSFLogError(LOGTAG, "%s: Couldn't set ICE credentials, res=%u",
+    CSFLogError(LOGTAG, "%s: Couldn't reset ICE credentials, res=%u",
                          __FUNCTION__,
                          static_cast<unsigned>(nrv));
     return nrv;
   }
-  mPreviousIceUfrag = "";
-  mPreviousIcePwd = "";
-  ++mIceRollbackCount;
 
   return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::RollbackIceRestart()
+{
+  mMedia->RollbackIceRestart();
+  ++mIceRollbackCount;
+
+  // put back the previous ice creds
+  return ResetIceCredentials();
 }
 
 void
@@ -1771,36 +1811,6 @@ static void DeferredSetRemote(const std::string& aPcHandle,
                 "PeerConnectionCtx isn't ready?");
     }
     wrapper.impl()->SetRemoteDescription(aAction, aSdp.c_str());
-  }
-}
-
-void
-PeerConnectionImpl::FireOnTrackEvents(RefPtr<PeerConnectionObserver>& aPco)
-{
-  for (auto& track : mJsepSession->GetRemoteTracksAdded()) {
-    if (track.GetMediaType() == mozilla::SdpMediaSection::kApplication) {
-      // Ignore datachannel
-      continue;
-    }
-
-    MOZ_ASSERT(!track.GetTrackId().empty());
-
-    nsString trackId = NS_ConvertUTF8toUTF16(track.GetTrackId().c_str());
-
-    dom::Sequence<nsString> streamIds;
-    for (const std::string& streamId : track.GetStreamIds()) {
-      // If this fails, oh well.
-      streamIds.AppendElement(
-          NS_ConvertASCIItoUTF16(streamId.c_str()), fallible);
-    }
-
-    JSErrorResult jrv;
-    aPco->OnTrack(trackId, streamIds, jrv);
-    if (jrv.Failed()) {
-      CSFLogError(LOGTAG, ": OnTrack(%s) failed! Error: %u",
-          track.GetTrackId().c_str(),
-          jrv.ErrorCodeAsInt());
-    }
   }
 }
 
@@ -1929,11 +1939,6 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
     }
 
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
-
-    // This needs to be done before we fire ontrack events
-    pco->SyncTransceivers(jrv);
-
-    FireOnTrackEvents(pco);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);
 

@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.dlc;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.annotation.IntDef;
 import android.util.Log;
@@ -100,7 +101,7 @@ public abstract class BaseAction {
         } else if (content.isHyphenationDictionary()) {
             destinationDirectory = new File(context.getApplicationInfo().dataDir, "hyphenation");
         } else {
-            throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind());
+            throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + (String) content.getKind());
         }
 
         if (!destinationDirectory.exists() && !destinationDirectory.mkdirs()) {

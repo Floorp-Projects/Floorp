@@ -102,9 +102,6 @@ public:
 
   void OnKeyStatusesChange(const nsAString& aSessionId) override;
 
-  void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
-                             nsTArray<nsCString>& aSessionIds) override;
-
   void GetStatusForPolicy(PromiseId aPromiseId,
                           const nsAString& aMinHdcpVersion) override;
 

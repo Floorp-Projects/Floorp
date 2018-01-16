@@ -14,8 +14,8 @@
   runNetworkTest(function (options) {
     const test = new PeerConnectionTest(options);
     let originalTrack;
-    let haveMuteEvent;
-    let haveUnmuteEvent;
+    let haveMuteEvent = new Promise(() => {});
+    let haveUnmuteEvent = new Promise(() => {});
     addRenegotiation(test.chain,
       [
         function PC_REMOTE_FIND_RECEIVER(test) {
@@ -64,10 +64,15 @@
       ]
     );
 
-    test.chain.insertBefore("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
+    // Second negotiation should cause the first track to mute...
+    test.chain.insertBefore("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
       function PC_REMOTE_SETUP_ONMUTE(test) {
         haveMuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[0].track, "mute");
-      },
+      }
+    ], false, 1);
+
+    // ...and a second track to unmute.
+    test.chain.insertAfter("PC_REMOTE_SET_REMOTE_DESCRIPTION", [
       function PC_REMOTE_SETUP_ONUNMUTE(test) {
         haveUnmuteEvent = haveEvent(test.pcRemote._pc.getReceivers()[1].track, "unmute");
       }

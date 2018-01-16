@@ -74,7 +74,7 @@ public:
     JSObject* CustomReadHandler(JSContext* aCx,
                                 JSStructuredCloneReader* aReader,
                                 uint32_t aTag,
-                                uint32_t aData)
+                                uint32_t aData) override
     {
         if (aTag == SCTAG_REFLECTOR) {
             MOZ_ASSERT(!aData);
@@ -142,7 +142,7 @@ public:
 
     bool CustomWriteHandler(JSContext* aCx,
                             JSStructuredCloneWriter* aWriter,
-                            JS::Handle<JSObject*> aObj)
+                            JS::Handle<JSObject*> aObj) override
     {
         {
             JS::Rooted<JSObject*> obj(aCx, aObj);

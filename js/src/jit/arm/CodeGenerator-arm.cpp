@@ -1101,7 +1101,7 @@ class js::jit::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorARM>
     MTableSwitch* mir_;
     Vector<CodeLabel, 8, JitAllocPolicy> codeLabels_;
 
-    void accept(CodeGeneratorARM* codegen) {
+    void accept(CodeGeneratorARM* codegen) override {
         codegen->visitOutOfLineTableSwitch(this);
     }
 

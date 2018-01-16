@@ -281,7 +281,7 @@ public:
 
     ProtocolId GetProtocolId() const { return mProtocolId; }
 
-    base::ProcessId OtherPid() const;
+    base::ProcessId OtherPid() const override;
     void SetOtherProcessId(base::ProcessId aOtherPid);
 
     bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
@@ -308,16 +308,16 @@ public:
 
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
-    virtual int32_t Register(IProtocol*);
-    virtual int32_t RegisterID(IProtocol*, int32_t);
-    virtual IProtocol* Lookup(int32_t);
-    virtual void Unregister(int32_t);
+    virtual int32_t Register(IProtocol*) override;
+    virtual int32_t RegisterID(IProtocol*, int32_t) override;
+    virtual IProtocol* Lookup(int32_t) override;
+    virtual void Unregister(int32_t) override;
 
     virtual Shmem::SharedMemory* CreateSharedMemory(
-        size_t, SharedMemory::SharedMemoryType, bool, int32_t*);
-    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t);
-    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*);
-    virtual bool DestroySharedMemory(Shmem&);
+        size_t, SharedMemory::SharedMemoryType, bool, int32_t*) override;
+    virtual Shmem::SharedMemory* LookupSharedMemory(int32_t) override;
+    virtual bool IsTrackingSharedMemory(Shmem::SharedMemory*) override;
+    virtual bool DestroySharedMemory(Shmem&) override;
 
     void DeallocShmems();
 
@@ -404,7 +404,7 @@ public:
     GetActorEventTarget(IProtocol* aActor);
 
     virtual nsIEventTarget*
-    GetActorEventTarget();
+    GetActorEventTarget() override;
 
     virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
@@ -422,13 +422,14 @@ protected:
     virtual already_AddRefed<nsIEventTarget>
     GetSpecificMessageEventTarget(const Message& aMsg) { return nullptr; }
 
-    virtual void SetEventTargetForActorInternal(IProtocol* aActor, nsIEventTarget* aEventTarget);
+    virtual void SetEventTargetForActorInternal(IProtocol* aActor,
+                                                nsIEventTarget* aEventTarget) override;
     virtual void ReplaceEventTargetForActorInternal(
       IProtocol* aActor,
-      nsIEventTarget* aEventTarget);
+      nsIEventTarget* aEventTarget) override;
 
     virtual already_AddRefed<nsIEventTarget>
-    GetActorEventTargetInternal(IProtocol* aActor);
+    GetActorEventTargetInternal(IProtocol* aActor) override;
 
   private:
     ProtocolId mProtocolId;

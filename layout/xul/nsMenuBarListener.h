@@ -77,9 +77,10 @@ protected:
 
   /**
    * Given a key event for an Alt+shortcut combination,
-   * return the menu, if any, that would be opened.
+   * return the menu, if any, that would be opened. If aPeek
+   * is false, then play a beep and deactivate the menubar on Windows.
    */
-  nsMenuFrame* GetMenuForKeyEvent(nsIDOMKeyEvent* aKeyEvent);
+  nsMenuFrame* GetMenuForKeyEvent(nsIDOMKeyEvent* aKeyEvent, bool aPeek);
 
   /**
    * Call MarkAsReservedByChrome if the user's preferences indicate that

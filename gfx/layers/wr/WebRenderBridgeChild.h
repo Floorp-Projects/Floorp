@@ -154,6 +154,17 @@ public:
 
   virtual RefPtr<KnowsCompositor> GetForMedia() override;
 
+  /// Alloc a specific type of shmem that is intended for use in
+  /// IpcResourceUpdateQueue only, and cache at most one of them,
+  /// when called multiple times.
+  ///
+  /// Do not use this for anything else.
+  bool AllocResourceShmem(size_t aSize, RefCountedShmem& aShm);
+  /// Dealloc shared memory that was allocated with AllocResourceShmem.
+  /// 
+  /// Do not use this for anything else.
+  void DeallocResourceShmem(RefCountedShmem& aShm);
+
 private:
   friend class CompositorBridgeChild;
 
@@ -224,6 +235,8 @@ private:
   nsDataHashtable<ScaledFontHashKey, wr::FontInstanceKey> mFontInstanceKeys;
 
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
+
+  RefCountedShmem mResourceShm;
 };
 
 } // namespace layers

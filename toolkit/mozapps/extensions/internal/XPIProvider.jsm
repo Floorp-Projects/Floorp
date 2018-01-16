@@ -4383,6 +4383,7 @@ this.XPIProvider = {
         installPath: aFile.clone(),
         resourceURI: getURIForResourceInFile(aFile, ""),
         signedState: aAddon.signedState,
+        temporarilyInstalled: aAddon._installLocation == TemporaryInstallLocation,
       };
 
       if (aMethod == "startup" && aAddon.startupData) {

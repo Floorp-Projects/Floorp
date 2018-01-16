@@ -228,6 +228,25 @@ add_task(async function oneOffReturn() {
   gBrowser.removeTab(gBrowser.selectedTab);
 });
 
+add_task(async function collapsedOneOffs() {
+  // Disable all the engines but the current one, check the oneoffs are
+  // collapsed and that moving up selects the last match.
+  let engines = Services.search.getVisibleEngines()
+                               .filter(e => e.name != Services.search.currentEngine.name);
+  await SpecialPowers.pushPrefEnv({"set": [
+    [ "browser.search.hiddenOneOffs", engines.map(e => e.name).join(",") ]
+  ]});
+
+  let typedValue = "foo";
+  await promiseAutocompleteResultPopup(typedValue, window, true);
+  await waitForAutocompleteResultAt(0);
+  assertState(0, -1);
+  Assert.ok(gURLBar.popup.oneOffSearchButtons.buttons.collapsed,
+    "The one-off buttons should be collapsed");
+  EventUtils.synthesizeKey("VK_UP", {});
+  assertState(1, -1);
+  await hidePopup();
+});
 
 function assertState(result, oneOff, textValue = undefined) {
   Assert.equal(gURLBar.popup.selectedIndex, result,

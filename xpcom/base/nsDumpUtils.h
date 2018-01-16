@@ -120,9 +120,9 @@ public:
 
   virtual ~FifoWatcher();
 
-  virtual int OpenFd();
+  virtual int OpenFd() override;
 
-  virtual void OnFileCanReadWithoutBlocking(int aFd);
+  virtual void OnFileCanReadWithoutBlocking(int aFd) override;
 
 private:
   nsAutoCString mDirPath;
@@ -158,11 +158,11 @@ public:
 
   virtual ~SignalPipeWatcher();
 
-  virtual int OpenFd();
+  virtual int OpenFd() override;
 
-  virtual void StopWatching();
+  virtual void StopWatching() override;
 
-  virtual void OnFileCanReadWithoutBlocking(int aFd);
+  virtual void OnFileCanReadWithoutBlocking(int aFd) override;
 
 private:
   static mozilla::StaticRefPtr<SignalPipeWatcher> sSingleton;

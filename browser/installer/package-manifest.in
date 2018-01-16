@@ -103,6 +103,9 @@
 #ifdef MOZ_GTK3
 @BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
 @BINPATH@/gtk2/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
+#ifdef MOZ_WAYLAND
+@BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
+#endif
 #endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact
@@ -230,9 +233,6 @@
 @RESPATH@/components/exthandler.xpt
 @RESPATH@/components/fastfind.xpt
 @RESPATH@/components/feeds.xpt
-#ifdef MOZ_GTK
-@RESPATH@/components/filepicker.xpt
-#endif
 @RESPATH@/components/gfx.xpt
 @RESPATH@/components/html5.xpt
 @RESPATH@/components/htmlparser.xpt
@@ -404,10 +404,6 @@
 @RESPATH@/components/webvtt.xpt
 @RESPATH@/components/WebVTT.manifest
 @RESPATH@/components/WebVTTParserWrapper.js
-#ifdef MOZ_GTK
-@RESPATH@/components/nsFilePicker.manifest
-@RESPATH@/components/nsFilePicker.js
-#endif
 @RESPATH@/components/nsHelperAppDlg.manifest
 @RESPATH@/components/nsHelperAppDlg.js
 @RESPATH@/components/NetworkGeolocationProvider.manifest

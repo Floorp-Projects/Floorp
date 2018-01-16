@@ -570,13 +570,7 @@ impl LonghandId {
         match *self {
             % for property in data.longhands:
                 LonghandId::${property.camel_case} => {
-                    % if not property.derived_from:
-                        longhands::${property.ident}::parse_declared(context, input)
-                    % else:
-                        Err(input.new_custom_error(
-                            StyleParseErrorKind::UnknownProperty("${property.ident}".into())
-                        ))
-                    % endif
+                    longhands::${property.ident}::parse_declared(context, input)
                 }
             % endfor
         }
@@ -1454,10 +1448,8 @@ impl ToCss for PropertyDeclaration {
     {
         match *self {
             % for property in data.longhands:
-                % if not property.derived_from:
-                    PropertyDeclaration::${property.camel_case}(ref value) =>
-                        value.to_css(dest),
-                % endif
+                PropertyDeclaration::${property.camel_case}(ref value) =>
+                    value.to_css(dest),
             % endfor
             PropertyDeclaration::CSSWideKeyword(_, keyword) => keyword.to_css(dest),
             PropertyDeclaration::WithVariables(_, ref with_variables) => {
@@ -1474,9 +1466,6 @@ impl ToCss for PropertyDeclaration {
                 Ok(())
             },
             PropertyDeclaration::Custom(_, ref value) => value.borrow().to_css(dest),
-            % if any(property.derived_from for property in data.longhands):
-                _ => Err(fmt::Error),
-            % endif
         }
     }
 }
@@ -1859,15 +1848,26 @@ pub mod style_structs {
                 /// The ${longhand.name} computed value.
                 pub ${longhand.ident}: longhands::${longhand.ident}::computed_value::T,
             % endfor
+            % if style_struct.name == "InheritedText":
+                /// The "used" text-decorations that apply to this box.
+                ///
+                /// FIXME(emilio): This is technically a box-tree concept, and
+                /// would be nice to move away from style.
+                pub text_decorations_in_effect: ::values::computed::text::TextDecorationsInEffect,
+            % endif
             % if style_struct.name == "Font":
                 /// The font hash, used for font caching.
                 pub hash: u64,
             % endif
+            % if style_struct.name == "Box":
+                /// The display value specified by the CSS stylesheets (without any style adjustments),
+                /// which is needed for hypothetical layout boxes.
+                pub original_display: longhands::display::computed_value::T,
+            % endif
         }
         % if style_struct.name == "Font":
-
-        impl PartialEq for ${style_struct.name} {
-            fn eq(&self, other: &${style_struct.name}) -> bool {
+        impl PartialEq for Font {
+            fn eq(&self, other: &Font) -> bool {
                 self.hash == other.hash
                 % for longhand in style_struct.longhands:
                     && self.${longhand.ident} == other.${longhand.ident}
@@ -1893,6 +1893,17 @@ pub mod style_structs {
                             self.${longhand.ident} = longhands::${longhand.ident}::computed_value
                                                               ::T(v.into_iter().collect());
                         }
+                    % elif longhand.ident == "display":
+                        /// Set `display`.
+                        ///
+                        /// We need to keep track of the original display for hypothetical boxes,
+                        /// so we need to special-case this.
+                        #[allow(non_snake_case)]
+                        #[inline]
+                        pub fn set_display(&mut self, v: longhands::display::computed_value::T) {
+                            self.display = v;
+                            self.original_display = v;
+                        }
                     % else:
                         /// Set ${longhand.name}.
                         #[allow(non_snake_case)]
@@ -1901,13 +1912,25 @@ pub mod style_structs {
                             self.${longhand.ident} = v;
                         }
                     % endif
-                    /// Set ${longhand.name} from other struct.
-                    #[allow(non_snake_case)]
-                    #[inline]
-                    pub fn copy_${longhand.ident}_from(&mut self, other: &Self) {
-                        self.${longhand.ident} = other.${longhand.ident}.clone();
-                    }
-
+                    % if longhand.ident == "display":
+                        /// Set `display` from other struct.
+                        ///
+                        /// Same as `set_display` above.
+                        /// Thus, we need to special-case this.
+                        #[allow(non_snake_case)]
+                        #[inline]
+                        pub fn copy_display_from(&mut self, other: &Self) {
+                            self.display = other.display.clone();
+                            self.original_display = other.display.clone();
+                        }
+                    % else:
+                        /// Set ${longhand.name} from other struct.
+                        #[allow(non_snake_case)]
+                        #[inline]
+                        pub fn copy_${longhand.ident}_from(&mut self, other: &Self) {
+                            self.${longhand.ident} = other.${longhand.ident}.clone();
+                        }
+                    % endif
                     /// Reset ${longhand.name} from the initial struct.
                     #[allow(non_snake_case)]
                     #[inline]
@@ -2002,15 +2025,16 @@ pub mod style_structs {
                     self.text_decoration_line.contains(longhands::text_decoration_line::SpecifiedValue::LINE_THROUGH)
                 }
             % elif style_struct.name == "Box":
-                /// Sets the display property, but without touching
-                /// __servo_display_for_hypothetical_box, except when the
-                /// adjustment comes from root or item display fixups.
-                pub fn set_adjusted_display(&mut self,
-                                            dpy: longhands::display::computed_value::T,
-                                            is_item_or_root: bool) {
-                    self.set_display(dpy);
+                /// Sets the display property, but without touching original_display,
+                /// except when the adjustment comes from root or item display fixups.
+                pub fn set_adjusted_display(
+                    &mut self,
+                    dpy: longhands::display::computed_value::T,
+                    is_item_or_root: bool
+                ) {
+                    self.display = dpy;
                     if is_item_or_root {
-                        self.set__servo_display_for_hypothetical_box(dpy);
+                        self.original_display = dpy;
                     }
                 }
             % endif
@@ -3045,8 +3069,14 @@ mod lazy_static_module {
                         % for longhand in style_struct.longhands:
                             ${longhand.ident}: longhands::${longhand.ident}::get_initial_value(),
                         % endfor
+                        % if style_struct.name == "InheritedText":
+                            text_decorations_in_effect: ::values::computed::text::TextDecorationsInEffect::default(),
+                        % endif
                         % if style_struct.name == "Font":
                             hash: 0,
+                        % endif
+                        % if style_struct.name == "Box":
+                            original_display: longhands::display::get_initial_value(),
                         % endif
                     }),
                 % endfor
@@ -3612,7 +3642,7 @@ macro_rules! css_properties_accessors {
         $macro_name! {
             % for kind, props in [("Longhand", data.longhands), ("Shorthand", data.shorthands)]:
                 % for property in props:
-                    % if not property.derived_from and property.enabled_in_content():
+                    % if property.enabled_in_content():
                         % for name in [property.name] + property.alias:
                             % if '-' in name:
                                 [${to_rust_ident(name).capitalize()}, Set${to_rust_ident(name).capitalize()},

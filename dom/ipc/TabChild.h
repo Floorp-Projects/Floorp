@@ -43,7 +43,6 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "nsDeque.h"
 #include "nsISHistoryListener.h"
-#include "nsIPartialSHistoryListener.h"
 
 class nsIDOMWindowUtils;
 class nsIHttpChannel;
@@ -183,29 +182,6 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 protected:
   ~ContentListener() {}
-  TabChild* mTabChild;
-};
-
-/**
- * Listens on session history change, and sends NotifySessionHistoryChange to
- * parent process.
- */
-class TabChildSHistoryListener final : public nsISHistoryListener,
-                                       public nsIPartialSHistoryListener,
-                                       public nsSupportsWeakReference
-{
-public:
-  explicit TabChildSHistoryListener(TabChild* aTabChild) : mTabChild(aTabChild) {}
-  void ClearTabChild() { mTabChild = nullptr; }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISHISTORYLISTENER
-  NS_DECL_NSIPARTIALSHISTORYLISTENER
-
-private:
-  nsresult SHistoryDidUpdate(bool aTruncate = false);
-
-  ~TabChildSHistoryListener() {}
   TabChild* mTabChild;
 };
 
@@ -739,8 +715,6 @@ public:
   bool StopAwaitingLargeAlloc();
   bool IsAwaitingLargeAlloc();
 
-  already_AddRefed<nsISHistory> GetRelatedSHistory();
-
   mozilla::dom::TabGroup* TabGroup();
 
 #if defined(ACCESSIBILITY)
@@ -818,13 +792,6 @@ protected:
                                                             const UIStateChangeType& aShowFocusRings) override;
 
   virtual mozilla::ipc::IPCResult RecvStopIMEStateManagement() override;
-
-  virtual mozilla::ipc::IPCResult RecvNotifyAttachGroupedSHistory(const uint32_t& aOffset) override;
-
-  virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryActive(const uint32_t& aGlobalLength,
-                                                                  const uint32_t& aTargetLocalIndex) override;
-
-  virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryDeactive() override;
 
   virtual mozilla::ipc::IPCResult RecvAwaitLargeAlloc() override;
 
@@ -907,7 +874,6 @@ private:
   nsCOMPtr<nsIURI> mLastURI;
   RenderFrameChild* mRemoteFrame;
   RefPtr<nsIContentChild> mManager;
-  RefPtr<TabChildSHistoryListener> mHistoryListener;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   int32_t mActiveSuppressDisplayport;

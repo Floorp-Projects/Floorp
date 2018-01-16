@@ -45,8 +45,7 @@ add_task(function* () {
   function* hideColumn(column) {
     info(`Clicking context-menu item for ${column}`);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelector("#requests-list-status-button") ||
-      document.querySelector("#requests-list-waterfall-button"));
+      document.querySelector(".devtools-toolbar.requests-list-headers"));
 
     let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
     parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
@@ -59,8 +58,7 @@ add_task(function* () {
   function* showColumn(column) {
     info(`Clicking context-menu item for ${column}`);
     EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelector("#requests-list-status-button") ||
-      document.querySelector("#requests-list-waterfall-button"));
+      document.querySelector(".devtools-toolbar.requests-list-headers"));
 
     let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
     parent.document.querySelector(`#request-list-header-${column}-toggle`).click();

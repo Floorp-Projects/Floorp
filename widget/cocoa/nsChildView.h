@@ -343,7 +343,7 @@ public:
   // pixels" and the Cocoa "points" coordinate system.
   CGFloat                 BackingScaleFactor() const;
 
-  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final {
+  mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() final override {
     return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
   }
 

@@ -922,15 +922,6 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
              aEvent->mMessage == eMouseUp ||
              aEvent->mMessage == eTouchEnd);
   doc->NotifyUserActivation();
-
-  // Activate parent document which has same principle on the parent chain.
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  nsCOMPtr<nsIDocument> parent =
-    doc->GetFirstParentDocumentWithSamePrincipal(principal);
-  while (parent) {
-    parent->NotifyUserActivation();
-    parent = parent->GetFirstParentDocumentWithSamePrincipal(principal);
-  }
 }
 
 void

@@ -278,6 +278,12 @@
   margin-inline-end: 15px;
 }
 
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="0"] {
+  padding-inline-start: 15px
+}
+
 .tree .tree-node[data-expandable="true"] {
   cursor: default;
 }

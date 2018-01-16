@@ -231,10 +231,7 @@ ProxyAccessible::Bounds()
   if (FAILED(hr)) {
     return rect;
   }
-  rect.x = left;
-  rect.y = top;
-  rect.width = width;
-  rect.height = height;
+  rect.SetRect(left, top, width, height);
   return rect;
 }
 

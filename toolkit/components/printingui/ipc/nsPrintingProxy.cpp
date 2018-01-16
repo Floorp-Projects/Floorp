@@ -16,7 +16,7 @@
 #include "nsIPrintingPromptService.h"
 #include "nsIPrintSession.h"
 #include "nsPIDOMWindow.h"
-#include "nsPrintOptionsImpl.h"
+#include "nsPrintSettingsService.h"
 #include "nsServiceManagerUtils.h"
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogChild.h"

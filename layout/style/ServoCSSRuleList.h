@@ -38,10 +38,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoCSSRuleList, dom::CSSRuleList)
 
-  ServoStyleSheet* GetParentObject() final { return mStyleSheet; }
+  ServoStyleSheet* GetParentObject() final override { return mStyleSheet; }
 
-  css::Rule* IndexedGetter(uint32_t aIndex, bool& aFound) final;
-  uint32_t Length() final { return mRules.Length(); }
+  css::Rule* IndexedGetter(uint32_t aIndex, bool& aFound) final override;
+  uint32_t Length() final override { return mRules.Length(); }
 
   void DropReference();
 

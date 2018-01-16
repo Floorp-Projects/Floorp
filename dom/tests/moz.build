@@ -31,9 +31,6 @@ with Files("browser/browser_cancel_keydown_keypress_event.js"):
 with Files("browser/*local*"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("browser/*prerender*"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
-
 with Files("browser/browser_test_focus_after_modal_state.js"):
     BUG_COMPONENT = ("Core", "Event Handling")
 

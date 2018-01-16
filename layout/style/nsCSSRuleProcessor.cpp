@@ -1352,16 +1352,15 @@ checkGenericEmptyMatches(Element* aElement,
                          bool isWhitespaceSignificant)
 {
   nsIContent *child = nullptr;
-  int32_t index = -1;
 
   if (aTreeMatchContext.mForStyling)
     aElement->SetFlags(NODE_HAS_EMPTY_SELECTOR);
 
-  do {
-    child = aElement->GetChildAt_Deprecated(++index);
-    // stop at first non-comment (and non-whitespace for
-    // :-moz-only-whitespace) node
-  } while (child && !IsSignificantChild(child, true, isWhitespaceSignificant));
+  // stop at first non-comment (and non-whitespace for :-moz-only-whitespace)
+  // node
+  for (child = aElement->GetFirstChild();
+       child && !IsSignificantChild(child, true, isWhitespaceSignificant);
+       child = child->GetNextSibling());
   return (child == nullptr);
 }
 
@@ -1630,12 +1629,10 @@ static bool SelectorMatches(Element* aElement,
           if (aTreeMatchContext.mForStyling)
             parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-          int32_t index = -1;
-          do {
-            firstNode = parent->GetChildAt_Deprecated(++index);
-            // stop at first non-comment and non-whitespace node
-          } while (firstNode &&
-                    !IsSignificantChild(firstNode, true, false));
+          // stop at first non-comment and non-whitespace node
+          for (firstNode = parent->GetFirstChild();
+               firstNode && !IsSignificantChild(firstNode, true, false);
+               firstNode = firstNode->GetNextSibling());
         }
         if (aElement != firstNode) {
           return false;
@@ -1657,12 +1654,10 @@ static bool SelectorMatches(Element* aElement,
           if (aTreeMatchContext.mForStyling)
             parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-          uint32_t index = parent->GetChildCount();
-          do {
-            lastNode = parent->GetChildAt_Deprecated(--index);
-            // stop at first non-comment and non-whitespace node
-          } while (lastNode &&
-                    !IsSignificantChild(lastNode, true, false));
+          // stop at first non-comment and non-whitespace node
+          for (lastNode = parent->GetLastChild();
+               lastNode && !IsSignificantChild(lastNode, true, false);
+               lastNode = lastNode->GetPreviousSibling());
         }
         if (aElement != lastNode) {
           return false;

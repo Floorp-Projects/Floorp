@@ -235,7 +235,7 @@ namespace frontend {
 
 // Values of this type are used to index into arrays such as isExprEnding[],
 // so the first value must be zero.
-enum TokenKind {
+enum class TokenKind {
 #define EMIT_ENUM(name, desc) TOK_##name,
 #define EMIT_ENUM_RANGE(name, value) TOK_##name = TOK_##value,
     FOR_EACH_TOKEN_KIND_WITH_RANGE(EMIT_ENUM, EMIT_ENUM_RANGE)
@@ -247,63 +247,63 @@ enum TokenKind {
 inline bool
 TokenKindIsBinaryOp(TokenKind tt)
 {
-    return TOK_BINOP_FIRST <= tt && tt <= TOK_BINOP_LAST;
+    return TokenKind::TOK_BINOP_FIRST <= tt && tt <= TokenKind::TOK_BINOP_LAST;
 }
 
 inline bool
 TokenKindIsEquality(TokenKind tt)
 {
-    return TOK_EQUALITY_START <= tt && tt <= TOK_EQUALITY_LAST;
+    return TokenKind::TOK_EQUALITY_START <= tt && tt <= TokenKind::TOK_EQUALITY_LAST;
 }
 
 inline bool
 TokenKindIsRelational(TokenKind tt)
 {
-    return TOK_RELOP_START <= tt && tt <= TOK_RELOP_LAST;
+    return TokenKind::TOK_RELOP_START <= tt && tt <= TokenKind::TOK_RELOP_LAST;
 }
 
 inline bool
 TokenKindIsShift(TokenKind tt)
 {
-    return TOK_SHIFTOP_START <= tt && tt <= TOK_SHIFTOP_LAST;
+    return TokenKind::TOK_SHIFTOP_START <= tt && tt <= TokenKind::TOK_SHIFTOP_LAST;
 }
 
 inline bool
 TokenKindIsAssignment(TokenKind tt)
 {
-    return TOK_ASSIGNMENT_START <= tt && tt <= TOK_ASSIGNMENT_LAST;
+    return TokenKind::TOK_ASSIGNMENT_START <= tt && tt <= TokenKind::TOK_ASSIGNMENT_LAST;
 }
 
 inline MOZ_MUST_USE bool
 TokenKindIsKeyword(TokenKind tt)
 {
-    return (TOK_KEYWORD_FIRST <= tt && tt <= TOK_KEYWORD_LAST) ||
-           (TOK_KEYWORD_BINOP_FIRST <= tt && tt <= TOK_KEYWORD_BINOP_LAST) ||
-           (TOK_KEYWORD_UNOP_FIRST <= tt && tt <= TOK_KEYWORD_UNOP_LAST);
+    return (TokenKind::TOK_KEYWORD_FIRST <= tt && tt <= TokenKind::TOK_KEYWORD_LAST) ||
+           (TokenKind::TOK_KEYWORD_BINOP_FIRST <= tt && tt <= TokenKind::TOK_KEYWORD_BINOP_LAST) ||
+           (TokenKind::TOK_KEYWORD_UNOP_FIRST <= tt && tt <= TokenKind::TOK_KEYWORD_UNOP_LAST);
 }
 
 inline MOZ_MUST_USE bool
 TokenKindIsContextualKeyword(TokenKind tt)
 {
-    return TOK_CONTEXTUAL_KEYWORD_FIRST <= tt && tt <= TOK_CONTEXTUAL_KEYWORD_LAST;
+    return TokenKind::TOK_CONTEXTUAL_KEYWORD_FIRST <= tt && tt <= TokenKind::TOK_CONTEXTUAL_KEYWORD_LAST;
 }
 
 inline MOZ_MUST_USE bool
 TokenKindIsFutureReservedWord(TokenKind tt)
 {
-    return TOK_FUTURE_RESERVED_KEYWORD_FIRST <= tt && tt <= TOK_FUTURE_RESERVED_KEYWORD_LAST;
+    return TokenKind::TOK_FUTURE_RESERVED_KEYWORD_FIRST <= tt && tt <= TokenKind::TOK_FUTURE_RESERVED_KEYWORD_LAST;
 }
 
 inline MOZ_MUST_USE bool
 TokenKindIsStrictReservedWord(TokenKind tt)
 {
-    return TOK_STRICT_RESERVED_KEYWORD_FIRST <= tt && tt <= TOK_STRICT_RESERVED_KEYWORD_LAST;
+    return TokenKind::TOK_STRICT_RESERVED_KEYWORD_FIRST <= tt && tt <= TokenKind::TOK_STRICT_RESERVED_KEYWORD_LAST;
 }
 
 inline MOZ_MUST_USE bool
 TokenKindIsReservedWordLiteral(TokenKind tt)
 {
-    return TOK_RESERVED_WORD_LITERAL_FIRST <= tt && tt <= TOK_RESERVED_WORD_LITERAL_LAST;
+    return TokenKind::TOK_RESERVED_WORD_LITERAL_FIRST <= tt && tt <= TokenKind::TOK_RESERVED_WORD_LITERAL_LAST;
 }
 
 inline MOZ_MUST_USE bool
@@ -317,7 +317,7 @@ TokenKindIsReservedWord(TokenKind tt)
 inline MOZ_MUST_USE bool
 TokenKindIsPossibleIdentifier(TokenKind tt)
 {
-    return tt == TOK_NAME ||
+    return tt == TokenKind::TOK_NAME ||
            TokenKindIsContextualKeyword(tt) ||
            TokenKindIsStrictReservedWord(tt);
 }

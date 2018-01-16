@@ -87,12 +87,11 @@ private:
 };
 
 #define TX_DECL_EXPRRESULT                                        \
-    virtual short getResultType();                                \
-    virtual void stringValue(nsString& aString);                  \
-    virtual const nsString* stringValuePointer();                 \
-    virtual bool booleanValue();                                \
-    virtual double numberValue();                                 \
-
+    virtual short getResultType() override;                       \
+    virtual void stringValue(nsString& aString) override;         \
+    virtual const nsString* stringValuePointer() override;        \
+    virtual bool booleanValue() override;                         \
+    virtual double numberValue() override;
 
 class BooleanResult : public txAExprResult {
 
@@ -128,4 +127,3 @@ public:
 };
 
 #endif
-

@@ -1,4 +1,4 @@
-const FILE = "https://example.com/browser/toolkit/content/tests/browser/gizmo.mp4";
+const VIDEO_PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
 
 var UserGestures = {
   MOUSE_CLICK: "mouse-click",
@@ -20,15 +20,13 @@ function setup_test_preference() {
 }
 
 function simulateUserGesture(gesture, targetBrowser) {
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let targetElement = targetBrowser.contentDocumentAsCPOW.documentElement;
   info(`- simulate ${gesture.type} event -`);
   switch (gesture.type) {
     case UserGestures.MOUSE_CLICK:
-      return BrowserTestUtils.synthesizeMouseAtCenter(targetElement, {button: 0},
+      return BrowserTestUtils.synthesizeMouseAtCenter("body", {button: 0},
                                                       targetBrowser);
     case UserGestures.MOUSE_MOVE:
-      return BrowserTestUtils.synthesizeMouseAtCenter(targetElement, {type: "mousemove"},
+      return BrowserTestUtils.synthesizeMouseAtCenter("body", {type: "mousemove"},
                                                       targetBrowser);
     case UserGestures.KEYBOARD_PRESS:
       return BrowserTestUtils.sendChar("a", targetBrowser);
@@ -42,23 +40,35 @@ async function test_play_without_user_gesture() {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  info("- create autoplay video -");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
-  let video = document.createElement("video");
-  video.src = FILE;
-  video.autoplay = true;
-  let canplayPromise = once(video, "canplaythrough");
-  document.body.appendChild(video);
+  tab.linkedBrowser.loadURI(VIDEO_PAGE);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  info("- can't autoplay without user activation -");
-  await canplayPromise;
-  ok(video.paused, "video can't start without user input.");
+  async function check_autoplay_keyword() {
+    info("- create an new autoplay video -");
+    let video = content.document.createElement("video");
+    video.src = "gizmo.mp4";
+    video.autoplay = true;
+    let canplayPromise = new Promise(function(resolve) {
+      video.addEventListener("canplaythrough", function() {
+        resolve();
+      }, {once: true});
+    });
+    content.document.body.appendChild(video);
 
-  info("- call play() without user activation -");
-  await video.play().catch(function() {
+    info("- can't autoplay without user activation -");
+    await canplayPromise;
+    ok(video.paused, "video can't start without user input.");
+  }
+  await ContentTask.spawn(tab.linkedBrowser, null, check_autoplay_keyword);
+
+  async function play_video() {
+    let video = content.document.getElementById("v");
+    info("- call play() without user activation -");
+    await video.play().catch(function() {
       ok(video.paused, "video can't start play without user input.");
-  });
+    });
+  }
+  await ContentTask.spawn(tab.linkedBrowser, null, play_video);
 
   info("- remove tab -");
   await BrowserTestUtils.removeTab(tab);
@@ -68,25 +78,25 @@ async function test_play_with_user_gesture(gesture) {
   info("- open new tab -");
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser,
                                                         "about:blank");
-  info("- create autoplay video -");
-  // eslint-disable-next-line mozilla/no-cpows-in-tests
-  let document = tab.linkedBrowser.contentDocumentAsCPOW;
-  let video = document.createElement("video");
-  video.src = FILE;
-  document.body.appendChild(video);
+  tab.linkedBrowser.loadURI(VIDEO_PAGE);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- simulate user gesture -");
   await simulateUserGesture(gesture, tab.linkedBrowser);
 
   info("- call play() -");
-  try {
-    await video.play();
-    ok(gesture.isActivationGesture, "user gesture can activate the page");
-    ok(!video.paused, "video starts playing.");
-  } catch (e) {
-    ok(!gesture.isActivationGesture, "user gesture can not activate the page");
-    ok(video.paused, "video can not start playing.");
+  async function play_video(gesture) {
+    let video = content.document.getElementById("v");
+    try {
+      await video.play();
+      ok(gesture.isActivationGesture, "user gesture can activate the page");
+      ok(!video.paused, "video starts playing.");
+    } catch (e) {
+      ok(!gesture.isActivationGesture, "user gesture can not activate the page");
+      ok(video.paused, "video can not start playing.");
+    }
   }
+  await ContentTask.spawn(tab.linkedBrowser, gesture, play_video);
 
   info("- remove tab -");
   await BrowserTestUtils.removeTab(tab);

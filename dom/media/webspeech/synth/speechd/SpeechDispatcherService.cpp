@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/nsSpeechTask.h"
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "nsEscape.h"
 #include "nsISupports.h"
@@ -560,6 +561,7 @@ SpeechDispatcherService::GetInstance(bool create)
   if (!sSingleton && create) {
     sSingleton = new SpeechDispatcherService();
     sSingleton->Init();
+    ClearOnShutdown(&sSingleton);
   }
 
   return sSingleton;
@@ -583,16 +585,6 @@ SpeechDispatcherService::EventNotify(uint32_t aMsgId, uint32_t aState)
       mCallbacks.Remove(aMsgId);
     }
   }
-}
-
-void
-SpeechDispatcherService::Shutdown()
-{
-  if (!sSingleton) {
-    return;
-  }
-
-  sSingleton = nullptr;
 }
 
 } // namespace dom

@@ -320,7 +320,9 @@ VacuumManager::getSingleton()
   }
 
   if (!gVacuumManager) {
-    gVacuumManager = new VacuumManager();
+    auto manager = MakeRefPtr<VacuumManager>();
+    MOZ_ASSERT(gVacuumManager == manager.get());
+    return manager.forget();
   }
   return do_AddRef(gVacuumManager);
 }

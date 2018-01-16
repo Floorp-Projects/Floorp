@@ -722,7 +722,7 @@ class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
       : ins_(ins)
     { }
 
-    void accept(CodeGeneratorX86* codegen) {
+    void accept(CodeGeneratorX86* codegen) override {
         codegen->visitOutOfLineTruncate(this);
     }
     LTruncateDToInt32* ins() const {
@@ -739,7 +739,7 @@ class OutOfLineTruncateFloat32 : public OutOfLineCodeBase<CodeGeneratorX86>
       : ins_(ins)
     { }
 
-    void accept(CodeGeneratorX86* codegen) {
+    void accept(CodeGeneratorX86* codegen) override {
         codegen->visitOutOfLineTruncateFloat32(this);
     }
     LTruncateFToInt32* ins() const {

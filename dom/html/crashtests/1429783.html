@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script>
+      try { o2 = document.createElement('textarea') } catch(e) { }
+      try { o3 = document.getSelection() } catch(e) { }
+      try { document.documentElement.appendChild(o2) } catch(e) { }
+      try { o2.select() } catch(e) { }
+      try { o4 = o3.getRangeAt(0) } catch(e) { }
+      try { o5 = o4.commonAncestorContainer } catch(e) { }
+      try { o6 = o4.commonAncestorContainer } catch(e) { }
+      try { document.documentElement.after("", o5, "") } catch(e) { }
+      try { o4 = document.createElement('t') } catch(e) { }
+      try { document.appendChild(o4); } catch(e) { }
+      try { document.write(atob("PHNjcmlwdCBzcmM9Jyc+PC9zY3JpcHQ+Cg==")) } catch(e) { }
+      try { document.replaceChild(o6, document.documentElement); } catch(e) { }
+    </script>
+  </head>
+</html>

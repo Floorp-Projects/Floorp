@@ -175,6 +175,7 @@
   "rotaryengine.js": ["RotaryEngine", "RotaryRecord", "RotaryStore", "RotaryTracker"],
   "require.js": ["require"],
   "RTCStatsReport.jsm": ["convertToRTCStatsReport"],
+  "Schemas.jsm": ["SchemaRoot", "Schemas"],
   "scratchpad-manager.jsm": ["ScratchpadManager"],
   "server.js": ["server"],
   "service.js": ["Service"],

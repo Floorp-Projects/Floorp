@@ -452,11 +452,7 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY,
     rect = IntlGeneric().AsProxy()->Bounds();
   }
 
-  *aX = rect.x;
-  *aY = rect.y;
-  *aWidth = rect.width;
-  *aHeight = rect.height;
-
+  rect.GetRect(aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 

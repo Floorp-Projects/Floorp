@@ -46,6 +46,7 @@ pub use self::color::{Color, ColorPropertyValue, RGBAColor};
 pub use self::effects::{BoxShadow, Filter, SimpleShadow};
 pub use self::flex::FlexBasis;
 pub use self::image::{Gradient, GradientItem, Image, ImageLayer, LineDirection, MozImageRect};
+pub use self::inherited_box::{Orientation, ImageOrientation};
 #[cfg(feature = "gecko")]
 pub use self::gecko::ScrollSnapPoint;
 pub use self::rect::LengthOrNumberRect;
@@ -62,6 +63,7 @@ pub use self::percentage::Percentage;
 pub use self::position::{Position, GridAutoFlow, GridTemplateAreas};
 pub use self::svg::{SVGLength, SVGOpacity, SVGPaint, SVGPaintKind};
 pub use self::svg::{SVGPaintOrder, SVGStrokeDashArray, SVGWidth};
+pub use self::svg::MozContextProperties;
 pub use self::table::XSpan;
 pub use self::text::{InitialLetter, LetterSpacing, LineHeight, TextAlign, TextOverflow, WordSpacing};
 pub use self::time::Time;
@@ -81,6 +83,7 @@ pub mod effects;
 pub mod flex;
 pub mod font;
 pub mod image;
+pub mod inherited_box;
 #[cfg(feature = "gecko")]
 pub mod gecko;
 pub mod length;

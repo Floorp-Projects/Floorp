@@ -30,7 +30,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual already_AddRefed<PrintTarget> MakePrintTarget() final;
+  virtual already_AddRefed<PrintTarget> MakePrintTarget() final override;
 
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS,
                   bool aIsPrintPreview) override;

@@ -365,14 +365,6 @@ MediaDrmCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId)
 }
 
 void
-MediaDrmCDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
-                                      nsTArray<nsCString>& aSessionIds)
-{
-  auto caps = Capabilites().Lock();
-  caps->GetSessionIdsForKeyId(aKeyId, aSessionIds);
-}
-
-void
 MediaDrmCDMProxy::GetStatusForPolicy(PromiseId aPromiseId,
                                      const nsAString& aMinHdcpVersion)
 {

@@ -200,7 +200,7 @@ class ProxyScriptContext extends BaseContext {
     this.extension = extension;
     this.messageManager = Services.cpmm;
     this.sandbox = Cu.Sandbox(this.extension.principal, {
-      sandboxName: `proxyscript:${extension.id}:${url}`,
+      sandboxName: `Extension Proxy Script (${extension.policy.debugName}): ${url}`,
       metadata: {addonID: extension.id},
     });
     this.url = url;
@@ -324,12 +324,13 @@ class ProxyScriptContext extends BaseContext {
 
 class ProxyScriptAPIManager extends SchemaAPIManager {
   constructor() {
-    super("proxy");
+    super("proxy", Schemas);
     this.initialized = false;
   }
 
   lazyInit() {
     if (!this.initialized) {
+      this.initGlobal();
       let entries = XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_CONTENT);
       for (let [/* name */, value] of entries) {
         this.loadScript(value);
@@ -388,6 +389,6 @@ defineLazyGetter(ProxyScriptContext.prototype, "browserObj", function() {
 
   let browserObj = Cu.createObjectIn(this.sandbox);
   let injectionContext = new ProxyScriptInjectionContext(this, can);
-  Schemas.inject(browserObj, injectionContext);
+  proxyScriptAPIManager.schema.inject(browserObj, injectionContext);
   return browserObj;
 });

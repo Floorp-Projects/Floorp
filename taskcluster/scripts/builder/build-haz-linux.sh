@@ -61,7 +61,6 @@ export NO_MERCURIAL_SETUP_CHECK=1
 if [[ "$PROJECT" = "browser" ]]; then (
     cd "$WORKSPACE"
     set "$WORKSPACE"
-    . setup-ccache.sh
     # Mozbuild config:
     export MOZBUILD_STATE_PATH=$WORKSPACE/mozbuild/
     # Create .mozbuild so mach doesn't complain about this

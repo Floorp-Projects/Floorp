@@ -7,7 +7,7 @@ es6id: 10.2.1
 esid: sec-strict-mode-code
 flags: [module]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

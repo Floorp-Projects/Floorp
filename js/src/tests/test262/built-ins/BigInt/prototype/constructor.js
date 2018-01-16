@@ -5,7 +5,7 @@
 /*---
 esid: sec-bigint.prototype.constructor
 description: BigInt.prototype.constructor property descriptor
-info: >
+info: |
   BigInt.prototype.constructor
 
   The initial value of BigInt.prototype.constructor is the intrinsic

@@ -372,7 +372,7 @@ class Concrete<js::RegExpShared> : TracerConcrete<js::RegExpShared>
         new (storage) Concrete(ptr);
     }
 
-    CoarseType coarseType() const final { return CoarseType::Other; }
+    CoarseType coarseType() const final override { return CoarseType::Other; }
 
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 

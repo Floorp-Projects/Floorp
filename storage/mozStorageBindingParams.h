@@ -95,10 +95,10 @@ class AsyncBindingParams : public BindingParams
 {
 public:
   NS_IMETHOD BindByName(const nsACString & aName,
-                                      nsIVariant *aValue);
-  NS_IMETHOD BindByIndex(uint32_t aIndex, nsIVariant *aValue);
+                        nsIVariant *aValue) override;
+  NS_IMETHOD BindByIndex(uint32_t aIndex, nsIVariant *aValue) override;
 
-  virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt * aStatement);
+  virtual already_AddRefed<mozIStorageError> bind(sqlite3_stmt * aStatement) override;
 
   explicit AsyncBindingParams(mozIStorageBindingParamsArray *aOwningArray);
   virtual ~AsyncBindingParams() {}

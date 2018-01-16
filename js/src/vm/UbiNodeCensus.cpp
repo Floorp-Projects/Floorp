@@ -146,7 +146,7 @@ class BucketCount : public CountType {
     }
 
     CountBasePtr makeCount() override { return CountBasePtr(js_new<Count>(*this)); }
-    void traceCount(CountBase& countBase, JSTracer* trc) final { }
+    void traceCount(CountBase& countBase, JSTracer* trc) final override { }
     bool count(CountBase& countBase, mozilla::MallocSizeOf mallocSizeOf, const Node& node) override;
     bool report(JSContext* cx, CountBase& countBase, MutableHandleValue report) override;
 };

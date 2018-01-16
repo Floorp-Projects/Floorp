@@ -755,7 +755,7 @@ class Simulator : public DecoderVisitor {
   void ExecuteInstruction();
 
   // Declare all Visitor functions.
-  #define DECLARE(A) virtual void Visit##A(const Instruction* instr);
+  #define DECLARE(A) virtual void Visit##A(const Instruction* instr) override;
   VISITOR_LIST_THAT_RETURN(DECLARE)
   VISITOR_LIST_THAT_DONT_RETURN(DECLARE)
   #undef DECLARE

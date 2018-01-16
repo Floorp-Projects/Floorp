@@ -4277,7 +4277,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
-  virtual void SetText(const char16_t* aText, int32_t aLength, nsBidiDirection aDirection)
+  virtual void SetText(const char16_t* aText, int32_t aLength, nsBidiDirection aDirection) override
   {
     mFontgrp->UpdateUserFonts(); // ensure user font generation is current
     // adjust flags for current direction run
@@ -4296,7 +4296,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                                      mMissingFonts);
   }
 
-  virtual nscoord GetWidth()
+  virtual nscoord GetWidth() override
   {
     gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
         mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
@@ -4369,7 +4369,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     return pattern.forget();
   }
 
-  virtual void DrawText(nscoord aXOffset, nscoord aWidth)
+  virtual void DrawText(nscoord aXOffset, nscoord aWidth) override
   {
     gfx::Point point = mPt;
     bool rtl = mTextRun->IsRightToLeft();

@@ -182,18 +182,15 @@ class FieldScanner {
     }
     let element = this._elements[elementIndex];
     let info = FormAutofillHeuristics.getInfo(element);
-    if (!info) {
-      info = {};
-    }
     let fieldInfo = {
-      section: info.section,
-      addressType: info.addressType,
-      contactType: info.contactType,
-      fieldName: info.fieldName,
+      section: info ? info.section : "",
+      addressType: info ? info.addressType : "",
+      contactType: info ? info.contactType : "",
+      fieldName: info ? info.fieldName : "",
       elementWeakRef: Cu.getWeakReference(element),
     };
 
-    if (info._reason) {
+    if (info && info._reason) {
       fieldInfo._reason = info._reason;
     }
 
@@ -539,9 +536,19 @@ this.FormAutofillHeuristics = {
     }
 
     let nextField = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
-    if (nextField && nextField.fieldName == "tel-extension") {
-      fieldScanner.parsingIndex++;
-      parsedField = true;
+    if (nextField && nextField._reason != "autocomplete" && fieldScanner.parsingIndex > 0) {
+      const regExpTelExtension = new RegExp(
+        "\\bext|ext\\b|extension" +
+        "|ramal", // pt-BR, pt-PT
+        "iu");
+      const previousField = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex - 1);
+      const previousFieldType = FormAutofillUtils.getCategoryFromFieldName(previousField.fieldName);
+      if (previousField && previousFieldType == "tel" &&
+        this._matchRegexp(nextField.elementWeakRef.get(), regExpTelExtension)) {
+        fieldScanner.updateFieldName(fieldScanner.parsingIndex, "tel-extension");
+        fieldScanner.parsingIndex++;
+        parsedField = true;
+      }
     }
 
     return parsedField;

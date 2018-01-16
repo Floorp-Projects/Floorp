@@ -51,7 +51,7 @@ UNIFIED_SOURCES += [
     'nsIdleServiceAndroid.cpp',
     'nsLookAndFeel.cpp',
     'nsNativeThemeAndroid.cpp',
-    'nsPrintOptionsAndroid.cpp',
+    'nsPrintSettingsServiceAndroid.cpp',
     'nsScreenManagerAndroid.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',

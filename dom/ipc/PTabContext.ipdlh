@@ -43,9 +43,6 @@ struct FrameIPCTabContext
   // <xul:browser> are not considered to be mozbrowser frames.
   bool isMozBrowserElement;
 
-  // Whether this TabContext should work in prerender mode.
-  bool isPrerendered;
-
   // The requested presentation URL.
   // This value would be empty if the TabContext isn't created for
   // presented content.

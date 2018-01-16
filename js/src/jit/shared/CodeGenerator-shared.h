@@ -346,13 +346,13 @@ class CodeGeneratorShared : public LElementVisitor
     void emitTruncateFloat32(FloatRegister src, Register dest, MTruncateToInt32* mir);
 
     void emitWasmCallBase(LWasmCallBase* ins);
-    void visitWasmCall(LWasmCall* ins) { emitWasmCallBase(ins); }
-    void visitWasmCallI64(LWasmCallI64* ins) { emitWasmCallBase(ins); }
+    void visitWasmCall(LWasmCall* ins) override { emitWasmCallBase(ins); }
+    void visitWasmCallI64(LWasmCallI64* ins) override { emitWasmCallBase(ins); }
 
-    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins);
-    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins);
-    void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins);
-    void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins);
+    void visitWasmLoadGlobalVar(LWasmLoadGlobalVar* ins) override;
+    void visitWasmStoreGlobalVar(LWasmStoreGlobalVar* ins) override;
+    void visitWasmLoadGlobalVarI64(LWasmLoadGlobalVarI64* ins) override;
+    void visitWasmStoreGlobalVarI64(LWasmStoreGlobalVarI64* ins) override;
 
     void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
@@ -637,7 +637,7 @@ template <typename T>
 class OutOfLineCodeBase : public OutOfLineCode
 {
   public:
-    virtual void generate(CodeGeneratorShared* codegen) {
+    virtual void generate(CodeGeneratorShared* codegen) override {
         accept(static_cast<T*>(codegen));
     }
 
@@ -801,7 +801,7 @@ class OutOfLineCallVM : public OutOfLineCodeBase<CodeGeneratorShared>
         out_(out)
     { }
 
-    void accept(CodeGeneratorShared* codegen) {
+    void accept(CodeGeneratorShared* codegen) override {
         codegen->visitOutOfLineCallVM(this);
     }
 
@@ -857,7 +857,7 @@ class OutOfLineWasmTruncateCheck : public OutOfLineCodeBase<CodeGeneratorShared>
         isUnsigned_(mir->isUnsigned()), bytecodeOffset_(mir->bytecodeOffset())
     { }
 
-    void accept(CodeGeneratorShared* codegen) {
+    void accept(CodeGeneratorShared* codegen) override {
         codegen->visitOutOfLineWasmTruncateCheck(this);
     }
 

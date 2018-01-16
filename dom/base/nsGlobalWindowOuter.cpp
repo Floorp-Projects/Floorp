@@ -7601,13 +7601,6 @@ nsGlobalWindowOuter::Orientation(CallerType aCallerType) const
 }
 #endif
 
-bool
-nsGlobalWindowOuter::GetIsPrerendered()
-{
-  nsIDocShell* docShell = GetDocShell();
-  return docShell && docShell->GetIsPrerendered();
-}
-
 void
 nsPIDOMWindowOuter::SetLargeAllocStatus(LargeAllocStatus aStatus)
 {

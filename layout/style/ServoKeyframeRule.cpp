@@ -29,18 +29,18 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
     ServoKeyframeDeclaration, nsICSSDeclaration)
 
-  css::Rule* GetParentRule() final { return mRule; }
+  css::Rule* GetParentRule() final override { return mRule; }
 
   void DropReference() {
     mRule = nullptr;
     mDecls->SetOwningRule(nullptr);
   }
 
-  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final
+  DeclarationBlock* GetCSSDeclaration(Operation aOperation) final override
   {
     return mDecls;
   }
-  nsresult SetCSSDeclaration(DeclarationBlock* aDecls) final
+  nsresult SetCSSDeclaration(DeclarationBlock* aDecls) final override
   {
     if (!mRule) {
       return NS_OK;
@@ -56,25 +56,25 @@ public:
     return NS_OK;
   }
   void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
-                                nsIPrincipal* aSubjectPrincipal) final
+                                nsIPrincipal* aSubjectPrincipal) final override
   {
     MOZ_ASSERT_UNREACHABLE("GetCSSParsingEnvironment "
                            "shouldn't be calling for a Servo rule");
     GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
   }
   ServoCSSParsingEnvironment GetServoCSSParsingEnvironment(
-      nsIPrincipal* aSubjectPrincipal) const final
+      nsIPrincipal* aSubjectPrincipal) const final override
   {
     return GetServoCSSParsingEnvironmentForRule(mRule);
   }
-  nsIDocument* DocToUpdate() final { return nullptr; }
+  nsIDocument* DocToUpdate() final override { return nullptr; }
 
-  nsINode* GetParentObject() final
+  nsINode* GetParentObject() final override
   {
     return mRule ? mRule->GetDocument() : nullptr;
   }
 
-  DocGroup* GetDocGroup() const final
+  DocGroup* GetDocGroup() const final override
   {
     if (!mRule) {
       return nullptr;

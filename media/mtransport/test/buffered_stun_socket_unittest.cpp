@@ -50,7 +50,7 @@ class BufferedStunSocketTest : public MtransportTest {
     nr_socket_destroy(&test_socket_);
   }
 
-  void SetUp() {
+  void SetUp() override {
     MtransportTest::SetUp();
 
     RefPtr<DummySocket> dummy(new DummySocket());

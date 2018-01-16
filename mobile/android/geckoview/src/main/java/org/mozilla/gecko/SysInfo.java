@@ -40,12 +40,9 @@ public final class SysInfo {
     /**
      * Get the number of cores on the device.
      *
-     * We can't use a nice tidy API call, because they're all wrong:
-     *
-     * <http://stackoverflow.com/questions/7962155/how-can-you-detect-a-dual-core-
-     * cpu-on-an-android-device-from-code>
-     *
-     * This method is based on that code.
+     * We can't use a nice tidy API call, <a
+     * href="https://stackoverflow.com/q/7962155">because they're all
+     * wrong</a>. This method is based on that code.
      *
      * @return the number of CPU cores, or 1 if the number could not be
      *         determined.

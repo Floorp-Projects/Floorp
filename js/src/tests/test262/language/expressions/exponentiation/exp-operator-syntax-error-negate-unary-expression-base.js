@@ -6,7 +6,7 @@
 author: Rick Waldron
 esid: sec-unary-operators
 description: Exponentiation Expression syntax error, `-` UnaryExpression
-info: >
+info: |
   ExponentiationExpression :
     UnaryExpression
     ...
@@ -17,7 +17,7 @@ info: >
     ...
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

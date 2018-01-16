@@ -131,7 +131,11 @@ pref("app.update.log", false);
 pref("app.update.backgroundMaxErrors", 10);
 
 // Whether or not app updates are enabled
+#ifdef MOZ_UPDATER
 pref("app.update.enabled", true);
+#else
+pref("app.update.enabled", false);
+#endif
 
 // Whether or not to use the doorhanger application update UI.
 pref("app.update.doorhanger", true);

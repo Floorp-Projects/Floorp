@@ -25,9 +25,6 @@ info: |
 
     Runtime Semantics: ClassElementEvaluation
 
-    ClassElement: static FieldDefinition;
-      Return ClassFieldDefinitionEvaluation of FieldDefinition with parameter true and object.
-
     ClassElement: FieldDefinition;
       Return ClassFieldDefinitionEvaluation of FieldDefinition with parameter false and object.
 

@@ -224,9 +224,6 @@ public:
   // Main thread only.
   virtual void OnKeyStatusesChange(const nsAString& aSessionId) = 0;
 
-  virtual void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
-                                     nsTArray<nsCString>& aSessionIds) = 0;
-
   // Main thread only.
   // Calls MediaKeys->ResolvePromiseWithKeyStatus(aPromiseId, aKeyStatus) after
   // the CDM has processed the request.

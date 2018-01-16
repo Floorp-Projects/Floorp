@@ -7,6 +7,7 @@ import {
   CONTENT_MESSAGE_TYPE,
   globalImportContext,
   MAIN_MESSAGE_TYPE,
+  PRELOAD_MESSAGE_TYPE,
   UI_CODE
 } from "common/Actions.jsm";
 
@@ -124,6 +125,26 @@ describe("ActionCreators", () => {
         assert.isFalse(au.isBroadcastToContent({type: "FOO"}));
         assert.isFalse(au.isBroadcastToContent(ac.SendToContent({type: "FOO"}, "foo123")));
       });
+    });
+  });
+  describe("SendToPreloaded", () => {
+    it("should create the right action", () => {
+      const action = {type: "FOO", data: "BAR"};
+      const newAction = ac.SendToPreloaded(action);
+      assert.deepEqual(newAction, {
+        type: "FOO",
+        data: "BAR",
+        meta: {from: MAIN_MESSAGE_TYPE, to: PRELOAD_MESSAGE_TYPE}
+      });
+    });
+  });
+  describe("isSendToPreloaded", () => {
+    it("should return true if action is SendToPreloaded", () => {
+      assert.isTrue(au.isSendToPreloaded(ac.SendToPreloaded({type: "FOO"})));
+    });
+    it("should return false if action is not SendToPreloaded", () => {
+      assert.isFalse(au.isSendToPreloaded({type: "FOO"}));
+      assert.isFalse(au.isSendToPreloaded(ac.BroadcastToContent({type: "FOO"})));
     });
   });
   describe("UserEvent", () => {

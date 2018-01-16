@@ -26,6 +26,7 @@
 #include "mozilla/Logging.h"
 
 class nsJARInputThunk;
+class nsJARProtocolHandler;
 class nsInputStreamPump;
 
 //-----------------------------------------------------------------------------
@@ -72,6 +73,7 @@ private:
 
     bool                            mOpened;
 
+    RefPtr<nsJARProtocolHandler>    mJarHandler;
     nsCOMPtr<nsIJARURI>             mJarURI;
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsISupports>           mOwner;

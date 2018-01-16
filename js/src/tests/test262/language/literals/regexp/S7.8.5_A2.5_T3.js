@@ -20,7 +20,7 @@ info: |
 description: >
   A regular expression may not contain a <CR> as a SourceCharacter
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

@@ -75,9 +75,9 @@ class SJISContextAnalysis : public JapaneseContextAnalysis
 {
   //SJISContextAnalysis(){};
 protected:
-  int32_t GetOrder(const char* str, uint32_t *charLen);
+  int32_t GetOrder(const char* str, uint32_t *charLen) override;
 
-  int32_t GetOrder(const char* str)
+  int32_t GetOrder(const char* str) override
   {
     //We only interested in Hiragana, so first byte is '\202'
     if (*str == '\202' &&
@@ -91,8 +91,8 @@ protected:
 class EUCJPContextAnalysis : public JapaneseContextAnalysis
 {
 protected:
-  int32_t GetOrder(const char* str, uint32_t *charLen);
-  int32_t GetOrder(const char* str)
+  int32_t GetOrder(const char* str, uint32_t *charLen) override;
+  int32_t GetOrder(const char* str) override
     //We only interested in Hiragana, so first byte is '\244'
   {
     if (*str == '\244' &&

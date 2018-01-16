@@ -50,6 +50,7 @@ AddonPathService::AddonPathService()
 
 AddonPathService::~AddonPathService()
 {
+  MOZ_ASSERT(sInstance == this);
   sInstance = nullptr;
 }
 
