@@ -42,6 +42,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
+#include "mozISpellI18NUtil.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIDOMNode.h"
@@ -1872,32 +1873,35 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP
+mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
   if (eventType.EqualsLiteral("blur")) {
-    return Blur(aEvent);
+    return OnBlur(aEvent);
   }
   if (eventType.EqualsLiteral("click")) {
-    return MouseClick(aEvent);
+    return OnMouseClick(aEvent);
   }
   if (eventType.EqualsLiteral("keypress")) {
-    return KeyPress(aEvent);
+    return OnKeyPress(aEvent);
   }
 
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
+nsresult
+mozInlineSpellChecker::OnBlur(nsIDOMEvent* aEvent)
 {
   // force spellcheck on blur, for instance when tabbing out of a textbox
   HandleNavigationEvent(true);
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
+nsresult
+mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(mouseEvent, NS_OK);
@@ -1910,7 +1914,8 @@ nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult
+mozInlineSpellChecker::OnKeyPress(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
   NS_ENSURE_TRUE(keyEvent, NS_OK);
