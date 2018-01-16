@@ -123,8 +123,6 @@ android {
                     exclude 'org/mozilla/gecko/GeckoMediaPlayer.java'
                     exclude 'org/mozilla/gecko/GeckoPresentationDisplay.java'
                     exclude 'org/mozilla/gecko/MediaPlayerManager.java'
-                    exclude 'org/mozilla/gecko/PresentationMediaPlayerManager.java'
-                    exclude 'org/mozilla/gecko/RemotePresentationService.java'
                 }
 
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
