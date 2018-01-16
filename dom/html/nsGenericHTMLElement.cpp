@@ -3102,12 +3102,12 @@ nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
     UPDATE_CONTENT_MODEL, true);
   nsAutoMutationBatch mb;
 
-  uint32_t childCount = GetChildCount();
-
   mb.Init(this, true, false);
-  for (uint32_t i = 0; i < childCount; ++i) {
-    RemoveChildAt_Deprecated(0, true);
+
+  while (HasChildren()) {
+    RemoveChildNode(nsINode::GetFirstChild(), true);
   }
+
   mb.RemovalDone();
 
   nsString str;
