@@ -389,6 +389,7 @@ class NameResolver
           // Nodes with no children that might require name resolution need no
           // further work.
           case ParseNodeKind::Nop:
+          case ParseNodeKind::EmptyStatement:
           case ParseNodeKind::String:
           case ParseNodeKind::TemplateString:
           case ParseNodeKind::RegExp:
@@ -422,6 +423,7 @@ class NameResolver
             break;
 
           // Nodes with a single non-null child requiring name resolution.
+          case ParseNodeKind::ExpressionStatement:
           case ParseNodeKind::TypeOfExpr:
           case ParseNodeKind::Void:
           case ParseNodeKind::Not:
@@ -447,7 +449,6 @@ class NameResolver
             break;
 
           // Nodes with a single nullable child.
-          case ParseNodeKind::Semi:
           case ParseNodeKind::This:
             MOZ_ASSERT(cur->isArity(PN_UNARY));
             if (ParseNode* expr = cur->pn_kid) {
