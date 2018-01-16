@@ -504,6 +504,23 @@ class DOMLocalization extends Localization {
    * Translate a DOM element or fragment asynchronously using this
    * `DOMLocalization` object.
    *
+   * Manually trigger the translation (or re-translation) of a DOM fragment.
+   * Use the `data-l10n-id` and `data-l10n-args` attributes to mark up the DOM
+   * with information about which translations to use.
+   *
+   * Returns a `Promise` that gets resolved once the translation is complete.
+   *
+   * @param   {DOMFragment} frag - Element or DocumentFragment to be translated
+   * @returns {Promise}
+   */
+  translateFragment(frag) {
+    return this.translateElements(this.getTranslatables(frag));
+  }
+
+  /**
+   * Translate a list of DOM elements asynchronously using this
+   * `DOMLocalization` object.
+   *
    * Manually trigger the translation (or re-translation) of a list of elements.
    * Use the `data-l10n-id` and `data-l10n-args` attributes to mark up the DOM
    * with information about which translations to use.
