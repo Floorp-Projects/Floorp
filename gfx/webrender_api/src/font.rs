@@ -199,6 +199,16 @@ impl Hash for FontVariation {
 #[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
 pub struct GlyphOptions {
     pub render_mode: FontRenderMode,
+    pub flags: FontInstanceFlags,
+}
+
+impl Default for GlyphOptions {
+    fn default() -> GlyphOptions {
+        GlyphOptions {
+            render_mode: FontRenderMode::Subpixel,
+            flags: FontInstanceFlags::empty(),
+        }
+    }
 }
 
 bitflags! {
@@ -210,6 +220,9 @@ bitflags! {
         const SYNTHETIC_BOLD    = 1 << 1;
         const EMBEDDED_BITMAPS  = 1 << 2;
         const SUBPIXEL_BGR      = 1 << 3;
+        const TRANSPOSE         = 1 << 4;
+        const FLIP_X            = 1 << 5;
+        const FLIP_Y            = 1 << 6;
 
         // Windows flags
         const FORCE_GDI         = 1 << 16;
