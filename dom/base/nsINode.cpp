@@ -1927,7 +1927,7 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   // nsIDocument::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
   // value for our cached root element, per note in
-  // nsDocument::RemoveChildAt_Deprecated().
+  // nsDocument::RemoveChildNode().
   MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
              aKid == GetChildAt_Deprecated(aIndex) &&
              IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");

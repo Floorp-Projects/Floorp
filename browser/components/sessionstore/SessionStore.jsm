@@ -3898,11 +3898,7 @@ var SessionStoreInternal = {
 
     this.markTabAsRestoring(aTab);
 
-    // We need a new frameloader if we are reloading into a browser with a
-    // grouped session history (as we don't support restoring into browsers
-    // with grouped session histories directly).
-    let newFrameloader =
-      aOptions.newFrameloader || !!browser.frameLoader.groupedSHistory;
+    let newFrameloader = aOptions.newFrameloader;
 
     let isRemotenessUpdate;
     if (aOptions.remoteType !== undefined) {

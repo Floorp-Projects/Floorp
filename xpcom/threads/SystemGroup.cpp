@@ -18,7 +18,7 @@ class SystemGroupImpl final : public SchedulerGroup
 {
 public:
   SystemGroupImpl();
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SystemGroupImpl)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SystemGroupImpl, override)
 
   static void InitStatic();
   static void ShutdownStatic();

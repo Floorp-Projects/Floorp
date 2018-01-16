@@ -294,12 +294,14 @@ public class UpdateService extends IntentService {
                     public void run() {
                         showPermissionNotification();
                         sendCheckUpdateResult(CheckUpdateResult.NOT_AVAILABLE);
-                    }})
+                    }
+                })
                 .run(new Runnable() {
                     @Override
                     public void run() {
                         startDownload(info, flags);
-                    }});
+                    }
+                });
     }
 
     private void startDownload(UpdateInfo info, int flags) {

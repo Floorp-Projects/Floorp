@@ -908,8 +908,6 @@ public:
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
 
-  bool GetIsPrerendered();
-
 private:
   void ReportLargeAllocStatus();
 

@@ -144,7 +144,7 @@ public:
   void SetCapitalization(uint32_t aStart, uint32_t aLength,
                          bool* aCapitalization);
   virtual bool SetPotentialLineBreaks(Range aRange,
-                                      const uint8_t* aBreakBefore);
+                                      const uint8_t* aBreakBefore) override;
   /**
    * Called after SetCapitalization and SetPotentialLineBreaks
    * are done and before we request any data from the textrun. Also always
@@ -160,8 +160,8 @@ public:
   }
 
   // override the gfxTextRun impls to account for additional members here
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) MOZ_MUST_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) MOZ_MUST_OVERRIDE;
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
   nsTransformingTextRunFactory       *mFactory;
   nsTArray<RefPtr<nsTransformedCharStyle>> mStyles;

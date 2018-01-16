@@ -34,25 +34,25 @@ protected:
   }
 
 public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion)
+  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     BorderLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void RenderLayer()
+  virtual void RenderLayer() override
   {
     RenderMaskLayers(this);
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
     aAttrs = BorderLayerAttributes(mRect, mColors, mCorners, mWidths);
   }
 
-  virtual Layer* AsLayer() { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() { return this; }
+  virtual Layer* AsLayer() override { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
 protected:
   ClientLayerManager* ClientManager()

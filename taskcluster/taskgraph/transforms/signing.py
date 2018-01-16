@@ -10,7 +10,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.schema import validate_schema, Schema
-from taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
+from taskgraph.util.scriptworker import (
+    get_signing_cert_scope_per_platform,
+    get_worker_type_for_scope,
+)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -135,7 +138,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': _generate_worker_type(signing_cert_scope),
+            'worker-type': get_worker_type_for_scope(config, signing_cert_scope),
             'worker': {'implementation': 'scriptworker-signing',
                        'upstream-artifacts': job['upstream-artifacts'],
                        'max-run-time': 3600},
@@ -157,8 +160,3 @@ def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
 
 def _generate_treeherder_symbol(is_nightly):
     return 'tc(Ns)' if is_nightly else 'tc(Bs)'
-
-
-def _generate_worker_type(signing_cert_scope):
-    worker_type = 'depsigning' if 'dep-signing' in signing_cert_scope else 'signing-linux-v1'
-    return 'scriptworker-prov-v1/{}'.format(worker_type)

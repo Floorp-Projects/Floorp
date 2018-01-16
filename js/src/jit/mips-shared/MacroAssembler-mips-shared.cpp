@@ -552,6 +552,7 @@ void
 MacroAssemblerMIPSShared::ma_load_unaligned(const wasm::MemoryAccessDesc& access, Register dest, const BaseIndex& src, Register temp,
                                             LoadStoreSize size, LoadStoreExtension extension)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     int16_t lowOffset, hiOffset;
     Register base;
 
@@ -704,6 +705,7 @@ void
 MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& access, Register data, const BaseIndex& dest, Register temp,
                                              LoadStoreSize size, LoadStoreExtension extension)
 {
+    MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     int16_t lowOffset, hiOffset;
     Register base;
 

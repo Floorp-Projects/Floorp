@@ -11,7 +11,7 @@ info: |
 features: [class, class-fields-private, class-fields-public]
 flags: [module]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

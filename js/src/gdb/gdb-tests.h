@@ -61,8 +61,8 @@ struct GDBFragment {
 
 #define FRAGMENT(category, subname)                                                             \
 class FRAGMENT_CLASS_NAME(category, subname): public GDBFragment {                              \
-    void run(JSContext* cx, const char**& argv);                                                \
-    const char* name() { return FRAGMENT_STRING_NAME(category, subname); }                      \
+    void run(JSContext* cx, const char**& argv) override;                                       \
+    const char* name() override { return FRAGMENT_STRING_NAME(category, subname); }             \
     static FRAGMENT_CLASS_NAME(category, subname) singleton;                                    \
 };                                                                                              \
 FRAGMENT_CLASS_NAME(category, subname) FRAGMENT_CLASS_NAME(category, subname)::singleton;       \

@@ -86,7 +86,7 @@ class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
         cacheInfoIndex_(cacheInfoIndex)
     { }
 
-    void bind(MacroAssembler* masm) {
+    void bind(MacroAssembler* masm) override {
         // The binding of the initial jump is done in
         // CodeGenerator::visitOutOfLineICFallback.
     }
@@ -101,7 +101,7 @@ class OutOfLineICFallback : public OutOfLineCodeBase<CodeGenerator>
         return lir_;
     }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineICFallback(this);
     }
 };
@@ -1935,7 +1935,7 @@ class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpMatcher(this);
     }
 
@@ -2092,7 +2092,7 @@ class OutOfLineRegExpSearcher : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpSearcher(this);
     }
 
@@ -2240,7 +2240,7 @@ class OutOfLineRegExpTester : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpTester(this);
     }
 
@@ -2304,7 +2304,7 @@ class OutOfLineRegExpPrototypeOptimizable : public OutOfLineCodeBase<CodeGenerat
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpPrototypeOptimizable(this);
     }
     LRegExpPrototypeOptimizable* ins() const {
@@ -2365,7 +2365,7 @@ class OutOfLineRegExpInstanceOptimizable : public OutOfLineCodeBase<CodeGenerato
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineRegExpInstanceOptimizable(this);
     }
     LRegExpInstanceOptimizable* ins() const {
@@ -2690,7 +2690,7 @@ class OutOfLineLambdaArrow : public OutOfLineCodeBase<CodeGenerator>
       : lir(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineLambdaArrow(this);
     }
 
@@ -2865,7 +2865,7 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
       : block(block), lir(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineInterruptCheckImplicit(this);
     }
 };
@@ -3721,7 +3721,7 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir), object_(object)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineCallPostWriteBarrier(this);
     }
 
@@ -3933,7 +3933,7 @@ class OutOfLineCallPostWriteElementBarrier : public OutOfLineCodeBase<CodeGenera
         index_(index)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineCallPostWriteElementBarrier(this);
     }
 
@@ -4078,28 +4078,47 @@ CodeGenerator::visitCallNative(LCallNative* call)
 }
 
 static void
-LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv)
+LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv, DOMObjectKind kind)
 {
     // Load the value in DOM_OBJECT_SLOT for a native or proxy DOM object. This
     // will be in the first slot but may be fixed or non-fixed.
     MOZ_ASSERT(obj != priv);
 
-    // Check shape->numFixedSlots != 0.
-    masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), priv);
+    // Check if it's a proxy.
+    Label isProxy, done;
+    if (kind == DOMObjectKind::Unknown)
+        masm.branchTestObjectIsProxy(true, obj, priv, &isProxy);
 
-    Label hasFixedSlots, done;
-    masm.branchTest32(Assembler::NonZero,
-                      Address(priv, Shape::offsetOfSlotInfo()),
-                      Imm32(Shape::fixedSlotsMask()),
-                      &hasFixedSlots);
+    if (kind != DOMObjectKind::Proxy) {
+#ifdef DEBUG
+        // If it's a native object, the value must be in a fixed slot.
+        Label hasFixedSlots;
+        masm.loadPtr(Address(obj, ShapedObject::offsetOfShape()), priv);
+        masm.branchTest32(Assembler::NonZero,
+                          Address(priv, Shape::offsetOfSlotInfo()),
+                          Imm32(Shape::fixedSlotsMask()),
+                          &hasFixedSlots);
+        masm.assumeUnreachable("Expected a fixed slot");
+        masm.bind(&hasFixedSlots);
+#endif
+        masm.loadPrivate(Address(obj, NativeObject::getFixedSlotOffset(0)), priv);
+        if (kind == DOMObjectKind::Unknown)
+            masm.jump(&done);
+    }
 
-    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), priv);
-    masm.loadPrivate(Address(priv, 0), priv);
-
-    masm.jump(&done);
-    masm.bind(&hasFixedSlots);
-
-    masm.loadPrivate(Address(obj, NativeObject::getFixedSlotOffset(0)), priv);
+    if (kind != DOMObjectKind::Native) {
+        masm.bind(&isProxy);
+#ifdef DEBUG
+        // Sanity check: it must be a DOM proxy.
+        Label isDOMProxy;
+        masm.branchTestProxyHandlerFamily(Assembler::Equal, obj, priv,
+                                          GetDOMProxyHandlerFamily(), &isDOMProxy);
+        masm.assumeUnreachable("Expected a DOM proxy");
+        masm.bind(&isDOMProxy);
+#endif
+        masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), priv);
+        masm.loadPrivate(Address(priv, detail::ProxyReservedSlots::offsetOfSlot(0)), priv);
+    }
 
     masm.bind(&done);
 }
@@ -4152,7 +4171,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
                      IonDOMMethodExitFrameLayoutTraits::offsetOfArgcFromArgv);
     masm.computeEffectiveAddress(Address(masm.getStackPointer(), 2 * sizeof(Value)), argArgs);
 
-    LoadDOMPrivate(masm, obj, argPrivate);
+    LoadDOMPrivate(masm, obj, argPrivate, static_cast<MCallDOMNative*>(call->mir())->objectKind());
 
     // Push argc from the call instruction into what will become the IonExitFrame
     masm.Push(Imm32(call->numActualArgs()));
@@ -4935,7 +4954,7 @@ class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitCheckOverRecursedFailure(this);
     }
 
@@ -5537,7 +5556,7 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNewArray(this);
     }
 
@@ -5855,7 +5874,7 @@ class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNewObject(this);
     }
 
@@ -8522,7 +8541,7 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
                    ins->isFallibleStoreElementV() || ins->isFallibleStoreElementT());
     }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineStoreElementHole(this);
     }
     LInstruction* ins() const {
@@ -9974,7 +9993,7 @@ class OutOfLineUnboxFloatingPoint : public OutOfLineCodeBase<CodeGenerator>
       : unboxFloatingPoint_(unboxFloatingPoint)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineUnboxFloatingPoint(this);
     }
 
@@ -10492,7 +10511,7 @@ class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineTypeOfV(this);
     }
     LTypeOfV* ins() const {
@@ -10985,7 +11004,7 @@ class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
     CodeLabel start_;
     bool isOutOfLine_;
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineSwitch(this);
     }
 
@@ -11634,7 +11653,7 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins)
 
     masm.Push(ObjectReg);
 
-    LoadDOMPrivate(masm, ObjectReg, PrivateReg);
+    LoadDOMPrivate(masm, ObjectReg, PrivateReg, ins->mir()->objectKind());
 
     // Rooting will happen at GC time.
     masm.moveStackPtrTo(ObjectReg);
@@ -11733,7 +11752,7 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins)
 
     masm.Push(ObjectReg);
 
-    LoadDOMPrivate(masm, ObjectReg, PrivateReg);
+    LoadDOMPrivate(masm, ObjectReg, PrivateReg, ins->mir()->objectKind());
 
     // Rooting will happen at GC time.
     masm.moveStackPtrTo(ObjectReg);
@@ -11770,7 +11789,7 @@ class OutOfLineIsCallable : public OutOfLineCodeBase<CodeGenerator>
       : object_(object), output_(output)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineIsCallable(this);
     }
     Register object() const {
@@ -11920,7 +11939,7 @@ class OutOfLineIsConstructor : public OutOfLineCodeBase<CodeGenerator>
       : ins_(ins)
     { }
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineIsConstructor(this);
     }
     LIsConstructor* ins() const {
@@ -12704,7 +12723,7 @@ class OutOfLineNaNToZero : public OutOfLineCodeBase<CodeGenerator>
       : lir_(lir)
     {}
 
-    void accept(CodeGenerator* codegen) {
+    void accept(CodeGenerator* codegen) override {
         codegen->visitOutOfLineNaNToZero(this);
     }
     LNaNToZero* lir() const {

@@ -7051,6 +7051,27 @@
     "n_buckets": 10,
     "description": "Time to fetch LocalStorage data before we can expose them as session only data (ms)"
   },
+  "LOGIN_REPUTATION_LOGIN_WHITELIST_RESULT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "enumerated",
+    "bug_numbers": [1422671],
+    "n_values": 3,
+    "description": "Login reputation login whitelist result (0=UNSPECIFIED, 1=SAFE, 2=ERROR)"
+  },
+  "LOGIN_REPUTATION_LOGIN_WHITELIST_LOOKUP_TIME": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dlee@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "bug_numbers": [1422671],
+    "high": 5000,
+    "n_buckets": 30,
+    "description": "Time spent per login reputation service lookup local whitelist (ms)"
+  },
   "RANGE_CHECKSUM_ERRORS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -7766,7 +7787,7 @@
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_ALL_CHILD_PROCESSES": {
-    "record_in_processes": ["all_children"],
+    "record_in_processes": ["all_childs"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -8569,26 +8590,17 @@
   },
   "MEDIA_EME_SECURE_CONTEXT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
+    "expires_in_version": "63",
     "kind": "boolean",
     "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
     "bug_numbers": [1360438]
   },
-  "VIDEO_CHROMIUM_CDM_MAX_SHMEMS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "bug_numbers": [1366639],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Counts of the maximum number of shared memory buffers used for transferring video frames between the CDM and Gecko processes during playback of DRM'd video. Reported once per CDMVideoDecoder instance, i.e., once per JavaScript SourceBuffer during playback of video using EME."
-  },
   "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
     "bug_numbers": [1368596],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Counts types of deprecation warnings logged on every successful call to navigator.requestMediaKeySystemAccess(). 0=No warnings logged, 1=MediaEMENoCapabilitiesDeprecatedWarning, 2=MediaEMENoCodecsDeprecatedWarning."
@@ -9417,7 +9429,7 @@
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "64",
     "kind": "exponential",
     "high": 3600,
     "n_buckets": 100,
@@ -9427,7 +9439,7 @@
   "MEDIA_RECORDER_TRACK_ENCODER_INIT_TIMEOUT_TYPE": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "64",
     "kind": "enumerated",
     "n_values": 4,
     "bug_numbers": [1400757],

@@ -9,7 +9,7 @@ description: >
   `await` is a reserved keyword within async generator function bodies and may
   not be used as the binding identifier of a parameter.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 features: [async-iteration]
 ---*/

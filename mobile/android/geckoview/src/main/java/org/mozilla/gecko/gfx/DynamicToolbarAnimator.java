@@ -82,7 +82,9 @@ public final class DynamicToolbarAnimator {
     }
 
     /**
-     * If true, scroll changes will not affect translation.
+     * Return whether the toolbar is pinned and cannot be hidden.
+     *
+     * @return True if the toolbar is pinned.
      */
     public boolean isPinned() {
         ThreadUtils.assertOnUiThread();

@@ -32,7 +32,6 @@ module.exports = {
       "browser/extensions/shield-recipe-client/test/browser/head.js",
       "browser/modules/offlineAppCache.jsm",
       "devtools/**",
-      "dom/indexedDB/**",
       "extensions/pref/**",
       "mobile/android/**",
       "testing/**",

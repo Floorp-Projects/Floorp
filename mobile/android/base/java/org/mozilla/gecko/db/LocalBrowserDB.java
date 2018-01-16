@@ -306,7 +306,11 @@ public class LocalBrowserDB extends BrowserDB {
                     bookmarkValue.put(Bookmarks.FAVICON_ID, faviconID);
                     faviconValues.add(iconValue);
                 }
-            } catch (IllegalAccessException | IllegalArgumentException | NoSuchFieldException e) {
+            } catch (IllegalAccessException e) {
+                Log.wtf(LOGTAG, "Reflection failure.", e);
+            } catch (IllegalArgumentException e) {
+                Log.wtf(LOGTAG, "Reflection failure.", e);
+            } catch (NoSuchFieldException e) {
                 Log.wtf(LOGTAG, "Reflection failure.", e);
             }
         }
@@ -502,7 +506,13 @@ public class LocalBrowserDB extends BrowserDB {
             faviconField.setAccessible(true);
 
             return faviconField.getInt(null);
-        } catch (IllegalAccessException | NoSuchFieldException e) {
+        } catch (IllegalAccessException e) {
+            // We'll end up here for any default bookmark that doesn't have a favicon in
+            // resources/raw/ (i.e., about:firefox). When this happens, the Favicons service will
+            // fall back to the default branding icon for about pages. Non-about pages should always
+            // specify an icon; otherwise, the placeholder globe favicon will be used.
+            Log.d(LOGTAG, "No raw favicon resource found for " + name);
+        } catch (NoSuchFieldException e) {
             // We'll end up here for any default bookmark that doesn't have a favicon in
             // resources/raw/ (i.e., about:firefox). When this happens, the Favicons service will
             // fall back to the default branding icon for about pages. Non-about pages should always

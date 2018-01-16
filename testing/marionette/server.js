@@ -53,7 +53,7 @@ const PREF_RECOMMENDED = "marionette.prefs.recommended";
 const NOTIFY_RUNNING = "remote-active";
 
 // Marionette sets preferences recommended for automation when it starts,
-// unless |marionette.prefs.recommended| has been set to false.
+// unless marionette.prefs.recommended has been set to false.
 // Where noted, some prefs should also be set in the profile passed to
 // Marionette to prevent them from affecting startup, since some of these
 // are checked before Marionette initialises.
@@ -291,8 +291,8 @@ const RECOMMENDED_PREFS = new Map([
  * Bootstraps Marionette and handles incoming client connections.
  *
  * Starting the Marionette server will open a TCP socket sporting the
- * debugger transport interface on the provided |port|.  For every new
- * connection, a |server.TCPConnection| is created.
+ * debugger transport interface on the provided <var>port</var>.
+ * For every new connection, a {@link server.TCPConnection} is created.
  */
 server.TCPListener = class {
   /**
@@ -341,11 +341,11 @@ server.TCPListener = class {
   }
 
   /**
-   * Bind this listener to |port| and start accepting incoming socket
-   * connections on |onSocketAccepted|.
+   * Bind this listener to {@link #port} and start accepting incoming
+   * socket connections on {@link #onSocketAccepted}.
    *
    * The marionette.port preference will be populated with the value
-   * of |this.port|.
+   * of {@link #port}.
    */
   start() {
     if (this.alive) {
@@ -425,7 +425,7 @@ server.TCPListener = class {
  * @param {DebuggerTransport} transport
  *     Debugger transport connection to the client.
  * @param {function(): GeckoDriver} driverFactory
- *     Factory function that produces a |GeckoDriver|.
+ *     Factory function that produces a {@link GeckoDriver}.
  */
 server.TCPConnection = class {
   constructor(connID, transport, driverFactory) {
@@ -566,13 +566,13 @@ server.TCPConnection = class {
   }
 
   /**
-   * Fail-safe creation of a new instance of |message.Response|.
+   * Fail-safe creation of a new instance of {@link Response}.
    *
    * @param {number} msgID
    *     Message ID to respond to.  If it is not a number, -1 is used.
    *
-   * @return {message.Response}
-   *     Response to the message with |msgID|.
+   * @return {Response}
+   *     Response to the message with <var>msgID</var>.
    */
   createResponse(msgID) {
     if (typeof msgID != "number") {

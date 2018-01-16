@@ -153,23 +153,8 @@ interface nsIServiceWorkerManager : nsISupports
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in DOMString aScope);
 
-  /**
-   * Call this to request that document `aDoc` be controlled by a ServiceWorker
-   * if a registration exists for it's scope.
-   *
-   * This MUST only be called once per document!
-   */
-  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc);
-
   [notxpcom, nostdcall] bool StartControlling(in const_ClientInfoRef aClientInfo,
                                               in const_ServiceWorkerDescriptorRef aServiceWorker);
-
-  /**
-   * Documents that have called MaybeStartControlling() should call this when
-   * they are destroyed. This function may be called multiple times, and is
-   * idempotent.
-   */
-  [notxpcom,nostdcall] void MaybeStopControlling(in nsIDocument aDoc);
 
   /*
    * Returns a ServiceWorker.

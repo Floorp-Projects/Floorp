@@ -64,7 +64,7 @@ public:
     eNEXT =         0x00000008,
     eALTERNATE =    0x00000010,
     ePRECONNECT =   0x00000020,
-    ePRERENDER =    0x00000040,
+    // NOTE: 0x40 is unused
     ePRELOAD =      0x00000080
   };
 

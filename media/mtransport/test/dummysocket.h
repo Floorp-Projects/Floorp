@@ -58,46 +58,45 @@ class DummySocket : public NrSocketBase {
         self_(nullptr) {}
 
   // the nr_socket APIs
-  virtual int create(nr_transport_addr *addr) {
+  virtual int create(nr_transport_addr *addr) override {
     return 0;
   }
 
   virtual int sendto(const void *msg, size_t len,
-                     int flags, nr_transport_addr *to) {
+                     int flags, nr_transport_addr *to) override {
     MOZ_CRASH();
     return 0;
   }
 
   virtual int recvfrom(void * buf, size_t maxlen,
                        size_t *len, int flags,
-                       nr_transport_addr *from) {
+                       nr_transport_addr *from) override {
     MOZ_CRASH();
     return 0;
   }
 
-  virtual int getaddr(nr_transport_addr *addrp) {
+  virtual int getaddr(nr_transport_addr *addrp) override {
     MOZ_CRASH();
     return 0;
   }
 
-  virtual void close() {
+  virtual void close() override {
   }
 
-  virtual int connect(nr_transport_addr *addr) {
+  virtual int connect(nr_transport_addr *addr) override {
     nr_transport_addr_copy(&connect_addr_, addr);
     return 0;
   }
 
-  virtual int listen(int backlog) {
+  virtual int listen(int backlog) override {
     return 0;
   }
 
-  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) {
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override {
     return 0;
   }
 
-
-  virtual int write(const void *msg, size_t len, size_t *written) {
+  virtual int write(const void *msg, size_t len, size_t *written) override {
     size_t to_write = std::min(len, writable_);
 
     if (to_write) {
@@ -110,7 +109,7 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
-  virtual int read(void* buf, size_t maxlen, size_t *len) {
+  virtual int read(void* buf, size_t maxlen, size_t *len) override {
     if (!read_buffer_.get()) {
       return R_WOULDBLOCK;
     }
@@ -135,7 +134,7 @@ class DummySocket : public NrSocketBase {
   // These are no-ops because we handle scheduling manually
   // for test purposes.
   virtual int async_wait(int how, NR_async_cb cb, void *cb_arg,
-                         char *function, int line) {
+                         char *function, int line) override {
     EXPECT_EQ(nullptr, cb_);
     cb_ = cb;
     cb_arg_ = cb_arg;
@@ -143,13 +142,12 @@ class DummySocket : public NrSocketBase {
     return 0;
   }
 
-  virtual int cancel(int how) {
+  virtual int cancel(int how) override {
     cb_ = nullptr;
     cb_arg_ = nullptr;
 
     return 0;
   }
-
 
   // Read/Manipulate the current state.
   void CheckWriteBuffer(const uint8_t *data, size_t len) {
@@ -208,7 +206,7 @@ class DummySocket : public NrSocketBase {
     return &connect_addr_;
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DummySocket);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DummySocket, override);
 
  private:
   ~DummySocket() {}
@@ -230,4 +228,3 @@ class DummySocket : public NrSocketBase {
 } //namespace mozilla
 
 #endif
-

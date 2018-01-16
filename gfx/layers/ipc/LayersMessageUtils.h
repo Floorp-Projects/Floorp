@@ -22,6 +22,7 @@
 #include "mozilla/layers/KeyboardMap.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/Move.h"
 
 #include <stdint.h>

@@ -602,7 +602,7 @@
   <toolbox id="navigator-toolbox">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
-             mode="icons" iconsize="small"
+             mode="icons"
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
@@ -628,7 +628,6 @@
              fullscreentoolbar="true"
              customizable="true"
              mode="icons"
-             iconsize="small"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              collapsed="true">
@@ -711,7 +710,6 @@
     <toolbar id="nav-bar"
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
-             iconsize="small"
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
@@ -979,7 +977,7 @@
     </toolbar>
 
     <toolbar id="PersonalToolbar"
-             mode="icons" iconsize="small"
+             mode="icons"
              class="chromeclass-directories"
              context="toolbar-context-menu"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"

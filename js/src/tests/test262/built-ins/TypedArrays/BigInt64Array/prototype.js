@@ -5,7 +5,7 @@
 /*---
 esid: sec-typedarray.prototype
 description: BigInt64Array.prototype property descriptor
-info: >
+info: |
   22.2.5.2 TypedArray.prototype
 
   The initial value of TypedArray.prototype is the corresponding

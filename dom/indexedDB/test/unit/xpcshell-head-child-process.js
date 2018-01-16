@@ -6,6 +6,8 @@
 function run_test() {
   const { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
+  Cu.import("resource://gre/modules/Services.jsm");
+
   const INDEXEDDB_HEAD_FILE = "xpcshell-head-parent-process.js";
   const INDEXEDDB_PREF_EXPERIMENTAL = "dom.indexedDB.experimental";
 
@@ -20,10 +22,7 @@ function run_test() {
   _HEAD_FILES.push(do_get_file(INDEXEDDB_HEAD_FILE).path.replace(/\\/g, "/"));
 
 
-  let prefs =
-    Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService)
-                                            .getBranch(null);
-  prefs.setBoolPref(INDEXEDDB_PREF_EXPERIMENTAL, true);
+  Services.prefs.setBoolPref(INDEXEDDB_PREF_EXPERIMENTAL, true);
 
   run_test_in_child(thisTest);
 }

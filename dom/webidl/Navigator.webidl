@@ -78,7 +78,7 @@ interface NavigatorContentUtils {
   // content handler registration
   [Throws]
   void registerProtocolHandler(DOMString scheme, DOMString url, DOMString title);
-  [Throws]
+  [Pref="dom.registerContentHandler.enabled", Throws]
   void registerContentHandler(DOMString mimeType, DOMString url, DOMString title);
   // NOT IMPLEMENTED
   //DOMString isProtocolHandlerRegistered(DOMString scheme, DOMString url);
@@ -237,7 +237,7 @@ partial interface Navigator {
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime
 partial interface Navigator {
-  [Throws, ChromeOnly, UnsafeInPrerendering]
+  [Throws, ChromeOnly]
   readonly attribute MozTimeManager mozTime;
 };
 #endif // MOZ_TIME_MANAGER
@@ -251,7 +251,7 @@ partial interface Navigator {
 
   // Deprecated. Use mediaDevices.getUserMedia instead.
   [Deprecated="NavigatorGetUserMedia", Throws,
-   Func="Navigator::HasUserMediaSupport", UnsafeInPrerendering,
+   Func="Navigator::HasUserMediaSupport",
    NeedsCallerType]
   void mozGetUserMedia(MediaStreamConstraints constraints,
                        NavigatorUserMediaSuccessCallback successCallback,

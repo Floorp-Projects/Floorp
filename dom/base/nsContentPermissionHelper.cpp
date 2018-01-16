@@ -143,10 +143,10 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
   nsTArray<PermissionRequest> mRequests;
 
  private:
-  virtual mozilla::ipc::IPCResult Recvprompt();
-  virtual mozilla::ipc::IPCResult RecvNotifyVisibility(const bool& aIsVisible);
-  virtual mozilla::ipc::IPCResult RecvDestroy();
-  virtual void ActorDestroy(ActorDestroyReason why);
+  virtual mozilla::ipc::IPCResult Recvprompt() override;
+  virtual mozilla::ipc::IPCResult RecvNotifyVisibility(const bool& aIsVisible) override;
+  virtual mozilla::ipc::IPCResult RecvDestroy() override;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 };
 
 ContentPermissionRequestParent::ContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,

@@ -186,7 +186,7 @@ private:
         {
             explicit StatusMatcher(ScriptStatus status) : mStatus(status) {}
 
-            virtual bool Matches(CachedScript* script)
+            virtual bool Matches(CachedScript* script) override
             {
                 return script->Status() == mStatus;
             }

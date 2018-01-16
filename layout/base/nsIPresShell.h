@@ -1003,7 +1003,7 @@ public:
    */
   virtual void ContentStateChanged(nsIDocument* aDocument,
                                    nsIContent* aContent,
-                                   mozilla::EventStates aStateMask) = 0;
+                                   mozilla::EventStates aStateMask) override = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add

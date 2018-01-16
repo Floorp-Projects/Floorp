@@ -667,6 +667,7 @@ extern CK_RV sftk_handleObject(SFTKObject *object, SFTKSession *session);
 
 extern SFTKSlot *sftk_SlotFromID(CK_SLOT_ID slotID, PRBool all);
 extern SFTKSlot *sftk_SlotFromSessionHandle(CK_SESSION_HANDLE handle);
+extern CK_SLOT_ID sftk_SlotIDFromSessionHandle(CK_SESSION_HANDLE handle);
 extern SFTKSession *sftk_SessionFromHandle(CK_SESSION_HANDLE handle);
 extern void sftk_FreeSession(SFTKSession *session);
 extern SFTKSession *sftk_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify,

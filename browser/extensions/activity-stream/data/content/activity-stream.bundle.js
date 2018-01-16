@@ -65,9 +65,16 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* unused harmony export MAIN_MESSAGE_TYPE */
+/* unused harmony export CONTENT_MESSAGE_TYPE */
+/* unused harmony export PRELOAD_MESSAGE_TYPE */
+/* unused harmony export UI_CODE */
+/* unused harmony export BACKGROUND_PROCESS */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return actionCreators; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return actionUtils; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -75,6 +82,7 @@
 
 var MAIN_MESSAGE_TYPE = "ActivityStream:Main";
 var CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
+var PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
 var UI_CODE = 1;
 var BACKGROUND_PROCESS = 2;
 
@@ -85,8 +93,9 @@ var BACKGROUND_PROCESS = 2;
  */
 
 const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS : UI_CODE;
-// Export for tests
+/* unused harmony export globalImportContext */
 
+// Export for tests
 
 // Create an object that avoids accidental differing key/value pairs:
 // {
@@ -94,6 +103,9 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
+/* harmony export (immutable) */ __webpack_exports__["b"] = actionTypes;
+
+
 for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
@@ -161,6 +173,19 @@ function SendToContent(action, target) {
     from: MAIN_MESSAGE_TYPE,
     to: CONTENT_MESSAGE_TYPE,
     toTarget: target
+  });
+}
+
+/**
+ * SendToPreloaded - Creates a message that will be sent to the preloaded tab.
+ *
+ * @param  {object} action Any redux action (required)
+ * @return {object} An action with added .meta properties
+ */
+function SendToPreloaded(action) {
+  return _RouteMessage(action, {
+    from: MAIN_MESSAGE_TYPE,
+    to: PRELOAD_MESSAGE_TYPE
   });
 }
 
@@ -236,6 +261,7 @@ var actionCreators = {
   ImpressionStats,
   SendToContent,
   SendToMain,
+  SendToPreloaded,
   SetPref
 };
 
@@ -266,6 +292,12 @@ var actionUtils = {
     }
     return false;
   },
+  isSendToPreloaded(action) {
+    if (!action.meta) {
+      return false;
+    }
+    return action.meta.to === PRELOAD_MESSAGE_TYPE && action.meta.from === MAIN_MESSAGE_TYPE;
+  },
   isFromMain(action) {
     if (!action.meta) {
       return false;
@@ -276,16 +308,6 @@ var actionUtils = {
     return action.meta && action.meta.fromTarget || null;
   },
   _RouteMessage
-};
-module.exports = {
-  actionTypes,
-  actionCreators,
-  actionUtils,
-  globalImportContext,
-  UI_CODE,
-  BACKGROUND_PROCESS,
-  MAIN_MESSAGE_TYPE,
-  CONTENT_MESSAGE_TYPE
 };
 
 /***/ }),
@@ -335,19 +357,63 @@ module.exports = g;
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+
+// EXTERNAL MODULE: ./system-addon/common/Actions.jsm
+var Actions = __webpack_require__(0);
+
+// CONCATENATED MODULE: ./system-addon/common/Dedupe.jsm
+class Dedupe {
+  constructor(createKey) {
+    this.createKey = createKey || this.defaultCreateKey;
+  }
+
+  defaultCreateKey(item) {
+    return item;
+  }
+
+  /**
+   * Dedupe any number of grouped elements favoring those from earlier groups.
+   *
+   * @param {Array} groups Contains an arbitrary number of arrays of elements.
+   * @returns {Array} A matching array of each provided group deduped.
+   */
+  group(...groups) {
+    const globalKeys = new Set();
+    const result = [];
+    for (const values of groups) {
+      const valueMap = new Map();
+      for (const value of values) {
+        const key = this.createKey(value);
+        if (!globalKeys.has(key) && !valueMap.has(key)) {
+          valueMap.set(key, value);
+        }
+      }
+      result.push(valueMap);
+      valueMap.forEach((value, key) => globalKeys.add(key));
+    }
+    return result.map(m => Array.from(m.values()));
+  }
+}
+// CONCATENATED MODULE: ./system-addon/common/Reducers.jsm
+/* unused harmony export insertPinned */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return reducers; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const { actionTypes: at } = __webpack_require__(0);
-const { Dedupe } = __webpack_require__(13);
+
 
 const TOP_SITES_DEFAULT_LENGTH = 6;
+/* harmony export (immutable) */ __webpack_exports__["a"] = TOP_SITES_DEFAULT_LENGTH;
+
 const TOP_SITES_SHOWMORE_LENGTH = 12;
+/* harmony export (immutable) */ __webpack_exports__["b"] = TOP_SITES_SHOWMORE_LENGTH;
+
+
 
 const dedupe = new Dedupe(site => site && site.url);
 
@@ -382,10 +448,13 @@ const INITIAL_STATE = {
   Sections: [],
   PreferencesPane: { visible: false }
 };
+/* unused harmony export INITIAL_STATE */
+
+
 
 function App(prevState = INITIAL_STATE.App, action) {
   switch (action.type) {
-    case at.INIT:
+    case Actions["b" /* actionTypes */].INIT:
       return Object.assign({}, prevState, action.data || {}, { initialized: true });
     default:
       return prevState;
@@ -427,20 +496,21 @@ function insertPinned(links, pinned) {
   return newLinks;
 }
 
+
 function TopSites(prevState = INITIAL_STATE.TopSites, action) {
   let hasMatch;
   let newRows;
   switch (action.type) {
-    case at.TOP_SITES_UPDATED:
+    case Actions["b" /* actionTypes */].TOP_SITES_UPDATED:
       if (!action.data) {
         return prevState;
       }
       return Object.assign({}, prevState, { initialized: true, rows: action.data });
-    case at.TOP_SITES_EDIT:
+    case Actions["b" /* actionTypes */].TOP_SITES_EDIT:
       return Object.assign({}, prevState, { editForm: { visible: true, index: action.data.index } });
-    case at.TOP_SITES_CANCEL_EDIT:
+    case Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, { editForm: { visible: false } });
-    case at.SCREENSHOT_UPDATED:
+    case Actions["b" /* actionTypes */].SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {
           hasMatch = true;
@@ -449,7 +519,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return row;
       });
       return hasMatch ? Object.assign({}, prevState, { rows: newRows }) : prevState;
-    case at.PLACES_BOOKMARK_ADDED:
+    case Actions["b" /* actionTypes */].PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -461,7 +531,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case at.PLACES_BOOKMARK_REMOVED:
+    case Actions["b" /* actionTypes */].PLACES_BOOKMARK_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -483,11 +553,11 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
 
 function Dialog(prevState = INITIAL_STATE.Dialog, action) {
   switch (action.type) {
-    case at.DIALOG_OPEN:
+    case Actions["b" /* actionTypes */].DIALOG_OPEN:
       return Object.assign({}, prevState, { visible: true, data: action.data });
-    case at.DIALOG_CANCEL:
+    case Actions["b" /* actionTypes */].DIALOG_CANCEL:
       return Object.assign({}, prevState, { visible: false });
-    case at.DELETE_HISTORY_URL:
+    case Actions["b" /* actionTypes */].DELETE_HISTORY_URL:
       return Object.assign({}, INITIAL_STATE.Dialog);
     default:
       return prevState;
@@ -497,9 +567,9 @@ function Dialog(prevState = INITIAL_STATE.Dialog, action) {
 function Prefs(prevState = INITIAL_STATE.Prefs, action) {
   let newValues;
   switch (action.type) {
-    case at.PREFS_INITIAL_VALUES:
+    case Actions["b" /* actionTypes */].PREFS_INITIAL_VALUES:
       return Object.assign({}, prevState, { initialized: true, values: action.data });
-    case at.PREF_CHANGED:
+    case Actions["b" /* actionTypes */].PREF_CHANGED:
       newValues = Object.assign({}, prevState.values);
       newValues[action.data.name] = action.data.value;
       return Object.assign({}, prevState, { values: newValues });
@@ -512,9 +582,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
   let hasMatch;
   let newState;
   switch (action.type) {
-    case at.SECTION_DEREGISTER:
+    case Actions["b" /* actionTypes */].SECTION_DEREGISTER:
       return prevState.filter(section => section.id !== action.data);
-    case at.SECTION_REGISTER:
+    case Actions["b" /* actionTypes */].SECTION_REGISTER:
       // If section exists in prevState, update it
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
@@ -547,7 +617,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         newState.splice(index, 0, section);
       }
       return newState;
-    case at.SECTION_UPDATE:
+    case Actions["b" /* actionTypes */].SECTION_UPDATE:
       newState = prevState.map(section => {
         if (section && section.id === action.data.id) {
           // If the action is updating rows, we should consider initialized to be true.
@@ -579,7 +649,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       });
 
       return newState;
-    case at.SECTION_UPDATE_CARD:
+    case Actions["b" /* actionTypes */].SECTION_UPDATE_CARD:
       return prevState.map(section => {
         if (section && section.id === action.data.id && section.rows) {
           const newRows = section.rows.map(card => {
@@ -592,7 +662,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
-    case at.PLACES_BOOKMARK_ADDED:
+    case Actions["b" /* actionTypes */].PLACES_BOOKMARK_ADDED:
       if (!action.data) {
         return prevState;
       }
@@ -611,7 +681,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           return item;
         })
       }));
-    case at.PLACES_BOOKMARK_REMOVED:
+    case Actions["b" /* actionTypes */].PLACES_BOOKMARK_REMOVED:
       if (!action.data) {
         return prevState;
       }
@@ -631,9 +701,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           return item;
         })
       }));
-    case at.PLACES_LINKS_DELETED:
+    case Actions["b" /* actionTypes */].PLACES_LINKS_DELETED:
       return prevState.map(section => Object.assign({}, section, { rows: section.rows.filter(site => !action.data.includes(site.url)) }));
-    case at.PLACES_LINK_BLOCKED:
+    case Actions["b" /* actionTypes */].PLACES_LINK_BLOCKED:
       return prevState.map(section => Object.assign({}, section, { rows: section.rows.filter(site => site.url !== action.data.url) }));
     default:
       return prevState;
@@ -642,9 +712,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
 
 function Snippets(prevState = INITIAL_STATE.Snippets, action) {
   switch (action.type) {
-    case at.SNIPPETS_DATA:
+    case Actions["b" /* actionTypes */].SNIPPETS_DATA:
       return Object.assign({}, prevState, { initialized: true }, action.data);
-    case at.SNIPPETS_RESET:
+    case Actions["b" /* actionTypes */].SNIPPETS_RESET:
       return INITIAL_STATE.Snippets;
     default:
       return prevState;
@@ -653,9 +723,9 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
 
 function PreferencesPane(prevState = INITIAL_STATE.PreferencesPane, action) {
   switch (action.type) {
-    case at.SETTINGS_OPEN:
+    case Actions["b" /* actionTypes */].SETTINGS_OPEN:
       return Object.assign({}, prevState, { visible: true });
-    case at.SETTINGS_CLOSE:
+    case Actions["b" /* actionTypes */].SETTINGS_CLOSE:
       return Object.assign({}, prevState, { visible: false });
     default:
       return prevState;
@@ -663,13 +733,6 @@ function PreferencesPane(prevState = INITIAL_STATE.PreferencesPane, action) {
 }
 
 var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane };
-module.exports = {
-  reducers,
-  INITIAL_STATE,
-  insertPinned,
-  TOP_SITES_DEFAULT_LENGTH,
-  TOP_SITES_SHOWMORE_LENGTH
-};
 
 /***/ }),
 /* 6 */
@@ -679,7 +742,6 @@ module.exports = {
 
 // EXTERNAL MODULE: ./system-addon/common/Actions.jsm
 var Actions = __webpack_require__(0);
-var Actions_default = /*#__PURE__*/__webpack_require__.n(Actions);
 
 // EXTERNAL MODULE: external "React"
 var external__React_ = __webpack_require__(1);
@@ -783,8 +845,8 @@ const LinkMenuOptions = {
   RemoveBookmark: site => ({
     id: "menu_action_remove_bookmark",
     icon: "bookmark-added",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].DELETE_BOOKMARK_BY_ID,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].DELETE_BOOKMARK_BY_ID,
       data: site.bookmarkGuid
     }),
     userEvent: "BOOKMARK_DELETE"
@@ -792,8 +854,8 @@ const LinkMenuOptions = {
   AddBookmark: site => ({
     id: "menu_action_bookmark",
     icon: "bookmark-hollow",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].BOOKMARK_URL,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].BOOKMARK_URL,
       data: { url: site.url, title: site.title, type: site.type }
     }),
     userEvent: "BOOKMARK_ADD"
@@ -801,8 +863,8 @@ const LinkMenuOptions = {
   OpenInNewWindow: site => ({
     id: "menu_action_open_new_window",
     icon: "new-window",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].OPEN_NEW_WINDOW,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].OPEN_NEW_WINDOW,
       data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_NEW_WINDOW"
@@ -810,8 +872,8 @@ const LinkMenuOptions = {
   OpenInPrivateWindow: site => ({
     id: "menu_action_open_private_window",
     icon: "new-window-private",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].OPEN_PRIVATE_WINDOW,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].OPEN_PRIVATE_WINDOW,
       data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_PRIVATE_WINDOW"
@@ -819,11 +881,11 @@ const LinkMenuOptions = {
   BlockUrl: (site, index, eventSource) => ({
     id: "menu_action_dismiss",
     icon: "dismiss",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].BLOCK_URL,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].BLOCK_URL,
       data: site.url
     }),
-    impression: Actions["actionCreators"].ImpressionStats({
+    impression: Actions["a" /* actionCreators */].ImpressionStats({
       source: eventSource,
       block: 0,
       tiles: [{ id: site.guid, pos: index }]
@@ -834,9 +896,9 @@ const LinkMenuOptions = {
     id: "menu_action_delete",
     icon: "delete",
     action: {
-      type: Actions["actionTypes"].DIALOG_OPEN,
+      type: Actions["b" /* actionTypes */].DIALOG_OPEN,
       data: {
-        onConfirm: [Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].DELETE_HISTORY_URL, data: { url: site.url, forceBlock: site.bookmarkGuid } }), Actions["actionCreators"].UserEvent({ event: "DELETE" })],
+        onConfirm: [Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].DELETE_HISTORY_URL, data: { url: site.url, forceBlock: site.bookmarkGuid } }), Actions["a" /* actionCreators */].UserEvent({ event: "DELETE" })],
         body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
         confirm_button_string_id: "menu_action_delete",
         cancel_button_string_id: "topsites_form_cancel_button",
@@ -848,8 +910,8 @@ const LinkMenuOptions = {
   PinTopSite: (site, index) => ({
     id: "menu_action_pin",
     icon: "pin",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].TOP_SITES_PIN,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
       data: { site: { url: site.url }, index }
     }),
     userEvent: "PIN"
@@ -857,8 +919,8 @@ const LinkMenuOptions = {
   UnpinTopSite: site => ({
     id: "menu_action_unpin",
     icon: "unpin",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].TOP_SITES_UNPIN,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
       data: { site: { url: site.url } }
     }),
     userEvent: "UNPIN"
@@ -866,11 +928,11 @@ const LinkMenuOptions = {
   SaveToPocket: (site, index, eventSource) => ({
     id: "menu_action_save_to_pocket",
     icon: "pocket",
-    action: Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].SAVE_TO_POCKET,
+    action: Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].SAVE_TO_POCKET,
       data: { site: { url: site.url, title: site.title } }
     }),
-    impression: Actions["actionCreators"].ImpressionStats({
+    impression: Actions["a" /* actionCreators */].ImpressionStats({
       source: eventSource,
       pocket: 0,
       tiles: [{ id: site.guid, pos: index }]
@@ -881,7 +943,7 @@ const LinkMenuOptions = {
     id: "edit_topsites_button_text",
     icon: "edit",
     action: {
-      type: Actions["actionTypes"].TOP_SITES_EDIT,
+      type: Actions["b" /* actionTypes */].TOP_SITES_EDIT,
       data: { index }
     }
   }),
@@ -912,7 +974,7 @@ class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
         option.onClick = () => {
           props.dispatch(action);
           if (userEvent) {
-            props.dispatch(Actions["actionCreators"].UserEvent({
+            props.dispatch(Actions["a" /* actionCreators */].UserEvent({
               event: userEvent,
               source,
               action_position: index
@@ -953,7 +1015,6 @@ const LinkMenu = Object(external__ReactIntl_["injectIntl"])(LinkMenu__LinkMenu);
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(1);
@@ -1007,8 +1068,8 @@ class Info extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.PureComponent {
     this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
   }
   onManageClick() {
-    this.props.dispatch({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SETTINGS_OPEN });
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
+    this.props.dispatch({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SETTINGS_OPEN });
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
   }
   render() {
     const { infoOption, intl } = this.props;
@@ -1075,8 +1136,8 @@ class Disclaimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.PureCompo
   }
 
   onAcknowledge() {
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SetPref(this.props.disclaimerPref, false));
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].UserEvent({ event: "SECTION_DISCLAIMER_ACKNOWLEDGED", source: this.props.eventSource }));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SetPref(this.props.disclaimerPref, false));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].UserEvent({ event: "SECTION_DISCLAIMER_ACKNOWLEDGED", source: this.props.eventSource }));
   }
 
   render() {
@@ -1170,7 +1231,7 @@ class _CollapsibleSection extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.
       isAnimating: true,
       maxHeight: `${this.sectionBody.scrollHeight}px`
     });
-    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SetPref(this.props.prefName, !getCollapsed(this.props)));
+    this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SetPref(this.props.prefName, !getCollapsed(this.props)));
   }
   onTransitionEnd(event) {
     // Only update the animating state for our own transition (not a child's)
@@ -1247,9 +1308,7 @@ const CollapsibleSection = Object(__WEBPACK_IMPORTED_MODULE_1_react_intl__["inje
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_react__);
 
@@ -1264,7 +1323,7 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
   constructor(props) {
     super(props);
     // Just for test dependency injection:
-    this.perfSvc = this.props.perfSvc || __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__["perfService"];
+    this.perfSvc = this.props.perfSvc || __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__["a" /* perfService */];
 
     this._sendBadStateEvent = this._sendBadStateEvent.bind(this);
     this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
@@ -1370,8 +1429,8 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
       const firstRenderKey = `${this.props.id}_first_render_ts`;
       // value has to be Int32.
       const value = parseInt(this.perfSvc.getMostRecentAbsMarkStartByName(dataReadyKey) - this.perfSvc.getMostRecentAbsMarkStartByName(firstRenderKey), 10);
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({
-        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({
+        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SAVE_SESSION_PERF_DATA,
         // highlights_data_late_by_ms, topsites_data_late_by_ms.
         data: { [`${this.props.id}_data_late_by_ms`]: value }
       }));
@@ -1395,8 +1454,8 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
       const data = {};
       data[key] = this.perfSvc.getMostRecentAbsMarkStartByName(key);
 
-      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({
-        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SAVE_SESSION_PERF_DATA,
+      this.props.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({
+        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SAVE_SESSION_PERF_DATA,
         data
       }));
     } catch (ex) {
@@ -1419,9 +1478,11 @@ class ComponentPerfTimer extends __WEBPACK_IMPORTED_MODULE_2_react___default.a.C
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* unused harmony export _PerfService */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return perfService; });
 /* globals Services */
 
 
@@ -1453,7 +1514,7 @@ if (typeof Services !== "undefined") {
   };
 }
 
-var _PerfService = function _PerfService(options) {
+function _PerfService(options) {
   // For testing, so that we can use a fake Window.performance object with
   // known state.
   if (options && options.performanceObj) {
@@ -1461,7 +1522,8 @@ var _PerfService = function _PerfService(options) {
   } else {
     this._perf = usablePerfObj;
   }
-};
+}
+
 
 _PerfService.prototype = {
   /**
@@ -1549,10 +1611,6 @@ _PerfService.prototype = {
 };
 
 var perfService = new _PerfService();
-module.exports = {
-  _PerfService,
-  perfService
-};
 
 /***/ }),
 /* 10 */
@@ -1561,19 +1619,17 @@ module.exports = {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_content_src_components_Base_Base__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__ = __webpack_require__(18);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom__ = __webpack_require__(20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_react_dom___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_7_react_dom__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__);
 
 
 
@@ -1584,7 +1640,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-const store = Object(__WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__["a" /* initStore */])(__WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__["reducers"], global.gActivityStreamPrerenderedState);
+const store = Object(__WEBPACK_IMPORTED_MODULE_4_content_src_lib_init_store__["a" /* initStore */])(__WEBPACK_IMPORTED_MODULE_8_common_Reducers_jsm__["c" /* reducers */], global.gActivityStreamPrerenderedState);
 
 new __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__["a" /* DetectUserSessionStart */](store).sendEventOrAddListener();
 
@@ -1592,7 +1648,7 @@ new __WEBPACK_IMPORTED_MODULE_3_content_src_lib_detect_user_session_start__["a" 
 // to request state rehydration (see Base.jsx). If we are NOT in a prerendered state,
 // we can request it immedately.
 if (!global.gActivityStreamPrerenderedState) {
-  store.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].NEW_TAB_STATE_REQUEST }));
+  store.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].NEW_TAB_STATE_REQUEST }));
 }
 
 __WEBPACK_IMPORTED_MODULE_7_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
@@ -1614,7 +1670,6 @@ Object(__WEBPACK_IMPORTED_MODULE_1_content_src_lib_snippets__["a" /* addSnippets
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["a"] = addSnippetsSubscriber;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
 const DATABASE_NAME = "snippets_db";
 const DATABASE_VERSION = 1;
 const SNIPPETS_OBJECTSTORE_NAME = "snippets";
@@ -1675,17 +1730,17 @@ class SnippetsMap extends Map {
     let blockList = this.blockList;
     if (!blockList.includes(id)) {
       blockList.push(id);
-      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SNIPPETS_BLOCKLIST_UPDATED, data: blockList }));
+      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPETS_BLOCKLIST_UPDATED, data: blockList }));
       await this.set("blockList", blockList);
     }
   }
 
   disableOnboarding() {
-    this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].DISABLE_ONBOARDING }));
+    this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].DISABLE_ONBOARDING }));
   }
 
   showFirefoxAccounts() {
-    this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SHOW_FIREFOX_ACCOUNTS }));
+    this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SHOW_FIREFOX_ACCOUNTS }));
   }
 
   /**
@@ -1881,7 +1936,7 @@ class SnippetsProvider {
   }
 
   _onAction(msg) {
-    if (msg.data.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SNIPPET_BLOCKED) {
+    if (msg.data.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SNIPPET_BLOCKED) {
       this.snippetsMap.set("blockList", msg.data.data);
       document.getElementById("snippets-container").style.display = "none";
     }
@@ -1993,7 +2048,6 @@ function addSnippetsSubscriber(store) {
 
 // EXTERNAL MODULE: ./system-addon/common/Actions.jsm
 var Actions = __webpack_require__(0);
-var Actions_default = /*#__PURE__*/__webpack_require__.n(Actions);
 
 // EXTERNAL MODULE: external "ReactIntl"
 var external__ReactIntl_ = __webpack_require__(2);
@@ -2040,8 +2094,8 @@ class ConfirmDialog__ConfirmDialog extends external__React__default.a.PureCompon
   }
 
   _handleCancelBtn() {
-    this.props.dispatch({ type: Actions["actionTypes"].DIALOG_CANCEL });
-    this.props.dispatch(Actions["actionCreators"].UserEvent({ event: Actions["actionTypes"].DIALOG_CANCEL }));
+    this.props.dispatch({ type: Actions["b" /* actionTypes */].DIALOG_CANCEL });
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].DIALOG_CANCEL }));
   }
 
   _handleConfirmBtn() {
@@ -2125,13 +2179,13 @@ class ManualMigration__ManualMigration extends external__React__default.a.PureCo
     this.onCancelTour = this.onCancelTour.bind(this);
   }
   onLaunchTour() {
-    this.props.dispatch(Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].MIGRATION_START }));
-    this.props.dispatch(Actions["actionCreators"].UserEvent({ event: Actions["actionTypes"].MIGRATION_START }));
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].MIGRATION_START }));
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].MIGRATION_START }));
   }
 
   onCancelTour() {
-    this.props.dispatch(Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].MIGRATION_CANCEL }));
-    this.props.dispatch(Actions["actionCreators"].UserEvent({ event: Actions["actionTypes"].MIGRATION_CANCEL }));
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].MIGRATION_CANCEL }));
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: Actions["b" /* actionTypes */].MIGRATION_CANCEL }));
   }
 
   render() {
@@ -2163,9 +2217,8 @@ class ManualMigration__ManualMigration extends external__React__default.a.PureCo
 }
 
 const ManualMigration = Object(external__ReactRedux_["connect"])()(ManualMigration__ManualMigration);
-// EXTERNAL MODULE: ./system-addon/common/Reducers.jsm
+// EXTERNAL MODULE: ./system-addon/common/Reducers.jsm + 1 modules
 var Reducers = __webpack_require__(5);
-var Reducers_default = /*#__PURE__*/__webpack_require__.n(Reducers);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/PreferencesPane/PreferencesPane.jsx
 
@@ -2234,23 +2287,23 @@ class PreferencesPane__PreferencesPane extends external__React__default.a.PureCo
     const { name, checked } = target;
     let value = checked;
     if (name === "topSitesCount") {
-      value = checked ? Reducers["TOP_SITES_SHOWMORE_LENGTH"] : Reducers["TOP_SITES_DEFAULT_LENGTH"];
+      value = checked ? Reducers["b" /* TOP_SITES_SHOWMORE_LENGTH */] : Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */];
     }
-    this.props.dispatch(Actions["actionCreators"].SetPref(name, value));
+    this.props.dispatch(Actions["a" /* actionCreators */].SetPref(name, value));
   }
   handleSectionChange(event) {
     const target = event.target;
     const id = target.name;
-    const type = target.checked ? Actions["actionTypes"].SECTION_ENABLE : Actions["actionTypes"].SECTION_DISABLE;
-    this.props.dispatch(Actions["actionCreators"].SendToMain({ type, data: id }));
+    const type = target.checked ? Actions["b" /* actionTypes */].SECTION_ENABLE : Actions["b" /* actionTypes */].SECTION_DISABLE;
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type, data: id }));
   }
   togglePane() {
     if (this.isSidebarOpen()) {
-      this.props.dispatch({ type: Actions["actionTypes"].SETTINGS_CLOSE });
-      this.props.dispatch(Actions["actionCreators"].UserEvent({ event: "CLOSE_NEWTAB_PREFS" }));
+      this.props.dispatch({ type: Actions["b" /* actionTypes */].SETTINGS_CLOSE });
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "CLOSE_NEWTAB_PREFS" }));
     } else {
-      this.props.dispatch({ type: Actions["actionTypes"].SETTINGS_OPEN });
-      this.props.dispatch(Actions["actionCreators"].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
+      this.props.dispatch({ type: Actions["b" /* actionTypes */].SETTINGS_OPEN });
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "OPEN_NEWTAB_PREFS" }));
     }
   }
   onWrapperMount(wrapper) {
@@ -2312,7 +2365,7 @@ class PreferencesPane__PreferencesPane extends external__React__default.a.PureCo
                 className: "showMoreTopSites",
                 prefName: "topSitesCount",
                 disabled: !prefs.showTopSites,
-                value: prefs.topSitesCount !== Reducers["TOP_SITES_DEFAULT_LENGTH"],
+                value: prefs.topSitesCount !== Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */],
                 onChange: this.handlePrefChange,
                 titleString: { id: "settings_pane_topsites_options_showmore" },
                 labelClassName: "icon icon-topsites" })
@@ -2362,12 +2415,92 @@ const PreferencesPane = Object(external__ReactRedux_["connect"])(state => ({
   PreferencesPane: state.PreferencesPane,
   Sections: state.Sections
 }))(Object(external__ReactIntl_["injectIntl"])(PreferencesPane__PreferencesPane));
-// EXTERNAL MODULE: ./system-addon/common/PrerenderData.jsm
-var PrerenderData = __webpack_require__(14);
-var PrerenderData_default = /*#__PURE__*/__webpack_require__.n(PrerenderData);
+// CONCATENATED MODULE: ./system-addon/common/PrerenderData.jsm
+class _PrerenderData {
+  constructor(options) {
+    this.initialPrefs = options.initialPrefs;
+    this.initialSections = options.initialSections;
+    this._setValidation(options.validation);
+  }
 
+  get validation() {
+    return this._validation;
+  }
+
+  set validation(value) {
+    this._setValidation(value);
+  }
+
+  get invalidatingPrefs() {
+    return this._invalidatingPrefs;
+  }
+
+  // This is needed so we can use it in the constructor
+  _setValidation(value = []) {
+    this._validation = value;
+    this._invalidatingPrefs = value.reduce((result, next) => {
+      if (typeof next === "string") {
+        result.push(next);
+        return result;
+      } else if (next && next.oneOf) {
+        return result.concat(next.oneOf);
+      }
+      throw new Error("Your validation configuration is not properly configured");
+    }, []);
+  }
+
+  arePrefsValid(getPref) {
+    for (const prefs of this.validation) {
+      // {oneOf: ["foo", "bar"]}
+      if (prefs && prefs.oneOf && !prefs.oneOf.some(name => getPref(name) === this.initialPrefs[name])) {
+        return false;
+
+        // "foo"
+      } else if (getPref(prefs) !== this.initialPrefs[prefs]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+var PrerenderData = new _PrerenderData({
+  initialPrefs: {
+    "migrationExpired": true,
+    "showTopSites": true,
+    "showSearch": true,
+    "topSitesCount": 12,
+    "collapseTopSites": false,
+    "section.highlights.collapsed": false,
+    "section.topstories.collapsed": false,
+    "feeds.section.topstories": true,
+    "feeds.section.highlights": true
+  },
+  // Prefs listed as invalidating will prevent the prerendered version
+  // of AS from being used if their value is something other than what is listed
+  // here. This is required because some preferences cause the page layout to be
+  // too different for the prerendered version to be used. Unfortunately, this
+  // will result in users who have modified some of their preferences not being
+  // able to get the benefits of prerendering.
+  validation: ["showTopSites", "showSearch", "topSitesCount", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed",
+  // This means if either of these are set to their default values,
+  // prerendering can be used.
+  { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
+  initialSections: [{
+    enabled: true,
+    icon: "pocket",
+    id: "topstories",
+    order: 1,
+    title: { id: "header_recommended_by", values: { provider: "Pocket" } }
+  }, {
+    enabled: true,
+    id: "highlights",
+    icon: "highlights",
+    order: 2,
+    title: { id: "header_highlights" }
+  }]
+});
 // EXTERNAL MODULE: ./system-addon/content-src/lib/constants.js
-var constants = __webpack_require__(15);
+var constants = __webpack_require__(13);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/Search/Search.jsx
 /* globals ContentSearchUIController */
@@ -2389,7 +2522,7 @@ class Search__Search extends external__React__default.a.PureComponent {
   handleEvent(event) {
     // Also track search events with our own telemetry
     if (event.detail.type === "Search") {
-      this.props.dispatch(Actions["actionCreators"].UserEvent({ event: "SEARCH" }));
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({ event: "SEARCH" }));
     }
   }
   onClick(event) {
@@ -2469,7 +2602,7 @@ class Search__Search extends external__React__default.a.PureComponent {
 
 const Search = Object(external__ReactRedux_["connect"])()(Object(external__ReactIntl_["injectIntl"])(Search__Search));
 // EXTERNAL MODULE: ./system-addon/content-src/components/Sections/Sections.jsx
-var Sections = __webpack_require__(16);
+var Sections = __webpack_require__(14);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSitesConstants.js
 const TOP_SITES_SOURCE = "TOP_SITES";
@@ -2631,7 +2764,7 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
     });
   }
   userEvent(event) {
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       event,
       source: TOP_SITES_SOURCE,
       action_position: this.props.index
@@ -2655,13 +2788,13 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
   onDismissButtonClick() {
     const { link } = this.props;
     if (link.isPinned) {
-      this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_UNPIN,
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
         data: { site: { url: link.url } }
       }));
     }
-    this.props.dispatch(Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].BLOCK_URL,
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].BLOCK_URL,
       data: link.url
     }));
     this.userEvent("BLOCK");
@@ -2669,14 +2802,14 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
   onPinButtonClick() {
     const { link, index } = this.props;
     if (link.isPinned) {
-      this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_UNPIN,
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_UNPIN,
         data: { site: { url: link.url } }
       }));
       this.userEvent("UNPIN");
     } else {
-      this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_PIN,
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
         data: { site: { url: link.url }, index }
       }));
       this.userEvent("PIN");
@@ -2754,7 +2887,7 @@ class TopSite_TopSitePlaceholder extends external__React__default.a.PureComponen
   }
   onEditButtonClick() {
     this.props.dispatch({
-      type: Actions["actionTypes"].TOP_SITES_EDIT,
+      type: Actions["b" /* actionTypes */].TOP_SITES_EDIT,
       data: { index: this.props.index }
     });
   }
@@ -2791,7 +2924,7 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
     }
   }
   userEvent(event, index) {
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       event,
       source: TOP_SITES_SOURCE,
       action_position: index
@@ -2819,8 +2952,8 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
         break;
       case "drop":
         if (index !== this.state.draggedIndex) {
-          this.props.dispatch(Actions["actionCreators"].SendToMain({
-            type: Actions["actionTypes"].TOP_SITES_INSERT,
+          this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+            type: Actions["b" /* actionTypes */].TOP_SITES_INSERT,
             data: { site: { url: this.state.draggedSite.url, label: this.state.draggedTitle }, index }
           }));
           this.userEvent("DROP", index);
@@ -2957,11 +3090,11 @@ class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
       if (this.state.label !== "") {
         site.label = this.state.label;
       }
-      this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_INSERT,
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_INSERT,
         data: { site }
       }));
-      this.props.dispatch(Actions["actionCreators"].UserEvent({
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
         source: TOP_SITES_SOURCE,
         event: "TOP_SITES_ADD"
       }));
@@ -2975,11 +3108,11 @@ class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
       if (this.state.label !== "") {
         site.label = this.state.label;
       }
-      this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_PIN,
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+        type: Actions["b" /* actionTypes */].TOP_SITES_PIN,
         data: { site, index: this.props.index }
       }));
-      this.props.dispatch(Actions["actionCreators"].UserEvent({
+      this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
         source: TOP_SITES_SOURCE,
         event: "TOP_SITES_EDIT",
         action_position: this.props.index
@@ -3118,44 +3251,44 @@ class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponen
   onEditButtonClick() {
     this.setState({ showEditModal: !this.state.showEditModal });
     const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event
     }));
   }
   onModalOverlayClick() {
     this.setState({ showEditModal: false, showAddForm: false, showEditForm: false });
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_EDIT_CLOSE"
     }));
-    this.props.dispatch({ type: Actions["actionTypes"].TOP_SITES_CANCEL_EDIT });
+    this.props.dispatch({ type: Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT });
   }
   onShowMoreLessClick() {
-    const prefIsSetToDefault = this.props.TopSitesCount === Reducers["TOP_SITES_DEFAULT_LENGTH"];
-    this.props.dispatch(Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].SET_PREF,
-      data: { name: "topSitesCount", value: prefIsSetToDefault ? Reducers["TOP_SITES_SHOWMORE_LENGTH"] : Reducers["TOP_SITES_DEFAULT_LENGTH"] }
+    const prefIsSetToDefault = this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */];
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].SET_PREF,
+      data: { name: "topSitesCount", value: prefIsSetToDefault ? Reducers["b" /* TOP_SITES_SHOWMORE_LENGTH */] : Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] }
     }));
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event: prefIsSetToDefault ? "TOP_SITES_EDIT_SHOW_MORE" : "TOP_SITES_EDIT_SHOW_LESS"
     }));
   }
   onAddButtonClick() {
     this.setState({ showAddForm: true });
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_ADD_FORM_OPEN"
     }));
   }
   onFormClose() {
     this.setState({ showAddForm: false, showEditForm: false });
-    this.props.dispatch({ type: Actions["actionTypes"].TOP_SITES_CANCEL_EDIT });
+    this.props.dispatch({ type: Actions["b" /* actionTypes */].TOP_SITES_CANCEL_EDIT });
   }
   onEdit(index) {
     this.setState({ showEditForm: true, editIndex: index });
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event: "TOP_SITES_EDIT_FORM_OPEN"
     }));
@@ -3215,8 +3348,8 @@ class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponen
             ),
             external__React__default.a.createElement(
               "button",
-              { className: `icon icon-topsites show-${this.props.TopSitesCount === Reducers["TOP_SITES_DEFAULT_LENGTH"] ? "more" : "less"}`, onClick: this.onShowMoreLessClick },
-              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: `edit_topsites_show${this.props.TopSitesCount === Reducers["TOP_SITES_DEFAULT_LENGTH"] ? "more" : "less"}_button` })
+              { className: `icon icon-topsites show-${this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] ? "more" : "less"}`, onClick: this.onShowMoreLessClick },
+              external__React__default.a.createElement(external__ReactIntl_["FormattedMessage"], { id: `edit_topsites_show${this.props.TopSitesCount === Reducers["a" /* TOP_SITES_DEFAULT_LENGTH */] ? "more" : "less"}_button` })
             ),
             external__React__default.a.createElement(
               "button",
@@ -3309,8 +3442,8 @@ class TopSites__TopSites extends external__React__default.a.PureComponent {
     const topSitesIconsStats = countTopSitesIconsTypes(topSites);
     const topSitesPinned = topSites.filter(site => !!site.isPinned).length;
     // Dispatch telemetry event with the count of TopSites images types.
-    this.props.dispatch(Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].SAVE_SESSION_PERF_DATA,
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].SAVE_SESSION_PERF_DATA,
       data: { topsites_icon_stats: topSitesIconsStats, topsites_pinned: topSitesPinned }
     }));
   }
@@ -3386,8 +3519,8 @@ class Base__Base extends external__React__default.a.PureComponent {
     // prerendered DOM to be unmounted. Otherwise, NEW_TAB_STATE_REQUEST is
     // dispatched right after the store is ready.
     if (this.props.isPrerendered) {
-      this.props.dispatch(Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].NEW_TAB_STATE_REQUEST }));
-      this.props.dispatch(Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].PAGE_PRERENDERED }));
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].NEW_TAB_STATE_REQUEST }));
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].PAGE_PRERENDERED }));
     }
   }
 
@@ -3400,7 +3533,7 @@ class Base__Base extends external__React__default.a.PureComponent {
   // have rendered that data.
   sendNewTabRehydrated(App) {
     if (App && App.initialized && !this.renderNotified) {
-      this.props.dispatch(Actions["actionCreators"].SendToMain({ type: Actions["actionTypes"].NEW_TAB_REHYDRATED, data: {} }));
+      this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({ type: Actions["b" /* actionTypes */].NEW_TAB_REHYDRATED, data: {} }));
       this.renderNotified = true;
     }
   }
@@ -3411,7 +3544,7 @@ class Base__Base extends external__React__default.a.PureComponent {
     const { initialized } = App;
     const prefs = props.Prefs.values;
 
-    const shouldBeFixedToTop = PrerenderData["PrerenderData"].arePrefsValid(name => prefs[name]);
+    const shouldBeFixedToTop = PrerenderData.arePrefsValid(name => prefs[name]);
 
     const outerClassName = `outer-wrapper${shouldBeFixedToTop ? " fixed-to-top" : ""}`;
 
@@ -3452,139 +3585,6 @@ const Base = Object(external__ReactRedux_["connect"])(state => ({ App: state.App
 
 /***/ }),
 /* 13 */
-/***/ (function(module, exports) {
-
-var Dedupe = class Dedupe {
-  constructor(createKey) {
-    this.createKey = createKey || this.defaultCreateKey;
-  }
-
-  defaultCreateKey(item) {
-    return item;
-  }
-
-  /**
-   * Dedupe any number of grouped elements favoring those from earlier groups.
-   *
-   * @param {Array} groups Contains an arbitrary number of arrays of elements.
-   * @returns {Array} A matching array of each provided group deduped.
-   */
-  group(...groups) {
-    const globalKeys = new Set();
-    const result = [];
-    for (const values of groups) {
-      const valueMap = new Map();
-      for (const value of values) {
-        const key = this.createKey(value);
-        if (!globalKeys.has(key) && !valueMap.has(key)) {
-          valueMap.set(key, value);
-        }
-      }
-      result.push(valueMap);
-      valueMap.forEach((value, key) => globalKeys.add(key));
-    }
-    return result.map(m => Array.from(m.values()));
-  }
-};
-module.exports = {
-  Dedupe
-};
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports) {
-
-class _PrerenderData {
-  constructor(options) {
-    this.initialPrefs = options.initialPrefs;
-    this.initialSections = options.initialSections;
-    this._setValidation(options.validation);
-  }
-
-  get validation() {
-    return this._validation;
-  }
-
-  set validation(value) {
-    this._setValidation(value);
-  }
-
-  get invalidatingPrefs() {
-    return this._invalidatingPrefs;
-  }
-
-  // This is needed so we can use it in the constructor
-  _setValidation(value = []) {
-    this._validation = value;
-    this._invalidatingPrefs = value.reduce((result, next) => {
-      if (typeof next === "string") {
-        result.push(next);
-        return result;
-      } else if (next && next.oneOf) {
-        return result.concat(next.oneOf);
-      }
-      throw new Error("Your validation configuration is not properly configured");
-    }, []);
-  }
-
-  arePrefsValid(getPref) {
-    for (const prefs of this.validation) {
-      // {oneOf: ["foo", "bar"]}
-      if (prefs && prefs.oneOf && !prefs.oneOf.some(name => getPref(name) === this.initialPrefs[name])) {
-        return false;
-
-        // "foo"
-      } else if (getPref(prefs) !== this.initialPrefs[prefs]) {
-        return false;
-      }
-    }
-    return true;
-  }
-}
-
-var PrerenderData = new _PrerenderData({
-  initialPrefs: {
-    "migrationExpired": true,
-    "showTopSites": true,
-    "showSearch": true,
-    "topSitesCount": 12,
-    "collapseTopSites": false,
-    "section.highlights.collapsed": false,
-    "section.topstories.collapsed": false,
-    "feeds.section.topstories": true,
-    "feeds.section.highlights": true
-  },
-  // Prefs listed as invalidating will prevent the prerendered version
-  // of AS from being used if their value is something other than what is listed
-  // here. This is required because some preferences cause the page layout to be
-  // too different for the prerendered version to be used. Unfortunately, this
-  // will result in users who have modified some of their preferences not being
-  // able to get the benefits of prerendering.
-  validation: ["showTopSites", "showSearch", "topSitesCount", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed",
-  // This means if either of these are set to their default values,
-  // prerendering can be used.
-  { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
-  initialSections: [{
-    enabled: true,
-    icon: "pocket",
-    id: "topstories",
-    order: 1,
-    title: { id: "header_recommended_by", values: { provider: "Pocket" } }
-  }, {
-    enabled: true,
-    id: "highlights",
-    icon: "highlights",
-    order: 2,
-    title: { id: "header_highlights" }
-  }]
-});
-module.exports = {
-  PrerenderData,
-  _PrerenderData
-};
-
-/***/ }),
-/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3594,22 +3594,21 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
-/* 16 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(17);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_react_intl___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_react_intl__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_content_src_components_ComponentPerfTimer_ComponentPerfTimer__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_react_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_react_redux__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_react___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_react__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_content_src_components_Topics_Topics__ = __webpack_require__(16);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 
@@ -3640,7 +3639,7 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
     const cards = props.rows.slice(0, maxCards);
 
     if (this.needsImpressionStats(cards)) {
-      props.dispatch(__WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__["actionCreators"].ImpressionStats({
+      props.dispatch(__WEBPACK_IMPORTED_MODULE_2_common_Actions_jsm__["a" /* actionCreators */].ImpressionStats({
         source: props.eventSource,
         tiles: cards.map(link => ({ id: link.guid }))
       }));
@@ -3826,14 +3825,13 @@ const Sections = Object(__WEBPACK_IMPORTED_MODULE_5_react_redux__["connect"])(st
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
-/* 17 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 
 // EXTERNAL MODULE: ./system-addon/common/Actions.jsm
 var Actions = __webpack_require__(0);
-var Actions_default = /*#__PURE__*/__webpack_require__.n(Actions);
 
 // CONCATENATED MODULE: ./system-addon/content-src/components/Card/types.js
 const cardContextTypes = {
@@ -3938,17 +3936,17 @@ class Card_Card extends external__React__default.a.PureComponent {
   onLinkClick(event) {
     event.preventDefault();
     const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
-    this.props.dispatch(Actions["actionCreators"].SendToMain({
-      type: Actions["actionTypes"].OPEN_LINK,
+    this.props.dispatch(Actions["a" /* actionCreators */].SendToMain({
+      type: Actions["b" /* actionTypes */].OPEN_LINK,
       data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
     }));
-    this.props.dispatch(Actions["actionCreators"].UserEvent({
+    this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       event: "CLICK",
       source: this.props.eventSource,
       action_position: this.props.index
     }));
     if (this.props.shouldSendImpressionStats) {
-      this.props.dispatch(Actions["actionCreators"].ImpressionStats({
+      this.props.dispatch(Actions["a" /* actionCreators */].ImpressionStats({
         source: this.props.eventSource,
         click: 0,
         tiles: [{ id: this.props.link.guid, pos: this.props.index }]
@@ -4065,7 +4063,7 @@ const PlaceholderCard = () => external__React__default.a.createElement(Card_Card
 
 
 /***/ }),
-/* 18 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4121,14 +4119,12 @@ class Topics extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureComponent
 
 
 /***/ }),
-/* 19 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__);
 
 
 
@@ -4140,7 +4136,7 @@ class DetectUserSessionStart {
     this._store = store;
     // Overrides for testing
     this.document = options.document || global.document;
-    this._perfService = options.perfService || __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__["perfService"];
+    this._perfService = options.perfService || __WEBPACK_IMPORTED_MODULE_1_common_PerfService_jsm__["a" /* perfService */];
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
   }
 
@@ -4172,8 +4168,8 @@ class DetectUserSessionStart {
     try {
       let visibility_event_rcvd_ts = this._perfService.getMostRecentAbsMarkStartByName("visibility_event_rcvd_ts");
 
-      this._store.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({
-        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SAVE_SESSION_PERF_DATA,
+      this._store.dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({
+        type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SAVE_SESSION_PERF_DATA,
         data: { visibility_event_rcvd_ts }
       }));
     } catch (ex) {
@@ -4198,14 +4194,13 @@ class DetectUserSessionStart {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
-/* 20 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["a"] = initStore;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_redux___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_redux__);
 /* eslint-env mozilla/frame-script */
 
@@ -4221,7 +4216,7 @@ const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
 const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
 /* unused harmony export INCOMING_MESSAGE_NAME */
 
-const EARLY_QUEUED_ACTIONS = [__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].SAVE_SESSION_PERF_DATA, __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].PAGE_PRERENDERED];
+const EARLY_QUEUED_ACTIONS = [__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].SAVE_SESSION_PERF_DATA, __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].PAGE_PRERENDERED];
 /* unused harmony export EARLY_QUEUED_ACTIONS */
 
 
@@ -4255,7 +4250,7 @@ function mergeStateReducer(mainReducer) {
  * messageMiddleware - Middleware that looks for SentToMain type actions, and sends them if necessary
  */
 const messageMiddleware = store => next => action => {
-  if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionUtils"].isSendToMain(action)) {
+  if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionUtils */].isSendToMain(action)) {
     sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
   }
   next(action);
@@ -4267,7 +4262,7 @@ const rehydrationMiddleware = store => next => action => {
   }
 
   const isMergeStoreAction = action.type === MERGE_STORE_ACTION;
-  const isRehydrationRequest = action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].NEW_TAB_STATE_REQUEST;
+  const isRehydrationRequest = action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].NEW_TAB_STATE_REQUEST;
 
   if (isRehydrationRequest) {
     store._didRequestInitialState = true;
@@ -4280,11 +4275,11 @@ const rehydrationMiddleware = store => next => action => {
   }
 
   // If init happened after our request was made, we need to re-request
-  if (store._didRequestInitialState && action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].INIT) {
-    return next(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionCreators"].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionTypes"].NEW_TAB_STATE_REQUEST }));
+  if (store._didRequestInitialState && action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].INIT) {
+    return next(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["a" /* actionCreators */].SendToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionTypes */].NEW_TAB_STATE_REQUEST }));
   }
 
-  if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionUtils"].isBroadcastToContent(action) || __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionUtils"].isSendToContent(action)) {
+  if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionUtils */].isBroadcastToContent(action) || __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionUtils */].isSendToContent(action) || __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionUtils */].isSendToPreloaded(action)) {
     // Note that actions received before didRehydrate will not be dispatched
     // because this could negatively affect preloading and the the state
     // will be replaced by rehydration anyway.
@@ -4306,7 +4301,7 @@ const rehydrationMiddleware = store => next => action => {
 const queueEarlyMessageMiddleware = store => next => action => {
   if (store._receivedFromMain) {
     next(action);
-  } else if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["actionUtils"].isFromMain(action)) {
+  } else if (__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionUtils */].isFromMain(action)) {
     next(action);
     store._receivedFromMain = true;
     // Sending out all the early actions as main is ready now
@@ -4354,13 +4349,13 @@ function initStore(reducers, initialState) {
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(4)))
 
 /***/ }),
-/* 21 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = Redux;
 
 /***/ }),
-/* 22 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;

@@ -35,7 +35,7 @@ class FontFaceBufferSource : public gfxFontFaceBufferSource
 public:
   explicit FontFaceBufferSource(FontFace* aFontFace)
     : mFontFace(aFontFace) {}
-  virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
+  virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) override;
 
 private:
   RefPtr<FontFace> mFontFace;

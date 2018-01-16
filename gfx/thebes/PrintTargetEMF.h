@@ -41,18 +41,18 @@ public:
   nsresult BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName,
                                  int32_t aStartPage,
-                                 int32_t aEndPage) final;
-  nsresult EndPrinting() final;
-  nsresult AbortPrinting() final;
-  nsresult BeginPage() final;
-  nsresult EndPage() final;
+                                 int32_t aEndPage) final override;
+  nsresult EndPrinting() final override;
+  nsresult AbortPrinting() final override;
+  nsresult BeginPage() final override;
+  nsresult EndPage() final override;
 
   already_AddRefed<DrawTarget>
   MakeDrawTarget(const IntSize& aSize,
-                 DrawEventRecorder* aRecorder = nullptr) final;
+                 DrawEventRecorder* aRecorder = nullptr) final override;
 
   already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final;
+  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final override;
 
   void ConvertToEMFDone(const nsresult& aResult, mozilla::ipc::Shmem&& aEMF);
   bool IsSyncPagePrinting() const final { return false; }

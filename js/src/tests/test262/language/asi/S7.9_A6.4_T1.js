@@ -9,7 +9,7 @@ description: >
     Three semicolons. For header is (false semicolon false semicolon
     false semicolon)
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

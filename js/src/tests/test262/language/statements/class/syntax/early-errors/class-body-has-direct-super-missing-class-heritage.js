@@ -12,7 +12,7 @@ description: >
       3. Return HasDirectSuper of constructor.
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

@@ -387,7 +387,7 @@ public:
     mInvalidated = true;
   }
 
-  NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl)
+  NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
 
 private:
   ~DirectoryLockImpl();

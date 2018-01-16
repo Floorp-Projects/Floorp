@@ -623,8 +623,8 @@ DocAccessibleParent::MaybeInitWindowEmulation()
   if (Compatibility::IsDolphin()) {
     rect = Bounds();
     nsIntRect rootRect = rootDocument->Bounds();
-    rect.x = rootRect.x - rect.x;
-    rect.y -= rootRect.y;
+    rect.MoveToX(rootRect.X() - rect.X());
+    rect.MoveToY(rect.Y() - rootRect.Y());
 
     auto tab = static_cast<dom::TabParent*>(Manager());
     tab->GetDocShellIsActive(&isActive);
@@ -652,8 +652,8 @@ DocAccessibleParent::MaybeInitWindowEmulation()
   HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
   DebugOnly<HWND> hWnd = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
                                                         parentWnd,
-                                                        rect.x, rect.y,
-                                                        rect.width, rect.height,
+                                                        rect.X(), rect.Y(),
+                                                        rect.Width(), rect.Height(),
                                                         isActive, &onCreate);
   MOZ_ASSERT(hWnd);
 }

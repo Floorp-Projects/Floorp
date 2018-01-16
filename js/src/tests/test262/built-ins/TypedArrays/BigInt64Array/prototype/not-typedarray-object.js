@@ -5,7 +5,7 @@
 /*---
 esid: sec-properties-of-typedarray-prototype-objects
 description: BigInt64Array.prototype is not a TypedArray instance
-info: >
+info: |
   22.2.6 Properties of TypedArray Prototype Objects
 
   [...] A TypedArray prototype object is an ordinary object. It does not

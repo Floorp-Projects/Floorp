@@ -36,18 +36,18 @@ public:
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 EventPriority aPriority,
-                const MutexAutoLock& aProofOfLock) final;
+                const MutexAutoLock& aProofOfLock) final override;
   already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
-                                         const MutexAutoLock& aProofOfLock) final;
+                                         const MutexAutoLock& aProofOfLock) final override;
 
-  bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
-  size_t Count(const MutexAutoLock& aProofOfLock) const final;
-  bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
+  bool IsEmpty(const MutexAutoLock& aProofOfLock) final override;
+  size_t Count(const MutexAutoLock& aProofOfLock) const final override;
+  bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final override;
 
-  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
-  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
-  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
-  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final override {}
+  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final override {}
+  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final override {}
+  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final override {}
 
 private:
 

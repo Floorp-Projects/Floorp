@@ -43,6 +43,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
@@ -530,13 +531,28 @@ class ExtensionData {
     let permissions = new Set();
     let webAccessibleResources = [];
 
+    let schemaPromises = new Map();
+
+    let result = {
+      apiNames,
+      dependencies,
+      id,
+      manifest,
+      modules: null,
+      originPermissions,
+      permissions,
+      schemaURLs: null,
+      type: this.type,
+      webAccessibleResources,
+    };
+
     if (this.type === "extension") {
       if (this.manifest.devtools_page) {
         permissions.add("devtools");
       }
 
       for (let perm of manifest.permissions) {
-        if (perm === "geckoProfiler") {
+        if (perm === "geckoProfiler" && !this.isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
           if (!acceptedExtensions.split(",").includes(id)) {
             this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
@@ -576,10 +592,48 @@ class ExtensionData {
         dependencies.add(`${api}@experiments.addons.mozilla.org`);
       }
 
+      let moduleData = data => ({
+        url: this.rootURI.resolve(data.script),
+        events: data.events,
+        paths: data.paths,
+        scopes: data.scopes,
+      });
+
+      let computeModuleInit = (scope, modules) => {
+        let manager = new ExtensionCommon.SchemaAPIManager(scope);
+        return manager.initModuleJSON([modules]);
+      };
+
+      if (manifest.experiment_apis) {
+        let parentModules = {};
+        let childModules = {};
+
+        for (let [name, data] of Object.entries(manifest.experiment_apis)) {
+          let schema = this.getURL(data.schema);
+
+          if (!schemaPromises.has(schema)) {
+            schemaPromises.set(schema, this.readJSON(data.schema).then(json => Schemas.processSchema(json)));
+          }
+
+          if (data.parent) {
+            parentModules[name] = moduleData(data.parent);
+          }
+
+          if (data.child) {
+            childModules[name] = moduleData(data.child);
+          }
+        }
+
+        result.modules = {
+          child: computeModuleInit("addon_child", childModules),
+          parent: computeModuleInit("addon_parent", parentModules),
+        };
+      }
+
       // Normalize all patterns to contain a single leading /
       if (manifest.web_accessible_resources) {
-        webAccessibleResources = manifest.web_accessible_resources
-          .map(path => path.replace(/^\/*/, "/"));
+        webAccessibleResources.push(...manifest.web_accessible_resources
+          .map(path => path.replace(/^\/*/, "/")));
       }
     } else if (this.type == "langpack") {
       // Compute the chrome resources to be registered for this langpack
@@ -601,8 +655,15 @@ class ExtensionData {
       this.startupData = {chromeEntries};
     }
 
-    return {apiNames, dependencies, originPermissions, id, manifest, permissions,
-            webAccessibleResources, type: this.type};
+    if (schemaPromises.size) {
+      let schemas = new Map();
+      for (let [url, promise] of schemaPromises) {
+        schemas.set(url, await promise);
+      }
+      result.schemaURLs = schemas;
+    }
+
+    return result;
   }
 
   // Reads the extension's |manifest.json| file, and stores its
@@ -626,12 +687,42 @@ class ExtensionData {
     this.apiNames = manifestData.apiNames;
     this.dependencies = manifestData.dependencies;
     this.permissions = manifestData.permissions;
+    this.schemaURLs = manifestData.schemaURLs;
     this.type = manifestData.type;
+
+    this.modules = manifestData.modules;
+
+    this.apiManager = this.getAPIManager();
+    await this.apiManager.lazyInit();
 
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
     this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions);
 
     return this.manifest;
+  }
+
+  getAPIManager() {
+    let apiManagers = [Management];
+
+    for (let id of this.dependencies) {
+      let policy = WebExtensionPolicy.getByID(id);
+      if (policy) {
+        apiManagers.push(policy.extension.experimentAPIManager);
+      }
+    }
+
+    if (this.modules) {
+      this.experimentAPIManager =
+        new ExtensionCommon.LazyAPIManager("main", this.modules.parent, this.schemaURLs);
+
+      apiManagers.push(this.experimentAPIManager);
+    }
+
+    if (apiManagers.length == 1) {
+      return apiManagers[0];
+    }
+
+    return new ExtensionCommon.MultiAPIManager("main", apiManagers.reverse());
   }
 
   localizeMessage(...args) {
@@ -1193,10 +1284,21 @@ class Extension extends ExtensionData {
     return [this.id, this.version, Services.locale.getAppLocaleAsLangTag()];
   }
 
+  get isPrivileged() {
+    return (this.addonData.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
+            (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
+             this.addonData.temporarilyInstalled));
+  }
+
+  get experimentsAllowed() {
+    return (AddonSettings.ALLOW_LEGACY_EXTENSIONS ||
+            this.isPrivileged);
+  }
+
   async _parseManifest() {
     let manifest = await super.parseManifest();
     if (manifest && manifest.permissions.has("mozillaAddons") &&
-        this.addonData.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED) {
+        !this.isPrivileged) {
       Cu.reportError(`Stripping mozillaAddons permission from ${this.id}`);
       manifest.permissions.delete("mozillaAddons");
       let i = manifest.manifest.permissions.indexOf("mozillaAddons");
@@ -1234,7 +1336,9 @@ class Extension extends ExtensionData {
         Array.from(this.apiNames, api => ExtensionCommon.ExtensionAPIs.load(api)));
 
       for (let API of apis) {
-        this.apis.push(new API(this));
+        if (API) {
+          this.apis.push(new API(this));
+        }
       }
     }
 
@@ -1258,9 +1362,12 @@ class Extension extends ExtensionData {
       webAccessibleResources: this.webAccessibleResources.map(res => res.glob),
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       localeData: this.localeData.serialize(),
+      childModules: this.modules && this.modules.child,
+      dependencies: this.dependencies,
       permissions: this.permissions,
       principal: this.principal,
       optionalPermissions: this.manifest.optional_permissions,
+      schemaURLs: this.schemaURLs,
     };
   }
 
@@ -1442,6 +1549,8 @@ class Extension extends ExtensionData {
       this.policy.active = true;
     }
 
+    this.policy.extension = this;
+
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
       await this.loadManifest();
@@ -1462,6 +1571,7 @@ class Extension extends ExtensionData {
 
       this.policy.active = false;
       this.policy = processScript.initExtension(this);
+      this.policy.extension = this;
 
       this.updatePermissions(this.startupReason);
 

@@ -78,7 +78,7 @@ namespace net {
 
 #define MAX_RECURSION_COUNT 50
 
-nsIOService* gIOService = nullptr;
+nsIOService* gIOService;
 static bool gHasWarnedUploadChannel2;
 static bool gCaptivePortalEnabled = false;
 static LazyLogModule gIOServiceLog("nsIOService");
@@ -269,7 +269,10 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    gIOService = nullptr;
+    if (gIOService) {
+        MOZ_ASSERT(gIOService == this);
+        gIOService = nullptr;
+    }
 }
 
 nsresult
@@ -355,13 +358,10 @@ already_AddRefed<nsIOService>
 nsIOService::GetInstance() {
     if (!gIOService) {
         RefPtr<nsIOService> ios = new nsIOService();
-        gIOService = ios.get();
-        if (NS_FAILED(ios->Init())) {
-            gIOService = nullptr;
-            return nullptr;
+        if (NS_SUCCEEDED(ios->Init())) {
+            MOZ_ASSERT(gIOService == ios.get());
+            return ios.forget();
         }
-
-        return ios.forget();
     }
     return do_AddRef(gIOService);
 }
@@ -1572,19 +1572,6 @@ nsIOService::ToImmutableURI(nsIURI* uri, nsIURI** result)
 
     NS_TryToSetImmutable(*result);
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
-{
-    NS_ENSURE_ARG(aURI);
-
-    nsCOMPtr<nsIURI> safeURI;
-    nsresult rv = NS_EnsureSafeToReturn(aURI, getter_AddRefs(safeURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_IF_ADDREF(*aResult = new nsSimpleNestedURI(safeURI));
-    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP

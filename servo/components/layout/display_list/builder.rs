@@ -45,7 +45,6 @@ use msg::constellation_msg::{BrowsingContextId, PipelineId};
 use net_traits::image::base::PixelFormat;
 use net_traits::image_cache::UsePlaceholder;
 use range::Range;
-use script_layout_interface::wrapper_traits::PseudoElementType;
 use servo_config::opts;
 use servo_geometry::max_rect;
 use std::{cmp, f32};
@@ -2172,9 +2171,8 @@ impl FragmentDisplayListBuilding for Fragment {
         }
 
         // Create display items for text decorations.
-        let text_decorations = self.style()
-            .get_inheritedtext()
-            ._servo_text_decorations_in_effect;
+        let text_decorations =
+            self.style().get_inheritedtext().text_decorations_in_effect;
 
         let stacking_relative_content_box = LogicalRect::from_physical(
             self.style.writing_mode,
@@ -2276,13 +2274,7 @@ impl FragmentDisplayListBuilding for Fragment {
     }
 
     fn fragment_type(&self) -> FragmentType {
-        match self.pseudo {
-            PseudoElementType::Normal => FragmentType::FragmentBody,
-            PseudoElementType::Before(_) => FragmentType::BeforePseudoContent,
-            PseudoElementType::After(_) => FragmentType::AfterPseudoContent,
-            PseudoElementType::DetailsSummary(_) => FragmentType::FragmentBody,
-            PseudoElementType::DetailsContent(_) => FragmentType::FragmentBody,
-        }
+        self.pseudo.fragment_type()
     }
 }
 

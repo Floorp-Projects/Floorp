@@ -161,12 +161,4 @@ DeleteTextTransaction::UndoTransaction()
   return mCharData->InsertData(mOffset, mDeletedText);
 }
 
-NS_IMETHODIMP
-DeleteTextTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("DeleteTextTransaction: ");
-  aString += mDeletedText;
-  return NS_OK;
-}
-
 } // namespace mozilla

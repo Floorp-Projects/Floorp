@@ -231,7 +231,7 @@ public class StringUtils {
     }
 
     /**
-     * Compatibility layer for API < 11.
+     * Compatibility layer for API &lt; 11.
      *
      * Returns a set of the unique names of all query parameters. Iterating
      * over the set will return the names in order of their first occurrence.

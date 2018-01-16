@@ -18,8 +18,6 @@ public class ContextUtils {
 
     /**
      * @return {@link android.content.pm.PackageInfo#firstInstallTime} for the context's package.
-     * @throws PackageManager.NameNotFoundException Unexpected - we get the package name from the context so
-     *         it's expected to be found.
      */
     public static PackageInfo getCurrentPackageInfo(final Context context) {
         try {

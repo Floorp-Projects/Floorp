@@ -5326,7 +5326,8 @@ class ShellSourceHook: public SourceHook {
   public:
     ShellSourceHook(JSContext* cx, JSFunction& fun) : fun(cx, &fun) {}
 
-    bool load(JSContext* cx, const char* filename, char16_t** src, size_t* length) {
+    bool load(JSContext* cx, const char* filename, char16_t** src,
+              size_t* length) override {
         RootedString str(cx, JS_NewStringCopyZ(cx, filename));
         if (!str)
             return false;

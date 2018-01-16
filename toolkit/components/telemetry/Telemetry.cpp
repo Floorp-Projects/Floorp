@@ -312,6 +312,10 @@ public:
     mTelemetry->mLastShutdownTime =
       ReadLastShutdownDuration(mShutdownTimeFilename);
     mTelemetry->ReadLateWritesStacks(mProfileDir);
+
+    TelemetryScalar::Set(Telemetry::ScalarID::BROWSER_TIMINGS_LAST_SHUTDOWN,
+                         mTelemetry->mLastShutdownTime);
+
     nsCOMPtr<nsIRunnable> e =
       NewRunnableMethod("nsFetchTelemetryData::MainThread",
                         this,
@@ -1940,6 +1944,12 @@ void
 Accumulate(HistogramID aID, const nsCString& aKey, uint32_t aSample)
 {
   TelemetryHistogram::Accumulate(aID, aKey, aSample);
+}
+
+void
+Accumulate(HistogramID aID, const nsCString& aKey, const nsTArray<uint32_t>& aSamples)
+{
+  TelemetryHistogram::Accumulate(aID, aKey, aSamples);
 }
 
 void

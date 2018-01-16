@@ -178,8 +178,6 @@ protected:
   uint32_t mVideoShmemsActive = 0;
   // Maximum number of shmems to use to return decoded video frames.
   uint32_t mVideoShmemLimit;
-  // High water mark for mVideoShmemsActive, reported via telemetry.
-  uint32_t mMaxVideoShmemsActive = 0;
 
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;

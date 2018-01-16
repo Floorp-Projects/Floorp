@@ -10,6 +10,7 @@
 #define nsDOMCSSAttributeDeclaration_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/DocGroup.h"
 #include "nsDOMCSSDeclaration.h"
 
 
@@ -36,7 +37,7 @@ public:
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv,
                                         nsIPrincipal* aSubjectPrincipal) override;
   nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final override;
   mozilla::css::Rule* GetParentRule() override;
 
   virtual nsINode* GetParentObject() override;

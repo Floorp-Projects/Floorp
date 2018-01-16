@@ -1,0 +1,8 @@
+<!doctype html>
+<div id="host" style="display: none"></div>
+<script>
+  let shadowRoot = host.attachShadow({ mode: "open" });
+  shadowRoot.appendChild(document.createTextNode('foo'));
+  document.body.offsetTop;
+  shadowRoot.insertBefore(document.createElement('bar'), shadowRoot.firstChild);
+</script>

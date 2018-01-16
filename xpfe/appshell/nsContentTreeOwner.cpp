@@ -430,25 +430,6 @@ NS_IMETHODIMP nsContentTreeOwner::ReloadInFreshProcess(nsIDocShell* aDocShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::StartPrerenderingDocument(nsIURI* aHref,
-                                                            nsIURI* aReferrer,
-                                                            nsIPrincipal* aTriggeringPrincipal)
-{
-  NS_WARNING("Cannot prerender a document in the parent process");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::ShouldSwitchToPrerenderedDocument(nsIURI* aHref,
-                                                                    nsIURI* aReferrer,
-                                                                    nsIRunnable* aSuccess,
-                                                                    nsIRunnable* aFailure,
-                                                                    bool* aRetval)
-{
-  NS_WARNING("Cannot switch to prerendered document in the parent process");
-  *aRetval = false;
-  return NS_OK;
-}
-
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome2
 //*****************************************************************************

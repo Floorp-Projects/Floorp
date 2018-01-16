@@ -232,7 +232,8 @@ public:
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) final override;
 
   // Changes to sheets should be inside of a WillDirty-DidDirty pair.
   // However, the calls do not need to be matched; it's ok to call

@@ -2,7 +2,7 @@
 // See LICENSE for details.
 
 /*---
-info: >
+info: |
     Generator can be declared with GeneratorDeclaration syntax
 es6id: 14.4
 author: Sam Mikes

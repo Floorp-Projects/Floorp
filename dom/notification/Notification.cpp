@@ -94,7 +94,7 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
-                    const nsAString& aServiceWorkerRegistrationScope) final
+                    const nsAString& aServiceWorkerRegistrationScope) final override
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(!aID.IsEmpty());
@@ -147,7 +147,7 @@ public:
     MOZ_ASSERT(aPromise);
   }
 
-  NS_IMETHOD Done() final
+  NS_IMETHOD Done() final override
   {
     ErrorResult result;
     AutoTArray<RefPtr<Notification>, 5> notifications;
@@ -1617,7 +1617,7 @@ namespace {
     nsAString& mBuffer; // This struct must not outlive this buffer
     explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
 
-    void Write(const char* aStr)
+    void Write(const char* aStr) override
     {
       mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
     }
@@ -2090,7 +2090,7 @@ public:
     MOZ_ASSERT(aProxy);
   }
 
-  NS_IMETHOD Done() final
+  NS_IMETHOD Done() final override
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mPromiseProxy, "Was Done() called twice?");

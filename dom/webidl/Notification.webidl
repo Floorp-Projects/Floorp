@@ -13,8 +13,7 @@
 
 [Constructor(DOMString title, optional NotificationOptions options),
  Exposed=(Window,Worker),
- Func="mozilla::dom::Notification::PrefEnabled",
- UnsafeInPrerendering]
+ Func="mozilla::dom::Notification::PrefEnabled"]
 interface Notification : EventTarget {
   [GetterThrows]
   static readonly attribute NotificationPermission permission;

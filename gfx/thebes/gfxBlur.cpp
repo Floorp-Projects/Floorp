@@ -379,7 +379,7 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
     {
     }
 
-    virtual void NotifyExpired(BlurCacheData* aObject)
+    virtual void NotifyExpired(BlurCacheData* aObject) override
     {
       RemoveObject(aObject);
       mHashEntries.Remove(aObject->mKey);

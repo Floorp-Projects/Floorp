@@ -7,6 +7,7 @@
 #define nsPluginHost_h_
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/StaticPtr.h"
 
 #include "nsIPluginHost.h"
 #include "nsIObserver.h"
@@ -415,7 +416,7 @@ private:
 
   // We need to hold a global ptr to ourselves because we register for
   // two different CIDs for some reason...
-  static nsPluginHost* sInst;
+  static mozilla::StaticRefPtr<nsPluginHost> sInst;
 };
 
 class PluginDestructionGuard : public mozilla::LinkedListElement<PluginDestructionGuard>

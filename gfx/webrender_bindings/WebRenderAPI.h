@@ -123,6 +123,44 @@ protected:
   wr::ResourceUpdates* mUpdates;
 };
 
+class TransactionBuilder {
+public:
+  TransactionBuilder();
+
+  ~TransactionBuilder();
+
+  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
+
+  void SetRootPipeline(PipelineId aPipelineId);
+
+  void RemovePipeline(PipelineId aPipelineId);
+
+  void SetDisplayList(gfx::Color aBgColor,
+                      Epoch aEpoch,
+                      mozilla::LayerSize aViewportSize,
+                      wr::WrPipelineId pipeline_id,
+                      const wr::LayoutSize& content_size,
+                      wr::BuiltDisplayListDescriptor dl_descriptor,
+                      wr::Vec<uint8_t>& dl_data);
+
+  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
+
+  void GenerateFrame();
+
+  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
+
+  void SetWindowParameters(LayoutDeviceIntSize size);
+
+  void UpdateResources(ResourceUpdateQueue& aUpdates);
+
+  bool IsEmpty() const;
+
+  Transaction* Raw() { return mTxn; }
+protected:
+  Transaction* mTxn;
+};
+
 class WebRenderAPI
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderAPI);
@@ -149,30 +187,7 @@ public:
                layers::FrameMetrics::ViewID& aOutScrollId,
                gfx::CompositorHitTestInfo& aOutHitInfo);
 
-  void GenerateFrame();
-  void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                     const nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  void SetWindowParameters(LayoutDeviceIntSize size);
-
-  void SetDisplayList(gfx::Color aBgColor,
-                      Epoch aEpoch,
-                      mozilla::LayerSize aViewportSize,
-                      wr::WrPipelineId pipeline_id,
-                      const wr::LayoutSize& content_size,
-                      wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec<uint8_t>& dl_data,
-                      ResourceUpdateQueue& aResources);
-
-  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
-
-  void SetRootPipeline(wr::PipelineId aPipeline);
-
-  void RemovePipeline(wr::PipelineId aPipeline);
-
-  void UpdateResources(ResourceUpdateQueue& aUpdates);
-
-  void UpdatePipelineResources(ResourceUpdateQueue& aUpdates, PipelineId aPipeline, Epoch aEpoch);
+  void SendTransaction(TransactionBuilder& aTxn);
 
   void SetFrameStartTime(const TimeStamp& aTime);
 

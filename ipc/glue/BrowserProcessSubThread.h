@@ -44,8 +44,8 @@ public:
   static MessageLoop* GetMessageLoop(ID identifier);
 
 protected:
-  virtual void Init();
-  virtual void CleanUp();
+  virtual void Init() override;
+  virtual void CleanUp() override;
 
 private:
   // The identifier of this thread.  Only one thread can exist with a given

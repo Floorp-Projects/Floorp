@@ -23,18 +23,18 @@ public:
   HeadlessLookAndFeel();
   virtual ~HeadlessLookAndFeel();
 
-  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult);
-  virtual void NativeInit() final {};
-  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
-  virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
+  virtual nsresult NativeGetColor(ColorID aID, nscolor &aResult) override;
+  virtual void NativeInit() final override {};
+  virtual nsresult GetIntImpl(IntID aID, int32_t &aResult) override;
+  virtual nsresult GetFloatImpl(FloatID aID, float &aResult) override;
   virtual bool GetFontImpl(FontID aID,
                            nsString& aFontName,
                            gfxFontStyle& aFontStyle,
-                           float aDevPixPerCSSPixel);
+                           float aDevPixPerCSSPixel) override;
 
-  virtual void RefreshImpl();
-  virtual char16_t GetPasswordCharacterImpl();
-  virtual bool GetEchoPasswordImpl();
+  virtual void RefreshImpl() override;
+  virtual char16_t GetPasswordCharacterImpl() override;
+  virtual bool GetEchoPasswordImpl() override;
 };
 
 #else

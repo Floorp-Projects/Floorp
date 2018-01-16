@@ -320,7 +320,7 @@ class ParserBase
         return pc->isGenerator();
     }
 
-    virtual bool strictMode() { return pc->sc()->strict(); }
+    virtual bool strictMode() override { return pc->sc()->strict(); }
     bool setLocalStrictMode(bool strict) {
         MOZ_ASSERT(anyChars.debugHasNoLookahead());
         return pc->sc()->setLocalStrictMode(strict);
@@ -1158,7 +1158,7 @@ class GeneralParser
     bool checkBindingIdentifier(PropertyName* ident,
                                 uint32_t offset,
                                 YieldHandling yieldHandling,
-                                TokenKind hint = TOK_LIMIT);
+                                TokenKind hint = TokenKind::TOK_LIMIT);
 
     PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
 
@@ -1232,7 +1232,8 @@ class GeneralParser
     PropertyName* bindingIdentifier(YieldHandling yieldHandling);
 
     bool checkLabelOrIdentifierReference(PropertyName* ident, uint32_t offset,
-                                         YieldHandling yieldHandling, TokenKind hint = TOK_LIMIT);
+                                         YieldHandling yieldHandling,
+                                         TokenKind hint = TokenKind::TOK_LIMIT);
 
     Node statementList(YieldHandling yieldHandling);
 

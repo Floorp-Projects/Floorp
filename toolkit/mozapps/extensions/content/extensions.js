@@ -3256,6 +3256,7 @@ var gDetailView = {
     browser.setAttribute("transparent", "true");
     browser.setAttribute("forcemessagemanager", "true");
     browser.setAttribute("selectmenulist", "ContentSelectDropdown");
+    browser.setAttribute("autocompletepopup", "PopupAutoComplete");
 
     // The outer about:addons document listens for key presses to focus
     // the search box when / is pressed.  But if we're focused inside an
@@ -3317,6 +3318,7 @@ var gDetailView = {
 
       mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
                          false);
+      mm.loadFrameScript("chrome://browser/content/content.js", false);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
       mm.addMessageListener("Extension:BrowserResized", messageListener);
 

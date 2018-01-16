@@ -120,13 +120,6 @@ DeleteRangeTransaction::RedoTransaction()
   return EditAggregateTransaction::RedoTransaction();
 }
 
-NS_IMETHODIMP
-DeleteRangeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("DeleteRangeTransaction");
-  return NS_OK;
-}
-
 nsresult
 DeleteRangeTransaction::CreateTxnsToDeleteBetween(
                           const RawRangeBoundary& aStart,

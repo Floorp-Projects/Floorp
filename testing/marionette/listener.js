@@ -28,7 +28,6 @@ const {
   ElementNotInteractableError,
   InsecureCertificateError,
   InvalidArgumentError,
-  InvalidElementStateError,
   InvalidSelectorError,
   NoSuchElementError,
   NoSuchFrameError,
@@ -47,7 +46,6 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let outerWindowID = null;
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
@@ -448,7 +446,7 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  outerWindowID = winUtil.outerWindowID;
+  let {outerWindowID} = winUtil;
   logger.debug(`Register listener.js for window ${outerWindowID}`);
 
   sandboxes.clear();
@@ -460,10 +458,12 @@ function registerSelf() {
   action.inputStateMap = new Map();
   action.inputsToCancel = [];
 
-  // register will have the ID and a boolean describing if this is the
-  // main process or not
-  let register = sendSyncMessage("Marionette:Register", {outerWindowID});
-  if (register[0].outerWindowID === outerWindowID) {
+  let reply = sendSyncMessage("Marionette:Register", {outerWindowID});
+  if (reply.length == 0) {
+    logger.error("No reply from Marionette:Register");
+  }
+
+  if (reply[0].outerWindowID === outerWindowID) {
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
@@ -558,6 +558,7 @@ function startListeners() {
   addMessageListener("Marionette:reftestWait", reftestWaitFn);
   addMessageListener("Marionette:releaseActions", releaseActionsFn);
   addMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
+  addMessageListener("Marionette:Session:Delete", deleteSession);
   addMessageListener("Marionette:singleTap", singleTapFn);
   addMessageListener("Marionette:switchToFrame", switchToFrame);
   addMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
@@ -595,13 +596,16 @@ function deregister() {
   removeMessageListener("Marionette:refresh", refresh);
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
   removeMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
+  removeMessageListener("Marionette:Session:Delete", deleteSession);
   removeMessageListener("Marionette:singleTap", singleTapFn);
   removeMessageListener("Marionette:switchToFrame", switchToFrame);
   removeMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
   removeMessageListener("Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListener("Marionette:takeScreenshot", takeScreenshotFn);
   removeMessageListener("Marionette:waitForPageLoaded", waitForPageLoaded);
+}
 
+function deleteSession() {
   seenEls.clear();
   // reset container frame to the top-most frame
   curContainer = {frame: content, shadowRoot: null};
@@ -1324,21 +1328,7 @@ async function sendKeysToElement(el, val) {
 
 /** Clear the text of an element. */
 function clearElement(el) {
-  try {
-    if (el.type == "file") {
-      el.value = null;
-    } else {
-      atom.clearElement(el, curContainer.frame);
-    }
-  } catch (e) {
-    // Bug 964738: Newer atoms contain status codes which makes wrapping
-    // this in an error prototype that has a status property unnecessary
-    if (e.name == "InvalidElementStateError") {
-      throw new InvalidElementStateError(e.message);
-    } else {
-      throw e;
-    }
-  }
+  interaction.clearElement(el);
 }
 
 /** Switch the current context to the specified host's Shadow DOM. */

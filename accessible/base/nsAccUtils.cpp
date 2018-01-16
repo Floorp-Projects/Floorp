@@ -368,7 +368,7 @@ nsAccUtils::GetScreenCoordsForParent(Accessible* aAccessible)
     return nsIntPoint(0, 0);
 
   nsRect rect = parentFrame->GetScreenRectInAppUnits();
-  return nsPoint(rect.x, rect.y).
+  return nsPoint(rect.X(), rect.Y()).
     ToNearestPixels(parentFrame->PresContext()->AppUnitsPerDevPixel());
 }
 

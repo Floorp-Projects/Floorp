@@ -159,7 +159,8 @@ this.AutoCompletePopup = {
 
     let window = browser.ownerGlobal;
     // Also check window top in case this is a sidebar.
-    if (Services.focus.activeWindow !== window.top) {
+    if (Services.focus.activeWindow !== window.top &&
+        Services.focus.focusedWindow.top !== window.top) {
       // We were sent a message from a window or tab that went into the
       // background, so we'll ignore it for now.
       return;

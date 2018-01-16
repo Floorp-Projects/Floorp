@@ -27,20 +27,20 @@ public:
 
   already_AddRefed<css::Rule> Clone() const override;
   bool UseForPresentation(nsPresContext* aPresContext,
-                          nsMediaQueryResultCacheKey& aKey) final;
+                          nsMediaQueryResultCacheKey& aKey) final override;
   void SetStyleSheet(StyleSheet* aSheet) override;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const final override;
 #endif
 
   RawServoMediaRule* Raw() const { return mRawRule; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final;
-  void GetConditionText(nsAString& aConditionText) final;
+  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
-                        ErrorResult& aRv) final;
-  dom::MediaList* Media() final;
+                        ErrorResult& aRv) final override;
+  dom::MediaList* Media() final override;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override;

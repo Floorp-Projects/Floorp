@@ -388,7 +388,7 @@ public:
 
     XPCJSRuntime* Runtime() const;
 
-    mozilla::CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override;
+    virtual mozilla::CycleCollectedJSRuntime* CreateRuntime(JSContext* aCx) override;
 
     XPCCallContext*  GetCallContext() const {return mCallContext;}
     XPCCallContext*  SetCallContext(XPCCallContext* ccx)
@@ -2491,7 +2491,7 @@ class TypedAutoMarkingPtr : public AutoMarkingPtr
     TypedAutoMarkingPtr<T>& operator =(T* ptr) { mPtr = ptr; return *this; }
 
   protected:
-    virtual void TraceJS(JSTracer* trc)
+    virtual void TraceJS(JSTracer* trc) override
     {
         if (mPtr) {
             mPtr->TraceJS(trc);
@@ -2499,7 +2499,7 @@ class TypedAutoMarkingPtr : public AutoMarkingPtr
         }
     }
 
-    virtual void MarkAfterJSFinalize()
+    virtual void MarkAfterJSFinalize() override
     {
         if (mPtr)
             mPtr->Mark();
@@ -2759,7 +2759,7 @@ public:
         , originAttributes(cx)
     { }
 
-    virtual bool Parse();
+    virtual bool Parse() override;
 
     bool wantXrays;
     bool allowWaivers;
@@ -2793,7 +2793,7 @@ public:
         , defineAs(cx, JSID_VOID)
     { }
 
-    virtual bool Parse() { return ParseId("defineAs", &defineAs); }
+    virtual bool Parse() override { return ParseId("defineAs", &defineAs); }
 
     JS::RootedId defineAs;
 };
@@ -2807,7 +2807,7 @@ public:
         , allowCrossOriginArguments(false)
     { }
 
-    virtual bool Parse() {
+    virtual bool Parse() override {
         return ParseId("defineAs", &defineAs) &&
                ParseBoolean("allowCrossOriginArguments", &allowCrossOriginArguments);
     }
@@ -2838,7 +2838,7 @@ public:
         return obj;
     }
 
-    virtual bool Parse() {
+    virtual bool Parse() override {
         return ParseBoolean("allowCrossOriginArguments", &allowCrossOriginArguments);
     }
 
@@ -2855,7 +2855,7 @@ public:
         , deepFreeze(false)
     { }
 
-    virtual bool Parse() {
+    virtual bool Parse() override {
         return ParseBoolean("wrapReflectors", &wrapReflectors) &&
                ParseBoolean("cloneFunctions", &cloneFunctions) &&
                ParseBoolean("deepFreeze", &deepFreeze);

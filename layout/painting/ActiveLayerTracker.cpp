@@ -124,7 +124,7 @@ public:
     AgeAllGenerations();
   }
 
-  virtual void NotifyExpired(LayerActivity* aObject);
+  virtual void NotifyExpired(LayerActivity* aObject) override;
 
 public:
   WeakFrame mCurrentScrollHandlerFrame;

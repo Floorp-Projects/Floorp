@@ -74,7 +74,7 @@ public:
   mozilla::ipc::IPCResult RecvShutdownSync() override;
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds) override;
   mozilla::ipc::IPCResult RecvUpdateResources(nsTArray<OpUpdateResource>&& aUpdates,
-                                              nsTArray<ipc::Shmem>&& aSmallShmems,
+                                              nsTArray<RefCountedShmem>&& aSmallShmems,
                                               nsTArray<ipc::Shmem>&& aLargeShmems) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
@@ -86,7 +86,7 @@ public:
                                              const wr::BuiltDisplayListDescriptor& dlDesc,
                                              const WebRenderScrollData& aScrollData,
                                              nsTArray<OpUpdateResource>&& aResourceUpdates,
-                                             nsTArray<ipc::Shmem>&& aSmallShmems,
+                                             nsTArray<RefCountedShmem>&& aSmallShmems,
                                              nsTArray<ipc::Shmem>&& aLargeShmems,
                                              const wr::IdNamespace& aIdNamespace,
                                              const TimeStamp& aTxnStartTime,
@@ -192,13 +192,11 @@ public:
                        CompositorAnimationStorage* aAnimStorage);
 
 private:
-  void DeallocShmems(nsTArray<ipc::Shmem>& aShmems);
-
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
 
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
-                       const nsTArray<ipc::Shmem>& aSmallShmems,
+                       const nsTArray<RefCountedShmem>& aSmallShmems,
                        const nsTArray<ipc::Shmem>& aLargeShmems,
                        wr::ResourceUpdateQueue& aUpdates);
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,

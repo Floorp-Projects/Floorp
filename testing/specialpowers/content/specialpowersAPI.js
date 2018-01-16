@@ -313,7 +313,9 @@ function SPConsoleListener(callback) {
 }
 
 SPConsoleListener.prototype = {
-  observe(msg) {
+  // Overload the observe method for both nsIConsoleListener and nsIObserver.
+  // The topic will be null for nsIConsoleListener.
+  observe(msg, topic) {
     let m = { message: msg.message,
               errorMessage: null,
               sourceName: null,
@@ -323,6 +325,7 @@ SPConsoleListener.prototype = {
               category: null,
               windowID: null,
               isScriptError: false,
+              isConsoleEvent: false,
               isWarning: false,
               isException: false,
               isStrict: false };
@@ -339,6 +342,17 @@ SPConsoleListener.prototype = {
       m.isWarning     = ((msg.flags & Ci.nsIScriptError.warningFlag) === 1);
       m.isException   = ((msg.flags & Ci.nsIScriptError.exceptionFlag) === 1);
       m.isStrict      = ((msg.flags & Ci.nsIScriptError.strictFlag) === 1);
+    } else if (topic === "console-api-log-event") {
+      // This is a dom/console event.
+      let unwrapped = msg.wrappedJSObject;
+      m.errorMessage   = unwrapped.arguments[0];
+      m.sourceName     = unwrapped.filename;
+      m.lineNumber     = unwrapped.lineNumber;
+      m.columnNumber   = unwrapped.columnNumber;
+      m.windowID       = unwrapped.ID;
+      m.innerWindowID  = unwrapped.innerID;
+      m.isConsoleEvent = true;
+      m.isWarning      = unwrapped.level === "warning";
     }
 
     Object.freeze(m);
@@ -349,11 +363,14 @@ SPConsoleListener.prototype = {
       this.callback.call(undefined, m);
     });
 
-    if (!m.isScriptError && m.message === "SENTINEL")
+    if (!m.isScriptError && !m.isConsoleEvent && m.message === "SENTINEL") {
+      Services.obs.removeObserver(this, "console-api-log-event");
       Services.console.unregisterListener(this);
+    }
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleListener,
+                                         Ci.nsIObserver])
 };
 
 function wrapCallback(cb) {
@@ -1438,6 +1455,9 @@ SpecialPowersAPI.prototype = {
   registerConsoleListener(callback) {
     let listener = new SPConsoleListener(callback);
     Services.console.registerListener(listener);
+
+    // listen for dom/console events as well
+    Services.obs.addObserver(listener, "console-api-log-event");
   },
   postConsoleSentinel() {
     Services.console.logStringMessage("SENTINEL");

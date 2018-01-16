@@ -23,14 +23,14 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
-  NS_IMETHOD ResumeNative(void);
+  NS_IMETHOD ResumeNative(void) override;
 
   nsAppShell();
 
   nsresult Init();
 
-  NS_IMETHOD Run(void);
-  NS_IMETHOD Exit(void);
+  NS_IMETHOD Run(void) override;
+  NS_IMETHOD Exit(void) override;
   // Called by the application delegate
   void WillTerminate(void);
 

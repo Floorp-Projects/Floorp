@@ -14,7 +14,7 @@ public:
     nsLookAndFeel();
     virtual ~nsLookAndFeel();
 
-    virtual void NativeInit() final;
+    virtual void NativeInit() final override;
     virtual void RefreshImpl();
     virtual nsresult NativeGetColor(const ColorID aID, nscolor &aResult);
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);

@@ -43,7 +43,7 @@ public:
 
   ~FpWriteFunc() { fclose(mFp); }
 
-  void Write(const char* aStr) { fputs(aStr, mFp); }
+  void Write(const char* aStr) override { fputs(aStr, mFp); }
 
 private:
   FILE* mFp;

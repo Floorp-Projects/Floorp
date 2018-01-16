@@ -53,6 +53,9 @@ namespace layout {
   // A helper class for nsIFrame::Destroy[From].  It's defined here because
   // nsFrameList needs it and we can't use nsIFrame here.
   struct PostFrameDestroyData {
+    PostFrameDestroyData(const PostFrameDestroyData&) = delete;
+    PostFrameDestroyData() = default;
+
     AutoTArray<RefPtr<nsIContent>, 50> mAnonymousContent;
     AutoTArray<RefPtr<nsIContent>, 50> mGeneratedContent;
     void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {

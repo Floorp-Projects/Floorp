@@ -124,9 +124,9 @@ partial interface HTMLMediaElement {
   [Func="IsChromeOrXBL"] attribute boolean mozIsCasting;
 
   // Mozilla extension: stream capture
-  [Throws, UnsafeInPrerendering]
+  [Throws]
   MediaStream mozCaptureStream();
-  [Throws, UnsafeInPrerendering]
+  [Throws]
   MediaStream mozCaptureStreamUntilEnded();
   readonly attribute boolean mozAudioCaptured;
 

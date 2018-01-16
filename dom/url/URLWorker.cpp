@@ -85,7 +85,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     using namespace mozilla::ipc;
 
@@ -145,7 +145,7 @@ public:
   {}
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -202,7 +202,7 @@ public:
   {}
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -245,7 +245,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -289,7 +289,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     AssertIsOnMainThread();
 
@@ -336,7 +336,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
     ErrorResult rv;
@@ -436,7 +436,7 @@ public:
   }
 
   bool
-  MainThreadRun()
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
     ErrorResult rv;

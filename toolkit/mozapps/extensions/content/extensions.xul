@@ -79,6 +79,13 @@
         />
     </menulist>
 
+    <panel type="autocomplete-richlistbox"
+           id="PopupAutoComplete"
+           noautofocus="true"
+           hidden="true"
+           norolluponanchor="true"
+           nomaxresults="true" />
+
     <tooltip id="addonitem-tooltip"/>
   </popupset>
 

@@ -151,8 +151,9 @@ add_task(function* () {
 function testItem(testCase, node) {
   info(testCase.info);
 
-  let columns = Array.from(node.querySelectorAll("thead th"));
-  let rows = Array.from(node.querySelectorAll("tbody tr"));
+  const columns = Array.from(node.querySelectorAll("[role=columnheader]"));
+  const columnsNumber = columns.length;
+  const cells = Array.from(node.querySelectorAll("[role=gridcell]"));
 
   is(
     JSON.stringify(testCase.expected.columns),
@@ -160,18 +161,17 @@ function testItem(testCase, node) {
     "table has the expected columns"
   );
 
-  is(testCase.expected.rows.length, rows.length,
+  // We don't really have rows since we are using a CSS grid in order to have a sticky
+  // header on the table. So we check the "rows" by dividing the number of cells by the
+  // number of columns.
+  is(testCase.expected.rows.length, cells.length / columnsNumber,
     "table has the expected number of rows");
 
   testCase.expected.rows.forEach((expectedRow, rowIndex) => {
-    let row = rows[rowIndex];
-    let cells = row.querySelectorAll("td");
-    is(expectedRow.length, cells.length, "row has the expected number of cells");
-
-    expectedRow.forEach((expectedCell, cellIndex) => {
-      let cell = cells[cellIndex];
-      is(expectedCell, cell.textContent, "cell has the expected content");
-    });
+    const startIndex = rowIndex * columnsNumber;
+    // Slicing the cells array so we can get the current "row".
+    const rowCells = cells.slice(startIndex, startIndex + columnsNumber);
+    is(rowCells.map(x => x.textContent).join(" | "), expectedRow.join(" | "));
   });
 }
 

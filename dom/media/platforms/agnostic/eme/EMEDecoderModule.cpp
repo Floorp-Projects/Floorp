@@ -98,10 +98,6 @@ public:
       return;
     }
 
-    nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
-    mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                  writer->mCrypto.mSessionIds);
-
     mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
     mProxy->Decrypt(aSample)
       ->Then(mTaskQueue, __func__, this,
@@ -276,9 +272,6 @@ EMEMediaDataDecoderProxy::Decode(MediaRawData* aSample)
            [self, this](RefPtr<MediaRawData> aSample) {
              mKeyRequest.Complete();
 
-             nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
-             mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                           writer->mCrypto.mSessionIds);
              MediaDataDecoderProxy::Decode(aSample)
                ->Then(mTaskQueue, __func__,
                       [self, this](const DecodedData& aResults) {

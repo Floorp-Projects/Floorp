@@ -53,11 +53,11 @@ public:
         return mLastError;
     }
 
-    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID);
+    nsresult resolveNamespacePrefix(nsAtom* aPrefix, int32_t& aID) override;
     nsresult resolveFunctionCall(nsAtom* aName, int32_t aID,
-                                 FunctionCall** aFunction);
-    bool caseInsensitiveNameTests();
-    void SetErrorOffset(uint32_t aOffset);
+                                 FunctionCall** aFunction) override;
+    bool caseInsensitiveNameTests() override;
+    void SetErrorOffset(uint32_t aOffset) override;
 
 private:
     XPathNSResolver* mResolver;

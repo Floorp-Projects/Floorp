@@ -123,6 +123,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify) override;
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
+  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
   virtual void GetTextContentInternal(nsAString& aTextContent,
                                       mozilla::OOMReporter& aError) override;
   virtual void SetTextContentInternal(const nsAString& aTextContent,
@@ -243,8 +244,8 @@ public:
     nsExtendedDOMSlots();
     ~nsExtendedDOMSlots() final;
 
-    void Traverse(nsCycleCollectionTraversalCallback&) final;
-    void Unlink() final;
+    void Traverse(nsCycleCollectionTraversalCallback&) final override;
+    void Unlink() final override;
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
@@ -295,8 +296,8 @@ public:
     nsDOMSlots();
     ~nsDOMSlots() final;
 
-    void Traverse(nsCycleCollectionTraversalCallback&) final;
-    void Unlink() final;
+    void Traverse(nsCycleCollectionTraversalCallback&) final override;
+    void Unlink() final override;
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -340,7 +341,7 @@ protected:
     return new nsDOMSlots();
   }
 
-  nsIContent::nsExtendedContentSlots* CreateExtendedSlots() final
+  nsIContent::nsExtendedContentSlots* CreateExtendedSlots() final override
   {
     return new nsExtendedDOMSlots();
   }

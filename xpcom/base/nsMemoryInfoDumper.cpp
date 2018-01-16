@@ -451,7 +451,7 @@ public:
     : mGZWriter(aGZWriter)
   {}
 
-  void Write(const char* aStr)
+  void Write(const char* aStr) override
   {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.

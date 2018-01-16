@@ -95,4 +95,7 @@ interface MediaStreamTrack : EventTarget {
     [Throws, NeedsCallerType]
     Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
 //              attribute EventHandler          onoverconstrained;
+
+    [ChromeOnly]
+    void mutedChanged(boolean muted);
 };

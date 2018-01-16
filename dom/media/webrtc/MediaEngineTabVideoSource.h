@@ -65,7 +65,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
         : Runnable("MediaEngineTabVideoSource::StartRunnable")
         , mVideoSource(videoSource)
       {}
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() override;
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
@@ -75,7 +75,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
         : Runnable("MediaEngineTabVideoSource::StopRunnable")
         , mVideoSource(videoSource)
       {}
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() override;
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
@@ -85,7 +85,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
         : Runnable("MediaEngineTabVideoSource::InitRunnable")
         , mVideoSource(videoSource)
       {}
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() override;
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
@@ -95,7 +95,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
         : Runnable("MediaEngineTabVideoSource::DestroyRunnable")
         , mVideoSource(videoSource)
       {}
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() override;
       RefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 

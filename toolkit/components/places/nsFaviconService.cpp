@@ -54,7 +54,7 @@ class ExpireFaviconsStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   ExpireFaviconsStatementCallbackNotifier();
-  NS_IMETHOD HandleCompletion(uint16_t aReason);
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override;
 };
 
 namespace {

@@ -20,6 +20,8 @@ enum ShadowRootMode {
 [Func="nsDocument::IsWebComponentsEnabled"]
 interface ShadowRoot : DocumentFragment
 {
+  readonly attribute Element? activeElement;
+
   // Shadow DOM v1
   readonly attribute ShadowRootMode mode;
   readonly attribute Element host;

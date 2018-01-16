@@ -136,8 +136,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     # Running via mozharness assumes an image that contains build.sh:
     # by default, desktop-build, but it could be another image (like
     # android-build) that "inherits" from desktop-build.
-    if not taskdesc['worker']['docker-image']:
-        taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
+    taskdesc['worker'].setdefault('docker-image', {'in-tree': 'desktop-build'})
 
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
 

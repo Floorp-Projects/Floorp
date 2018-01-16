@@ -2061,7 +2061,7 @@ GetFirstSelectedContent(nsRange* aRange)
   NS_PRECONDITION(aRange->GetStartContainer()->IsElement(),
                   "Unexpected parent");
 
-  return aRange->GetStartContainer()->GetChildAt_Deprecated(aRange->StartOffset());
+  return aRange->GetChildAtStartOffset();
 }
 
 // Table selection support.
@@ -2346,7 +2346,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
 
           int32_t offset = range->StartOffset();
           // Be sure previous selection is a table cell
-          nsIContent* child = container->GetChildAt_Deprecated(offset);
+          nsIContent* child = range->GetChildAtStartOffset();
           if (child && IsCell(child)) {
             previousCellParent = container;
           }
@@ -2691,14 +2691,7 @@ nsFrameSelection::GetFirstCellNodeInRange(nsRange *aRange) const
 {
   if (!aRange) return nullptr;
 
-  nsINode* startContainer = aRange->GetStartContainer();
-  if (!startContainer) {
-    return nullptr;
-  }
-
-  int32_t offset = aRange->StartOffset();
-
-  nsIContent* childContent = startContainer->GetChildAt_Deprecated(offset);
+  nsIContent* childContent = aRange->GetChildAtStartOffset();
   if (!childContent)
     return nullptr;
   // Don't return node if not a cell

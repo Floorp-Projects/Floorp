@@ -323,15 +323,12 @@ class StubField
     }
 
   private:
-    union {
-        uintptr_t dataWord_;
-        uint64_t dataInt64_;
-    };
+    uint64_t data_;
     Type type_;
 
   public:
     StubField(uint64_t data, Type type)
-      : dataInt64_(data), type_(type)
+      : data_(data), type_(type)
     {
         MOZ_ASSERT_IF(sizeIsWord(), data <= UINTPTR_MAX);
     }
@@ -341,8 +338,8 @@ class StubField
     bool sizeIsWord() const { return sizeIsWord(type_); }
     bool sizeIsInt64() const { return sizeIsInt64(type_); }
 
-    uintptr_t asWord() const { MOZ_ASSERT(sizeIsWord()); return dataWord_; }
-    uint64_t asInt64() const { MOZ_ASSERT(sizeIsInt64()); return dataInt64_; }
+    uintptr_t asWord() const { MOZ_ASSERT(sizeIsWord()); return uintptr_t(data_); }
+    uint64_t asInt64() const { MOZ_ASSERT(sizeIsInt64()); return data_; }
 } JS_HAZ_GC_POINTER;
 
 // We use this enum as GuardClass operand, instead of storing Class* pointers

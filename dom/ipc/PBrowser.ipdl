@@ -576,25 +576,6 @@ parent:
     sync EnsureLayersConnected() returns (CompositorOptions compositorOptions);
 
     /**
-     * Notify the parent that the session history state has been updated.
-     *
-     * @param aCount
-     *        The updated number of entries in child session history
-     * @param aLocalIndex
-     *        The local session history index which is loaded.
-     */
-    async SHistoryUpdate(uint32_t aCount, uint32_t aLocalIndex, bool aTruncate);
-
-    /**
-     * When the session history is across multiple root docshells, this function
-     * is used to notify parent that it needs to navigate to an entry out of
-     * local index of the child.
-     *
-     * @param aGlobalIndex The global index of history entry to navigate to.
-     */
-    async RequestCrossBrowserNavigation(uint32_t aGlobalIndex);
-
-    /**
      * This function is used to notify the parent that it should display a
      * canvas permission prompt.
      *
@@ -899,32 +880,6 @@ child:
      * @param aNewHandle The native window handle of the tab's top-level window.
      */
     async UpdateNativeWindowHandle(uintptr_t aNewHandle);
-
-    /**
-     * Called when the session history of this particular PBrowser has been
-     * attached to a grouped session history.
-     *
-     * @param aOffset           The number of entries in the grouped session
-     *                          history before this session history object.
-     */
-    async NotifyAttachGroupedSHistory(uint32_t aOffset);
-
-    /**
-     * Notify that the session history associated to this PBrowser has become
-     * the active history in the grouped session history.
-     *
-     * @param aGlobalLength      The up-to-date number of entries in the grouped
-     *                           session history.
-     * @param aTargetLocalIndex  The target local index to navigate to.
-     */
-    async NotifyPartialSHistoryActive(uint32_t aGlobalLength,
-                                      uint32_t aTargetLocalIndex);
-
-    /**
-     * Notify that the session history asssociates to this PBrowser has become
-     * an inactive history in the grouped session history.
-     */
-    async NotifyPartialSHistoryDeactive();
 
     /**
      * Tell the TabChild that it should expect a Large-Allocation load to occur.

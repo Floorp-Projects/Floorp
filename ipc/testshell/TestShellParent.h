@@ -51,9 +51,9 @@ public:
 protected:
   bool ExecuteCallback(const nsString& aResponse);
 
-  void ActorDestroy(ActorDestroyReason why);
+  void ActorDestroy(ActorDestroyReason why) override;
 
-  mozilla::ipc::IPCResult Recv__delete__(const nsString& aResponse) {
+  mozilla::ipc::IPCResult Recv__delete__(const nsString& aResponse) override {
     if (!ExecuteCallback(aResponse)) {
       return IPC_FAIL_NO_REASON(this);
     }
@@ -63,7 +63,6 @@ protected:
 private:
   JS::PersistentRooted<JS::Value> mCallback;
 };
-
 
 } /* namespace ipc */
 } /* namespace mozilla */

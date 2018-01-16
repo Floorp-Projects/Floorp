@@ -589,6 +589,7 @@ struct nssutilArgSlotFlagTable {
     }
 static struct nssutilArgSlotFlagTable nssutil_argSlotFlagTable[] = {
     NSSUTIL_ARG_ENTRY(RSA, SECMOD_RSA_FLAG),
+    NSSUTIL_ARG_ENTRY(ECC, SECMOD_ECC_FLAG),
     NSSUTIL_ARG_ENTRY(DSA, SECMOD_RSA_FLAG),
     NSSUTIL_ARG_ENTRY(RC2, SECMOD_RC4_FLAG),
     NSSUTIL_ARG_ENTRY(RC4, SECMOD_RC2_FLAG),

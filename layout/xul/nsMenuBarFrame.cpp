@@ -144,7 +144,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
 }
 
 nsMenuFrame*
-nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
+nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool aPeek)
 {
   uint32_t charCode;
   aKeyEvent->GetCharCode(&charCode);
@@ -202,22 +202,24 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 
   // didn't find a matching menu item
 #ifdef XP_WIN
-  // behavior on Windows - this item is on the menu bar, beep and deactivate the menu bar
-  if (mIsActive) {
-    nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (soundInterface)
-      soundInterface->Beep();
-  }
+  if (!aPeek) {
+    // behavior on Windows - this item is on the menu bar, beep and deactivate the menu bar
+    if (mIsActive) {
+      nsCOMPtr<nsISound> soundInterface = do_CreateInstance("@mozilla.org/sound;1");
+      if (soundInterface)
+        soundInterface->Beep();
+    }
 
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
-    nsIFrame* popup = pm->GetTopPopup(ePopupTypeAny);
-    if (popup)
-      pm->HidePopup(popup->GetContent(), true, true, true, false);
-  }
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+      nsIFrame* popup = pm->GetTopPopup(ePopupTypeMenu);
+      if (popup)
+        pm->HidePopup(popup->GetContent(), true, true, true, false);
+    }
 
-  SetCurrentMenuItem(nullptr);
-  SetActive(false);
+    SetCurrentMenuItem(nullptr);
+    SetActive(false);
+  }
 
 #endif  // #ifdef XP_WIN
 

@@ -118,7 +118,7 @@ public:
   already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
     dom::CSSImportRule* aCloneOwnerRule,
     nsIDocument* aCloneDocument,
-    nsINode* aCloneOwningNode) const final;
+    nsINode* aCloneOwningNode) const final override;
 
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);

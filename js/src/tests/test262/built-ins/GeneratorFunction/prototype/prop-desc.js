@@ -3,7 +3,7 @@
 /*---
 es6id: 25.4.5.1
 description: GeneratorFunction.prototype property descriptor
-info: >
+info: |
   This property has the attributes { [[Writable]]: false, [[Enumerable]]:
   false, [[Configurable]]: false }.
 includes: [propertyHelper.js]

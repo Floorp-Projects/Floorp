@@ -141,6 +141,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
         'mozgtk_stub',
     ]
 
+if CONFIG['MOZ_WAYLAND']:
+    USE_LIBS += [
+        'mozwayland',
+    ]
+
 if CONFIG['MOZ_JPROF']:
     USE_LIBS += [
         'jprof',

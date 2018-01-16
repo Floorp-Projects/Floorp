@@ -470,13 +470,14 @@ class DeviceManager(object):
             return processInfo[0]
 
     @abstractmethod
-    def killProcess(self, processName, sig=None):
+    def killProcess(self, processName, sig=None, native=False):
         """
         Kills the process named processName. If sig is not None, process is
         killed with the specified signal.
 
         :param processName: path or name of the process to kill
         :param sig: signal to pass into the kill command (optional)
+        :param native: is this a native process, (like xpcshell)? (optional)
         """
 
     @abstractmethod

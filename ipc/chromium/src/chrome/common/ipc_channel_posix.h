@@ -65,8 +65,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   bool ProcessOutgoingMessages();
 
   // MessageLoopForIO::Watcher implementation.
-  virtual void OnFileCanReadWithoutBlocking(int fd);
-  virtual void OnFileCanWriteWithoutBlocking(int fd);
+  virtual void OnFileCanReadWithoutBlocking(int fd) override;
+  virtual void OnFileCanWriteWithoutBlocking(int fd) override;
 
 #if defined(OS_MACOSX)
   void CloseDescriptors(uint32_t pending_fd_id);

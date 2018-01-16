@@ -8,9 +8,7 @@ interface LoadContext;
 interface TabParent;
 interface URI;
 interface nsIDocShell;
-interface nsIGroupedSHistory;
 interface nsIMessageSender;
-interface nsIPartialSHistory;
 interface nsIPrintSettings;
 interface nsIWebBrowserPersistDocumentReceiver;
 interface nsIWebProgressListener;
@@ -49,35 +47,6 @@ interface FrameLoader {
    */
   [Throws]
   void loadURI(URI aURI, optional boolean originalSrc = false);
-
-  /**
-   * Puts the frameloader in prerendering mode.
-   */
-  [Throws]
-  void setIsPrerendered();
-
-  /**
-   * Make the prerendered frameloader being active (and clear isPrerendered flag).
-   */
-  [Throws]
-  void makePrerenderedLoaderActive();
-
-  /**
-   * Append partial session history from another frame loader.
-   *
-   * @return A promise which will be resolved when the navigation is complete.
-   */
-  [Throws]
-  Promise<void> appendPartialSHistoryAndSwap(FrameLoader aOther);
-
-  /**
-   * If grouped session history is applied, use this function to navigate to
-   * an entry of session history object of another frameloader.
-   *
-   * @return A promise which will be resolved when the navigation is complete.
-   */
-  [Throws]
-  Promise<void> requestGroupedHistoryNavigation(unsigned long aGlobalIndex);
 
   /**
    * Adds a blocking promise for the current cross process navigation.
@@ -181,12 +150,6 @@ interface FrameLoader {
              optional nsIWebProgressListener? aProgressListener = null);
 
   /**
-   * Ensure that the current nsIFrameLoader has a GroupedSHistory.
-   */
-  [Throws]
-  nsIGroupedSHistory ensureGroupedSHistory();
-
-  /**
    * The default event mode automatically forwards the events
    * handled in EventStateManager::HandleCrossProcessEvent to
    * the child content process when these events are targeted to
@@ -260,17 +223,6 @@ interface FrameLoader {
    */
   [Pure]
   readonly attribute unsigned long lazyHeight;
-
-  /**
-   * The partial session history.
-   */
-  readonly attribute nsIPartialSHistory? partialSHistory;
-
-  /**
-   * The grouped session history composed of multiple session history objects
-   * across root docshells.
-   */
-  readonly attribute nsIGroupedSHistory? groupedSHistory;
 
   /**
    * Is `true` if the frameloader is dead (destroy has been called on it)

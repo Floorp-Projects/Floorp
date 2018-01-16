@@ -37,8 +37,13 @@ static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
 static const uint32_t LOW_32_MASK = (1LL << 32) - 1;
+#if MOZ_LITTLE_ENDIAN
 static const int32_t LOW_32_OFFSET = 0;
 static const int32_t HIGH_32_OFFSET = 4;
+#else
+static const int32_t LOW_32_OFFSET = 4;
+static const int32_t HIGH_32_OFFSET = 0;
+#endif
 
 class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
 {
@@ -395,6 +400,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         return ToPayload(Operand(base)).toAddress();
     }
 
+    BaseIndex ToPayload(BaseIndex base) {
+        return BaseIndex(base.base, base.index, base.scale, base.offset + NUNBOX32_PAYLOAD_OFFSET);
+    }
+
   protected:
     Operand ToType(Operand base);
     Address ToType(Address base) {
@@ -413,14 +422,14 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         if (dest.isFloat())
             loadInt32OrDouble(address, dest.fpu());
         else
-            ma_lw(dest.gpr(), address);
+            ma_lw(dest.gpr(), ToPayload(address));
     }
 
     void loadUnboxedValue(BaseIndex address, MIRType type, AnyRegister dest) {
         if (dest.isFloat())
             loadInt32OrDouble(address.base, address.index, dest.fpu(), address.scale);
         else
-            load32(address, dest.gpr());
+            load32(ToPayload(address), dest.gpr());
     }
 
     template <typename T>
@@ -493,6 +502,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
+#if MOZ_LITTLE_ENDIAN
     void pushValue(const Value& val) {
         push(Imm32(val.toNunboxTag()));
         if (val.isGCThing())
@@ -504,6 +514,19 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
         ma_push(reg);
     }
+#else
+    void pushValue(const Value& val) {
+        if (val.isGCThing())
+            push(ImmGCPtr(val.toGCThing()));
+        else
+            push(Imm32(val.toNunboxPayload()));
+        push(Imm32(val.toNunboxTag()));
+    }
+    void pushValue(JSValueType type, Register reg) {
+        ma_push(reg);
+        push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
+    }
+#endif
     void pushValue(const Address& addr);
 
     void storePayload(const Value& val, Address dest);

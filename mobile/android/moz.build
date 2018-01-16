@@ -11,9 +11,6 @@ with Files('**'):
 with Files('branding/**'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
-with Files('build/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
 with Files('config/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 

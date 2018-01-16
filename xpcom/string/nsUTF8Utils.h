@@ -11,7 +11,9 @@
 // use XPCOM assertion/debugging macros, etc.
 
 #include "nscore.h"
+#include "mozilla/arm.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/SSE.h"
 #include "mozilla/TypeTraits.h"
 
@@ -663,6 +665,12 @@ public:
       return;
     }
 #endif
+#if defined(MOZILLA_MAY_SUPPORT_NEON) && defined(MOZ_LITTLE_ENDIAN)
+    if (mozilla::supports_neon()) {
+      write_neon(aSource, aSourceLength);
+      return;
+    }
+#endif
     const char* done_writing = aSource + aSourceLength;
     while (aSource < done_writing) {
       *mDestination++ = (char16_t)(unsigned char)(*aSource++);
@@ -671,6 +679,10 @@ public:
 
   void
   write_sse2(const char* aSource, uint32_t aSourceLength);
+#if defined(MOZILLA_MAY_SUPPORT_NEON) && defined(MOZ_LITTLE_ENDIAN)
+  void
+  write_neon(const char* aSource, uint32_t aSourceLength);
+#endif
 
   void
   write_terminator()
@@ -707,6 +719,12 @@ public:
       return;
     }
 #endif
+#if defined(MOZILLA_MAY_SUPPORT_NEON) && defined(MOZ_LITTLE_ENDIAN)
+    if (mozilla::supports_neon()) {
+      write_neon(aSource, aSourceLength);
+      return;
+    }
+#endif
     const char16_t* done_writing = aSource + aSourceLength;
     while (aSource < done_writing) {
       *mDestination++ = (char)(*aSource++);
@@ -716,6 +734,10 @@ public:
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   void
   write_sse2(const char16_t* aSource, uint32_t aSourceLength);
+#endif
+#if defined(MOZILLA_MAY_SUPPORT_NEON) && defined(MOZ_LITTLE_ENDIAN)
+  void
+  write_neon(const char16_t* aSource, uint32_t aSourceLength);
 #endif
 
   void

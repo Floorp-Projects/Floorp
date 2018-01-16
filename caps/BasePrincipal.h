@@ -60,15 +60,15 @@ public:
   enum DocumentDomainConsideration { DontConsiderDocumentDomain, ConsiderDocumentDomain};
   bool Subsumes(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration);
 
-  NS_IMETHOD GetOrigin(nsACString& aOrigin) final;
-  NS_IMETHOD GetOriginNoSuffix(nsACString& aOrigin) final;
-  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) final;
-  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final;
-  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final;
-  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final;
-  NS_IMETHOD SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* other, bool* _retval) final;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final;
-  NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final;
+  NS_IMETHOD GetOrigin(nsACString& aOrigin) final override;
+  NS_IMETHOD GetOriginNoSuffix(nsACString& aOrigin) final override;
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval) final override;
+  NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval) final override;
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval) final override;
+  NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final override;
+  NS_IMETHOD SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* other, bool* _retval) final override;
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final override;
+  NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final override;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD EnsureCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
@@ -79,12 +79,12 @@ public:
   NS_IMETHOD GetIsCodebasePrincipal(bool* aResult) override;
   NS_IMETHOD GetIsExpandedPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsSystemPrincipal(bool* aResult) override;
-  NS_IMETHOD GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) final;
-  NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final;
-  NS_IMETHOD GetAppId(uint32_t* aAppId) final;
-  NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement) final;
-  NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
-  NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
+  NS_IMETHOD GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) final override;
+  NS_IMETHOD GetOriginSuffix(nsACString& aOriginSuffix) final override;
+  NS_IMETHOD GetAppId(uint32_t* aAppId) final override;
+  NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserElement) final override;
+  NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final override;
+  NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final override;
 
   virtual bool AddonHasPermission(const nsAtom* aPerm);
 
@@ -102,7 +102,7 @@ public:
   static already_AddRefed<BasePrincipal>
   CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs);
 
-  const OriginAttributes& OriginAttributesRef() final { return mOriginAttributes; }
+  const OriginAttributes& OriginAttributesRef() final override { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   extensions::WebExtensionPolicy* AddonPolicy();
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }

@@ -98,7 +98,7 @@ tasks:
               TASKCLUSTER_CACHES: /builds/worker/checkouts
             - $if: 'tasks_for == "action"'
               then:
-                ACTION_TASK_GROUP_ID: '${action.taskGroupId}'
+                ACTION_TASK_GROUP_ID: '${ownTaskId}'
                 ACTION_TASK_ID: {$json: {$eval: 'taskId'}}
                 ACTION_TASK: {$json: {$eval: 'task'}}
                 ACTION_INPUT: {$json: {$eval: 'input'}}
@@ -185,4 +185,7 @@ tasks:
                   taskId: {$eval: 'taskId'}
                   input: {$eval: 'input'}
                   parameters: {$eval: 'parameters'}
+          - $if: 'tasks_for == "cron"'
+            then:
+              cron: {$json: {$eval: 'cron'}}
           - tasks_for: '${tasks_for}'

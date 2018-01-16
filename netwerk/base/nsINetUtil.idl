@@ -83,13 +83,6 @@ interface nsINetUtil : nsISupports
    */
   nsIURI toImmutableURI(in nsIURI aURI);
 
-  /**
-   * Create a simple nested URI using the result of
-   * toImmutableURI on the passed-in aURI which may not be null.
-   * Note: The return URI will not have had its spec set yet.
-   */
-  nsIURI newSimpleNestedURI(in nsIURI aURI);
-
   /** Escape every character with its %XX-escaped equivalent */
   const unsigned long ESCAPE_ALL = 0;
 

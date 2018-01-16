@@ -295,9 +295,9 @@ fi
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-if [ -n "$NSS_FORCE_FIPS" ]; then
+NO_INIT_SUPPORT=`certutil --build-flags |grep -cw NSS_NO_INIT_SUPPORT`
+if [ $NO_INIT_SUPPORT -eq 0 ]; then
     RUN_FIPS="fips"
-    export NSS_TEST_ENABLE_FIPS=1
 fi
 
 tests="cipher lowhash libpkix cert dbtests tools $RUN_FIPS sdr crmf smime ssl ocsp merge pkits ec gtests ssl_gtests"
@@ -310,7 +310,7 @@ TESTS=${NSS_TESTS:-$tests}
 ALL_TESTS=${TESTS}
 
 nss_ssl_tests="crl iopr policy"
-if [ -n "$NSS_FORCE_FIPS" ]; then
+if [ $NO_INIT_SUPPORT -eq 0 ]; then
     nss_ssl_tests="$nss_ssl_tests fips_normal normal_fips"
 fi
 NSS_SSL_TESTS="${NSS_SSL_TESTS:-$nss_ssl_tests}"

@@ -79,13 +79,6 @@ AddStyleSheetTransaction::UndoTransaction()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-AddStyleSheetTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("AddStyleSheetTransaction");
-  return NS_OK;
-}
-
 /******************************************************************************
  * RemoveStyleSheetTransaction
  ******************************************************************************/
@@ -123,13 +116,6 @@ RemoveStyleSheetTransaction::UndoTransaction()
     return NS_ERROR_NOT_INITIALIZED;
   }
   AddStyleSheet(*mEditorBase, mSheet);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-RemoveStyleSheetTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("RemoveStyleSheetTransaction");
   return NS_OK;
 }
 

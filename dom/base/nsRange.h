@@ -365,10 +365,7 @@ public:
 
   static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
                                   mozilla::ErrorResult& aError,
-                                  nsIContent* aStartContainer,
-                                  uint32_t aStartOffset,
-                                  nsIContent* aEndContainer,
-                                  uint32_t aEndOffset);
+                                  nsIContent* aContainer);
 
   nsINode* GetParentObject() const { return mOwner; }
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override final;

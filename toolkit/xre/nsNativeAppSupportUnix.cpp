@@ -138,9 +138,9 @@ public:
 
   void DisconnectFromSM();
 #endif
-  NS_IMETHOD Start(bool* aRetVal);
-  NS_IMETHOD Stop(bool *aResult);
-  NS_IMETHOD Enable();
+  NS_IMETHOD Start(bool* aRetVal) override;
+  NS_IMETHOD Stop(bool *aResult) override;
+  NS_IMETHOD Enable() override;
 
 private:
 #if MOZ_X11

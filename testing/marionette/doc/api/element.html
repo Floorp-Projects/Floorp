@@ -82,7 +82,7 @@ functionality for looking up and retrieving elements.</p></div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line46">line 46</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -309,7 +309,7 @@ top-left corner.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line667">line 667</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line920">line 920</a>
     </li></ul></dd>
     
 
@@ -337,7 +337,7 @@ top-left corner.</p>
     <div class="param-desc">
     
         <p>TypeError
-    If |xOffset| or |yOffset| are not numbers.</p>
+    If <var>xOffset</var> or <var>yOffset</var> are not numbers.</p>
     
     </div>
 
@@ -389,10 +389,10 @@ top-left corner.</p>
     <p>Find a single element or a collection of elements starting at the
 document root or a given node.</p>
 <p>If |timeout| is above 0, an implicit search technique is used.
-This will wait for the duration of |timeout| for the element
-to appear in the DOM.</p>
-<p>See the |element.Strategy| enum for a full list of supported
-search strategies that can be passed to |strategy|.</p>
+This will wait for the duration of <var>timeout</var> for the
+element to appear in the DOM.</p>
+<p>See the <code>element.Strategy</code> enum for a full list of supported
+search strategies that can be passed to <var>strategy</var>.</p>
 <p>Available flags for <var>opts</var>:</p>
 <p><dl>
   <dt><code>all</code>
@@ -569,7 +569,7 @@ search strategies that can be passed to |strategy|.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line240">line 240</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line315">line 315</a>
     </li></ul></dd>
     
 
@@ -661,7 +661,7 @@ search strategies that can be passed to |strategy|.</p>
     
 
     
-    <h4 class="name" id=".findByLinkText"><span class="type-signature">(static) </span>findByLinkText<span class="signature">(node, s)</span><span class="type-signature"> &rarr; {Array.&lt;DOMAnchorElement>}</span></h4>
+    <h4 class="name" id=".findAnonymousNodes"><span class="type-signature">(static) </span>findAnonymousNodes<span class="signature">(document, node)</span><span class="type-signature"> &rarr; {Iterable.&lt;XULElement>}</span></h4>
     
 
     
@@ -669,7 +669,7 @@ search strategies that can be passed to |strategy|.</p>
 
 
 <div class="description">
-    <p>Find all hyperlinks dscendant of |node| which link text is |s|.</p>
+    <p>Find anonymous nodes of <var>node</var>.</p>
 </div>
 
 
@@ -705,13 +705,13 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>node</code></td>
+                <td class="name"><code>document</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">XULDocument</span>
 
 
             
@@ -721,14 +721,195 @@ search strategies that can be passed to |strategy|.</p>
 
             
 
-            <td class="description last"><p>Where in the DOM hierarchy to being searching.</p></td>
+            <td class="description last"><p>Root node of the document.</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>s</code></td>
+                <td class="name"><code>node</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">XULElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Where in the DOM hierarchy to begin searching.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line487">line 487</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>Iterator over anonymous elements.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Iterable.&lt;XULElement></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".findByLinkText"><span class="type-signature">(static) </span>findByLinkText<span class="signature">(startNode, linkText)</span><span class="type-signature"> &rarr; {Iterable.&lt;HTMLAnchorElement>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Find all hyperlinks descendant of <var>startNode</var> which
+link text is <var>linkText</var>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>startNode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Where in the DOM hierarchy to begin searching.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>linkText</code></td>
             
 
             <td class="type">
@@ -785,7 +966,7 @@ search strategies that can be passed to |strategy|.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line381">line 381</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line455">line 455</a>
     </li></ul></dd>
     
 
@@ -812,7 +993,7 @@ search strategies that can be passed to |strategy|.</p>
 
         
 <div class="param-desc">
-    <p>Sequence of link elements which text is |s|.</p>
+    <p>Sequence of link elements which text is <var>s</var>.</p>
 </div>
 
 
@@ -823,7 +1004,7 @@ search strategies that can be passed to |strategy|.</p>
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;DOMAnchorElement></span>
+<span class="param-type">Iterable.&lt;HTMLAnchorElement></span>
 
 
     </dd>
@@ -841,7 +1022,7 @@ search strategies that can be passed to |strategy|.</p>
     
 
     
-    <h4 class="name" id=".findByPartialLinkText"><span class="type-signature">(static) </span>findByPartialLinkText<span class="signature">(node, s)</span><span class="type-signature"> &rarr; {Array.&lt;DOMAnchorElement>}</span></h4>
+    <h4 class="name" id=".findByPartialLinkText"><span class="type-signature">(static) </span>findByPartialLinkText<span class="signature">(startNode, linkText)</span><span class="type-signature"> &rarr; {Iterable.&lt;HTMLAnchorElement>}</span></h4>
     
 
     
@@ -849,7 +1030,8 @@ search strategies that can be passed to |strategy|.</p>
 
 
 <div class="description">
-    <p>Find all hyperlinks descendant of |node| which link text contains |s|.</p>
+    <p>Find all hyperlinks descendant of <var>startNode</var> which
+link text contains <var>linkText</var>.</p>
 </div>
 
 
@@ -885,13 +1067,13 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>node</code></td>
+                <td class="name"><code>startNode</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">Element</span>
 
 
             
@@ -908,7 +1090,7 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>s</code></td>
+                <td class="name"><code>linkText</code></td>
             
 
             <td class="type">
@@ -965,7 +1147,7 @@ search strategies that can be passed to |strategy|.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line396">line 396</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line472">line 472</a>
     </li></ul></dd>
     
 
@@ -992,7 +1174,8 @@ search strategies that can be passed to |strategy|.</p>
 
         
 <div class="param-desc">
-    <p>Sequence of link elements which text containins |s|.</p>
+    <p>Iterator of link elements which text containins
+    <var>linkText</var>.</p>
 </div>
 
 
@@ -1003,7 +1186,7 @@ search strategies that can be passed to |strategy|.</p>
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;DOMAnchorElement></span>
+<span class="param-type">Iterable.&lt;HTMLAnchorElement></span>
 
 
     </dd>
@@ -1021,7 +1204,7 @@ search strategies that can be passed to |strategy|.</p>
     
 
     
-    <h4 class="name" id=".findByXPath"><span class="type-signature">(static) </span>findByXPath<span class="signature">(root, startNode, expr)</span><span class="type-signature"> &rarr; {DOMElement}</span></h4>
+    <h4 class="name" id=".findByXPath"><span class="type-signature">(static) </span>findByXPath<span class="signature">(document, startNode, expression)</span><span class="type-signature"> &rarr; {Node}</span></h4>
     
 
     
@@ -1065,13 +1248,13 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>root</code></td>
+                <td class="name"><code>document</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">HTMLDocument</span>
 
 
             
@@ -1081,7 +1264,7 @@ search strategies that can be passed to |strategy|.</p>
 
             
 
-            <td class="description last"><p>Document root</p></td>
+            <td class="description last"><p>Document root.</p></td>
         </tr>
 
     
@@ -1094,7 +1277,7 @@ search strategies that can be passed to |strategy|.</p>
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">Element</span>
 
 
             
@@ -1111,7 +1294,7 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>expr</code></td>
+                <td class="name"><code>expression</code></td>
             
 
             <td class="type">
@@ -1168,7 +1351,7 @@ search strategies that can be passed to |strategy|.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line339">line 339</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line414">line 414</a>
     </li></ul></dd>
     
 
@@ -1195,7 +1378,7 @@ search strategies that can be passed to |strategy|.</p>
 
         
 <div class="param-desc">
-    <p>First element matching expression.</p>
+    <p>First element matching <var>expression</var>.</p>
 </div>
 
 
@@ -1206,7 +1389,7 @@ search strategies that can be passed to |strategy|.</p>
     </dt>
     <dd>
         
-<span class="param-type">DOMElement</span>
+<span class="param-type">Node</span>
 
 
     </dd>
@@ -1224,7 +1407,7 @@ search strategies that can be passed to |strategy|.</p>
     
 
     
-    <h4 class="name" id=".findByXPathAll"><span class="type-signature">(static) </span>findByXPathAll<span class="signature">(root, startNode, expr)</span><span class="type-signature"> &rarr; {Array.&lt;DOMElement>}</span></h4>
+    <h4 class="name" id=".findByXPathAll"><span class="type-signature">(static) </span>findByXPathAll<span class="signature">(document, startNode, expression)</span><span class="type-signature"> &rarr; {Iterable.&lt;Node>}</span></h4>
     
 
     
@@ -1268,13 +1451,13 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>root</code></td>
+                <td class="name"><code>document</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">HTMLDocument</span>
 
 
             
@@ -1297,7 +1480,7 @@ search strategies that can be passed to |strategy|.</p>
             <td class="type">
             
                 
-<span class="param-type">DOMElement</span>
+<span class="param-type">Element</span>
 
 
             
@@ -1314,7 +1497,7 @@ search strategies that can be passed to |strategy|.</p>
 
         <tr>
             
-                <td class="name"><code>expr</code></td>
+                <td class="name"><code>expression</code></td>
             
 
             <td class="type">
@@ -1371,7 +1554,7 @@ search strategies that can be passed to |strategy|.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line358">line 358</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line433">line 433</a>
     </li></ul></dd>
     
 
@@ -1398,7 +1581,7 @@ search strategies that can be passed to |strategy|.</p>
 
         
 <div class="param-desc">
-    <p>Sequence of found elements matching expression.</p>
+    <p>Iterator over elements matching <var>expression</var>.</p>
 </div>
 
 
@@ -1409,7 +1592,189 @@ search strategies that can be passed to |strategy|.</p>
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;DOMElement></span>
+<span class="param-type">Iterable.&lt;Node></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".findClosest"><span class="type-signature">(static) </span>findClosest<span class="signature">(startNode, selector)</span><span class="type-signature"> &rarr; {Node}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Finds the closest parent node of <var>startNode</var> by CSS a
+<var>selector</var> expression.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>startNode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Node</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Cyce through <var>startNode</var>'s parent nodes in tree-order
+    and return the first match to <var>selector</var>.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>selector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>CSS selector expression.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line680">line 680</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>First match to <var>selector</var>, or null if no match was found.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Node</span>
 
 
     </dd>
@@ -1437,9 +1802,10 @@ search strategies that can be passed to |strategy|.</p>
 <div class="description">
     <p>Gets the element's container element.</p>
 <p>An element container is defined by the WebDriver
-specification to be an <option> element in a valid element context
-(https://html.spec.whatwg.org/#concept-element-contexts), meaning
-that it has an ancestral element that is either <datalist> or <select>.</p>
+specification to be an <tt>&lt;option&gt;</tt> element in a
+<a href="https://html.spec.whatwg.org/#concept-element-contexts">valid
+element context</a>, meaning that it has an ancestral element
+that is either <tt>&lt;datalist&gt;</tt> or <tt>&lt;select&gt;</tt>.</p>
 <p>If the element does not have a valid context, its container element
 is itself.</p>
 </div>
@@ -1534,7 +1900,7 @@ is itself.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line737">line 737</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line991">line 991</a>
     </li></ul></dd>
     
 
@@ -1561,7 +1927,7 @@ is itself.</p>
 
         
 <div class="param-desc">
-    <p>Container element of |el|.</p>
+    <p>Container element of <var>el</var>.</p>
 </div>
 
 
@@ -1716,7 +2082,7 @@ rectangle that is inside the viewport.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line864">line 864</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1116">line 1116</a>
     </li></ul></dd>
     
 
@@ -1877,7 +2243,7 @@ of any rendered scrollbars.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line895">line 895</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1147">line 1147</a>
     </li></ul></dd>
     
 
@@ -2112,7 +2478,7 @@ of any rendered scrollbars.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line704">line 704</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line957">line 957</a>
     </li></ul></dd>
     
 
@@ -2139,7 +2505,7 @@ of any rendered scrollbars.</p>
 
         
 <div class="param-desc">
-    <p>True if if |el| is in viewport, false otherwise.</p>
+    <p>True if if <var>el</var> is in viewport, false otherwise.</p>
 </div>
 
 
@@ -2228,7 +2594,7 @@ of any rendered scrollbars.</p>
 
             
 
-            <td class="description last"><p>Element to test if |attr| is a boolean attribute on.</p></td>
+            <td class="description last"><p>Element to test if <var>attr</var> is a boolean attribute on.</p></td>
         </tr>
 
     
@@ -2292,7 +2658,7 @@ of any rendered scrollbars.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line989">line 989</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1304">line 1304</a>
     </li></ul></dd>
     
 
@@ -2348,7 +2714,7 @@ of any rendered scrollbars.</p>
     
 
     
-    <h4 class="name" id=".isCollection"><span class="type-signature">(static) </span>isCollection<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".isCollection"><span class="type-signature">(static) </span>isCollection<span class="signature">(seq)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -2356,7 +2722,7 @@ of any rendered scrollbars.</p>
 
 
 <div class="description">
-    <p>Determines if |obj| is an HTML or JS collection.</p>
+    <p>Determines if <var>obj<var> is an HTML or JS collection.</p>
 </div>
 
 
@@ -2365,6 +2731,55 @@ of any rendered scrollbars.</p>
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>seq</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Type to determine.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -2400,7 +2815,7 @@ of any rendered scrollbars.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line577">line 577</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line700">line 700</a>
     </li></ul></dd>
     
 
@@ -2423,6 +2838,988 @@ of any rendered scrollbars.</p>
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if <var>seq</va> is collection.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isDisabled"><span class="type-signature">(static) </span>isDisabled<span class="signature">(el)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>An element is considered disabled if it is a an element
+that can be disabled, or it belongs to a container group which
+<code>disabled</code> content IDL attribute affects it.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>el</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element to test for disabledness.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line821">line 821</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if element, or its container group, is disabled.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isDOMElement"><span class="type-signature">(static) </span>isDOMElement<span class="signature">(node)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Ascertains whether <var>node</var> is a DOM element.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>node</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element thought to be an <code>Element</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1216">line 1216</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if <var>node</var> is a DOM element, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isDOMWindow"><span class="type-signature">(static) </span>isDOMWindow<span class="signature">(node)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Ascertains whether <var>node</var> is a <code>WindowProxy</code>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>node</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Node thought to be a <code>WindowProxy</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1251">line 1251</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if <var>node</var> is a DOM window.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isEditable"><span class="type-signature">(static) </span>isEditable<span class="signature">(Element)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Determines if an element is editable according to WebDriver.</p>
+<p>An element is considered editable if it is not read-only or
+disabled, and one of the following conditions are met:</p>
+<ul>
+<li>It is a <code>&lt;textarea&gt;</code> element.
+
+<li>It is an <code>&lt;input&gt;</code> element that is not of
+the <code>checkbox</code>, <code>radio</code>, <code>hidden</code>,
+<code>submit</code>, <code>button</code>, or <code>image</code> types.
+
+<li>It is content-editable.
+
+<li>It belongs to a document in design mode.
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>Element</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>to test if editable.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line886">line 886</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if editable, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isEditingHost"><span class="type-signature">(static) </span>isEditingHost<span class="signature">(el)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>An editing host is a node that is either an HTML element with a
+<code>contenteditable</code> attribute, or the HTML element child
+of a document whose <code>designMode</code> is enabled.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>el</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element to determine if is an editing host.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line857">line 857</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if editing host, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isElement"><span class="type-signature">(static) </span>isElement<span class="signature">(node)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Ascertains whether <var>node</var> is a DOM-, SVG-, or XUL element.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>node</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element thought to be an <code>Element</code> or
+    <code>XULElement</code>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1203">line 1203</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if <var>node</var> is an element, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -2446,12 +3843,13 @@ of any rendered scrollbars.</p>
 paint tree.</p>
 <p>This means an element is considered to be in view, but not necessarily
 pointer-interactable, if it is found somewhere in the
-|elementsFromPoint| list at |el|'s in-view centre coordinates.</p>
-<p>Before running the check, we change |el|'s pointerEvents style property
-to &quot;auto&quot;, since elements without pointer events enabled do not turn
-up in the paint tree we get from document.elementsFromPoint.  This is
-a specialisation that is only relevant when checking if the element is
-in view.</p>
+<code>elementsFromPoint</code> list at <var>el</var>'s in-view
+centre coordinates.</p>
+<p>Before running the check, we change <var>el</var>'s pointerEvents
+style property to &quot;auto&quot;, since elements without pointer events
+enabled do not turn up in the paint tree we get from
+document.elementsFromPoint.  This is a specialisation that is only
+relevant when checking if the element is in view.</p>
 </div>
 
 
@@ -2544,7 +3942,7 @@ in view.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line779">line 779</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1024">line 1024</a>
     </li></ul></dd>
     
 
@@ -2571,7 +3969,7 @@ in view.</p>
 
         
 <div class="param-desc">
-    <p>True if |el| is inside the viewport, or false otherwise.</p>
+    <p>True if <var>el</var> is inside the viewport, or false otherwise.</p>
 </div>
 
 
@@ -2707,7 +4105,7 @@ inclusive descendant of itself.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line843">line 843</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1095">line 1095</a>
     </li></ul></dd>
     
 
@@ -2763,7 +4161,7 @@ inclusive descendant of itself.</p>
     
 
     
-    <h4 class="name" id=".isStale"><span class="type-signature">(static) </span>isStale<span class="signature">(el)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id=".isReadOnly"><span class="type-signature">(static) </span>isReadOnly<span class="signature">(el)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -2771,9 +4169,9 @@ inclusive descendant of itself.</p>
 
 
 <div class="description">
-    <p>Determines if <var>el</var> is stale.</p>
-<p>A stale element is an element no longer attached to the DOM or which
-node document is not the active document.</p>
+    <p>An element is considered read only if it is an
+<code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code>
+element whose <code>readOnly</code> content IDL attribute is set.</p>
 </div>
 
 
@@ -2825,7 +4223,7 @@ node document is not the active document.</p>
 
             
 
-            <td class="description last"><p>DOM element to check for staleness.</p></td>
+            <td class="description last"><p>Element to test is read only.</p></td>
         </tr>
 
     
@@ -2866,7 +4264,386 @@ node document is not the active document.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line633">line 633</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line805">line 805</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if element is read only.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isSelected"><span class="type-signature">(static) </span>isSelected<span class="signature">(el)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Determine if <var>el</var> is selected or not.</p>
+<p>This operation only makes sense on</p>
+<p><tt>&lt;input type=checkbox&gt;</tt>,</p>
+<p><tt>&lt;input type=radio&gt;</tt>,
+and <tt>&gt;option&gt;</tt> elements.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>el</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">DOMElement</span>
+|
+
+<span class="param-type">XULElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element to test if selected.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line771">line 771</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if element is selected, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isStale"><span class="type-signature">(static) </span>isStale<span class="signature">(el<span class="signature-attributes">opt</span>, window<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Determines if <var>el</var> is stale.</p>
+<p>A stale element is an element no longer attached to the DOM or which
+node document is not the active document of the current browsing
+context.</p>
+<p>The currently selected browsing context, specified through
+<var>window<var>, is a WebDriver concept defining the target
+against which commands will run.  As the current browsing context
+may differ from <var>el</var>'s associated context, an element is
+considered stale even if it is connected to a living (not discarded)
+browsing context such as an <tt>&lt;iframe&gt;</tt>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>el</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>DOM element to check for staleness.  If null, which may be
+    the case if the element has been unwrapped from a weak
+    reference, it is always considered stale.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>window</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">WindowProxy</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>Current browsing context, which may differ from the associate
+    browsing context of <var>el</var>.  When retrieving XUL
+    elements, this is optional.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line743">line 743</a>
     </li></ul></dd>
     
 
@@ -3102,7 +4879,7 @@ not displayed or the given coordinates are not within the viewport.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line806">line 806</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1059">line 1059</a>
     </li></ul></dd>
     
 
@@ -3158,7 +4935,7 @@ not displayed or the given coordinates are not within the viewport.</p>
     
 
     
-    <h4 class="name" id=".isWebElementReference"><span class="type-signature">(static) </span>isWebElementReference<span class="signature">(ref)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id=".isXULElement"><span class="type-signature">(static) </span>isXULElement<span class="signature">(node)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -3166,8 +4943,7 @@ not displayed or the given coordinates are not within the viewport.</p>
 
 
 <div class="description">
-    <p>Checks if |ref| has either |element.Key| or |element.LegacyKey|
-as properties.</p>
+    <p>Ascertains whether <var>el</var> is a XUL- or XBL element.</p>
 </div>
 
 
@@ -3203,13 +4979,13 @@ as properties.</p>
 
         <tr>
             
-                <td class="name"><code>ref</code></td>
+                <td class="name"><code>node</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object.&lt;string, string></span>
+<span class="param-type">*</span>
 
 
             
@@ -3219,7 +4995,7 @@ as properties.</p>
 
             
 
-            <td class="description last"><p>Object that represents a web element reference.</p></td>
+            <td class="description last"><p>Element thought to be a XUL- or XBL element.</p></td>
         </tr>
 
     
@@ -3260,7 +5036,7 @@ as properties.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line610">line 610</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1234">line 1234</a>
     </li></ul></dd>
     
 
@@ -3287,7 +5063,8 @@ as properties.</p>
 
         
 <div class="param-desc">
-    <p>True if |ref| has either expected property.</p>
+    <p>True if <var>node</var> is a XULElement or XBLElement,
+    false otherwise.</p>
 </div>
 
 
@@ -3417,7 +5194,7 @@ as properties.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="element.js.html">element.js</a>, <a href="element.js.html#line937">line 937</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1187">line 1187</a>
     </li></ul></dd>
     
 
@@ -3461,13 +5238,13 @@ as properties.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="ChromeWebElement.html">ChromeWebElement</a></li><li><a href="Command.html">Command</a></li><li><a href="ContentEventObserverService.html">ContentEventObserverService</a></li><li><a href="ContentWebElement.html">ContentWebElement</a></li><li><a href="ContentWebFrame.html">ContentWebFrame</a></li><li><a href="ContentWebWindow.html">ContentWebWindow</a></li><li><a href="Context.html">Context</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li><li><a href="WebElement.html">WebElement</a></li><li><a href="WebElementEventTarget.html">WebElementEventTarget</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#exitFullscreen">exitFullscreen</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#PollPromise">PollPromise</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restoreWindow">restoreWindow</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#truncate">truncate</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#whenIdle">whenIdle</a></li><li><a href="global.html#WindowState">WindowState</a></li><li><a href="global.html#XUL_CHECKED_ELS">XUL_CHECKED_ELS</a></li><li><a href="global.html#XUL_SELECTED_ELS">XUL_SELECTED_ELS</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Oct 04 2017 18:33:34 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

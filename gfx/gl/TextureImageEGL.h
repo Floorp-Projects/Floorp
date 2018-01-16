@@ -26,11 +26,11 @@ public:
 
     virtual ~TextureImageEGL();
 
-    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
+    virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0)) override;
 
-    virtual void BindTexture(GLenum aTextureUnit);
+    virtual void BindTexture(GLenum aTextureUnit) override;
 
-    virtual GLuint GetTextureID()
+    virtual GLuint GetTextureID() override
     {
         // Ensure the texture is allocated before it is used.
         if (mTextureState == Created) {
@@ -39,7 +39,7 @@ public:
         return mTexture;
     };
 
-    virtual void Resize(const gfx::IntSize& aSize);
+    virtual void Resize(const gfx::IntSize& aSize) override;
 
     bool BindTexImage();
 

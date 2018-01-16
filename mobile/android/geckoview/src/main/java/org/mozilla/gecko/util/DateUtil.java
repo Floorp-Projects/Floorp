@@ -45,7 +45,7 @@ public class DateUtil {
      * savings time in some regions. We return minutes because we can accurately represent time zones that are
      * offset by non-integer hour values, e.g. parts of New Zealand at UTC+12:45.
      *
-     * @param calendar A calendar with the appropriate time zone & date already set.
+     * @param calendar A calendar with the appropriate time zone &amp; date already set.
      */
     public static int getTimezoneOffsetInMinutesForGivenDate(@NonNull final Calendar calendar) {
         // via Date.getTimezoneOffset deprecated docs (note: it had incorrect order of operations).

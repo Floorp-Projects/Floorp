@@ -3,13 +3,13 @@
 
 package org.mozilla.gecko.db;
 
+import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.provider.Browser;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,15 +41,12 @@ public class BrowserProviderGeneralTest {
 
     private static final long INVALID_ID = -1;
 
-    private BrowserProvider provider;
+    private ContentProvider provider;
     private ContentProviderClient browserClient;
 
     @Before
     public void setUp() throws Exception {
-        provider = new BrowserProvider();
-        provider.onCreate();
-
-        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
+        provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
 
         ShadowContentResolver contentResolver = new ShadowContentResolver();
         browserClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);

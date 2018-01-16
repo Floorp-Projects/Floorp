@@ -4592,6 +4592,15 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
   MOZ_ASSERT(aElement->IsInComposedDoc());
   MOZ_ASSERT(aElement->IsStyledByServo());
 
+  // Check the existing root early on, since it may allow us to short-circuit
+  // before examining the parent chain.
+  nsIDocument* doc = aElement->GetComposedDoc();
+  nsINode* existingRoot = doc->GetServoRestyleRoot();
+  if (existingRoot == aElement) {
+    doc->SetServoRestyleRootDirtyBits(doc->GetServoRestyleRootDirtyBits() | aBits);
+    return;
+  }
+
   nsINode* parent = aElement->GetFlattenedTreeParentNodeForStyle();
   if (!parent) {
     // The element is not in the flattened tree, bail.
@@ -4630,15 +4639,11 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     }
   }
 
-  nsIDocument* doc = aElement->GetComposedDoc();
   if (nsIPresShell* shell = doc->GetShell()) {
     shell->EnsureStyleFlush();
   }
 
   MOZ_ASSERT(parent->IsElement() || parent == doc);
-
-  nsINode* existingRoot = doc->GetServoRestyleRoot();
-  uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
 
   // The bit checks below rely on this to arrive to useful conclusions about the
   // shape of the tree.
@@ -4646,8 +4651,8 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
 
   // If there's no existing restyle root, or if the root is already aElement,
   // just note the root+bits and return.
-  if (!existingRoot || existingRoot == aElement) {
-    doc->SetServoRestyleRoot(aElement, existingBits | aBits);
+  if (!existingRoot) {
+    doc->SetServoRestyleRoot(aElement, aBits);
     return;
   }
 
@@ -4657,6 +4662,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     !parent->IsElement() ||
     !PropagateBits(parent->AsElement(), aBits, existingRoot);
 
+  uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
   if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
       // make sure the bit we propagated is also registered on the root.

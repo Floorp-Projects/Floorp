@@ -7,7 +7,7 @@ description: ASI test in field declarations -- error when computed name interpre
 esid: sec-automatic-semicolon-insertion
 features: [class, class-fields-public]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

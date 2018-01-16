@@ -306,10 +306,10 @@ class TLValueTrackingTraverser : public TIntermTraverser
                              int shaderVersion);
     virtual ~TLValueTrackingTraverser() {}
 
-    void traverseBinary(TIntermBinary *node) final;
-    void traverseUnary(TIntermUnary *node) final;
-    void traverseFunctionPrototype(TIntermFunctionPrototype *node) final;
-    void traverseAggregate(TIntermAggregate *node) final;
+    void traverseBinary(TIntermBinary *node) final override;
+    void traverseUnary(TIntermUnary *node) final override;
+    void traverseFunctionPrototype(TIntermFunctionPrototype *node) final override;
+    void traverseAggregate(TIntermAggregate *node) final override;
 
   protected:
     bool isLValueRequiredHere() const

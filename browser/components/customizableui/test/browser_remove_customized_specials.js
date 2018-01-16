@@ -15,9 +15,10 @@ add_task(async function() {
   let expectedPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
   info("Placements before drag: " + expectedPlacements.join(","));
   let lastItem = document.getElementById(expectedPlacements[expectedPlacements.length - 1]);
-  simulateItemDrag(lastSpring, lastItem);
+  await waitForElementShown(lastItem);
+  simulateItemDrag(lastSpring, lastItem, "end");
   expectedPlacements.splice(expectedPlacements.indexOf(lastSpring.id), 1);
-  expectedPlacements.splice(expectedPlacements.length - 1, 0, lastSpring.id);
+  expectedPlacements.push(lastSpring.id);
   let actualPlacements = CustomizableUI.getWidgetIdsInArea("nav-bar");
   // Log these separately because Assert.deepEqual truncates the stringified versions...
   info("Actual placements: " + actualPlacements.join(","));

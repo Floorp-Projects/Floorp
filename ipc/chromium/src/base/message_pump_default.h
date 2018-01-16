@@ -19,10 +19,10 @@ class MessagePumpDefault : public MessagePump {
   ~MessagePumpDefault() {}
 
   // MessagePump methods:
-  virtual void Run(Delegate* delegate);
-  virtual void Quit();
-  virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
+  virtual void Run(Delegate* delegate) override;
+  virtual void Quit() override;
+  virtual void ScheduleWork() override;
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) override;
 
  protected:
   // This flag is set to false when Run should return.
