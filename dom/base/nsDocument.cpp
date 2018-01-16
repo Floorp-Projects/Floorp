@@ -7454,10 +7454,10 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
     }
   }
 
-  uint32_t count = aNode->GetChildCount();
-  for (uint32_t i = 0; i < count; ++i) {
-    BlastSubtreeToPieces(aNode->GetFirstChild());
-    aNode->RemoveChildAt_Deprecated(0, false);
+  while (aNode->HasChildren()) {
+    nsIContent* node = aNode->GetFirstChild();
+    BlastSubtreeToPieces(node);
+    aNode->RemoveChildNode(node, false);
   }
 }
 
@@ -7655,9 +7655,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       // Remove from parent.
       nsCOMPtr<nsINode> parent = adoptedNode->GetParentNode();
       if (parent) {
-        int32_t idx = parent->IndexOf(adoptedNode);
-        MOZ_ASSERT(idx >= 0);
-        parent->RemoveChildAt_Deprecated(idx, true);
+        parent->RemoveChildNode(adoptedNode->AsContent(), true);
       } else {
         MOZ_ASSERT(!adoptedNode->IsInUncomposedDoc());
 
