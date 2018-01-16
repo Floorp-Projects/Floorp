@@ -672,7 +672,8 @@ function getTypedURLs(registryKeyPath) {
     let entryName;
     for (let entry = 1; typedURLKey.hasValue((entryName = "url" + entry)); entry++) {
       let url = typedURLKey.readStringValue(entryName);
-      let timeTyped = 0;
+      // If we can't get a date for whatever reason, default to 6 months ago
+      let timeTyped = Date.now() - 31536000 / 2;
       if (typedURLTimeKey && typedURLTimeKey.hasValue(entryName)) {
         let urlTime = "";
         try {
@@ -692,16 +693,20 @@ function getTypedURLs(registryKeyPath) {
             let hi = parseInt(urlTimeHex.slice(0, 4).join(""), 16);
             let lo = parseInt(urlTimeHex.slice(4, 8).join(""), 16);
             // Convert to seconds since epoch:
-            timeTyped = cTypes.fileTimeToSecondsSinceEpoch(hi, lo);
-            // Callers expect PRTime, which is microseconds since epoch:
-            timeTyped *= 1000 * 1000;
+            let secondsSinceEpoch = cTypes.fileTimeToSecondsSinceEpoch(hi, lo);
+
+            // If the date is very far in the past, just use the default
+            if (secondsSinceEpoch > Date.now() / 1000000) {
+              // Callers expect PRTime, which is microseconds since epoch:
+              timeTyped = secondsSinceEpoch * 1000;
+            }
           } catch (ex) {
             // Ignore conversion exceptions. Callers will have to deal
-            // with the fallback value (0).
+            // with the fallback value.
           }
         }
       }
-      typedURLs.set(url, timeTyped);
+      typedURLs.set(url, timeTyped * 1000);
     }
   } catch (ex) {
     Cu.reportError("Error reading typed URL history: " + ex);
