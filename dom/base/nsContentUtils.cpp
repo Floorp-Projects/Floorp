@@ -9972,7 +9972,7 @@ DoCustomElementCreate(Element** aElement, nsIDocument* aDoc, NodeInfo* aNodeInfo
 
 /* static */ nsresult
 nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* aNodeInfo,
-                                    FromParser aFromParser, const nsAString* aIs,
+                                    FromParser aFromParser, nsAtom* aIsAtom,
                                     mozilla::dom::CustomElementDefinition* aDefinition)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
@@ -9993,9 +9993,9 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
   RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
   RefPtr<nsAtom> typeAtom;
-  bool isCustomElement = isCustomElementName || aIs;
+  bool isCustomElement = isCustomElementName || aIsAtom;
   if (isCustomElement) {
-    typeAtom = isCustomElementName ? tagAtom : NS_Atomize(*aIs);
+    typeAtom = isCustomElementName ? tagAtom.get() : aIsAtom;
   }
 
   MOZ_ASSERT_IF(aDefinition, isCustomElement);

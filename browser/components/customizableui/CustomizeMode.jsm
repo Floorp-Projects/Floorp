@@ -278,8 +278,6 @@ CustomizeMode.prototype = {
         });
       }
 
-      this.updateLWTStyling();
-
       CustomizableUI.dispatchToolboxEvent("beforecustomization", {}, window);
       CustomizableUI.notifyStartCustomizing(this.window);
 
@@ -314,8 +312,6 @@ CustomizeMode.prototype = {
         toolbar.setAttribute("customizing", true);
 
       await this._doTransition(true);
-
-      Services.obs.addObserver(this, "lightweight-theme-window-updated");
 
       // Let everybody in this window know that we're about to customize.
       CustomizableUI.dispatchToolboxEvent("customizationstarting", {}, window);
@@ -410,9 +406,6 @@ CustomizeMode.prototype = {
       await this.depopulatePalette();
 
       await this._doTransition(false);
-      this.updateLWTStyling({});
-
-      Services.obs.removeObserver(this, "lightweight-theme-window-updated");
 
       if (this.browser.selectedTab == gTab) {
         if (gTab.linkedBrowser.currentURI.spec == "about:blank") {
@@ -513,26 +506,6 @@ CustomizeMode.prototype = {
       docEl.removeAttribute("customize-entered");
     }
     return Promise.resolve();
-  },
-
-  updateLWTStyling(aData) {
-    let docElement = this.document.documentElement;
-    if (!aData) {
-      let lwt = docElement._lightweightTheme;
-      aData = lwt.getData();
-    }
-    let headerURL = aData && aData.headerURL;
-    if (!headerURL) {
-      docElement.removeAttribute("customization-lwtheme");
-      return;
-    }
-    docElement.setAttribute("customization-lwtheme", "true");
-
-    let deck = this.document.getElementById("tab-view-deck");
-    let toolboxRect = this.window.gNavToolbox.getBoundingClientRect();
-    let height = toolboxRect.bottom;
-    deck.style.setProperty("--toolbox-rect-height", `${height}`);
-    deck.style.setProperty("--toolbox-rect-height-with-unit", `${height}px`);
   },
 
   _getCustomizableChildForNode(aNode) {
@@ -1173,7 +1146,6 @@ CustomizeMode.prototype = {
       toolbar.removeAttribute("customizing");
     }
     this._onUIChange();
-    this.updateLWTStyling();
   },
 
   onWidgetMoved(aWidgetId, aArea, aOldPosition, aNewPosition) {
@@ -1619,12 +1591,6 @@ CustomizeMode.prototype = {
         if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
           this._updateTitlebarCheckbox();
           this._updateDragSpaceCheckbox();
-        }
-        break;
-      case "lightweight-theme-window-updated":
-        if (aSubject == this.window) {
-          aData = JSON.parse(aData);
-          this.updateLWTStyling(aData);
         }
         break;
     }
