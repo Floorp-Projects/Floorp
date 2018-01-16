@@ -76,7 +76,7 @@ SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat) {
     case gfx::SurfaceFormat::B8G8R8A8:
       return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::A8:
-      return Some(wr::ImageFormat::A8);
+      return Some(wr::ImageFormat::R8);
     case gfx::SurfaceFormat::R8G8:
       return Some(wr::ImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
@@ -91,7 +91,7 @@ ImageFormatToSurfaceFormat(ImageFormat aFormat) {
   switch (aFormat) {
     case ImageFormat::BGRA8:
       return gfx::SurfaceFormat::B8G8R8A8;
-    case ImageFormat::A8:
+    case ImageFormat::R8:
       return gfx::SurfaceFormat::A8;
     default:
       return gfx::SurfaceFormat::UNKNOWN;
