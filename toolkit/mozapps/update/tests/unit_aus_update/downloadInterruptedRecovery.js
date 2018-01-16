@@ -6,18 +6,20 @@
 function run_test() {
   setupTestCommon();
 
-  debugDump("testing mar download with interrupted recovery count exceeded");
+  debugDump("testing mar mar download interrupted recovery");
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
   setUpdateURL(gURLData + gHTTPHandlerPath);
+
   initMockIncrementalDownload();
   gIncrementalDownloadErrorType = 0;
-  Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_MAXERRORS, 2);
-  Services.prefs.setIntPref(PREF_APP_UPDATE_RETRYTIMEOUT, 0);
   let patches = getRemotePatchString({});
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
+  gUpdates = null;
+  gUpdateCount = null;
+  gStatusResult = null;
   gCheckFunc = updateCheckCompleted;
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
@@ -41,9 +43,10 @@ function updateCheckCompleted() {
  * Called after the download listener onStopRequest is called.
  */
 function downloadListenerStop() {
-  Assert.equal(gStatusResult, Cr.NS_ERROR_NET_RESET,
+  Assert.equal(gStatusResult, Cr.NS_OK,
                "the download status result" + MSG_SHOULD_EQUAL);
   gAUS.removeDownloadListener(downloadListener);
+  gUpdateManager.cleanupActiveUpdate();
   executeSoon(waitForUpdateXMLFiles);
 }
 
