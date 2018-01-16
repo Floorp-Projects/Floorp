@@ -274,15 +274,15 @@ nsStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 }
 
 void
-nsStyleSet::Init(nsPresContext* aPresContext)
+nsStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
 {
   mFirstLineRule = new nsEmptyStyleRule;
   mFirstLetterRule = new nsEmptyStyleRule;
   mPlaceholderRule = new nsEmptyStyleRule;
   mDisableTextZoomStyleRule = new nsDisableTextZoomStyleRule;
-  mBindingManager = aPresContext->Document()->BindingManager();
 
   mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
+  mBindingManager = aBindingManager;
 
   // Make an explicit GatherRuleProcessors call for the levels that
   // don't have style sheets.  The other levels will have their calls
@@ -2702,6 +2702,9 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 
   if (mBindingManager) {
     AutoTArray<StyleSheet*, 32> sheets;
+    // XXXheycam stylo: AppendAllSheets will need to be able to return either
+    // CSSStyleSheets or ServoStyleSheets, on request (and then here requesting
+    // CSSStyleSheets).
     mBindingManager->AppendAllSheets(sheets);
     for (StyleSheet* sheet : sheets) {
       MOZ_ASSERT(sheet->IsGecko(), "stylo: AppendAllSheets shouldn't give us "
