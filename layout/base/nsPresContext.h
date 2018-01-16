@@ -223,6 +223,13 @@ public:
 
   mozilla::StyleSetHandle StyleSet() const { return GetPresShell()->StyleSet(); }
 
+#ifdef DEBUG
+  bool HasPendingMediaQueryUpdates() const
+  {
+    return mPendingMediaFeatureValuesChanged;
+  }
+#endif
+
   nsFrameManager* FrameManager()
     { return PresShell()->FrameManager(); }
 
