@@ -87,7 +87,7 @@ cd zlib-1.2.11
 make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 
 cd ..
-wget https://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-src.tar.bz2
+wget --progress=dot:mega https://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-src.tar.bz2
 echo "559703cc25f78697be1784a38d1d9a19c97d27a200dc9257d1483c028c6be9242cbcd10391ba618f88561c2ba57fdbd8b3607bea47ed8c3ad7509a6ae4075138  nsis-3.01-src.tar.bz2" | sha512sum -c -
 bunzip2 nsis-3.01-src.tar.bz2
 tar xaf nsis-3.01-src.tar
