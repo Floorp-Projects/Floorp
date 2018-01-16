@@ -741,7 +741,7 @@ GetSystemFontInfo(GtkStyleContext *aStyle,
     // Scale fonts up on HiDPI displays.
     // This would be done automatically with cairo, but we manually manage
     // the display scale for platform consistency.
-    size *= ScreenHelperGTK::GetGTKMonitorScaleFactor();
+    size *= mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
 
     // |size| is now pixels
 
