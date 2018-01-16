@@ -220,7 +220,10 @@ WaylandDisplayLoopLocked(wl_display* aDisplay,
     if (gWaylandDisplays[i]->Matches(aDisplay)) {
       if (gWaylandDisplays[i]->DisplayLoop()) {
         MessageLoop::current()->PostDelayedTask(
-            NewRunnableFunction(&WaylandDisplayLoop, aDisplay), EVENT_LOOP_DELAY);
+            NewRunnableFunction("WaylandDisplayLoop",
+                               &WaylandDisplayLoop,
+                               aDisplay),
+            EVENT_LOOP_DELAY);
       }
       break;
     }
@@ -271,6 +274,7 @@ nsWaylandDisplay::GetShm()
 
     wl_proxy_set_queue((struct wl_proxy *)registry, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
+
     MOZ_RELEASE_ASSERT(mShm, "Wayland registry query failed!");
   }
 
@@ -305,8 +309,8 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
     mEventQueue = nullptr;
   } else {
     mEventQueue = wl_display_create_queue(mDisplay);
-    MessageLoop::current()->PostTask(NewRunnableFunction(&WaylandDisplayLoop,
-                                                         mDisplay));
+    MessageLoop::current()->PostTask(NewRunnableFunction(
+        "WaylandDisplayLoop", &WaylandDisplayLoop, mDisplay));
   }
 }
 
@@ -577,7 +581,9 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
     // in compositor thread. We have to unref/delete WaylandDisplay in compositor
     // thread then and we can't use MessageLoop::current() here.
     mDisplayThreadMessageLoop->PostTask(
-      NewRunnableFunction(&WaylandDisplayRelease, mWaylandDisplay->GetDisplay()));
+      NewRunnableFunction("WaylandDisplayRelease",
+                          &WaylandDisplayRelease,
+                          mWaylandDisplay->GetDisplay()));
   } else {
     WaylandDisplayRelease(mWaylandDisplay->GetDisplay());
   }

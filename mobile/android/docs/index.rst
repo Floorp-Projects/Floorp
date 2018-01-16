@@ -20,6 +20,7 @@ Contents:
    defaultdomains
    shutdown
    push
+   gradle
 
 Indices and tables
 ==================
