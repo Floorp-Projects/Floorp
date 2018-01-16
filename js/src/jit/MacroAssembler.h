@@ -1417,6 +1417,25 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     // ========================================================================
+    // Convert floating point.
+
+    // temp required on x86 and x64; must be undefined on mips64.
+    void convertUInt64ToFloat32(Register64 src, FloatRegister dest, Register temp)
+        DEFINED_ON(arm64, mips64, x64, x86);
+
+    void convertInt64ToFloat32(Register64 src, FloatRegister dest)
+        DEFINED_ON(arm64, mips64, x64, x86);
+
+    bool convertUInt64ToDoubleNeedsTemp() PER_ARCH;
+
+    // temp required when convertUInt64ToDoubleNeedsTemp() returns true.
+    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp) PER_ARCH;
+
+    void convertInt64ToDouble(Register64 src, FloatRegister dest)
+        DEFINED_ON(arm64, mips64, x64, x86);
+
+  public:
+    // ========================================================================
     // wasm support
 
     CodeOffset illegalInstruction() PER_SHARED_ARCH;

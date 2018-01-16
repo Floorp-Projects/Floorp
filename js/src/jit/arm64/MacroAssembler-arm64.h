@@ -1990,15 +1990,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         vixl::MacroAssembler::Ret(vixl::lr);
     }
 
-    bool convertUInt64ToDoubleNeedsTemp() {
-        return false;
-    }
-
-    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp) {
-        MOZ_ASSERT(temp == Register::Invalid());
-        Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
-    }
-
     void clampCheck(Register r, Label* handleNotAnInt) {
         MOZ_CRASH("clampCheck");
     }

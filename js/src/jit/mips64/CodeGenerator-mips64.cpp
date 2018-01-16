@@ -743,12 +743,12 @@ CodeGeneratorMIPS64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
 
     if (outputType == MIRType::Double) {
         if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToDouble(input, output);
+            masm.convertUInt64ToDouble(input, output, Register::Invalid());
         else
             masm.convertInt64ToDouble(input, output);
     } else {
         if (lir->mir()->isUnsigned())
-            masm.convertUInt64ToFloat32(input, output);
+            masm.convertUInt64ToFloat32(input, output, Register::Invalid());
         else
             masm.convertInt64ToFloat32(input, output);
     }
