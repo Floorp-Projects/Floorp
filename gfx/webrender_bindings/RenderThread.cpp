@@ -467,10 +467,13 @@ void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
 
 void wr_notifier_new_scroll_frame_ready(mozilla::wr::WrWindowId aWindowId, bool aCompositeNeeded)
 {
-  // It is not necessary to update rendering with new_scroll_frame_ready.
-  // WebRenderBridgeParent::CompositeToTarget() is implemented to call
-  // WebRenderAPI::GenerateFrame() if it is necessary to trigger UpdateAndRender().
-  // See Bug 1377688.
+  // If we sent a transaction that contained both scrolling updates and a
+  // GenerateFrame, we can get this function called with aCompositeNeeded=true
+  // instead of wr_notifier_new_frame_ready. In that case we want to update the
+  // rendering.
+  if (aCompositeNeeded) {
+    wr_notifier_new_frame_ready(aWindowId);
+  }
 }
 
 void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEvent)

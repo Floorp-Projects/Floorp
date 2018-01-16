@@ -31,6 +31,7 @@ namespace mozilla {
 class MultiTouchInput;
 
 namespace wr {
+class TransactionBuilder;
 class WebRenderAPI;
 struct WrTransformProperty;
 }
@@ -179,7 +180,7 @@ public:
    * Returns true if any APZ animations are in progress and we need to keep
    * compositing.
    */
-  bool PushStateToWR(wr::WebRenderAPI* aWrApi,
+  bool PushStateToWR(wr::TransactionBuilder& aTxn,
                      const TimeStamp& aSampleTime,
                      nsTArray<wr::WrTransformProperty>& aTransformArray);
 

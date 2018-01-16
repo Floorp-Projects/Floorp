@@ -222,6 +222,14 @@ TransactionBuilder::UpdateResources(ResourceUpdateQueue& aUpdates)
   wr_transaction_update_resources(mTxn, aUpdates.Raw());
 }
 
+void
+TransactionBuilder::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                                         const layers::FrameMetrics::ViewID& aScrollId,
+                                         const wr::LayoutPoint& aScrollPosition)
+{
+  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
+}
+
 
 /*static*/ void
 WebRenderAPI::InitExternalLogHandler()
@@ -306,14 +314,6 @@ void
 WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 {
   wr_api_send_transaction(mDocHandle, aTxn.Raw());
-}
-
-void
-WebRenderAPI::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                                   const layers::FrameMetrics::ViewID& aScrollId,
-                                   const wr::LayoutPoint& aScrollPosition)
-{
-  wr_scroll_layer_with_id(mDocHandle, aPipelineId, aScrollId, aScrollPosition);
 }
 
 bool
