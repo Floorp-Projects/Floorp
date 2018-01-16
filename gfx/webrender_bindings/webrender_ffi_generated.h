@@ -710,9 +710,11 @@ struct GlyphInstance {
 
 struct GlyphOptions {
   FontRenderMode render_mode;
+  FontInstanceFlags flags;
 
   bool operator==(const GlyphOptions& aOther) const {
-    return render_mode == aOther.render_mode;
+    return render_mode == aOther.render_mode &&
+           flags == aOther.flags;
   }
 };
 
