@@ -58,7 +58,7 @@ public:
                         double aTime)
   {
     ProfilerMarker* marker =
-      new ProfilerMarker(aMarkerName, Move(aPayload), aTime);
+      new ProfilerMarker(aMarkerName, mThreadId, Move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 
