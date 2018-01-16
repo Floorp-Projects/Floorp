@@ -215,13 +215,7 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
     return;
   }
 
-  dom::Element* owningElement;
-  CSSPseudoElementType owningPseudoType;
-  mOwningElement.GetElement(owningElement, owningPseudoType);
-  MOZ_ASSERT(owningElement, "Owning element should be set");
-
-  nsPresContext* presContext =
-    nsContentUtils::GetContextForContent(owningElement);
+  nsPresContext* presContext = mOwningElement.GetPresContext();
   if (!presContext) {
     return;
   }
@@ -349,7 +343,7 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
 
   nsTransitionManager* manager = presContext->TransitionManager();
   for (const TransitionEventParams& evt : events) {
-    manager->QueueEvent(TransitionEventInfo(owningElement, owningPseudoType,
+    manager->QueueEvent(TransitionEventInfo(mOwningElement.Target(),
                                             evt.mMessage,
                                             TransitionProperty(),
                                             evt.mElapsedTime,
