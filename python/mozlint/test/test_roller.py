@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 import os
+import platform
 import sys
 
 import mozunit
@@ -76,9 +77,46 @@ def test_roll_with_failure_code(lint, lintdir, files):
     lint.read(os.path.join(lintdir, 'badreturncode.yml'))
 
     assert lint.failed is None
-    result = lint.roll(files)
+    result = lint.roll(files, num_procs=1)
     assert len(result) == 0
     assert lint.failed == ['BadReturnCodeLinter']
+
+
+def fake_run_linters(config, paths, **lintargs):
+    return {'count': [1]}, []
+
+
+@pytest.mark.skipif(platform.system() == 'Windows',
+                    reason="monkeypatch issues with multiprocessing on Windows")
+@pytest.mark.parametrize('num_procs', [1, 4, 8, 16])
+def test_number_of_jobs(monkeypatch, lint, linters, files, num_procs):
+    monkeypatch.setattr(sys.modules[lint.__module__], '_run_linters', fake_run_linters)
+
+    lint.read(linters)
+    num_jobs = len(lint.roll(files, num_procs=num_procs)['count'])
+
+    if len(files) >= num_procs:
+        assert num_jobs == num_procs * len(linters)
+    else:
+        assert num_jobs == len(files) * len(linters)
+
+
+@pytest.mark.skipif(platform.system() == 'Windows',
+                    reason="monkeypatch issues with multiprocessing on Windows")
+@pytest.mark.parametrize('max_paths,expected_jobs', [(1, 12), (4, 6), (16, 6)])
+def test_max_paths_per_job(monkeypatch, lint, linters, files, max_paths, expected_jobs):
+    monkeypatch.setattr(sys.modules[lint.__module__], '_run_linters', fake_run_linters)
+
+    files = files[:4]
+    assert len(files) == 4
+
+    linters = linters[:3]
+    assert len(linters) == 3
+
+    lint.MAX_PATHS_PER_JOB = max_paths
+    lint.read(linters)
+    num_jobs = len(lint.roll(files, num_procs=2)['count'])
+    assert num_jobs == expected_jobs
 
 
 if __name__ == '__main__':
