@@ -831,6 +831,7 @@ tests.push({
 tests.push({
   name: "D.12",
   desc: "Fix empty-named tags",
+  _taggedItemIds: {},
 
   setup() {
     // Add a place to ensure place_id = 1 is valid
@@ -847,6 +848,12 @@ tests.push({
     addBookmark(placeId, bs.TYPE_BOOKMARK, this._titledTagId);
     // Create a titled folder.
     this._titledFolderId = addBookmark(null, bs.TYPE_FOLDER, bs.toolbarFolder, null, null, "titledFolder");
+
+    // Create two tagged bookmarks in different folders.
+    this._taggedItemIds.inMenu = addBookmark(placeId, bs.TYPE_BOOKMARK,
+      bs.bookmarksMenuFolder, null, null, "Tagged bookmark in menu");
+    this._taggedItemIds.inToolbar = addBookmark(placeId, bs.TYPE_BOOKMARK,
+      bs.toolbarFolder, null, null, "Tagged bookmark in toolbar");
   },
 
   check() {
@@ -870,6 +877,16 @@ tests.push({
     Assert.ok(stmt.executeStep());
     Assert.equal(stmt.row.title, "titledFolder");
     stmt.finalize();
+
+    let taggedItemsStmt = mDBConn.createStatement(`
+      SELECT syncChangeCounter FROM moz_bookmarks
+      WHERE id IN (:taggedInMenu, :taggedInToolbar)`);
+    taggedItemsStmt.params.taggedInMenu = this._taggedItemIds.inMenu;
+    taggedItemsStmt.params.taggedInToolbar = this._taggedItemIds.inToolbar;
+    while (taggedItemsStmt.executeStep()) {
+      Assert.greaterOrEqual(taggedItemsStmt.row.syncChangeCounter, 1);
+    }
+    taggedItemsStmt.finalize();
   }
 });
 
