@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/javascript">
   const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
-  const PARAMS = ["SCHEME_FROM", "SCHEME_TO"];
+  const PARAMS = ["SCHEME_FROM", "SCHEME_TO", "CROSS_ORIGIN"];
 
   const testCases = [
     {ACTION: ["generate-fetch-user-control-policy-test"],
@@ -59,11 +59,17 @@
          SCHEME_FROM: 'http',
          SCHEME_TO: 'https',
          RESULT: 'origin'},
-        {NAME: 'default-policy-value-strict-origin-when-cross-origin-https-https',
-         DESC: 'default-policy-value-strict-origin-when-cross-origin-https-https',
+        {NAME: 'default-policy-value-strict-origin-when-cross-origin-https-https-same-origin',
+         DESC: 'default-policy-value-strict-origin-when-cross-origin-https-https-same-origin',
          SCHEME_FROM: 'https',
          SCHEME_TO: 'https',
-         RESULT: 'full'}],
+         RESULT: 'full'},
+        {NAME: 'default-policy-value-strict-origin-when-cross-origin-https-https-cross-origin',
+         DESC: 'default-policy-value-strict-origin-when-cross-origin-https-https-cross-origin',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'https',
+         CROSS_ORIGIN: 'true',
+         RESULT: 'origin'}],
     },
     {ACTION: ["generate-fetch-user-control-policy-test"],
       PREFS: [['network.http.referer.defaultPolicy', 3]],
