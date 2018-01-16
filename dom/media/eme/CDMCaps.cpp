@@ -113,17 +113,6 @@ CDMCaps::GetKeyStatusesForSession(const nsAString& aSessionId,
   }
 }
 
-void
-CDMCaps::GetSessionIdsForKeyId(const CencKeyId& aKeyId,
-                               nsTArray<nsCString>& aOutSessionIds)
-{
-  for (const KeyStatus& keyStatus : mKeyStatuses) {
-    if (keyStatus.mId == aKeyId) {
-      aOutSessionIds.AppendElement(NS_ConvertUTF16toUTF8(keyStatus.mSessionId));
-    }
-  }
-}
-
 bool
 CDMCaps::RemoveKeysForSession(const nsString& aSessionId)
 {

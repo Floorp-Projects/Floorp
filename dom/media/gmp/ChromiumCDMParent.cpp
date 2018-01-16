@@ -16,7 +16,6 @@
 #include "MediaPrefs.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/gmp/GMPTypes.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "AnnexB.h"
 #include "H264.h"
@@ -676,9 +675,6 @@ ChromiumCDMParent::EnsureSufficientShmems(size_t aVideoFrameSize)
     mVideoShmemsActive++;
   }
 
-  mMaxVideoShmemsActive =
-    std::max(mMaxVideoShmemsActive, mVideoShmemsActive);
-
   return true;
 }
 
@@ -1077,12 +1073,7 @@ ChromiumCDMParent::ShutdownVideoDecoder()
   }
   mVideoDecoderInitialized = false;
 
-  GMP_LOG("ChromiumCDMParent::~ShutdownVideoDecoder(this=%p) "
-          "VIDEO_CHROMIUM_CDM_MAX_SHMEMS=%u",
-          this,
-          mMaxVideoShmemsActive);
-  Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_CHROMIUM_CDM_MAX_SHMEMS,
-                        mMaxVideoShmemsActive);
+  GMP_LOG("ChromiumCDMParent::~ShutdownVideoDecoder(this=%p) ", this);
 
   // The ChromiumCDMChild will purge its shmems, so if the decoder is
   // reinitialized the shmems need to be re-allocated, and they may need
