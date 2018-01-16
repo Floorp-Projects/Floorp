@@ -10,8 +10,24 @@ clang_checkers:
    publish: !!bool yes
  - name: clang-analyzer-deadcode.DeadStores
    publish: !!bool yes
- - name: clang-analyzer-security.*
+ - name: clang-analyzer-security.FloatLoopCounter
+   publish: !!bool yes
+ - name: clang-analyzer-security.UncheckedReturn
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.getpw
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.gets
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.mkstemp
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.mktemp
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.rand
+   publish: !!bool yes
+ - name: clang-analyzer-security.insecureAPI.strcpy
    publish: !!bool no
+ - name: clang-analyzer-security.insecureAPI.vfork
+   publish: !!bool yes
  - name: misc-argument-comment
    publish: !!bool yes
  - name: misc-assert-side-effect
