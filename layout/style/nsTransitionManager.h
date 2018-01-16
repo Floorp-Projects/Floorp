@@ -307,14 +307,13 @@ struct TransitionEventInfo {
   InternalTransitionEvent mEvent;
   TimeStamp mTimeStamp;
 
-  TransitionEventInfo(dom::Element* aElement,
-                      CSSPseudoElementType aPseudoType,
+  TransitionEventInfo(const NonOwningAnimationTarget& aTarget,
                       EventMessage aMessage,
                       nsCSSPropertyID aProperty,
                       StickyTimeDuration aDuration,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
-    : mElement(aElement)
+    : mElement(aTarget.mElement)
     , mAnimation(aAnimation)
     , mEvent(true, aMessage)
     , mTimeStamp(aTimeStamp)
@@ -324,7 +323,8 @@ struct TransitionEventInfo {
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
     mEvent.mElapsedTime = aDuration.ToSeconds();
     mEvent.mPseudoElement =
-      AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(aPseudoType);
+      AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(
+        aTarget.mPseudoType);
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
