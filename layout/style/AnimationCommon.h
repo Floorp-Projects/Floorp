@@ -27,12 +27,13 @@ class nsPresContext;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+template <class EventInfo> class DelayedEventDispatcher;
 
 namespace dom {
 class Element;
 }
 
-template <class AnimationType>
+template <class AnimationType, class AnimationEventType>
 class CommonAnimationManager {
 public:
   explicit CommonAnimationManager(nsPresContext *aPresContext)
@@ -74,6 +75,18 @@ public:
     collection->Destroy();
   }
 
+  /**
+   * Add a pending event.
+   */
+  void QueueEvent(AnimationEventType&& aEventInfo)
+  {
+    mEventDispatcher.QueueEvent(
+      mozilla::Forward<AnimationEventType>(aEventInfo));
+  }
+
+  void SortEvents()      { mEventDispatcher.SortEvents(); }
+  void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
+
 protected:
   virtual ~CommonAnimationManager()
   {
@@ -94,6 +107,8 @@ protected:
 
   LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
+
+  mozilla::DelayedEventDispatcher<AnimationEventType> mEventDispatcher;
 };
 
 /**
