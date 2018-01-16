@@ -1243,12 +1243,6 @@ bool nsCSPDirective::equals(CSPDirective aDirective) const
   return (mDirective == aDirective);
 }
 
-void
-nsCSPDirective::getDirName(nsAString& outStr) const
-{
-  outStr.AppendASCII(CSP_CSPDirectiveToString(mDirective));
-}
-
 /* =============== nsCSPChildSrcDirective ============= */
 
 nsCSPChildSrcDirective::nsCSPChildSrcDirective(CSPDirective aDirective)
@@ -1334,13 +1328,6 @@ nsBlockAllMixedContentDirective::toString(nsAString& outStr) const
     nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT));
 }
 
-void
-nsBlockAllMixedContentDirective::getDirName(nsAString& outStr) const
-{
-  outStr.AppendASCII(CSP_CSPDirectiveToString(
-    nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT));
-}
-
 /* =============== nsUpgradeInsecureDirective ============= */
 
 nsUpgradeInsecureDirective::nsUpgradeInsecureDirective(CSPDirective aDirective)
@@ -1354,13 +1341,6 @@ nsUpgradeInsecureDirective::~nsUpgradeInsecureDirective()
 
 void
 nsUpgradeInsecureDirective::toString(nsAString& outStr) const
-{
-  outStr.AppendASCII(CSP_CSPDirectiveToString(
-    nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE));
-}
-
-void
-nsUpgradeInsecureDirective::getDirName(nsAString& outStr) const
 {
   outStr.AppendASCII(CSP_CSPDirectiveToString(
     nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE));
@@ -1417,13 +1397,6 @@ nsRequireSRIForDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHas
   return (aKeyword != CSP_REQUIRE_SRI_FOR);
 }
 
-void
-nsRequireSRIForDirective::getDirName(nsAString& outStr) const
-{
-  outStr.AppendASCII(CSP_CSPDirectiveToString(
-    nsIContentSecurityPolicy::REQUIRE_SRI_FOR));
-}
-
 /* ===== nsCSPPolicy ========================= */
 
 nsCSPPolicy::nsCSPPolicy()
@@ -1477,7 +1450,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
     if (mDirectives[i]->equals(aDir)) {
       if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected, mReportOnly,
                                    mUpgradeInsecDir, aParserCreated)) {
-        mDirectives[i]->getDirName(outViolatedDirective);
+        mDirectives[i]->toString(outViolatedDirective);
         return false;
       }
       return true;
@@ -1492,7 +1465,7 @@ nsCSPPolicy::permits(CSPDirective aDir,
   if (!aSpecific && defaultDir) {
     if (!defaultDir->permits(aUri, aNonce, aWasRedirected, mReportOnly,
                              mUpgradeInsecDir, aParserCreated)) {
-      defaultDir->getDirName(outViolatedDirective);
+      defaultDir->toString(outViolatedDirective);
       return false;
     }
     return true;
@@ -1619,7 +1592,7 @@ nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
   nsCSPDirective* defaultDir = nullptr;
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->restrictsContentType(aContentType)) {
-      mDirectives[i]->getDirName(outDirective);
+      mDirectives[i]->toString(outDirective);
       return;
     }
     if (mDirectives[i]->isDefaultDirective()) {
@@ -1629,7 +1602,7 @@ nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
   // if we haven't found a matching directive yet,
   // the contentType must be restricted by the default directive
   if (defaultDir) {
-    defaultDir->getDirName(outDirective);
+    defaultDir->toString(outDirective);
     return;
   }
   NS_ASSERTION(false, "Can not query directive string for contentType!");
