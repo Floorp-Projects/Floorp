@@ -331,6 +331,11 @@ Attr::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
 }
 
+void
+Attr::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+}
+
 nsresult
 Attr::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {

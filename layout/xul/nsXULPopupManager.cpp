@@ -2133,7 +2133,7 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
   }
 
   if (mActiveMenuBar) {
-    nsMenuFrame* result = mActiveMenuBar->FindMenuWithShortcut(aKeyEvent);
+    nsMenuFrame* result = mActiveMenuBar->FindMenuWithShortcut(aKeyEvent, false);
     if (result) {
       mActiveMenuBar->SetActive(true);
       result->OpenMenu(true);
