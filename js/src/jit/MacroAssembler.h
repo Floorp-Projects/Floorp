@@ -1489,23 +1489,23 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Operand dstAddr) DEFINED_ON(x86);
 
-    // For all the ARM wasmLoad and wasmStore functions, `ptr` MUST equal
-    // `ptrScratch`, and that register will be updated based on conditions
+    // For all the ARM and ARM64 wasmLoad and wasmStore functions, `ptr` MUST
+    // equal `ptrScratch`, and that register will be updated based on conditions
     // listed below (where it is only mentioned as `ptr`).
 
     // `ptr` will be updated if access.offset() != 0 or access.type() == Scalar::Int64.
     void wasmLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                   Register ptrScratch, AnyRegister output)
-        DEFINED_ON(arm, mips_shared);
+        DEFINED_ON(arm, arm64, mips_shared);
     void wasmLoadI64(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
                      Register ptrScratch, Register64 output)
-        DEFINED_ON(arm, mips32, mips64);
+        DEFINED_ON(arm, arm64, mips32, mips64);
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Register memoryBase,
                    Register ptr, Register ptrScratch)
-        DEFINED_ON(arm, mips_shared);
+        DEFINED_ON(arm, arm64, mips_shared);
     void wasmStoreI64(const wasm::MemoryAccessDesc& access, Register64 value, Register memoryBase,
                       Register ptr, Register ptrScratch)
-        DEFINED_ON(arm, mips32, mips64);
+        DEFINED_ON(arm, arm64, mips32, mips64);
 
     // `ptr` will always be updated.
     void wasmUnalignedLoad(const wasm::MemoryAccessDesc& access, Register memoryBase, Register ptr,
