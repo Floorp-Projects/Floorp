@@ -234,13 +234,6 @@ protected:
 
   nsresult GetWholeText(nsAString& aWholeText);
 
-  static int32_t FirstLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                int32_t aIndex);
-
-  static int32_t LastLogicallyAdjacentTextNode(nsIContent* aParent,
-                                               int32_t aIndex,
-                                               uint32_t aCount);
-
   nsresult SetTextInternal(uint32_t aOffset, uint32_t aCount,
                            const char16_t* aBuffer, uint32_t aLength,
                            bool aNotify,
