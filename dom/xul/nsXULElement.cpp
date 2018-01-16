@@ -950,6 +950,101 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 }
 
 void
+nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
+{
+    // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
+    // the possibility exists that some of the items in the removed subtree
+    // are selected (and therefore need to be deselected). We need to account for this.
+    nsCOMPtr<nsIDOMXULMultiSelectControlElement> controlElement;
+    nsCOMPtr<nsIListBoxObject> listBox;
+    bool fireSelectionHandler = false;
+
+    // -1 = do nothing, -2 = null out current item
+    // anything else = index to re-set as current
+    int32_t newCurrentIndex = -1;
+
+    if (aKid->NodeInfo()->Equals(nsGkAtoms::listitem, kNameSpaceID_XUL)) {
+      // This is the nasty case. We have (potentially) a slew of selected items
+      // and cells going away.
+      // First, retrieve the tree.
+      // Check first whether this element IS the tree
+      controlElement = do_QueryObject(this);
+
+      // If it's not, look at our parent
+      if (!controlElement)
+        GetParentTree(getter_AddRefs(controlElement));
+      nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
+      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
+
+      nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(aKid);
+      if (xulElement && oldKidElem) {
+        // Iterate over all of the items and find out if they are contained inside
+        // the removed subtree.
+        int32_t length;
+        controlElement->GetSelectedCount(&length);
+        for (int32_t i = 0; i < length; i++) {
+          nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
+          controlElement->MultiGetSelectedItem(i, getter_AddRefs(node));
+          // we need to QI here to do an XPCOM-correct pointercompare
+          nsCOMPtr<nsIDOMElement> selElem = do_QueryInterface(node);
+          if (selElem == oldKidElem &&
+              NS_SUCCEEDED(controlElement->RemoveItemFromSelection(node))) {
+            length--;
+            i--;
+            fireSelectionHandler = true;
+          }
+        }
+
+        nsCOMPtr<nsIDOMXULSelectControlItemElement> curItem;
+        controlElement->GetCurrentItem(getter_AddRefs(curItem));
+        nsCOMPtr<nsIContent> curNode = do_QueryInterface(curItem);
+        if (curNode && nsContentUtils::ContentIsDescendantOf(curNode, aKid)) {
+            // Current item going away
+            IgnoredErrorResult ignored;
+            nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(ignored);
+            listBox = do_QueryInterface(box);
+            if (listBox && oldKidElem) {
+              listBox->GetIndexOfItem(oldKidElem, &newCurrentIndex);
+            }
+
+            // If any of this fails, we'll just set the current item to null
+            if (newCurrentIndex == -1)
+              newCurrentIndex = -2;
+        }
+      }
+    }
+
+    nsStyledElement::RemoveChildNode(aKid, aNotify);
+
+    if (newCurrentIndex == -2) {
+        controlElement->SetCurrentItem(nullptr);
+    } else if (newCurrentIndex > -1) {
+        // Make sure the index is still valid
+        int32_t treeRows;
+        listBox->GetRowCount(&treeRows);
+        if (treeRows > 0) {
+            newCurrentIndex = std::min((treeRows - 1), newCurrentIndex);
+            nsCOMPtr<nsIDOMElement> newCurrentItem;
+            listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
+            nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
+            if (xulCurItem)
+                controlElement->SetCurrentItem(xulCurItem);
+        } else {
+            controlElement->SetCurrentItem(nullptr);
+        }
+    }
+
+    nsIDocument* doc;
+    if (fireSelectionHandler && (doc = GetComposedDoc())) {
+      nsContentUtils::DispatchTrustedEvent(doc,
+                                           static_cast<nsIContent*>(this),
+                                           NS_LITERAL_STRING("select"),
+                                           false,
+                                           true);
+    }
+}
+
+void
 nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
 {
     // If someone changes the accesskey, unregister the old one
