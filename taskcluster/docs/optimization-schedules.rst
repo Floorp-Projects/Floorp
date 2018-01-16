@@ -78,6 +78,14 @@ For cases where an inclusive component is affected exclusively (such as the pyth
     with Files('**/pep8rc'):
         SCHEDULES.exclusive = ['py-lint']
 
+If multiple stanzas set ``SCHEDULES.exclusive``, the last one will take precedence.  Thus the following will set ``SCHEDULES.exclusive`` to ``hpux`` for all files except those under ``docs/``.
+
+    with Files('**'):
+        SCHEDULES.exclusive = ['hpux']
+
+    with Files('**/docs'):
+        SCHEDULES.exclusive = ['docs']
+
 Task Annotation
 :::::::::::::::
 
