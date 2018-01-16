@@ -148,10 +148,10 @@ fuzzy(127,500) == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/mult
 == css-multicol-1/multicol-rule-shorthand-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-solid-000.xht css-multicol-1/multicol-rule-solid-000-ref.xht
 fails == css-multicol-1/multicol-rule-stacking-001.xht css-multicol-1/multicol-rule-stacking-ref.xht
-fails-if(webrender) == css-multicol-1/multicol-rule-style-groove-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
-fails-if(webrender) == css-multicol-1/multicol-rule-style-inset-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
-fails-if(webrender) == css-multicol-1/multicol-rule-style-outset-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
-fails-if(webrender) == css-multicol-1/multicol-rule-style-ridge-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
+== css-multicol-1/multicol-rule-style-groove-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
+== css-multicol-1/multicol-rule-style-inset-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
+== css-multicol-1/multicol-rule-style-outset-001.xht css-multicol-1/multicol-rule-style-groove-001-ref.xht
+== css-multicol-1/multicol-rule-style-ridge-001.xht css-multicol-1/multicol-rule-style-ridge-001-ref.xht
 fails == css-multicol-1/multicol-shorthand-001.xht css-multicol-1/multicol-rule-ref.xht
 fails == css-multicol-1/multicol-span-000.xht css-multicol-1/multicol-span-000-ref.xht
 fails == css-multicol-1/multicol-span-all-001.xht css-multicol-1/multicol-span-all-001-ref.xht
