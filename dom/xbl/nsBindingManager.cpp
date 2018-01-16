@@ -1144,20 +1144,3 @@ nsBindingManager::FindNestedSingleInsertionPoint(nsIContent* aContainer,
 
   return parent;
 }
-
-bool
-nsBindingManager::AnyBindingHasDocumentStateDependency(EventStates aStateMask)
-{
-  MOZ_ASSERT(mDocument->IsStyledByServo());
-
-  bool result = false;
-  EnumerateBoundContentBindings([&](nsXBLBinding* aBinding) {
-    ServoStyleSet* styleSet = aBinding->PrototypeBinding()->GetServoStyleSet();
-    if (styleSet && styleSet->HasDocumentStateDependency(aStateMask)) {
-      result = true;
-      return false;
-    }
-    return true;
-  });
-  return result;
-}
