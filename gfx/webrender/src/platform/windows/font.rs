@@ -236,8 +236,23 @@ impl FontContext {
     ) -> Option<GlyphDimensions> {
         let size = font.size.to_f32_px();
         let bitmaps = is_bitmap_font(font);
-        let transform = if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-            let shape = FontTransform::identity().synthesize_italics(OBLIQUE_SKEW_FACTOR);
+        let transform = if font.flags.intersects(FontInstanceFlags::SYNTHETIC_ITALICS |
+                                                 FontInstanceFlags::TRANSPOSE |
+                                                 FontInstanceFlags::FLIP_X |
+                                                 FontInstanceFlags::FLIP_Y) {
+            let mut shape = FontTransform::identity();
+            if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                shape = shape.flip_x();
+            }
+            if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                shape = shape.flip_y();
+            }
+            if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                shape = shape.swap_xy();
+            }
+            if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+                shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+            }
             Some(dwrote::DWRITE_MATRIX {
                 m11: shape.scale_x,
                 m12: shape.skew_y,
@@ -359,6 +374,15 @@ impl FontContext {
         } else {
             (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
         };
+        if font.flags.contains(FontInstanceFlags::FLIP_X) {
+            shape = shape.flip_x();
+        }
+        if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+            shape = shape.flip_y();
+        }
+        if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+            shape = shape.swap_xy();
+        }
         if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
             shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
         }

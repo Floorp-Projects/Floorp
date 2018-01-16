@@ -801,6 +801,7 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::PushStackingContext(..) => String::from("push_stacking_context"),
             SpecificDisplayItem::Iframe(..) => String::from("iframe"),
             SpecificDisplayItem::Clip(..) => String::from("clip"),
+            SpecificDisplayItem::ClipChain(..) => String::from("clip_chain"),
             SpecificDisplayItem::ScrollFrame(..) => String::from("scroll_frame"),
             SpecificDisplayItem::StickyFrame(..) => String::from("sticky_frame"),
             SpecificDisplayItem::SetGradientStops => String::from("set_gradient_stops"),
@@ -816,16 +817,17 @@ impl ToDebugString for SpecificDisplayItem {
 impl RenderBackend {
     // Note: the mutable `self` is only needed here for resolving blob images
     fn save_capture(&mut self, root: &PathBuf) -> Vec<ExternalCaptureImage> {
-        use ron::ser::pretty;
+        use ron::ser::{to_string_pretty, PrettyConfig};
         use std::fs;
         use std::io::Write;
 
         info!("capture: saving {}", root.to_string_lossy());
+        let ron_config = PrettyConfig::default();
         let (resources, deferred) = self.resource_cache.save_capture(root);
 
         for (&id, doc) in &self.documents {
             info!("\tdocument {:?}", id);
-            let ron = pretty::to_string(&doc.scene).unwrap();
+            let ron = to_string_pretty(&doc.scene, ron_config.clone()).unwrap();
             let file_name = format!("scene-{}-{}.ron", (id.0).0, id.1);
             let ron_path = root.clone().join(file_name);
             let mut file = fs::File::create(ron_path).unwrap();
@@ -844,7 +846,7 @@ impl RenderBackend {
             resources,
         };
 
-        let ron = pretty::to_string(&serial).unwrap();
+        let ron = to_string_pretty(&serial, ron_config).unwrap();
         let ron_path = root.clone().join("backend.ron");
         let mut file = fs::File::create(ron_path).unwrap();
         write!(file, "{}\n", ron).unwrap();

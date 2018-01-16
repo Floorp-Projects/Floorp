@@ -111,6 +111,7 @@ pub enum SpecificDisplayItem {
     BoxShadow(BoxShadowDisplayItem),
     Gradient(GradientDisplayItem),
     RadialGradient(RadialGradientDisplayItem),
+    ClipChain(ClipChainItem),
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
@@ -126,6 +127,7 @@ pub enum SpecificDisplayItem {
 #[derive(Deserialize, Serialize)]
 pub enum CompletelySpecificDisplayItem {
     Clip(ClipDisplayItem, Vec<ComplexClipRegion>),
+    ClipChain(ClipChainItem, Vec<ClipId>),
     ScrollFrame(ScrollFrameDisplayItem, Vec<ComplexClipRegion>),
     StickyFrame(StickyFrameDisplayItem),
     Rectangle(RectangleDisplayItem),
@@ -427,6 +429,12 @@ pub struct RadialGradient {
 } // IMPLICIT stops: Vec<GradientStop>
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ClipChainItem {
+    pub id: ClipChainId,
+    pub parent: Option<ClipChainId>,
+} // IMPLICIT stops: Vec<ClipId>
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct RadialGradientDisplayItem {
     pub gradient: RadialGradient,
     pub tile_size: LayoutSize,
@@ -507,6 +515,7 @@ pub struct ImageDisplayItem {
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub image_rendering: ImageRendering,
+    pub alpha_type: AlphaType,
 }
 
 #[repr(u32)]
@@ -515,6 +524,12 @@ pub enum ImageRendering {
     Auto = 0,
     CrispEdges = 1,
     Pixelated = 2,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum AlphaType {
+    Alpha = 0,
+    PremultipliedAlpha = 1,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -727,9 +742,14 @@ impl ComplexClipRegion {
     }
 }
 
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub struct ClipChainId(pub u64, pub PipelineId);
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ClipId {
     Clip(u64, PipelineId),
+    ClipChain(ClipChainId),
     ClipExternalId(u64, PipelineId),
     DynamicallyAddedNode(u64, PipelineId),
 }
@@ -756,6 +776,7 @@ impl ClipId {
     pub fn pipeline_id(&self) -> PipelineId {
         match *self {
             ClipId::Clip(_, pipeline_id) |
+            ClipId::ClipChain(ClipChainId(_, pipeline_id)) |
             ClipId::ClipExternalId(_, pipeline_id) |
             ClipId::DynamicallyAddedNode(_, pipeline_id) => pipeline_id,
         }

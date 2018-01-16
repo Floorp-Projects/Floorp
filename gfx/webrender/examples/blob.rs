@@ -85,7 +85,7 @@ fn render_blob(
                     texels.push(color.r * checker + tc);
                     texels.push(color.a * checker + tc);
                 }
-                api::ImageFormat::A8 => {
+                api::ImageFormat::R8 => {
                     texels.push(color.a * checker + tc);
                 }
                 _ => {
@@ -265,6 +265,7 @@ impl Example for App {
             api::LayoutSize::new(500.0, 500.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
+            api::AlphaType::PremultipliedAlpha,
             blob_img1,
         );
 
@@ -274,6 +275,7 @@ impl Example for App {
             api::LayoutSize::new(200.0, 200.0),
             api::LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
+            api::AlphaType::PremultipliedAlpha,
             blob_img2,
         );
 
