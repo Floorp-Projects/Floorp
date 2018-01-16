@@ -36,7 +36,7 @@ this.Toolbars = {
       async verifyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (browserWindow.fullScreen) {
-          return Promise.reject("The bookmark toolbar and menubar are not shown in fullscreen.");
+          return "The bookmark toolbar and menubar are not shown in fullscreen.";
         }
         return undefined;
       },
