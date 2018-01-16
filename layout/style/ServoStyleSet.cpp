@@ -1340,6 +1340,8 @@ ServoStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 nsCSSCounterStyleRule*
 ServoStyleSet::CounterStyleRuleForName(nsAtom* aName)
 {
+  // FIXME(emilio): This should probably call UpdateStylistIfNeeded, or
+  // otherwise assert?
   return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
 }
 
