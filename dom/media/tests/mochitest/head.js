@@ -16,11 +16,61 @@ try {
   dump('TEST DEVICES: Using media devices:\n');
   dump('audio: ' + audioDevice + '\nvideo: ' + videoDevice + '\n');
   FAKE_ENABLED = false;
-  TEST_AUDIO_FREQ = 440;
+  // It will be updated to 440 when/if DefaultLoopbackTone is instantiated.
+  TEST_AUDIO_FREQ = -1;
 } catch (e) {
   dump('TEST DEVICES: No test devices found (in media.{audio,video}_loopback_dev, using fake streams.\n');
   FAKE_ENABLED = true;
 }
+
+/**
+ *  Global flag to skip LoopbackTone
+ */
+var DISABLE_LOOPBACK_TONE = false
+/**
+ * Helper class to setup a sine tone of a given frequency.
+ */
+class LoopbackTone {
+  constructor(audioContext, frequency) {
+    if (!audioContext) {
+      throw new Error("You must provide a valid AudioContext");
+    }
+    this.oscNode = audioContext.createOscillator();
+    var gainNode = audioContext.createGain();
+    gainNode.gain.value = 0.5;
+    this.oscNode.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    this.changeFrequency(frequency);
+  }
+
+  // Method should be used when FAKE_ENABLED is false.
+  start() {
+    if (!this.oscNode) {
+      throw new Error("Attempt to start a stopped LoopbackTone");
+    }
+    info(`Start loopback tone at ${this.oscNode.frequency.value}`);
+    this.oscNode.start();
+  }
+
+  // Change the frequency of the tone. It can be used after start.
+  // Frequency will change on the fly. No need to stop and create a new instance.
+  changeFrequency(frequency) {
+    if (!this.oscNode) {
+      throw new Error("Attempt to change frequency on a stopped LoopbackTone");
+    }
+    this.oscNode.frequency.value = frequency;
+  }
+
+  stop() {
+    if (!this.oscNode) {
+      throw new Error("Attempt to stop a stopped LoopbackTone");
+    }
+    this.oscNode.stop();
+    this.oscNode = null;
+  }
+};
+// Object that holds the default loopback tone.
+var DefaultLoopbackTone = null;
 
 /**
  * This class provides helpers around analysing the audio content in a stream
@@ -251,6 +301,8 @@ function createMediaElement(type, id) {
   element.setAttribute('width', 150);
   element.setAttribute('controls', 'controls');
   element.setAttribute('autoplay', 'autoplay');
+  element.setAttribute('muted', 'muted');
+  element.muted = true;
   document.getElementById('content').appendChild(element);
 
   return element;
@@ -296,6 +348,23 @@ function createMediaElementForTrack(track, idPrefix) {
  *        The constraints for this mozGetUserMedia callback
  */
 function getUserMedia(constraints) {
+  if (!FAKE_ENABLED
+      && !constraints.fake
+      && constraints.audio
+      && !DISABLE_LOOPBACK_TONE) {
+    // Loopback device is configured, start the default loopback tone
+    if (!DefaultLoopbackTone) {
+      TEST_AUDIO_FREQ = 440;
+      DefaultLoopbackTone = new LoopbackTone(new AudioContext, TEST_AUDIO_FREQ);
+      DefaultLoopbackTone.start();
+    }
+    // Disable input processing mode when it's not explicity enabled.
+    // This is to avoid distortion of the loopback tone
+    constraints.audio = Object.assign({}, {autoGainControl: false}
+                                        , {echoCancellation: false}
+                                        , {noiseSuppression: false}
+                                        , constraints.audio);
+  }
   info("Call getUserMedia for " + JSON.stringify(constraints));
   return navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => (checkMediaStreamTracks(constraints, stream), stream));
@@ -327,6 +396,12 @@ function setupEnvironment() {
       ['media.recorder.audio_node.enabled', true]
     ]
   };
+
+  if (!FAKE_ENABLED) {
+    defaultMochitestPrefs.set.push(
+      ["media.volume_scale", "1"],
+    );
+  }
 
   const isAndroid = !!navigator.userAgent.includes("Android");
 

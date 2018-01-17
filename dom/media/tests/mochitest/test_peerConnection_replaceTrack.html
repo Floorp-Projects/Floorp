@@ -39,7 +39,7 @@
 
     var newTrack;
     var audiotrack;
-    return navigator.mediaDevices.getUserMedia({video:true, audio:true})
+    return getUserMedia({video:true, audio:true})
       .then(newStream => {
         window.grip = newStream;
         newTrack = newStream.getVideoTracks()[0];
