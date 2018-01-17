@@ -79,24 +79,27 @@ jobs:
 
     # NOTE: Windows Searchfox jobs aren't working quite yet (bug 1418415).
 
-    win32-searchfox/debug:
-        description: "Win32 Searchfox Debug (clang-cl)"
+    win64-searchfox/debug:
+        description: "Win64 Searchfox Debug (clang-cl)"
         index:
             product: firefox
-            job-name: win32-searchfox-debug
+            job-name: win64-searchfox-debug
         treeherder:
-            platform: windows2012-32/debug
+            platform: windows2012-64/debug
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
             max-run-time: 7200
             env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
         run:
             using: mozharness
+            options: [append-env-variables-from-configs]
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/releng_base_firefox.py
-                - builds/taskcluster_firefox_win32_clang_searchfox_debug.py
+                - builds/taskcluster_base_windows.py
+                - builds/taskcluster_base_win64.py
+                - builds/taskcluster_sub_win64/searchfox_debug.py
         toolchains:
-            - win32-clang-cl
-            - win32-rust
+            - win64-clang-cl
+            - win64-rust

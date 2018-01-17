@@ -82,7 +82,6 @@ public:
   int32_t                     mNumPrintablePages;
   int32_t                     mNumPagesPrinted;
   float                       mShrinkRatio;
-  float                       mOrigDCScale;
 
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
   nsPrintPreviewListener*     mPPEventListeners;

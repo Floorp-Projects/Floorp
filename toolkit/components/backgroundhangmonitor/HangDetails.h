@@ -11,62 +11,13 @@
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
-#include "mozilla/HangStack.h"
+#include "mozilla/HangTypes.h"
 #include "mozilla/HangAnnotations.h"
 #include "nsTArray.h"
 #include "nsIHangDetails.h"
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
-
-/**
- * HangDetails is a POD struct which contains the information collected from the
- * hang. It can be wrapped in a nsHangDetails to provide an XPCOM interface for
- * extracting information from it easily.
- *
- * This type is separate, as it can be sent over IPC while nsHangDetails is an
- * XPCOM interface which is harder to serialize over IPC.
- */
-class HangDetails
-{
-public:
-  HangDetails()
-    : mDuration(0)
-    , mEndTime(TimeStamp::Now())
-    , mProcess(GeckoProcessType_Invalid)
-    , mRemoteType(VoidString())
-  {}
-
-  HangDetails(const HangDetails& aOther) = default;
-  HangDetails(HangDetails&& aOther) = default;
-  HangDetails(uint32_t aDuration,
-              TimeStamp aEndTime,
-              GeckoProcessType aProcess,
-              const nsACString& aThreadName,
-              const nsACString& aRunnableName,
-              HangStack&& aStack,
-              HangMonitor::HangAnnotations&& aAnnotations)
-    : mDuration(aDuration)
-    , mEndTime(aEndTime)
-    , mProcess(aProcess)
-    , mRemoteType(VoidString())
-    , mThreadName(aThreadName)
-    , mRunnableName(aRunnableName)
-    , mStack(Move(aStack))
-    , mAnnotations(Move(aAnnotations))
-  {}
-
-  uint32_t mDuration;
-  TimeStamp mEndTime;
-  GeckoProcessType mProcess;
-  // NOTE: mRemoteType is set in nsHangDetails::Submit before the HangDetails
-  // object is sent to the parent process.
-  nsString mRemoteType;
-  nsCString mThreadName;
-  nsCString mRunnableName;
-  HangStack mStack;
-  HangMonitor::HangAnnotations mAnnotations;
-};
 
 /**
  * HangDetails is the concrete implementaion of nsIHangDetails, and contains the
