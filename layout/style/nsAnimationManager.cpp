@@ -164,7 +164,7 @@ CSSAnimation::HasLowerCompositeOrderThan(const CSSAnimation& aOther) const
 }
 
 void
-CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
+CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
 {
   // If the animation is pending, we ignore animation events until we finish
   // pending.
@@ -235,8 +235,8 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
   AutoTArray<AnimationEventInfo, 2> events;
 
   auto appendAnimationEvent = [&](EventMessage aMessage,
-                                  StickyTimeDuration aElapsedTime,
-                                  TimeStamp aTimeStamp) {
+                                  const StickyTimeDuration& aElapsedTime,
+                                  const TimeStamp& aTimeStamp) {
     events.AppendElement(AnimationEventInfo(mOwningElement.Target(),
                                             aMessage,
                                             mAnimationName,
