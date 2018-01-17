@@ -32,13 +32,15 @@ XPIDL_MODULE = 'backgroundhangmonitor'
 EXPORTS.mozilla += [
     'BackgroundHangMonitor.h',
     'HangDetails.h',
-    'HangStack.h',
 ]
 
 UNIFIED_SOURCES += [
     'BackgroundHangMonitor.cpp',
     'HangDetails.cpp',
-    'HangStack.cpp',
+]
+
+IPDL_SOURCES += [
+    'HangTypes.ipdlh',
 ]
 
 if CONFIG['MOZ_GECKO_PROFILER']:

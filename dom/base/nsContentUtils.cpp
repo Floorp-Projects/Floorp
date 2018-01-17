@@ -5273,32 +5273,37 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     UPDATE_CONTENT_MODEL, true);
   nsAutoMutationBatch mb;
 
-  uint32_t childCount = aContent->GetChildCount();
-
   if (aTryReuse && !aValue.IsEmpty()) {
-    uint32_t removeIndex = 0;
-
-    for (uint32_t i = 0; i < childCount; ++i) {
-      nsIContent* child = aContent->GetChildAt_Deprecated(removeIndex);
-      if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
-        nsresult rv = child->SetText(aValue, true);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        removeIndex = 1;
+    // Let's remove nodes until we find a eTEXT.
+    while (aContent->HasChildren()) {
+      nsIContent* child = aContent->GetFirstChild();
+      if (child->IsNodeOfType(nsINode::eTEXT)) {
+        break;
       }
-      else {
-        aContent->RemoveChildAt_Deprecated(removeIndex, true);
+      aContent->RemoveChildNode(child, true);
+    }
+
+    // If we have a node, it must be a eTEXT and we reuse it.
+    if (aContent->HasChildren()) {
+      nsIContent* child = aContent->GetFirstChild();
+      MOZ_ASSERT(child->IsNodeOfType(nsINode::eTEXT));
+      nsresult rv = child->SetText(aValue, true);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // All the following nodes, if they exist, must be deleted.
+      while (nsIContent* nextChild = child->GetNextSibling()) {
+        aContent->RemoveChildNode(nextChild, true);
       }
     }
 
-    if (removeIndex == 1) {
+    if (aContent->HasChildren()) {
       return NS_OK;
     }
   }
   else {
     mb.Init(aContent, true, false);
-    for (uint32_t i = 0; i < childCount; ++i) {
-      aContent->RemoveChildAt_Deprecated(0, true);
+    while (aContent->HasChildren()) {
+      aContent->RemoveChildNode(aContent->GetFirstChild(), true);
     }
   }
   mb.RemovalDone();

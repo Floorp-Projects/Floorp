@@ -1,0 +1,93 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+
+// The different kinds of hang entries which we're going to need to handle in
+// our HangStacks.
+
+struct HangEntryBufOffset
+{
+    // NOTE: Don't trust this index without checking it is a valid index into
+    // the strbuffer, and that the buffer's last byte is a '\0'.
+    uint32_t index;
+};
+
+struct HangEntryModOffset
+{
+    uint32_t module;
+    uint32_t offset;
+};
+
+struct HangEntryProgCounter
+{
+    uintptr_t pc;
+};
+
+// Singleton structs for the union type.
+struct HangEntryContent {};
+struct HangEntryJit {};
+struct HangEntryWasm {};
+struct HangEntryChromeScript {};
+struct HangEntrySuppressed {};
+
+union HangEntry
+{
+    // String representing a pseudostack or chrome JS stack.
+    nsCString;
+    // The index of the start of a string in the associated buffer.
+    HangEntryBufOffset;
+    // A module index and offset into that module.
+    HangEntryModOffset;
+    // A raw program counter which has not been mapped into a module.
+    HangEntryProgCounter;
+    // A hidden "(content script)" frame.
+    HangEntryContent;
+    // An unprocessed "(jit frame)"
+    HangEntryJit;
+    // An unprocessed "(wasm)" frame.
+    HangEntryWasm;
+    // A chrome script which didn't fit in the buffer.
+    HangEntryChromeScript;
+    // A JS frame while profiling was suppressed.
+    HangEntrySuppressed;
+};
+
+struct HangModule
+{
+    // The file name, /foo/bar/libxul.so for example.
+    // It can contain unicode characters.
+    nsString name;
+    nsCString breakpadId;
+};
+
+struct HangStack
+{
+    HangEntry[] stack;
+    int8_t[] strbuffer;
+    HangModule[] modules;
+};
+
+// Hang annotation information.
+struct HangAnnotation
+{
+    nsString name;
+    nsString value;
+};
+
+// The information about an individual hang which is sent over IPC.
+struct HangDetails
+{
+    uint32_t duration;
+    nsCString process;
+    nsString remoteType;
+    nsCString threadName;
+    nsCString runnableName;
+    HangStack stack;
+    HangAnnotation[] annotations;
+};
+
+} // namespace mozilla
