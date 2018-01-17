@@ -450,11 +450,13 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 }
 
 bool
-APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
+APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
                                const TimeStamp& aSampleTime,
                                nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
   APZThreadUtils::AssertOnCompositorThread();
+  MOZ_ASSERT(aWrApi);
+  MOZ_ASSERT(aWrApi == RefPtr<wr::WebRenderAPI>(GetWebRenderAPI()).get());
 
   MutexAutoLock lock(mTreeLock);
 
@@ -511,7 +513,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
         // scroll delta here, we want to negate the translation.
         ParentLayerPoint asyncScrollDelta = -layerTranslation;
         // XXX figure out what zoom-related conversions need to happen here.
-        aTxn.UpdateScrollPosition(lastPipelineId, apzc->GetGuid().mScrollId,
+        aWrApi->UpdateScrollPosition(lastPipelineId, apzc->GetGuid().mScrollId,
             wr::ToLayoutPoint(LayoutDevicePoint::FromUnknownPoint(asyncScrollDelta.ToUnknownPoint())));
 
         apzc->ReportCheckerboard(aSampleTime);
