@@ -2,9 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import sys
 
 from marionette_driver import By, Wait
+from six import reraise
 
 
 class WindowManagerMixin(object):
@@ -68,7 +71,7 @@ class WindowManagerMixin(object):
                     self.marionette.find_element(*self._menu_item_new_tab).click()
         except Exception:
             exc, val, tb = sys.exc_info()
-            raise exc, 'Failed to trigger opening a new tab: {}'.format(val), tb
+            reraise(exc, 'Failed to trigger opening a new tab: {}'.format(val), tb)
         else:
             Wait(self.marionette).until(
                 lambda mn: len(mn.window_handles) == len(current_tabs) + 1,
@@ -99,7 +102,7 @@ class WindowManagerMixin(object):
                     self.marionette.execute_script("window.open();")
         except Exception:
             exc, val, tb = sys.exc_info()
-            raise exc, 'Failed to trigger opening a new window: {}'.format(val), tb
+            reraise(exc, 'Failed to trigger opening a new window: {}'.format(val), tb)
         else:
             Wait(self.marionette).until(
                 lambda mn: len(mn.chrome_window_handles) == len(current_windows) + 1,
