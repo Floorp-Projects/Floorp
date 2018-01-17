@@ -312,6 +312,48 @@ def test_resettable_element_focus_when_empty(session):
     assert session.execute_script("return window.events") == []
 
 
+@pytest.mark.parametrize("type,invalid_value",
+                         [("number", "foo"),
+                          ("range", "foo"),
+                          ("email", "foo"),
+                          ("url", "foo"),
+                          ("color", "foo"),
+                          ("date", "foo"),
+                          ("datetime", "foo"),
+                          ("datetime-local", "foo"),
+                          ("time", "foo"),
+                          ("month", "foo"),
+                          ("week", "foo")])
+def test_resettable_element_does_not_satisfy_validation_constraints(session, type, invalid_value):
+    """
+    Some UAs allow invalid input to certain types of constrained
+    form controls.  For example, Gecko allows non-valid characters
+    to be typed into <input type=number> but Chrome does not.
+    Since we want to test that Element Clear works for clearing the
+    invalid characters in these UAs, it is fine to skip this test
+    where UAs do not allow the element to not satisfy its constraints.
+    """
+    session.url = inline("<input type=%s>" % type)
+    element = session.find.css("input", all=False)
+
+    def is_valid(element):
+        return session.execute_script("""
+            let [input] = arguments;
+            return input.validity.valid;
+            """, args=(element,))
+
+    # value property does not get updated if the input is invalid
+    element.send_keys(invalid_value)
+
+    # UA does not allow invalid input for this form control type
+    if is_valid(element):
+        return
+
+    response = element_clear(session, element)
+    assert_success(response)
+    assert is_valid(element)
+
+
 @pytest.mark.parametrize("type",
                          ["checkbox",
                           "radio",

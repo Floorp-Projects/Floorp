@@ -4,8 +4,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
-           xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
         Only overriden styles for Honeycomb/Ice cream sandwich are specified here.
@@ -27,6 +26,9 @@
 
     <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView" />
 
+    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.Holo.ProgressBar.Horizontal" />
+
+
     <!--
         Application styles. All customizations that are not specific
         to a particular API level can go here.
@@ -44,6 +46,18 @@
 
     <!-- ActionBar -->
     <style name="ActionBar" parent="android:style/Widget.Holo.ActionBar" />
+
+    <!-- TabsLayout ActionBar -->
+    <style name="ActionBar.TabsLayout">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <!-- DropDown List View -->
+    <style name="DropDownListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:listSelector">@drawable/action_bar_button</item>
+        <item name="android:divider">@color/toolbar_divider_grey</item>
+        <item name="android:dividerHeight">@dimen/page_row_divider_height</item>
+    </style>
 
     <!-- Spinner DropDown Item -->
     <style name="Widget.DropDownItem.Spinner" parent="@android:style/Widget.Holo.Light.DropDownItem.Spinner">
@@ -94,8 +108,7 @@
 
     <style name="TabInput.TabWidget" parent="android:style/Widget.Holo.Light.TabWidget" />
 
-    <style name="TabInput.Tab" parent="android:style/Widget.Holo.Light.Tab"
-           tools:ignore="UnusedResources">
+    <style name="TabInput.Tab" parent="android:style/Widget.Holo.Light.Tab">
         <item name="android:minHeight">@dimen/menu_item_row_height</item>
         <item name="android:textAllCaps">true</item>
     </style>

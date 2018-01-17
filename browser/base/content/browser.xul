@@ -596,9 +596,6 @@
 </vbox>
 #endif
 
-<deck flex="1" id="tab-view-deck">
-<vbox flex="1" id="browser-panel">
-
   <toolbox id="navigator-toolbox">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
@@ -1237,11 +1234,5 @@
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox" notificationside="bottom"/>
   </vbox>
-
-</vbox>
-# <iframe id="tab-view"> is dynamically appended as the 2nd child of #tab-view-deck.
-#     Introducing the iframe dynamically, as needed, was found to be better than
-#     starting with an empty iframe here in browser.xul from a Ts standpoint.
-</deck>
 
 </window>

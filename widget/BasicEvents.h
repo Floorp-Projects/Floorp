@@ -862,6 +862,10 @@ public:
    */
   bool IsAllowedToDispatchInSystemGroup() const;
   /**
+   * Whether the event should be blocked for fingerprinting resistance.
+   */
+  bool IsBlockedForFingerprintingResistance() const;
+  /**
    * Initialize mComposed
    */
   void SetDefaultComposed()

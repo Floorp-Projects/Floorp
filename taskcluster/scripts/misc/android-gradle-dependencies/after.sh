@@ -5,7 +5,7 @@ set -x -e
 echo "running as" $(id)
 
 : WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
-: GRADLE_VERSION ${GRADLE_VERSION:=4.1}
+: GRADLE_VERSION ${GRADLE_VERSION:=3.4.1}
 
 set -v
 

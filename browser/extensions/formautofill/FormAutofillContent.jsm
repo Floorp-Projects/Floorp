@@ -108,6 +108,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
     let AutocompleteResult = isAddressField ? AddressResult : CreditCardResult;
+    let pendingSearchResult = null;
 
     ProfileAutocomplete.lastProfileAutoCompleteFocusedInput = activeInput;
     // Fallback to form-history if ...
@@ -120,56 +121,54 @@ AutofillProfileAutoCompleteSearch.prototype = {
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
       if (activeInput.autocomplete == "off") {
         // Create a dummy result as an empty search result.
-        let result = new AutocompleteResult("", "", [], [], {});
-        listener.onSearchResult(this, result);
-        return;
+        pendingSearchResult = new AutocompleteResult("", "", [], [], {});
+      } else {
+        pendingSearchResult = new Promise(resolve => {
+          let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
+                            .createInstance(Ci.nsIAutoCompleteSearch);
+          formHistory.startSearch(searchString, searchParam, previousResult, {
+            onSearchResult: (_, result) => resolve(result),
+          });
+        });
       }
-      let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
-                          .createInstance(Ci.nsIAutoCompleteSearch);
-      formHistory.startSearch(searchString, searchParam, previousResult, {
-        onSearchResult: (search, result) => {
-          listener.onSearchResult(this, result);
-          ProfileAutocomplete.lastProfileAutoCompleteResult = result;
-        },
-      });
-      return;
-    }
+    } else if (isInputAutofilled) {
+      pendingSearchResult = new AutocompleteResult(searchString, "", [], [], {isInputAutofilled});
+    } else {
+      let infoWithoutElement = {...activeFieldDetail};
+      delete infoWithoutElement.elementWeakRef;
 
-    if (isInputAutofilled) {
-      let result = new AutocompleteResult(searchString, "", [], [], {isInputAutofilled});
-      listener.onSearchResult(this, result);
-      ProfileAutocomplete.lastProfileAutoCompleteResult = result;
-      return;
-    }
+      let data = {
+        collectionName: isAddressField ? ADDRESSES_COLLECTION_NAME : CREDITCARDS_COLLECTION_NAME,
+        info: infoWithoutElement,
+        searchString,
+      };
 
-    let infoWithoutElement = Object.assign({}, activeFieldDetail);
-    delete infoWithoutElement.elementWeakRef;
+      pendingSearchResult = this._getRecords(data).then((records) => {
+        if (this.forceStop) {
+          return null;
+        }
+        // Sort addresses by timeLastUsed for showing the lastest used address at top.
+        records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
-    let data = {
-      collectionName: isAddressField ? ADDRESSES_COLLECTION_NAME : CREDITCARDS_COLLECTION_NAME,
-      info: infoWithoutElement,
-      searchString,
-    };
+        let adaptedRecords = activeSection.getAdaptedProfiles(records);
+        let handler = FormAutofillContent.activeHandler;
+        let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
 
-    this._getRecords(data).then((records) => {
-      if (this.forceStop) {
-        return;
-      }
-      // Sort addresses by timeLastUsed for showing the lastest used address at top.
-      records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
-
-      let adaptedRecords = activeSection.getAdaptedProfiles(records);
-      let result = null;
-      let handler = FormAutofillContent.activeHandler;
-      let isSecure = InsecurePasswordUtils.isFormSecure(handler.form);
-
-      result = new AutocompleteResult(searchString,
+        return new AutocompleteResult(searchString,
                                       activeFieldDetail.fieldName,
                                       allFieldNames,
                                       adaptedRecords,
                                       {isSecure, isInputAutofilled});
+      });
+    }
+
+    Promise.resolve(pendingSearchResult).then((result) => {
       listener.onSearchResult(this, result);
       ProfileAutocomplete.lastProfileAutoCompleteResult = result;
+      // Reset AutoCompleteController's state at the end of startSearch to ensure that
+      // none of form autofill result will be cached in other places and make the
+      // result out of sync.
+      autocompleteController.resetInternalState();
     });
   },
 
@@ -293,11 +292,8 @@ let ProfileAutocomplete = {
     }
 
     let profile = JSON.parse(this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex));
-    let {fieldName} = FormAutofillContent.activeFieldDetail;
 
-    FormAutofillContent.activeHandler.autofillFormFields(profile).then(() => {
-      autocompleteController.searchString = profile[fieldName];
-    });
+    FormAutofillContent.activeHandler.autofillFormFields(profile);
   },
 
   _clearProfilePreview() {
@@ -565,7 +561,6 @@ var FormAutofillContent = {
     }
 
     this.activeSection.clearPopulatedForm();
-    autocompleteController.searchString = "";
   },
 
   previewProfile(doc) {

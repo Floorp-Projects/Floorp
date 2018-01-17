@@ -43,8 +43,30 @@ add_task(async function () {
   const mixedActiveContentMessage = await onMixedActiveContent;
   ok(true, "Mixed active content warning message is visible");
 
+  const checkLink = ({ link, where, expectedLink, expectedTab }) => {
+    is(link, expectedLink, `Clicking the provided link opens ${link}`);
+    is(where, expectedTab, `Clicking the provided link opens in expected tab`);
+  }
+
   info("Clicking on the Learn More link");
   const learnMoreLink = mixedActiveContentMessage.querySelector(".learn-more-link");
-  const url = await simulateLinkClick(learnMoreLink);
-  is(url, LEARN_MORE_URI, `Clicking the provided link opens ${url}`);
+  let linkSimulation = await simulateLinkClick(learnMoreLink);
+  checkLink({
+    ...linkSimulation,
+    expectedLink: LEARN_MORE_URI,
+    expectedTab: "tab"
+  });
+
+  let isOSX = Services.appinfo.OS == "Darwin";
+  let ctrlOrCmdKeyMouseEvent = new MouseEvent("click", {
+    bubbles: true,
+    [isOSX ? "metaKey" : "ctrlKey"]: true,
+    view: window
+  });
+  linkSimulation = await simulateLinkClick(learnMoreLink, ctrlOrCmdKeyMouseEvent);
+  checkLink({
+    ...linkSimulation,
+    expectedLink: LEARN_MORE_URI,
+    expectedTab: "tabshifted"
+  });
 });

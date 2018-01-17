@@ -12,8 +12,7 @@ const TEST_VIOLATION = "https://example.com/browser/devtools/client/" +
                        "webconsole/test/test_bug_770099_violation.html";
 const CSP_VIOLATION_MSG = "Content Security Policy: The page\u2019s settings " +
                           "blocked the loading of a resource at " +
-                          "http://some.example.com/test.png (\u201cdefault-src " +
-                          "https://example.com\u201d).";
+                          "http://some.example.com/test.png (\u201cdefault-src\u201d).";
 
 add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);

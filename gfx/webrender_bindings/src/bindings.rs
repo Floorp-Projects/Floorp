@@ -953,6 +953,18 @@ pub extern "C" fn wr_transaction_update_dynamic_properties(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_scroll_layer(
+    txn: &mut Transaction,
+    pipeline_id: WrPipelineId,
+    scroll_id: u64,
+    new_scroll_origin: LayoutPoint
+) {
+    assert!(unsafe { is_in_compositor_thread() });
+    let clip_id = ClipId::new(scroll_id, pipeline_id);
+    txn.scroll_node_with_id(new_scroll_origin, clip_id, ScrollClamping::NoClamping);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_resource_updates_add_image(
     resources: &mut ResourceUpdates,
     image_key: WrImageKey,
@@ -1523,16 +1535,6 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
 pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
     debug_assert!(unsafe { is_in_main_thread() });
     state.frame_builder.dl_builder.pop_clip_id();
-}
-
-#[no_mangle]
-pub extern "C" fn wr_scroll_layer_with_id(dh: &mut DocumentHandle,
-                                          pipeline_id: WrPipelineId,
-                                          scroll_id: u64,
-                                          new_scroll_origin: LayoutPoint) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let clip_id = ClipId::new(scroll_id, pipeline_id);
-    dh.api.scroll_node_with_id(dh.document_id, new_scroll_origin, clip_id, ScrollClamping::NoClamping);
 }
 
 #[no_mangle]

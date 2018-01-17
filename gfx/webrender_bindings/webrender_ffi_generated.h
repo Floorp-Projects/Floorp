@@ -1503,13 +1503,6 @@ void wr_resource_updates_update_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-void wr_scroll_layer_with_id(DocumentHandle *aDh,
-                             WrPipelineId aPipelineId,
-                             uint64_t aScrollId,
-                             LayoutPoint aNewScrollOrigin)
-WR_FUNC;
-
-WR_INLINE
 void wr_set_item_tag(WrState *aState,
                      uint64_t aScrollId,
                      uint16_t aHitInfo)
@@ -1562,6 +1555,13 @@ WR_FUNC;
 WR_INLINE
 void wr_transaction_remove_pipeline(Transaction *aTxn,
                                     WrPipelineId aPipelineId)
+WR_FUNC;
+
+WR_INLINE
+void wr_transaction_scroll_layer(Transaction *aTxn,
+                                 WrPipelineId aPipelineId,
+                                 uint64_t aScrollId,
+                                 LayoutPoint aNewScrollOrigin)
 WR_FUNC;
 
 WR_INLINE

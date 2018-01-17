@@ -63,7 +63,7 @@ define(function (require, exports, module) {
    */
   class TreeView extends Component {
     // The only required property (not set by default) is the input data
-    // object that is used to puputate the tree.
+    // object that is used to populate the tree.
     static get propTypes() {
       return {
         // The input data object.
@@ -93,7 +93,7 @@ define(function (require, exports, module) {
         renderRow: PropTypes.func,
         // Custom cell renderer
         renderCell: PropTypes.func,
-        // Custom value renderef
+        // Custom value renderer
         renderValue: PropTypes.func,
         // Custom tree label (including a toggle button) renderer
         renderLabelCell: PropTypes.func,

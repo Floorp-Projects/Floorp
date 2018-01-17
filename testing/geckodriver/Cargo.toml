@@ -17,7 +17,7 @@ lazy_static = "0.1"
 log = "0.3"
 mozprofile = "0.3.0"
 mozrunner = "0.5.0"
-mozversion = "0.1.2"
+mozversion = { path = "../mozbase/rust/mozversion" }
 regex = "0.2"
 rustc-serialize = "0.3"
 slog = "1"

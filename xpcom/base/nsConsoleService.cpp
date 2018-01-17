@@ -54,6 +54,9 @@ NS_IMPL_CI_INTERFACE_GETTER(nsConsoleService, nsIConsoleService, nsIObserver)
 
 static const bool gLoggingEnabled = true;
 static const bool gLoggingBuffered = true;
+#ifdef XP_WIN
+static bool gLoggingToDebugger = true;
+#endif // XP_WIN
 #if defined(ANDROID)
 static bool gLoggingLogcat = false;
 #endif // defined(ANDROID)
@@ -71,6 +74,18 @@ nsConsoleService::nsConsoleService()
   // hm, but worry about circularity, bc we want to be able to report
   // prefs errs...
   mMaximumSize = 250;
+
+#ifdef XP_WIN
+  // This environment variable controls whether the console service
+  // should be prevented from putting output to the attached debugger.
+  // It only affects the Windows platform.
+  //
+  // To disable OutputDebugString, set:
+  //   MOZ_CONSOLESERVICE_DISABLE_DEBUGGER_OUTPUT=1
+  //
+  const char* disableDebugLoggingVar = getenv("MOZ_CONSOLESERVICE_DISABLE_DEBUGGER_OUTPUT");
+  gLoggingToDebugger = !disableDebugLoggingVar || (disableDebugLoggingVar[0] == '0');
+#endif // XP_WIN
 }
 
 
@@ -286,7 +301,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     }
 #endif
 #ifdef XP_WIN
-    if (IsDebuggerPresent()) {
+    if (gLoggingToDebugger && IsDebuggerPresent()) {
       nsString msg;
       aMessage->GetMessageMoz(getter_Copies(msg));
       msg.Append('\n');
