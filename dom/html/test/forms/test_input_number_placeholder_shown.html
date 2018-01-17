@@ -1,0 +1,30 @@
+<!doctype html>
+<title>Test for :placeholder-shown on input elements and invalid values.</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+input {
+  border: 1px solid purple;
+}
+input:placeholder-shown {
+  border-color: blue;
+}
+</style>
+<input type="number" placeholder="foo">
+<script>
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(function() {
+    test();
+    SimpleTest.finish();
+  });
+
+  function test() {
+    let input = document.querySelector('input');
+    input.focus();
+    is(getComputedStyle(input).borderLeftColor, "rgb(0, 0, 255)",
+       ":placeholder-shown should apply")
+    synthesizeKey('x', {});
+    isnot(getComputedStyle(input).borderLeftColor, "rgb(0, 0, 255)",
+       ":placeholder-shown should not apply, even though the value is invalid")
+  }
+</script>
