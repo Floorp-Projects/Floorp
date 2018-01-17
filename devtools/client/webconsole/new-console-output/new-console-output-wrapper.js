@@ -88,8 +88,8 @@ NewConsoleOutputWrapper.prototype = {
           }]));
         },
         hudProxy: hud.proxy,
-        openLink: (url, e) => {
-          hud.owner.openLink(url, e);
+        openLink: url => {
+          hud.owner.openLink(url);
         },
         createElement: nodename => {
           return this.document.createElement(nodename);

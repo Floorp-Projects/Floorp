@@ -93,9 +93,9 @@ class Message extends Component {
     }
   }
 
-  onLearnMoreClick(e) {
+  onLearnMoreClick() {
     let {exceptionDocURL} = this.props;
-    this.props.serviceContainer.openLink(exceptionDocURL, e);
+    this.props.serviceContainer.openLink(exceptionDocURL);
   }
 
   onContextMenu(e) {

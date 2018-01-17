@@ -141,9 +141,8 @@ const SUPPORTED_HTTP_CODES = [
 ];
 
 const MDN_URL = "https://developer.mozilla.org/docs/";
-const getGAParams = (panelId = "netmonitor") => {
-  return `?utm_source=mozilla&utm_medium=devtools-${panelId}&utm_campaign=default`;
-};
+const GA_PARAMS =
+  "?utm_source=mozilla&utm_medium=devtools-netmonitor&utm_campaign=default";
 
 /**
  * Get the MDN URL for the specified header.
@@ -157,7 +156,7 @@ function getHeadersURL(header) {
   let idx = SUPPORTED_HEADERS.findIndex(item =>
     item.toLowerCase() === lowerCaseHeader);
   return idx > -1 ?
-    `${MDN_URL}Web/HTTP/Headers/${SUPPORTED_HEADERS[idx] + getGAParams()}` : null;
+    `${MDN_URL}Web/HTTP/Headers/${SUPPORTED_HEADERS[idx] + GA_PARAMS}` : null;
 }
 
 /**
@@ -167,11 +166,10 @@ function getHeadersURL(header) {
  *
  * @return {string} The MDN URL for the HTTP status code, or null if not available.
  */
-function getHTTPStatusCodeURL(statusCode, panelId) {
+function getHTTPStatusCodeURL(statusCode) {
   let idx = SUPPORTED_HTTP_CODES.indexOf(statusCode);
   return idx > -1 ?
-    `${MDN_URL}Web/HTTP/Status/${SUPPORTED_HTTP_CODES[idx] + getGAParams(panelId)}`
-      : null;
+    `${MDN_URL}Web/HTTP/Status/${SUPPORTED_HTTP_CODES[idx] + GA_PARAMS}` : null;
 }
 
 /**
@@ -180,7 +178,7 @@ function getHTTPStatusCodeURL(statusCode, panelId) {
  * @return {string} the MDN URL of the Timings tag for Network Monitor.
  */
 function getNetMonitorTimingsURL() {
-  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Timings`;
+  return `${MDN_URL}Tools/Network_Monitor${GA_PARAMS}#Timings`;
 }
 
 /**
@@ -189,7 +187,7 @@ function getNetMonitorTimingsURL() {
  * @return {string} The MDN URL for the documentation of Performance Analysis.
  */
 function getPerformanceAnalysisURL() {
-  return `${MDN_URL}Tools/Network_Monitor${getGAParams()}#Performance_analysis`;
+  return `${MDN_URL}Tools/Network_Monitor${GA_PARAMS}#Performance_analysis`;
 }
 
 module.exports = {
