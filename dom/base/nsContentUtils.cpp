@@ -10043,9 +10043,11 @@ nsContentUtils::TryToUpgradeElement(Element* aElement)
   NodeInfo* nodeInfo = aElement->NodeInfo();
   RefPtr<nsAtom> typeAtom =
     aElement->GetCustomElementData()->GetCustomElementType();
+
+  MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
   CustomElementDefinition* definition =
     nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
-                                                  nodeInfo->LocalName(),
+                                                  nodeInfo->NameAtom(),
                                                   nodeInfo->NamespaceID(),
                                                   typeAtom);
   if (definition) {
@@ -10129,9 +10131,10 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   CustomElementDefinition* definition = aDefinition;
   if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement &&
       !definition) {
+    MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
     definition =
       nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
-                                                    nodeInfo->LocalName(),
+                                                    nodeInfo->NameAtom(),
                                                     nodeInfo->NamespaceID(),
                                                     typeAtom);
   }
@@ -10243,7 +10246,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
 /* static */ CustomElementDefinition*
 nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
-                                              const nsAString& aLocalName,
+                                              nsAtom* aNameAtom,
                                               uint32_t aNameSpaceID,
                                               nsAtom* aTypeAtom)
 {
@@ -10265,7 +10268,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  return registry->LookupCustomElementDefinition(aLocalName, aTypeAtom);
+  return registry->LookupCustomElementDefinition(aNameAtom, aTypeAtom);
 }
 
 /* static */ void
