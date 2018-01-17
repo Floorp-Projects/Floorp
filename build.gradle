@@ -16,6 +16,7 @@ allprojects {
         topobjdir = gradle.mozconfig.topobjdir
 
         compileSdkVersion = tryInt(mozconfig.substs.ANDROID_COMPILE_SDK_VERSION)
+        buildToolsVersion = tryInt(mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION)
         targetSdkVersion = tryInt(mozconfig.substs.ANDROID_TARGET_SDK)
         minSdkVersion = tryInt(mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION)
         manifestPlaceholders = [
@@ -51,7 +52,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:2.3.3'
         // Provided in tree.
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
     }
