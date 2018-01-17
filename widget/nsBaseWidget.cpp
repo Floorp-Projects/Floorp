@@ -911,6 +911,7 @@ nsBaseWidget::AllowWebRenderForThisWindow()
 {
   return WindowType() == eWindowType_toplevel ||
          WindowType() == eWindowType_child ||
+         WindowType() == eWindowType_dialog ||
          (WindowType() == eWindowType_popup && HasRemoteContent());
 }
 
