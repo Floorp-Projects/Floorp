@@ -1221,8 +1221,12 @@ static const GUID kUnsupportedServices[] = {
   {0x8EDAA462, 0x21F4, 0x4C87, { 0xA0, 0x12, 0xB3, 0xCD, 0xA3, 0xAB, 0x01, 0xFC }},
   // Unknown, queried by Windows
   {0xacd46652, 0x829d, 0x41cb, { 0xa5, 0xfc, 0x17, 0xac, 0xf4, 0x36, 0x61, 0xac }},
-  // Unknown, queried by Windows
-  {0xb96fdb85, 0x7204, 0x4724, { 0x84, 0x2b, 0xc7, 0x05, 0x9d, 0xed, 0xb9, 0xd0 }}
+  // SID_IsUIAutomationObject (undocumented), queried by Windows
+  {0xb96fdb85, 0x7204, 0x4724, { 0x84, 0x2b, 0xc7, 0x05, 0x9d, 0xed, 0xb9, 0xd0 }},
+  // IIS_IsOleaccProxy (undocumented), queried by Windows
+  {0x902697FA, 0x80E4, 0x4560, {0x80, 0x2A, 0xA1, 0x3F, 0x22, 0xA6, 0x47, 0x09}},
+  // IID_IHTMLElement, queried by JAWS
+  {0x3050F1FF, 0x98B5, 0x11CF, {0xBB, 0x82, 0x00, 0xAA, 0x00, 0xBD, 0xCE, 0x0B}}
 };
 
 /*** IServiceProvider ***/
@@ -1240,6 +1244,13 @@ AccessibleHandler::QueryService(REFGUID aServiceId, REFIID aIid,
     RefPtr<NEWEST_IA2_INTERFACE> ia2(this);
     ia2.forget(aOutInterface);
     return S_OK;
+  }
+
+  // JAWS uses QueryService for these, but QI will work just fine and we can
+  // thus avoid a cross-process call. More importantly, if QS is used, the
+  // handler won't get used for that object, so our caching won't be used.
+  if (aIid == IID_IAccessibleAction || aIid == IID_IAccessibleText) {
+    return InternalQueryInterface(aIid, aOutInterface);
   }
 
   for (uint32_t i = 0; i < ArrayLength(kUnsupportedServices); ++i) {

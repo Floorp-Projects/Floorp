@@ -284,7 +284,12 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     g_get_charset(&charset);
     mTextPlainLocale = g_strdup_printf("text/plain;charset=%s", charset);
 
-    mDisplay = gdk_wayland_display_get_wl_display(gdk_display_get_default());
+    // Available as of GTK 3.8+
+    static auto sGdkWaylandDisplayGetWlDisplay =
+        (wl_display *(*)(GdkDisplay *))
+        dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+
+    mDisplay = sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
     wl_registry_add_listener(wl_display_get_registry(mDisplay),
                              &clipboard_registry_listener, this);
     wl_display_roundtrip(mDisplay);

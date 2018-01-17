@@ -25,7 +25,6 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.push.PushManager;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.ContextUtils;
 
@@ -75,7 +74,6 @@ public class MmaDelegate {
         // we gather the information here then pass to mmaHelper.init()
         // Note that generateUserAttribute always return a non null HashMap.
         final Map<String, Object> attributes = gatherUserAttributes(activity);
-        mmaHelper.setGcmSenderId(PushManager.getSenderIds());
         final String deviceId = getDeviceId(activity);
         mmaHelper.setDeviceId(deviceId);
         PrefsHelper.setPref(GeckoPreferences.PREFS_MMA_DEVICE_ID, deviceId);
@@ -159,10 +157,6 @@ public class MmaDelegate {
         } else {
             return false;
         }
-    }
-
-    public static String getMmaSenderId() {
-        return mmaHelper.getMmaSenderId();
     }
 
     private static String getDeviceId(Activity activity) {

@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 SimpleTest.waitForExplicitFinish();
 
 var content = '<div id="container"></div>';
-setWebComponentsPrefAndCreateIframe(content)
+setShadowDOMPrefAndCreateIframe(content)
   .then((aDocument) => {
     var iframeWin = aDocument.defaultView;
 

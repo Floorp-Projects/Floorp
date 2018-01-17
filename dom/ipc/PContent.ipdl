@@ -60,6 +60,7 @@ include ServiceWorkerConfiguration;
 include GraphicsMessages;
 include MemoryReportTypes;
 include ClientIPCTypes;
+include HangTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -98,7 +99,6 @@ using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
-using mozilla::HangDetails from "mozilla/HangDetails.h";
 
 union ChromeRegistryItem
 {
@@ -847,6 +847,12 @@ parent:
     // Returns true if data of one of the specified types is on the clipboard.
     sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
         returns (bool hasType);
+
+    // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
+    // the content process.
+    async PlaySound(URIParams aURL) compress;
+    async Beep() compress;
+    async PlayEventSound(uint32_t aEventId) compress;
 
     sync GetSystemColors(uint32_t colorsCount)
         returns (uint32_t[] colors);

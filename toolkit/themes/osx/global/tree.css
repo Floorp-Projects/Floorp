@@ -222,17 +222,6 @@ treechildren::-moz-tree-indentation {
   width: 16px;
 }
 
-/* ::::: gridline style ::::: */
-
-treechildren.gridlines::-moz-tree-cell {
-  border-inline-end: 1px solid GrayText;
-  border-bottom: 1px solid GrayText;
-}
-
-treechildren.gridlines::-moz-tree-row {
-  border: none;
-}
-
 /* ::::: editable tree ::::: */
 
 .tree-input {

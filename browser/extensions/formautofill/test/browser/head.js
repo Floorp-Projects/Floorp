@@ -100,14 +100,14 @@ const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
   "cc-number": "1234567812345678",
   "cc-exp-month": 4,
-  "cc-exp-year": 2017,
+  "cc-exp-year": new Date().getFullYear(),
 };
 
 const TEST_CREDIT_CARD_2 = {
   "cc-name": "Timothy Berners-Lee",
   "cc-number": "1111222233334444",
   "cc-exp-month": 12,
-  "cc-exp-year": 2022,
+  "cc-exp-year": new Date().getFullYear() + 10,
 };
 
 const TEST_CREDIT_CARD_3 = {

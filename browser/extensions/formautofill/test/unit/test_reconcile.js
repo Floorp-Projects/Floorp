@@ -1011,7 +1011,14 @@ add_task(async function test_reconcile_three_way_merge() {
         rawData: true,
       });
 
+      let onReconciled = TestUtils.topicObserved(
+        "formautofill-storage-changed",
+        (subject, data) =>
+          data == "reconcile" &&
+          subject.wrappedJSObject.collectionName == collectionName
+      );
       let {forkedGUID} = profileStorage[collectionName].reconcile(test.remote);
+      await onReconciled;
       let reconciledRecord = profileStorage[collectionName].get(test.parent.guid, {
         rawData: true,
       });

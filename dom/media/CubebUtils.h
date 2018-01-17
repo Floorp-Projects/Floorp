@@ -38,11 +38,9 @@ enum Side {
   Output
 };
 
-void PrefChanged(const char* aPref, void* aClosure);
 double GetVolumeScale();
 bool GetFirstStream();
 cubeb* GetCubebContext();
-cubeb* GetCubebContextUnlocked();
 void ReportCubebStreamInitFailure(bool aIsFirstStream);
 void ReportCubebBackendUsed();
 uint32_t GetCubebPlaybackLatencyInMilliseconds();

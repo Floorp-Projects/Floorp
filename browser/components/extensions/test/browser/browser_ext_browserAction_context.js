@@ -21,6 +21,10 @@ async function runTests(options) {
       browser.test.assertEq(String(expecting.badgeBackgroundColor),
                             String(badgeBackgroundColor),
                             "expected value from getBadgeBackgroundColor");
+
+      let enabled = await browser.browserAction.isEnabled({tabId});
+      browser.test.assertEq(!expecting.disabled, enabled,
+                            "expected value from isEnabled");
     }
 
     let expectDefaults = expecting => {
@@ -285,7 +289,7 @@ add_task(async function testTabSwitchContext() {
           browser.test.log("Switch back to tab 2. Expect former value, unaffected by changes to defaults in previous step.");
           await browser.tabs.update(tabs[1], {active: true});
 
-          await expectDefaults(details[3]);
+          await expectDefaults(details[4]);
           expect(details[2]);
         },
         expect => {

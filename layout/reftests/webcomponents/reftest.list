@@ -1,23 +1,23 @@
-pref(dom.webcomponents.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-1.html basic-shadow-1-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-2.html basic-shadow-2-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-3.html basic-shadow-3-ref.html
-pref(dom.webcomponents.enabled,true) == basic-shadow-4.html basic-shadow-4-ref.html
-pref(dom.webcomponents.enabled,true) == fallback-content-1.html fallback-content-1-ref.html
-pref(dom.webcomponents.enabled,true) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
-pref(dom.webcomponents.enabled,true) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
-pref(dom.webcomponents.enabled,true) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
-pref(dom.webcomponents.enabled,true) fuzzy-if(Android,2,7) == input-transition-1.html input-transition-1-ref.html
-pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
-pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
-pref(dom.webcomponents.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html
-pref(dom.webcomponents.enabled,true) == reframe-shadow-child-1.html reframe-shadow-child-ref.html
-pref(dom.webcomponents.enabled,true) == reframe-shadow-child-2.html reframe-shadow-child-ref.html
-pref(dom.webcomponents.enabled,true) == style-sharing.html style-sharing-ref.html
-pref(dom.webcomponents.enabled,true) skip-if(!stylo||styloVsGecko) == style-sharing-across-shadow.html style-sharing-ref.html # bug 1412400
-pref(dom.webcomponents.enabled,true) == basic-slot-1.html basic-slot-1-ref.html
-pref(dom.webcomponents.enabled,true) == basic-slot-2.html basic-slot-2-ref.html
-pref(dom.webcomponents.enabled,true) == basic-slot-3.html basic-slot-3-ref.html
-pref(dom.webcomponents.enabled,true) == basic-slot-4.html basic-slot-3-ref.html
-pref(dom.webcomponents.enabled,true) == basic-slot-5.html basic-slot-5-ref.html
-pref(dom.webcomponents.enabled,true) == basic-slot-6.html basic-slot-6-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-shadow-1.html basic-shadow-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-shadow-2.html basic-shadow-2-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-shadow-3.html basic-shadow-3-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-shadow-4.html basic-shadow-4-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == fallback-content-1.html fallback-content-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == remove-insertion-point-1.html remove-insertion-point-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) fuzzy-if(Android,2,7) == input-transition-1.html input-transition-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == reframe-shadow-child-1.html reframe-shadow-child-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == reframe-shadow-child-2.html reframe-shadow-child-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == style-sharing.html style-sharing-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) skip-if(!stylo||styloVsGecko) == style-sharing-across-shadow.html style-sharing-ref.html # bug 1412400
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-1.html basic-slot-1-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-2.html basic-slot-2-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-3.html basic-slot-3-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-4.html basic-slot-3-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-5.html basic-slot-5-ref.html
+pref(dom.webcomponents.shadowdom.enabled,true) == basic-slot-6.html basic-slot-6-ref.html

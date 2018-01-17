@@ -17,18 +17,18 @@ RUSTUP_URL_BASE = 'https://static-rust-lang-org.s3.amazonaws.com/rustup'
 RUSTUP_MANIFEST = os.path.join(RUSTUP_URL_BASE, 'release-stable.toml')
 
 # We bake in a known version number so we can verify a checksum.
-RUSTUP_VERSION = '1.5.0'
+RUSTUP_VERSION = '1.9.0'
 
 # SHA-256 checksums of the installers, per platform.
 RUSTUP_HASHES = {
     'x86_64-unknown-freebsd':
-        '0fd08eaf4cb2935a195e4bab2352a4506e986dc65e3ba6c696d374081f9b56cb',
+        'ef830f79b25f9c3ec9cffba6318740089fc8133c8e760f4a1f780f1547d6cc3c',
     'x86_64-apple-darwin':
-        '29884ee3b2b896fd5ac0ecee624d726667974a4a6df01a66a7ab345325d623a5',
+        '8319dbcd09f34f670a2c0aab22070fcce67477dcd620ce762b75a5718c35e335',
     'x86_64-unknown-linux-gnu':
-        '7b5ce33a881992b285e2aa6cbc785da4138c5bab7c8c9b55c06918bfb1ba0efa',
+        '4b7a67cd971d713e0caef48b5754190aca19192d1863927a005c3432512b12dc',
     'x86_64-pc-windows-msvc':
-        '7500b705855c4f8e70e222ad1192bb46de15629f73a6459a98c9fd4bd06136bc',
+        '9f48dfec34c71336177e5ca2e275f368867f6519079aeb3b974715db93ad03e7',
 }
 
 NO_PLATFORM = '''

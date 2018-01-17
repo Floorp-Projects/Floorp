@@ -8,10 +8,12 @@ use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerVector2D, Shadow};
 use api::{ClipId, PremultipliedColorF};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::PrimitiveContext;
-use gpu_cache::GpuDataRequest;
+use gpu_cache::{GpuCache, GpuDataRequest};
 use gpu_types::{BrushImageKind, PictureType};
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
-use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskTree};
+use render_task::{ClearMode, RenderTask, RenderTaskCacheKey};
+use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskTree};
+use resource_cache::{CacheItem, ResourceCache};
 use scene::{FilterOpHelpers, SceneProperties};
 use tiling::RenderTargetKind;
 
@@ -57,7 +59,6 @@ pub enum PictureKind {
     BoxShadow {
         blur_radius: f32,
         color: ColorF,
-        blur_regions: Vec<LayerRect>,
         clip_mode: BoxShadowClipMode,
         image_kind: BrushImageKind,
         content_rect: LayerRect,
@@ -88,11 +89,21 @@ pub enum PictureKind {
     },
 }
 
+// The type of surface that a picture can be drawn to.
+// RenderTask surfaces are not retained across frames.
+// TextureCache surfaces are stored across frames, and
+// also shared between display lists.
+#[derive(Debug)]
+pub enum PictureSurface {
+    RenderTask(RenderTaskId),
+    TextureCache(CacheItem),
+}
+
 #[derive(Debug)]
 pub struct PicturePrimitive {
     // If this picture is drawn to an intermediate surface,
-    // the associated render task.
-    pub render_task_id: Option<RenderTaskId>,
+    // the associated target information.
+    pub surface: Option<PictureSurface>,
 
     // Details specific to this type of picture.
     pub kind: PictureKind,
@@ -113,7 +124,7 @@ impl PicturePrimitive {
     pub fn new_text_shadow(shadow: Shadow, pipeline_id: PipelineId) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
-            render_task_id: None,
+            surface: None,
             kind: PictureKind::TextShadow {
                 offset: shadow.offset,
                 color: shadow.color,
@@ -149,7 +160,6 @@ impl PicturePrimitive {
     pub fn new_box_shadow(
         blur_radius: f32,
         color: ColorF,
-        blur_regions: Vec<LayerRect>,
         clip_mode: BoxShadowClipMode,
         image_kind: BrushImageKind,
         cache_key: BoxShadowCacheKey,
@@ -157,11 +167,10 @@ impl PicturePrimitive {
     ) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
-            render_task_id: None,
+            surface: None,
             kind: PictureKind::BoxShadow {
                 blur_radius,
                 color,
-                blur_regions,
                 clip_mode,
                 image_kind,
                 content_rect: LayerRect::zero(),
@@ -181,7 +190,7 @@ impl PicturePrimitive {
     ) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
-            render_task_id: None,
+            surface: None,
             kind: PictureKind::Image {
                 secondary_render_task_id: None,
                 composite_mode,
@@ -303,6 +312,8 @@ impl PicturePrimitive {
         prim_local_rect: &LayerRect,
         child_tasks: Vec<RenderTaskId>,
         parent_tasks: &mut Vec<RenderTaskId>,
+        resource_cache: &mut ResourceCache,
+        gpu_cache: &mut GpuCache,
     ) {
         let content_scale = LayerToWorldScale::new(1.0) * prim_context.device_pixel_scale;
 
@@ -323,26 +334,24 @@ impl PicturePrimitive {
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             child_tasks,
-                            None,
                             PictureType::Image,
                         );
 
                         let blur_std_deviation = blur_radius * prim_context.device_pixel_scale.0;
                         let picture_task_id = render_tasks.add(picture_task);
 
-                        let blur_render_task = RenderTask::new_blur(
+                        let (blur_render_task, _) = RenderTask::new_blur(
                             blur_std_deviation,
                             picture_task_id,
                             render_tasks,
                             RenderTargetKind::Color,
-                            &[],
                             ClearMode::Transparent,
                             PremultipliedColorF::TRANSPARENT,
-                            None,
                         );
 
-                        let blur_render_task_id = render_tasks.add(blur_render_task);
-                        self.render_task_id = Some(blur_render_task_id);
+                        let render_task_id = render_tasks.add(blur_render_task);
+                        parent_tasks.push(render_task_id);
+                        self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
                         let rect = (prim_local_rect.translate(&-offset) * content_scale).round().to_i32();
@@ -354,26 +363,26 @@ impl PicturePrimitive {
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             child_tasks,
-                            None,
                             PictureType::Image,
                         );
 
                         let blur_std_deviation = blur_radius * prim_context.device_pixel_scale.0;
                         let picture_task_id = render_tasks.add(picture_task);
 
-                        let blur_render_task = RenderTask::new_blur(
+                        let (blur_render_task, _) = RenderTask::new_blur(
                             blur_std_deviation.round(),
                             picture_task_id,
                             render_tasks,
                             RenderTargetKind::Color,
-                            &[],
                             ClearMode::Transparent,
                             color.premultiplied(),
-                            None,
                         );
 
                         *secondary_render_task_id = Some(picture_task_id);
-                        self.render_task_id = Some(render_tasks.add(blur_render_task));
+
+                        let render_task_id = render_tasks.add(blur_render_task);
+                        parent_tasks.push(render_task_id);
+                        self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::MixBlend(..)) => {
                         let picture_task = RenderTask::new_picture(
@@ -384,7 +393,6 @@ impl PicturePrimitive {
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             child_tasks,
-                            None,
                             PictureType::Image,
                         );
 
@@ -393,7 +401,9 @@ impl PicturePrimitive {
                         *secondary_render_task_id = Some(readback_task_id);
                         parent_tasks.push(readback_task_id);
 
-                        self.render_task_id = Some(render_tasks.add(picture_task));
+                        let render_task_id = render_tasks.add(picture_task);
+                        parent_tasks.push(render_task_id);
+                        self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     Some(PictureCompositeMode::Filter(filter)) => {
                         // If this filter is not currently going to affect
@@ -403,7 +413,7 @@ impl PicturePrimitive {
                         // filters and be a significant performance win.
                         if filter.is_noop() {
                             parent_tasks.extend(child_tasks);
-                            self.render_task_id = None;
+                            self.surface = None;
                         } else {
                             let picture_task = RenderTask::new_picture(
                                 Some(prim_screen_rect.size),
@@ -413,11 +423,12 @@ impl PicturePrimitive {
                                 PremultipliedColorF::TRANSPARENT,
                                 ClearMode::Transparent,
                                 child_tasks,
-                                None,
                                 PictureType::Image,
                             );
 
-                            self.render_task_id = Some(render_tasks.add(picture_task));
+                            let render_task_id = render_tasks.add(picture_task);
+                            parent_tasks.push(render_task_id);
+                            self.surface = Some(PictureSurface::RenderTask(render_task_id));
                         }
                     }
                     Some(PictureCompositeMode::Blit) => {
@@ -429,15 +440,16 @@ impl PicturePrimitive {
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             child_tasks,
-                            None,
                             PictureType::Image,
                         );
 
-                        self.render_task_id = Some(render_tasks.add(picture_task));
+                        let render_task_id = render_tasks.add(picture_task);
+                        parent_tasks.push(render_task_id);
+                        self.surface = Some(PictureSurface::RenderTask(render_task_id));
                     }
                     None => {
                         parent_tasks.extend(child_tasks);
-                        self.render_task_id = None;
+                        self.surface = None;
                     }
                 }
             }
@@ -468,26 +480,25 @@ impl PicturePrimitive {
                     color.premultiplied(),
                     ClearMode::Transparent,
                     Vec::new(),
-                    None,
                     PictureType::TextShadow,
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
 
-                let render_task = RenderTask::new_blur(
+                let (blur_render_task, _) = RenderTask::new_blur(
                     blur_std_deviation,
                     picture_task_id,
                     render_tasks,
                     RenderTargetKind::Color,
-                    &[],
                     ClearMode::Transparent,
                     color.premultiplied(),
-                    None,
                 );
 
-                self.render_task_id = Some(render_tasks.add(render_task));
+                let render_task_id = render_tasks.add(blur_render_task);
+                parent_tasks.push(render_task_id);
+                self.surface = Some(PictureSurface::RenderTask(render_task_id));
             }
-            PictureKind::BoxShadow { blur_radius, clip_mode, ref blur_regions, color, content_rect, cache_key, .. } => {
+            PictureKind::BoxShadow { blur_radius, clip_mode, color, content_rect, cache_key, .. } => {
                 // TODO(gw): Rounding the content rect here to device pixels is not
                 // technically correct. Ideally we should ceil() here, and ensure that
                 // the extra part pixel in the case of fractional sizes is correctly
@@ -495,59 +506,82 @@ impl PicturePrimitive {
                 // Gecko tests.
                 let cache_size = (content_rect.size * content_scale).round().to_i32();
 
-                // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
-                // "the image that would be generated by applying to the shadow a
-                // Gaussian blur with a standard deviation equal to half the blur radius."
-                let device_radius = (blur_radius * prim_context.device_pixel_scale.0).round();
-                let blur_std_deviation = device_radius * 0.5;
-
-                let blur_clear_mode = match clip_mode {
-                    BoxShadowClipMode::Outset => {
-                        ClearMode::One
-                    }
-                    BoxShadowClipMode::Inset => {
-                        ClearMode::Zero
-                    }
-                };
-
-                let picture_task = RenderTask::new_picture(
-                    Some(cache_size),
-                    prim_index,
-                    RenderTargetKind::Alpha,
-                    ContentOrigin::Local(content_rect.origin),
-                    color.premultiplied(),
-                    ClearMode::Zero,
-                    Vec::new(),
-                    Some(cache_key),
-                    PictureType::BoxShadow,
-                );
-
-                let picture_task_id = render_tasks.add(picture_task);
-
-                let render_task = RenderTask::new_blur(
-                    blur_std_deviation,
-                    picture_task_id,
+                // Request the texture cache item for this box-shadow key. If it
+                // doesn't exist in the cache, the closure is invoked to build
+                // a render task chain to draw the cacheable result.
+                let cache_item = resource_cache.request_render_task(
+                    RenderTaskCacheKey {
+                        size: cache_size,
+                        kind: RenderTaskCacheKeyKind::BoxShadow(cache_key),
+                    },
+                    gpu_cache,
                     render_tasks,
-                    RenderTargetKind::Alpha,
-                    blur_regions,
-                    blur_clear_mode,
-                    color.premultiplied(),
-                    Some(cache_key),
+                    |render_tasks| {
+                        // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
+                        // "the image that would be generated by applying to the shadow a
+                        // Gaussian blur with a standard deviation equal to half the blur radius."
+                        let device_radius = (blur_radius * prim_context.device_pixel_scale.0).round();
+                        let blur_std_deviation = device_radius * 0.5;
+
+                        let blur_clear_mode = match clip_mode {
+                            BoxShadowClipMode::Outset => {
+                                ClearMode::One
+                            }
+                            BoxShadowClipMode::Inset => {
+                                ClearMode::Zero
+                            }
+                        };
+
+                        let picture_task = RenderTask::new_picture(
+                            Some(cache_size),
+                            prim_index,
+                            RenderTargetKind::Alpha,
+                            ContentOrigin::Local(content_rect.origin),
+                            color.premultiplied(),
+                            ClearMode::Zero,
+                            Vec::new(),
+                            PictureType::BoxShadow,
+                        );
+
+                        let picture_task_id = render_tasks.add(picture_task);
+
+                        let (blur_render_task, scale_factor) = RenderTask::new_blur(
+                            blur_std_deviation,
+                            picture_task_id,
+                            render_tasks,
+                            RenderTargetKind::Alpha,
+                            blur_clear_mode,
+                            color.premultiplied(),
+                        );
+
+                        let root_task_id = render_tasks.add(blur_render_task);
+                        parent_tasks.push(root_task_id);
+
+                        // TODO(gw): Remove the nastiness with having to pass
+                        //           the scale factor through the texture cache
+                        //           item user data. This will disappear once
+                        //           the brush_image shader is updated to draw
+                        //           segments, since the scale factor will not
+                        //           be used at all then during drawing.
+                        (root_task_id, [scale_factor, 0.0, 0.0])
+                    }
                 );
 
-                self.render_task_id = Some(render_tasks.add(render_task));
+                self.surface = Some(PictureSurface::TextureCache(cache_item));
             }
-        }
-
-        if let Some(render_task_id) = self.render_task_id {
-            parent_tasks.push(render_task_id);
         }
     }
 
-    pub fn write_gpu_blocks(&self, _request: &mut GpuDataRequest) {
-        // TODO(gw): We'll need to write the GPU blocks
-        //           here specific to a brush primitive
-        //           once we start drawing pictures as brushes!
+    pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+        match self.kind {
+            PictureKind::TextShadow { .. } |
+            PictureKind::Image { .. } => {
+                request.push([0.0; 4]);
+            }
+            PictureKind::BoxShadow { color, .. } => {
+                request.push(color.premultiplied());
+            }
+        }
     }
 
     pub fn target_kind(&self) -> RenderTargetKind {

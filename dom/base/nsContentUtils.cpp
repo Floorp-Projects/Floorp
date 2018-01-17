@@ -293,7 +293,7 @@ bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
-bool nsContentUtils::sIsWebComponentsEnabled = false;
+bool nsContentUtils::sIsShadowDOMEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
@@ -653,8 +653,8 @@ nsContentUtils::Init()
   Preferences::AddBoolVarCache(&sIsFormAutofillAutocompleteEnabled,
                                "dom.forms.autocomplete.formautofill", false);
 
-  Preferences::AddBoolVarCache(&sIsWebComponentsEnabled,
-                               "dom.webcomponents.enabled", false);
+  Preferences::AddBoolVarCache(&sIsShadowDOMEnabled,
+                               "dom.webcomponents.shadowdom.enabled", false);
 
   Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
                                "dom.webcomponents.customelements.enabled", false);
@@ -5273,32 +5273,37 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     UPDATE_CONTENT_MODEL, true);
   nsAutoMutationBatch mb;
 
-  uint32_t childCount = aContent->GetChildCount();
-
   if (aTryReuse && !aValue.IsEmpty()) {
-    uint32_t removeIndex = 0;
-
-    for (uint32_t i = 0; i < childCount; ++i) {
-      nsIContent* child = aContent->GetChildAt_Deprecated(removeIndex);
-      if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
-        nsresult rv = child->SetText(aValue, true);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        removeIndex = 1;
+    // Let's remove nodes until we find a eTEXT.
+    while (aContent->HasChildren()) {
+      nsIContent* child = aContent->GetFirstChild();
+      if (child->IsNodeOfType(nsINode::eTEXT)) {
+        break;
       }
-      else {
-        aContent->RemoveChildAt_Deprecated(removeIndex, true);
+      aContent->RemoveChildNode(child, true);
+    }
+
+    // If we have a node, it must be a eTEXT and we reuse it.
+    if (aContent->HasChildren()) {
+      nsIContent* child = aContent->GetFirstChild();
+      MOZ_ASSERT(child->IsNodeOfType(nsINode::eTEXT));
+      nsresult rv = child->SetText(aValue, true);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // All the following nodes, if they exist, must be deleted.
+      while (nsIContent* nextChild = child->GetNextSibling()) {
+        aContent->RemoveChildNode(nextChild, true);
       }
     }
 
-    if (removeIndex == 1) {
+    if (aContent->HasChildren()) {
       return NS_OK;
     }
   }
   else {
     mb.Init(aContent, true, false);
-    for (uint32_t i = 0; i < childCount; ++i) {
-      aContent->RemoveChildAt_Deprecated(0, true);
+    while (aContent->HasChildren()) {
+      aContent->RemoveChildNode(aContent->GetFirstChild(), true);
     }
   }
   mb.RemovalDone();
@@ -9972,7 +9977,7 @@ DoCustomElementCreate(Element** aElement, nsIDocument* aDoc, NodeInfo* aNodeInfo
 
 /* static */ nsresult
 nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* aNodeInfo,
-                                    FromParser aFromParser, const nsAString* aIs,
+                                    FromParser aFromParser, nsAtom* aIsAtom,
                                     mozilla::dom::CustomElementDefinition* aDefinition)
 {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
@@ -9993,9 +9998,9 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
   RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
   RefPtr<nsAtom> typeAtom;
-  bool isCustomElement = isCustomElementName || aIs;
+  bool isCustomElement = isCustomElementName || aIsAtom;
   if (isCustomElement) {
-    typeAtom = isCustomElementName ? tagAtom : NS_Atomize(*aIs);
+    typeAtom = isCustomElementName ? tagAtom.get() : aIsAtom;
   }
 
   MOZ_ASSERT_IF(aDefinition, isCustomElement);

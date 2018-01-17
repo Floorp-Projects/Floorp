@@ -20,8 +20,6 @@ public interface MmaInterface {
 
     void init(Activity Activity, Map<String, ?> attributes);
 
-    void setGcmSenderId(String senderIds);
-
     void setCustomIcon(@DrawableRes int iconResId);
 
     void start(Context context);
@@ -33,8 +31,6 @@ public interface MmaInterface {
     void stop();
 
     @CheckResult boolean handleGcmMessage(Context context, String from, Bundle bundle);
-
-    String getMmaSenderId();
 
     void setDeviceId(@NonNull String deviceId);
 }

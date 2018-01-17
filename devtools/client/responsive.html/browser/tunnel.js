@@ -6,7 +6,6 @@
 
 const { Ci, Cu } = require("chrome");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const { BrowserElementWebNavigation } = require("./web-navigation");
 const { getStack } = require("devtools/shared/platform/stack");
 
@@ -95,7 +94,7 @@ function tunnelToInnerBrowser(outer, inner) {
 
   return {
 
-    start: Task.async(function* () {
+    async start() {
       if (outer.isRemoteBrowser) {
         throw new Error("The outer browser must be non-remote.");
       }
@@ -234,7 +233,7 @@ function tunnelToInnerBrowser(outer, inner) {
 
       // Add mozbrowser event handlers
       inner.addEventListener("mozbrowseropenwindow", this);
-    }),
+    },
 
     handleEvent(event) {
       if (event.type != "mozbrowseropenwindow") {

@@ -192,7 +192,7 @@ impl Example for App {
         let yuv_chanel3 = api.generate_image_key();
         resources.add_image(
             yuv_chanel1,
-            ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, true),
             ImageData::new(vec![127; 100 * 100]),
             None,
         );
@@ -204,13 +204,13 @@ impl Example for App {
         );
         resources.add_image(
             yuv_chanel2_1,
-            ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, true),
             ImageData::new(vec![127; 100 * 100]),
             None,
         );
         resources.add_image(
             yuv_chanel3,
-            ImageDescriptor::new(100, 100, ImageFormat::A8, true),
+            ImageDescriptor::new(100, 100, ImageFormat::R8, true),
             ImageData::new(vec![127; 100 * 100]),
             None,
         );

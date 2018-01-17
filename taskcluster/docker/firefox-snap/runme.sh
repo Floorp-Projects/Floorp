@@ -15,22 +15,23 @@ SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TARGET="firefox-${VERSION}.snap"
 TARGET_FULL_PATH="$ARTIFACTS_DIR/$TARGET"
+SOURCE_DEST="${WORKSPACE}/source"
 
 mkdir -p "$ARTIFACTS_DIR"
-rm -rf "${WORKSPACE}/source" && mkdir -p "${WORKSPACE}/source/opt" "${WORKSPACE}/source/usr/bin"
+rm -rf "$SOURCE_DEST" && mkdir -p "$SOURCE_DEST"
 
 CURL="curl --location --retry 10 --retry-delay 10"
 
 # Download and extract en-US linux64 binary
 $CURL -o "${WORKSPACE}/firefox.tar.bz2" \
     "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/en-US/firefox-${VERSION}.tar.bz2"
-tar -C "${WORKSPACE}/source/opt" -xf "${WORKSPACE}/firefox.tar.bz2"
+tar -C "$SOURCE_DEST" -xf "${WORKSPACE}/firefox.tar.bz2" --strip-components=1
 
 # Get Ubuntu configuration
 PARTNER_CONFIG_DIR="$WORKSPACE/partner_config"
 git clone https://github.com/mozilla-partners/canonical.git "$PARTNER_CONFIG_DIR"
 
-DISTRIBUTION_DIR="$WORKSPACE/source/opt/firefox/distribution"
+DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
 mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
 cp -v "$SCRIPT_DIRECTORY/firefox.desktop" "$DISTRIBUTION_DIR"
 
@@ -40,12 +41,9 @@ cat "${WORKSPACE}/l10n_changesets.txt"
 
 mkdir -p "$DISTRIBUTION_DIR/extensions"
 for locale in $(grep -v ja-JP-mac "${WORKSPACE}/l10n_changesets.txt" | awk '{print $1}'); do
-    $CURL -o "${WORKSPACE}/source/opt/firefox/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
+    $CURL -o "$SOURCE_DEST/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
-
-# Symlink firefox binary to /usr/bin to make it available in PATH
-ln -s ../../opt/firefox/firefox "${WORKSPACE}/source/usr/bin"
 
 # Generate snapcraft manifest
 sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > ${WORKSPACE}/snapcraft.yaml

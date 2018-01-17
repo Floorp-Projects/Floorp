@@ -6,7 +6,7 @@
 /* global ResponsiveUIManager */
 /* eslint key-spacing: 0 */
 
-add_task(function* () {
+add_task(async function () {
   let manager = ResponsiveUIManager;
   let done;
 
@@ -15,7 +15,7 @@ add_task(function* () {
   }
 
   const TEST_URL = "data:text/html;charset=utf-8,hi";
-  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
+  await helpers.addTabWithToolbar(TEST_URL, (options) => {
     return helpers.audit(options, [
       {
         setup() {
@@ -31,10 +31,10 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(isOpen(), "responsive mode is open");
-        }),
+        },
       },
       {
         setup() {
@@ -50,14 +50,14 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(!isOpen(), "responsive mode is closed");
-        }),
+        },
       },
     ]);
   });
-  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
+  await helpers.addTabWithToolbar(TEST_URL, (options) => {
     return helpers.audit(options, [
       {
         setup() {
@@ -73,10 +73,10 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(isOpen(), "responsive mode is open");
-        }),
+        },
       },
       {
         setup() {
@@ -92,14 +92,14 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(!isOpen(), "responsive mode is closed");
-        }),
+        },
       },
     ]);
   });
-  yield helpers.addTabWithToolbar(TEST_URL, (options) => {
+  await helpers.addTabWithToolbar(TEST_URL, (options) => {
     return helpers.audit(options, [
       {
         setup() {
@@ -119,10 +119,10 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(isOpen(), "responsive mode is open");
-        }),
+        },
       },
       {
         setup() {
@@ -138,10 +138,10 @@ add_task(function* () {
         exec: {
           output: ""
         },
-        post: Task.async(function* () {
-          yield done;
+        async post() {
+          await done;
           ok(!isOpen(), "responsive mode is closed");
-        }),
+        },
       },
     ]);
   });

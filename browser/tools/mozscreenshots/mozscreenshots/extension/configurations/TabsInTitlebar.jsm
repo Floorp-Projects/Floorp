@@ -21,7 +21,7 @@ this.TabsInTitlebar = {
       selectors: ["#navigator-toolbox"],
       async applyConfig() {
         if (Services.appinfo.OS == "Linux") {
-          return Promise.reject("TabsInTitlebar isn't supported on Linux");
+          return "TabsInTitlebar isn't supported on Linux";
         }
         Services.prefs.setBoolPref(PREF_TABS_IN_TITLEBAR, true);
         return undefined;

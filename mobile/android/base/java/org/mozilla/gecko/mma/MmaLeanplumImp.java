@@ -46,6 +46,8 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         }
 
+        LeanplumPushService.setGcmSenderId(AppConstants.MOZ_ANDROID_GCM_SENDERIDS);
+
         if (attributes != null) {
             Leanplum.start(activity, attributes);
         } else {
@@ -67,11 +69,6 @@ public class MmaLeanplumImp implements MmaInterface {
                 LeanplumActivityHelper.onResume(activity);
             }
         });
-    }
-
-    @Override
-    public void setGcmSenderId(String senderIds) {
-        LeanplumPushService.setGcmSenderId(senderIds);
     }
 
     @Override
@@ -115,11 +112,6 @@ public class MmaLeanplumImp implements MmaInterface {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public String getMmaSenderId() {
-        return MmaConstants.MOZ_MMA_SENDER_ID;
     }
 
     @Override

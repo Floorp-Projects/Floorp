@@ -46,6 +46,8 @@ private:
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
+  mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId) override;
+
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
   mozilla::ipc::IPCResult RecvPreloadLibs(const nsCString& aLibs) override;
 
@@ -76,6 +78,7 @@ private:
 
   MessageLoop* mGMPMessageLoop;
   nsString mPluginPath;
+  nsCString mStorageId;
   UniquePtr<GMPLoader> mGMPLoader;
 };
 

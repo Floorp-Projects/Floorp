@@ -28,50 +28,50 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   // Test defaults
   testViewportDimensions(ui, 320, 480);
   info("Should have default UA at the start of the test");
-  yield testUserAgent(ui, DEFAULT_UA);
-  yield testDevicePixelRatio(ui, DEFAULT_DPPX);
-  yield testTouchEventsOverride(ui, false);
+  await testUserAgent(ui, DEFAULT_UA);
+  await testDevicePixelRatio(ui, DEFAULT_DPPX);
+  await testTouchEventsOverride(ui, false);
   testViewportDeviceSelectLabel(ui, "no device selected");
 
   // Test device with custom properties
   let reloaded = waitForViewportLoad(ui);
-  yield selectDevice(ui, "Fake Phone RDM Test");
-  yield reloaded;
-  yield waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
+  await selectDevice(ui, "Fake Phone RDM Test");
+  await reloaded;
+  await waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
   info("Should have device UA now that device is applied");
-  yield testUserAgent(ui, testDevice.userAgent);
-  yield testDevicePixelRatio(ui, testDevice.pixelRatio);
-  yield testTouchEventsOverride(ui, true);
+  await testUserAgent(ui, testDevice.userAgent);
+  await testDevicePixelRatio(ui, testDevice.pixelRatio);
+  await testTouchEventsOverride(ui, true);
 
   // Test resetting device when resizing viewport
   let deviceRemoved = once(ui, "device-association-removed");
   reloaded = waitForViewportLoad(ui);
-  yield testViewportResize(ui, ".viewport-vertical-resize-handle",
+  await testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
-  yield Promise.all([ deviceRemoved, reloaded ]);
+  await Promise.all([ deviceRemoved, reloaded ]);
   info("Should have default UA after resizing viewport");
-  yield testUserAgent(ui, DEFAULT_UA);
-  yield testDevicePixelRatio(ui, DEFAULT_DPPX);
-  yield testTouchEventsOverride(ui, false);
+  await testUserAgent(ui, DEFAULT_UA);
+  await testDevicePixelRatio(ui, DEFAULT_DPPX);
+  await testTouchEventsOverride(ui, false);
   testViewportDeviceSelectLabel(ui, "no device selected");
 
   // Test device with generic properties
-  yield selectDevice(ui, "Laptop (1366 x 768)");
-  yield waitForViewportResizeTo(ui, 1366, 768);
+  await selectDevice(ui, "Laptop (1366 x 768)");
+  await waitForViewportResizeTo(ui, 1366, 768);
   info("Should have default UA when using device without specific UA");
-  yield testUserAgent(ui, DEFAULT_UA);
-  yield testDevicePixelRatio(ui, 1);
-  yield testTouchEventsOverride(ui, false);
+  await testUserAgent(ui, DEFAULT_UA);
+  await testDevicePixelRatio(ui, 1);
+  await testTouchEventsOverride(ui, false);
 });
 
 add_task(async function () {
@@ -113,13 +113,7 @@ function testViewportDimensions(ui, w, h) {
      `${h}px`, `Viewport should have height of ${h}px`);
 }
 
-function* testDevicePixelRatio(ui, expected) {
-  let dppx = yield getViewportDevicePixelRatio(ui);
+async function testDevicePixelRatio(ui, expected) {
+  let dppx = await getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
-}
-
-function* getViewportDevicePixelRatio(ui) {
-  return yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    return content.devicePixelRatio;
-  });
 }

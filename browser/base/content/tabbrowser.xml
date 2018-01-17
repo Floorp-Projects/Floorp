@@ -3437,19 +3437,19 @@
         </body>
       </method>
 
-      <method name="_blurTab">
+      <method name="_findTabToBlurTo">
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (!aTab.selected)
-              return;
+            if (!aTab.selected) {
+              return null;
+            }
 
             if (aTab.owner &&
                 !aTab.owner.hidden &&
                 !aTab.owner.closing &&
                 Services.prefs.getBoolPref("browser.tabs.selectOwnerOnClose")) {
-              this.selectedTab = aTab.owner;
-              return;
+              return aTab.owner;
             }
 
             // Switch to a visible tab unless there aren't any others remaining
@@ -3462,7 +3462,7 @@
             }
 
             // Try to find a remaining tab that comes after the given tab
-            var tab = aTab;
+            let tab = aTab;
             do {
               tab = tab.nextSibling;
             } while (tab && remainingTabs.indexOf(tab) == -1);
@@ -3475,7 +3475,16 @@
               } while (tab && remainingTabs.indexOf(tab) == -1);
             }
 
-            this.selectedTab = tab;
+            return tab;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_blurTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            this.selectedTab = this._findTabToBlurTo(aTab);
           ]]>
         </body>
       </method>
@@ -5053,6 +5062,10 @@
 
             canWarmTab(tab) {
               if (!this.tabbrowser.tabWarmingEnabled) {
+                return false;
+              }
+
+              if (!tab) {
                 return false;
               }
 
@@ -7972,7 +7985,12 @@
 
           // Prepare connection to host beforehand.
           SessionStore.speculativeConnectOnTabHover(this);
-          tabContainer.tabbrowser.warmupTab(this);
+
+          let tabToWarm = this;
+          if (this.mOverCloseButton) {
+            tabToWarm = tabContainer.tabbrowser._findTabToBlurTo(this);
+          }
+          tabContainer.tabbrowser.warmupTab(tabToWarm);
         ]]></body>
       </method>
 

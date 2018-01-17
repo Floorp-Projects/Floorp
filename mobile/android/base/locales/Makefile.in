@@ -10,11 +10,8 @@ AB_rCD = $(if $(filter he, $(AB_CD)),iw,$(if $(filter id, $(AB_CD)),in,$(subst -
 
 SYNCSTRINGSPATH = $(abspath $(call MERGE_FILE,sync_strings.dtd))
 STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
-ifeq (,$(XPI_NAME))
-BRANDPATH = $(topobjdir)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
-else
-BRANDPATH = $(ABS_DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd
-endif
+# Fennec branding is en-US only: see $(MOZ_BRANDING_DIRECTORY)/locales/jar.mn.
+BRANDPATH := $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
 $(warnIfEmpty,AB_CD) # todo: $(errorIfEmpty )
 
 dir-res-values := ../res/values

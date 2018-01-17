@@ -7,6 +7,7 @@ dom/base/test/.*
 dom/bindings/test/.*
 dom/media/gtest/.*
 gfx/testsd/.*
+.*/gtest/ExampleStylesheet.h
 image/test/.*
 ipc/ipdl/test/.*
 ipc/testshell/.*

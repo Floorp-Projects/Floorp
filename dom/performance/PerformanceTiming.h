@@ -69,10 +69,10 @@ public:
    *          page), if the given TimeStamp is valid. Otherwise, it will return
    *          the FetchStart timing value.
    */
-  inline DOMHighResTimeStamp TimeStampToDOMHighResOrFetchStart(TimeStamp aStamp)
+  inline DOMHighResTimeStamp TimeStampToReducedDOMHighResOrFetchStart(TimeStamp aStamp)
   {
     return (!aStamp.IsNull())
-        ? TimeStampToDOMHighRes(aStamp)
+        ? nsRFPService::ReduceTimePrecisionAsMSecs(TimeStampToDOMHighRes(aStamp))
         : FetchStartHighRes();
   }
 
@@ -108,8 +108,7 @@ public:
     MOZ_ASSERT(!aStamp.IsNull());
     TimeDuration duration =
         aStamp - GetDOMTiming()->GetNavigationStartTimeStamp();
-    return nsRFPService::ReduceTimePrecisionAsMSecs(
-      duration.ToMilliseconds() + mZeroTime);
+    return duration.ToMilliseconds() + mZeroTime;
   }
 
   virtual JSObject* WrapObject(JSContext *cx,

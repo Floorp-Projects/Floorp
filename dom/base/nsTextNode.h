@@ -77,7 +77,7 @@ public:
 
   // Need to have a copy here because including nsDocument.h in this file will
   // fail to build on Windows.
-  static bool IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject);
+  static bool IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject);
 
 #ifdef DEBUG
   virtual void List(FILE* out, int32_t aIndent) const override;

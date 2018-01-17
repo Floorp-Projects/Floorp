@@ -732,7 +732,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     //
     // - We skip samples that don't have an appropriate ThreadId or Time.
     //
-    // - We skip range Pause, Resume, CollectionStart, and CollectionEnd
+    // - We skip range Pause, Resume, CollectionStart, Marker, and CollectionEnd
     //   entries between samples.
     while (e.Has()) {
       if (e.Get().IsThreadId()) {
@@ -918,16 +918,17 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
 {
   EntryGetter e(*this);
 
-  int currentThreadID = -1;
-
-  // Stream all markers whose threadId matches aThreadId. All other entries are
-  // skipped, because we process them in StreamSamplesToJSON().
+  // Stream all markers whose threadId matches aThreadId. We skip other entries,
+  // because we process them in StreamSamplesToJSON().
+  //
+  // NOTE: The ThreadId of a marker is determined by its GetThreadId() method,
+  // rather than ThreadId buffer entries, as markers can be added outside of
+  // samples.
   while (e.Has()) {
-    if (e.Get().IsThreadId()) {
-      currentThreadID = e.Get().u.mInt;
-    } else if (currentThreadID == aThreadId && e.Get().IsMarker()) {
+    if (e.Get().IsMarker()) {
       const ProfilerMarker* marker = e.Get().u.mMarker;
-      if (marker->GetTime() >= aSinceTime) {
+      if (marker->GetTime() >= aSinceTime &&
+          marker->GetThreadId() == aThreadId) {
         marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
       }
     }

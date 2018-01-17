@@ -27,6 +27,7 @@ parent:
 child:
   async CrashPluginNow();
   intr StartPlugin(nsString adapter);
+  async ProvideStorageId(nsCString storageId);
   async PreloadLibs(nsCString libs);
   async CloseActive();
   async InitGMPContentChild(Endpoint<PGMPContentChild> endpoint);

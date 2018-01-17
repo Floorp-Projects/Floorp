@@ -909,7 +909,9 @@ nsBaseWidget::UseAPZ()
 bool
 nsBaseWidget::AllowWebRenderForThisWindow()
 {
-  return WindowType() == eWindowType_toplevel || HasRemoteContent();
+  return WindowType() == eWindowType_toplevel ||
+         WindowType() == eWindowType_child ||
+         (WindowType() == eWindowType_popup && HasRemoteContent());
 }
 
 void nsBaseWidget::CreateCompositor()

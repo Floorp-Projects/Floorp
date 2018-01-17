@@ -342,11 +342,11 @@ int av1_get_qindex(const struct segmentation *seg, int segment_id,
 }
 
 #if CONFIG_AOM_QM
-qm_val_t *aom_iqmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
+const qm_val_t *aom_iqmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
                        TX_SIZE tx_size, int is_intra) {
   return &cm->giqmatrix[qmlevel][!!is_chroma][!!is_intra][tx_size][0];
 }
-qm_val_t *aom_qmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
+const qm_val_t *aom_qmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
                       TX_SIZE tx_size, int is_intra) {
   return &cm->gqmatrix[qmlevel][!!is_chroma][!!is_intra][tx_size][0];
 }
@@ -356,8 +356,8 @@ qm_val_t *aom_qmatrix(AV1_COMMON *cm, int qmlevel, int is_chroma,
 #else
 #define QM_TOTAL_SIZE 3344
 #endif
-static uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
-static uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
+static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
+static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE];
 
 void aom_qm_init(AV1_COMMON *cm) {
   int q, c, f, t;
@@ -399,7 +399,7 @@ void aom_qm_init(AV1_COMMON *cm) {
    frequency domain according to different nominal viewing
    distances.
  */
-static uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
+static const uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   {
       { /* Luma */
 #if CONFIG_CHROMA_2X2
@@ -7295,7 +7295,7 @@ static uint16_t iwt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   },
 };
 
-static uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
+static const uint16_t wt_matrix_ref[NUM_QM_LEVELS][2][QM_TOTAL_SIZE] = {
   {
       { /* Luma */
 #if CONFIG_CHROMA_2X2

@@ -18,37 +18,37 @@ const TEST_URI = "data:text/html;charset=utf-8,<html><style>" +
                  "};" +
                  "</style><div></div></html>";
 
-addRDMTask(TEST_URI, function* ({ ui, manager }) {
+addRDMTask(TEST_URI, async function ({ ui, manager }) {
   info("Open the responsive design mode and set its size to 500x500 to start");
-  yield setViewportSize(ui, manager, 500, 500);
+  await setViewportSize(ui, manager, 500, 500);
 
   info("Open the inspector, computed-view and select the test node");
-  let { inspector, view } = yield openComputedView();
-  yield selectNode("div", inspector);
+  let { inspector, view } = await openComputedView();
+  await selectNode("div", inspector);
 
   info("Try shrinking the viewport and checking the applied styles");
-  yield testShrink(view, inspector, ui, manager);
+  await testShrink(view, inspector, ui, manager);
 
   info("Try growing the viewport and checking the applied styles");
-  yield testGrow(view, inspector, ui, manager);
+  await testGrow(view, inspector, ui, manager);
 
-  yield closeToolbox();
+  await closeToolbox();
 });
 
-function* testShrink(computedView, inspector, ui, manager) {
+async function testShrink(computedView, inspector, ui, manager) {
   is(computedWidth(computedView), "500px", "Should show 500px initially.");
 
   let onRefresh = inspector.once("computed-view-refreshed");
-  yield setViewportSize(ui, manager, 100, 100);
-  yield onRefresh;
+  await setViewportSize(ui, manager, 100, 100);
+  await onRefresh;
 
   is(computedWidth(computedView), "100px", "Should be 100px after shrinking.");
 }
 
-function* testGrow(computedView, inspector, ui, manager) {
+async function testGrow(computedView, inspector, ui, manager) {
   let onRefresh = inspector.once("computed-view-refreshed");
-  yield setViewportSize(ui, manager, 500, 500);
-  yield onRefresh;
+  await setViewportSize(ui, manager, 500, 500);
+  await onRefresh;
 
   is(computedWidth(computedView), "500px", "Should be 500px after growing.");
 }

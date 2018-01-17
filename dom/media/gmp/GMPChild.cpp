@@ -254,6 +254,14 @@ GMPChild::Init(const nsAString& aPluginPath,
   return true;
 }
 
+mozilla::ipc::IPCResult
+GMPChild::RecvProvideStorageId(const nsCString& aStorageId)
+{
+  LOGD("%s", __FUNCTION__);
+  mStorageId = aStorageId;
+  return IPC_OK();
+}
+
 GMPErr
 GMPChild::GetAPI(const char* aAPIName,
                  void* aHostAPI,

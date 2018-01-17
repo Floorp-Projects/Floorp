@@ -42,7 +42,7 @@ nsresult
 NS_NewHTMLElement(mozilla::dom::Element** aResult,
                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                   mozilla::dom::FromParser aFromParser,
-                  const nsAString* aIs = nullptr,
+                  nsAtom* aIsAtom = nullptr,
                   mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
 // First argument should be nsHTMLTag, but that adds dependency to parser

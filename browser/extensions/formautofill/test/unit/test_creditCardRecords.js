@@ -7,6 +7,7 @@
 const {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-credit-card.json";
+const COLLECTION_NAME = "creditCards";
 
 const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
@@ -148,8 +149,12 @@ let prepareTestCreditCards = async function(path) {
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "add");
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) =>
+      data == "add" &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
+  );
   Assert.ok(profileStorage.creditCards.add(TEST_CREDIT_CARD_1));
   await onChanged;
   Assert.ok(profileStorage.creditCards.add(TEST_CREDIT_CARD_2));
@@ -295,8 +300,12 @@ add_task(async function test_update() {
   let guid = creditCards[1].guid;
   let timeLastModified = creditCards[1].timeLastModified;
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "update");
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) =>
+      data == "update" &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
+  );
 
   Assert.notEqual(creditCards[1]["cc-name"], undefined);
   profileStorage.creditCards.update(guid, TEST_CREDIT_CARD_3);
@@ -421,8 +430,12 @@ add_task(async function test_remove() {
   let creditCards = profileStorage.creditCards.getAll();
   let guid = creditCards[1].guid;
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "remove");
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) =>
+      data == "remove" &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
+  );
 
   Assert.equal(creditCards.length, 2);
 
@@ -453,7 +466,9 @@ MERGE_TESTCASES.forEach((testcase) => {
     let onMerged = TestUtils.topicObserved(
       "formautofill-storage-changed",
       (subject, data) =>
-        data == "update" && subject.QueryInterface(Ci.nsISupportsString).data == guid
+        data == "update" &&
+        subject.wrappedJSObject.guid == guid &&
+        subject.wrappedJSObject.collectionName == COLLECTION_NAME
     );
     // Force to create sync metadata.
     profileStorage.creditCards.pullSyncChanges();
