@@ -55,6 +55,10 @@ public:
     layers::AutoCompleteTask complete(mTask);
 
     UniquePtr<RenderCompositor> compositor = RenderCompositor::Create(Move(mCompositorWidget));
+    if (!compositor) {
+      // RenderCompositor::Create puts a message into gfxCriticalNote if it is nullptr
+      return;
+    }
 
     *mUseANGLE = compositor->UseANGLE();
 
