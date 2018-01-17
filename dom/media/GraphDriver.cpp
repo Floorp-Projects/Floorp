@@ -574,7 +574,7 @@ bool IsMacbookOrMacbookAir()
     char* substring = strstr(model.get(), "MacBook");
     if (substring) {
       const size_t offset = strlen("MacBook");
-      if (strncmp(model.get() + offset, "Air", len - offset) ||
+      if (!strncmp(model.get() + offset, "Air", 3) ||
           isdigit(model[offset + 1])) {
         return true;
       }

@@ -114,6 +114,18 @@ impl FontTransform {
             self.scale_y - self.skew_y * skew_factor,
         )
     }
+
+    pub fn swap_xy(&self) -> Self {
+        FontTransform::new(self.skew_x, self.scale_x, self.scale_y, self.skew_y)
+    }
+
+    pub fn flip_x(&self) -> Self {
+        FontTransform::new(-self.scale_x, self.skew_x, -self.skew_y, self.scale_y)
+    }
+
+    pub fn flip_y(&self) -> Self {
+        FontTransform::new(self.scale_x, -self.skew_y, self.skew_y, -self.scale_y)
+    }
 }
 
 impl<'a> From<&'a LayerToWorldTransform> for FontTransform {
@@ -220,8 +232,6 @@ pub enum GlyphFormat {
 impl GlyphFormat {
     pub fn ignore_color(self) -> Self {
         match self {
-            GlyphFormat::Subpixel => GlyphFormat::Alpha,
-            GlyphFormat::TransformedSubpixel => GlyphFormat::TransformedAlpha,
             GlyphFormat::ColorBitmap => GlyphFormat::Bitmap,
             _ => self,
         }
@@ -400,7 +410,7 @@ impl GlyphRasterizer {
                                     offset: 0,
                                 },
                                 TextureFilter::Linear,
-                                ImageData::Raw(glyph_info.glyph_bytes.clone()),
+                                Some(ImageData::Raw(glyph_info.glyph_bytes.clone())),
                                 [glyph_info.offset.x, glyph_info.offset.y, glyph_info.scale],
                                 None,
                                 gpu_cache,
@@ -523,7 +533,7 @@ impl GlyphRasterizer {
                             offset: 0,
                         },
                         TextureFilter::Linear,
-                        ImageData::Raw(glyph_bytes.clone()),
+                        Some(ImageData::Raw(glyph_bytes.clone())),
                         [glyph.left, -glyph.top, glyph.scale],
                         None,
                         gpu_cache,

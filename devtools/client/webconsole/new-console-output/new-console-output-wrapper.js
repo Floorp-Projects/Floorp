@@ -221,7 +221,7 @@ NewConsoleOutputWrapper.prototype = {
     });
   },
 
-  dispatchMessageAdd: function (message, waitForResponse) {
+  dispatchMessageAdd: function (packet, waitForResponse) {
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.
@@ -229,11 +229,15 @@ NewConsoleOutputWrapper.prototype = {
     let promise;
     // Also, do not expect any update while the panel is in background.
     if (waitForResponse && document.visibilityState === "visible") {
+      const timeStampToMatch = packet.message
+        ? packet.message.timeStamp
+        : packet.timestamp;
+
       promise = new Promise(resolve => {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
           for (let m of messages) {
-            if (m.timeStamp === message.timestamp) {
+            if (m.timeStamp === timeStampToMatch) {
               resolve(m.node);
               jsterm.hud.off("new-messages", onThisMessage);
               return;
@@ -245,7 +249,7 @@ NewConsoleOutputWrapper.prototype = {
       promise = Promise.resolve();
     }
 
-    this.batchedMessagesAdd(message);
+    this.batchedMessagesAdd(packet);
     return promise;
   },
 

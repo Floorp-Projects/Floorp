@@ -11,7 +11,7 @@ const {
   updateDeviceDisplayed,
 } = require("devtools/client/responsive.html/actions/devices");
 
-add_task(function* () {
+add_task(async function () {
   let store = Store();
   const { getState, dispatch } = store;
 

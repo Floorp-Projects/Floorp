@@ -171,6 +171,23 @@ linux64-sixgill:
     toolchains:
         - linux64-gcc-4.9
 
+linux64-llvm-dsymutil:
+    description: "llvm-dsymutil toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(dsymutil)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: build-llvm-dsymutil.sh
+        toolchain-artifact: public/build/llvm-dsymutil.tar.xz
+    toolchains:
+        - linux64-gcc-4.9
+
 linux64-binutils:
     description: "Binutils toolchain build"
     treeherder:

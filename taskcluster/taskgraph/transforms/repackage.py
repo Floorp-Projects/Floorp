@@ -163,9 +163,6 @@ def make_job_description(config, jobs):
             run['tooltool-downloads'] = 'internal'
             worker['docker-image'] = {"in-tree": "desktop-build"}
 
-            cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
-            cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
-
         description = (
             "Repackaging for locale '{locale}' for build '"
             "{build_platform}/{build_type}'".format(

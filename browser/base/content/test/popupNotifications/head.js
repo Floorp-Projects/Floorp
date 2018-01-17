@@ -203,7 +203,15 @@ function checkPopup(popup, notifyObj) {
     ok(popup.anchorNode.classList.contains("notification-anchor-icon"),
        "notification anchored to icon");
   }
-  is(notification.getAttribute("label"), notifyObj.message, "message matches");
+
+  if (typeof notifyObj.message == "string") {
+    is(notification.getAttribute("startlabel"), notifyObj.message, "message matches");
+  } else {
+    is(notification.getAttribute("startlabel"), notifyObj.message.start, "message matches");
+    is(notification.getAttribute("hostname"), notifyObj.message.host, "message matches");
+    is(notification.getAttribute("endlabel"), notifyObj.message.end, "message matches");
+  }
+
   is(notification.id, notifyObj.id + "-notification", "id matches");
   if (notifyObj.mainAction) {
     is(notification.getAttribute("buttonlabel"), notifyObj.mainAction.label,

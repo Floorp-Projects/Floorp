@@ -362,7 +362,7 @@ toolbarpaletteitem {
   }
 
   .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image, inherit);
+    list-style-image: var(--webextension-menuitem-image, inherit) !important;
   }
 }
 
@@ -394,7 +394,7 @@ toolbarpaletteitem {
   }
 
   .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image-2x, inherit);
+    list-style-image: var(--webextension-menuitem-image-2x, inherit) !important;
   }
 }
 
