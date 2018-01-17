@@ -204,6 +204,7 @@ static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 static const uint32_t CUBEB_NORMAL_LATENCY_FRAMES = 1024;
 
 namespace CubebUtils {
+cubeb* GetCubebContextUnlocked();
 
 void PrefChanged(const char* aPref, void* aClosure)
 {
