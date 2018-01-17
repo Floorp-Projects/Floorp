@@ -267,6 +267,13 @@ public:
    * for the different touch points. In the case where the touch point has no
    * target, or the target is not a scrollable frame, the target's |mScrollId|
    * should be set to FrameMetrics::NULL_SCROLL_ID.
+   * Note: For mouse events that start a scrollbar drag, both SetTargetAPZC()
+   *       and StartScrollbarDrag() will be called, and the calls may happen
+   *       in either order. That's fine - whichever arrives first will confirm
+   *       the block, and StartScrollbarDrag() will fill in the drag metrics.
+   *       If the block is confirmed before we have drag metrics, some events
+   *       in the drag block may be handled as no-ops until the drag metrics
+   *       arrive.
    */
   void SetTargetAPZC(
       uint64_t aInputBlockId,
