@@ -1333,7 +1333,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
             }
           }
 
-          // We don't drop the moz_hosts table such that it is avaliable for
+          // We don't drop the moz_hosts table such that it is available for
           // backwards-compatability and for future migrations in case of
           // migration errors in the current code.
           // Create a marker empty table which will indicate that the moz_hosts
@@ -1755,7 +1755,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
     }
   }
 
-  MOZ_ASSERT(PermissionAvaliable(aPrincipal, aType.get()));
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, aType.get()));
 
   // look up the type index
   int32_t typeIndex = GetTypeIndex(aType.get(), true);
@@ -2215,7 +2215,7 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  MOZ_ASSERT(PermissionAvaliable(aPrincipal, aType));
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, aType));
 
   int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
@@ -2311,7 +2311,7 @@ nsPermissionManager::CommonTestPermissionInternal(nsIPrincipal* aPrincipal,
     if (!prin) {
       prin = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, OriginAttributes());
     }
-    MOZ_ASSERT(PermissionAvaliable(prin, aType));
+    MOZ_ASSERT(PermissionAvailable(prin, aType));
   }
 #endif
 
@@ -2348,7 +2348,7 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType,
                                           bool aExactHostMatch)
 {
-  MOZ_ASSERT(PermissionAvaliable(aPrincipal, mTypeArray[aType].get()));
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, mTypeArray[aType].get()));
 
   nsresult rv;
   RefPtr<PermissionKey> key =
@@ -2408,7 +2408,7 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
     nsCOMPtr<nsIPrincipal> principal;
     nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
     MOZ_ASSERT_IF(NS_SUCCEEDED(rv),
-                  PermissionAvaliable(principal, mTypeArray[aType].get()));
+                  PermissionAvailable(principal, mTypeArray[aType].get()));
   }
 #endif
 
@@ -2463,8 +2463,8 @@ nsPermissionManager::GetPermissionHashKey(nsIURI* aURI,
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
   if (XRE_IsContentProcess()) {
-    NS_WARNING("nsPermissionManager's enumerator is not avaliable in the "
-               "content process, as not all permissions may be avaliable.");
+    NS_WARNING("nsPermissionManager's enumerator is not available in the "
+               "content process, as not all permissions may be available.");
     *aEnum = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -2513,7 +2513,7 @@ NS_IMETHODIMP nsPermissionManager::GetAllForURI(nsIURI* aURI, nsISimpleEnumerato
   nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(PermissionAvaliable(principal, nullptr));
+  MOZ_ASSERT(PermissionAvailable(principal, nullptr));
 
   RefPtr<PermissionKey> key = PermissionKey::CreateFromPrincipal(principal, rv);
   if (!key) {
@@ -3129,7 +3129,7 @@ nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  MOZ_ASSERT(PermissionAvaliable(aPrincipal, aType));
+  MOZ_ASSERT(PermissionAvailable(aPrincipal, aType));
 
   int32_t typeIndex = GetTypeIndex(aType, false);
   // If type == -1, the type isn't known,
@@ -3361,7 +3361,7 @@ nsPermissionManager::BroadcastPermissionsForPrincipalToAllContentProcesses(nsIPr
 }
 
 bool
-nsPermissionManager::PermissionAvaliable(nsIPrincipal* aPrincipal, const char* aType)
+nsPermissionManager::PermissionAvailable(nsIPrincipal* aPrincipal, const char* aType)
 {
   if (XRE_IsContentProcess()) {
     nsAutoCString permissionKey;
@@ -3369,7 +3369,7 @@ nsPermissionManager::PermissionAvaliable(nsIPrincipal* aPrincipal, const char* a
     GetKeyForPermission(aPrincipal, aType, permissionKey);
 
     // If we have a pending promise for the permission key in question, we don't
-    // have the permission avaliable, so report a warning and return false.
+    // have the permission available, so report a warning and return false.
     RefPtr<GenericPromise::Private> promise;
     if (!mPermissionKeyPromiseMap.Get(permissionKey, getter_AddRefs(promise)) || promise) {
       // Emit a useful diagnostic warning with the permissionKey for the process
@@ -3397,7 +3397,7 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
   for (auto& key : GetAllKeysForPrincipal(aPrincipal)) {
     RefPtr<GenericPromise::Private> promise;
     if (!mPermissionKeyPromiseMap.Get(key, getter_AddRefs(promise))) {
-      // In this case we have found a permission which isn't avaliable in the
+      // In this case we have found a permission which isn't available in the
       // content process and hasn't been requested yet. We need to create a new
       // promise, and send the request to the parent (if we have not already
       // done so).
@@ -3410,7 +3410,7 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     }
   }
 
-  // If all of our permissions are avaliable, immediately run the runnable. This
+  // If all of our permissions are available, immediately run the runnable. This
   // avoids any extra overhead during fetch interception which is performance
   // sensitive.
   if (promises.IsEmpty()) {
