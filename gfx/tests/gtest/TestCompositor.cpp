@@ -45,7 +45,7 @@ struct LayerManagerData {
 
 static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, widget::CompositorWidget* widget)
 {
-  gfxPrefs::GetSingleton();
+  gfxPlatform::GetPlatform();
 
   RefPtr<Compositor> compositor;
 
