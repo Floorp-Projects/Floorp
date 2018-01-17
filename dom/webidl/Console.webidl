@@ -78,7 +78,6 @@ dictionary ConsoleEvent {
   DOMString groupName = "";
   any timer = null;
   any counter = null;
-  DOMString prefix = "";
 };
 
 // Event for profile operations
