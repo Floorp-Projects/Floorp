@@ -444,7 +444,7 @@ private:
   nsString mPassedInnerID;
   RefPtr<ConsoleInstanceDumpCallback> mDumpFunction;
   bool mDumpToStdout;
-  nsString mDumpPrefix;
+  nsString mPrefix;
   bool mChromeInstance;
   ConsoleLogLevel mMaxLogLevel;
 
