@@ -1533,7 +1533,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   margin-bottom: -2px;
 }
 
-.sources-list .managed-tree .tree .node.focused img.blackBox {
+.sources-list .managed-tree .tree .node.focused img {
   background-color: white;
 }
 
