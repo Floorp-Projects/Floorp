@@ -13,6 +13,7 @@ DevToolsModules(
     'filter-predicates.js',
     'filter-text-utils.js',
     'format-utils.js',
+    'headers-provider.js',
     'l10n.js',
     'mdn-utils.js',
     'menu.js',

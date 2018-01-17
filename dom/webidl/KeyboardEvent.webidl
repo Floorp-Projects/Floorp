@@ -8,13 +8,18 @@
 interface KeyboardEvent : UIEvent
 {
   readonly attribute unsigned long    charCode;
+  [NeedsCallerType]
   readonly attribute unsigned long    keyCode;
 
+  [NeedsCallerType]
   readonly attribute boolean          altKey;
+  [NeedsCallerType]
   readonly attribute boolean          ctrlKey;
+  [NeedsCallerType]
   readonly attribute boolean          shiftKey;
   readonly attribute boolean          metaKey;
 
+  [NeedsCallerType]
   boolean getModifierState(DOMString key);
 
   const unsigned long DOM_KEY_LOCATION_STANDARD = 0x00;
@@ -27,6 +32,7 @@ interface KeyboardEvent : UIEvent
   readonly attribute boolean       isComposing;
 
   readonly attribute DOMString key;
+  [NeedsCallerType]
   readonly attribute DOMString code;
 
   [Throws]

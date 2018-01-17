@@ -196,7 +196,11 @@ public class WebAppActivity extends AppCompatActivity
         } catch (Exception e2) {
             Log.e(LOGTAG, "Failed to fall back to launching in Firefox");
         }
-        finish();
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            finishAndRemoveTask();
+        } else {
+            finish();
+        }
     }
 
     @Override
