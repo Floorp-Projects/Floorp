@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from marionette_driver.errors import (
     JavascriptException,
     ScriptTimeoutException,
@@ -60,7 +62,7 @@ class TestExecuteAsyncContent(MarionetteTestCase):
                 foo(bar);
                 """)
             self.assertFalse(True)
-        except JavascriptException, inst:
+        except JavascriptException as inst:
             self.assertTrue('foo(bar)' in inst.stacktrace)
 
     def test_execute_async_js_exception(self):

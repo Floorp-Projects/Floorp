@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from marionette_driver.marionette import Actions
 from marionette_driver.errors import TimeoutException
 from marionette_driver.by import By
