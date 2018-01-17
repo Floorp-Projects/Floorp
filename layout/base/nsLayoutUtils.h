@@ -2582,10 +2582,9 @@ public:
 
 #ifdef MOZ_STYLO
   /**
-   * Return whether stylo should be used for a given document URI and
-   * principal.
+   * Return whether stylo should be used for a given document principal.
    */
-  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal);
+  static bool ShouldUseStylo(nsIPrincipal* aPrincipal);
 
   /**
    * Principal-based blocklist for stylo.
@@ -2610,7 +2609,7 @@ public:
    */
   static void RemoveFromStyloBlocklist(const nsACString& aBlockedDomain);
 #else
-  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal) {
+  static bool ShouldUseStylo(nsIPrincipal* aPrincipal) {
     return false;
   }
 #endif
