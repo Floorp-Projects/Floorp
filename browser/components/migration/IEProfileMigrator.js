@@ -370,7 +370,8 @@ IEProfileMigrator.prototype.getLastUsedDate = function IE_getLastUsedDate() {
       typedURLs = MSMigrationUtils.getTypedURLs("Software\\Microsoft\\Internet Explorer");
     } catch (ex) {}
     let dates = [0, ...typedURLs.values()];
-    resolve(Math.max.apply(Math, dates));
+    // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
+    resolve(Math.max.apply(Math, dates) / 1000);
   }));
   return Promise.all(datePromises).then(dates => {
     return new Date(Math.max.apply(Math, dates));
