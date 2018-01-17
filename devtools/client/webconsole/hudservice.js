@@ -420,14 +420,9 @@ WebConsole.prototype = {
    * @param string aLink
    *        The URL you want to open in a new tab.
    */
-  openLink: function WC_openLink(aLink, e)
+  openLink: function WC_openLink(aLink)
   {
-    let isOSX = Services.appinfo.OS == "Darwin";
-    if (e != null && (e.button === 1 || (e.button === 0 && (isOSX ? e.metaKey : e.ctrlKey)))) {
-      this.chromeUtilsWindow.openUILinkIn(aLink, "tabshifted");
-    } else {
-      this.chromeUtilsWindow.openUILinkIn(aLink, "tab");
-    }
+    this.chromeUtilsWindow.openUILinkIn(aLink, "tab");
   },
 
   /**
