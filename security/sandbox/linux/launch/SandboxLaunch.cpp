@@ -220,6 +220,7 @@ SandboxLaunchPrepare(GeckoProcessType aType,
     // once the XShm detection shim is fixed.
 
     if (level >= 4) {
+      canChroot = true;
       // Unshare network namespace if allowed by graphics; see
       // function definition above for details.  (The display
       // local-ness is cached because it won't change.)
