@@ -53,11 +53,6 @@ public:
   static const int DEFAULT_169_VIDEO_WIDTH = 1280;
   static const int DEFAULT_169_VIDEO_HEIGHT = 720;
 
-  // This allows using whatever rate the graph is using for the
-  // MediaStreamTrack. This is useful for microphone data, we know it's already
-  // at the correct rate for insertion in the MSG.
-  static const int USE_GRAPH_RATE = -1;
-
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
   virtual void EnumerateVideoDevices(dom::MediaSourceEnum,

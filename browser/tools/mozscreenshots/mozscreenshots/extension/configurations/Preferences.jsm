@@ -36,7 +36,13 @@ this.Preferences = {
       }
       this.configurations[configName] = {};
       this.configurations[configName].selectors = ["#browser"];
-      this.configurations[configName].applyConfig = prefHelper.bind(null, primary, customFn);
+      if (primary == "panePrivacy" && customFn) {
+        this.configurations[configName].applyConfig = async () => {
+          return {todo: `${configName} times out on the try server`};
+        };
+      } else {
+        this.configurations[configName].applyConfig = prefHelper.bind(null, primary, customFn);
+      }
     }
   },
 
@@ -49,7 +55,9 @@ let prefHelper = async function(primary, customFn = null) {
 
   // close any dialog that might still be open
   await ContentTask.spawn(selectedBrowser, null, async function() {
-    if (!content.window.gSubDialog) {
+    // Check that gSubDialog is defined on the content window
+    // and that there is an open dialog to close
+    if (!content.window.gSubDialog || !content.window.gSubDialog._topDialog) {
       return;
     }
     content.window.gSubDialog.close();
@@ -73,9 +81,11 @@ let prefHelper = async function(primary, customFn = null) {
 
   if (customFn) {
     let customPaintPromise = paintPromise(browserWindow);
-    await customFn(selectedBrowser);
+    let result = await customFn(selectedBrowser);
     await customPaintPromise;
+    return result;
   }
+  return undefined;
 };
 
 function paintPromise(browserWindow) {
@@ -99,8 +109,13 @@ async function cacheGroup(aBrowser) {
 }
 
 async function DNTDialog(aBrowser) {
-  await ContentTask.spawn(aBrowser, null, async function() {
-    content.document.getElementById("doNotTrackSettings").click();
+  return ContentTask.spawn(aBrowser, null, async function() {
+    const button = content.document.getElementById("doNotTrackSettings");
+    if (!button) {
+      return {todo: "The dialog may have exited before we could click the button"};
+    }
+    button.click();
+    return undefined;
   });
 }
 

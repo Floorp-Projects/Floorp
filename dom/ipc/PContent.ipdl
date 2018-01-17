@@ -60,6 +60,7 @@ include ServiceWorkerConfiguration;
 include GraphicsMessages;
 include MemoryReportTypes;
 include ClientIPCTypes;
+include HangTypes;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -98,7 +99,6 @@ using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
-using mozilla::HangDetails from "mozilla/HangDetails.h";
 
 union ChromeRegistryItem
 {

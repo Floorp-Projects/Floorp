@@ -12,6 +12,7 @@
 #include "nsIDocumentViewerPrint.h"
 #include "nsPrintObject.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/OwningNonNull.h"
 #include "nsThreadUtils.h"
 
 class nsPrintJob;
@@ -33,7 +34,7 @@ public:
                    uint32_t aDelay)
     : Runnable("nsPagePrintTimer")
     , mPrintJob(aPrintJob)
-    , mDocViewerPrint(aDocViewerPrint)
+    , mDocViewerPrint(*aDocViewerPrint)
     , mDocument(aDocument)
     , mDelay(aDelay)
     , mFiringCount(0)
@@ -41,8 +42,8 @@ public:
     , mWatchDogCount(0)
     , mDone(false)
   {
-    MOZ_ASSERT(aDocument);
-    mDocViewerPrint->IncrementDestroyRefCount();
+    MOZ_ASSERT(aDocViewerPrint && aDocument);
+    mDocViewerPrint->IncrementDestroyBlockedCount();
   }
 
   NS_DECL_NSITIMERCALLBACK
@@ -71,7 +72,7 @@ private:
   void     Fail();
 
   nsPrintJob*                mPrintJob;
-  nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
+  const mozilla::OwningNonNull<nsIDocumentViewerPrint> mDocViewerPrint;
   nsCOMPtr<nsIDocument>      mDocument;
   nsCOMPtr<nsITimer>         mTimer;
   nsCOMPtr<nsITimer>         mWatchDogTimer;

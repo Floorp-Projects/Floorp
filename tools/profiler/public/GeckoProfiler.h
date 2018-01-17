@@ -462,6 +462,11 @@ void profiler_add_marker(const char* aMarkerName);
 void profiler_add_marker(const char* aMarkerName,
                          mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
 
+// Insert a marker in the profile timeline for a specified thread.
+void profiler_add_marker_for_thread(int aThreadId,
+                                    const char* aMarkerName,
+                                    mozilla::UniquePtr<ProfilerMarkerPayload> aPayload);
+
 enum TracingKind {
   TRACING_EVENT,
   TRACING_INTERVAL_START,

@@ -875,7 +875,7 @@ def build_docker_worker_payload(config, task, task_def):
         else:
             suffix = ''
 
-        skip_untrusted = config.params['project'] == 'try' or level == 1
+        skip_untrusted = config.params.is_try() or level == 1
 
         for cache in worker['caches']:
             # Some caches aren't enabled in environments where we can't
@@ -1454,10 +1454,7 @@ def build_task(config, tasks):
                 'description': task['description'],
                 'name': task['label'],
                 'owner': config.params['owner'],
-                'source': '{}/file/{}/{}'.format(
-                    config.params['head_repository'],
-                    config.params['head_rev'],
-                    config.path),
+                'source': config.params.file_url(config.path),
             },
             'extra': extra,
             'tags': tags,
