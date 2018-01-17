@@ -687,7 +687,7 @@ Selection::GetTableSelectionType(nsIDOMRange* aDOMRange,
   nsIContent* child = range->GetChildAtStartOffset();
 
   // Not a single selected node
-  if (!child || child != range->GetChildAtEndOffset()) {
+  if (!child || child->GetNextSibling() != range->GetChildAtEndOffset()) {
     return NS_OK;
   }
 

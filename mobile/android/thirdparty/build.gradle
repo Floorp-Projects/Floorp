@@ -4,8 +4,12 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
+        defaultPublishConfig 'release'
+        publishNonDefault true
+
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
@@ -43,11 +47,11 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    compile "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
     if (mozconfig.substs.MOZ_ANDROID_MMA) {
-        implementation "com.android.support:appcompat-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
-        implementation "com.android.support:support-annotations:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
-        implementation "com.google.android.gms:play-services-gcm:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.android.support:appcompat-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+        compile "com.android.support:support-annotations:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        compile "com.google.android.gms:play-services-gcm:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 }
 

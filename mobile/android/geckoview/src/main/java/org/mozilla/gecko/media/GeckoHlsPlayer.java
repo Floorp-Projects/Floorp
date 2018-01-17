@@ -64,7 +64,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private final int mPlayerId;
     private boolean mExoplayerSuspended = false;
 
-    private enum MediaDecoderPlayState {
+    private enum MediaDecoderPlayState{
         PLAY_STATE_PREPARING,
         PLAY_STATE_PAUSED,
         PLAY_STATE_PLAYING

@@ -1153,3 +1153,64 @@ TEST(Tokenizer, RecordAndReadUntil)
 
   EXPECT_TRUE(t.CheckEOF());
 }
+
+TEST(Tokenizer, ReadIntegers)
+{
+  // Make sure that adding dash (the 'minus' sign) as an additional char
+  // doesn't break reading negative numbers.
+  Tokenizer t("100,-100,200,-200,4294967295,-4294967295,-2147483647", nullptr, "-");
+
+  uint32_t unsigned_value32;
+  int32_t signed_value32;
+  int64_t signed_value64;
+
+  // "100,"
+  EXPECT_TRUE(t.ReadInteger(&unsigned_value32));
+  EXPECT_TRUE(unsigned_value32 == 100);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "-100,"
+  EXPECT_FALSE(t.ReadInteger(&unsigned_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_TRUE(signed_value32 == -100);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "200,"
+  EXPECT_TRUE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_TRUE(signed_value32 == 200);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "-200,"
+  EXPECT_TRUE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_TRUE(signed_value32 == -200);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "4294967295,"
+  EXPECT_FALSE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadInteger(&unsigned_value32));
+  EXPECT_TRUE(unsigned_value32 == 4294967295UL);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "-4294967295,"
+  EXPECT_FALSE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_FALSE(t.ReadInteger(&unsigned_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadSignedInteger(&signed_value64));
+  EXPECT_TRUE(signed_value64 == -4294967295LL);
+  EXPECT_TRUE(t.CheckChar(','));
+
+  // "-2147483647"
+  EXPECT_FALSE(t.ReadInteger(&unsigned_value32));
+  EXPECT_FALSE(t.CheckChar(','));
+
+  EXPECT_TRUE(t.ReadSignedInteger(&signed_value32));
+  EXPECT_TRUE(signed_value32 == -2147483647L);
+  EXPECT_TRUE(t.CheckEOF());
+}

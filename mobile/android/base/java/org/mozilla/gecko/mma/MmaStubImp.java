@@ -22,6 +22,11 @@ public class MmaStubImp implements MmaInterface {
     }
 
     @Override
+    public void setGcmSenderId(String senderIds) {
+
+    }
+
+    @Override
     public void setCustomIcon(@DrawableRes int iconResId) {
 
     }
@@ -49,6 +54,11 @@ public class MmaStubImp implements MmaInterface {
     @Override
     public boolean handleGcmMessage(Context context, String from, Bundle bundle) {
         return false;
+    }
+
+    @Override
+    public String getMmaSenderId() {
+        return "";
     }
 
     @Override

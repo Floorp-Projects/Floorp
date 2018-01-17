@@ -50,7 +50,7 @@ function checkResults(reportStr) {
        "http://mochi.test:8888/tests/dom/security/test/csp/test_report_for_import.html",
        "Incorrect referrer");
     is(cspReport["violated-directive"],
-       "style-src http://mochi.test:8888",
+       "style-src",
        "Incorrect violated-directive");
     is(cspReport["original-policy"],
        "style-src http://mochi.test:8888; report-uri " +

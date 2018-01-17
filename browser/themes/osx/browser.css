@@ -1136,8 +1136,8 @@ html|*.addon-webext-perm-list {
 
 /* Private browsing and accessibility indicators */
 
-:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
-:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
+:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
+:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
 :root[accessibilitymode]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .accessibility-indicator,
 :root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
   display: none;

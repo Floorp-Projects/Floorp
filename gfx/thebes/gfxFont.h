@@ -2347,6 +2347,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
     mozilla::gfx::Float       synBoldOnePixelOffset;
     int32_t                   extraStrikes;
     mozilla::gfx::DrawOptions drawOptions;
+    gfxFloat                  advanceDirection;
     bool                      isVerticalFont;
     bool                      haveSVGGlyphs;
     bool                      haveColorGlyphs;

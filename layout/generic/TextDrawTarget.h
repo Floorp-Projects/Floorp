@@ -91,6 +91,41 @@ public:
   void FoundUnsupportedFeature() { mHasUnsupportedFeatures = true; }
   bool HasUnsupportedFeatures() { return mHasUnsupportedFeatures; }
 
+  wr::FontInstanceFlags GetWRGlyphFlags() const { return mWRGlyphFlags; }
+  void SetWRGlyphFlags(wr::FontInstanceFlags aFlags) { mWRGlyphFlags = aFlags; }
+
+  class AutoRestoreWRGlyphFlags
+  {
+  public:
+    ~AutoRestoreWRGlyphFlags()
+    {
+      if (mTarget) {
+        mTarget->SetWRGlyphFlags(mFlags);
+      }
+    }
+
+    void Save(TextDrawTarget* aTarget)
+    {
+      // This allows for recursive saves, in case the flags need to be modified
+      // under multiple conditions (i.e. transforms and synthetic italics),
+      // since the flags will be restored to the first saved value in the
+      // destructor on scope exit.
+      if (!mTarget) {
+        // Only record the first save with the original flags that will be restored.
+        mTarget = aTarget;
+        mFlags = aTarget->GetWRGlyphFlags();
+      } else {
+        // Ensure that this is actually a recursive save to the same target
+        MOZ_ASSERT(mTarget == aTarget,
+                   "Recursive save of WR glyph flags to different TextDrawTargets");
+      }
+    }
+
+  private:
+    TextDrawTarget* mTarget = nullptr;
+    wr::FontInstanceFlags mFlags = {0};
+  };
+
   // This overload just stores the glyphs/font/color.
   void
   FillGlyphs(ScaledFont* aFont,
@@ -134,7 +169,7 @@ public:
 
     wr::GlyphOptions glyphOptions;
     glyphOptions.render_mode = wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
-    glyphOptions.flags = 0;
+    glyphOptions.flags = mWRGlyphFlags;
 
     mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont,
                                      color, mSc, mBoundsRect, mClipRect,
@@ -286,6 +321,8 @@ private:
   wr::LayerRect mBoundsRect;
   wr::LayerRect mClipRect;
   bool mBackfaceVisible;
+
+  wr::FontInstanceFlags mWRGlyphFlags = {0};
 
   // The rest of this is dummy implementations of DrawTarget's API
 public:

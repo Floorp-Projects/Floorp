@@ -421,8 +421,7 @@ TCPFastOpenFinish(PRFileDesc *fd, PRErrorCode &err,
       result = PR_GetError();
       SOCKET_LOG(("TCPFastOpenFinish - sendto error=%d.\n", result));
 
-      if (result == PR_NOT_IMPLEMENTED_ERROR || // When a windows version does not support Fast Open it will return this error.
-          result == PR_NOT_TCP_SOCKET_ERROR) { // SendTo will return PR_NOT_TCP_SOCKET_ERROR if TCP Fast Open is turned off on Linux.
+      if (result == PR_NOT_TCP_SOCKET_ERROR) { // SendTo will return PR_NOT_TCP_SOCKET_ERROR if TCP Fast Open is turned off on Linux.
         // We can call connect again.
         fastOpenNotSupported = true;
         rv = (tfoFd->lower->methods->connect)(tfoFd->lower, &secret->mAddr,

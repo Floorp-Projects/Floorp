@@ -3,7 +3,6 @@
 
 package org.mozilla.gecko;
 
-import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -16,6 +15,7 @@ import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.robolectric.shadows.ShadowContentResolver;
 
@@ -27,8 +27,11 @@ public class GlobalPageMetadataTest {
     public void testQueueing() throws Exception {
         BrowserDB db = new LocalBrowserDB("default");
 
-        final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
+        BrowserProvider provider = new BrowserProvider();
         try {
+            provider.onCreate();
+            ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
+
             ShadowContentResolver cr = new ShadowContentResolver();
             ContentProviderClient pageMetadataClient = cr.acquireContentProviderClient(PageMetadata.CONTENT_URI);
 
@@ -61,8 +64,11 @@ public class GlobalPageMetadataTest {
         // Start listening for events.
         GlobalPageMetadata.getInstance().init();
 
-        final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
+        BrowserProvider provider = new BrowserProvider();
         try {
+            provider.onCreate();
+            ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
+
             ShadowContentResolver cr = new ShadowContentResolver();
             ContentProviderClient historyClient = cr.acquireContentProviderClient(BrowserContract.History.CONTENT_URI);
             ContentProviderClient pageMetadataClient = cr.acquireContentProviderClient(PageMetadata.CONTENT_URI);

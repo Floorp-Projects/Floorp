@@ -36,16 +36,6 @@ function urlSecurityCheck(aURL, aPrincipal, aFlags) {
   return BrowserUtils.urlSecurityCheck(aURL, aPrincipal, aFlags);
 }
 
-/**
- * Determine whether or not a given focused DOMWindow is in the content area.
- **/
-function isContentFrame(aFocusedWindow) {
-  if (!aFocusedWindow)
-    return false;
-
-  return (aFocusedWindow.top == window.content);
-}
-
 function forbidCPOW(arg, func, argname) {
   if (arg && (typeof(arg) == "object" || typeof(arg) == "function") &&
       Components.utils.isCrossProcessWrapper(arg)) {

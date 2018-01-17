@@ -25,11 +25,9 @@ namespace gfx {
 ScaledFontFontconfig::ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont,
                                            FcPattern* aPattern,
                                            const RefPtr<UnscaledFont>& aUnscaledFont,
-                                           Float aSize,
-                                           bool aNeedsOblique)
+                                           Float aSize)
   : ScaledFontBase(aUnscaledFont, aSize)
   , mPattern(aPattern)
-  , mNeedsOblique(aNeedsOblique)
 {
   SetCairoScaledFont(aScaledFont);
   FcPatternReference(aPattern);
@@ -249,10 +247,6 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
   wr::FontInstancePlatformOptions platformOptions;
   platformOptions.lcd_filter = wr::FontLCDFilter::Legacy;
   platformOptions.hinting = wr::FontHinting::Normal;
-
-  if (mNeedsOblique) {
-    options.flags |= wr::FontInstanceFlags::SYNTHETIC_ITALICS;
-  }
 
   FcBool autohint;
   if (FcPatternGetBool(mPattern, FC_AUTOHINT, 0, &autohint) == FcResultMatch && autohint) {

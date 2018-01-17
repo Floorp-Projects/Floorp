@@ -8,8 +8,6 @@ skip-if(!retainedDisplayList) == retained-dl-scroll-out-of-view-1.html retained-
 skip-if(!retainedDisplayList) == retained-dl-displayport-1.html retained-dl-displayport-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-prerender-transform-1.html retained-dl-prerender-transform-1-ref.html
 == retained-dl-wrap-list.html retained-dl-wrap-list-ref.html
-== retained-dl-zindex-1.html retained-dl-zindex-1-ref.html
-== retained-dl-zindex-2.html retained-dl-zindex-2-ref.html
 fuzzy(1,235200) == 1413073.html 1413073-ref.html
 == 1416291.html 1416291-ref.html
 == 1417601-1.html 1417601-1-ref.html

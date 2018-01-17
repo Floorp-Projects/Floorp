@@ -72,8 +72,7 @@
       </remoteStorage>
       <externalConfiguration>
         <repositoryPolicy>RELEASE</repositoryPolicy>
-        <!-- Google doesn't publish checksums.  Why, Google, why? -->
-        <checksumPolicy>STRICT_IF_EXISTS</checksumPolicy>
+        <checksumPolicy>STRICT</checksumPolicy>
         <fileTypeValidation>true</fileTypeValidation>
         <downloadRemoteIndex>false</downloadRemoteIndex>
         <artifactMaxAge>-1</artifactMaxAge>

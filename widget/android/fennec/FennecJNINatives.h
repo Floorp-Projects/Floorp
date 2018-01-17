@@ -83,7 +83,6 @@ const JNINativeMethod MemoryMonitor::Natives<Impl>::methods[] = {
             ::template Wrap<&Impl::DispatchMemoryPressure>)
 };
 
-#ifdef MOZ_NATIVE_DEVICES
 template<class Impl>
 class PresentationMediaPlayerManager::Natives : public mozilla::jni::NativeImpl<PresentationMediaPlayerManager, Impl>
 {
@@ -107,7 +106,6 @@ const JNINativeMethod PresentationMediaPlayerManager::Natives<Impl>::methods[] =
             ::template Wrap<&Impl::RemovePresentationSurface>)
 };
 
-#endif // MOZ_NATIVE_DEVICES
 template<class Impl>
 class Telemetry::Natives : public mozilla::jni::NativeImpl<Telemetry, Impl>
 {
