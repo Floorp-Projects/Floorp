@@ -6,12 +6,12 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for " +
-                 "obeserver notifications";
+                 "observer notifications";
 
 let created = false;
 let destroyed = false;
 
-add_task(async function() {
+add_task(async function () {
   setupObserver();
   await openNewTabAndConsole(TEST_URI);
   await waitFor(() => created);

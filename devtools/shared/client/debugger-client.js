@@ -29,6 +29,7 @@ loader.lazyRequireGetter(this, "TabClient", "devtools/shared/client/tab-client")
 loader.lazyRequireGetter(this, "ThreadClient", "devtools/shared/client/thread-client");
 loader.lazyRequireGetter(this, "TraceClient", "devtools/shared/client/trace-client");
 loader.lazyRequireGetter(this, "WorkerClient", "devtools/shared/client/worker-client");
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 
 const noop = () => {};
 
@@ -1194,7 +1195,16 @@ DebuggerClient.prototype = {
   /**
    * Currently attached addon.
    */
-  activeAddon: null
+  activeAddon: null,
+
+  /**
+   * Creates an object client for this DebuggerClient and the grip in parameter,
+   * @param {Object} grip: The grip to create the ObjectClient for.
+   * @returns {ObjectClient}
+   */
+  createObjectClient: function (grip) {
+    return new ObjectClient(this, grip);
+  }
 };
 
 eventSource(DebuggerClient.prototype);

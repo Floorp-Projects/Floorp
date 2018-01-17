@@ -38,6 +38,7 @@
     <issue id="ResourceAsColor" severity="warning" />
     <issue id="ResourceType" severity="warning" />
     <issue id="ValidFragment" severity="warning" />
+    <issue id="WrongConstant" severity="warning" />
 
     <!-- New Android-Gradle lint integration regressed this check. -->
     <issue id="MissingRegistered" severity="warning" />
@@ -50,6 +51,7 @@
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/dlc/DownloadContentTelemetry.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/preferences/LocaleListPreference.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/media/MediaControlService.java"/>
+        <ignore path="**/mobile/android/base/java/org/mozilla/gecko/db/PerProfileDatabaseProvider.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/PrintHelper.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/animation/PropertyAnimator.java"/>
         <ignore path="**/mobile/android/base/java/org/mozilla/gecko/RemotePresentationService.java"/>

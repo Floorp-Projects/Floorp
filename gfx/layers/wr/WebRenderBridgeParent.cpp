@@ -529,7 +529,8 @@ WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
 }
 
 bool
-WebRenderBridgeParent::PushAPZStateToWR(nsTArray<wr::WrTransformProperty>& aTransformArray)
+WebRenderBridgeParent::PushAPZStateToWR(wr::TransactionBuilder& aTxn,
+                                        nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
   CompositorBridgeParent* cbp = GetRootCompositorBridgeParent();
   if (!cbp) {
@@ -544,7 +545,7 @@ WebRenderBridgeParent::PushAPZStateToWR(nsTArray<wr::WrTransformProperty>& aTran
     if (frameInterval != TimeDuration::Forever()) {
       animationTime += frameInterval;
     }
-    return apzc->PushStateToWR(mApi, animationTime, aTransformArray);
+    return apzc->PushStateToWR(aTxn, animationTime, aTransformArray);
   }
   return false;
 }
@@ -1229,7 +1230,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     ScheduleGenerateFrame();
   }
 
-  if (PushAPZStateToWR(transformArray)) {
+  wr::TransactionBuilder txn;
+
+  if (PushAPZStateToWR(txn, transformArray)) {
     ScheduleGenerateFrame();
   }
 
@@ -1239,8 +1242,6 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   auto startTime = TimeStamp::Now();
   mApi->SetFrameStartTime(startTime);
 #endif
-
-  wr::TransactionBuilder txn;
 
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
     txn.UpdateDynamicProperties(opacityArray, transformArray);

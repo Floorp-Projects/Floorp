@@ -1308,8 +1308,7 @@ gfxFontconfigFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
             Factory::CreateScaledFontForFontconfigFont(GetCairoScaledFont(),
                                                        GetPattern(),
                                                        GetUnscaledFont(),
-                                                       GetAdjustedSize(),
-                                                       IsSyntheticOblique());
+                                                       GetAdjustedSize());
     }
 
     RefPtr<ScaledFont> scaledFont(mAzureScaledFont);

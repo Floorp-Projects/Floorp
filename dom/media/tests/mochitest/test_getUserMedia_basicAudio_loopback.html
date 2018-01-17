@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script>
+  createHTML({
+    title: "getUserMedia Basic Audio Test Loopback",
+    bug: "1406350",
+    visible: true
+  });
+  /**
+   * Run a test to verify the use of LoopbackTone as audio input.
+   */
+  scriptsReady
+  .then(() => FAKE_ENABLED = false)
+  .then(() => runTestWhenReady( async () => {
+    // At this point DefaultLoopbackTone has been instantiated
+    // automatically on frequency TEST_AUDIO_FREQ (440 Hz). Verify
+    // that a tone is detected on that frequency.
+    info("Capturing at default frequency");
+    let stream = await getUserMedia({audio: true});
+
+    let audioContext = new AudioContext();
+    let analyser = new AudioStreamAnalyser(audioContext, stream);
+    analyser.enableDebugCanvas();
+    await analyser.waitForAnalysisSuccess( array => {
+      // High energy on 1000 Hz low energy around that
+      const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
+      const freq        = array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)];
+      const freq_2000Hz = array[analyser.binIndexForFrequency(2000)];
+
+      info("Analysing audio frequency - low:target:high = "
+              + freg_50Hz + ':' + freq + ':' + freq_2000Hz);
+      return freg_50Hz < 50 && freq > 200 && freq_2000Hz < 50;
+    })
+
+    // Use the LoopbackTone API to change the frequency of the default tone.
+    // Verify that a tone is detected on the new frequency (800 Hz).
+    info("Change loopback tone frequency");
+    DefaultLoopbackTone.changeFrequency(800);
+    await analyser.waitForAnalysisSuccess( array => {
+      const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
+      const freq        = array[analyser.binIndexForFrequency(800)];
+      const freq_2000Hz = array[analyser.binIndexForFrequency(2000)];
+
+      info("Analysing audio frequency - low:target:high = "
+              + freg_50Hz + ':' + freq + ':' + freq_2000Hz);
+      return freg_50Hz < 50 && freq > 200 && freq_2000Hz < 50;
+    })
+
+    // Create a second tone at a different frequency.
+    // Verify that both tones are detected.
+    info("Multiple loopback tones");
+    DefaultLoopbackTone.changeFrequency(TEST_AUDIO_FREQ);
+    let second_tone = new LoopbackTone(audioContext, 2000);
+    second_tone.start();
+    await analyser.waitForAnalysisSuccess( array => {
+      const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
+      const freq        = array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)];
+      const freq_2000Hz = array[analyser.binIndexForFrequency(2000)];
+      const freq_4000Hz = array[analyser.binIndexForFrequency(4000)];
+
+      info("Analysing audio frequency - low:target1:target2:high = "
+              + freg_50Hz + ':' + freq + ':' + freq_2000Hz + ':' + freq_4000Hz);
+      return freg_50Hz < 50 && freq > 200 && freq_2000Hz > 200 && freq_4000Hz < 50;
+    })
+
+    // Stop all tones and verify that there is no audio on the given frequencies.
+    info("Stop all loopback tones");
+    DefaultLoopbackTone.stop();
+    second_tone.stop()
+    await analyser.waitForAnalysisSuccess( array => {
+      const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
+      const freq        = array[analyser.binIndexForFrequency(TEST_AUDIO_FREQ)];
+      const freq_2000Hz = array[analyser.binIndexForFrequency(2000)];
+
+      info("Analysing audio frequency - low:target:high = "
+              + freg_50Hz + ':' + freq + ':' + freq_2000Hz);
+      return freg_50Hz < 50 && freq < 50 && freq_2000Hz < 50;
+    })
+  }))
+  .then(() => finish())
+</script>
+</pre>
+</body>
+</html>

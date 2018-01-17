@@ -34,15 +34,6 @@ const {
 const ELEMENT_NODE = 1;
 const DOCUMENT_NODE = 9;
 
-const UNEDITABLE_INPUTS = new Set([
-  "checkbox",
-  "radio",
-  "hidden",
-  "submit",
-  "button",
-  "image",
-]);
-
 const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -844,6 +835,60 @@ element.isDisabled = function(el) {
 };
 
 /**
+ * Denotes elements that can be used for typing and clearing.
+ *
+ * Elements that are considered WebDriver-editable are non-readonly
+ * and non-disabled <code>&lt;input&gt;</code> elements in the Text,
+ * Search, URL, Telephone, Email, Password, Date, Month, Date and
+ * Time Local, Number, Range, Color, and File Upload states, and
+ * <code>&lt;textarea&gt;</code> elements.
+ *
+ * @param {Element} el
+ *     Element to test.
+ *
+ * @return {boolean}
+ *     True if editable, false otherwise.
+ */
+element.isMutableFormControl = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+  if (element.isReadOnly(el) || element.isDisabled(el)) {
+    return false;
+  }
+
+  if (el.localName == "textarea") {
+    return true;
+  }
+
+  if (el.localName != "input") {
+    return false;
+  }
+
+  switch (el.type) {
+    case "color":
+    case "date":
+    case "datetime-local":
+    case "email":
+    case "file":
+    case "month":
+    case "number":
+    case "password":
+    case "range":
+    case "search":
+    case "tel":
+    case "text":
+    case "time":
+    case "url":
+    case "week":
+      return true;
+
+    default:
+      return false;
+  }
+};
+
+/**
  * An editing host is a node that is either an HTML element with a
  * <code>contenteditable</code> attribute, or the HTML element child
  * of a document whose <code>designMode</code> is enabled.
@@ -892,9 +937,7 @@ element.isEditable = function(el) {
     return false;
   }
 
-  return (el.localName == "input" && !UNEDITABLE_INPUTS.has(el.type)) ||
-      el.localName == "textarea" ||
-      element.isEditingHost(el);
+  return element.isMutableFormControl(el) || element.isEditingHost(el);
 };
 
 /**

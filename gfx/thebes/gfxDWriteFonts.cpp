@@ -686,7 +686,6 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                    GetAdjustedSize(),
                                                    useEmbeddedBitmap,
                                                    forceGDI,
-                                                   IsSyntheticOblique(),
                                                    params,
                                                    params->GetGamma(),
                                                    params->GetEnhancedContrast());

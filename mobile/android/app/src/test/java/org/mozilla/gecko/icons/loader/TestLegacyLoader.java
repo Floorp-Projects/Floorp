@@ -3,21 +3,29 @@
 
 package org.mozilla.gecko.icons.loader;
 
-import android.content.ContentProvider;
 import android.graphics.Bitmap;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.shadows.ShadowContentResolver;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -38,7 +46,9 @@ public class TestLegacyLoader {
         // We need to ensure we close our db connection properly.
         // This is the only test in this class that actually accesses a database. If that changes,
         // move BrowserProvider registration into a @Before method, and provider.shutdown into @After.
-        final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
+        final BrowserProvider provider = new BrowserProvider();
+        provider.onCreate();
+        ShadowContentResolver.registerProvider(BrowserContract.AUTHORITY, new DelegatingTestContentProvider(provider));
         try {
             final IconRequest request = Icons.with(RuntimeEnvironment.application)
                     .pageUrl(TEST_PAGE_URL)
@@ -51,8 +61,8 @@ public class TestLegacyLoader {
 
             verify(loader).loadBitmapFromDatabase(request);
             Assert.assertNull(response);
+        // Close any open db connections.
         } finally {
-            // Close any open db connections.
             provider.shutdown();
         }
     }

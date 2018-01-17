@@ -70,18 +70,28 @@ redistributed publicly.)
 
 Archiving the Gradle executable is straight-forward, but archiving a
 local Maven repository is not.  Therefore a special Task Cluster
-Docker image and toolchain job exist for producing the required
-archives.  The Docker image definition is rooted in
-``taskcluster/docker/android-build``.  The Task Cluster toolchain job
-is named `android-gradle-dependencies`.  The job runs in a container
-based on the custom Docker image and spawns a Sonatype Nexus proxying
-Maven repository process in the background.  The job builds Firefox
-for Android using Gradle and the in-tree Gradle configuration rooted
-at ``build.gradle``.  The spawned proxying Maven repository downloads
-external dependencies and collects them.  After the Gradle build
-completes, the job archives the Gradle version used to build, and the
-downloaded Maven repository, and exposes them as Task Cluster
-artifacts.
+Docker image and job exist for producing the required archives.  The
+Docker image definition is rooted in
+``taskcluster/docker/android-build``.  The Task Cluster job
+definition is in
+``testing/taskcluster/tasks/builds/android_api_16_gradle_dependencies.yml``.
+The job runs in a container based on the custom Docker image and
+spawns a Sonatype Nexus proxying Maven repository process in the
+background.  The job builds Firefox for Android using Gradle and the
+in-tree Gradle configuration rooted at ``build.gradle``.  The spawned
+proxying Maven repository downloads external dependencies and collects
+them.  After the Gradle build completes, the job archives the Gradle
+version used to build, and the downloaded Maven repository, and
+exposes them as Task Cluster artifacts.
+
+Here is `an example try job fetching these dependencies
+<https://treeherder.mozilla.org/#/jobs?repo=try&revision=75bc98935147&selectedJob=17793653>`_.
+The resulting task produced a `Gradle archive
+<https://queue.taskcluster.net/v1/task/CeYMgAP3Q-KF8h37nMhJjg/runs/0/artifacts/public%2Fbuild%2Fgradle.tar.xz>`_
+and a `Maven repository archive
+<https://queue.taskcluster.net/v1/task/CeYMgAP3Q-KF8h37nMhJjg/runs/0/artifacts/public%2Fbuild%2Fjcentral.tar.xz>`_.
+These archives were then uploaded (manually) to Mozilla automation
+using tooltool for consumption in Gradle builds.
 
 To update the version of Gradle in the archive produced, update
 ``gradle/wrapper/gradle-wrapper.properties``.  Be sure to also update
@@ -90,18 +100,12 @@ the SHA256 checksum to prevent poisoning the build machines!
 To update the versions of Gradle dependencies used, update
 ``dependencies`` sections in the in-tree Gradle configuration rooted
 at ``build.gradle``.  Once you are confident your changes build
-locally, push a fresh build to try.  The `android-gradle-dependencies`
-toolchain should run automatically, fetching your new dependencies and
-wiring them into the appropriate try build jobs.
+locally, push a fresh try build with an invocation like::
 
-To update the version of Sonatype Nexus, update `NEXUS_VERSION` in the
-`android-build` Docker image.
+   $ hg push-to-try -m "try: -b o -p android-api-16-gradle-dependencies"
 
-To modify the Sonatype Nexus configuration, typically to proxy a new
-remote Maven repository, modify
-`taskcluster/scripts/misc/android-gradle-dependencies/nexus.xml`.
-
-There is also a toolchain job that fetches the Android SDK and related
-packages.  To update the versions of packaged fetched, modify
-`python/mozboot/mozboot/android-packages.txt` and update the various
-in-tree versions accordingly.
+Then `upload your archives to tooltool
+<https://wiki.mozilla.org/ReleaseEngineering/Applications/Tooltool#How_To_Upload_To_Tooltool>`_,
+update the in-tree manifests in
+``mobile/android/config/tooltool-manifests``, and push a fresh try
+build.

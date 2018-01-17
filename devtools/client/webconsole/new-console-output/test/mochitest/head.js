@@ -20,9 +20,16 @@ Services.scriptloader.loadSubScript(
 
 var {HUDService} = require("devtools/client/webconsole/hudservice");
 var WCUL10n = require("devtools/client/webconsole/webconsole-l10n");
-const DOCS_GA_PARAMS = "?utm_source=mozilla" +
-                       "&utm_medium=firefox-console-errors" +
-                       "&utm_campaign=default";
+const DOCS_GA_PARAMS = `?${new URLSearchParams({
+  "utm_source": "mozilla",
+  "utm_medium": "firefox-console-errors",
+  "utm_campaign": "default"
+})}`;
+const STATUS_CODES_GA_PARAMS = `?${new URLSearchParams({
+  "utm_source": "mozilla",
+  "utm_medium": "devtools-webconsole",
+  "utm_campaign": "default"
+})}`;
 
 Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", true);
 registerCleanupFunction(function* () {
@@ -413,24 +420,53 @@ async function closeConsole(tab = gBrowser.selectedTab) {
  * Fake clicking a link and return the URL we would have navigated to.
  * This function should be used to check external links since we can't access
  * network in tests.
+ * This can also be used to test that a click will not be fired.
  *
  * @param ElementNode element
  *        The <a> element we want to simulate click on.
+ * @param Object clickEventProps
+ *        The custom properties which would be used to dispatch a click event
  * @returns Promise
- *          A Promise that resolved when the link clik simulation occured.
+ *          A Promise that is resolved when the link click simulation occured or when the click is not dispatched.
+ *          The promise resolves with an object that holds the following properties
+ *          - link: url of the link or null(if event not fired)
+ *          - where: "tab" if tab is active or "tabshifted" if tab is inactive or null(if event not fired)
  */
-function simulateLinkClick(element) {
-  return new Promise((resolve) => {
-    // Override openUILinkIn to prevent navigating.
-    let oldOpenUILinkIn = window.openUILinkIn;
-    window.openUILinkIn = function (link) {
+function simulateLinkClick(element, clickEventProps) {
+  // Override openUILinkIn to prevent navigating.
+  let oldOpenUILinkIn = window.openUILinkIn;
+
+  const onOpenLink = new Promise((resolve) => {
+    window.openUILinkIn = function (link, where) {
       window.openUILinkIn = oldOpenUILinkIn;
-      resolve(link);
+      resolve({link: link, where});
     };
 
-    // Click on the link.
-    element.click();
+    if (clickEventProps) {
+      // Click on the link using the event properties.
+      element.dispatchEvent(clickEventProps);
+    } else {
+      // Click on the link.
+      element.click();
+    }
   });
+
+  // Declare a timeout Promise that we can use to make sure openUILinkIn was not called.
+  let timeoutId;
+  const onTimeout = new Promise(function(resolve, reject) {
+    timeoutId = setTimeout(() => {
+      window.openUILinkIn = oldOpenUILinkIn;
+      timeoutId = null;
+      resolve({link: null, where: null});
+    }, 1000);
+  });
+
+  onOpenLink.then(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  });
+  return Promise.race([onOpenLink, onTimeout]);
 }
 
 /**

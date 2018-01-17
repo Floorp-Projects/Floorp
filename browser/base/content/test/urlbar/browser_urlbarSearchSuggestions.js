@@ -75,6 +75,21 @@ add_task(async function ctrlEnterOnSuggestion() {
                                      { ctrlKey: true });
 });
 
+add_task(async function copySuggestionText() {
+  gURLBar.focus();
+  await promiseAutocompleteResultPopup("foo");
+  let [idx, suggestion] = await promiseFirstSuggestion();
+  for (let i = 0; i < idx; ++i) {
+    EventUtils.synthesizeKey("VK_DOWN", {});
+  }
+  gURLBar.select();
+  await new Promise((resolve, reject) => waitForClipboard(suggestion, function() {
+    goDoCommand("cmd_copy");
+  }, resolve, reject));
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  await promisePopupHidden(gURLBar.popup);
+});
+
 function getFirstSuggestion() {
   let controller = gURLBar.popup.input.controller;
   let matchCount = controller.matchCount;

@@ -517,8 +517,20 @@ this.PlacesDBUtils = {
       { query: `DROP TABLE moz_bm_reindex_temp` },
 
       // D.12 Fix empty-named tags.
-      // Tags were allowed to have empty names due to a UI bug.  Fix them
-      // replacing their title with "(notitle)".
+      // Tags were allowed to have empty names due to a UI bug.  Fix them by
+      // replacing their title with "(notitle)", and bumping the change counter
+      // for all bookmarks with the fixed tags.
+      { query:
+        `UPDATE moz_bookmarks SET syncChangeCounter = syncChangeCounter + 1
+         WHERE fk IN (SELECT b.fk FROM moz_bookmarks b
+                      JOIN moz_bookmarks p ON p.id = b.parent
+                      WHERE length(p.title) = 0 AND p.type = :folder_type AND
+                            p.parent = :tags_folder)`,
+        params: {
+          folder_type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          tags_folder: PlacesUtils.tagsFolderId,
+        },
+      },
       { query:
         `UPDATE moz_bookmarks SET title = :empty_title
         WHERE length(title) = 0 AND type = :folder_type

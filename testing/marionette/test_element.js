@@ -44,9 +44,14 @@ class DOMElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
 
-    this.namespaceURI = XHTMLNS;
+    if (typeof this.namespaceURI == "undefined") {
+      this.namespaceURI = XHTMLNS;
+    }
     if (typeof this.ownerDocument == "undefined") {
       this.ownerDocument = {designMode: "off"};
+    }
+    if (typeof this.type == "undefined") {
+      this.type = "text";
     }
 
     if (this.localName == "option") {
@@ -254,6 +259,40 @@ add_test(function test_isEditable() {
   ok(element.isEditable(new DOMElement("textarea")));
   ok(element.isEditable(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
   ok(element.isEditable(new DOMElement("p", {isContentEditable: true})));
+
+  run_next_test();
+});
+
+add_test(function test_isMutableFormControlElement() {
+  ok(!element.isMutableFormControl(null));
+  ok(!element.isMutableFormControl(new DOMElement("textarea", {readOnly: true})));
+  ok(!element.isMutableFormControl(new DOMElement("textarea", {disabled: true})));
+
+  const mutableStates = new Set([
+    "color",
+    "date",
+    "datetime-local",
+    "email",
+    "file",
+    "month",
+    "number",
+    "password",
+    "range",
+    "search",
+    "tel",
+    "text",
+    "url",
+    "week",
+  ]);
+  for (let type of mutableStates) {
+    ok(element.isMutableFormControl(new DOMElement("input", {type})));
+  }
+  ok(element.isMutableFormControl(new DOMElement("textarea")));
+
+  ok(!element.isMutableFormControl(new DOMElement("input", {type: "hidden"})));
+  ok(!element.isMutableFormControl(new DOMElement("p")));
+  ok(!element.isMutableFormControl(new DOMElement("p", {isContentEditable: true})));
+  ok(!element.isMutableFormControl(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
 
   run_next_test();
 });

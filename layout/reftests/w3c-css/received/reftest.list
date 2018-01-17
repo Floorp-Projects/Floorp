@@ -1073,7 +1073,7 @@ fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vlr-007.xh
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-002.xht css-writing-modes-3/text-baseline-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-004.xht css-writing-modes-3/text-baseline-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes-3/text-baseline-vrl-006.xht css-writing-modes-3/text-baseline-vrl-006-ref.xht
-fuzzy-if(OSX,15,16) fails-if(webrender) == css-writing-modes-3/text-combine-upright-decorations-001.html css-writing-modes-3/reference/text-combine-upright-decorations-001.html
+fuzzy-if(OSX,15,16) == css-writing-modes-3/text-combine-upright-decorations-001.html css-writing-modes-3/reference/text-combine-upright-decorations-001.html
 == css-writing-modes-3/text-combine-upright-inherit-all-001.html css-writing-modes-3/reference/text-combine-upright-inherit-all-001.html
 == css-writing-modes-3/text-combine-upright-inherit-all-002.html css-writing-modes-3/reference/text-combine-upright-inherit-all-002.html
 == css-writing-modes-3/text-combine-upright-layout-rules-001.html css-writing-modes-3/reference/text-combine-upright-layout-rules-001-ref.html

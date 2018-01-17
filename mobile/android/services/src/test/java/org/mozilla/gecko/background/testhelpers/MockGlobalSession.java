@@ -13,8 +13,6 @@ import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
-import org.robolectric.Robolectric;
-import org.robolectric.RuntimeEnvironment;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -28,7 +26,7 @@ public class MockGlobalSession extends MockPrefsGlobalSession {
 
   public MockGlobalSession(SyncConfiguration config, GlobalSessionCallback callback)
           throws SyncConfigurationException, IllegalArgumentException, IOException, NonObjectJSONException {
-    super(config, callback, RuntimeEnvironment.application, null);
+    super(config, callback, null, null);
   }
 
   @Override

@@ -510,6 +510,24 @@ WidgetEvent::IsAllowedToDispatchInSystemGroup() const
   return mClass != ePointerEventClass;
 }
 
+bool
+WidgetEvent::IsBlockedForFingerprintingResistance() const
+{
+  if (mClass == eKeyboardEventClass &&
+      nsContentUtils::ShouldResistFingerprinting()) {
+    const WidgetKeyboardEvent* keyboardEvent = AsKeyboardEvent();
+
+    if (keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_Alt     ||
+        keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_Shift   ||
+        keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_Control ||
+        keyboardEvent->mKeyNameIndex == KEY_NAME_INDEX_AltGraph) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /******************************************************************************
  * mozilla::WidgetEvent
  *

@@ -237,7 +237,7 @@
     overflow: -moz-hidden-unscrollable;
   }
 
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+  #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
     /* Render a window top border: */
     background-image: linear-gradient(to bottom,
           ThreeDLightShadow 0, ThreeDLightShadow 1px,
@@ -285,7 +285,7 @@
 }
 
 @media (-moz-windows-classic) {
-  #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
+  #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #toolbar-menubar {
     margin-top: 4px;
   }
 }

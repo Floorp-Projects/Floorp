@@ -5,13 +5,16 @@
 
 // Bug 1353055 - Strip 'vars' debugging information to agree with moz.build.
 ext.configureVariantDebugLevel = { variant ->
-    // Like 'debug' or 'release'.
+    // Like 'debug', 'release', or 'withGeckoBinaries'.
     def buildType = variant.buildType.name
+
+    // For :app, like 'local', 'localOld', or 'official'.  For other projects, null.
+    def audienceDimension = variant.productFlavors[0]?.name
 
     // The default is 'lines,source,vars', which includes debugging information
     // that is quite large: roughly 500kb for Fennec.  Therefore we remove
     // 'vars' unless we're producing a debug build, where it is useful.
-    if (!'debug'.equals(buildType) || (variant.productFlavors*.name).contains('official')) {
+    if (!'debug'.equals(buildType) || 'official'.equals(audienceDimension)) {
         variant.javaCompile.options.debugOptions.debugLevel = 'lines,source'
     }
 }

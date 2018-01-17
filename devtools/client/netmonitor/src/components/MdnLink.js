@@ -35,7 +35,9 @@ function onLearnMoreClick(e, url) {
   e.preventDefault();
 
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  if (e.button === 1) {
+  let { button, ctrlKey, metaKey } = e;
+  let isOSX = Services.appinfo.OS == "Darwin";
+  if (button === 1 || (button === 0 && (isOSX ? metaKey : ctrlKey))) {
     win.openUILinkIn(url, "tabshifted");
   } else {
     win.openUILinkIn(url, "tab");

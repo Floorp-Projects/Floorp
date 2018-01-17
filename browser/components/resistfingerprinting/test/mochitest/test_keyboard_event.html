@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1222285
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1222285</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1222285 **/
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = () => {
+    SpecialPowers.pushPrefEnv({"set":
+      [
+        ["privacy.resistFingerprinting", true]
+      ]
+    }, doTestForSystemEventGroup);
+  };
+
+  // This test makes sure that system event group will still get real keyboard event.
+  function doTestForSystemEventGroup() {
+    SpecialPowers.addSystemEventListener(document, "keydown",
+      function eventHandler(aEvent) {
+        SpecialPowers.removeSystemEventListener(document,
+          "keydown", eventHandler, true);
+
+        is(aEvent.code, "Minus", "The system group event should get real code.");
+        is(aEvent.keyCode, 63, "The system group event should get real keyCode.");
+
+        doTestModifiersForSystemEventGroup();
+      }, true);
+
+    // Send key event to the system group.
+    synthesizeKey("\u00DF", {code: "Minus", keyCode: 63});
+  }
+
+  // Test that will system group event still get suppressed modifier keys
+  function doTestModifiersForSystemEventGroup() {
+    SpecialPowers.addSystemEventListener(document, "keydown",
+      function eventHandler(aEvent) {
+        SpecialPowers.removeSystemEventListener(document,
+          "keydown", eventHandler, true);
+        is(aEvent.key, "Alt", "The system group event get the suppressed keyboard event.");
+
+        SimpleTest.finish();
+      }, true);
+
+    // Send key event to the system group.
+    synthesizeKey("KEY_Alt", {altKey: true});
+  }
+
+  </script>
+</head>
+<body>
+</body>
+</html>
