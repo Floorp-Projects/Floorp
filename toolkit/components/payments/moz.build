@@ -20,9 +20,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
 
 SPHINX_TREES['docs'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 TESTING_JS_MODULES += [
     'test/PaymentTestUtils.jsm',
 ]

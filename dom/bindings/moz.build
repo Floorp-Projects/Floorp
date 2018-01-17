@@ -149,14 +149,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 SPHINX_TREES['webidl'] = 'docs'
-
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 SPHINX_PYTHON_PACKAGE_DIRS += ['mozwebidlcodegen']
-
-with Files('mozwebidlcodegen/**.py'):
-    SCHEDULES.inclusive += ['docs']
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
     # This is needed for Window.webidl

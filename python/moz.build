@@ -37,13 +37,7 @@ SPHINX_PYTHON_PACKAGE_DIRS += [
     'mozversioncontrol/mozversioncontrol',
 ]
 
-with Files('**.py'):
-    SCHEDULES.inclusive += ['docs']
-
 SPHINX_TREES['mach'] = 'mach/docs'
-
-with Files('mach/docs/**'):
-    SCHEDULES.exclusive = ['docs']
 
 PYTHON_UNITTEST_MANIFESTS += [
     'mach/mach/test/python.ini',
