@@ -1059,6 +1059,11 @@ protected:
    */
   bool IsValueEmpty() const;
 
+  /**
+   * Returns whether the current placeholder value should be shown.
+   */
+  bool ShouldShowPlaceholder() const;
+
   void ClearFiles(bool aSetValueChanged);
 
   void SetIndeterminateInternal(bool aValue,
