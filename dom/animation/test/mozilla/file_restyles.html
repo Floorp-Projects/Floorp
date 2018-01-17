@@ -25,6 +25,9 @@ SimpleTest.finish = function finish() {
   from { opacity: 1; }
   to { opacity: 0; }
 }
+@keyframes opacity-without-end-value {
+  from { opacity: 0; }
+}
 @keyframes background-color {
   from { background-color: red; }
   to { background-color: blue; }
@@ -366,6 +369,27 @@ waitForAllPaints(() => {
 
     await ensureElementRemoval(parentElement);
   });
+
+  add_task(
+    async function no_restyling_missing_keyframe_opacity_animations_on_scrolled_out_element() {
+      var parentElement = addDiv(null,
+        { style: 'overflow-y: scroll; height: 20px;' });
+      var div = addDiv(null,
+        { style: 'animation: opacity-without-end-value 100s; ' +
+                 'position: relative; top: 100px;' });
+      parentElement.appendChild(div);
+      var animation = div.getAnimations()[0];
+      await animation.ready;
+
+      var markers = await observeStyling(5);
+
+      is(markers.length, 0,
+         'Opacity animations on scrolled out elements should never cause ' +
+         'restyles even if the animation has missing keyframes');
+
+      await ensureElementRemoval(parentElement);
+    }
+  );
 
   add_task(
     async function restyling_transform_animations_in_scrolled_out_element() {
@@ -990,6 +1014,27 @@ waitForAllPaints(() => {
        'out-of-view element should not be throttled');
     await ensureElementRemoval(div);
   });
+
+  // Tests that missing keyframes animation on scrolled out element that the
+  // animation is not able to be throttled.
+  add_task(
+    async function no_throttling_missing_keyframe_animations_out_of_view_element() {
+      var div =
+        addDiv(null, { style: 'transform: translateY(-400px);' +
+                              'visibility: collapse;' });
+      var animation =
+        div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
+      await animation.ready;
+
+      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
+      var markers = await observeStyling(5);
+      is(markers.length, expectedRestyleCount,
+         'visibility animation has no keyframe whose offset is 0 or 1 in an ' +
+         'out-of-view element and produces change hint other than paint-only ' +
+         'change hint should not be throttled');
+      await ensureElementRemoval(div);
+    }
+  );
 
   // Counter part of the above test.
   add_task(async function no_restyling_discrete_animations_out_of_view_element() {
