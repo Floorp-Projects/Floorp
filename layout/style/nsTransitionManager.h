@@ -310,7 +310,7 @@ struct TransitionEventInfo {
   TransitionEventInfo(const NonOwningAnimationTarget& aTarget,
                       EventMessage aMessage,
                       nsCSSPropertyID aProperty,
-                      StickyTimeDuration aDuration,
+                      StickyTimeDuration aElapsedTime,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
     : mElement(aTarget.mElement)
@@ -321,7 +321,7 @@ struct TransitionEventInfo {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.mPropertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    mEvent.mElapsedTime = aDuration.ToSeconds();
+    mEvent.mElapsedTime = aElapsedTime.ToSeconds();
     mEvent.mPseudoElement =
       AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(
         aTarget.mPseudoType);
