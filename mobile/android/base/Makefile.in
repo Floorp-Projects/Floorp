@@ -27,8 +27,6 @@ GARBAGE_DIRS += classes db jars res sync services generated
 
 gradle_dir := $(topobjdir)/gradle/build/mobile/android
 
-ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
 # The bootclasspath is functionally identical to the classpath, but allows the
 # classes given to redefine classes in core packages, such as java.lang.
 # android.jar is here as it provides Android's definition of the Java Standard
@@ -54,15 +52,12 @@ JAVA_CLASSPATH += \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
     $(NULL)
 
-ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+# If native devices are enabled, add Google Play Services and some of the v7
+# compat libraries.
+ifdef MOZ_NATIVE_DEVICES
     JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
-ifdef MOZ_NATIVE_DEVICES
-    JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
@@ -85,7 +80,7 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
 # which take care of the Play Services requirements in JAVA_CLASSPATH.
 # Based on the import of
 # `com.google.android.gms.ads.identifier.AdvertisingIdClient` in
@@ -112,13 +107,6 @@ java_bundled_libs := \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
     $(NULL)
 
-ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
-    java_bundled_libs += \
-        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
-        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
-        $(NULL)
-endif
-
 ifdef MOZ_NATIVE_DEVICES
     java_bundled_libs += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
@@ -145,7 +133,7 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
 # which take care of the Play Services requirements in
 # java_bundled_libs.  See the note above.
 
@@ -155,6 +143,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 java_bundled_libs := $(call uniq,$(java_bundled_libs))
 java_bundled_libs := $(subst $(NULL) ,:,$(strip $(java_bundled_libs)))
 
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 GECKOVIEW_JARS = \
   constants.jar \
   gecko-R.jar \
@@ -185,6 +174,16 @@ FENNEC_JARS = \
 ifdef MOZ_ANDROID_MLS_STUMBLER
 FENNEC_JARS += ../stumbler/stumbler.jar
 endif
+
+else # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+
+GECKOVIEW_JARS := $(gradle_dir)/geckoview/intermediates/bundles/debug/classes.jar
+FENNEC_JARS := $(gradle_dir)/app/intermediates/packaged/officialPhoton/debug/classes.jar
+
+$(GECKOVIEW_JARS): .gradle.deps
+$(FENNEC_JARS): .gradle.deps
+
+endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 geckoview_jars_classpath := $(subst $(NULL) ,:,$(strip $(GECKOVIEW_JARS)))
 
@@ -233,8 +232,6 @@ endif # MOZ_INSTALL_TRACKING
 
 library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
 
-endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
-
 ifdef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 define gradle_command
 $(1): $(2)
@@ -247,7 +244,7 @@ $(eval $(call gradle_command,.gradle.deps,.aapt.deps FORCE))
 
 classes.dex: .gradle.deps
 	$(REPORT_BUILD)
-	cp $(gradle_dir)/app/intermediates/transforms/dexMerger/officialWithoutGeckoBinariesNoMinApiPhoton/debug/0/classes.dex classes.dex
+	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex $@
 
 GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.deps
 	$(REPORT_BUILD)
@@ -255,7 +252,7 @@ GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.
 FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
 	$(REPORT_BUILD)
 
-else # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+else
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex --force-jumbo jars-proguarded
@@ -494,7 +491,7 @@ $(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(constants_PP_J
 .aapt.nodeps: .gradle.nodeps FORCE
 	@$(TOUCH) $@
 	cp $(GRADLE_ANDROID_APP_APK) gecko-nodeps.ap_
-	cp $(gradle_dir)/app/intermediates/transforms/dexMerger/officialWithoutGeckoBinariesNoMinApiPhoton/debug/0/classes.dex classes.dex
+	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex classes.dex
 else
 # .aapt.nodeps: AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
@@ -560,7 +557,6 @@ endif
 # @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
 # list to support @BuildFlag(MOZ_FOO).
 BINDING_BUILD_FLAGS = \
-  MOZ_NATIVE_DEVICES \
   $(NULL)
 
 # Preprocess a JNI binding file using the build flags defined above.

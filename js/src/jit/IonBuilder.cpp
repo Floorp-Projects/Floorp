@@ -9820,6 +9820,11 @@ IonBuilder::jsop_getelem_super()
     MDefinition* receiver = current->pop();
     MDefinition* id = current->pop();
 
+#if defined(JS_CODEGEN_X86)
+    if (instrumentedProfiling())
+        return abort(AbortReason::Disable, "profiling functions with GETELEM_SUPER is disabled on x86");
+#endif
+
     auto* ins = MGetPropSuperCache::New(alloc(), obj, receiver, id);
     current->add(ins);
     current->push(ins);
