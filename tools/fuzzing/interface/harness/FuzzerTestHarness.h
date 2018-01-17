@@ -9,8 +9,8 @@
  * and stdio.h/stdlib.h.
  */
 
-#ifndef LibFuzzerTestHarness_h__
-#define LibFuzzerTestHarness_h__
+#ifndef FuzzerTestHarness_h__
+#define FuzzerTestHarness_h__
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -273,4 +273,4 @@ ScopedXPCOM::Release()
 
 } // namespace
 
-#endif  // LibFuzzerTestHarness_h__
+#endif  // FuzzerTestHarness_h__
