@@ -116,7 +116,6 @@ toolchain_defaults = {
                schema=toolchain_run_schema, defaults=toolchain_defaults)
 def docker_worker_toolchain(config, job, taskdesc):
     run = job['run']
-    taskdesc['run-on-projects'] = ['trunk', 'try']
 
     worker = taskdesc['worker']
     worker['chain-of-trust'] = True
@@ -188,7 +187,6 @@ def docker_worker_toolchain(config, job, taskdesc):
                schema=toolchain_run_schema, defaults=toolchain_defaults)
 def windows_toolchain(config, job, taskdesc):
     run = job['run']
-    taskdesc['run-on-projects'] = ['trunk', 'try']
 
     worker = taskdesc['worker']
 
