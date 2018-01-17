@@ -8499,16 +8499,6 @@
     "n_buckets": 1000,
     "description": "The time (in milliseconds) that it took to display a selected source to the user."
   },
-  "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
-    "bug_numbers": [1429047],
-    "expires_in_version": "66",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 1000,
-    "description": "The time (in milliseconds) that it took to load a source for the user."
-  },
   "DEVTOOLS_ABOUT_DEVTOOLS_OPENED_KEY": {
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
