@@ -187,6 +187,15 @@ function do_test() {
     ok(testValues(values, expected), "property " + prop + "'s values");
   }
 
+  // Regression test for bug 1255378.
+  var expected = [ "inherit", "initial", "unset", "none", "calc", ...allColors ];
+  var values = InspectorUtils.getCSSValuesForProperty("text-shadow");
+  ok(testValues(values, expected), "property text-shadow's values");
+
+  var expected = [ "inherit", "initial", "unset", "inset", "none", "calc", ...allColors ];
+  var values = InspectorUtils.getCSSValuesForProperty("box-shadow");
+  ok(testValues(values, expected), "property box-shadow's values");
+
   SimpleTest.finish();
 }
 

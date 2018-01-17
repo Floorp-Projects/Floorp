@@ -611,26 +611,27 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
     return false;
   }
 
-  // Properties that are parsed by functions must have their
-  // attributes hand-maintained here.
+  uint32_t supported = nsCSSProps::ParserVariant(aPropertyID);
+
+  // For the time being, properties that are parsed by functions must
+  // have some of their attributes hand-maintained here.
   if (nsCSSProps::PropHasFlags(aPropertyID, CSS_PROPERTY_VALUE_PARSER_FUNCTION) ||
       nsCSSProps::PropertyParseType(aPropertyID) == CSS_PROPERTY_PARSE_FUNCTION) {
     // These must all be special-cased.
-    uint32_t supported;
     switch (aPropertyID) {
       case eCSSProperty_border_image_slice:
       case eCSSProperty_grid_template:
       case eCSSProperty_grid:
-        supported = VARIANT_PN;
+        supported |= VARIANT_PN;
         break;
 
       case eCSSProperty_border_image_outset:
-        supported = VARIANT_LN;
+        supported |= VARIANT_LN;
         break;
 
       case eCSSProperty_border_image_width:
       case eCSSProperty_stroke_dasharray:
-        supported = VARIANT_LPN;
+        supported |= VARIANT_LPN;
         break;
 
       case eCSSProperty_border_top_left_radius:
@@ -659,39 +660,39 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty__moz_outline_radius_bottomleft:
       case eCSSProperty__moz_outline_radius_bottomright:
       case eCSSProperty__moz_window_transform_origin:
-        supported = VARIANT_LP;
+        supported |= VARIANT_LP;
         break;
 
       case eCSSProperty_text_shadow:
       case eCSSProperty_box_shadow:
-        supported = VARIANT_LENGTH | VARIANT_COLOR;
+        supported |= VARIANT_LENGTH | VARIANT_COLOR;
         break;
 
       case eCSSProperty_border_spacing:
-        supported = VARIANT_LENGTH;
+        supported |= VARIANT_LENGTH;
         break;
 
       case eCSSProperty_content:
       case eCSSProperty_cursor:
       case eCSSProperty_clip_path:
-        supported = VARIANT_URL;
+        supported |= VARIANT_URL;
         break;
 
       case eCSSProperty_shape_outside:
-        supported = VARIANT_IMAGE;
+        supported |= VARIANT_IMAGE;
         break;
 
       case eCSSProperty_fill:
       case eCSSProperty_stroke:
-        supported = VARIANT_COLOR | VARIANT_URL;
+        supported |= VARIANT_COLOR | VARIANT_URL;
         break;
 
       case eCSSProperty_image_orientation:
-        supported = VARIANT_ANGLE;
+        supported |= VARIANT_ANGLE;
         break;
 
       case eCSSProperty_filter:
-        supported = VARIANT_URL;
+        supported |= VARIANT_URL;
         break;
 
       case eCSSProperty_grid_column_start:
@@ -700,18 +701,15 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
       case eCSSProperty_grid_row_end:
       case eCSSProperty_font_weight:
       case eCSSProperty_initial_letter:
-        supported = VARIANT_NUMBER;
+        supported |= VARIANT_NUMBER;
         break;
 
       default:
-        supported = 0;
         break;
     }
-
-    return (supported & aVariant) != 0;
   }
 
-  return (nsCSSProps::ParserVariant(aPropertyID) & aVariant) != 0;
+  return (supported & aVariant) != 0;
 }
 
 bool
