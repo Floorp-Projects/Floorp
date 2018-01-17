@@ -242,9 +242,9 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                   copy.CopyBuffer();
                 }
               }
+            } else {
+              gfxWarning() << "[Tiling:Client] Failed to aquire the discarded front buffer's draw target";
             }
-          } else {
-            gfxWarning() << "[Tiling:Client] Failed to aquire the discarded front buffer's draw target";
           }
         } else {
           gfxWarning() << "[Tiling:Client] Failed to aquire the discarded front buffer's draw target";
