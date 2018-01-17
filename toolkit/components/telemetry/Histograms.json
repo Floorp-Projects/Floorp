@@ -12450,6 +12450,15 @@
     "n_values": 12,
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   },
+  "DOM_SCRIPT_KIND": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jcoppeard@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "categorical",
+    "bug_numbers": [1430145],
+    "labels": ["ClassicScript", "ModuleScript"],
+    "description": "Record the kind of every script loaded in a document."
+  },
   "DOM_SCRIPT_SRC_ENCODING": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dteller@mozilla.com"],

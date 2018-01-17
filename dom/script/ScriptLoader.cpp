@@ -195,6 +195,13 @@ CollectScriptTelemetry(nsIIncrementalStreamLoader* aLoader,
     return;
   }
 
+  // Report the script kind.
+  if (aRequest->IsModuleRequest()) {
+    AccumulateCategorical(LABELS_DOM_SCRIPT_KIND::ModuleScript);
+  } else {
+    AccumulateCategorical(LABELS_DOM_SCRIPT_KIND::ClassicScript);
+  }
+
   // Report the type of source, as well as the size of the source.
   if (aRequest->IsLoadingSource()) {
     if (aRequest->mIsInline) {
