@@ -31,7 +31,7 @@ describe("FilterBar component:", () => {
   });
 
   it("initial render", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     const wrapper = render(Provider({store}, FilterBar({ serviceContainer })));
     const toolbar = wrapper.find(
@@ -169,7 +169,7 @@ describe("FilterBar component:", () => {
   });
 
   it("does not display the number of hidden messages when there are no messages", () => {
-    const store = setupStore([]);
+    const store = setupStore();
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
     const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
     expect(toolbar.exists()).toBeFalsy();
@@ -194,7 +194,7 @@ describe("FilterBar component:", () => {
   });
 
   it("displays filter bar when button is clicked", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     expect(getAllUi(store.getState()).filterBarVisible).toBe(false);
     expect(ServicesMock.prefs.getBoolPref(PREFS.UI.FILTER_BAR), false);
@@ -236,7 +236,7 @@ describe("FilterBar component:", () => {
   });
 
   it("fires MESSAGES_CLEAR action when clear button is clicked", () => {
-    const store = setupStore([]);
+    const store = setupStore();
     store.dispatch = sinon.spy();
 
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
@@ -248,7 +248,7 @@ describe("FilterBar component:", () => {
   });
 
   it("sets filter text when text is typed", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
     wrapper.find(".devtools-plaininput").simulate("input", { target: { value: "a" } });
@@ -256,7 +256,7 @@ describe("FilterBar component:", () => {
   });
 
   it("toggles persist logs when checkbox is clicked", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     expect(getAllUi(store.getState()).persistLogs).toBe(false);
     expect(ServicesMock.prefs.getBoolPref(PREFS.UI.PERSIST), false);

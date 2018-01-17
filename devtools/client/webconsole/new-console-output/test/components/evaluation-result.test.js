@@ -65,7 +65,7 @@ describe("EvaluationResult component:", () => {
   });
 
   it("displays a [Learn more] link", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     const message = stubPreparedMessages.get("asdf()");
 
