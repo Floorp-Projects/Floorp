@@ -653,10 +653,9 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont,
 #ifdef MOZ_WIDGET_GTK
 already_AddRefed<ScaledFont>
 Factory::CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-                                           const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                                           bool aNeedsOblique)
+                                           const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize)
 {
-  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, aPattern, aUnscaledFont, aSize, aNeedsOblique);
+  return MakeAndAddRef<ScaledFontFontconfig>(aScaledFont, aPattern, aUnscaledFont, aSize);
 }
 #endif
 
@@ -667,13 +666,12 @@ Factory::CreateScaledFontForMacFont(CGFontRef aCGFont,
                                     Float aSize,
                                     const Color& aFontSmoothingBackgroundColor,
                                     bool aUseFontSmoothing,
-                                    bool aApplySyntheticBold,
-                                    bool aNeedsOblique)
+                                    bool aApplySyntheticBold)
 {
   return MakeAndAddRef<ScaledFontMac>(
     aCGFont, aUnscaledFont, aSize, false,
     aFontSmoothingBackgroundColor, aUseFontSmoothing,
-    aApplySyntheticBold, aNeedsOblique);
+    aApplySyntheticBold);
 }
 #endif
 
@@ -952,13 +950,12 @@ Factory::CreateScaledFontForDWriteFont(IDWriteFontFace* aFontFace,
                                        float aSize,
                                        bool aUseEmbeddedBitmap,
                                        bool aForceGDIMode,
-                                       bool aNeedsOblique,
                                        IDWriteRenderingParams* aParams,
                                        Float aGamma,
                                        Float aContrast)
 {
   return MakeAndAddRef<ScaledFontDWrite>(aFontFace, aUnscaledFont, aSize,
-                                         aUseEmbeddedBitmap, aForceGDIMode, aNeedsOblique,
+                                         aUseEmbeddedBitmap, aForceGDIMode,
                                          aParams, aGamma, aContrast,
                                          aStyle);
 }
