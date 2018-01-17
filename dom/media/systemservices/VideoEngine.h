@@ -35,7 +35,7 @@ public:
   VideoEngine (){};
   NS_INLINE_DECL_REFCOUNTING(VideoEngine)
 
-  static RefPtr<VideoEngine> Create(UniquePtr<const webrtc::Config>&& aConfig);
+  static already_AddRefed<VideoEngine> Create(UniquePtr<const webrtc::Config>&& aConfig);
 #if defined(ANDROID)
   static int SetAndroidObjects(JavaVM* javaVM);
 #endif

@@ -64,7 +64,7 @@ FeasibilityDistance(int32_t candidate, int32_t requested)
   return std::abs(candidate - requested) * 1000 / std::max(candidate, requested);
 }
 
-RefPtr<VideoEngine> CamerasParent::sEngines[CaptureEngine::MaxEngine];
+StaticRefPtr<VideoEngine> CamerasParent::sEngines[CaptureEngine::MaxEngine];
 int32_t CamerasParent::sNumOfOpenCamerasParentEngines = 0;
 int32_t CamerasParent::sNumOfCamerasParents = 0;
 base::Thread* CamerasParent::sVideoCaptureThread = nullptr;
@@ -338,10 +338,10 @@ bool
 CamerasParent::SetupEngine(CaptureEngine aCapEngine)
 {
   LOG((__PRETTY_FUNCTION__));
-  RefPtr<mozilla::camera::VideoEngine>* engine = &sEngines[aCapEngine];
+  StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
 
-  if (!engine->get()) {
-    webrtc::CaptureDeviceInfo *captureDeviceInfo = nullptr;
+  if (!engine) {
+    webrtc::CaptureDeviceInfo *captureDeviceInfo = nullptr;  
     UniquePtr<webrtc::Config> config(new webrtc::Config);
 
     switch (aCapEngine) {
@@ -372,9 +372,9 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
     }
 
     config->Set<webrtc::CaptureDeviceInfo>(captureDeviceInfo);
-    *engine = mozilla::camera::VideoEngine::Create(UniquePtr<const webrtc::Config>(config.release()));
+    engine = VideoEngine::Create(Move(config));
 
-    if (!engine->get()) {
+    if (!engine) {
       LOG(("VideoEngine::Create failed"));
       return false;
     }
@@ -382,7 +382,7 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
 
   if (aCapEngine == CameraEngine && !mCameraObserver) {
     mCameraObserver = new InputObserver(this);
-    auto device_info = engine->get()->GetOrCreateVideoCaptureDeviceInfo();
+    auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
     MOZ_ASSERT(device_info);
     if (device_info) {
       device_info->RegisterVideoInputFeedBack(mCameraObserver.get());
@@ -410,7 +410,7 @@ CamerasParent::CloseEngines()
     Unused << ReleaseCaptureDevice(capEngine, streamNum);
   }
 
-  auto engine = sEngines[CameraEngine].get();
+  StaticRefPtr<VideoEngine>& engine = sEngines[CameraEngine];
   if (engine && mCameraObserver) {
     auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
     MOZ_ASSERT(device_info);
@@ -424,8 +424,8 @@ CamerasParent::CloseEngines()
   sNumOfOpenCamerasParentEngines--;
   if (sNumOfOpenCamerasParentEngines == 0) {
     for (auto& engine : sEngines) {
-      if (engine.get()) {
-        mozilla::camera::VideoEngine::Delete(engine.get());
+      if (engine) {
+        VideoEngine::Delete(engine);
         engine = nullptr;
       }
     }
@@ -754,7 +754,7 @@ CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
         int numdev = -1;
         int error = -1;
         if (allowed && self->EnsureInitialized(aCapEngine)) {
-          auto engine = self->sEngines[aCapEngine].get();
+          StaticRefPtr<VideoEngine>& engine = self->sEngines[aCapEngine];
           engine->CreateVideoCapture(numdev, unique_id.get());
           engine->WithEntry(numdev, [&error](VideoEngine::CaptureEntry& cap) {
             if (cap.VideoCapture()) {
