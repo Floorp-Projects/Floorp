@@ -201,7 +201,7 @@ CSSTransition::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 }
 
 void
-CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
+CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
 {
   if (!mOwningElement.IsSet()) {
     return;
@@ -251,8 +251,8 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
   AutoTArray<TransitionEventInfo, 3> events;
 
   auto appendTransitionEvent = [&](EventMessage aMessage,
-                                   StickyTimeDuration aElapsedTime,
-                                   TimeStamp aTimeStamp) {
+                                   const StickyTimeDuration& aElapsedTime,
+                                   const TimeStamp& aTimeStamp) {
     events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
                                              aMessage,
                                              TransitionProperty(),
