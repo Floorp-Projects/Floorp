@@ -113,6 +113,9 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
+    run-on-projects:
+        - trunk
+        - try
     toolchains:
         - linux64-gcc-4.9
 
@@ -465,6 +468,9 @@ linux64-gn:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/build-gn-common.sh'
         toolchain-artifact: public/build/gn.tar.xz
+    run-on-projects:
+        - trunk
+        - try
     toolchains:
         - linux64-gcc-4.9
 
