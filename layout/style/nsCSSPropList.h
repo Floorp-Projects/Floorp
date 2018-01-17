@@ -3611,19 +3611,6 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Right)
-CSS_PROP_DISPLAY(
-    rotate,
-    rotate,
-    Rotate,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-        CSS_PROPERTY_CREATES_STACKING_CONTEXT |
-        CSS_PROPERTY_FIXPOS_CB,
-    "layout.css.individual-transform.enabled",
-    0,
-    nullptr,
-    offsetof(nsStyleDisplay, mSpecifiedRotate),
-    eStyleAnimType_None)
 CSS_PROP_TEXT(
     ruby-align,
     ruby_align,
@@ -4253,19 +4240,6 @@ CSS_PROP_TEXT(
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
-CSS_PROP_DISPLAY(
-    scale,
-    scale,
-    Scale,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-        CSS_PROPERTY_CREATES_STACKING_CONTEXT |
-        CSS_PROPERTY_FIXPOS_CB,
-    "layout.css.individual-transform.enabled",
-    0,
-    nullptr,
-    offsetof(nsStyleDisplay, mSpecifiedScale),
-    eStyleAnimType_None)
 CSS_PROP_TEXT(
     text-transform,
     text_transform,
@@ -4437,19 +4411,6 @@ CSS_PROP_DISPLAY(
     VARIANT_KEYWORD | VARIANT_TIMING_FUNCTION, // used by list parsing
     kTransitionTimingFunctionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_DISPLAY(
-    translate,
-    translate,
-    Translate,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-        CSS_PROPERTY_CREATES_STACKING_CONTEXT |
-        CSS_PROPERTY_FIXPOS_CB,
-    "layout.css.individual-transform.enabled",
-    0,
-    nullptr,
-    offsetof(nsStyleDisplay, mSpecifiedTranslate),
     eStyleAnimType_None)
 #ifndef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 CSS_PROP_TEXTRESET(

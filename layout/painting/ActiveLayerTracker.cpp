@@ -248,8 +248,7 @@ static void
 IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
 {
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  RefPtr<nsCSSValueSharedList> transformList = display->GetCombinedTransform();
-  if (!transformList) {
+  if (!display->mSpecifiedTransform) {
     // The transform was removed.
     aActivity->mPreviousTransformScale = Nothing();
     IncrementMutationCount(&aActivity->mRestyleCounts[LayerActivity::ACTIVITY_SCALE]);
@@ -262,7 +261,7 @@ IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame, LayerActivity* aActivity)
   bool dummyBool;
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform =
-    nsStyleTransformMatrix::ReadTransforms(transformList->mHead,
+    nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
                                            aFrame->StyleContext(),
                                            presContext,
                                            dummy, refBox,
