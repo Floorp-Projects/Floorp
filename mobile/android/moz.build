@@ -67,6 +67,3 @@ TEST_DIRS += [
 ]
 
 SPHINX_TREES['fennec'] = 'docs'
-
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
