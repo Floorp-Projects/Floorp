@@ -625,11 +625,10 @@ txMozillaXMLOutput::createTxWrapper()
       mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                             nsGkAtoms::transformiix, namespaceID);
 
-    uint32_t j = 0;
 #ifdef DEBUG
     // Keep track of the location of the current documentElement, if there is
     // one, so we can verify later
-    uint32_t rootLocation = 0;
+    uint32_t j = 0, rootLocation = 0;
 #endif
     for (nsCOMPtr<nsIContent> childContent = mDocument->GetFirstChild();
          childContent; childContent = childContent->GetNextSibling()) {
@@ -645,11 +644,11 @@ txMozillaXMLOutput::createTxWrapper()
             // This is needed for cases when there is no existing
             // documentElement in the document.
             rootLocation = std::max(rootLocation, j + 1);
-#endif
             ++j;
+#endif
         }
         else {
-            mDocument->RemoveChildAt_Deprecated(j, true);
+            mDocument->RemoveChildNode(childContent, true);
 
             rv = wrapper->AppendChildTo(childContent, true);
             NS_ENSURE_SUCCESS(rv, rv);

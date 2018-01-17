@@ -89,7 +89,7 @@ def is_release_promotion_available(parameters):
 @register_callback_action(
     name='release-promotion',
     title='Release Promotion',
-    symbol='Relpro',
+    symbol='${input.release_promotion_flavor}',
     description="Promote a release.",
     order=10000,
     context=[],

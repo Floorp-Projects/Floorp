@@ -543,7 +543,6 @@ private:
   nsString mDeviceName;
   nsCString mDeviceUUID;
 
-  int32_t mSampleFrequency;
   uint64_t mTotalFrames;
   uint64_t mLastLogFrames;
 
