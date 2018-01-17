@@ -32,10 +32,7 @@ function testValues(values, expected) {
 }
 
 function do_test() {
-  // test a property with keywords and colors
-  var prop = "color";
-  var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+  var allColors = [ "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
       "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood",
       "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor",
       "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey",
@@ -56,91 +53,39 @@ function do_test() {
       "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen",
       "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat",
       "white", "whitesmoke", "yellow", "yellowgreen", "rgb", "hsl", "rgba", "hsla" ];
+
+  // test a property with keywords and colors
+  var prop = "color";
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
+  var expected = [ "initial", "inherit", "unset", ...allColors ];
   ok(testValues(values, expected), "property color's values.");
 
   // test a shorthand property
   var prop = "background";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
-      "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue",
-      "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor", "cyan", "darkblue",
-      "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki", "darkmagenta",
-      "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen", "darkslateblue",
-      "darkslategray", "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray",
-      "dimgrey", "dodgerblue", "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite",
-      "gold", "goldenrod", "gray", "grey", "green", "greenyellow", "honeydew", "hotpink", "indianred",
-      "indigo", "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
-      "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink",
-      "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey", "lightsteelblue",
-      "lightyellow", "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine", "mediumblue",
-      "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen",
-      "mediumturquoise", "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin",
-      "navajowhite", "navy", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
-      "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum",
-      "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown",
-      "seagreen", "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey",
-      "snow", "springgreen", "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise",
-      "violet", "wheat", "white", "whitesmoke", "yellow", "yellowgreen", "no-repeat", "repeat",
+  var expected = [ "initial", "inherit", "unset", ...allColors, "no-repeat", "repeat",
       "repeat-x", "repeat-y", "space", "round", "fixed", "scroll", "local", "center", "top", "bottom", "left", "right",
       "border-box", "padding-box", "content-box", "text", "contain",
-      "cover", "rgb", "hsl", "rgba", "hsla", "none", "-moz-element", "-moz-image-rect", "url", "linear-gradient",
+      "cover", "none", "-moz-element", "-moz-image-rect", "url", "linear-gradient",
       "radial-gradient", "repeating-linear-gradient", "repeating-radial-gradient", "-moz-linear-gradient",
       "-moz-radial-gradient", "-moz-repeating-linear-gradient", "-moz-repeating-radial-gradient" ];
   ok(testValues(values, expected), "Shorthand property values.");
 
   var prop = "border";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "unset", "aliceblue",
-      "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
-      "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
-      "crimson", "currentColor", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
-      "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen",
-      "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise", "darkviolet", "dashed", "deeppink",
-      "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "dotted", "double", "fill", "firebrick", "floralwhite",
-      "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod", "gray", "grey", "green", "greenyellow",
-      "groove", "hidden", "honeydew", "hotpink", "hsl", "hsla", "indianred", "indigo", "inherit", "inset", "ivory",
-      "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue", "lightcoral", "lightcyan",
-      "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey", "lightpink", "lightsalmon", "lightseagreen",
-      "lightskyblue", "lightslategray", "lightslategrey", "lightsteelblue", "lightyellow", "lime", "limegreen",
-      "linen", "magenta", "maroon", "medium", "mediumaquamarine", "mediumblue", "mediumorchid",
-      "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
-      "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite", "navy", "none",
-      "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "outset", "palegoldenrod", "palegreen",
-      "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum", "powderblue",
-      "purple", "rebeccapurple", "red", "repeat", "rgb", "rgba", "ridge", "rosybrown", "round", "royalblue", "saddlebrown",
-      "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey",
-      "snow", "solid", "space", "springgreen", "steelblue", "stretch", "tan", "teal", "thick", "thin", "thistle", "tomato",
-      "transparent", "turquoise", "-moz-element", "-moz-image-rect", "url", "violet", "wheat", "white", "whitesmoke",
-      "yellow", "yellowgreen", "linear-gradient", "radial-gradient", "repeating-linear-gradient",
+  var expected = [ "initial", "unset", "calc", "dashed", "dotted", "double", "fill",
+      "groove", "hidden", "inherit", "inset", "medium", "none", "outset", "repeat", "ridge", "round",
+      "solid", "space", "stretch", "thick", "thin", "-moz-element",
+      "-moz-image-rect", "url", "linear-gradient", "radial-gradient", "repeating-linear-gradient",
       "repeating-radial-gradient", "-moz-linear-gradient", "-moz-radial-gradient", "-moz-repeating-linear-gradient",
-      "-moz-repeating-radial-gradient" ]
+      "-moz-repeating-radial-gradient", ...allColors ]
   ok(testValues(values, expected), "Shorthand property values.");
 
   // test keywords only
   var prop = "border-top";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "inherit", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
-      "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
-      "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
-      "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
-      "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "currentColor", "cyan", "darkblue", "darkcyan",
-      "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki", "darkmagenta", "darkolivegreen",
-      "darkorange", "darkorchid", "darkred", "darksalmon", "darkseagreen", "darkslateblue", "darkslategray",
-      "darkslategrey", "darkturquoise", "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey",
-      "dodgerblue", "firebrick", "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite",
-      "gold", "goldenrod", "gray", "grey", "green", "greenyellow", "honeydew", "hotpink", "indianred",
-      "indigo", "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
-      "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey",
-      "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray", "lightslategrey",
-      "lightsteelblue", "lightyellow", "lime", "limegreen", "linen", "magenta", "maroon", "mediumaquamarine",
-      "mediumblue", "mediumorchid", "mediumpurple", "mediumseagreen", "mediumslateblue", "mediumspringgreen",
-      "mediumturquoise", "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite",
-      "navy", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod", "palegreen",
-      "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink", "plum", "powderblue",
-      "purple", "rebeccapurple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
-      "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen",
-      "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white",
-      "whitesmoke", "yellow", "yellowgreen", "calc", "rgb", "hsl", "rgba", "hsla" ];
+      "dashed", "solid", "double", "groove", "ridge", "inset", "outset", "calc", ...allColors ];
   ok(testValues(values, expected), "property border-top's values.");
 
   // tests no keywords or colors
