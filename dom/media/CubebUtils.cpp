@@ -73,7 +73,7 @@ namespace {
 void* sServerHandle = nullptr;
 
 // Initialized during early startup, protected by sMutex.
-ipc::FileDescriptor sIPCConnection;
+StaticAutoPtr<ipc::FileDescriptor> sIPCConnection;
 
 static bool
 StartSoundServer()
@@ -410,8 +410,8 @@ void InitAudioIPCConnection()
                 __func__,
                 [](ipc::FileDescriptor aFD) {
                   StaticMutexAutoLock lock(sMutex);
-                  MOZ_ASSERT(!sIPCConnection.IsValid());
-                  sIPCConnection = aFD;
+                  MOZ_ASSERT(!sIPCConnection);
+                  sIPCConnection = new ipc::FileDescriptor(aFD);
                 },
                 [](mozilla::ipc::ResponseRejectReason aReason) {
                   MOZ_LOG(gCubebLog, LogLevel::Error, ("SendCreateAudioIPCConnection failed: %d",
@@ -453,10 +453,10 @@ cubeb* GetCubebContextUnlocked()
   if (sCubebSandbox) {
     if (XRE_IsParentProcess()) {
       // TODO: Don't use audio IPC when within the same process.
-      MOZ_ASSERT(!sIPCConnection.IsValid());
-      sIPCConnection = CreateAudioIPCConnection();
+      MOZ_ASSERT(!sIPCConnection);
+      sIPCConnection = new ipc::FileDescriptor(CreateAudioIPCConnection());
     } else {
-      MOZ_DIAGNOSTIC_ASSERT(sIPCConnection.IsValid());
+      MOZ_DIAGNOSTIC_ASSERT(sIPCConnection);
     }
   }
 
@@ -464,8 +464,9 @@ cubeb* GetCubebContextUnlocked()
 
   int rv = sCubebSandbox
     ? audioipc_client_init(&sCubebContext, sBrandName,
-                           sIPCConnection.ClonePlatformHandle().release())
+                           sIPCConnection->ClonePlatformHandle().release())
     : cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
+  sIPCConnection = nullptr;
 #else // !MOZ_CUBEB_REMOTING
   int rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
 #endif // MOZ_CUBEB_REMOTING
@@ -585,7 +586,7 @@ void ShutdownLibrary()
   sCubebState = CubebState::Shutdown;
 
 #ifdef MOZ_CUBEB_REMOTING
-  sIPCConnection = ipc::FileDescriptor();
+  sIPCConnection = nullptr;
   ShutdownSoundServer();
 #endif
 }
