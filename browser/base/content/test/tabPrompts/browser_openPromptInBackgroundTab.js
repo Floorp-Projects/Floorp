@@ -75,5 +75,11 @@ add_task(async function() {
   // should be switched back
   ok(openedTab.selected, "Ta-dah, the other tab should now be selected again!");
 
+  // In e10s, with the conformant promise scheduling, we have to wait for next tick
+  // to ensure that the prompt is open before removing the opened tab, because the
+  // promise callback of 'openedTabSelectedPromise' could be done at the middle of
+  // RemotePrompt.openTabPrompt() while 'DOMModalDialogClosed' event is fired.
+  await TestUtils.waitForTick();
+
   await BrowserTestUtils.removeTab(openedTab);
 });

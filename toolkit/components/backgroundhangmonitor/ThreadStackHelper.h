@@ -53,13 +53,6 @@ namespace mozilla {
  */
 class ThreadStackHelper : public ProfilerStackCollector
 {
-public:
-  // When a native stack is gathered, this vector holds the raw program counter
-  // values that FramePointerStackWalk will return to us after it walks the
-  // stack. When gathering the Telemetry payload, Telemetry will take care of
-  // mapping these program counters to proper addresses within modules.
-  typedef NativeHangStack NativeStack;
-
 private:
   HangStack* mStackToFill;
   Array<char, nsThread::kRunnableNameBufSize>* mRunnableNameBuffer;
@@ -87,6 +80,11 @@ public:
    */
   void GetStack(HangStack& aStack, nsACString& aRunnableName, bool aStackWalk);
 
+  /**
+   * Retrieve the thread's profiler thread ID.
+   */
+  int GetThreadId() const { return mThreadId; }
+
 protected:
   /**
    * ProfilerStackCollector
@@ -98,7 +96,7 @@ protected:
   virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) override;
 
 private:
-  void TryAppendFrame(mozilla::HangStack::Frame aFrame);
+  void TryAppendFrame(mozilla::HangEntry aFrame);
 
   // The profiler's unique thread identifier for the target thread.
   int mThreadId;

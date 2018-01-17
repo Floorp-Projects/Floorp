@@ -27,6 +27,7 @@ add_task(async function() {
     "Breakpoint has correct line"
   );
 
+  await addBreakpoint(dbg, entrySrc, 5);
   await addBreakpoint(dbg, entrySrc, 15);
   await disableBreakpoint(dbg, entrySrc, 15);
 
@@ -34,7 +35,10 @@ add_task(async function() {
   await reload(dbg, "opts.js");
   await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
 
-  is(getBreakpoints(getState()).size, 2, "One breakpoint exists");
+  await waitForPaused(dbg);
+  assertPausedLocation(dbg);
+
+  is(getBreakpoints(getState()).size, 3, "Three breakpoints exist");
 
   ok(
     getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
