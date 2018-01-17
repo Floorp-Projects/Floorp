@@ -141,7 +141,7 @@ protected:
   // be accessed by main thread / PBackground thread / VideoCapture thread
   // sNumOfCamerasParent and sThreadMonitor create & delete are protected by sMutex
   // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by sThreadMonitor
-  static RefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
+  static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
   static int32_t sNumOfOpenCamerasParentEngines;
   static int32_t sNumOfCamerasParents;
   nsTArray<CallbackHelper*> mCallbacks;
