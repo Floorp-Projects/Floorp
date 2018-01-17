@@ -1310,7 +1310,7 @@ CSS_PROP_EFFECTS(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
         // NOTE: some components must be nonnegative
     "",
-    0,
+    VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
     kBoxShadowTypeKTable,
     offsetof(nsStyleEffects, mBoxShadow),
     eStyleAnimType_Shadow)
@@ -4130,7 +4130,7 @@ CSS_PROP_TEXT(
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
         // NOTE: some components must be nonnegative
     "",
-    0,
+    VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC | VARIANT_INHERIT | VARIANT_NONE,
     nullptr,
     offsetof(nsStyleText, mTextShadow),
     eStyleAnimType_Shadow)
