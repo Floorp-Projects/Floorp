@@ -7026,7 +7026,7 @@ HTMLInputElement::PlaceholderApplies() const
     return false;
   }
 
-  return IsSingleLineTextControl(false);
+  return IsSingleLineTextOrNumberControl(false);
 }
 
 bool
