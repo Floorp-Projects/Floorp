@@ -972,6 +972,22 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertEqual(local_includes, expected)
 
+    def test_local_includes_invalid(self):
+        """Test that invalid LOCAL_INCLUDES are properly detected."""
+        reader = self.reader('local_includes-invalid/srcdir')
+
+        with self.assertRaisesRegexp(
+                SandboxValidationError,
+                'Path specified in LOCAL_INCLUDES is not allowed:'):
+            objs = self.read_topsrcdir(reader)
+
+        reader = self.reader('local_includes-invalid/objdir')
+
+        with self.assertRaisesRegexp(
+                SandboxValidationError,
+                'Path specified in LOCAL_INCLUDES is not allowed:'):
+            objs = self.read_topsrcdir(reader)
+
     def test_generated_includes(self):
         """Test that GENERATED_INCLUDES is emitted correctly."""
         reader = self.reader('generated_includes')
