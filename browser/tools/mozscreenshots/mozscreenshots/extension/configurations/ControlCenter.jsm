@@ -55,7 +55,7 @@ this.ControlCenter = {
       },
 
       async verifyConfig() {
-        return Promise.reject("Bug 1373563: intermittent controlCenter_localFile on Taskcluster");
+        return { todo: "Bug 1373563: intermittent controlCenter_localFile on Taskcluster" };
       },
     },
 

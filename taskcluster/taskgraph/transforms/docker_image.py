@@ -113,7 +113,7 @@ def fill_template(config, tasks):
             'label': 'build-docker-image-' + image_name,
             'description': description,
             'attributes': {'image_name': image_name},
-            'expires-after': '28 days' if config.params['project'] == 'try' else '1 year',
+            'expires-after': '28 days' if config.params.is_try() else '1 year',
             'scopes': ['secrets:get:project/taskcluster/gecko/hgfingerprint'],
             'treeherder': {
                 'symbol': job_symbol,

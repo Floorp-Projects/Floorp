@@ -53,7 +53,7 @@ this.Tabs = {
         hoverTab(browserWindow.gBrowser.tabs[2]);
         // also hover the new tab button
         let newTabButton = browserWindow.document.getAnonymousElementByAttribute(browserWindow.
-                           gBrowser.tabContainer, "class", "tabs-newtab-button");
+                           gBrowser.tabContainer, "anonid", "tabs-newtab-button");
         hoverTab(newTabButton);
         browserWindow.gBrowser.tabs[browserWindow.gBrowser.tabs.length - 1].
                       setAttribute("beforehovered", true);
@@ -134,6 +134,7 @@ async function allTabTitlesDisplayed(browserWindow) {
     "about:home": "New Tab",
     "about:newtab": "New Tab",
     "about:addons": "Add-ons Manager",
+    "about:privatebrowsing": "Open a private window?"
   };
   specToTitleMap[PREFS_TAB] = "browser/skin/settings.svg";
   specToTitleMap[CUST_TAB] = "browser/skin/customize.svg";
