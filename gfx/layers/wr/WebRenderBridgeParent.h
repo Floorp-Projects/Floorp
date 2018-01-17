@@ -220,8 +220,7 @@ private:
   // animation is in effect and we need to schedule another composition.
   // If scrollbars need their transforms updated, the provided aTransformArray
   // is populated with the property update details.
-  bool PushAPZStateToWR(wr::TransactionBuilder& aTxn,
-                        nsTArray<wr::WrTransformProperty>& aTransformArray);
+  bool PushAPZStateToWR(nsTArray<wr::WrTransformProperty>& aTransformArray);
 
   // Helper method to get an APZC reference from a scroll id. Uses the layers
   // id of this bridge, and may return null if the APZC wasn't found.
