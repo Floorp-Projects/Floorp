@@ -70,8 +70,8 @@ toolbar[brighttext] .toolbarbutton-1 {
 /* Change the base colors for the browser chrome */
 
 #TabsToolbar,
-#browser-panel {
-  background: var(--chrome-background-color);
+#navigator-toolbox {
+  background-color: var(--chrome-background-color);
   color: var(--chrome-color);
 }
 

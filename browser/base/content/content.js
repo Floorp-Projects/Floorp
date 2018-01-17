@@ -67,12 +67,6 @@ addEventListener("blur", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
 
-// Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
-const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
-const TLS_ERROR_REPORT_TELEMETRY_EXPANDED = 1;
-const TLS_ERROR_REPORT_TELEMETRY_SUCCESS  = 6;
-const TLS_ERROR_REPORT_TELEMETRY_FAILURE  = 7;
-
 const SEC_ERROR_BASE          = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 
@@ -409,6 +403,9 @@ var AboutNetAndCertErrorListener = {
   },
 
   onPageLoad(evt) {
+    // Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
+    const TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN = 0;
+
     if (this.isAboutCertError) {
       let originalTarget = evt.originalTarget;
       let ownerDoc = originalTarget.ownerDocument;

@@ -305,6 +305,11 @@ class MozbuildFileCommands(MachCommandBase):
         for p in relpaths:
             if '*' not in p:
                 if p not in all_paths_set:
+                    if not os.path.exists(mozpath.join(self.topsrcdir, p)):
+                        print('(%s does not exist; ignoring)' % p,
+                              file=sys.stderr)
+                        continue
+
                     all_paths_set.add(p)
                     allpaths.append(p)
                 continue
