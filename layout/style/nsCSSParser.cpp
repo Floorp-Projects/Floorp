@@ -11831,11 +11831,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSPropertyID aPropID)
     return ParseWebkitTextStroke();
   case eCSSProperty_all:
     return ParseAll();
-  case eCSSProperty_translate:
-  case eCSSProperty_rotate:
-  case eCSSProperty_scale:
-    // These properties aren't implemented in the old style system.
-    return false;
   default:
     MOZ_ASSERT(false, "should not be called");
     return false;

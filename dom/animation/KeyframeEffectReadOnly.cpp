@@ -1670,12 +1670,6 @@ KeyframeEffectReadOnly::ShouldBlockAsyncTransformAnimations(
     }
   }
 
-  // XXX cku temporarily disable async-animation when this frame has any
-  // individual transforms before bug 1425837 been fixed.
-  if (aFrame->StyleDisplay()->HasIndividualTransform()) {
-    return true;
-  }
-
   return false;
 }
 
