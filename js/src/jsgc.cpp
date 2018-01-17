@@ -7496,7 +7496,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
         CheckHeapAfterGC(rt);
     }
-    if (rt->hasZealMode(ZealMode::CheckGrayMarking)) {
+    if (rt->hasZealMode(ZealMode::CheckGrayMarking) && !isIncrementalGCInProgress()) {
         MOZ_RELEASE_ASSERT(CheckGrayMarkingState(rt));
     }
 #endif
