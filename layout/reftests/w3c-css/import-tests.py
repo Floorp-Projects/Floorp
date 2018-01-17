@@ -30,12 +30,12 @@ import re
 # But for now, let's just import a few sets of tests.
 
 gSubtrees = [
-    os.path.join("css-namespaces-3"),
-    os.path.join("css-conditional-3"),
-    os.path.join("css-values-3"),
-    os.path.join("css-multicol-1"),
-    os.path.join("css-writing-modes-3"),
-    os.path.join("selectors4"),
+    os.path.join("css-namespaces"),
+    os.path.join("css-conditional"),
+    os.path.join("css-values"),
+    os.path.join("css-multicol"),
+    os.path.join("css-writing-modes"),
+    os.path.join("selectors"),
 ]
 
 gPrefixedProperties = [
