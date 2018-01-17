@@ -42,6 +42,8 @@ import java.util.Arrays;
  *
  * * {@link AbstractPerProfileDatabaseProvider} provides a simple abstraction for
  *   querying databases that are stored in the user's profile directory.
+ * * {@link PerProfileDatabaseProvider} is a simple version that only allows a
+ *   single ContentProvider to access each per-profile database.
  * * {@link SharedBrowserDatabaseProvider} is an example of a per-profile provider
  *   that allows for multiple providers to safely work with the same databases.
  */
@@ -132,7 +134,7 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
      * If we're not in a batch, but we are in a write transaction,
      * end it.
      *
-     * @see AbstractTransactionalProvider#markWriteSuccessful(SQLiteDatabase)
+     * @see PerProfileDatabaseProvider#markWriteSuccessful(SQLiteDatabase)
      */
     protected void endWrite(final SQLiteDatabase db) {
         if (isInBatch()) {

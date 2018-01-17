@@ -9,6 +9,8 @@
 
 #include "nsString.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ScopeExit.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
@@ -347,7 +349,7 @@ public:
    * and the cursor is moved forward.
    */
   template <typename T>
-  MOZ_MUST_USE bool ReadInteger(T* aValue)
+  MOZ_MUST_USE bool ReadInteger(T *aValue)
   {
     MOZ_RELEASE_ASSERT(aValue);
 
@@ -368,6 +370,48 @@ public:
     }
 
     *aValue = checked.value();
+    return true;
+  }
+
+  /**
+   * Same as above, but accepts an integer with an optional minus sign.
+   */
+  template <typename T,
+            typename V = typename EnableIf<IsSigned<typename RemovePointer<T>::Type>::value,
+                                           typename RemovePointer<T>::Type>::Type>
+  MOZ_MUST_USE bool ReadSignedInteger(T *aValue)
+  {
+    MOZ_RELEASE_ASSERT(aValue);
+
+    nsACString::const_char_iterator rollback = mRollback;
+    nsACString::const_char_iterator cursor = mCursor;
+    auto revert = MakeScopeExit([&] {
+      // Move to a state as if Check() call has failed
+      mRollback = rollback;
+      mCursor = cursor;
+      mHasFailed = true;
+    });
+
+    // Using functional raw access because '-' could be part of the word set
+    // making CheckChar('-') not work.
+    bool minus = CheckChar([](const char aChar) { return aChar == '-'; });
+
+    Token t;
+    if (!Check(TOKEN_INTEGER, t)) {
+      return false;
+    }
+
+    mozilla::CheckedInt<T> checked(t.AsInteger());
+    if (minus) {
+      checked *= -1;
+    }
+
+    if (!checked.isValid()) {
+      return false;
+    }
+
+    *aValue = checked.value();
+    revert.release();
     return true;
   }
 

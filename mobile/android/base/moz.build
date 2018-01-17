@@ -565,6 +565,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'db/LocalURLMetadata.java',
     'db/LoginsProvider.java',
     'db/PasswordsProvider.java',
+    'db/PerProfileDatabaseProvider.java',
     'db/PerProfileDatabases.java',
     'db/RemoteClient.java',
     'db/RemoteTab.java',
@@ -662,6 +663,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/HomeConfigLoader.java',
     'home/HomeConfigPrefsBackend.java',
     'home/HomeContextMenuInfo.java',
+    'home/HomeExpandableListView.java',
     'home/HomeFragment.java',
     'home/HomeListView.java',
     'home/HomePager.java',
@@ -1160,7 +1162,7 @@ gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 
-gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough,-cast', '-J-Xmx512m', '-J-Xms128m']
+gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
 # gecko-thirdparty is a good place to put small independent libraries
 gtjar = add_java_jar('gecko-thirdparty')

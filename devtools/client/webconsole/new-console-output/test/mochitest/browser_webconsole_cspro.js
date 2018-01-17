@@ -21,11 +21,11 @@ const TEST_VIOLATION = "http://example.com/browser/devtools/client/webconsole/" 
                        "new-console-output/test/mochitest/test-cspro.html";
 const CSP_VIOLATION_MSG =
   "Content Security Policy: The page\u2019s settings blocked the loading of a resource " +
-  "at http://some.example.com/cspro.png (\u201cimg-src http://example.com\u201d).";
+  "at http://some.example.com/cspro.png (\u201cimg-src\u201d).";
 const CSP_REPORT_MSG =
   "Content Security Policy: The page\u2019s settings observed the loading of a " +
   "resource at http://some.example.com/cspro.js " +
-  "(\u201cscript-src http://example.com\u201d). A CSP report is being sent.";
+  "(\u201cscript-src\u201d). A CSP report is being sent.";
 
 add_task(async function () {
   let hud = await openNewTabAndConsole(TEST_URI);

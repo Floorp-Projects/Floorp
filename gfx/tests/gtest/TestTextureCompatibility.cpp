@@ -54,7 +54,10 @@ CreateTextureWithBackend(LayersBackend& aLayersBackend,
 static void
 GetPlatformBackends(nsTArray<LayersBackend>& aBackends)
 {
-  gfxPlatform::GetPlatform()->GetCompositorBackends(
+  gfxPlatform* platform = gfxPlatform::GetPlatform();
+  MOZ_ASSERT(platform);
+
+  platform->GetCompositorBackends(
     gfxConfig::IsEnabled(Feature::HW_COMPOSITING), aBackends);
 
   if (aBackends.IsEmpty()) {

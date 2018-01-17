@@ -414,9 +414,7 @@ class MachCommands(MachCommandBase):
         # $JAVA_HOME/bin/java into $JAVA_HOME.
         java_home = os.path.dirname(os.path.dirname(self.substs['JAVA']))
 
-        gradle_flags = self.substs.get('GRADLE_FLAGS', '') or \
-                       os.environ.get('GRADLE_FLAGS', '')
-        gradle_flags = shell_split(gradle_flags)
+        gradle_flags = shell_split(self.substs.get('GRADLE_FLAGS', ''))
 
         # We force the Gradle JVM to run with the UTF-8 encoding, since we
         # filter strings.xml, which is really UTF-8; the ellipsis character is

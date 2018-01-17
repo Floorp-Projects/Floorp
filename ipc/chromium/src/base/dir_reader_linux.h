@@ -90,7 +90,10 @@ class DirReaderLinux {
 
  private:
   const int fd_;
-  unsigned char buf_[512];
+  union {
+    linux_dirent dirent_;
+    unsigned char buf_[512];
+  };
   size_t offset_, size_;
 
   DISALLOW_COPY_AND_ASSIGN(DirReaderLinux);
