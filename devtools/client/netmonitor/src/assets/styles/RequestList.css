@@ -65,10 +65,7 @@
 .requests-list-contents {
   display: table-row-group;
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   --timings-scale: 1;
@@ -623,7 +620,12 @@
 
 .request-list-item {
   position: relative;
+/*
   display: table-row;
+  Bug 1431132: Disabling this rule is surprising as we no longer have "rows".
+  But this helps preventing reflowing the whole requests list anytime we append
+  a new request/row.
+*/
   height: 24px;
 }
 

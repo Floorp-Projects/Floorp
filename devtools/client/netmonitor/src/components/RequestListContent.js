@@ -72,6 +72,7 @@ class RequestListContent extends Component {
     this.isScrolledToBottom = this.isScrolledToBottom.bind(this);
     this.onHover = this.onHover.bind(this);
     this.onScroll = this.onScroll.bind(this);
+    this.onResize = this.onResize.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onFocusedNodeChange = this.onFocusedNodeChange.bind(this);
@@ -85,6 +86,7 @@ class RequestListContent extends Component {
       openStatistics,
     });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
+    window.addEventListener("resize", this.onResize);
   }
 
   componentDidMount() {
@@ -95,6 +97,7 @@ class RequestListContent extends Component {
     });
     // Install event handler to hide the tooltip on scroll
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
+    this.onResize();
   }
 
   componentWillUpdate(nextProps) {
@@ -118,6 +121,12 @@ class RequestListContent extends Component {
 
     // Uninstall the tooltip event handler
     this.tooltip.stopTogglingOnHover();
+    window.removeEventListener("resize", this.onResize);
+  }
+
+  onResize() {
+    let parent = this.refs.contentEl.parentNode;
+    this.refs.contentEl.style.height = parent.offsetHeight + "px";
   }
 
   isScrolledToBottom() {
