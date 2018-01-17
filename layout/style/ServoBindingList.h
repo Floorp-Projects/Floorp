@@ -40,11 +40,6 @@ SERVO_BINDING_FUNC(Servo_Element_IsDisplayNone,
 SERVO_BINDING_FUNC(Servo_Element_IsPrimaryStyleReusedViaRuleNode,
                    bool,
                    RawGeckoElementBorrowed element)
-SERVO_BINDING_FUNC(Servo_InvalidateStyleForDocStateChanges,
-                   void,
-                   RawGeckoElementBorrowed root,
-                   const nsTArray<RawServoStyleSetBorrowed>* sets,
-                   uint64_t aStatesChanged)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes,
