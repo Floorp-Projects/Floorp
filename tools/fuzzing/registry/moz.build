@@ -4,16 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('fuzzer-runner')
+Library('fuzzer-registry')
 
 SOURCES += [
-    'LibFuzzerRegistry.cpp',
-    'LibFuzzerRunner.cpp',
+    'FuzzerRegistry.cpp',
 ]
 
 EXPORTS += [
-    'LibFuzzerRegistry.h',
-    'LibFuzzerRunner.h',
+    'FuzzerRegistry.h',
 ]
 
-FINAL_LIBRARY = "xul"
+if CONFIG['JS_STANDALONE']:
+    FINAL_LIBRARY = "js"
+else:
+    FINAL_LIBRARY = "xul"
