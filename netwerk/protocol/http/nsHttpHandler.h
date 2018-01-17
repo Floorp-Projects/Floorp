@@ -184,10 +184,6 @@ public:
     // If one of tcp connections return PR_NOT_TCP_SOCKET_ERROR while trying
     // fast open, it means that Fast Open is turned off so we will not try again
     // until a restart. This is only on Linux.
-    // For windows 10 we can only check whether a version of windows support
-    // Fast Open at run time, so if we get error PR_NOT_IMPLEMENTED_ERROR it
-    // means that Fast Open is not supported and we will set mFastOpenSupported
-    // to false.
     void SetFastOpenNotSupported() { mFastOpenSupported = false; }
 
     void IncrementFastOpenConsecutiveFailureCounter();
