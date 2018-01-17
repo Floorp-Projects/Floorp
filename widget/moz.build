@@ -190,6 +190,7 @@ UNIFIED_SOURCES += [
     'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
     'nsPrintSettingsImpl.cpp',
+    'nsSoundProxy.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
     'PuppetBidiKeyboard.cpp',

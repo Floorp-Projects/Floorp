@@ -13,7 +13,6 @@ const {
 
 const { getFormatStr } = require("../utils/l10n");
 const { getToplevelWindow } = require("../utils/window");
-const { Task: { spawn } } = require("devtools/shared/task");
 const e10s = require("../utils/e10s");
 const Services = require("Services");
 
@@ -41,17 +40,15 @@ function createScreenshotFor(node) {
 }
 
 function saveToFile(data, filename) {
-  return spawn(function* () {
-    const chromeWindow = getToplevelWindow(window);
-    const chromeDocument = chromeWindow.document;
+  const chromeWindow = getToplevelWindow(window);
+  const chromeDocument = chromeWindow.document;
 
-    // append .png extension to filename if it doesn't exist
-    filename = filename.replace(/\.png$|$/i, ".png");
+  // append .png extension to filename if it doesn't exist
+  filename = filename.replace(/\.png$|$/i, ".png");
 
-    chromeWindow.saveURL(data, filename, null,
-                         true, true,
-                         chromeDocument.documentURIObject, chromeDocument);
-  });
+  chromeWindow.saveURL(data, filename, null,
+                        true, true,
+                        chromeDocument.documentURIObject, chromeDocument);
 }
 
 function simulateCameraEffects(node) {
@@ -65,19 +62,19 @@ function simulateCameraEffects(node) {
 module.exports = {
 
   takeScreenshot() {
-    return function* (dispatch, getState) {
-      yield dispatch({ type: TAKE_SCREENSHOT_START });
+    return async function (dispatch, getState) {
+      await dispatch({ type: TAKE_SCREENSHOT_START });
 
       // Waiting the next repaint, to ensure the react components
       // can be properly render after the action dispatched above
-      yield animationFrame();
+      await animationFrame();
 
       let iframe = document.querySelector("iframe");
-      let data = yield createScreenshotFor(iframe);
+      let data = await createScreenshotFor(iframe);
 
       simulateCameraEffects(iframe);
 
-      yield saveToFile(data, getFileName());
+      saveToFile(data, getFileName());
 
       dispatch({ type: TAKE_SCREENSHOT_END });
     };

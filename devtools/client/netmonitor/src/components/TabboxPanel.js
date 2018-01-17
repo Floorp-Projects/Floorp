@@ -90,7 +90,10 @@ function TabboxPanel({
         id: PANELS.TIMINGS,
         title: TIMINGS_TITLE,
       },
-        TimingsPanel({ request }),
+        TimingsPanel({
+          connector,
+          request,
+        }),
       ),
       request.cause && request.cause.stacktraceAvailable &&
       TabPanel({

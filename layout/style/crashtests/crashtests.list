@@ -112,12 +112,12 @@ load 945048-1.html
 load 972199-1.html
 load 989965-1.html
 load 992333-1.html
-pref(dom.webcomponents.enabled,true) load 1017798-1.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1017798-1.html
 load 1028514-1.html
 load 1066089-1.html
 load 1074651-1.html
 load 1135534.html
-pref(dom.webcomponents.enabled,true) load 1089463-1.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1089463-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1146101-1.html
 load 1153693-1.html
@@ -261,9 +261,9 @@ load 1411478.html
 load 1413288.html
 load 1413361.html
 load 1415663.html
-pref(dom.webcomponents.enabled,true) load 1415353.html
-load 1415021.html # This should have dom.webcomponents.enabled=true, but it leaks the world, see bug 1416296.
+pref(dom.webcomponents.shadowdom.enabled,true) load 1415353.html
+load 1415021.html # This should have dom.webcomponents.shadowdom.enabled=true, but it leaks the world, see bug 1416296.
 load 1418059.html
 skip-if(!stylo) test-pref(dom.animations-api.core.enabled,true) load 1418867.html
-pref(dom.webcomponents.enabled,true) load 1419554.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1419554.html
 load 1426312.html

@@ -848,6 +848,12 @@ parent:
     sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
         returns (bool hasType);
 
+    // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
+    // the content process.
+    async PlaySound(URIParams aURL) compress;
+    async Beep() compress;
+    async PlayEventSound(uint32_t aEventId) compress;
+
     sync GetSystemColors(uint32_t colorsCount)
         returns (uint32_t[] colors);
 

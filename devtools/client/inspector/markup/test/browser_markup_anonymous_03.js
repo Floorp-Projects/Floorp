@@ -10,7 +10,7 @@
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
 add_task(function* () {
-  Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
+  Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
 
   let {inspector} = yield openInspectorForURL(TEST_URL);
 

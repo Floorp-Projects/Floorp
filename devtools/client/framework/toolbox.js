@@ -179,6 +179,20 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this.on("picker-started", this._onPickerStarted);
   this.on("picker-stopped", this._onPickerStopped);
+
+  /**
+   * Get text direction for the current locale direction.
+   *
+   * `getComputedStyle` forces a synchronous reflow, so use a lazy getter in order to
+   * call it only once.
+   */
+  loader.lazyGetter(this, "direction", () => {
+    // Get the direction from browser.xul document
+    let top = this.win.top;
+    let topDocEl = top.document.documentElement;
+    let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
+    return isRtl ? "rtl" : "ltr";
+  });
 }
 exports.Toolbox = Toolbox;
 
@@ -1740,10 +1754,7 @@ Toolbox.prototype = {
 
     if (docEl.hasAttribute("dir")) {
       // Set the dir attribute value only if dir is already present on the document.
-      let top = this.win.top;
-      let topDocEl = top.document.documentElement;
-      let isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
-      docEl.setAttribute("dir", isRtl ? "rtl" : "ltr");
+      docEl.setAttribute("dir", this.direction);
     }
   },
 

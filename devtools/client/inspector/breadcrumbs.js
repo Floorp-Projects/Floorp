@@ -73,7 +73,7 @@ ArrowScrollBox.prototype = {
    * Determine whether the current text directionality is RTL
    */
   isRtl: function () {
-    return this.win.getComputedStyle(this.container).direction === "rtl";
+    return this.doc.dir === "rtl";
   },
 
   /**

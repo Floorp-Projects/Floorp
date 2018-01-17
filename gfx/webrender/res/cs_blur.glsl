@@ -20,7 +20,6 @@ flat varying int vBlurRadius;
 in int aBlurRenderTaskAddress;
 in int aBlurSourceTaskAddress;
 in int aBlurDirection;
-in vec4 aBlurRegion;
 
 void main(void) {
     BlurTask blur_task = fetch_blur_task(aBlurRenderTaskAddress);
@@ -50,13 +49,6 @@ void main(void) {
     vUvRect = vec4(src_rect.p0 + vec2(0.5),
                    src_rect.p0 + src_rect.size - vec2(0.5));
     vUvRect /= texture_size.xyxy;
-
-    if (aBlurRegion.z > 0.0) {
-        vec4 blur_region = aBlurRegion * uDevicePixelRatio;
-        src_rect = RectWithSize(src_rect.p0 + blur_region.xy, blur_region.zw);
-        target_rect.p0 = target_rect.p0 + blur_region.xy;
-        target_rect.size = blur_region.zw;
-    }
 
     vec2 pos = target_rect.p0 + target_rect.size * aPosition.xy;
 

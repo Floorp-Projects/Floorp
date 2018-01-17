@@ -6878,8 +6878,10 @@ nsWindow::GetCSDSupportLevel() {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
         } else if (strstr(currentDesktop, "Unity") != nullptr) {
             sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        } else if (strstr(currentDesktop, "Pantheon") != nullptr) {
+            sCSDSupportLevel = CSD_SUPPORT_FULL;
         } else {
-            sCSDSupportLevel = CSD_SUPPORT_NONE;
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
         }
     } else {
         sCSDSupportLevel = CSD_SUPPORT_NONE;

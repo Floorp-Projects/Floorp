@@ -37,6 +37,18 @@ add_task(async function test_get_current() {
         },
       };
 
+      function promiseWindowChanged(winId) {
+        return new Promise(resolve => {
+          let listener = windowId => {
+            if (windowId === winId) {
+              browser.windows.onFocusChanged.removeListener(listener);
+              resolve();
+            }
+          };
+          browser.windows.onFocusChanged.addListener(listener);
+        });
+      }
+
       function testTheme1(returnedTheme) {
         browser.test.assertTrue(
           returnedTheme.images.headerURL.includes("image1.png"),
@@ -83,13 +95,17 @@ add_task(async function test_get_current() {
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after window focus change");
+      let focusChanged = promiseWindowChanged(firstWin.id);
       await browser.windows.update(firstWin.id, {focused: true});
+      await focusChanged;
       testTheme1(await browser.theme.getCurrent());
       testTheme1(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after another window focus change");
+      focusChanged = promiseWindowChanged(secondWin.id);
       await browser.windows.update(secondWin.id, {focused: true});
+      await focusChanged;
       testTheme2(await browser.theme.getCurrent());
       testTheme1(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));
@@ -101,7 +117,9 @@ add_task(async function test_get_current() {
       testTheme2(await browser.theme.getCurrent(secondWin.id));
 
       browser.test.log("Testing getCurrent() after reset and window focus change");
+      focusChanged = promiseWindowChanged(firstWin.id);
       await browser.windows.update(firstWin.id, {focused: true});
+      await focusChanged;
       testEmptyTheme(await browser.theme.getCurrent());
       testEmptyTheme(await browser.theme.getCurrent(firstWin.id));
       testTheme2(await browser.theme.getCurrent(secondWin.id));

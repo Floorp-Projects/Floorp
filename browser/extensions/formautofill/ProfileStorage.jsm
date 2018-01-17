@@ -376,7 +376,10 @@ class AutofillRecords {
 
     this._store.saveSoon();
 
-    Services.obs.notifyObservers({wrappedJSObject: {sourceSync}}, "formautofill-storage-changed", "add");
+    Services.obs.notifyObservers({wrappedJSObject: {
+      sourceSync,
+      collectionName: this._collectionName,
+    }}, "formautofill-storage-changed", "add");
     return recordToSave.guid;
   }
 
@@ -449,9 +452,10 @@ class AutofillRecords {
 
     this._store.saveSoon();
 
-    let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    str.data = guid;
-    Services.obs.notifyObservers(str, "formautofill-storage-changed", "update");
+    Services.obs.notifyObservers({wrappedJSObject: {
+      guid,
+      collectionName: this._collectionName,
+    }}, "formautofill-storage-changed", "update");
   }
 
   /**
@@ -519,7 +523,10 @@ class AutofillRecords {
     }
 
     this._store.saveSoon();
-    Services.obs.notifyObservers({wrappedJSObject: {sourceSync}}, "formautofill-storage-changed", "remove");
+    Services.obs.notifyObservers({wrappedJSObject: {
+      sourceSync,
+      collectionName: this._collectionName,
+    }}, "formautofill-storage-changed", "remove");
   }
 
   /**
@@ -838,6 +845,7 @@ class AutofillRecords {
     this._store.saveSoon();
     Services.obs.notifyObservers({wrappedJSObject: {
       sourceSync: true,
+      collectionName: this._collectionName,
     }}, "formautofill-storage-changed", "reconcile");
 
     return {forkedGUID};

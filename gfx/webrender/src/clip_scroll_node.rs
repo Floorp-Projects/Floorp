@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DeviceIntRect, DevicePixelScale, LayerPixel, LayerPoint, LayerRect, LayerSize};
+use api::{ClipId, DevicePixelScale, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToWorldTransform, LayerTransform, LayerVector2D, LayoutTransform, LayoutVector2D};
 use api::{PipelineId, PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLocation};
 use api::{ScrollSensitivity, StickyOffsetBounds, WorldPoint};
@@ -12,11 +12,10 @@ use euclid::SideOffsets2D;
 use geometry::ray_intersects_rect;
 use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex, ClipScrollNodeData};
-use render_task::{ClipChain, ClipChainNode, ClipWorkItem};
+use render_task::{ClipChain, ClipWorkItem};
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
 use spring::{DAMPING, STIFFNESS, Spring};
-use std::rc::Rc;
 use util::{MatrixHelpers, TransformOrOffset, TransformedRectKind};
 
 #[cfg(target_os = "macos")]
@@ -107,10 +106,8 @@ pub struct ClipScrollNode {
     /// The type of this node and any data associated with that node type.
     pub node_type: NodeType,
 
-    /// The node in the chain of clips that are necessary to clip display items
-    /// that have this ClipScrollNode as their clip parent. This will be used to
-    /// generate clip tasks.
-    pub clip_chain_node: ClipChain,
+    /// The ClipChain that will be used if this node is used as the 'clipping node.'
+    pub clip_chain: Option<ClipChain>,
 
     /// True if this node is transformed by an invertible transform.  If not, display items
     /// transformed by this node will not be displayed and display items not transformed by this
@@ -145,7 +142,7 @@ impl ClipScrollNode {
             children: Vec::new(),
             pipeline_id,
             node_type: node_type,
-            clip_chain_node: None,
+            clip_chain: None,
             invertible: true,
             coordinate_system_id: CoordinateSystemId(0),
             coordinate_system_relative_transform: TransformOrOffset::zero(),
@@ -272,7 +269,7 @@ impl ClipScrollNode {
         self.invertible = false;
         self.world_content_transform = LayerToWorldTransform::identity();
         self.world_viewport_transform = LayerToWorldTransform::identity();
-        self.clip_chain_node = None;
+        self.clip_chain = None;
     }
 
     pub fn push_gpu_node_data(&mut self, node_data: &mut Vec<ClipScrollNodeData>) {
@@ -300,7 +297,6 @@ impl ClipScrollNode {
         &mut self,
         state: &mut TransformUpdateState,
         next_coordinate_system_id: &mut CoordinateSystemId,
-        screen_rect: &DeviceIntRect,
         device_pixel_scale: DevicePixelScale,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
@@ -329,7 +325,6 @@ impl ClipScrollNode {
 
         self.update_clip_work_item(
             state,
-            screen_rect,
             device_pixel_scale,
             clip_store,
             resource_cache,
@@ -340,21 +335,15 @@ impl ClipScrollNode {
     pub fn update_clip_work_item(
         &mut self,
         state: &mut TransformUpdateState,
-        screen_rect: &DeviceIntRect,
         device_pixel_scale: DevicePixelScale,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
     ) {
-        let current_clip_chain = state.parent_clip_chain.clone();
-        let combined_outer_screen_rect = current_clip_chain.as_ref().map_or(
-            *screen_rect, |clip| clip.combined_outer_screen_rect,
-        );
-
         let clip_sources_handle = match self.node_type {
             NodeType::Clip(ref handle) => handle,
             _ => {
-                self.clip_chain_node = current_clip_chain.clone();
+                self.clip_chain = Some(state.parent_clip_chain.clone());
                 self.invertible = true;
                 return;
             }
@@ -376,8 +365,8 @@ impl ClipScrollNode {
         // If this clip's inner rectangle completely surrounds the existing clip
         // chain's outer rectangle, we can discard this clip entirely since it isn't
         // going to affect anything.
-        if screen_inner_rect.contains_rect(&combined_outer_screen_rect) {
-            self.clip_chain_node = current_clip_chain;
+        if screen_inner_rect.contains_rect(&state.parent_clip_chain.combined_outer_screen_rect) {
+            self.clip_chain = Some(state.parent_clip_chain.clone());
             return;
         }
 
@@ -387,16 +376,15 @@ impl ClipScrollNode {
             coordinate_system_id: state.current_coordinate_system_id,
         };
 
-        let clip_chain_node = ClipChainNode::new(
+        let clip_chain = state.parent_clip_chain.new_with_added_node(
             work_item,
             self.coordinate_system_relative_transform.apply(&local_outer_rect),
             screen_outer_rect,
             screen_inner_rect,
-            current_clip_chain
         );
 
-        self.clip_chain_node = Some(Rc::new(clip_chain_node));
-        state.parent_clip_chain = self.clip_chain_node.clone();
+        self.clip_chain = Some(clip_chain.clone());
+        state.parent_clip_chain = clip_chain;
     }
 
     pub fn update_transform(
@@ -613,7 +601,6 @@ impl ClipScrollNode {
     pub fn prepare_state_for_children(&self, state: &mut TransformUpdateState) {
         if !self.invertible {
             state.invertible = false;
-            state.parent_clip_chain = None;
             return;
         }
 
@@ -776,16 +763,6 @@ impl ClipScrollNode {
         match self.node_type {
             NodeType::ScrollFrame(ref state) => state.overscroll_amount() != LayerVector2D::zero(),
             _ => false,
-        }
-    }
-
-    pub fn is_visible(&self) -> bool {
-        if !self.invertible {
-            return false;
-        }
-        match self.clip_chain_node {
-            Some(ref node) if node.combined_outer_screen_rect.is_empty() => false,
-            _ => true,
         }
     }
 }

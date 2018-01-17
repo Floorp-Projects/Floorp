@@ -97,6 +97,24 @@
         ]
       },
       {
+        "name": "isShown",
+        "type": "function",
+        "description": "Checks whether the page action is shown.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "integer",
+                "description": "Specify the tab to get the shownness from."
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "setTitle",
         "type": "function",
         "description": "Sets the title of the page action. This is displayed in a tooltip over the page action.",

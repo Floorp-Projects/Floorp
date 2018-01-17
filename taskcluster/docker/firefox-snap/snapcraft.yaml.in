@@ -7,8 +7,8 @@ grade: stable
 
 apps:
   firefox:
-    command: desktop-launch firefox
-    desktop: opt/firefox/distribution/firefox.desktop
+    command: desktop-launch $SNAP/firefox
+    desktop: distribution/firefox.desktop
     environment:
       DISABLE_WAYLAND: 1
     plugs:

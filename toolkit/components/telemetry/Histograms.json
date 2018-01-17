@@ -3894,20 +3894,20 @@
   },
   "PREDICTOR_PREFETCH_DECISION_REASON": {
     "record_in_processes": ["main"],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 15,
     "alert_emails": ["hurley@mozilla.com"],
-    "bug_numbers": [1409542],
+    "bug_numbers": [1409542, 1430322],
     "description": "Why the predictor determined a particular resource was eligible for future prefetch (or not). See PrefetchDecisionReason in Predictor.cpp for value meanings"
   },
   "PREDICTOR_PREFETCH_IGNORE_REASON": {
     "record_in_processes": ["main"],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 15,
     "alert_emails": ["hurley@mozilla.com"],
-    "bug_numbers": [1409542],
+    "bug_numbers": [1409542, 1430322],
     "description": "Why the predictor determined a particular resource that was marked eligible for prefetch should not be prefetched. See PrefetchIgnoreReason in Predictor.cpp for value meanings"
   },
   "HTTPCONNMGR_TOTAL_SPECULATIVE_CONN": {
@@ -6548,11 +6548,11 @@
   },
   "FX_PREFERENCES_CATEGORY_OPENED_V2": {
     "record_in_processes": ["main", "content"],
-    "bug_numbers": [1335907],
+    "bug_numbers": [1335907, 1425173],
     "alert_emails": ["jaws@mozilla.com"],
-    "expires_in_version": "59",
+    "expires_in_version": "66",
     "kind": "categorical",
-    "labels": ["unknown", "searchresults", "general", "applications", "privacy", "sync", "advanced"],
+    "labels": ["unknown", "searchresults", "general", "applications", "privacy", "sync", "advanced", "search"],
     "releaseChannelCollection": "opt-out",
     "description": "Count how often each preference category is opened."
   },

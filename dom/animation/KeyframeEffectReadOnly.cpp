@@ -1770,6 +1770,15 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aStyleContext)
   mCumulativeChangeHint = nsChangeHint(0);
 
   for (const AnimationProperty& property : mProperties) {
+    // For opacity property we don't produce any change hints that are not
+    // included in nsChangeHint_Hints_CanIgnoreIfNotVisible so we can throttle
+    // opacity animations regardless of the change they produce.  This
+    // optimization is particularly important since it allows us to throttle
+    // opacity animations with missing 0%/100% keyframes.
+    if (property.mProperty == eCSSProperty_opacity) {
+      continue;
+    }
+
     for (const AnimationPropertySegment& segment : property.mSegments) {
       // In case composite operation is not 'replace' or value is null,
       // we can't throttle animations which will not cause any layout changes

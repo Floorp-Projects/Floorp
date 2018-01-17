@@ -194,17 +194,17 @@ load 930250.html
 load 942979.html
 load 973401.html
 load 978646.html
-pref(dom.webcomponents.enabled,true) load 1024428-1.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1024428-1.html
 load 1026714.html
-pref(dom.webcomponents.enabled,true) load 1027461-1.html
-pref(dom.webcomponents.enabled,true) load 1029710.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1027461-1.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1029710.html
 load 1154598.xhtml
 load 1157995.html
 load 1158412.html
 load 1181619.html
 load 1230422.html
 load 1251361.html
-pref(dom.webcomponents.enabled,true) load 1281715.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1281715.html
 load 1304437.html
 pref(dom.IntersectionObserver.enabled,true) load 1324209.html
 load 1324500.html
@@ -233,10 +233,10 @@ load 1400701.html
 load 1403377.html
 load 1405771.html
 load 1406109-1.html
-pref(dom.webcomponents.enabled,true) load 1324463.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1324463.html
 pref(dom.webcomponents.customelements.enabled,true) load 1413815.html
 load 1411473.html
-pref(dom.webcomponents.enabled,false) load 1422931.html
-pref(dom.webcomponents.enabled,true) load 1419799.html
+pref(dom.webcomponents.shadowdom.enabled,false) load 1422931.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1419799.html
 skip-if(!browserIsRemote) pref(dom.webcomponents.customelements.enabled,true) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902
-pref(dom.webcomponents.enabled,true) load 1428053.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1428053.html

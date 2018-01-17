@@ -465,6 +465,8 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         self.skip_test = False
         if buildconfig.substs['MOZ_BUILD_APP'] != 'browser':
             self.skip_test = True
+        if buildconfig.substs.get('ENABLE_STRIP'):
+            self.skip_test = True
         self.topsrcdir = buildconfig.topsrcdir
         self.script_path = os.path.join(self.topsrcdir, 'toolkit',
                                         'crashreporter', 'tools',

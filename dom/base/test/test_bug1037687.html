@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037687
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.webcomponents.enabled", true]
+      ["dom.webcomponents.shadowdom.enabled", true]
     ]
   }, function() {
     // This test loads in an iframe, to ensure that the element instance is

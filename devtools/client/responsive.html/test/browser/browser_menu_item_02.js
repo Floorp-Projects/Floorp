@@ -12,12 +12,12 @@ const isMenuCheckedFor = ({document}) => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(function* () {
-  const window1 = yield BrowserTestUtils.openNewBrowserWindow();
+add_task(async function () {
+  const window1 = await BrowserTestUtils.openNewBrowserWindow();
   let { gBrowser } = window1;
 
-  yield BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL },
-    function* (browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: TEST_URL },
+    async function (browser) {
       let tab = gBrowser.getTabForBrowser(browser);
 
       is(window1, Services.wm.getMostRecentWindow("navigator:browser"),
@@ -26,18 +26,18 @@ add_task(function* () {
       ok(!isMenuCheckedFor(window1),
         "RDM menu item is unchecked by default");
 
-      yield openRDM(tab);
+      await openRDM(tab);
 
       ok(isMenuCheckedFor(window1),
         "RDM menu item is checked with RDM open");
 
-      yield closeRDM(tab);
+      await closeRDM(tab);
 
       ok(!isMenuCheckedFor(window1),
         "RDM menu item is unchecked with RDM closed");
     });
 
-  yield BrowserTestUtils.closeWindow(window1);
+  await BrowserTestUtils.closeWindow(window1);
 
   is(window, Services.wm.getMostRecentWindow("navigator:browser"),
     "The original window is the active one");

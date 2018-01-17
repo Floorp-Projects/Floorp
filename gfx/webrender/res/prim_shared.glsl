@@ -694,17 +694,18 @@ GlyphResource fetch_glyph_resource(int address) {
 struct ImageResource {
     vec4 uv_rect;
     float layer;
+    vec3 user_data;
 };
 
 ImageResource fetch_image_resource(int address) {
     //Note: number of blocks has to match `renderer::BLOCKS_PER_UV_RECT`
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return ImageResource(data[0], data[1].x);
+    return ImageResource(data[0], data[1].x, data[1].yzw);
 }
 
 ImageResource fetch_image_resource_direct(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
-    return ImageResource(data[0], data[1].x);
+    return ImageResource(data[0], data[1].x, data[1].yzw);
 }
 
 struct TextRun {

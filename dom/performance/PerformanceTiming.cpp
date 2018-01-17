@@ -278,8 +278,7 @@ PerformanceTiming::RedirectStartHighRes()
       nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    TimeStampToDOMHighResOrFetchStart(mRedirectStart));
+  return TimeStampToReducedDOMHighResOrFetchStart(mRedirectStart);
 }
 
 DOMTimeMilliSec
@@ -313,8 +312,7 @@ PerformanceTiming::RedirectEndHighRes()
       nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    TimeStampToDOMHighResOrFetchStart(mRedirectEnd));
+  return TimeStampToReducedDOMHighResOrFetchStart(mRedirectEnd);
 }
 
 DOMTimeMilliSec
@@ -338,8 +336,7 @@ PerformanceTiming::DomainLookupStartHighRes()
       nsContentUtils::ShouldResistFingerprinting()) {
     return mZeroTime;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    TimeStampToDOMHighResOrFetchStart(mDomainLookupStart));
+  return TimeStampToReducedDOMHighResOrFetchStart(mDomainLookupStart);
 }
 
 DOMTimeMilliSec
@@ -437,8 +434,7 @@ PerformanceTiming::RequestStartHighRes()
     mRequestStart = mWorkerRequestStart;
   }
 
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    TimeStampToDOMHighResOrFetchStart(mRequestStart));
+  return TimeStampToReducedDOMHighResOrFetchStart(mRequestStart);
 }
 
 DOMTimeMilliSec
@@ -463,8 +459,7 @@ PerformanceTiming::ResponseStartHighRes()
       (!mRequestStart.IsNull() && mResponseStart < mRequestStart)) {
     mResponseStart = mRequestStart;
   }
-  return nsRFPService::ReduceTimePrecisionAsMSecs(
-    TimeStampToDOMHighResOrFetchStart(mResponseStart));
+  return TimeStampToReducedDOMHighResOrFetchStart(mResponseStart);
 }
 
 DOMTimeMilliSec

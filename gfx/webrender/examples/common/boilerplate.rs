@@ -64,6 +64,9 @@ impl HandyDandyRectBuilder for (i32, i32) {
 pub trait Example {
     const TITLE: &'static str = "WebRender Sample App";
     const PRECACHE_SHADERS: bool = false;
+    const WIDTH: u32 = 1920;
+    const HEIGHT: u32 = 1080;
+
     fn render(
         &mut self,
         api: &RenderApi,
@@ -103,6 +106,7 @@ pub fn main_wrapper<E: Example>(
     let window = glutin::WindowBuilder::new()
         .with_title(E::TITLE)
         .with_multitouch()
+        .with_dimensions(E::WIDTH, E::HEIGHT)
         .with_gl(glutin::GlRequest::GlThenGles {
             opengl_version: (3, 2),
             opengles_version: (3, 0),
@@ -223,6 +227,13 @@ pub fn main_wrapper<E: Example>(
                     Some(glutin::VirtualKeyCode::B),
                 ) => {
                     renderer.toggle_debug_flags(webrender::DebugFlags::ALPHA_PRIM_DBG);
+                }
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::S),
+                ) => {
+                    renderer.toggle_debug_flags(webrender::DebugFlags::COMPACT_PROFILER);
                 }
                 glutin::Event::KeyboardInput(
                     glutin::ElementState::Pressed,

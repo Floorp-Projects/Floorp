@@ -105,6 +105,38 @@ fn skew_bitmap(bitmap: &[u8], width: usize, height: usize, left: i32, top: i32) 
     (skew_buffer, skew_width, left + skew_min as i32)
 }
 
+fn transpose_bitmap(bitmap: &[u8], width: usize, height: usize) -> Vec<u8> {
+    let mut transposed = vec![0u8; width * height * 4];
+    for (y, row) in bitmap.chunks(width * 4).enumerate() {
+        let mut offset = y * 4;
+        for src in row.chunks(4) {
+            transposed[offset .. offset + 4].copy_from_slice(src);
+            offset += height * 4;
+        }
+    }
+    transposed
+}
+
+fn flip_bitmap_x(bitmap: &mut [u8], width: usize, height: usize) {
+    assert!(bitmap.len() == width * height * 4);
+    let pixels = unsafe { slice::from_raw_parts_mut(bitmap.as_mut_ptr() as *mut u32, width * height) };
+    for row in pixels.chunks_mut(width) {
+        row.reverse();
+    }
+}
+
+fn flip_bitmap_y(bitmap: &mut [u8], width: usize, height: usize) {
+    assert!(bitmap.len() == width * height * 4);
+    let pixels = unsafe { slice::from_raw_parts_mut(bitmap.as_mut_ptr() as *mut u32, width * height) };
+    for y in 0 .. height / 2 {
+        let low_row = y * width;
+        let high_row = (height - 1 - y) * width;
+        for x in 0 .. width {
+            pixels.swap(low_row + x, high_row + x);
+        }
+    }
+}
+
 impl FontContext {
     pub fn new() -> FontContext {
         let mut lib: FT_Library = ptr::null_mut();
@@ -250,6 +282,15 @@ impl FontContext {
             self.choose_bitmap_size(face.face, req_size * y_scale)
         } else {
             let mut shape = font.transform.invert_scale(x_scale, y_scale);
+            if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                shape = shape.flip_x();
+            }
+            if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                shape = shape.flip_y();
+            }
+            if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                shape = shape.swap_xy();
+            }
             if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
                 shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
             };
@@ -390,6 +431,18 @@ impl FontContext {
                         let (skew_min, skew_max) = get_skew_bounds(top - height as i32, top);
                         left += skew_min as i32;
                         width += (skew_max - skew_min) as u32;
+                    }
+                    if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                        mem::swap(&mut width, &mut height);
+                        mem::swap(&mut left, &mut top);
+                        left -= width as i32;
+                        top += height as i32;
+                    }
+                    if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                        left = -(left + width as i32);
+                    }
+                    if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                        top = -(top - height as i32);
                     }
                 }
                 Some(GlyphDimensions {
@@ -570,7 +623,7 @@ impl FontContext {
 
         let bitmap = unsafe { &(*slot).bitmap };
         let pixel_mode = unsafe { mem::transmute(bitmap.pixel_mode as u32) };
-        let (mut actual_width, actual_height) = match pixel_mode {
+        let (mut actual_width, mut actual_height) = match pixel_mode {
             FT_Pixel_Mode::FT_PIXEL_MODE_LCD => {
                 assert!(bitmap.width % 3 == 0);
                 ((bitmap.width / 3) as usize, bitmap.rows as usize)
@@ -676,6 +729,21 @@ impl FontContext {
                     final_buffer = skew_buffer;
                     actual_width = skew_width;
                     left = skew_left;
+                }
+                if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                    final_buffer = transpose_bitmap(&final_buffer, actual_width, actual_height);
+                    mem::swap(&mut actual_width, &mut actual_height);
+                    mem::swap(&mut left, &mut top);
+                    left -= actual_width as i32;
+                    top += actual_height as i32;
+                }
+                if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                    flip_bitmap_x(&mut final_buffer, actual_width, actual_height);
+                    left = -(left + actual_width as i32);
+                }
+                if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                    flip_bitmap_y(&mut final_buffer, actual_width, actual_height);
+                    top = -(top - actual_height as i32);
                 }
             }
             FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => {

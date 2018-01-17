@@ -1559,6 +1559,19 @@ def build_task(config, tasks):
 
 
 @transforms.add
+def chain_of_trust(config, tasks):
+    for task in tasks:
+        if task['task'].get('payload', {}).get('features', {}).get('chainOfTrust'):
+            image = task.get('dependencies', {}).get('docker-image')
+            if image:
+                cot = task['task'].setdefault('extra', {}).setdefault('chainOfTrust', {})
+                cot.setdefault('inputs', {})['docker-image'] = {
+                    'task-reference': '<docker-image>'
+                }
+        yield task
+
+
+@transforms.add
 def check_task_identifiers(config, tasks):
     """Ensures that all tasks have well defined identifiers:
        ^[a-zA-Z0-9_-]{1,22}$

@@ -25,7 +25,7 @@ window.onload = function () {
   const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
   SpecialPowers.pushPrefEnv({"set": [
-    ["dom.webcomponents.enabled", true]
+    ["dom.webcomponents.shadowdom.enabled", true]
   ]});
   SimpleTest.waitForExplicitFinish();
 

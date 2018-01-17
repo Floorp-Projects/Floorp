@@ -3093,7 +3093,7 @@ public:
                                     JS::MutableHandle<JS::Value> aValue);
 
   static bool
-  IsWebComponentsEnabled() { return sIsWebComponentsEnabled; }
+  IsShadowDOMEnabled() { return sIsShadowDOMEnabled; }
 
   /**
    * Returns true if reserved key events should be prevented from being sent
@@ -3395,7 +3395,7 @@ private:
   static bool sIsPerformanceNavigationTimingEnabled;
   static bool sIsFrameTimingPrefEnabled;
   static bool sIsFormAutofillAutocompleteEnabled;
-  static bool sIsWebComponentsEnabled;
+  static bool sIsShadowDOMEnabled;
   static bool sIsCustomElementsEnabled;
   static bool sSendPerformanceTimingNotifications;
   static bool sUseActivityCursor;
