@@ -24,11 +24,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265841
   function testFrame(src) {
     var iframe = document.createElement("iframe");
     iframe.src = src;
-    window.callback = function(result) {
+    window.callback = function(data) {
       window.callback = null;
       document.body.removeChild(iframe);
       iframe = null;
-      ok(result, "Got notificationclose event with correct data.");
+      ok(data.result, "Got notificationclose event with correct data.");
+      ok(!data.windowOpened,
+         "Shouldn't allow to openWindow in notificationclose");
       MockServices.unregister();
       registration.unregister().then(function() {
         SimpleTest.finish();
