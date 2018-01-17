@@ -513,7 +513,7 @@ XRE_API(int,
                            const XREShellData* aShellData))
 
 #ifdef LIBFUZZER
-#include "LibFuzzerRegistry.h"
+#include "FuzzerRegistry.h"
 
 XRE_API(void,
         XRE_LibFuzzerSetDriver, (LibFuzzerDriver))
