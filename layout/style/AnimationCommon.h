@@ -27,12 +27,13 @@ class nsPresContext;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+template <class EventInfo> class DelayedEventDispatcher;
 
 namespace dom {
 class Element;
 }
 
-template <class AnimationType>
+template <class AnimationType, class AnimationEventType>
 class CommonAnimationManager {
 public:
   explicit CommonAnimationManager(nsPresContext *aPresContext)
@@ -74,6 +75,18 @@ public:
     collection->Destroy();
   }
 
+  /**
+   * Add pending events.
+   */
+  void QueueEvents(nsTArray<AnimationEventType>&& aEvents)
+  {
+    mEventDispatcher.QueueEvents(
+      mozilla::Forward<nsTArray<AnimationEventType>>(aEvents));
+  }
+
+  void SortEvents()      { mEventDispatcher.SortEvents(); }
+  void ClearEventQueue() { mEventDispatcher.ClearEventQueue(); }
+
 protected:
   virtual ~CommonAnimationManager()
   {
@@ -94,6 +107,8 @@ protected:
 
   LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
+
+  mozilla::DelayedEventDispatcher<AnimationEventType> mEventDispatcher;
 };
 
 /**
@@ -153,6 +168,13 @@ public:
     aPseudoType = mTarget.mPseudoType;
   }
 
+  const NonOwningAnimationTarget& Target() const { return mTarget; }
+
+  nsPresContext* GetPresContext() const
+  {
+    return nsContentUtils::GetContextForContent(mTarget.mElement);
+  }
+
 private:
   NonOwningAnimationTarget mTarget;
 };
@@ -163,9 +185,9 @@ class DelayedEventDispatcher
 public:
   DelayedEventDispatcher() : mIsSorted(true) { }
 
-  void QueueEvent(EventInfo&& aEventInfo)
+  void QueueEvents(nsTArray<EventInfo>&& aEvents)
   {
-    mPendingEvents.AppendElement(Forward<EventInfo>(aEventInfo));
+    mPendingEvents.AppendElements(Forward<nsTArray<EventInfo>>(aEvents));
     mIsSorted = false;
   }
 
