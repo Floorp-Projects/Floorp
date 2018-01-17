@@ -512,8 +512,9 @@
               <xul:label class="popup-notification-origin header"
                          xbl:inherits="value=origin,tooltiptext=origin"
                          crop="center"/>
-              <xul:description>
-                <html:span xbl:inherits="xbl:text=startlabel,popupid"/>
+              <xul:description class="popup-notification-description"
+                               xbl:inherits="popupid">
+                <html:span xbl:inherits="xbl:text=label,popupid"/>
                 <html:b    xbl:inherits="xbl:text=hostname,popupid"/>
                 <html:span xbl:inherits="xbl:text=endlabel,popupid"/>
               </xul:description>
