@@ -24,7 +24,7 @@ describe("Network message reducer:", () => {
   });
 
   beforeEach(() => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     getState = store.getState;
     dispatch = store.dispatch;
