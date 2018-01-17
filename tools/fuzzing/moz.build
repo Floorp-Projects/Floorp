@@ -5,11 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-  'common',
   'interface',
-  'messagemanager',
-  'shmem'
+  'registry',
 ]
+
+if not CONFIG['JS_STANDALONE']:
+  DIRS += [
+    'common',
+    'messagemanager',
+    'shmem',
+  ]
 
 if CONFIG['LIBFUZZER']:
   DIRS += [
