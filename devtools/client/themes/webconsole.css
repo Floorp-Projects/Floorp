@@ -1012,6 +1012,8 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-output-wrapper .message.network .status .status-info .status-code {
   padding: 0 2px;
   border-radius: 3px;
+  text-decoration: none;
+  font-style: normal;
 }
 
 .webconsole-output-wrapper .message.network .status .status-info .status-code:not([data-code^="3"]) {

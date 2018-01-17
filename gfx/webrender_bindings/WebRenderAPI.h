@@ -154,6 +154,10 @@ public:
 
   void UpdateResources(ResourceUpdateQueue& aUpdates);
 
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const wr::LayoutPoint& aScrollPosition);
+
   bool IsEmpty() const;
 
   Transaction* Raw() { return mTxn; }
@@ -179,9 +183,6 @@ public:
 
   wr::WindowId GetId() const { return mId; }
 
-  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                            const layers::FrameMetrics::ViewID& aScrollId,
-                            const wr::LayoutPoint& aScrollPosition);
   bool HitTest(const wr::WorldPoint& aPoint,
                wr::WrPipelineId& aOutPipelineId,
                layers::FrameMetrics::ViewID& aOutScrollId,

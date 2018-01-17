@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.dlc;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -107,7 +106,7 @@ public class DownloadAction extends BaseAction {
                 }
 
                 if (!content.isAssetArchive()) {
-                    Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + (String) content.getType());
+                    Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + content.getType());
                     temporaryFile.delete();
                     DownloadContentTelemetry.eventDownloadFailure(content, DownloadContentTelemetry.ERROR_LOGIC);
                     continue;

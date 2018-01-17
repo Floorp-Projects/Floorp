@@ -15,6 +15,15 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Light.Dialog">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Holo.Light.Dialog" />
+
     <!--
         Activity based themes for API 11+. This theme completely replaces
         GeckoAppBase from res/values/themes.xml on API 11+ devices.

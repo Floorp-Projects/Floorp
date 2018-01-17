@@ -48,14 +48,6 @@ using mozilla::dom::KeyframeEffectReadOnly;
 using namespace mozilla;
 using namespace mozilla::css;
 
-namespace {
-struct TransitionEventParams {
-  EventMessage mMessage;
-  StickyTimeDuration mElapsedTime;
-  TimeStamp mTimeStamp;
-};
-} // anonymous namespace
-
 double
 ElementPropertyTransition::CurrentValuePortion() const
 {
@@ -215,13 +207,7 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
     return;
   }
 
-  dom::Element* owningElement;
-  CSSPseudoElementType owningPseudoType;
-  mOwningElement.GetElement(owningElement, owningPseudoType);
-  MOZ_ASSERT(owningElement, "Owning element should be set");
-
-  nsPresContext* presContext =
-    nsContentUtils::GetContextForContent(owningElement);
+  nsPresContext* presContext = mOwningElement.GetPresContext();
   if (!presContext) {
     return;
   }
@@ -262,16 +248,25 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
     currentPhase = TransitionPhase::Pending;
   }
 
-  AutoTArray<TransitionEventParams, 3> events;
+  AutoTArray<TransitionEventInfo, 3> events;
+
+  auto appendTransitionEvent = [&](EventMessage aMessage,
+                                   StickyTimeDuration aElapsedTime,
+                                   TimeStamp aTimeStamp) {
+    events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
+                                             aMessage,
+                                             TransitionProperty(),
+                                             aElapsedTime,
+                                             aTimeStamp,
+                                             this));
+  };
 
   // Handle cancel events first
   if ((mPreviousTransitionPhase != TransitionPhase::Idle &&
        mPreviousTransitionPhase != TransitionPhase::After) &&
       currentPhase == TransitionPhase::Idle) {
     TimeStamp activeTimeStamp = ElapsedTimeToTimeStamp(aActiveTime);
-    events.AppendElement(TransitionEventParams{ eTransitionCancel,
-                                                aActiveTime,
-                                                activeTimeStamp });
+    appendTransitionEvent(eTransitionCancel, aActiveTime, activeTimeStamp);
   }
 
   // All other events
@@ -279,82 +274,64 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
     case TransitionPhase::Idle:
       if (currentPhase == TransitionPhase::Pending ||
           currentPhase == TransitionPhase::Before) {
-        events.AppendElement(TransitionEventParams{ eTransitionRun,
-                                                    intervalStartTime,
-                                                    zeroTimeStamp });
+        appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
       } else if (currentPhase == TransitionPhase::Active) {
-        events.AppendElement(TransitionEventParams{ eTransitionRun,
-                                                    intervalStartTime,
-                                                    zeroTimeStamp });
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalStartTime,
-                                                    startTimeStamp });
+        appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
+        appendTransitionEvent(eTransitionStart,
+                              intervalStartTime,
+                              startTimeStamp);
       } else if (currentPhase == TransitionPhase::After) {
-        events.AppendElement(TransitionEventParams{ eTransitionRun,
-                                                    intervalStartTime,
-                                                    zeroTimeStamp });
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalStartTime,
-                                                    startTimeStamp });
-        events.AppendElement(TransitionEventParams{ eTransitionEnd,
-                                                    intervalEndTime,
-                                                    endTimeStamp });
+        appendTransitionEvent(eTransitionRun, intervalStartTime, zeroTimeStamp);
+        appendTransitionEvent(eTransitionStart,
+                              intervalStartTime,
+                              startTimeStamp);
+        appendTransitionEvent(eTransitionEnd, intervalEndTime, endTimeStamp);
       }
       break;
 
     case TransitionPhase::Pending:
     case TransitionPhase::Before:
       if (currentPhase == TransitionPhase::Active) {
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalStartTime,
-                                                    startTimeStamp });
+        appendTransitionEvent(eTransitionStart,
+                              intervalStartTime,
+                              startTimeStamp);
       } else if (currentPhase == TransitionPhase::After) {
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalStartTime,
-                                                    startTimeStamp });
-        events.AppendElement(TransitionEventParams{ eTransitionEnd,
-                                                    intervalEndTime,
-                                                    endTimeStamp });
+        appendTransitionEvent(eTransitionStart,
+                              intervalStartTime,
+                              startTimeStamp);
+        appendTransitionEvent(eTransitionEnd, intervalEndTime, endTimeStamp);
       }
       break;
 
     case TransitionPhase::Active:
       if (currentPhase == TransitionPhase::After) {
-        events.AppendElement(TransitionEventParams{ eTransitionEnd,
-                                                    intervalEndTime,
-                                                    endTimeStamp });
+        appendTransitionEvent(eTransitionEnd, intervalEndTime, endTimeStamp);
       } else if (currentPhase == TransitionPhase::Before) {
-        events.AppendElement(TransitionEventParams{ eTransitionEnd,
-                                                    intervalStartTime,
-                                                    startTimeStamp });
+        appendTransitionEvent(eTransitionEnd,
+                              intervalStartTime,
+                              startTimeStamp);
       }
       break;
 
     case TransitionPhase::After:
       if (currentPhase == TransitionPhase::Active) {
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalEndTime,
-                                                    startTimeStamp });
+        appendTransitionEvent(eTransitionStart,
+                              intervalEndTime,
+                              startTimeStamp);
       } else if (currentPhase == TransitionPhase::Before) {
-        events.AppendElement(TransitionEventParams{ eTransitionStart,
-                                                    intervalEndTime,
-                                                    startTimeStamp });
-        events.AppendElement(TransitionEventParams{ eTransitionEnd,
-                                                    intervalStartTime,
-                                                    endTimeStamp });
+        appendTransitionEvent(eTransitionStart,
+                              intervalEndTime,
+                              startTimeStamp);
+        appendTransitionEvent(eTransitionEnd,
+                              intervalStartTime,
+                              endTimeStamp);
       }
       break;
   }
   mPreviousTransitionPhase = currentPhase;
 
-  nsTransitionManager* manager = presContext->TransitionManager();
-  for (const TransitionEventParams& evt : events) {
-    manager->QueueEvent(TransitionEventInfo(owningElement, owningPseudoType,
-                                            evt.mMessage,
-                                            TransitionProperty(),
-                                            evt.mElapsedTime,
-                                            evt.mTimeStamp,
-                                            this));
+  if (!events.IsEmpty()) {
+    presContext->TransitionManager()->QueueEvents(Move(events));
   }
 }
 

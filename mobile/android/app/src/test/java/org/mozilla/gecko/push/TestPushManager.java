@@ -190,7 +190,7 @@ public class TestPushManager {
     public void testStartupBeforeConfiguration() throws Exception {
         verify(gcmTokenClient, never()).getToken(anyString(), anyBoolean());
         manager.startup(System.currentTimeMillis());
-        verify(gcmTokenClient, times(1)).getToken(AppConstants.MOZ_ANDROID_GCM_SENDERIDS, false);
+        verify(gcmTokenClient, times(1)).getToken(AppConstants.MOZ_ANDROID_GCM_SENDERID, false);
     }
 
     @Test

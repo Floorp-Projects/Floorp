@@ -2,10 +2,9 @@ buildDir "${topobjdir}/gradle/build/mobile/android/geckoview_example"
 
 apply plugin: 'com.android.application'
 
-apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
-
 android {
     compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
         targetSdkVersion project.ext.targetSdkVersion
@@ -18,27 +17,52 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+    // This is extremely frustrating, but the only way to do it automation for
+    // now.  Without this, we only get a "debugAndroidTest" configuration; we
+    // have no "withoutGeckoBinariesAndroidTest" configuration.
+    testBuildType "withoutGeckoBinaries"
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        withGeckoBinaries { // For consistency with :geckoview project in Task Cluster invocations.
+            initWith debug
+        }
+        withoutGeckoBinaries { // Logical negation of withGeckoBinaries.
+            initWith debug
+        }
     }
-
-    project.configureProductFlavors.delegate = it
-    project.configureProductFlavors()
 }
 
 dependencies {
-    testImplementation 'junit:junit:4.12'
+    testCompile 'junit:junit:4.12'
 
-    implementation 'com.android.support:support-annotations:23.4.0'
+    compile 'com.android.support:support-annotations:23.4.0'
 
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestImplementation 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.android.support.test:runner:0.5'
     // Not defining this library again results in test-app assuming 23.1.1, and the following errors:
     // "Conflict with dependency 'com.android.support:support-annotations'. Resolved versions for app (23.4.0) and test app (23.1.1) differ."
-    androidTestImplementation 'com.android.support:support-annotations:23.4.0'
+    androidTestCompile 'com.android.support:support-annotations:23.4.0'
 
-    implementation project(path: ':geckoview')
+    debugCompile project(path: ':geckoview', configuration: "debug")
+    releaseCompile project(path: ':geckoview', configuration: "release")
+    withGeckoBinariesCompile project(path: ':geckoview', configuration: "withGeckoBinaries")
+    withoutGeckoBinariesCompile project(path: ':geckoview', configuration: "withoutGeckoBinaries")
+}
+
+apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
+
+android.applicationVariants.all { variant ->
+    // Like 'debug', 'release', or 'withoutGeckoBinaries'.
+    def buildType = variant.buildType.name
+
+    // It would be most natural for :geckoview to always include the Gecko
+    // binaries, but that's difficult; see the notes in
+    // mobile/android/gradle/with_gecko_binaries.gradle.  Instead we handle our
+    // own Gecko binary inclusion.
+    if (!buildType.equals('withoutGeckoBinaries')) {
+        configureVariantWithGeckoBinaries(variant)
+    }
 }

@@ -12,17 +12,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
-import org.mozilla.gecko.util.NetworkUtils.ConnectionSubType;
-import org.mozilla.gecko.util.NetworkUtils.ConnectionType;
-import org.mozilla.gecko.util.NetworkUtils.NetworkStatus;
+import org.mozilla.gecko.util.NetworkUtils.*;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.shadow.api.Shadow;
+import org.robolectric.internal.ShadowExtractor;
 import org.robolectric.shadows.ShadowConnectivityManager;
 import org.robolectric.shadows.ShadowNetworkInfo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(TestRunner.class)
 public class NetworkUtilsTest {
@@ -35,7 +31,7 @@ public class NetworkUtilsTest {
 
         // Not using Shadows.shadowOf(connectivityManager) because of Robolectric bug when using API23+
         // See: https://github.com/robolectric/robolectric/issues/1862
-        shadowConnectivityManager = (ShadowConnectivityManager) Shadow.extract(connectivityManager);
+        shadowConnectivityManager = (ShadowConnectivityManager) ShadowExtractor.extract(connectivityManager);
     }
 
     @Test

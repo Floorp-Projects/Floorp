@@ -69,6 +69,10 @@ const GRID_GAP_PATTERN_HEIGHT = 14; // px
 const GRID_GAP_PATTERN_LINE_DASH = [5, 3]; // px
 const GRID_GAP_ALPHA = 0.5;
 
+// 25 is a good margin distance between the document grid container edge without cutting
+// off parts of the arrow box container.
+const OFFSET_FROM_EDGE = 25;
+
 /**
  * Cached used by `CssGridHighlighter.getGridGapPattern`.
  */
@@ -1168,12 +1172,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       }
     }
 
-    if (!this.hasNodeTransformations) {
-      x = Math.max(x, padding);
-      y = Math.max(y, padding);
-    }
-
-    // Draw a bubble rectanglular arrow with a border width of 2 pixels, a border color
+    // Draw a bubble rectangular arrow with a border width of 2 pixels, a border color
     // matching the grid color and a white background (the line number will be written in
     // black).
     this.ctx.lineWidth = 2 * displayPixelRatio;
@@ -1185,31 +1184,108 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let margin = 2 * displayPixelRatio;
     let arrowSize = 8 * displayPixelRatio;
 
+    let minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
+
     let minBoxSize = arrowSize * 2 + padding;
     boxWidth = Math.max(boxWidth, minBoxSize);
     boxHeight = Math.max(boxHeight, minBoxSize);
 
+    let { width, height } = this._winDimensions;
+
+    let boxAlignment;
+    let textCenterPos;
+
     if (dimensionType === COLUMNS) {
       if (lineNumber > 0) {
+        boxAlignment = "top";
+        textCenterPos = (boxHeight + arrowSize + radius) - boxHeight / 2;
+
+        // If there is not enough space for the box number, flip its alignment and
+        // its text position.
+        if (y <= minOffsetFromEdge) {
+          boxAlignment = "bottom";
+          textCenterPos = -((boxHeight + arrowSize + radius) - boxHeight / 2);
+
+          // Maintain a consistent margin between the pointer and viewport edge when the
+          // grid edge falls out of view. We can use the arrow text's padding value to
+          // maintain this distance.
+          if (y + padding < 0 || y === padding) {
+            y = padding;
+          } else {
+            // If the grid edge is still visible, increment the pointer position by its
+            // arrow size so that the it does not cross over edge.
+            y += arrowSize;
+          }
+        }
+
         drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-          "top");
+          boxAlignment);
+
         // After drawing the number box, we need to center the x/y coordinates of the
         // number text written it.
-        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
+        y -= textCenterPos;
       } else {
+        boxAlignment = "bottom";
+        textCenterPos = (boxHeight + arrowSize + radius) - boxHeight / 2;
+
+        // Flip the negative number when its position reaches 95% of the document's
+        // height/width.
+        if (y / displayPixelRatio >= height * .95) {
+          boxAlignment = "top";
+          textCenterPos = -((boxHeight + arrowSize + radius) - boxHeight / 2);
+
+          if (y + padding > height) {
+            y -= arrowSize;
+          }
+        }
+
         drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-          "bottom");
-        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
+                       boxAlignment);
+
+        y += textCenterPos;
       }
-    } else if (dimensionType === ROWS) {
+    }
+
+    if (dimensionType === ROWS) {
       if (lineNumber > 0) {
+        boxAlignment = "left";
+        textCenterPos = (boxWidth + arrowSize + radius) - boxWidth / 2;
+
+        if (x <= minOffsetFromEdge) {
+          boxAlignment = "right";
+          textCenterPos = -((boxWidth + arrowSize + radius) - boxWidth / 2);
+
+          // See comment above for maintaining a consistent distance between the arrow box
+          // pointer and the edge of the viewport.
+          if (x + padding < 0 || x === padding) {
+            x = padding;
+          } else {
+            x += arrowSize;
+          }
+        }
+
         drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-          "left");
-        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
+                       boxAlignment);
+
+        x -= textCenterPos;
       } else {
+        boxAlignment = "right";
+        textCenterPos = (boxWidth + arrowSize + radius) - boxWidth / 2;
+
+        // See above comment for flipping negative numbers .
+        if (x / displayPixelRatio >= width * .95) {
+          boxAlignment = "left";
+          textCenterPos = -((boxWidth + arrowSize + radius) - boxWidth / 2);
+
+          if (x + padding > width) {
+            x -= arrowSize;
+          }
+        }
+
         drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-          "right");
-        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
+                       boxAlignment);
+
+        x += textCenterPos;
       }
     }
 

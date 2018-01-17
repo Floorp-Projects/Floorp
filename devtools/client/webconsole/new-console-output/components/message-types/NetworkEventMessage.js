@@ -14,6 +14,8 @@ const Message = createFactory(require("devtools/client/webconsole/new-console-ou
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const TabboxPanel = createFactory(require("devtools/client/netmonitor/src/components/TabboxPanel"));
+const { getHTTPStatusCodeURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
+const LEARN_MORE = l10n.getStr("webConsoleMoreInfoLabel");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
@@ -74,7 +76,17 @@ function NetworkEventMessage({
   let statusCode, statusInfo;
 
   if (httpVersion && status && statusText !== undefined && totalTime !== undefined) {
-    statusCode = dom.span({className: "status-code", "data-code": status}, status);
+    let statusCodeDocURL = getHTTPStatusCodeURL(status.toString(), "webconsole");
+    statusCode = dom.a({
+      className: "status-code",
+      "data-code": status,
+      title: LEARN_MORE,
+      onClick: (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        serviceContainer.openLink(statusCodeDocURL, e);
+      }
+    }, status);
     statusInfo = dom.span(
       {className: "status-info"},
       `[${httpVersion} `, statusCode, ` ${statusText} ${totalTime}ms]`
