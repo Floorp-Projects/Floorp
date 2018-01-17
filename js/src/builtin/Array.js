@@ -1112,6 +1112,105 @@ function ArrayConcat(arg1) {
     return A;
 }
 
+// https://tc39.github.io/proposal-flatMap/
+// January 16, 2018
+function ArrayFlatMap(mapperFunction/*, thisArg*/) {
+    // Step 1.
+    var O = ToObject(this);
+
+    // Step 2.
+    var sourceLen = ToLength(O.length);
+
+    // Step 3.
+    if (!IsCallable(mapperFunction))
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, mapperFunction));
+
+    // Step 4.
+    var T = arguments.length > 1 ? arguments[1] : undefined;
+
+    // Step 5.
+    var A = ArraySpeciesCreate(O, 0);
+
+    // Step 6.
+    FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, T);
+
+    // Step 7.
+    return A;
+}
+
+// https://tc39.github.io/proposal-flatMap/
+// January 16, 2018
+function ArrayFlatten(/* depth */) {
+     // Step 1.
+    var O = ToObject(this);
+
+    // Step 2.
+    var sourceLen = ToLength(O.length);
+
+    // Step 3.
+    var depthNum = 1;
+
+    // Step 4.
+    if (arguments.length > 0 && arguments[0] !== undefined)
+        depthNum = ToInteger(arguments[0]);
+
+    // Step 5.
+    var A = ArraySpeciesCreate(O, 0);
+
+    // Step 6.
+    FlattenIntoArray(A, O, sourceLen, 0, depthNum);
+
+    // Step 7.
+    return A;
+}
+
+function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
+    // Step 1.
+    var targetIndex = start;
+
+    // Steps 2-3.
+    for (var sourceIndex = 0; sourceIndex < sourceLen; sourceIndex++) {
+        // Steps 3.a-c.
+        if (sourceIndex in source) {
+            // Step 3.c.i.
+            var element = source[sourceIndex];
+
+            if (mapperFunction) {
+                // Step 3.c.ii.1.
+                assert(arguments.length === 7, "thisArg is present");
+
+                // Step 3.c.ii.2.
+                element = callContentFunction(mapperFunction, thisArg, element, sourceIndex, source);
+            }
+
+            // Step 3.c.iii.
+            var flattenable = IsArray(element);
+
+            // Step 3.c.iv.
+            if (flattenable && depth > 0) {
+                // Step 3.c.iv.1.
+                var elementLen = ToLength(element.length);
+
+                // Step 3.c.iv.2.
+                targetIndex = FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1);
+            } else {
+                // Step 3.c.v.1.
+                if (targetIndex >= MAX_NUMERIC_INDEX)
+                    ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
+
+                // Step 3.c.v.2.
+                _DefineDataProperty(target, targetIndex, element);
+
+                // Step 3.c.v.3.
+                targetIndex++;
+            }
+        }
+    }
+
+    // Step 4.
+    return targetIndex;
+}
+
 function ArrayStaticConcat(arr, arg1) {
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "Array.concat");
