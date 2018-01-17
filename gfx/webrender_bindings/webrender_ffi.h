@@ -51,11 +51,29 @@ struct FontInstanceFlags {
     return *this;
   }
 
+  FontInstanceFlags operator|(uint32_t aBits) {
+    FontInstanceFlags flags = { bits | aBits };
+    return flags;
+  }
+
+  FontInstanceFlags& operator&=(uint32_t aBits) {
+    bits &= aBits;
+    return *this;
+  }
+
+  FontInstanceFlags operator&(uint32_t aBits) {
+    FontInstanceFlags flags = { bits & aBits };
+    return flags;
+  }
+
   enum : uint32_t {
     SYNTHETIC_ITALICS = 1 << 0,
     SYNTHETIC_BOLD    = 1 << 1,
     EMBEDDED_BITMAPS  = 1 << 2,
     SUBPIXEL_BGR      = 1 << 3,
+    TRANSPOSE         = 1 << 4,
+    FLIP_X            = 1 << 5,
+    FLIP_Y            = 1 << 6,
 
     FORCE_GDI         = 1 << 16,
 

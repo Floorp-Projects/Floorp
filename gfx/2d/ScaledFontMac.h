@@ -29,8 +29,7 @@ public:
                 bool aOwnsFont = false,
                 const Color &aFontSmoothingBackgroundColor = Color(),
                 bool aUseFontSmoothing = true,
-                bool aApplySyntheticBold = false,
-                bool aNeedsOblique = false);
+                bool aApplySyntheticBold = false);
   ~ScaledFontMac();
 
   FontType GetType() const override { return FontType::MAC; }
@@ -60,7 +59,6 @@ private:
   Color mFontSmoothingBackgroundColor;
   bool mUseFontSmoothing;
   bool mApplySyntheticBold;
-  bool mNeedsOblique;
 
   typedef void (CTFontDrawGlyphsFuncT)(CTFontRef,
                                        const CGGlyph[], const CGPoint[],
