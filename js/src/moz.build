@@ -50,6 +50,16 @@ if not CONFIG['JS_DISABLE_SHELL']:
 
 TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
+if CONFIG['FUZZING']:
+    if CONFIG['LIBFUZZER']:
+        # Add trace-pc coverage for libfuzzer
+        CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
+
+    TEST_DIRS += [
+        'fuzz-tests',
+    ]
+
 CONFIGURE_SUBST_FILES += [
     'devtools/rootAnalysis/Makefile',
 ]
