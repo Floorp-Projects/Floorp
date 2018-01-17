@@ -39,7 +39,7 @@ jobs:
     run:
       using: debian-package
       dsc:
-        url: http://snapshot.debian.org/archive/debian-debug/20161204T031605Z/pool/main/c/cmake/cmake_3.7.1-1.dsc
+        url: http://snapshot.debian.org/archive/debian/20161204T034107Z/pool/main/c/cmake/cmake_3.7.1-1.dsc
         sha256: 406a12c0d0a2e92d44a8d444fd1b32bcc29a8810e9631427161a7cb411f60172
       patch: cmake-wheezy.diff
 
@@ -61,7 +61,7 @@ jobs:
     run:
       using: debian-package
       dsc:
-        url: http://snapshot.debian.org/archive/debian-debug/20160209T034956Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
+        url: http://snapshot.debian.org/archive/debian/20160209T042121Z/pool/main/n/ninja-build/ninja-build_1.6.0-1.dsc
         sha256: 25cd62b011d669c31bcd51d36d454dd826bc50af6a3af8d87bcab8948ec21626
       patch: ninja-wheezy.diff
 
