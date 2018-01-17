@@ -406,7 +406,7 @@ void InitAudioIPCConnection()
   MOZ_ASSERT(NS_IsMainThread());
   auto contentChild = dom::ContentChild::GetSingleton();
   auto promise = contentChild->SendCreateAudioIPCConnection();
-  promise->Then(AbstractThread::GetCurrent(),
+  promise->Then(AbstractThread::MainThread(),
                 __func__,
                 [](ipc::FileDescriptor aFD) {
                   StaticMutexAutoLock lock(sMutex);
@@ -560,8 +560,7 @@ void InitLibrary()
 #endif
 #ifdef MOZ_CUBEB_REMOTING
   if (sCubebSandbox && XRE_IsContentProcess()) {
-    AbstractThread::MainThread()->Dispatch(
-      NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitAudioIPCConnection));
+    InitAudioIPCConnection();
   }
 #endif
 }
