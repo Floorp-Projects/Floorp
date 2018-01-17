@@ -54,6 +54,8 @@ run_schema = Schema({
 def docker_worker_debian_package(config, job, taskdesc):
     run = job['run']
 
+    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
+
     worker = taskdesc['worker']
     worker['artifacts'] = []
     worker['docker-image'] = 'debian:{dist}-{date}'.format(
@@ -61,6 +63,10 @@ def docker_worker_debian_package(config, job, taskdesc):
         date=run['snapshot'][:8])
 
     add_public_artifacts(config, job, taskdesc, path='/tmp/artifacts')
+
+    env = worker.setdefault('env', {})
+    env['DEBFULLNAME'] = 'Mozilla build team'
+    env['DEBEMAIL'] = 'dev-builds@lists.mozilla.org'
 
     if 'dsc' in run:
         src = run['dsc']
@@ -97,6 +103,12 @@ def docker_worker_debian_package(config, job, taskdesc):
             src_file=src_file,
             package=package,
             ver='$(dpkg-parsechangelog | awk \'$1=="Version:"{print $2}\' | cut -f 1 -d -)',
+        )
+    if 'patch' not in run and 'pre-build-command' not in run:
+        adjust += ('debchange -l ".{prefix}moz" --distribution "{dist}"'
+                   ' "Mozilla backport for {dist}." < /dev/null && ').format(
+            prefix=name.split('-', 1)[0],
+            dist=run['dist'],
         )
 
     # We can't depend on docker images (since docker images depend on packages),
@@ -151,7 +163,6 @@ def docker_worker_debian_package(config, job, taskdesc):
         )
     ]
 
-    name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
     files = [
         # This file
         'taskcluster/taskgraph/transforms/job/debian_package.py',
