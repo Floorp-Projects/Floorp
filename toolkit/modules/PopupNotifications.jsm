@@ -777,10 +777,10 @@ PopupNotifications.prototype = {
 
       // Adding an if condition to check if n.message(i.e. the notification-description-text) is a string or an object.
       if (typeof n.message == "string") {
-        popupnotification.setAttribute("startlabel", n.message);
+        popupnotification.setAttribute("label", n.message);
       } else {
         if (n.message.start) {
-          popupnotification.setAttribute("startlabel", n.message.start);
+          popupnotification.setAttribute("label", n.message.start);
         }
         if (n.message.host) {
           popupnotification.setAttribute("hostname", n.message.host);
