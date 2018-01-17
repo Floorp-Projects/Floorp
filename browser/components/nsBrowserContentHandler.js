@@ -646,7 +646,7 @@ nsBrowserContentHandler.prototype = {
     if (urlFlagIdx > -1 && (osintFlagIdx > -1 ||
         cmdLine.state == nsICommandLine.STATE_REMOTE_EXPLICIT)) {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
-      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/.test(urlParam))
+      if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/i.test(urlParam))
         throw NS_ERROR_ABORT;
       var isDefault = false;
       try {

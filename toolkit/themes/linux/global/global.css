@@ -217,10 +217,6 @@ label[disabled="true"] {
   margin: 3px 5px 4px;
 }
 
-.wizard-box {
-  padding: 20px 44px 10px;
-}
-
 .text-link {
   color: -moz-nativehyperlinktext;
   cursor: pointer;

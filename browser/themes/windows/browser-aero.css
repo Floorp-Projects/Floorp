@@ -8,7 +8,7 @@
 
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-classic: 0) {
-    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
+    #main-window[sizemode="normal"] > #navigator-toolbox > #toolbar-menubar {
       margin-top: 1px;
     }
   }
@@ -258,7 +258,7 @@
   @media (-moz-os-version: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
      * Borders for win7 are below, win10 doesn't need them. */
-    #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+    #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
       border-top: 1px solid @glassShadowColor@;
     }
   }
@@ -337,13 +337,13 @@
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
    * We use a different border for win8, and this is not necessary on win10+ */
-  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+  #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
     border-top: 1px solid @glassActiveBorderColor@;
     padding-top: 1px;
     box-shadow: 0 1px 0 rgba(255,255,255,.6) inset;
   }
 
-  #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
+  #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
     border-top-color: @glassInactiveBorderColor@;
   }
 }
@@ -359,13 +359,13 @@
     }
 
     /* Render a window top border for lwthemes: */
-    #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme {
+    #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
       background-image: linear-gradient(to bottom,
             @glassActiveBorderColor@ 0, @glassActiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
     }
 
-    #main-window[tabsintitlebar][sizemode="normal"] > #tab-view-deck > #browser-panel:-moz-lwtheme:-moz-window-inactive {
+    #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
       background-image: linear-gradient(to bottom,
             @glassInactiveBorderColor@ 0, @glassInactiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);

@@ -5,6 +5,8 @@
 
 /**
  * Tests if Request-Headers and Response-Headers are sorted in Headers tab.
+ * The test also verifies that headers with the same name and headers
+ * with an empty value are also displayed.
  */
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_SJS);
@@ -35,7 +37,8 @@ add_task(function* () {
   info("Check if Request-Headers and Response-Headers are sorted");
   let expectedResponseHeaders = ["cache-control", "connection", "content-length",
                                  "content-type", "date", "expires", "foo-bar",
-                                 "pragma", "server", "set-cookie"];
+                                 "foo-bar", "foo-bar", "pragma", "server", "set-cookie",
+                                 "set-cookie"];
   let expectedRequestHeaders = ["Accept", "Accept-Encoding", "Accept-Language",
                                 "Cache-Control", "Connection", "Cookie", "Host",
                                 "Pragma", "Upgrade-Insecure-Requests", "User-Agent"];

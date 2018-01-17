@@ -42,7 +42,7 @@ const AUTO_EXPAND_MAX_NODES = 50;
 const EDITOR_CONFIG_ID = "EDITOR_CONFIG";
 const HTML_PREVIEW_ID = "HTML_PREVIEW";
 
-/*
+/**
  * Properties View component
  * A scrollable tree view component which provides some useful features for
  * representing object properties.
@@ -57,6 +57,7 @@ class PropertiesView extends Component {
   static get propTypes() {
     return {
       object: PropTypes.object,
+      provider: PropTypes.object,
       enableInput: PropTypes.bool,
       expandableStrings: PropTypes.bool,
       filterPlaceHolder: PropTypes.string,
@@ -190,6 +191,7 @@ class PropertiesView extends Component {
       renderValue,
       sectionNames,
       openLink,
+      provider,
     } = this.props;
 
     return (
@@ -206,6 +208,7 @@ class PropertiesView extends Component {
         div({ className: "tree-container" },
           TreeView({
             object,
+            provider,
             columns: [{
               id: "value",
               width: "100%",
