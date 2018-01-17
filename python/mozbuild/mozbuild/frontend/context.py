@@ -848,9 +848,10 @@ class Schedules(object):
         elif other._exclusive == schedules.EXCLUSIVE_COMPONENTS:
             rv._exclusive = self._exclusive
         else:
-            # in a case where two SCHEDULES.exclusive set different values, take
-            # the later one; this acts the way we expect assignment to work.
-            rv._exclusive = other._exclusive
+            msg = 'Two Files sections have set SCHEDULES.exclusive to different' \
+                'values; these cannot be combined: {} and {}'
+            msg = msg.format(self._exclusive, other._exclusive)
+            raise ValueError(msg)
         return rv
 
 

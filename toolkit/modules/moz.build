@@ -165,9 +165,6 @@ TESTING_JS_MODULES += [
 
 SPHINX_TREES['toolkit_modules'] = 'docs'
 
-with Files('docs/**'):
-    SCHEDULES.exclusive = ['docs']
-
 EXTRA_JS_MODULES += [
     'addons/MatchURLFilters.jsm',
     'addons/WebNavigation.jsm',
