@@ -418,6 +418,25 @@
         ]
       },
       {
+        "name": "isEnabled",
+        "type": "function",
+        "description": "Checks whether the browser action is enabled.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "tabId": {
+                "type": "integer",
+                "optional": true,
+                "description": "Specify the tab to get the enabledness from. If no tab is specified, the non-tab-specific enabledness is returned."
+              }
+            }
+          }
+        ]
+      },
+      {
         "name": "openPopup",
         "type": "function",
         "requireUserInput": true,

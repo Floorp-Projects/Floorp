@@ -83,8 +83,7 @@ class WaterfallBackground {
       optimalTickIntervalFound = true;
     }
 
-    const isRTL = document.defaultView
-      .getComputedStyle(document.documentElement).direction === "rtl";
+    const isRTL = document.dir === "rtl";
     const [r, g, b] = REQUESTS_WATERFALL.BACKGROUND_TICKS_COLOR_RGB;
     let alphaComponent = REQUESTS_WATERFALL.BACKGROUND_TICKS_OPACITY_MIN;
 

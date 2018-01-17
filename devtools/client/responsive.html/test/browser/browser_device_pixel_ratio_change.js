@@ -24,27 +24,27 @@ const testDevice = {
 // Add the new device to the list
 addDeviceForTest(testDevice);
 
-addRDMTask(TEST_URL, function* ({ ui, manager }) {
-  yield waitStartup(ui);
+addRDMTask(TEST_URL, async function ({ ui, manager }) {
+  await waitStartup(ui);
 
-  yield testDefaults(ui);
-  yield testChangingDevice(ui);
-  yield testResetWhenResizingViewport(ui);
-  yield testChangingDevicePixelRatio(ui);
+  await testDefaults(ui);
+  await testChangingDevice(ui);
+  await testResetWhenResizingViewport(ui);
+  await testChangingDevicePixelRatio(ui);
 });
 
-function* waitStartup(ui) {
+async function waitStartup(ui) {
   let { store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 }
 
-function* testDefaults(ui) {
+async function testDefaults(ui) {
   info("Test Defaults");
 
-  yield testDevicePixelRatio(ui, window.devicePixelRatio);
+  await testDevicePixelRatio(ui, window.devicePixelRatio);
   testViewportDevicePixelRatioSelect(ui, {
     value: window.devicePixelRatio,
     disabled: false,
@@ -52,15 +52,15 @@ function* testDefaults(ui) {
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
-function* testChangingDevice(ui) {
+async function testChangingDevice(ui) {
   info("Test Changing Device");
 
   let waitPixelRatioChange = onceDevicePixelRatioChange(ui);
 
-  yield selectDevice(ui, testDevice.name);
-  yield waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
-  yield waitPixelRatioChange;
-  yield testDevicePixelRatio(ui, testDevice.pixelRatio);
+  await selectDevice(ui, testDevice.name);
+  await waitForViewportResizeTo(ui, testDevice.width, testDevice.height);
+  await waitPixelRatioChange;
+  await testDevicePixelRatio(ui, testDevice.pixelRatio);
   testViewportDevicePixelRatioSelect(ui, {
     value: testDevice.pixelRatio,
     disabled: true,
@@ -68,18 +68,18 @@ function* testChangingDevice(ui) {
   testViewportDeviceSelectLabel(ui, testDevice.name);
 }
 
-function* testResetWhenResizingViewport(ui) {
+async function testResetWhenResizingViewport(ui) {
   info("Test reset when resizing the viewport");
 
   let waitPixelRatioChange = onceDevicePixelRatioChange(ui);
 
   let deviceRemoved = once(ui, "device-association-removed");
-  yield testViewportResize(ui, ".viewport-vertical-resize-handle",
+  await testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
-  yield deviceRemoved;
+  await deviceRemoved;
 
-  yield waitPixelRatioChange;
-  yield testDevicePixelRatio(ui, window.devicePixelRatio);
+  await waitPixelRatioChange;
+  await testDevicePixelRatio(ui, window.devicePixelRatio);
 
   testViewportDevicePixelRatioSelect(ui, {
     value: window.devicePixelRatio,
@@ -88,14 +88,14 @@ function* testResetWhenResizingViewport(ui) {
   testViewportDeviceSelectLabel(ui, "no device selected");
 }
 
-function* testChangingDevicePixelRatio(ui) {
+async function testChangingDevicePixelRatio(ui) {
   info("Test changing device pixel ratio");
 
   let waitPixelRatioChange = onceDevicePixelRatioChange(ui);
 
-  yield selectDevicePixelRatio(ui, VIEWPORT_DPPX);
-  yield waitPixelRatioChange;
-  yield testDevicePixelRatio(ui, VIEWPORT_DPPX);
+  await selectDevicePixelRatio(ui, VIEWPORT_DPPX);
+  await waitPixelRatioChange;
+  await testDevicePixelRatio(ui, VIEWPORT_DPPX);
   testViewportDevicePixelRatioSelect(ui, {
     value: VIEWPORT_DPPX,
     disabled: false,
@@ -114,21 +114,15 @@ function testViewportDevicePixelRatioSelect(ui, expected) {
     `DevicePixelRatio Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
 }
 
-function* testDevicePixelRatio(ui, expected) {
+async function testDevicePixelRatio(ui, expected) {
   info("Test device pixel ratio");
 
-  let dppx = yield getViewportDevicePixelRatio(ui);
+  let dppx = await getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be: ${expected}`);
 }
 
-function* getViewportDevicePixelRatio(ui) {
-  return yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    return content.devicePixelRatio;
-  });
-}
-
 function onceDevicePixelRatioChange(ui) {
-  return ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
     info(`Listening for a pixel ratio change (current: ${content.devicePixelRatio}dppx)`);
 
     let pixelRatio = content.devicePixelRatio;

@@ -3,16 +3,16 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function () {
   let newWindowPromise = BrowserTestUtils.waitForNewWindow();
   window.open("data:text/html;charset=utf-8,", "_blank");
-  let newWindow = yield newWindowPromise;
+  let newWindow = await newWindowPromise;
 
   newWindow.focus();
-  yield BrowserTestUtils.browserLoaded(newWindow.gBrowser.selectedBrowser);
+  await BrowserTestUtils.browserLoaded(newWindow.gBrowser.selectedBrowser);
 
   let tab = newWindow.gBrowser.selectedTab;
-  yield openRDM(tab);
+  await openRDM(tab);
 
   // Close the window on a tab with an active responsive design UI and
   // wait for the UI to gracefully shutdown.  This has leaked the window
@@ -20,6 +20,6 @@ add_task(function* () {
   ok(ResponsiveUIManager.isActiveForTab(tab),
      "ResponsiveUI should be active for tab when the window is closed");
   let offPromise = once(ResponsiveUIManager, "off");
-  yield BrowserTestUtils.closeWindow(newWindow);
-  yield offPromise;
+  await BrowserTestUtils.closeWindow(newWindow);
+  await offPromise;
 });

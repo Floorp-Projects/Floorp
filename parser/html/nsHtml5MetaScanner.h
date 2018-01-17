@@ -120,17 +120,14 @@ private:
 
 protected:
   nsHtml5ByteReadable* readable;
-
 private:
   int32_t metaState;
   int32_t contentIndex;
   int32_t charsetIndex;
   int32_t httpEquivIndex;
   int32_t contentTypeIndex;
-
 protected:
   int32_t stateSave;
-
 private:
   int32_t strBufLen;
   autoJArray<char16_t, int32_t> strBuf;
@@ -138,14 +135,11 @@ private:
   nsHtml5String charset;
   int32_t httpEquivState;
   nsHtml5TreeBuilder* treeBuilder;
-
 public:
   explicit nsHtml5MetaScanner(nsHtml5TreeBuilder* tb);
   ~nsHtml5MetaScanner();
-
 protected:
   void stateLoop(int32_t state);
-
 private:
   void handleCharInAttributeValue(int32_t c);
   inline int32_t toAsciiLowerCase(int32_t c)
@@ -160,10 +154,8 @@ private:
   void handleAttributeValue();
   bool handleTag();
   bool handleTagInner();
-
 protected:
   bool tryCharset(nsHtml5String encoding);
-
 public:
   static void initializeStatics();
   static void releaseStatics();

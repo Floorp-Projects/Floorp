@@ -134,6 +134,7 @@ public:
 
     wr::GlyphOptions glyphOptions;
     glyphOptions.render_mode = wr::ToFontRenderMode(aOptions.mAntialiasMode, GetPermitSubpixelAA());
+    glyphOptions.flags = 0;
 
     mManager->WrBridge()->PushGlyphs(mBuilder, glyphs, aFont,
                                      color, mSc, mBoundsRect, mClipRect,

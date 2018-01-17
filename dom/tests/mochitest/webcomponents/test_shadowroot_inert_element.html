@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 SimpleTest.waitForExplicitFinish();
 
 var content = '<div id="grabme"></div>';
-setWebComponentsPrefAndCreateIframe(content)
+setShadowDOMPrefAndCreateIframe(content)
   .then((aDocument) => {
     function runChecks() {
       isnot(aDocument.defaultView.getComputedStyle(shadowSpan, null).getPropertyValue("padding-top"), "10px", "Link element should be inert.");

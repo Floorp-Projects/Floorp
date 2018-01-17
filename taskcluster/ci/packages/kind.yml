@@ -42,6 +42,17 @@ jobs:
         sha256: 406a12c0d0a2e92d44a8d444fd1b32bcc29a8810e9631427161a7cb411f60172
       patch: cmake-wheezy.diff
 
+  deb7-make:
+    description: "Make backport for Debian wheezy"
+    treeherder:
+      symbol: Deb7(make)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20150121T220334Z/pool/main/m/make-dfsg/make-dfsg_4.0-8.1.dsc
+        sha256: ae258d9abb68e756d1ff5195dc3060748b3d4b019ccce19a249d4de23039a0ce
+      patch: make-wheezy.diff
+
   deb7-ninja:
     description: "Ninja backport for Debian wheezy"
     treeherder:

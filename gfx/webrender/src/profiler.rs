@@ -944,6 +944,7 @@ impl Profiler {
                 &renderer_profile.color_targets,
                 &renderer_profile.alpha_targets,
                 &renderer_profile.draw_calls,
+                &renderer_profile.vertices,
                 &self.backend_time,
                 &self.compositor_time,
                 &self.gpu_time,

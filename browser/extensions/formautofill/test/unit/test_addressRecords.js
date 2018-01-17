@@ -5,6 +5,7 @@
 "use strict";
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
+const COLLECTION_NAME = "addresses";
 
 const TEST_ADDRESS_1 = {
   "given-name": "Timothy",
@@ -378,7 +379,9 @@ add_task(async function test_update() {
   let onChanged = TestUtils.topicObserved(
     "formautofill-storage-changed",
     (subject, data) =>
-      data == "update" && subject.QueryInterface(Ci.nsISupportsString).data == guid
+      data == "update" &&
+      subject.wrappedJSObject.guid == guid &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
   );
 
   Assert.notEqual(addresses[1].country, undefined);
@@ -491,8 +494,12 @@ add_task(async function test_remove() {
   let addresses = profileStorage.addresses.getAll();
   let guid = addresses[1].guid;
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "remove");
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) =>
+      data == "remove" &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
+  );
 
   Assert.equal(addresses.length, 2);
 
@@ -519,7 +526,9 @@ MERGE_TESTCASES.forEach((testcase) => {
     let onMerged = TestUtils.topicObserved(
       "formautofill-storage-changed",
       (subject, data) =>
-        data == "update" && subject.QueryInterface(Ci.nsISupportsString).data == guid
+        data == "update" &&
+        subject.wrappedJSObject.guid == guid &&
+        subject.wrappedJSObject.collectionName == COLLECTION_NAME
     );
 
     // Force to create sync metadata.

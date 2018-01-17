@@ -116,7 +116,7 @@ DocumentOrShadowRoot::GetRetargetedFocusedElement()
       }
 
       if (focusedContent) {
-        if (!nsDocument::IsWebComponentsEnabled(focusedContent)) {
+        if (!nsDocument::IsShadowDOMEnabled(focusedContent)) {
           return focusedContent->AsElement();
         }
 

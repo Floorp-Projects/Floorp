@@ -206,7 +206,7 @@ impl TextureCache {
         TextureCache {
             max_texture_size,
             array_a8_linear: TextureArray::new(
-                ImageFormat::A8,
+                ImageFormat::R8,
                 TextureFilter::Linear,
                 TEXTURE_ARRAY_LAYERS_LINEAR,
             ),
@@ -284,7 +284,7 @@ impl TextureCache {
         handle: &mut TextureCacheHandle,
         descriptor: ImageDescriptor,
         filter: TextureFilter,
-        data: ImageData,
+        data: Option<ImageData>,
         user_data: [f32; 3],
         mut dirty_rect: Option<DeviceUintRect>,
         gpu_cache: &mut GpuCache,
@@ -337,25 +337,27 @@ impl TextureCache {
         // Create an update command, which the render thread processes
         // to upload the new image data into the correct location
         // in GPU memory.
-        let (layer_index, origin) = match entry.kind {
-            EntryKind::Standalone { .. } => (0, DeviceUintPoint::zero()),
-            EntryKind::Cache {
-                layer_index,
-                origin,
-                ..
-            } => (layer_index, origin),
-        };
+        if let Some(data) = data {
+            let (layer_index, origin) = match entry.kind {
+                EntryKind::Standalone { .. } => (0, DeviceUintPoint::zero()),
+                EntryKind::Cache {
+                    layer_index,
+                    origin,
+                    ..
+                } => (layer_index, origin),
+            };
 
-        let op = TextureUpdate::new_update(
-            data,
-            &descriptor,
-            origin,
-            entry.size,
-            entry.texture_id,
-            layer_index as i32,
-            dirty_rect,
-        );
-        self.pending_updates.push(op);
+            let op = TextureUpdate::new_update(
+                data,
+                &descriptor,
+                origin,
+                entry.size,
+                entry.texture_id,
+                layer_index as i32,
+                dirty_rect,
+            );
+            self.pending_updates.push(op);
+        }
     }
 
     // Get a specific region by index from a shared texture array.
@@ -365,16 +367,24 @@ impl TextureCache {
         region_index: u16
     ) -> &mut TextureRegion {
         let texture_array = match (format, filter) {
-            (ImageFormat::A8, TextureFilter::Linear) => &mut self.array_a8_linear,
+            (ImageFormat::R8, TextureFilter::Linear) => &mut self.array_a8_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::Invalid, _) |
             (ImageFormat::RGBAF32, _) |
             (ImageFormat::RG8, _) |
-            (ImageFormat::A8, TextureFilter::Nearest) => unreachable!(),
+            (ImageFormat::R8, TextureFilter::Nearest) => unreachable!(),
         };
 
         &mut texture_array.regions[region_index as usize]
+    }
+
+    // Check if a given texture handle has a valid allocation
+    // in the texture cache.
+    pub fn is_allocated(&self, handle: &TextureCacheHandle) -> bool {
+        handle.entry.as_ref().map_or(false, |handle| {
+            self.entries.get_opt(handle).is_some()
+        })
     }
 
     // Retrieve the details of an item in the cache. This is used
@@ -396,6 +406,36 @@ impl TextureCache {
             }
             None => panic!("BUG: handle not requested earlier in frame"),
         }
+    }
+
+    // A more detailed version of get(). This allows access to the actual
+    // device rect of the cache allocation.
+    pub fn get_cache_location(
+        &self,
+        handle: &TextureCacheHandle,
+    ) -> (SourceTexture, i32, DeviceUintRect) {
+        let handle = handle
+            .entry
+            .as_ref()
+            .expect("BUG: handle not requested earlier in frame");
+
+        let entry = self.entries
+            .get_opt(handle)
+            .expect("BUG: was dropped from cache or not updated!");
+        debug_assert_eq!(entry.last_access, self.frame_id);
+        let (layer_index, origin) = match entry.kind {
+            EntryKind::Standalone { .. } => {
+                (0, DeviceUintPoint::zero())
+            }
+            EntryKind::Cache {
+                layer_index,
+                origin,
+                ..
+            } => (layer_index, origin),
+        };
+        (SourceTexture::TextureCache(entry.texture_id),
+         layer_index as i32,
+         DeviceUintRect::new(origin, entry.size))
     }
 
     // Expire old standalone textures.
@@ -470,7 +510,7 @@ impl TextureCache {
         // want to evict everything we can, since that will result in
         // more items being uploaded than necessary.
         // Instead, we say we will keep evicting until both of these
-        // consitions are met:
+        // conditions are met:
         // - We have evicted some arbitrary number of items (512 currently).
         //   AND
         // - We have freed an item that will definitely allow us to
@@ -537,12 +577,12 @@ impl TextureCache {
     ) -> Option<CacheEntry> {
         // Work out which cache it goes in, based on format.
         let texture_array = match (descriptor.format, filter) {
-            (ImageFormat::A8, TextureFilter::Linear) => &mut self.array_a8_linear,
+            (ImageFormat::R8, TextureFilter::Linear) => &mut self.array_a8_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
             (ImageFormat::Invalid, _) |
             (ImageFormat::RGBAF32, _) |
-            (ImageFormat::A8, TextureFilter::Nearest) |
+            (ImageFormat::R8, TextureFilter::Nearest) |
             (ImageFormat::RG8, _) => unreachable!(),
         };
 

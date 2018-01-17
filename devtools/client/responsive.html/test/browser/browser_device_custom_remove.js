@@ -24,14 +24,14 @@ const device2 = Object.assign({}, device, {
   name: "Test Device 2",
 });
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   info("Verify that remove buttons affect the correct device");
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");
@@ -44,14 +44,14 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   adderShow.click();
 
   info("Add test device 1");
-  yield addDeviceInModal(ui, device1);
+  await addDeviceInModal(ui, device1);
 
   info("Reveal device adder form");
   adderShow = document.querySelector("#device-adder-show");
   adderShow.click();
 
   info("Add test device 2");
-  yield addDeviceInModal(ui, device2);
+  await addDeviceInModal(ui, device2);
 
   info("Verify all custom devices default to enabled in modal");
   let deviceCbs =
@@ -77,7 +77,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   is(deviceRemoveButtons.length, 2, "Both devices have a remove button in modal");
   let removed = waitUntilState(store, state => state.devices.custom.length == 1);
   deviceRemoveButtons[1].click();
-  yield removed;
+  await removed;
   submitButton.click();
 
   info("Ensure device 1 is still in device selector");
@@ -89,12 +89,12 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   ok(!deviceOption2, "Test device 2 option removed");
 });
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");

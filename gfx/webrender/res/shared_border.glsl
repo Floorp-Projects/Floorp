@@ -47,7 +47,7 @@ vec4 get_effective_border_widths(Border border, int style) {
             // for now - we can adjust this if we find other browsers pick
             // different values in some cases.
             // SEE: https://drafts.csswg.org/css-backgrounds-3/#double
-            return floor(0.5 + border.widths / 3.0);
+            return max(floor(0.5 + border.widths / 3.0), 1.0);
         case BORDER_STYLE_GROOVE:
         case BORDER_STYLE_RIDGE:
             return floor(0.5 + border.widths * 0.5);

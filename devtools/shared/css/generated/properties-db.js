@@ -8529,6 +8529,7 @@ exports.CSS_PROPERTIES = {
       "initial",
       "justify",
       "left",
+      "match-parent",
       "right",
       "start",
       "unset"

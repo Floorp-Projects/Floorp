@@ -17,7 +17,7 @@ class GentooBootstrapper(StyloInstall, BaseBootstrapper):
 
     def install_system_packages(self):
         self.run_as_root(['emerge', '--noreplace', '--quiet', 'dev-vcs/git',
-                          'mercurial', 'node'])
+                          'mercurial', 'nodejs'])
 
     def install_browser_packages(self):
         self.ensure_browser_packages()

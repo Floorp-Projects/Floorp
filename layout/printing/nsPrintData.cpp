@@ -38,7 +38,6 @@ nsPrintData::nsPrintData(ePrintDataType aType)
   , mNumPrintablePages(0)
   , mNumPagesPrinted(0)
   , mShrinkRatio(1.0)
-  , mOrigDCScale(1.0)
   , mPPEventListeners(nullptr)
 {
   nsCOMPtr<nsIStringBundle> brandBundle;

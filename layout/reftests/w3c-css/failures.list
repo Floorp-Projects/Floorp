@@ -269,10 +269,10 @@ fails css-multicol-1/multicol-rule-px-001.xht
 fuzzy(127,500) css-multicol-1/multicol-rule-ridge-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-solid-000.xht
 fails css-multicol-1/multicol-rule-stacking-001.xht
-fails-if(webrender) css-multicol-1/multicol-rule-style-groove-001.xht
-fails-if(webrender) css-multicol-1/multicol-rule-style-inset-001.xht
-fails-if(webrender) css-multicol-1/multicol-rule-style-outset-001.xht
-fails-if(webrender) css-multicol-1/multicol-rule-style-ridge-001.xht
+css-multicol-1/multicol-rule-style-groove-001.xht
+css-multicol-1/multicol-rule-style-inset-001.xht
+css-multicol-1/multicol-rule-style-outset-001.xht
+css-multicol-1/multicol-rule-style-ridge-001.xht
 fails css-multicol-1/multicol-shorthand-001.xht
 fails css-multicol-1/multicol-span-000.xht
 fails css-multicol-1/multicol-span-all-001.xht

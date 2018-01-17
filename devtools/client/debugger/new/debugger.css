@@ -1568,7 +1568,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .outline-list {
   list-style-type: none;
   width: 100%;
-  padding: 10px;
+  padding: 10px 0px;
   margin: 0;
 }
 
@@ -1581,7 +1581,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 .outline-list h2 {
   font-weight: normal;
   font-size: 1em;
-  margin: 10px 0;
+  margin: 10px 0 10px 10px;
   color: var(--theme-body-color);
 }
 
@@ -1595,6 +1595,10 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .outline-list__element:hover {
   background: var(--theme-toolbar-background-hover);
+}
+
+.outline-list__element .function {
+  padding-left: 10px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2849,14 +2853,38 @@ html .breakpoints-list .breakpoint.paused {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.expression-input-form {
+  width: 100%;
+}
+
 .input-expression {
   width: 100%;
-  margin: 0px;
+  margin: 0;
   border: 1px;
   background-color: var(--theme-sidebar-background);
   font-size: 12px;
-  padding: 0px 20px;
+  padding: 0.5em 2.16em;
   color: var(--theme-body-color);
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+.input-expression.error {
+  border: 1px solid red;
+  animation: 150ms cubic-bezier(0.07, 0.95, 0, 1) shake;
 }
 
 .input-expression::placeholder {
@@ -2877,7 +2905,6 @@ html .breakpoints-list .breakpoint.paused {
   padding: 0;
 }
 .expression-input-container {
-  padding: 0.5em;
   display: flex;
 }
 
@@ -3367,6 +3394,7 @@ html[dir="rtl"] .dropdown {
   padding: 0px 2px;
   position: relative;
   align-self: center;
+  height: 100%;
 }
 
 .dropdown-button {
@@ -3376,6 +3404,8 @@ html[dir="rtl"] .dropdown {
   padding: 0;
   font-weight: 100;
   font-size: 14px;
+  height: 100%;
+  width: 24px;
 }
 
 .dropdown li {
@@ -3396,6 +3426,7 @@ html[dir="rtl"] .dropdown {
   height: var(--icon-size);
   margin-right: 5px;
   vertical-align: middle;
+  display: inline-block;
 }
 
 .dropdown-icon.prettyPrint {

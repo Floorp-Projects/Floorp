@@ -35,17 +35,17 @@ this.AppMenu = {
 
     appMenuHistorySubview: {
       selectors: ["#appMenu-popup"],
-      applyConfig() {
+      async applyConfig() {
         // History has a footer
         if (isCustomizing()) {
-          return Promise.reject("Can't show subviews while customizing");
+          return "Can't show subviews while customizing";
         }
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let promise = browserWindow.PanelUI.show();
-        return promise.then(() => {
-          browserWindow.PanelUI.showMainView();
-          browserWindow.document.getElementById("history-panelmenu").click();
-        });
+        await browserWindow.PanelUI.show();
+        browserWindow.PanelUI.showMainView();
+        browserWindow.document.getElementById("history-panelmenu").click();
+
+        return undefined;
       },
 
       verifyConfig: verifyConfigHelper,
@@ -53,16 +53,16 @@ this.AppMenu = {
 
     appMenuHelpSubview: {
       selectors: ["#appMenu-popup"],
-      applyConfig() {
+      async applyConfig() {
         if (isCustomizing()) {
-          return Promise.reject("Can't show subviews while customizing");
+          return "Can't show subviews while customizing";
         }
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let promise = browserWindow.PanelUI.show();
-        return promise.then(() => {
-          browserWindow.PanelUI.showMainView();
-          browserWindow.document.getElementById("PanelUI-help").click();
-        });
+        await browserWindow.PanelUI.show();
+        browserWindow.PanelUI.showMainView();
+        browserWindow.document.getElementById("PanelUI-help").click();
+
+        return undefined;
       },
 
       verifyConfig: verifyConfigHelper,
@@ -73,9 +73,9 @@ this.AppMenu = {
 
 function verifyConfigHelper() {
   if (isCustomizing()) {
-    return Promise.reject("AppMenu verifyConfigHelper");
+    return "navigator:browser has the customizing attribute";
   }
-  return Promise.resolve("AppMenu verifyConfigHelper");
+  return undefined;
 }
 
 function isCustomizing() {

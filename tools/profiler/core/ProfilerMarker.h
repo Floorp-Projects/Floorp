@@ -22,6 +22,7 @@ class ProfilerMarker
 
 public:
   explicit ProfilerMarker(const char* aMarkerName,
+                          int aThreadId,
                           mozilla::UniquePtr<ProfilerMarkerPayload>
                             aPayload = nullptr,
                           double aTime = 0)
@@ -30,6 +31,7 @@ public:
     , mNext{nullptr}
     , mTime(aTime)
     , mGenID{0}
+    , mThreadId{aThreadId}
     {}
 
   void SetGeneration(uint32_t aGenID) { mGenID = aGenID; }
@@ -37,6 +39,8 @@ public:
   bool HasExpired(uint32_t aGenID) const { return mGenID + 2 <= aGenID; }
 
   double GetTime() const { return mTime; }
+
+  int GetThreadId() const { return mThreadId; }
 
   void StreamJSON(SpliceableJSONWriter& aWriter,
                   const mozilla::TimeStamp& aProcessStartTime,
@@ -69,6 +73,7 @@ private:
   ProfilerMarker* mNext;
   double mTime;
   uint32_t mGenID;
+  int mThreadId;
 };
 
 template<typename T>

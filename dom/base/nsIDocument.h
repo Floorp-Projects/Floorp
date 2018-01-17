@@ -3178,9 +3178,9 @@ public:
   virtual bool AllowPaymentRequest() const = 0;
   virtual void SetAllowPaymentRequest(bool aAllowPaymentRequest) = 0;
 
-  bool IsWebComponentsEnabled() const
+  bool IsShadowDOMEnabled() const
   {
-    return mIsWebComponentsEnabled;
+    return mIsShadowDOMEnabled;
   }
 
   bool ModuleScriptsEnabled();
@@ -3538,8 +3538,9 @@ protected:
   // True if the encoding menu should be disabled.
   bool mEncodingMenuDisabled : 1;
 
-  // True if dom.webcomponents.enabled pref is set when document is created.
-  bool mIsWebComponentsEnabled : 1;
+  // True if dom.webcomponents.shadowdom.enabled pref is set when document is
+  // created.
+  bool mIsShadowDOMEnabled : 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };

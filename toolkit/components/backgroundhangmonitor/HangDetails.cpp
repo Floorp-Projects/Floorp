@@ -5,8 +5,9 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/GfxMessageUtils.h" // For ParamTraits<GeckoProcessType>
+
 #ifdef MOZ_GECKO_PROFILER
-#include "ProfilerMarkerPayload.h"
+#include "shared-libraries.h"
 #endif
 
 namespace mozilla {
@@ -14,35 +15,35 @@ namespace mozilla {
 NS_IMETHODIMP
 nsHangDetails::GetDuration(uint32_t* aDuration)
 {
-  *aDuration = mDetails.mDuration;
+  *aDuration = mDetails.duration();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHangDetails::GetThread(nsACString& aName)
 {
-  aName.Assign(mDetails.mThreadName);
+  aName.Assign(mDetails.threadName());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHangDetails::GetRunnableName(nsACString& aRunnableName)
 {
-  aRunnableName.Assign(mDetails.mRunnableName);
+  aRunnableName.Assign(mDetails.runnableName());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHangDetails::GetProcess(nsACString& aName)
 {
-  aName.AssignASCII(XRE_ChildProcessTypeToString(mDetails.mProcess));
+  aName.Assign(mDetails.process());
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHangDetails::GetRemoteType(nsAString& aName)
 {
-  aName.Assign(mDetails.mRemoteType);
+  aName.Assign(mDetails.remoteType());
   return NS_OK;
 }
 
@@ -56,14 +57,14 @@ nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (auto& annot : mDetails.mAnnotations) {
-    JSString* jsString = JS_NewUCStringCopyN(aCx, annot.mValue.get(), annot.mValue.Length());
+  for (auto& annot : mDetails.annotations()) {
+    JSString* jsString = JS_NewUCStringCopyN(aCx, annot.value().get(), annot.value().Length());
     if (!jsString) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     JS::RootedValue jsValue(aCx);
     jsValue.setString(jsString);
-    if (!JS_DefineUCProperty(aCx, jsAnnotation, annot.mName.get(), annot.mName.Length(),
+    if (!JS_DefineUCProperty(aCx, jsAnnotation, annot.name().get(), annot.name().Length(),
                              jsValue, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -98,32 +99,63 @@ StringFrame(JSContext* aCx,
 } // anonymous namespace
 
 NS_IMETHODIMP
-nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
+nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandleValue aStack)
 {
-  JS::RootedObject ret(aCx, JS_NewArrayObject(aCx, mDetails.mStack.length()));
+  auto& stack = mDetails.stack();
+  uint32_t length = stack.stack().Length();
+  JS::RootedObject ret(aCx, JS_NewArrayObject(aCx, length));
   if (!ret) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  for (size_t i = 0; i < mDetails.mStack.length(); ++i) {
-    const HangStack::Frame& frame = mDetails.mStack[i];
-    switch (frame.GetKind()) {
-      case HangStack::Frame::Kind::STRING: {
-        nsresult rv = StringFrame(aCx, ret, i, frame.AsString());
+
+  for (uint32_t i = 0; i < length; ++i) {
+    auto& entry = stack.stack()[i];
+    switch (entry.type()) {
+      case HangEntry::TnsCString: {
+        nsresult rv = StringFrame(aCx, ret, i, entry.get_nsCString().get());
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
+      case HangEntry::THangEntryBufOffset: {
+        uint32_t offset = entry.get_HangEntryBufOffset().index();
 
-      case HangStack::Frame::Kind::MODOFFSET: {
+        // NOTE: We can't trust the offset we got, as we might have gotten it
+        // from a compromised content process. Validate that it is in bounds.
+        if (NS_WARN_IF(stack.strbuffer().IsEmpty() ||
+                       offset >= stack.strbuffer().Length())) {
+          MOZ_ASSERT_UNREACHABLE("Corrupted offset data");
+          return NS_ERROR_FAILURE;
+        }
+
+        // NOTE: If our content process is compromised, it could send us back a
+        // strbuffer() which didn't have a null terminator. If the last byte in
+        // the buffer is not '\0', we abort, to make sure we don't read out of
+        // bounds.
+        if (stack.strbuffer().LastElement() != '\0') {
+          MOZ_ASSERT_UNREACHABLE("Corrupted strbuffer data");
+          return NS_ERROR_FAILURE;
+        }
+
+        // We know this offset is safe because of the previous checks.
+        const int8_t* start = stack.strbuffer().Elements() + offset;
+        nsresult rv = StringFrame(aCx, ret, i,
+                                  reinterpret_cast<const char*>(start));
+        NS_ENSURE_SUCCESS(rv, rv);
+        break;
+      }
+      case HangEntry::THangEntryModOffset: {
+        const HangEntryModOffset& mo = entry.get_HangEntryModOffset();
+
         JS::RootedObject jsFrame(aCx, JS_NewArrayObject(aCx, 2));
         if (!jsFrame) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        if (!JS_DefineElement(aCx, jsFrame, 0, frame.AsModOffset().mModule, JSPROP_ENUMERATE)) {
+        if (!JS_DefineElement(aCx, jsFrame, 0, mo.module(), JSPROP_ENUMERATE)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        nsPrintfCString hexString("%" PRIxPTR, (uintptr_t)frame.AsModOffset().mOffset);
+        nsPrintfCString hexString("%" PRIxPTR, (uintptr_t)mo.offset());
         JS::RootedString hex(aCx, JS_NewStringCopyZ(aCx, hexString.get()));
         if (!hex || !JS_DefineElement(aCx, jsFrame, 1, hex, JSPROP_ENUMERATE)) {
           return NS_ERROR_OUT_OF_MEMORY;
@@ -134,67 +166,49 @@ nsHangDetails::GetStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
         }
         break;
       }
-
-      case HangStack::Frame::Kind::PC: {
-        JS::RootedObject jsFrame(aCx, JS_NewArrayObject(aCx, 2));
-        if (!jsFrame) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        if (!JS_DefineElement(aCx, jsFrame, 0, -1, JSPROP_ENUMERATE)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        nsPrintfCString hexString("%" PRIxPTR, frame.AsPC());
-        JS::RootedString hex(aCx, JS_NewStringCopyZ(aCx, hexString.get()));
-        if (!hex || !JS_DefineElement(aCx, jsFrame, 1, hex, JSPROP_ENUMERATE)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        if (!JS_DefineElement(aCx, ret, i, jsFrame, JSPROP_ENUMERATE)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+      case HangEntry::THangEntryProgCounter: {
+        // Don't bother recording fixed program counters to JS
+        nsresult rv = StringFrame(aCx, ret, i, "(unresolved)");
+        NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-
-      case HangStack::Frame::Kind::CONTENT: {
+      case HangEntry::THangEntryContent: {
         nsresult rv = StringFrame(aCx, ret, i, "(content script)");
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-
-      case HangStack::Frame::Kind::JIT: {
+      case HangEntry::THangEntryJit: {
         nsresult rv = StringFrame(aCx, ret, i, "(jit frame)");
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-
-      case HangStack::Frame::Kind::WASM: {
+      case HangEntry::THangEntryWasm: {
         nsresult rv = StringFrame(aCx, ret, i, "(wasm)");
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-
-      case HangStack::Frame::Kind::SUPPRESSED: {
+      case HangEntry::THangEntryChromeScript: {
+        nsresult rv = StringFrame(aCx, ret, i, "(chrome script)");
+        NS_ENSURE_SUCCESS(rv, rv);
+        break;
+      }
+      case HangEntry::THangEntrySuppressed: {
         nsresult rv = StringFrame(aCx, ret, i, "(profiling suppressed)");
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       }
-
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid variant");
-        break;
+      default: MOZ_CRASH("Unsupported HangEntry type?");
     }
   }
 
-  aVal.setObject(*ret);
+  aStack.setObject(*ret);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
 {
-  auto& modules = mDetails.mStack.GetModules();
+  auto& modules = mDetails.stack().modules();
   size_t length = modules.Length();
   JS::RootedObject retObj(aCx, JS_NewArrayObject(aCx, length));
   if (!retObj) {
@@ -202,18 +216,22 @@ nsHangDetails::GetModules(JSContext* aCx, JS::MutableHandleValue aVal)
   }
 
   for (size_t i = 0; i < length; ++i) {
-    const HangStack::Module& module = modules[i];
+    const HangModule& module = modules[i];
     JS::RootedObject jsModule(aCx, JS_NewArrayObject(aCx, 2));
     if (!jsModule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS::RootedString name(aCx, JS_NewUCStringCopyN(aCx, module.mName.BeginReading(), module.mName.Length()));
+    JS::RootedString name(aCx, JS_NewUCStringCopyN(aCx,
+                                                   module.name().BeginReading(),
+                                                   module.name().Length()));
     if (!JS_DefineElement(aCx, jsModule, 0, name, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS::RootedString breakpadId(aCx, JS_NewStringCopyN(aCx, module.mBreakpadId.BeginReading(), module.mBreakpadId.Length()));
+    JS::RootedString breakpadId(aCx, JS_NewStringCopyN(aCx,
+                                                       module.breakpadId().BeginReading(),
+                                                       module.breakpadId().Length()));
     if (!JS_DefineElement(aCx, jsModule, 1, breakpadId, JSPROP_ENUMERATE)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -247,7 +265,7 @@ nsHangDetails::Submit()
     case GeckoProcessType_Content: {
       auto cc = dom::ContentChild::GetSingleton();
       if (cc) {
-        hangDetails->mDetails.mRemoteType.Assign(cc->GetRemoteType());
+        hangDetails->mDetails.remoteType().Assign(cc->GetRemoteType());
         Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
       }
       break;
@@ -272,16 +290,6 @@ nsHangDetails::Submit()
       NS_WARNING("Unsupported BHR process type - discarding hang.");
       break;
     }
-#ifdef MOZ_GECKO_PROFILER
-    if (profiler_is_active()) {
-      TimeStamp endTime = hangDetails->mDetails.mEndTime;
-      TimeStamp startTime = endTime -
-                            TimeDuration::FromMilliseconds(hangDetails->mDetails.mDuration);
-      profiler_add_marker(
-        "BHR-detected hang",
-        MakeUnique<HangMarkerPayload>(startTime, endTime));
-    }
-#endif
   });
 
   nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
@@ -291,12 +299,88 @@ nsHangDetails::Submit()
 
 NS_IMPL_ISUPPORTS(nsHangDetails, nsIHangDetails)
 
+namespace {
+
+// Sorting comparator used by ReadModuleInformation. Sorts PC Frames by their
+// PC.
+struct PCFrameComparator {
+  bool LessThan(HangEntry* const& a, HangEntry* const& b) const {
+    return a->get_HangEntryProgCounter().pc() < b->get_HangEntryProgCounter().pc();
+  }
+  bool Equals(HangEntry* const& a, HangEntry* const& b) const {
+    return a->get_HangEntryProgCounter().pc() == b->get_HangEntryProgCounter().pc();
+  }
+};
+
+} // anonymous namespace
+
+void
+ReadModuleInformation(HangStack& stack)
+{
+  // modules() should be empty when we start filling it.
+  stack.modules().Clear();
+
+#ifdef MOZ_GECKO_PROFILER
+  // Create a sorted list of the PCs in the current stack.
+  AutoTArray<HangEntry*, 100> frames;
+  for (auto& frame : stack.stack()) {
+    if (frame.type() == HangEntry::THangEntryProgCounter) {
+      frames.AppendElement(&frame);
+    }
+  }
+  PCFrameComparator comparator;
+  frames.Sort(comparator);
+
+  SharedLibraryInfo rawModules = SharedLibraryInfo::GetInfoForSelf();
+  rawModules.SortByAddress();
+
+  size_t frameIdx = 0;
+  for (size_t i = 0; i < rawModules.GetSize(); ++i) {
+    const SharedLibrary& info = rawModules.GetEntry(i);
+    uintptr_t moduleStart = info.GetStart();
+    uintptr_t moduleEnd = info.GetEnd() - 1;
+    // the interval is [moduleStart, moduleEnd)
+
+    bool moduleReferenced = false;
+    for (; frameIdx < frames.Length(); ++frameIdx) {
+      auto& frame = frames[frameIdx];
+      uint64_t pc = frame->get_HangEntryProgCounter().pc();
+      // We've moved past this frame, let's go to the next one.
+      if (pc >= moduleEnd) {
+        break;
+      }
+      if (pc >= moduleStart) {
+        uint64_t offset = pc - moduleStart;
+        if (NS_WARN_IF(offset > UINT32_MAX)) {
+          continue; // module/offset can only hold 32-bit offsets into shared libraries.
+        }
+
+        // If we found the module, rewrite the Frame entry to instead be a
+        // ModOffset one. mModules.Length() will be the index of the module when
+        // we append it below, and we set moduleReferenced to true to ensure
+        // that we do.
+        moduleReferenced = true;
+        uint32_t module = stack.modules().Length();
+        HangEntryModOffset modOffset(module, static_cast<uint32_t>(offset));
+        *frame = modOffset;
+      }
+    }
+
+    if (moduleReferenced) {
+      nsDependentCString cstr(info.GetBreakpadId().c_str());
+      HangModule module(info.GetDebugName(), cstr);
+      stack.modules().AppendElement(module);
+    }
+  }
+#endif
+}
+
 NS_IMETHODIMP
 ProcessHangStackRunnable::Run()
 {
   // NOTE: Reading module information can take a long time, which is why we do
   // it off-main-thread.
-  mHangDetails.mStack.ReadModuleInformation();
+  ReadModuleInformation(mHangDetails.stack());
 
   RefPtr<nsHangDetails> hangDetails = new nsHangDetails(Move(mHangDetails));
   hangDetails->Submit();
@@ -305,53 +389,3 @@ ProcessHangStackRunnable::Run()
 }
 
 } // namespace mozilla
-
-
-/**
- * IPC Serialization / Deserialization logic
- */
-namespace IPC {
-
-void
-ParamTraits<mozilla::HangDetails>::Write(Message* aMsg, const mozilla::HangDetails& aParam)
-{
-  WriteParam(aMsg, aParam.mDuration);
-  WriteParam(aMsg, aParam.mProcess);
-  WriteParam(aMsg, aParam.mRemoteType);
-  WriteParam(aMsg, aParam.mThreadName);
-  WriteParam(aMsg, aParam.mRunnableName);
-  WriteParam(aMsg, aParam.mStack);
-  WriteParam(aMsg, aParam.mAnnotations);
-}
-
-bool
-ParamTraits<mozilla::HangDetails>::Read(const Message* aMsg,
-                                        PickleIterator* aIter,
-                                        mozilla::HangDetails* aResult)
-{
-  if (!ReadParam(aMsg, aIter, &aResult->mDuration)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mProcess)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mRemoteType)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mThreadName)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mRunnableName)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mStack)) {
-    return false;
-  }
-  if (!ReadParam(aMsg, aIter, &aResult->mAnnotations)) {
-    return false;
-  }
-
-  return true;
-}
-
-} // namespace IPC

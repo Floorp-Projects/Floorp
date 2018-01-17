@@ -279,6 +279,22 @@ this.TestRunner = {
     return {bounds, rects};
   },
 
+  _do_skip(reason, combo, config, func) {
+    const { todo } = reason;
+    if (todo) {
+      this.mochitestScope.todo(
+        false,
+        `Skipped configuration ` +
+        `[ ${combo.map((e) => e.name).join(", ")} ] for failure in ` +
+        `${config.name}.${func}: ${todo}`);
+    } else {
+      this.mochitestScope.info(
+        `\tSkipped configuration ` +
+        `[ ${combo.map((e) => e.name).join(", ")} ] ` +
+        `for "${reason}" in  ${config.name}.${func}`);
+    }
+  },
+
   async _performCombo(combo) {
     let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);
     this.mochitestScope.info(
@@ -298,9 +314,9 @@ this.TestRunner = {
       this.mochitestScope.info("called " + config.name);
       // Add a default timeout of 500ms to avoid conflicts when configurations
       // try to apply at the same time. e.g WindowSize and TabsInTitlebar
-      return Promise.race([applyPromise, timeoutPromise]).then(() => {
+      return Promise.race([applyPromise, timeoutPromise]).then(result => {
         return new Promise((resolve) => {
-          setTimeout(resolve, 500);
+          setTimeout(() => resolve(result), 500);
         });
       });
     };
@@ -311,7 +327,11 @@ this.TestRunner = {
         let config = combo[i];
         if (!this._lastCombo || config !== this._lastCombo[i]) {
           this.mochitestScope.info(`promising ${config.name}`);
-          await changeConfig(config);
+          const reason = await changeConfig(config);
+          if (reason) {
+            this._do_skip(reason, combo, config, "applyConfig");
+            return;
+          }
         }
       }
 
@@ -330,18 +350,22 @@ this.TestRunner = {
         // have invalidated it.
         if (config.verifyConfig) {
           this.mochitestScope.info(`checking if the combo is valid with ${config.name}`);
-          await config.verifyConfig();
+          const reason = await config.verifyConfig();
+          if (reason) {
+            this._do_skip(reason, combo, config, "applyConfig");
+            return;
+          }
         }
       }
     } catch (ex) {
-      this.mochitestScope.info(`\tskipped configuration [ ${combo.map((e) => e.name).join(", ")} ]`);
-      this.mochitestScope.info(`\treason: ${ex.toString()}`);
-      // Don't set lastCombo here so that we properly know which configurations
-      // need to be applied since the last screenshot
-
-      // Return so we don't take a screenshot.
+      this.mochitestScope.ok(false, `Unexpected exception in [ ${combo.map(({ name }) => name).join(", ")} ]: ${ex.toString()}`);
+      this.mochitestScope.info(`\t${ex}`);
+      if (ex.stack) {
+        this.mochitestScope.info(`\t${ex.stack}`);
+      }
       return;
     }
+    this.mochitestScope.info(`Configured UI for [ ${combo.map(({ name }) => name).join(", ")} ] successfully`);
 
     // Collect selectors from combo configs for cropping region
     let windowType;

@@ -34,27 +34,6 @@ WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(WebGLContext* web
     FOO(RGBA32F);
 
 #undef FOO
-
-#ifdef DEBUG
-    const auto gl = webgl->gl;
-    float was[4] = {};
-    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, was);
-
-    const float test[4] = {-1.0, 0, 2.0, 255.0};
-    gl->fClearColor(test[0], test[1], test[2], test[3]);
-
-    float now[4] = {};
-    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, now);
-    const bool ok = now[0] == test[0] && now[1] == test[1] &&
-                    now[2] == test[2] && now[3] == test[3];
-    if (!ok) {
-        printf_stderr("COLOR_CLEAR_VALUE: now{%f,%f,%f,%f} != test{%f,%f,%f,%f}\n",
-                      test[0], test[1], test[2], test[3],
-                      now[0], now[1], now[2], now[3]);
-        MOZ_ASSERT(false);
-    }
-    gl->fClearColor(was[0], was[1], was[2], was[3]);
-#endif
 }
 
 WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat()

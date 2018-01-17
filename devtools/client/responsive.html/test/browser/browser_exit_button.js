@@ -6,17 +6,17 @@
 const TEST_URL = "data:text/html;charset=utf-8,";
 
 // Test global exit button
-addRDMTask(TEST_URL, function* (...args) {
-  yield testExitButton(...args);
+addRDMTask(TEST_URL, async function (...args) {
+  await testExitButton(...args);
 });
 
 // Test global exit button on detached tab.
 // See Bug 1262806
-add_task(function* () {
-  let tab = yield addTab(TEST_URL);
-  let { ui, manager } = yield openRDM(tab);
+add_task(async function () {
+  let tab = await addTab(TEST_URL);
+  let { ui, manager } = await openRDM(tab);
 
-  yield waitBootstrap(ui);
+  await waitBootstrap(ui);
 
   let waitTabIsDetached = Promise.all([
     once(tab, "TabClose"),
@@ -27,8 +27,8 @@ add_task(function* () {
   let newWindow = gBrowser.replaceTabWithWindow(tab);
 
   // Wait until the tab is detached and the new window is fully initialized.
-  yield waitTabIsDetached;
-  yield newWindow.delayedStartupPromise;
+  await waitTabIsDetached;
+  await newWindow.delayedStartupPromise;
 
   // Get the new tab instance.
   tab = newWindow.gBrowser.tabs[0];
@@ -38,24 +38,24 @@ add_task(function* () {
     "Responsive Design Mode is not active for the tab");
 
   // Reopen the RDM and test the exit button again.
-  yield testExitButton(yield openRDM(tab));
-  yield BrowserTestUtils.closeWindow(newWindow);
+  await testExitButton(await openRDM(tab));
+  await BrowserTestUtils.closeWindow(newWindow);
 });
 
-function* waitBootstrap(ui) {
+async function waitBootstrap(ui) {
   let { toolWindow, tab } = ui;
   let { store } = toolWindow;
   let url = String(tab.linkedBrowser.currentURI.spec);
 
   // Wait until the viewport has been added.
-  yield waitUntilState(store, state => state.viewports.length == 1);
+  await waitUntilState(store, state => state.viewports.length == 1);
 
   // Wait until the document has been loaded.
-  yield waitForFrameLoad(ui, url);
+  await waitForFrameLoad(ui, url);
 }
 
-function* testExitButton({ui, manager}) {
-  yield waitBootstrap(ui);
+async function testExitButton({ui, manager}) {
+  await waitBootstrap(ui);
 
   let exitButton = ui.toolWindow.document.getElementById("global-exit-button");
 
@@ -64,7 +64,7 @@ function* testExitButton({ui, manager}) {
 
   exitButton.click();
 
-  yield once(manager, "off");
+  await once(manager, "off");
 
   ok(!manager.isActiveForTab(ui.tab),
     "Responsive Design Mode is not active for the tab");

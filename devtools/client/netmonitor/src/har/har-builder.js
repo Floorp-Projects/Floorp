@@ -120,10 +120,15 @@ HarBuilder.prototype = {
     entry.startedDateTime = dateToJSON(new Date(file.startedMillis));
     entry.time = file.endedMillis - file.startedMillis;
 
+    let eventTimings = file.eventTimings;
+    if (!eventTimings && this._options.requestData) {
+      eventTimings = await this._options.requestData(file.id, "eventTimings");
+    }
+
     entry.request = await this.buildRequest(file);
     entry.response = await this.buildResponse(file);
     entry.cache = this.buildCache(file);
-    entry.timings = file.eventTimings ? file.eventTimings.timings : {};
+    entry.timings = eventTimings ? eventTimings.timings : {};
 
     if (file.remoteAddress) {
       entry.serverIPAddress = file.remoteAddress;

@@ -424,6 +424,17 @@ moz_container_size_allocate (GtkWidget     *widget,
                                allocation->width,
                                allocation->height);
     }
+
+#if defined(MOZ_WAYLAND)
+    // We need to position our subsurface according to GdkWindow
+    // when offset changes (GdkWindow is maximized for instance).
+    // see gtk-clutter-embed.c for reference.
+    if (container->subsurface) {
+        gint x, y;
+        gdk_window_get_position(gtk_widget_get_window(widget), &x, &y);
+        wl_subsurface_set_position(container->subsurface, x, y);
+    }
+#endif
 }
 
 void

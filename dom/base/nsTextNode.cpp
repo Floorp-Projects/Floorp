@@ -159,9 +159,9 @@ void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 bool
-nsTextNode::IsWebComponentsEnabled(JSContext* aCx, JSObject* aObject)
+nsTextNode::IsShadowDOMEnabled(JSContext* aCx, JSObject* aObject)
 {
-  return nsDocument::IsWebComponentsEnabled(aCx, aObject);
+  return nsDocument::IsShadowDOMEnabled(aCx, aObject);
 }
 
 #ifdef DEBUG

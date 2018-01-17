@@ -144,7 +144,7 @@ ac_add_options --enable-artifact-builds
 # Upgrade Mercurial older than this.
 # This should match OLDEST_NON_LEGACY_VERSION from
 # the hg setup wizard in version-control-tools.
-MODERN_MERCURIAL_VERSION = LooseVersion('3.7.3')
+MODERN_MERCURIAL_VERSION = LooseVersion('4.2.3')
 
 # Upgrade Python older than this.
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
@@ -447,15 +447,19 @@ class BaseBootstrapper(object):
 
         return LooseVersion(match.group(1))
 
-    def _hgplain_env(self):
+    def _hg_cleanenv(self):
         """ Returns a copy of the current environment updated with the HGPLAIN
-        environment variable.
+        and HGRCPATH environment variables.
 
         HGPLAIN prevents Mercurial from applying locale variations to the output
         making it suitable for use in scripts.
+
+        HGRCPATH controls the loading of hgrc files. Setting it to the empty
+        string forces that no user or system hgrc file is used.
         """
         env = os.environ.copy()
         env[b'HGPLAIN'] = b'1'
+        env[b'HGRCPATH'] = b''
 
         return env
 
@@ -465,7 +469,7 @@ class BaseBootstrapper(object):
             print(NO_MERCURIAL)
             return False, False, None
 
-        our = self._parse_version(hg, 'version', self._hgplain_env())
+        our = self._parse_version(hg, 'version', self._hg_cleanenv())
         if not our:
             return True, False, None
 

@@ -74,9 +74,9 @@ module.exports = {
   updatePreferredDevices: updatePreferredDevices,
 
   addCustomDevice(device) {
-    return function* (dispatch) {
+    return async function (dispatch) {
       // Add custom device to device storage
-      yield addDevice(device, "custom");
+      await addDevice(device, "custom");
       dispatch({
         type: ADD_DEVICE,
         device,
@@ -101,7 +101,7 @@ module.exports = {
   },
 
   removeCustomDevice(device) {
-    return function* (dispatch, getState) {
+    return async function (dispatch, getState) {
       // Check if the custom device is currently associated with any viewports
       let { viewports } = getState();
       for (let viewport of viewports) {
@@ -111,7 +111,7 @@ module.exports = {
       }
 
       // Remove custom device from device storage
-      yield removeDevice(device, "custom");
+      await removeDevice(device, "custom");
       dispatch({
         type: REMOVE_DEVICE,
         device,
@@ -130,13 +130,13 @@ module.exports = {
   },
 
   loadDevices() {
-    return function* (dispatch) {
+    return async function (dispatch) {
       dispatch({ type: LOAD_DEVICE_LIST_START });
       let preferredDevices = loadPreferredDevices();
       let devices;
 
       try {
-        devices = yield getDevices();
+        devices = await getDevices();
       } catch (e) {
         console.error("Could not load device list: " + e);
         dispatch({ type: LOAD_DEVICE_LIST_ERROR });

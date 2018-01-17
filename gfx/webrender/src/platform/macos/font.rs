@@ -117,7 +117,6 @@ fn get_glyph_metrics(
 
     if let Some(transform) = transform {
         bounds = bounds.apply_transform(transform);
-        advance = advance.apply_transform(transform);
     }
 
     // First round out to pixel boundaries
@@ -361,8 +360,23 @@ impl FontContext {
                 let glyph = key.index as CGGlyph;
                 let bitmap = is_bitmap_font(ct_font);
                 let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
-                let transform = if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-                    let shape = FontTransform::identity().synthesize_italics(OBLIQUE_SKEW_FACTOR);
+                let transform = if font.flags.intersects(FontInstanceFlags::SYNTHETIC_ITALICS |
+                                                         FontInstanceFlags::TRANSPOSE |
+                                                         FontInstanceFlags::FLIP_X |
+                                                         FontInstanceFlags::FLIP_Y) {
+                    let mut shape = FontTransform::identity();
+                    if font.flags.contains(FontInstanceFlags::FLIP_X) {
+                        shape = shape.flip_x();
+                    }
+                    if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+                        shape = shape.flip_y();
+                    }
+                    if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                        shape = shape.swap_xy();
+                    }
+                    if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+                        shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+                    }
                     Some(CGAffineTransform {
                         a: shape.scale_x as f64,
                         b: -shape.skew_y as f64,
@@ -483,6 +497,15 @@ impl FontContext {
         } else {
             (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
         };
+        if font.flags.contains(FontInstanceFlags::FLIP_X) {
+            shape = shape.flip_x();
+        }
+        if font.flags.contains(FontInstanceFlags::FLIP_Y) {
+            shape = shape.flip_y();
+        }
+        if font.flags.contains(FontInstanceFlags::TRANSPOSE) {
+            shape = shape.swap_xy();
+        }
         if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
             shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
         }
