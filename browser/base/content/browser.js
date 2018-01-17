@@ -6591,7 +6591,13 @@ var CanvasPermissionPromptHelper = {
       return;
     }
 
-    let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", [ uri.asciiHost ]);
+    let message = {};
+    let header = gNavigatorBundle.getFormattedString("canvas.siteprompt", ["<>"], 1);
+
+    header = header.split("<>");
+    message.start = header[0];
+    message.host = uri.asciiHost;
+    message.end = header[1];
 
     function setCanvasPermission(aURI, aPerm, aPersistent) {
       Services.perms.add(aURI, "canvas", aPerm,
