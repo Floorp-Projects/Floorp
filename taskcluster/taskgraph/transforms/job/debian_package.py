@@ -16,7 +16,7 @@ from voluptuous import Any, Optional, Required
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import add_public_artifacts
 
-from taskgraph.util.hash import hash_paths
+from taskgraph.util.hash import hash_path
 from taskgraph import GECKO
 from taskgraph.util.cached_tasks import add_optimization
 
@@ -87,15 +87,15 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     adjust = ''
     if 'patch' in run:
-        # We can't depend on docker images, so we don't have robustcheckout
+        # We can't depend on docker images, so we don't have robustcheckout or
         # or run-task to get a checkout. So for this one file we'd need
         # from a checkout, download it.
-        adjust += ('curl -sL {head_repo}/raw-file/{head_rev}'
-                   '/build/debian-packages/{patch} | patch -p1 && ').format(
+        env['PATCH_URL'] = '{head_repo}/raw-file/{head_rev}/build/debian-packages/{patch}'.format(
             head_repo=config.params['head_repository'],
             head_rev=config.params['head_rev'],
             patch=run['patch'],
         )
+        adjust += 'curl -sL $PATCH_URL | patch -p1 && '
     if 'pre-build-command' in run:
         adjust += run['pre-build-command'] + ' && '
     if 'tarball' in run:
@@ -163,16 +163,10 @@ def docker_worker_debian_package(config, job, taskdesc):
         )
     ]
 
-    files = [
-        # This file
-        'taskcluster/taskgraph/transforms/job/debian_package.py',
-    ]
+    # Use the command generated above as the base for the index hash.
+    # We rely on it not varying depending on the head_repository or head_rev.
+    data = list(worker['command'])
     if 'patch' in run:
-        files.append('build/debian-packages/{}'.format(run['patch']))
-    data = [hash_paths(GECKO, files)]
-    for k in ('snapshot', 'dist', 'pre-build-command'):
-        if k in run:
-            data.append(run[k])
-    data.append(src['sha256'])
+        data.append(hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
     add_optimization(config, taskdesc, cache_type='packages.v1',
                      cache_name=name, digest_data=data)
