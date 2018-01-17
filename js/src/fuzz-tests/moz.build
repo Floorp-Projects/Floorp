@@ -9,6 +9,7 @@ GeckoProgram('fuzz-tests', linkage=None)
 UNIFIED_SOURCES += [
     'testExample.cpp',
     'tests.cpp',
+    'testStructuredCloneReader.cpp',
 ]
 
 if CONFIG['JS_BUILD_BINAST']:
