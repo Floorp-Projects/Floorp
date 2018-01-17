@@ -39,7 +39,8 @@
 
     var newTrack;
     var audiotrack;
-    return getUserMedia({video:true, audio:true})
+    // Remove fake constraints with Bug 1431056
+    return getUserMedia({fake:true, video:true, audio:true})
       .then(newStream => {
         window.grip = newStream;
         newTrack = newStream.getVideoTracks()[0];
@@ -69,7 +70,8 @@
   runNetworkTest(function () {
     test = new PeerConnectionTest();
     test.audioCtx = new AudioContext();
-    test.setMediaConstraints([{video: true, audio: true}], [{video: true}]);
+    // Remove fake constraints with Bug 1431056
+    test.setMediaConstraints([{fake: true, video: true, audio: true}], [{fake: true, video: true}]);
     test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
 
     // Test replaceTrack on pcRemote separately since it's video only.
