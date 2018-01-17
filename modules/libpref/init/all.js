@@ -631,7 +631,11 @@ pref("media.cubeb.logging_level", "");
 
 #ifdef NIGHTLY_BUILD
 // Cubeb sandbox (remoting) control
+#ifdef XP_MACOSX
+pref("media.cubeb.sandbox", false);
+#else
 pref("media.cubeb.sandbox", true);
+#endif
 #endif
 
 // Set to true to force demux/decode warnings to be treated as errors.
