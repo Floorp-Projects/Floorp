@@ -1002,27 +1002,6 @@ private:
     txOwningArray<txNodeTest> mNodeTests;
 };
 
-/**
- *  Expression that failed to parse
- */
-class txErrorExpr : public Expr
-{
-public:
-#ifdef TX_TO_STRING
-    explicit txErrorExpr(const nsAString& aStr)
-      : mStr(aStr)
-    {
-    }
-#endif
-
-    TX_DECL_EXPR
-
-#ifdef TX_TO_STRING
-private:
-    nsString mStr;
-#endif
-};
-
 #endif
 
 
