@@ -411,117 +411,115 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
     }
   };
 
-  if (!aNewList->IsEmpty()) {
-    // Build a hashtable of items in the old list so we can look for them quickly.
-    // We have similar data in the nsIFrame DisplayItems() property, but it doesn't
-    // know which display list items are in, and we only want to match items in
-    // this list.
-    nsDataHashtable<DisplayItemHashEntry, nsDisplayItem*> oldListLookup(aOldList->Count());
+  // Build a hashtable of items in the old list so we can look for them quickly.
+  // We have similar data in the nsIFrame DisplayItems() property, but it doesn't
+  // know which display list items are in, and we only want to match items in
+  // this list.
+  nsDataHashtable<DisplayItemHashEntry, nsDisplayItem*> oldListLookup(aOldList->Count());
 
-    for (nsDisplayItem* i = aOldList->GetBottom(); i != nullptr; i = i->GetAbove()) {
-      i->SetReused(false);
+  for (nsDisplayItem* i = aOldList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+    i->SetReused(false);
 
-      if (!aNewList->IsEmpty()) {
-        oldListLookup.Put({ i->Frame(), i->GetPerFrameKey() }, i);
-      }
+    if (!aNewList->IsEmpty()) {
+      oldListLookup.Put({ i->Frame(), i->GetPerFrameKey() }, i);
     }
+  }
 
-    nsDataHashtable<DisplayItemHashEntry, nsDisplayItem*> newListLookup(aNewList->Count());
-    for (nsDisplayItem* i = aNewList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+  nsDataHashtable<DisplayItemHashEntry, nsDisplayItem*> newListLookup(aNewList->Count());
+  for (nsDisplayItem* i = aNewList->GetBottom(); i != nullptr; i = i->GetAbove()) {
 #ifdef DEBUG
-      if (newListLookup.Get({ i->Frame(), i->GetPerFrameKey() }, nullptr)) {
-        MOZ_CRASH_UNSAFE_PRINTF("Duplicate display items detected!: %s(0x%p) type=%d key=%d",
-                                  i->Name(), i->Frame(),
-                                  static_cast<int>(i->GetType()), i->GetPerFrameKey());
-      }
-#endif
-      newListLookup.Put({ i->Frame(), i->GetPerFrameKey() }, i);
+    if (newListLookup.Get({ i->Frame(), i->GetPerFrameKey() }, nullptr)) {
+       MOZ_CRASH_UNSAFE_PRINTF("Duplicate display items detected!: %s(0x%p) type=%d key=%d",
+                                i->Name(), i->Frame(),
+                                static_cast<int>(i->GetType()), i->GetPerFrameKey());
     }
+#endif
+    newListLookup.Put({ i->Frame(), i->GetPerFrameKey() }, i);
+  }
 
-    while (nsDisplayItem* newItem = aNewList->RemoveBottom()) {
-      if (nsDisplayItem* oldItem = oldListLookup.Get({ newItem->Frame(), newItem->GetPerFrameKey() })) {
-        // The new item has a matching counterpart in the old list that we haven't yet reached,
-        // so copy all valid items from the old list into the merged list until we get to the
-        // matched item.
-        nsDisplayItem* old = nullptr;
-        while ((old = aOldList->GetBottom()) && old != oldItem) {
-          if (IsAnyAncestorModified(old->FrameForInvalidation())) {
-            // The old item is invalid, discard it.
-            oldListLookup.Remove({ old->Frame(), old->GetPerFrameKey() });
-            aOldList->RemoveBottom();
-            old->Destroy(&mBuilder);
-          } else if (newListLookup.Get({ old->Frame(), old->GetPerFrameKey() })) {
-            // This old item is also in the new list, but we haven't got to it yet.
-            // Stop now, and we'll deal with it when we get to the new entry.
-            break;
-          } else {
-            // Recurse into the child list (without a matching new list) to
-            // ensure that we find and remove any invalidated items.
-            if (old->GetChildren()) {
-              nsDisplayList empty;
-              Maybe<const ActiveScrolledRoot*> containerASRForChildren;
-              MergeDisplayLists(&empty, old->GetChildren(),
-                                old->GetChildren(), containerASRForChildren);
-              UpdateASR(old, containerASRForChildren);
-              old->UpdateBounds(&mBuilder);
-            }
-            aOldList->RemoveBottom();
-            ReuseItem(old);
-          }
-        }
-        bool destroy = false;
-        if (old == oldItem) {
-          // If we advanced the old list until the matching item then we can pop
-          // the matching item off the old list and make sure we clean it up.
+  while (nsDisplayItem* newItem = aNewList->RemoveBottom()) {
+    if (nsDisplayItem* oldItem = oldListLookup.Get({ newItem->Frame(), newItem->GetPerFrameKey() })) {
+      // The new item has a matching counterpart in the old list that we haven't yet reached,
+      // so copy all valid items from the old list into the merged list until we get to the
+      // matched item.
+      nsDisplayItem* old = nullptr;
+      while ((old = aOldList->GetBottom()) && old != oldItem) {
+        if (IsAnyAncestorModified(old->FrameForInvalidation())) {
+          // The old item is invalid, discard it.
+          oldListLookup.Remove({ old->Frame(), old->GetPerFrameKey() });
           aOldList->RemoveBottom();
-          destroy = true;
+          old->Destroy(&mBuilder);
+        } else if (newListLookup.Get({ old->Frame(), old->GetPerFrameKey() })) {
+          // This old item is also in the new list, but we haven't got to it yet.
+          // Stop now, and we'll deal with it when we get to the new entry.
+          break;
         } else {
-          // If we didn't get to the matching item, then mark the old item
-          // as being reused (since we're adding the new version to the new
-          // list now) so that we don't add it twice at the end.
-          oldItem->SetReused(true);
-        }
-
-        // Recursively merge any child lists, destroy the old item and add
-        // the new one to the list.
-        if (!destroy &&
-            oldItem->GetType() == DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
-            !IsAnyAncestorModified(oldItem->FrameForInvalidation())) {
-          // Event regions items don't have anything interesting other than
-          // the lists of regions and frames, so we have no need to use the
-          // newer item. Always use the old item instead since we assume it's
-          // likely to have the bigger lists and merging will be quicker.
-          MergeLayerEventRegions(oldItem, newItem);
-          ReuseItem(oldItem);
-          newItem->Destroy(&mBuilder);
-        } else {
-          if (!IsAnyAncestorModified(oldItem->FrameForInvalidation()) &&
-              oldItem->GetChildren()) {
-            MOZ_ASSERT(newItem->GetChildren());
+          // Recurse into the child list (without a matching new list) to
+          // ensure that we find and remove any invalidated items.
+          if (old->GetChildren()) {
+            nsDisplayList empty;
             Maybe<const ActiveScrolledRoot*> containerASRForChildren;
-            MergeDisplayLists(newItem->GetChildren(), oldItem->GetChildren(),
-                              newItem->GetChildren(), containerASRForChildren);
-            UpdateASR(newItem, containerASRForChildren);
-            newItem->UpdateBounds(&mBuilder);
+            MergeDisplayLists(&empty, old->GetChildren(),
+                              old->GetChildren(), containerASRForChildren);
+            UpdateASR(old, containerASRForChildren);
+            old->UpdateBounds(&mBuilder);
           }
-
-          if (destroy) {
-            oldItem->Destroy(&mBuilder);
-          }
-          UseItem(newItem);
+          aOldList->RemoveBottom();
+          ReuseItem(old);
         }
+      }
+      bool destroy = false;
+      if (old == oldItem) {
+        // If we advanced the old list until the matching item then we can pop
+        // the matching item off the old list and make sure we clean it up.
+        aOldList->RemoveBottom();
+        destroy = true;
       } else {
-        // If there was no matching item in the old list, then we only need to
-        // add the new item to the merged list.
+        // If we didn't get to the matching item, then mark the old item
+        // as being reused (since we're adding the new version to the new
+        // list now) so that we don't add it twice at the end.
+        oldItem->SetReused(true);
+      }
+
+      // Recursively merge any child lists, destroy the old item and add
+      // the new one to the list.
+      if (!destroy &&
+          oldItem->GetType() == DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+          !IsAnyAncestorModified(oldItem->FrameForInvalidation())) {
+        // Event regions items don't have anything interesting other than
+        // the lists of regions and frames, so we have no need to use the
+        // newer item. Always use the old item instead since we assume it's
+        // likely to have the bigger lists and merging will be quicker.
+        MergeLayerEventRegions(oldItem, newItem);
+        ReuseItem(oldItem);
+        newItem->Destroy(&mBuilder);
+      } else {
+        if (!IsAnyAncestorModified(oldItem->FrameForInvalidation()) &&
+            oldItem->GetChildren()) {
+          MOZ_ASSERT(newItem->GetChildren());
+          Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+          MergeDisplayLists(newItem->GetChildren(), oldItem->GetChildren(),
+                            newItem->GetChildren(), containerASRForChildren);
+          UpdateASR(newItem, containerASRForChildren);
+          newItem->UpdateBounds(&mBuilder);
+        }
+
+        if (destroy) {
+          oldItem->Destroy(&mBuilder);
+        }
         UseItem(newItem);
       }
+    } else {
+      // If there was no matching item in the old list, then we only need to
+      // add the new item to the merged list.
+      UseItem(newItem);
     }
   }
 
   // Reuse the remaining valid items from the old display list.
   while (nsDisplayItem* old = aOldList->RemoveBottom()) {
     if (!IsAnyAncestorModified(old->FrameForInvalidation()) &&
-        (!old->IsReused() || aNewList->IsEmpty())) {
+        !old->IsReused()) {
       if (old->GetChildren()) {
         // We are calling MergeDisplayLists() to ensure that the display items
         // with modified or deleted children will be correctly handled.
