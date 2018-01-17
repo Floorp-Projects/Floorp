@@ -9,6 +9,9 @@
     window.onload = function () {
       let x = document.styleSheets[0];
       x.insertRule("div { color: seagreen; }", 1);
+
+      // Add a rule with a leading newline, to test that inspector can handle it.
+      x.insertRule("\n\ndiv { font-weight: bold; }", 1);
     };
   </script>
 
