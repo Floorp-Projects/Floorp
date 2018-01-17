@@ -119,7 +119,7 @@ unsafe extern "C" fn capi_stream_init(c: *mut cubeb::Context,
         if sp.is_null() { None } else { Some(unsafe { *sp }) }
     }
 
-    let mut ctx = &mut *(c as *mut backend::Context);
+    let ctx = &mut *(c as *mut backend::Context);
     let stream_name = CStr::from_ptr(stream_name);
 
     match ctx.new_stream(stream_name,
@@ -144,13 +144,13 @@ unsafe extern "C" fn capi_stream_destroy(s: *mut cubeb::Stream) {
 }
 
 unsafe extern "C" fn capi_stream_start(s: *mut cubeb::Stream) -> i32 {
-    let mut stm = &mut *(s as *mut backend::Stream);
+    let stm = &mut *(s as *mut backend::Stream);
 
     stm.start()
 }
 
 unsafe extern "C" fn capi_stream_stop(s: *mut cubeb::Stream) -> i32 {
-    let mut stm = &mut *(s as *mut backend::Stream);
+    let stm = &mut *(s as *mut backend::Stream);
 
     stm.stop()
 }
@@ -214,7 +214,7 @@ unsafe extern "C" fn capi_register_device_collection_changed(c: *mut cubeb::Cont
                                                              cubeb::DeviceCollectionChangedCallback,
                                                       user_ptr: *mut c_void) -> i32
 {
-    let mut ctx = &mut *(c as *mut backend::Context);
+    let ctx = &mut *(c as *mut backend::Context);
     ctx.register_device_collection_changed(devtype, collection_changed_callback, user_ptr as _)
 }
 
