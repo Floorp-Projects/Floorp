@@ -136,7 +136,6 @@ var BrowserPageActions = {
     if (action.subview) {
       buttonNode.classList.add("subviewbutton-nav");
       panelViewNode = this._makePanelViewNodeForAction(action, false);
-      this.multiViewNode._panelViews = null;
       this.multiViewNode.appendChild(panelViewNode);
     }
     buttonNode.addEventListener("command", event => {
