@@ -84,7 +84,7 @@
             "talos_options": ["--disable-stylo"]
         },
         "speedometer-e10s": {
-            "tests": ["speedometer"]
+            "tests": ["speedometer", "stylebench"]
         },
         "speedometer-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
