@@ -1246,6 +1246,13 @@ AccessibleHandler::QueryService(REFGUID aServiceId, REFIID aIid,
     return S_OK;
   }
 
+  // JAWS uses QueryService for these, but QI will work just fine and we can
+  // thus avoid a cross-process call. More importantly, if QS is used, the
+  // handler won't get used for that object, so our caching won't be used.
+  if (aIid == IID_IAccessibleAction || aIid == IID_IAccessibleText) {
+    return InternalQueryInterface(aIid, aOutInterface);
+  }
+
   for (uint32_t i = 0; i < ArrayLength(kUnsupportedServices); ++i) {
     if (aServiceId == kUnsupportedServices[i]) {
       return E_NOINTERFACE;
