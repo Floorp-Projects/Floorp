@@ -329,17 +329,17 @@ dependencies = [
 
 [[package]]
 name = "cubeb-ffi"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
- "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "cubeb-pulse"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
- "cubeb-ffi 0.0.1",
- "pulse 0.1.0",
+ "cubeb-ffi 0.0.2",
+ "pulse 0.2.0",
  "pulse-ffi 0.1.0",
  "semver 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -567,7 +567,7 @@ dependencies = [
  "cubeb 0.3.0",
  "cubeb-backend 0.2.0",
  "cubeb-core 0.1.0",
- "cubeb-pulse 0.0.1",
+ "cubeb-pulse 0.0.2",
  "encoding_c 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "geckoservo 0.0.1",
@@ -1011,9 +1011,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pulse"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulse-ffi 0.1.0",
 ]
 
