@@ -6,7 +6,7 @@ index 1db59240e335..241f3cfed041 100644
       * to override all other choices
       */
      init_oneshot,
-+#if defined(NIGHTLY_BUILD) && defined(USE_PULSE_RUST)
++#if defined(USE_PULSE_RUST)
 +    pulse_rust_init,
 +#endif
  #if defined(USE_PULSE)
