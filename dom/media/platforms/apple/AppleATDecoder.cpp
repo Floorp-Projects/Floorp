@@ -370,7 +370,7 @@ AppleATDecoder::GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
   if (NS_WARN_IF(rv)) {
     return MediaResult(
       NS_ERROR_FAILURE,
-      RESULT_DETAIL("Unable to get format info:%lld", int64_t(rv)));
+      RESULT_DETAIL("Unable to get format info:%d", int32_t(rv)));
   }
 
   // If any of the methods below fail, we will return the default format as
@@ -569,12 +569,12 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 
   LOG("Initializing Apple AudioToolbox decoder");
 
+  nsTArray<uint8_t>& magicCookie =
+    mMagicCookie.Length() ? mMagicCookie : *mConfig.mExtraData;
   AudioStreamBasicDescription inputFormat;
   PodZero(&inputFormat);
-  MediaResult rv =
-    GetInputAudioDescription(inputFormat,
-                             mMagicCookie.Length() ?
-                                 mMagicCookie : *mConfig.mExtraData);
+
+  MediaResult rv = GetInputAudioDescription(inputFormat, magicCookie);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -601,11 +601,26 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
 
   OSStatus status = AudioConverterNew(&inputFormat, &mOutputFormat, &mConverter);
   if (status) {
-    LOG("Error %d constructing AudioConverter", static_cast<int>(status));
+    LOG("Error %d constructing AudioConverter", int(status));
     mConverter = nullptr;
     return MediaResult(
       NS_ERROR_FAILURE,
-      RESULT_DETAIL("Error constructing AudioConverter:%lld", int64_t(status)));
+      RESULT_DETAIL("Error constructing AudioConverter:%d", int32_t(status)));
+  }
+
+  if (magicCookie.Length() && mFormatID == kAudioFormatMPEG4AAC) {
+    status = AudioConverterSetProperty(mConverter,
+                                       kAudioConverterDecompressionMagicCookie,
+                                       magicCookie.Length(),
+                                       magicCookie.Elements());
+    if (status) {
+      LOG("Error setting AudioConverter AAC cookie:%d", int32_t(status));
+      ProcessShutdown();
+      return MediaResult(
+        NS_ERROR_FAILURE,
+        RESULT_DETAIL("Error setting AudioConverter AAC cookie:%d",
+                      int32_t(status)));
+    }
   }
 
   if (NS_FAILED(SetupChannelLayout())) {
