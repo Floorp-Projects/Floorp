@@ -268,10 +268,6 @@ var TabsInTitlebar = {
     }
 
     ToolbarIconColor.inferFromText("tabsintitlebar", TabsInTitlebar.enabled);
-
-    if (document.documentElement.hasAttribute("customizing")) {
-      gCustomizeMode.updateLWTStyling();
-    }
   },
 
   _sizePlaceholder(type, width) {

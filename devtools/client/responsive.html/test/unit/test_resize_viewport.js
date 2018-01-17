@@ -8,7 +8,7 @@
 const { addViewport, resizeViewport } =
   require("devtools/client/responsive.html/actions/viewports");
 
-add_task(function* () {
+add_task(async function () {
   let store = Store();
   const { getState, dispatch } = store;
 

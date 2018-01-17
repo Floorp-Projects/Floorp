@@ -1309,7 +1309,10 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   }
 
   if (aBeforeEditorInit && value.IsEmpty()) {
-    mRootNode->RemoveChildAt_Deprecated(0, true);
+    nsIContent* node = mRootNode->GetFirstChild();
+    if (node) {
+      mRootNode->RemoveChildNode(node, true);
+    }
     return NS_OK;
   }
 

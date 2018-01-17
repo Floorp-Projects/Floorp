@@ -383,16 +383,6 @@ def mh_options_replace_project(config, jobs):
 
 
 @transforms.add
-def chain_of_trust(config, jobs):
-    for job in jobs:
-        # add the docker image to the chain of trust inputs in task.extra
-        if not job['worker-type'].endswith("-b-win2012"):
-            cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
-            cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
-        yield job
-
-
-@transforms.add
 def validate_again(config, jobs):
     for job in jobs:
         validate_schema(l10n_description_schema, job,

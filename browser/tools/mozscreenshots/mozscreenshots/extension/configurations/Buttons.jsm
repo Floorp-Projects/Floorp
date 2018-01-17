@@ -38,12 +38,12 @@ this.Buttons = {
         CustomizableUI.addWidgetToArea("screenshot-widget", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
       },
 
-      verifyConfig() {
+      async verifyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (browserWindow.PanelUI.panel.state == "closed") {
-          return Promise.reject("The button isn't shown when the panel isn't open.");
+          return "The button isn't shown when the panel isn't open.";
         }
-        return Promise.resolve("menuPanelButtons.verifyConfig");
+        return undefined;
       },
     },
 
@@ -53,12 +53,12 @@ this.Buttons = {
         CustomizableUI.removeWidgetFromArea("screenshot-widget");
       },
 
-      verifyConfig() {
+      async verifyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
         if (browserWindow.document.documentElement.getAttribute("customizing") != "true") {
-          return Promise.reject("The button isn't shown when we're not in customize mode.");
+          return "The button isn't shown when we're not in customize mode.";
         }
-        return Promise.resolve("custPaletteButtons.verifyConfig");
+        return undefined;
       },
     },
   },

@@ -527,9 +527,15 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
     return nullptr;
   }
 
+  // Some display item may draw exceed the paintSize, we need prepare a larger
+  // draw target to contain the result.
+  auto scaledBounds = bounds * LayoutDeviceToLayerScale(1);
+  scaledBounds.Scale(scale.width, scale.height);
+  LayerIntSize dtSize = RoundedToInt(scaledBounds).Size();
+
   bool needPaint = true;
   LayoutDeviceIntPoint offset = RoundedToInt(bounds.TopLeft());
-  aImageRect = LayoutDeviceRect(offset, LayoutDeviceSize(RoundedToInt(bounds.Size())));
+  aImageRect = LayoutDeviceRect(offset, LayoutDeviceSize(RoundedToInt(bounds).Size()));
   LayerRect paintRect = LayerRect(LayerPoint(0, 0), LayerSize(paintSize));
   nsDisplayItemGeometry* geometry = fallbackData->GetGeometry();
 
@@ -581,7 +587,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
         });
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
-      RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
+      RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, dtSize.ToUnknownSize());
       if (!fallbackData->mBasicLayerManager) {
         fallbackData->mBasicLayerManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
@@ -593,7 +599,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       if (isInvalidated) {
         Range<uint8_t> bytes((uint8_t *)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
         wr::ImageKey key = mManager->WrBridge()->GetNextImageKey();
-        wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
+        wr::ImageDescriptor descriptor(dtSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
         if (!aResources.AddBlobImage(key, descriptor, bytes)) {
           return nullptr;
         }
@@ -612,7 +618,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       bool isInvalidated = false;
 
       {
-        UpdateImageHelper helper(imageContainer, imageClient, paintSize.ToUnknownSize(), format);
+        UpdateImageHelper helper(imageContainer, imageClient, dtSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           if (!dt) {
@@ -622,9 +628,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
             fallbackData->mBasicLayerManager = new BasicLayerManager(mManager->GetWidget());
           }
           isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset,
-                                               aDisplayListBuilder,
-                                               fallbackData->mBasicLayerManager, scale,
-                                               highlight);
+                                                aDisplayListBuilder,
+                                                fallbackData->mBasicLayerManager, scale,
+                                                highlight);
         }
 
         if (isInvalidated) {

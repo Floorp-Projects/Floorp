@@ -1608,6 +1608,7 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                      stretch_size,
                      tile_spacing,
                      image_rendering,
+                     AlphaType::PremultipliedAlpha,
                      key);
 }
 

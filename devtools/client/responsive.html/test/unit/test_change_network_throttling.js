@@ -9,7 +9,7 @@ const {
   changeNetworkThrottling,
 } = require("devtools/client/responsive.html/actions/network-throttling");
 
-add_task(function* () {
+add_task(async function () {
   let store = Store();
   const { getState, dispatch } = store;
 

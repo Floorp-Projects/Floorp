@@ -121,7 +121,7 @@ impl DebugRenderer {
             &mut font_texture,
             debug_font_data::BMP_WIDTH,
             debug_font_data::BMP_HEIGHT,
-            ImageFormat::A8,
+            ImageFormat::R8,
             TextureFilter::Linear,
             None,
             1,

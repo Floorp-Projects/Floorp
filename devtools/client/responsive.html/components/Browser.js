@@ -119,7 +119,7 @@ class Browser extends PureComponent {
 
     await e10s.request(mm, "Start", {
       requiresFloatingScrollbars,
-      // Tests expect events on resize to yield on various size changes
+      // Tests expect events on resize to wait for various size changes
       notifyOnResize: flags.testing,
     });
   }

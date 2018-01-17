@@ -310,15 +310,15 @@ typedef struct AV1Common {
 
 #if CONFIG_AOM_QM
   // Global quant matrix tables
-  qm_val_t *giqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
-  qm_val_t *gqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
+  const qm_val_t *giqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
+  const qm_val_t *gqmatrix[NUM_QM_LEVELS][2][2][TX_SIZES_ALL];
 
   // Local quant matrix tables for each frame
-  qm_val_t *y_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
-  qm_val_t *uv_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  const qm_val_t *y_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  const qm_val_t *uv_iqmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
   // Encoder
-  qm_val_t *y_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
-  qm_val_t *uv_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  const qm_val_t *y_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
+  const qm_val_t *uv_qmatrix[MAX_SEGMENTS][2][TX_SIZES_ALL];
 
   int using_qmatrix;
   int min_qmlevel;

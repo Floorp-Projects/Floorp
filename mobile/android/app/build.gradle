@@ -123,6 +123,8 @@ android {
                     exclude 'org/mozilla/gecko/GeckoMediaPlayer.java'
                     exclude 'org/mozilla/gecko/GeckoPresentationDisplay.java'
                     exclude 'org/mozilla/gecko/MediaPlayerManager.java'
+                    exclude 'org/mozilla/gecko/PresentationMediaPlayerManager.java'
+                    exclude 'org/mozilla/gecko/RemotePresentationService.java'
                 }
 
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
@@ -231,11 +233,11 @@ dependencies {
         implementation "com.google.android.gms:play-services-measurement:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
     }
 
-    // Include LeakCanary in most gradle based builds.  Gradle based tests
-    // include the no-op version.  Mach based builds only include the no-op
-    // version of this library.
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
-    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
+    // Include LeakCanary in local builds, but not in official builds.  Mach
+    // builds target the official audience, so LeakCanary will not be included
+    // in any Mach build.
+    localImplementation 'com.squareup.leakcanary:leakcanary-android:1.4-beta1'
+    officialImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
     testImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta1'
 
     implementation project(path: ':geckoview')

@@ -23,10 +23,7 @@ namespace net {
 
 CacheObserver* CacheObserver::sSelf = nullptr;
 
-static int32_t const kDefaultHalfLifeExperiment = -1; // Disabled
-int32_t CacheObserver::sHalfLifeExperiment = kDefaultHalfLifeExperiment;
-
-static float const kDefaultHalfLifeHours = 1.0F; // 1 hour
+static float const kDefaultHalfLifeHours = 24.0F; // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
 static bool const kDefaultUseDiskCache = true;
@@ -183,52 +180,8 @@ CacheObserver::AttachToPreferences()
     "browser.cache.disk.parent_directory", NS_GET_IID(nsIFile),
     getter_AddRefs(mCacheParentDirectoryOverride));
 
-  // First check the default value.  If it is at -1, the experient
-  // is turned off.  If it is at 0, then use the user pref value
-  // instead.
-  sHalfLifeExperiment = mozilla::Preferences::GetInt(
-    "browser.cache.frecency_experiment", kDefaultHalfLifeExperiment,
-    PrefValueKind::Default);
-
-  if (sHalfLifeExperiment == 0) {
-    // Default preferences indicate we want to run the experiment,
-    // hence read the user value.
-    sHalfLifeExperiment = mozilla::Preferences::GetInt(
-      "browser.cache.frecency_experiment", sHalfLifeExperiment);
-  }
-
-  if (sHalfLifeExperiment == 0) {
-    // The experiment has not yet been initialized but is engaged, do
-    // the initialization now.
-    srand(time(NULL));
-    sHalfLifeExperiment = (rand() % 4) + 1;
-    // Store the experiemnt value, since we need it not to change between
-    // browser sessions.
-    mozilla::Preferences::SetInt(
-      "browser.cache.frecency_experiment", sHalfLifeExperiment);
-  }
-
-  switch (sHalfLifeExperiment) {
-  case 1: // The experiment is engaged
-    sHalfLifeHours = 0.083F; // ~5 mintues
-    break;
-  case 2:
-    sHalfLifeHours = 0.25F; // 15 mintues
-    break;
-  case 3:
-    sHalfLifeHours = 1.0F;
-    break;
-  case 4:
-    sHalfLifeHours = 6.0F;
-    break;
-
-  case -1:
-  default: // The experiment is off or broken
-    sHalfLifeExperiment = -1;
-    sHalfLifeHours = std::max(0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
-      "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
-    break;
-  }
+  sHalfLifeHours = std::max(0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
+    "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
 
   mozilla::Preferences::AddBoolVarCache(
     &sSanitizeOnShutdown, "privacy.sanitize.sanitizeOnShutdown", kDefaultSanitizeOnShutdown);

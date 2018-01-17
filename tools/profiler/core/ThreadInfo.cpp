@@ -25,9 +25,8 @@ ThreadInfo::ThreadInfo(const char* aName,
                        void* aStackTop)
   : mName(strdup(aName))
   , mRegisterTime(TimeStamp::Now())
-  , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
-  , mRacyInfo(mozilla::MakeNotNull<RacyThreadInfo*>())
+  , mRacyInfo(mozilla::MakeNotNull<RacyThreadInfo*>(aThreadId))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
   , mIsBeingProfiled(false)
@@ -260,7 +259,7 @@ ThreadInfo::FlushSamplesAndMarkers(const TimeStamp& aProcessStartTime,
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
     {
-      aBuffer.StreamSamplesToJSON(b, mThreadId, /* aSinceTime = */ 0,
+      aBuffer.StreamSamplesToJSON(b, ThreadId(), /* aSinceTime = */ 0,
                                   &mFirstSavedStreamedSampleTime,
                                   mContext, *mUniqueStacks);
     }
@@ -272,7 +271,7 @@ ThreadInfo::FlushSamplesAndMarkers(const TimeStamp& aProcessStartTime,
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
     {
-      aBuffer.StreamMarkersToJSON(b, mThreadId, aProcessStartTime,
+      aBuffer.StreamMarkersToJSON(b, ThreadId(), aProcessStartTime,
                                   /* aSinceTime = */ 0, *mUniqueStacks);
     }
     b.EndBareList();

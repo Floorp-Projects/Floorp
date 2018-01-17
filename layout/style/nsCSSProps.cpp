@@ -2434,13 +2434,6 @@ const KTableEntry nsCSSProps::kColumnSpanKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-static inline bool
-IsKeyValSentinel(const KTableEntry& aTableEntry)
-{
-  return aTableEntry.mKeyword == eCSSKeyword_UNKNOWN &&
-         aTableEntry.mValue == -1;
-}
-
 int32_t
 nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
                                const KTableEntry aTable[])
@@ -2455,7 +2448,7 @@ nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
   }
   for (int32_t i = 0; ; ++i) {
     const KTableEntry& entry = aTable[i];
-    if (::IsKeyValSentinel(entry)) {
+    if (entry.IsSentinel()) {
       break;
     }
     if (aKeyword == entry.mKeyword) {
@@ -2486,7 +2479,7 @@ nsCSSProps::ValueToKeywordEnum(int32_t aValue, const KTableEntry aTable[])
 #endif
   for (int32_t i = 0; ; ++i) {
     const KTableEntry& entry = aTable[i];
-    if (::IsKeyValSentinel(entry)) {
+    if (entry.IsSentinel()) {
       break;
     }
     if (aValue == entry.mValue) {

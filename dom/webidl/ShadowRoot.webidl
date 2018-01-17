@@ -17,7 +17,7 @@ enum ShadowRootMode {
 };
 
 // https://dom.spec.whatwg.org/#shadowroot
-[Func="nsDocument::IsWebComponentsEnabled"]
+[Func="nsDocument::IsShadowDOMEnabled"]
 interface ShadowRoot : DocumentFragment
 {
   readonly attribute Element? activeElement;

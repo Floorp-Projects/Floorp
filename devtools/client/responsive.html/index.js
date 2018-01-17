@@ -13,7 +13,6 @@ const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive.html/",
   window
 });
-const { Task } = require("devtools/shared/task");
 const Telemetry = require("devtools/client/shared/telemetry");
 const { loadAgentSheet } = require("./utils/css");
 
@@ -39,7 +38,7 @@ let bootstrap = {
 
   store: null,
 
-  init: Task.async(function* () {
+  async init() {
     // Load a special UA stylesheet to reset certain styles such as dropdown
     // lists.
     loadAgentSheet(
@@ -51,7 +50,7 @@ let bootstrap = {
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
     message.post(window, "init:done");
-  }),
+  },
 
   destroy() {
     this.store = null;

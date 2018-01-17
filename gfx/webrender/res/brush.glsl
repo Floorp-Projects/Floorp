@@ -23,6 +23,7 @@ struct BrushInstance {
     int clip_address;
     int z;
     int segment_index;
+    int edge_mask;
     ivec2 user_data;
 };
 
@@ -35,7 +36,8 @@ BrushInstance load_brush() {
     bi.scroll_node_id = aData0.z % 65536;
     bi.clip_address = aData0.w;
     bi.z = aData1.x;
-    bi.segment_index = aData1.y;
+    bi.segment_index = aData1.y & 0xffff;
+    bi.edge_mask = aData1.y >> 16;
     bi.user_data = aData1.zw;
 
     return bi;
@@ -125,7 +127,7 @@ void main(void) {
             vLocalBounds = vec4(vec2(-1000000.0), vec2(1000000.0));
 #endif
         } else {
-            bvec4 edge_mask = notEqual(int(segment_data[1].x) & ivec4(1, 2, 4, 8), ivec4(0));
+            bvec4 edge_mask = notEqual(brush.edge_mask & ivec4(1, 2, 4, 8), ivec4(0));
             vi = write_transform_vertex(
                 local_segment_rect,
                 brush_prim.local_rect,

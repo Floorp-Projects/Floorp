@@ -4,8 +4,7 @@
 
 use api::{AddFont, BlobImageData, BlobImageResources, ResourceUpdate, ResourceUpdates};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
-use api::ColorF;
-use api::{DevicePoint, DeviceUintRect, DeviceUintSize};
+use api::{ColorF, DevicePoint, DeviceUintRect, DeviceUintSize};
 use api::{Epoch, FontInstanceKey, FontKey, FontTemplate};
 use api::{ExternalImageData, ExternalImageType};
 use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
@@ -25,6 +24,7 @@ use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList}
 use internal_types::ExternalCaptureImage;
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use rayon::ThreadPool;
+use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId, RenderTaskTree};
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::cmp;
 use std::fmt::Debug;
@@ -52,6 +52,7 @@ pub struct GlyphFetchResult {
 // storing the coordinates as texel values
 // we don't need to go through and update
 // various CPU-side structures.
+#[derive(Debug)]
 pub struct CacheItem {
     pub texture_id: SourceTexture,
     pub uv_rect_handle: GpuCacheHandle,
@@ -219,6 +220,7 @@ impl BlobImageResources for Resources {
 pub struct ResourceCache {
     cached_glyphs: GlyphCache,
     cached_images: ImageCache,
+    cached_render_tasks: RenderTaskCache,
 
     resources: Resources,
     state: State,
@@ -247,6 +249,7 @@ impl ResourceCache {
         ResourceCache {
             cached_glyphs: GlyphCache::new(),
             cached_images: ResourceClassCache::new(),
+            cached_render_tasks: RenderTaskCache::new(),
             resources: Resources {
                 font_templates: FastHashMap::default(),
                 font_instances: Arc::new(RwLock::new(FastHashMap::default())),
@@ -276,6 +279,27 @@ impl ResourceCache {
                 info.image_type == ExternalImageType::ExternalBuffer && size_check
             }
         }
+    }
+
+    // Request the texture cache item for a cacheable render
+    // task. If the item is already cached, the texture cache
+    // handle will be returned. Otherwise, the user supplied
+    // closure will be invoked to generate the render task
+    // chain that is required to draw this task.
+    pub fn request_render_task<F>(
+        &mut self,
+        key: RenderTaskCacheKey,
+        gpu_cache: &mut GpuCache,
+        render_tasks: &mut RenderTaskTree,
+        f: F,
+    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3]) {
+        self.cached_render_tasks.request_render_task(
+            key,
+            &mut self.texture_cache,
+            gpu_cache,
+            render_tasks,
+            f
+        )
     }
 
     pub fn update_resources(
@@ -762,6 +786,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(frame_id);
+        self.cached_render_tasks.begin_frame(&mut self.texture_cache);
         self.current_frame_id = frame_id;
     }
 
@@ -871,7 +896,7 @@ impl ResourceCache {
                 &mut entry.texture_cache_handle,
                 descriptor,
                 filter,
-                image_data,
+                Some(image_data),
                 [0.0; 3],
                 image_template.dirty_rect,
                 gpu_cache,
@@ -896,6 +921,7 @@ impl ResourceCache {
         // recently used resources.
         self.cached_images.clear();
         self.cached_glyphs.clear();
+        self.cached_render_tasks.clear();
     }
 
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
@@ -1127,6 +1153,7 @@ impl ResourceCache {
         info!("loading resource cache");
         self.cached_glyphs.clear();
         self.cached_images.clear();
+        self.cached_render_tasks.clear();
 
         self.state = State::Idle;
         self.current_frame_id = FrameId(0);

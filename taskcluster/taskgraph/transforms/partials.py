@@ -110,9 +110,6 @@ def make_task_description(config, jobs):
             extra['funsize']['partials'].append(partial_info)
             update_number += 1
 
-        cot = extra.setdefault('chainOfTrust', {})
-        cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
-
         mar_channel_id = None
         if config.params['project'] == 'mozilla-beta':
             if 'devedition' in label:

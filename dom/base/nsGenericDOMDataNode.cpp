@@ -776,29 +776,39 @@ nsGenericDOMDataNode::SplitText(uint32_t aOffset, nsIDOMText** aReturn)
   return rv;
 }
 
-/* static */ int32_t
-nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                     int32_t aIndex)
+static nsIContent*
+FirstLogicallyAdjacentTextNode(nsIContent* aNode)
 {
-  while (aIndex-- > 0) {
-    nsIContent* sibling = aParent->GetChildAt_Deprecated(aIndex);
-    if (!sibling->IsNodeOfType(nsINode::eTEXT))
-      return aIndex + 1;
+  nsCOMPtr<nsIContent> parent = aNode->GetParent();
+
+  while (aNode) {
+    nsIContent* sibling = aNode->GetPreviousSibling();
+    if (!sibling || !sibling->IsNodeOfType(nsINode::eTEXT)) {
+      return aNode;
+    }
+    aNode = sibling;
   }
-  return 0;
+
+  return parent->GetFirstChild();
 }
 
-/* static */ int32_t
-nsGenericDOMDataNode::LastLogicallyAdjacentTextNode(nsIContent* aParent,
-                                                    int32_t aIndex,
-                                                    uint32_t aCount)
+static nsIContent*
+LastLogicallyAdjacentTextNode(nsIContent* aNode)
 {
-  while (++aIndex < int32_t(aCount)) {
-    nsIContent* sibling = aParent->GetChildAt_Deprecated(aIndex);
-    if (!sibling->IsNodeOfType(nsINode::eTEXT))
-      return aIndex - 1;
+  nsCOMPtr<nsIContent> parent = aNode->GetParent();
+
+  while (aNode) {
+    nsIContent* sibling = aNode->GetNextSibling();
+    if (!sibling) break;
+
+    if (!sibling->IsNodeOfType(nsINode::eTEXT)) {
+      return aNode;
+    }
+
+    aNode = sibling;
   }
-  return aCount - 1;
+
+  return parent->GetLastChild();
 }
 
 nsresult
@@ -815,20 +825,25 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
                        "Trying to use .wholeText with an anonymous"
                        "text node child of a binding parent?");
   NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  int32_t first =
-    FirstLogicallyAdjacentTextNode(parent, index);
-  int32_t last =
-    LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
+  nsCOMPtr<nsIContent> first = FirstLogicallyAdjacentTextNode(this);
+  nsCOMPtr<nsIContent> last = LastLogicallyAdjacentTextNode(this);
 
   aWholeText.Truncate();
 
   nsCOMPtr<nsIDOMText> node;
   nsAutoString tmp;
-  do {
-    node = do_QueryInterface(parent->GetChildAt_Deprecated(first));
+
+  while (true) {
+    node = do_QueryInterface(first);
     node->GetData(tmp);
     aWholeText.Append(tmp);
-  } while (first++ < last);
+
+    if (first == last) {
+      break;
+    }
+
+    first = first->GetNextSibling();
+  }
 
   return NS_OK;
 }

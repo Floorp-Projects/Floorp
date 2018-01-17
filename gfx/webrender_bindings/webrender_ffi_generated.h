@@ -96,7 +96,7 @@ enum class FontRenderMode : uint32_t {
 
 enum class ImageFormat : uint32_t {
   Invalid = 0,
-  A8 = 1,
+  R8 = 1,
   BGRA8 = 3,
   RGBAF32 = 4,
   RG8 = 5,
@@ -710,9 +710,11 @@ struct GlyphInstance {
 
 struct GlyphOptions {
   FontRenderMode render_mode;
+  FontInstanceFlags flags;
 
   bool operator==(const GlyphOptions& aOther) const {
-    return render_mode == aOther.render_mode;
+    return render_mode == aOther.render_mode &&
+           flags == aOther.flags;
   }
 };
 

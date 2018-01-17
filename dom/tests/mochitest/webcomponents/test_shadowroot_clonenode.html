@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1429982
 
 /** Test for Bug 1429982 **/
 SimpleTest.waitForExplicitFinish();
-setWebComponentsPrefAndCreateIframe()
+setShadowDOMPrefAndCreateIframe()
   .then((aDocument) => {
     var element = aDocument.createElement("div");
     var shadowRoot = element.attachShadow({mode: "open"});

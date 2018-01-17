@@ -96,7 +96,7 @@
   min-width: 190px;
 }
 
-#sidebar-extensions:empty + toolbarseparator {
+toolbarseparator + #sidebar-extensions-separator {
   display: none;
 }
 

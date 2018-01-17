@@ -6,17 +6,17 @@
 <div id="log"></div>
 <script>
 function runTest() {
-    // Change visible region of |closure| element.
-    document.getElementById("target").classList.add("rotate");
-    window.setTimeout(function() {
-	var target = document.getElementById("target");
-	var bounds = target.getBoundingClientRect();
-	var x = bounds.x + bounds.width / 2;
-	var y = bounds.y + bounds.height / 2;
-	is(document.elementFromPoint(x, y).id, target.id,
-	  "it should be |target| element if visible regions of closure is correct");
-	SimpleTest.finish();
-    }, 0);
+  // Change visible region of |closure| element.
+  document.getElementById("target").classList.add("rotate");
+  window.setTimeout(function() {
+    var target = document.getElementById("target");
+    var bounds = target.getBoundingClientRect();
+    var x = bounds.x + bounds.width / 2;
+    var y = bounds.y + bounds.height / 2;
+    is(document.elementFromPoint(x, y).id, target.id,
+       "it should be |target| element if visible regions of closure is correct");
+    SimpleTest.finish();
+  }, 0);
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -50,12 +50,15 @@ SimpleTest.waitForFocus(runTest);
 <div id="outer">
   <div id="closure">
     <div style="transform-style: preserve-3d;">
-	<div style="transform-style: preserve-3d; background-color: blue;">
-	  <ul style="transform-style: preserve-3d;">
-	    <li style="transform-style:preserve-3d;"><div id="target" class="panel"></div>
-	    </li>
-	  </ul>
-	</div>
+      <div style="transform-style: preserve-3d; background-color: blue;">
+        <ul style="transform-style: preserve-3d;">
+          <li style="transform-style:preserve-3d;">
+            <div style="display: contents">
+              <div id="target" class="panel"></div>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

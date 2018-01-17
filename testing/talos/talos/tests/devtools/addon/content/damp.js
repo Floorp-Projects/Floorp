@@ -317,9 +317,9 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  async waitForNetworkRequests(label, toolbox) {
+  async waitForNetworkRequests(label, toolbox, expectedRequests) {
     let test = this.runTest(label + ".requestsFinished.DAMP");
-    await this.waitForAllRequestsFinished();
+    await this.waitForAllRequestsFinished(expectedRequests);
     test.done();
   },
 
@@ -772,7 +772,13 @@ async _consoleOpenWithCachedMessagesTest() {
     await this.testTeardown();
   },
 
-  _getToolLoadingTests(url, label, { expectedMessages, expectedSources, selectedFile, expectedText }) {
+  _getToolLoadingTests(url, label, {
+    expectedMessages,
+    expectedRequests,
+    expectedSources,
+    selectedFile,
+    expectedText,
+  }) {
     let tests = {
       async inspector() {
         await this.testSetup(url);
@@ -830,7 +836,7 @@ async _consoleOpenWithCachedMessagesTest() {
       async netmonitor() {
         await this.testSetup(url);
         const toolbox = await this.openToolboxAndLog(label + ".netmonitor", "netmonitor");
-        const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
+        const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox, expectedRequests);
         await this.reloadPageAndLog(label + ".netmonitor", toolbox);
         await requestsDone;
         await this.closeToolboxAndLog(label + ".netmonitor", toolbox);
@@ -963,39 +969,39 @@ async _consoleOpenWithCachedMessagesTest() {
    *   period.
    * @returns a promise that resolves when the wait is done.
    */
-  waitForAllRequestsFinished() {
+  waitForAllRequestsFinished(expectedRequests) {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = TargetFactory.forTab(tab);
     let toolbox = gDevTools.getToolbox(target);
     let window = toolbox.getCurrentPanel().panelWin;
 
     return new Promise(resolve => {
-      // Key is the request id, value is a boolean - is request finished or not?
-      let requests = new Map();
-
-      function onRequest(_, id) {
-        requests.set(id, false);
-      }
+      // Explicitly waiting for specific number of requests arrived
+      let payloadReady = 0;
+      let timingsUpdated = 0;
 
       function onPayloadReady(_, id) {
-        requests.set(id, true);
+        payloadReady++;
+        maybeResolve();
+      }
+
+      function onTimingsUpdated(_, id) {
+        timingsUpdated++;
         maybeResolve();
       }
 
       function maybeResolve() {
-        // Have all the requests in the map finished yet?
-        if (![...requests.values()].every(finished => finished)) {
-          return;
+        // Have all the requests finished yet?
+        if (payloadReady === expectedRequests && timingsUpdated === expectedRequests) {
+          // All requests are done - unsubscribe from events and resolve!
+          window.off(EVENTS.PAYLOAD_READY, onPayloadReady);
+          window.off(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);
+          resolve();
         }
-
-        // All requests are done - unsubscribe from events and resolve!
-        window.off(EVENTS.NETWORK_EVENT, onRequest);
-        window.off(EVENTS.PAYLOAD_READY, onPayloadReady);
-        resolve();
       }
 
-      window.on(EVENTS.NETWORK_EVENT, onRequest);
       window.on(EVENTS.PAYLOAD_READY, onPayloadReady);
+      window.on(EVENTS.RECEIVED_EVENT_TIMINGS, onTimingsUpdated);
     });
   },
 
@@ -1028,6 +1034,7 @@ async _consoleOpenWithCachedMessagesTest() {
     // Run all tests against "simple" document
     Object.assign(tests, this._getToolLoadingTests(SIMPLE_URL, "simple", {
       expectedMessages: 1,
+      expectedRequests: 1,
       expectedSources: 1,
       selectedFile: "simple.html",
       expectedText: "This is a simple page"
@@ -1036,6 +1043,7 @@ async _consoleOpenWithCachedMessagesTest() {
     // Run all tests against "complicated" document
     Object.assign(tests, this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
       expectedMessages: 7,
+      expectedRequests: 280,
       expectedSources: 14,
       selectedFile: "ga.js",
       expectedText: "Math;function ga(a,b){return a.name=b}"

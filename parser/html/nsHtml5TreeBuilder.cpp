@@ -4928,6 +4928,7 @@ void
 nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot,
                               nsHtml5AtomTable* interner)
 {
+  mCurrentHtmlScriptIsAsyncOrDefer = false;
   jArray<nsHtml5StackNode*, int32_t> stackCopy = snapshot->getStack();
   int32_t stackLen = snapshot->getStackLength();
   jArray<nsHtml5StackNode*, int32_t> listCopy =

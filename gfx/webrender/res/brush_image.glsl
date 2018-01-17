@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 0
+#define VECS_PER_SPECIFIC_BRUSH 1
 
 #include shared,prim_shared,brush
 
@@ -25,6 +25,16 @@ flat varying vec4 vColor;
 #define BRUSH_IMAGE_MIRROR      2
 
 #ifdef WR_VERTEX_SHADER
+
+struct Picture {
+    vec4 color;
+};
+
+Picture fetch_picture(int address) {
+    vec4 data = fetch_from_resource_cache_1(address);
+    return Picture(data);
+}
+
 void brush_vs(
     int prim_address,
     vec2 local_pos,
@@ -32,29 +42,35 @@ void brush_vs(
     ivec2 user_data,
     PictureTask pic_task
 ) {
-    // TODO(gw): For now, this brush_image shader is only
-    //           being used to draw items from the intermediate
-    //           surface cache (render tasks). In the future
-    //           we can expand this to support items from
-    //           the normal texture cache and unify this
-    //           with the normal image shader.
-    BlurTask blur_task = fetch_blur_task(user_data.x);
-    vUv.z = blur_task.common_data.texture_layer_index;
     vImageKind = user_data.y;
 
-#if defined WR_FEATURE_COLOR_TARGET
+    // TODO(gw): There's quite a bit of code duplication here,
+    //           depending on which variation of brush image
+    //           this is being used for. This is because only
+    //           box-shadow pictures are currently supported
+    //           as texture cacheable items. Once we port the
+    //           drop-shadows and text-shadows to be cacheable,
+    //           most of this code can be merged together.
+#if defined WR_FEATURE_COLOR_TARGET || defined WR_FEATURE_COLOR_TARGET_ALPHA_MASK
+    BlurTask blur_task = fetch_blur_task(user_data.x);
+    vUv.z = blur_task.common_data.texture_layer_index;
     vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-#elif defined WR_FEATURE_COLOR_TARGET_ALPHA_MASK
-    vec2 texture_size = vec2(textureSize(sColor0, 0).xy);
-    vColor = blur_task.color;
-#else
-    vec2 texture_size = vec2(textureSize(sColor1, 0).xy);
+#if defined WR_FEATURE_COLOR_TARGET_ALPHA_MASK
     vColor = blur_task.color;
 #endif
-
     vec2 uv0 = blur_task.common_data.task_rect.p0;
     vec2 src_size = blur_task.common_data.task_rect.size * blur_task.scale_factor;
     vec2 uv1 = uv0 + blur_task.common_data.task_rect.size;
+#else
+    Picture pic = fetch_picture(prim_address);
+    ImageResource uv_rect = fetch_image_resource(user_data.x);
+    vec2 texture_size = vec2(textureSize(sColor1, 0).xy);
+    vColor = pic.color;
+    vec2 uv0 = uv_rect.uv_rect.xy;
+    vec2 uv1 = uv_rect.uv_rect.zw;
+    vec2 src_size = (uv1 - uv0) * uv_rect.user_data.x;
+    vUv.z = uv_rect.layer;
+#endif
 
     // TODO(gw): In the future we'll probably draw these as segments
     //           with the brush shader. When that occurs, we can

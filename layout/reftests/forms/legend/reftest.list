@@ -1,4 +1,4 @@
 == legend.html legend-ref.html
-#bug 1418002 fuzzy-if(skiaContent,1,7) pref(dom.webcomponents.enabled,true) == shadow-dom.html shadow-dom-ref.html
+#bug 1418002 fuzzy-if(skiaContent,1,7) pref(dom.webcomponents.shadowdom.enabled,true) == shadow-dom.html shadow-dom-ref.html
 == 1273433.html 1273433-ref.html
 fails-if(styloVsGecko||stylo) == 1339287.html 1339287-ref.html

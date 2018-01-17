@@ -3283,6 +3283,46 @@ profiler_add_marker(const char* aMarkerName)
   profiler_add_marker(aMarkerName, nullptr);
 }
 
+// This logic needs to add a marker for a different thread, so we actually need
+// to lock here.
+void
+profiler_add_marker_for_thread(int aThreadId,
+                               const char* aMarkerName,
+                               UniquePtr<ProfilerMarkerPayload> aPayload)
+{
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // Create the ProfilerMarker which we're going to store.
+  TimeStamp origin = (aPayload && !aPayload->GetStartTime().IsNull())
+                   ? aPayload->GetStartTime()
+                   : TimeStamp::Now();
+  TimeDuration delta = origin - CorePS::ProcessStartTime();
+  ProfilerMarker* marker =
+    new ProfilerMarker(aMarkerName, aThreadId, Move(aPayload),
+                       delta.ToMilliseconds());
+
+  PSAutoLock lock(gPSMutex);
+
+#ifdef DEBUG
+  // Assert that our thread ID makes sense
+  bool realThread = false;
+  const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(lock);
+  for (uint32_t i = 0; i < liveThreads.size(); i++) {
+    ThreadInfo* info = liveThreads.at(i);
+    if (info->ThreadId() == aThreadId) {
+      realThread = true;
+      break;
+    }
+  }
+  MOZ_ASSERT(realThread, "Invalid thread id");
+#endif
+
+  // Insert the marker into the buffer
+  ProfileBuffer& buffer = ActivePS::Buffer(lock);
+  buffer.AddStoredMarker(marker);
+  buffer.AddEntry(ProfileBufferEntry::Marker(marker));
+}
+
 void
 profiler_tracing(const char* aCategory, const char* aMarkerName,
                  TracingKind aKind)

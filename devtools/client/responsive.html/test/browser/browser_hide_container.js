@@ -30,35 +30,35 @@ function flushContainerTabState(tab) {
   });
 }
 
-add_task(function* () {
+add_task(async function () {
   // Load test URL
-  let tab = yield addTab(TEST_URL);
+  let tab = await addTab(TEST_URL);
   let browser = tab.linkedBrowser;
 
   // Check session history state
-  let history = yield getSessionHistory(browser);
+  let history = await getSessionHistory(browser);
   is(history.index - 1, 0, "At page 0 in history");
   is(history.entries.length, 1, "1 page in history");
   is(history.entries[0].url, TEST_URL, "Page 0 URL matches");
 
   // Open RDM
-  yield openRDM(tab);
+  await openRDM(tab);
 
   // Checking session history directly in content does show the container URL
   // that we're trying to hide...
-  history = yield getSessionHistory(browser);
+  history = await getSessionHistory(browser);
   is(history.index - 1, 0, "At page 0 in history");
   is(history.entries.length, 1, "1 page in history");
   is(history.entries[0].url, CONTAINER_URL, "Page 0 URL matches");
 
   // However, checking the recorded tab state for the outer browser shows the
   // container URL has been ignored correctly.
-  yield flushContainerTabState(tab);
+  await flushContainerTabState(tab);
   let tabState = JSON.parse(SessionStore.getTabState(tab));
   is(tabState.index - 1, 0, "At page 0 in history");
   is(tabState.entries.length, 1, "1 page in history");
   is(tabState.entries[0].url, TEST_URL, "Page 0 URL matches");
 
-  yield closeRDM(tab);
-  yield removeTab(tab);
+  await closeRDM(tab);
+  await removeTab(tab);
 });
