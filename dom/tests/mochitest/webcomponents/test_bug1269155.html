@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1269155
 SimpleTest.waitForExplicitFinish();
 
 var content = '<div id="content" style="display: none"> </div>';
-setWebComponentsPrefAndCreateIframe(content)
+setShadowDOMPrefAndCreateIframe(content)
   .then((aDocument) => {
     var host = aDocument.querySelector('#content');
     var root = host.attachShadow({mode: "open"});

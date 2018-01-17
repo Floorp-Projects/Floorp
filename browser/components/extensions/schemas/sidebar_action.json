@@ -197,6 +197,26 @@
         "description": "Closes the extension sidebar in the active window if the sidebar belongs to the extension.",
         "async": true,
         "parameters": []
+      },
+      {
+        "name": "isOpen",
+        "type": "function",
+        "description": "Checks whether the sidebar action is open.",
+        "async": true,
+        "parameters": [
+          {
+            "name": "details",
+            "type": "object",
+            "properties": {
+              "windowId": {
+                "type": "integer",
+                "minimum": -2,
+                "optional": true,
+                "description": "Specify the window to get the openness from."
+              }
+            }
+          }
+        ]
       }
     ]
   }

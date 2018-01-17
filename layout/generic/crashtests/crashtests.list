@@ -586,7 +586,7 @@ load 1039454-1.html
 load 1042489.html
 load 1054010-1.html
 load 1058954-1.html
-asserts-if(!stylo,0-2) pref(dom.webcomponents.enabled,true) pref(dom.webcomponents.customelements.enabled,true) load 1059138-1.html # bug 1389936
+asserts-if(!stylo,0-2) pref(dom.webcomponents.shadowdom.enabled,true) pref(dom.webcomponents.customelements.enabled,true) load 1059138-1.html # bug 1389936
 load 1134531.html
 load 1134667.html
 load 1137723-1.html

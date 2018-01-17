@@ -17,7 +17,7 @@ var els = SpecialPowers.Cc["@mozilla.org/eventlistenerservice;1"]
             .getService(SpecialPowers.Ci.nsIEventListenerService);
 
 SimpleTest.waitForExplicitFinish();
-setWebComponentsPrefAndCreateIframe()
+setShadowDOMPrefAndCreateIframe()
   .then((aDocument) => {
     function eventListener(e) {
       eventChain.push(this);

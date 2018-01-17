@@ -67,14 +67,20 @@ class StatisticsPanel extends Component {
   componentDidMount() {
     let { requests, connector } = this.props;
     requests.forEach((request) => {
-      fetchNetworkUpdatePacket(connector.requestData, request, ["responseHeaders"]);
+      fetchNetworkUpdatePacket(connector.requestData, request, [
+        "eventTimings",
+        "responseHeaders",
+      ]);
     });
   }
 
   componentWillReceiveProps(nextProps) {
     let { requests, connector } = nextProps;
     requests.forEach((request) => {
-      fetchNetworkUpdatePacket(connector.requestData, request, ["responseHeaders"]);
+      fetchNetworkUpdatePacket(connector.requestData, request, [
+        "eventTimings",
+        "responseHeaders",
+      ]);
     });
   }
 

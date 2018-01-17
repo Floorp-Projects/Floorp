@@ -461,16 +461,20 @@ GeolocationPermissionPrompt.prototype = {
   },
 
   get message() {
-    let message;
+    let message = {};
     if (this.principal.URI.schemeIs("file")) {
-      message = gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
+      message.start = gBrowserBundle.GetStringFromName("geolocation.shareWithFile3");
     } else {
-      let hostPort = "<>";
+      let header = gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
+                                                    ["<>"], 1);
+      header = header.split("<>");
+      message.end = header[1];
+      message.start = header[0];
+
+      message.host = "<>";
       try {
-        hostPort = this.principal.URI.hostPort;
+        message.host = this.principal.URI.hostPort;
       } catch (ex) { }
-      message = gBrowserBundle.formatStringFromName("geolocation.shareWithSite3",
-                                                    [hostPort], 1);
     }
     return message;
   },
@@ -559,12 +563,20 @@ DesktopNotificationPermissionPrompt.prototype = {
   },
 
   get message() {
-    let hostPort = "<>";
+    let message = {};
+
+    message.host = "<>";
     try {
-      hostPort = this.principal.URI.hostPort;
+      message.host = this.principal.URI.hostPort;
     } catch (ex) { }
-    return gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
-                                               [hostPort], 1);
+
+    let header = gBrowserBundle.formatStringFromName("webNotifications.receiveFromSite2",
+                                                    ["<>"], 1);
+    header = header.split("<>");
+    message.end = header[1];
+    message.start = header[0];
+
+    return message;
   },
 
   get promptActions() {
@@ -630,7 +642,8 @@ PersistentStoragePermissionPrompt.prototype = {
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
     return {
       checkbox,
-      learnMoreURL
+      learnMoreURL,
+      displayURI: false
     };
   },
 
@@ -643,12 +656,20 @@ PersistentStoragePermissionPrompt.prototype = {
   },
 
   get message() {
-    let hostPort = "<>";
+    let message = {};
+
+    message.host = "<>";
     try {
-      hostPort = this.principal.URI.hostPort;
+      message.host = this.principal.URI.hostPort;
     } catch (ex) {}
-    return gBrowserBundle.formatStringFromName(
-      "persistentStorage.allowWithSite", [hostPort], 1);
+
+    let header = gBrowserBundle.formatStringFromName("persistentStorage.allowWithSite",
+                                                    ["<>"], 1);
+    header = header.split("<>");
+    message.end = header[1];
+    message.start = header[0];
+
+    return message;
   },
 
   get promptActions() {

@@ -4,6 +4,7 @@
 
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browser.js */
+/* globals WINDOW_ID_CURRENT */
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
@@ -188,7 +189,8 @@ this.sidebarAction = class extends ExtensionAPI {
 
     document.getElementById("mainBroadcasterSet").appendChild(broadcaster);
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
-    document.getElementById("sidebar-extensions").appendChild(toolbarbutton);
+    let separator = document.getElementById("sidebar-extensions-separator");
+    separator.parentNode.insertBefore(toolbarbutton, separator);
 
     return menuitem;
   }
@@ -348,10 +350,20 @@ this.sidebarAction = class extends ExtensionAPI {
    * @param {ChromeWindow} window
    */
   close(window) {
-    let {SidebarUI} = window;
-    if (SidebarUI.isOpen && this.id == SidebarUI.currentID) {
-      SidebarUI.hide();
+    if (this.isOpen(window)) {
+      window.SidebarUI.hide();
     }
+  }
+
+  /**
+   * Checks whether this sidebar action is open in the given window.
+   *
+   * @param {ChromeWindow} window
+   * @returns {boolean}
+   */
+  isOpen(window) {
+    let {SidebarUI} = window;
+    return SidebarUI.isOpen && this.id == SidebarUI.currentID;
   }
 
   getAPI(context) {
@@ -426,6 +438,15 @@ this.sidebarAction = class extends ExtensionAPI {
         close() {
           let window = windowTracker.topWindow;
           sidebarAction.close(window);
+        },
+
+        isOpen(details) {
+          let {windowId} = details;
+          if (windowId == null) {
+            windowId = WINDOW_ID_CURRENT;
+          }
+          let window = windowTracker.getWindow(windowId, context);
+          return sidebarAction.isOpen(window);
         },
       },
     };

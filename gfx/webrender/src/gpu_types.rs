@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayerRect, LayerToWorldTransform};
+use api::{LayerToWorldTransform};
 use gpu_cache::GpuCacheAddress;
+use prim_store::EdgeAaSegmentMask;
 use render_task::RenderTaskAddress;
 
 // Contains type that must exactly match the same structures declared in GLSL.
@@ -21,7 +22,6 @@ pub struct BlurInstance {
     pub task_address: RenderTaskAddress,
     pub src_task_address: RenderTaskAddress,
     pub blur_direction: BlurDirection,
-    pub region: LayerRect,
 }
 
 /// A clipping primitive drawn into the clipping mask.
@@ -155,6 +155,7 @@ pub struct BrushInstance {
     pub clip_task_address: RenderTaskAddress,
     pub z: i32,
     pub segment_index: i32,
+    pub edge_flags: EdgeAaSegmentMask,
     pub user_data0: i32,
     pub user_data1: i32,
 }
@@ -168,7 +169,7 @@ impl From<BrushInstance> for PrimitiveInstance {
                 ((instance.clip_chain_rect_index.0 as i32) << 16) | instance.scroll_id.0 as i32,
                 instance.clip_task_address.0 as i32,
                 instance.z,
-                instance.segment_index,
+                instance.segment_index | ((instance.edge_flags.bits() as i32) << 16),
                 instance.user_data0,
                 instance.user_data1,
             ]

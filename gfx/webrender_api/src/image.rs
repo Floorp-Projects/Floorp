@@ -51,7 +51,7 @@ pub struct ExternalImageData {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum ImageFormat {
     Invalid = 0,
-    A8 = 1,
+    R8 = 1,
     BGRA8 = 3,
     RGBAF32 = 4,
     RG8 = 5,
@@ -60,7 +60,7 @@ pub enum ImageFormat {
 impl ImageFormat {
     pub fn bytes_per_pixel(self) -> u32 {
         match self {
-            ImageFormat::A8 => 1,
+            ImageFormat::R8 => 1,
             ImageFormat::BGRA8 => 4,
             ImageFormat::RGBAF32 => 16,
             ImageFormat::RG8 => 2,
