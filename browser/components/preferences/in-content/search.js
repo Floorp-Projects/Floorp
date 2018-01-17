@@ -71,7 +71,7 @@ var gSearchPane = {
       document.getElementById("showSearchSuggestionsFirstCheckbox");
 
     pref.on("change", () => {
-      this.syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
+      this._syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
     });
     this._syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
 
