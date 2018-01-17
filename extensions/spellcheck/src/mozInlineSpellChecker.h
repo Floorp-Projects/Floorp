@@ -9,7 +9,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMTreeWalker.h"
-#include "nsIEditActionListener.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsRange.h"
@@ -112,7 +111,6 @@ protected:
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,
-                                    public nsIEditActionListener,
                                     public nsIDOMEventListener,
                                     public nsSupportsWeakReference
 {
@@ -176,10 +174,13 @@ private:
   // the whole document.
   bool mFullSpellCheckScheduled;
 
+  // Set to true when this instance needs to listen to edit actions of
+  // the editor.
+  bool mIsListeningToEditActions;
+
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIEDITACTIONLISTENER
   NS_DECL_NSIINLINESPELLCHECKER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMEventListener)
@@ -250,6 +251,11 @@ public:
 
   nsresult ResumeCheck(mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
 
+  // Those methods are called when mTextEditor splits a node or joins the
+  // given nodes.
+  void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
+  void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
+
 protected:
   virtual ~mozInlineSpellChecker();
 
@@ -262,6 +268,9 @@ protected:
   void ChangeNumPendingSpellChecks(int32_t aDelta,
                                    mozilla::TextEditor* aTextEditor = nullptr);
   void NotifyObservers(const char* aTopic, mozilla::TextEditor* aTextEditor);
+
+  void StartToListenToEditActions() { mIsListeningToEditActions = true; }
+  void EndListeningToEditActions() { mIsListeningToEditActions = false; }
 };
 
 #endif // #ifndef mozilla_mozInlineSpellChecker_h

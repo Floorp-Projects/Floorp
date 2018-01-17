@@ -8,7 +8,6 @@
 #include "mozHunspell.h"
 #include "mozHunspellDirProvider.h"
 #include "mozSpellChecker.h"
-#include "mozInlineSpellChecker.h"
 #include "mozPersonalDictionary.h"
 #include "mozSpellI18NManager.h"
 #include "nsIFile.h"
@@ -18,24 +17,17 @@
 0x8227F019, 0xAFC7, 0x461e,                     \
 { 0xB0, 0x30, 0x9F, 0x18, 0x5D, 0x7A, 0x0E, 0x29} }
 
-#define MOZ_INLINESPELLCHECKER_CID         \
-{ /* 9FE5D975-09BD-44aa-A01A-66402EA28657 */    \
-0x9fe5d975, 0x9bd, 0x44aa,                      \
-{ 0xa0, 0x1a, 0x66, 0x40, 0x2e, 0xa2, 0x86, 0x57} }
-
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozHunspell, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozHunspellDirProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozSpellChecker, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozPersonalDictionary, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozSpellI18NManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozInlineSpellChecker)
 
 NS_DEFINE_NAMED_CID(MOZ_HUNSPELL_CID);
 NS_DEFINE_NAMED_CID(HUNSPELLDIRPROVIDER_CID);
 NS_DEFINE_NAMED_CID(NS_SPELLCHECKER_CID);
 NS_DEFINE_NAMED_CID(MOZ_PERSONALDICTIONARY_CID);
 NS_DEFINE_NAMED_CID(MOZ_SPELLI18NMANAGER_CID);
-NS_DEFINE_NAMED_CID(MOZ_INLINESPELLCHECKER_CID);
 
 static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
     { &kMOZ_HUNSPELL_CID, false, nullptr, mozHunspellConstructor },
@@ -43,7 +35,6 @@ static const mozilla::Module::CIDEntry kSpellcheckCIDs[] = {
     { &kNS_SPELLCHECKER_CID, false, nullptr, mozSpellCheckerConstructor },
     { &kMOZ_PERSONALDICTIONARY_CID, false, nullptr, mozPersonalDictionaryConstructor },
     { &kMOZ_SPELLI18NMANAGER_CID, false, nullptr, mozSpellI18NManagerConstructor },
-    { &kMOZ_INLINESPELLCHECKER_CID, false, nullptr, mozInlineSpellCheckerConstructor },
     { nullptr }
 };
 
@@ -53,7 +44,6 @@ static const mozilla::Module::ContractIDEntry kSpellcheckContracts[] = {
     { NS_SPELLCHECKER_CONTRACTID, &kNS_SPELLCHECKER_CID },
     { MOZ_PERSONALDICTIONARY_CONTRACTID, &kMOZ_PERSONALDICTIONARY_CID },
     { MOZ_SPELLI18NMANAGER_CONTRACTID, &kMOZ_SPELLI18NMANAGER_CID },
-    { MOZ_INLINESPELLCHECKER_CONTRACTID, &kMOZ_INLINESPELLCHECKER_CID },
     { nullptr }
 };
 

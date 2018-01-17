@@ -1575,6 +1575,11 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
     htmlEditRules->DidSplitNode(aStartOfRightNode.GetContainer(), newNode);
   }
 
+  if (mInlineSpellChecker) {
+    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
+    spellChecker->DidSplitNode(aStartOfRightNode.GetContainer(), newNode);
+  }
+
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
@@ -1637,6 +1642,11 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     htmlEditRules->DidJoinNodes(aLeftNode, aRightNode);
+  }
+
+  if (mInlineSpellChecker) {
+    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
+    spellChecker->DidJoinNodes(aLeftNode, aRightNode);
   }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
@@ -2213,6 +2223,8 @@ EditorBase::AddEditActionListener(nsIEditActionListener* aListener)
   // Make sure the listener isn't already on the list
   if (!mActionListeners.Contains(aListener)) {
     mActionListeners.AppendElement(*aListener);
+    NS_WARNING_ASSERTION(mActionListeners.Length() != 1,
+      "nsIEditActionListener installed, this editor becomes slower");
   }
 
   return NS_OK;
@@ -2228,6 +2240,8 @@ EditorBase::RemoveEditActionListener(nsIEditActionListener* aListener)
     return NS_OK;
   }
 
+  NS_WARNING_ASSERTION(mActionListeners.Length() != 1,
+    "All nsIEditActionListeners have been removed, this editor becomes faster");
   mActionListeners.RemoveElement(aListener);
 
   return NS_OK;

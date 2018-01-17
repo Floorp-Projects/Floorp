@@ -48,9 +48,3 @@ interface nsIInlineSpellChecker : nsISupports
 
   readonly attribute boolean spellCheckPending;
 };
-
-%{C++
-
-#define MOZ_INLINESPELLCHECKER_CONTRACTID "@mozilla.org/spellchecker-inline;1"
-
-%}

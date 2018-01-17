@@ -527,7 +527,6 @@ NS_IMPL_ISUPPORTS(InitEditorSpellCheckCallback, nsIEditorSpellCheckCallback)
 
 NS_INTERFACE_MAP_BEGIN(mozInlineSpellChecker)
   NS_INTERFACE_MAP_ENTRY(nsIInlineSpellChecker)
-  NS_INTERFACE_MAP_ENTRY(nsIEditActionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
@@ -705,7 +704,7 @@ mozInlineSpellChecker::RegisterEventListeners()
     return NS_ERROR_FAILURE;
   }
 
-  mTextEditor->AddEditActionListener(this);
+  StartToListenToEditActions();
 
   nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
@@ -726,7 +725,7 @@ mozInlineSpellChecker::UnregisterEventListeners()
     return NS_ERROR_FAILURE;
   }
 
-  mTextEditor->RemoveEditActionListener(this);
+  EndListeningToEditActions();
 
   nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
@@ -1038,80 +1037,26 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
   return ScheduleSpellCheck(Move(status));
 }
 
-NS_IMETHODIMP
-mozInlineSpellChecker::DidCreateNode(const nsAString& aTag,
-                                     nsIDOMNode* aNewNode,
-                                     nsresult aResult)
+void
+mozInlineSpellChecker::DidSplitNode(nsINode* aExistingRightNode,
+                                    nsINode* aNewLeftNode)
 {
-  return NS_OK;
+  if (!mIsListeningToEditActions) {
+    return;
+  }
+  nsIDOMNode* newLeftDOMNode =
+    aNewLeftNode ? aNewLeftNode->AsDOMNode() : nullptr;
+  SpellCheckBetweenNodes(newLeftDOMNode, 0, newLeftDOMNode, 0);
 }
 
-NS_IMETHODIMP
-mozInlineSpellChecker::DidInsertNode(nsIDOMNode* aNode,
-                                     nsresult aResult)
+void
+mozInlineSpellChecker::DidJoinNodes(nsINode& aLeftNode,
+                                    nsINode& aRightNode)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidDeleteNode(nsIDOMNode* aChild,
-                                     nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidSplitNode(nsIDOMNode* aExistingRightNode,
-                                    nsIDOMNode* aNewLeftNode)
-{
-  return SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidJoinNodes(nsIDOMNode* aLeftNode,
-                                    nsIDOMNode* aRightNode,
-                                    nsIDOMNode* aParent,
-                                    nsresult aResult)
-{
-  return SpellCheckBetweenNodes(aRightNode, 0, aRightNode, 0);
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidInsertText(nsIDOMCharacterData* aTextNode,
-                                     int32_t aOffset,
-                                     const nsAString& aString,
-                                     nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::WillDeleteText(nsIDOMCharacterData* aTextNode,
-                                      int32_t aOffset,
-                                      int32_t aLength)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidDeleteText(nsIDOMCharacterData* aTextNode,
-                                     int32_t aOffset,
-                                     int32_t aLength,
-                                     nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::WillDeleteSelection(nsISelection* aSelection)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidDeleteSelection(nsISelection* aSelection)
-{
-  return NS_OK;
+  if (!mIsListeningToEditActions) {
+    return;
+  }
+  SpellCheckBetweenNodes(aRightNode.AsDOMNode(), 0, aRightNode.AsDOMNode(), 0);
 }
 
 // mozInlineSpellChecker::MakeSpellCheckRange
