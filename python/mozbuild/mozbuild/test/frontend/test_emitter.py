@@ -663,6 +663,19 @@ class TestEmitterBasic(unittest.TestCase):
                                        'test_program2.%s' %
                                        reader.config.substs['OBJ_SUFFIX'])])
 
+    def test_program_paths(self):
+        """Various moz.build settings that change the destination of PROGRAM should be
+        accurately reflected in Program.output_path."""
+        reader = self.reader('program-paths')
+        objs = self.read_topsrcdir(reader)
+        prog_paths = [o.output_path for o in objs if isinstance(o, Program)]
+        self.assertEqual(prog_paths, [
+            '!/dist/bin/dist-bin.prog',
+            '!/dist/bin/foo/dist-subdir.prog',
+            '!/final/target/final-target.prog',
+            '!not-installed.prog',
+        ])
+
     def test_test_manifest_missing_manifest(self):
         """A missing manifest file should result in an error."""
         reader = self.reader('test-manifest-missing-manifest')
