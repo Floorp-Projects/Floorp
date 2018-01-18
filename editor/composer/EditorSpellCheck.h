@@ -50,6 +50,8 @@ public:
   /* Declare all methods in the nsIEditorSpellCheck interface */
   NS_DECL_NSIEDITORSPELLCHECK
 
+  mozSpellChecker* GetSpellChecker();
+
 protected:
   virtual ~EditorSpellCheck();
 
