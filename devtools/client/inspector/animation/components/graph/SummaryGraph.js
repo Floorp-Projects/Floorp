@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const DelaySign = createFactory(require("./DelaySign"));
+const EndDelaySign = createFactory(require("./EndDelaySign"));
 const SummaryGraphPath = createFactory(require("./SummaryGraphPath"));
 
 class SummaryGraph extends PureComponent {
@@ -40,6 +41,15 @@ class SummaryGraph extends PureComponent {
       ),
       animation.state.delay ?
         DelaySign(
+          {
+            animation,
+            timeScale,
+          }
+        )
+      :
+      null,
+      animation.state.iterationCount && animation.state.endDelay ?
+        EndDelaySign(
           {
             animation,
             timeScale,
