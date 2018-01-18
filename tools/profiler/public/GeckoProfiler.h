@@ -176,7 +176,7 @@ void profiler_shutdown();
 //   "aInterval" the sampling interval, measured in millseconds.
 //   "aFeatures" is the feature set. Features unsupported by this
 //               platform/configuration are ignored.
-void profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
+void profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                     const char** aFilters, uint32_t aFilterCount);
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
@@ -188,7 +188,7 @@ void profiler_stop();
 // the state change are performed while the profiler state is locked.
 // The only difference to profiler_start is that the current buffer contents are
 // not discarded if the profiler is already running with the requested settings.
-void profiler_ensure_started(int aEntries, double aInterval,
+void profiler_ensure_started(uint32_t aEntries, double aInterval,
                              uint32_t aFeatures, const char** aFilters,
                              uint32_t aFilterCount);
 

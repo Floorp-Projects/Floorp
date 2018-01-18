@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 
-ProfileBuffer::ProfileBuffer(int aEntrySize)
+ProfileBuffer::ProfileBuffer(uint32_t aEntrySize)
   : mEntries(mozilla::MakeUnique<ProfileBufferEntry[]>(aEntrySize))
   , mWritePos(0)
   , mReadPos(0)
@@ -55,7 +55,7 @@ ProfileBuffer::AddThreadIdEntry(int aThreadId, LastSample* aLS)
   if (aLS) {
     // This is the start of a sample, so make a note of its location in |aLS|.
     aLS->mGeneration = mGeneration;
-    aLS->mPos = mWritePos;
+    aLS->mPos = Some(mWritePos);
   }
   AddEntry(ProfileBufferEntry::ThreadId(aThreadId));
 }
