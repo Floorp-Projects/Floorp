@@ -402,8 +402,8 @@ ChromeUtils::Import(const GlobalObject& aGlobal,
   }
 
   JS::Rooted<JS::Value> retval(cx);
-  nsresult rv = moduleloader->Import(registryLocation, targetObj, cx,
-                                     optionalArgc, &retval);
+  nsresult rv = moduleloader->ImportInto(registryLocation, targetObj, cx,
+                                         optionalArgc, &retval);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
