@@ -11,7 +11,6 @@ const TEST_CASES = [
     expectedResult: {
       nameAndType: "cssanimation - CSS Animation",
       duration: "100s",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -20,7 +19,6 @@ const TEST_CASES = [
       nameAndType: "cssanimation - CSS Animation",
       duration: "100s",
       animationTimingFunction: "linear",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -29,7 +27,6 @@ const TEST_CASES = [
       nameAndType: "test-delay-animation - Script Animation",
       delay: "50s",
       duration: "100s",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -38,7 +35,6 @@ const TEST_CASES = [
       nameAndType: "test-negative-delay-animation - Script Animation",
       delay: "-50s",
       duration: "100s",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -47,7 +43,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       easing: "steps(2)",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -56,7 +51,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       endDelay: "50s",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -65,7 +59,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       endDelay: "-50s",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -75,7 +68,6 @@ const TEST_CASES = [
       duration: "100s",
       endDelay: "50s",
       fill: "forwards",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -85,7 +77,6 @@ const TEST_CASES = [
       duration: "100s",
       endDelay: "50s",
       iterations: "\u221E",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -95,7 +86,6 @@ const TEST_CASES = [
       duration: "100s",
       direction: "alternate",
       iterations: "\u221E",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -105,7 +95,6 @@ const TEST_CASES = [
       duration: "100s",
       direction: "alternate-reverse",
       iterations: "\u221E",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -115,7 +104,6 @@ const TEST_CASES = [
       duration: "100s",
       direction: "reverse",
       iterations: "\u221E",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -124,7 +112,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       fill: "backwards",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -135,7 +122,6 @@ const TEST_CASES = [
       duration: "100s",
       fill: "backwards",
       iterationStart: "0.5",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -144,7 +130,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       fill: "both",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -155,7 +140,6 @@ const TEST_CASES = [
       duration: "100s",
       fill: "both",
       iterationStart: "0.5",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -164,7 +148,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       fill: "forwards",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -173,7 +156,6 @@ const TEST_CASES = [
       nameAndType: "Script Animation",
       duration: "100s",
       iterationStart: "0.5",
-      isAllOnCompositor: true,
     },
   },
   {
@@ -188,7 +170,6 @@ const TEST_CASES = [
     expectedResult: {
       nameAndType: "Script Animation",
       duration: "100s",
-      isAllOnCompositor: true,
     },
   },
 ];
@@ -224,7 +205,6 @@ add_task(async function () {
       iterations,
       iterationStart,
       nameAndType,
-      isAllOnCompositor,
     } = expectedResult;
 
     ok(tooltip.startsWith(nameAndType), "Tooltip should start with name and type");
@@ -292,14 +272,6 @@ add_task(async function () {
     } else {
       ok(!tooltip.includes("Iteration start:"),
          "Tooltip should not include iterationStart");
-    }
-
-    if (isAllOnCompositor) {
-      const expected = "All animation properties are optimized";
-      ok(tooltip.includes(expected), `Tooltip should include '${ expected }'`);
-    } else {
-      ok(!tooltip.includes("optimized"),
-         "Tooltip should not include a message for optmization");
     }
   }
 });
