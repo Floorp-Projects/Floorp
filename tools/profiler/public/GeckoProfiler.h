@@ -347,30 +347,21 @@ using UniqueProfilerBacktrace =
 // if the profiler is inactive or in privacy mode.
 UniqueProfilerBacktrace profiler_get_backtrace();
 
-// Get information about the current buffer status. A no-op when the profiler
-// is inactive. Do not call this function; call profiler_get_buffer_info()
-// instead.
-void profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
-                                     uint32_t* aEntries,
-                                     uint32_t* aGeneration);
+struct ProfilerBufferInfo
+{
+  uint32_t mWritePosition;
+  uint32_t mReadPosition;
+  uint32_t mGeneration;
+  uint32_t mEntryCount;
+};
 
-// Get information about the current buffer status. Returns (via outparams) the
-// current write position in the buffer, the total size of the buffer, and the
-// generation of the buffer. Returns zeroes if the profiler is inactive.
+// Get information about the current buffer status.
+// Returns Nothing() if the profiler is inactive.
 //
 // This information may be useful to a user-interface displaying the current
 // status of the profiler, allowing the user to get a sense for how fast the
 // buffer is being written to, and how much data is visible.
-static inline void profiler_get_buffer_info(uint32_t* aCurrentPosition,
-                                            uint32_t* aEntries,
-                                            uint32_t* aGeneration)
-{
-  *aCurrentPosition = 0;
-  *aEntries = 0;
-  *aGeneration = 0;
-
-  profiler_get_buffer_info_helper(aCurrentPosition, aEntries, aGeneration);
-}
+mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 
 // Get the current thread's PseudoStack.
 PseudoStack* profiler_get_pseudo_stack();
