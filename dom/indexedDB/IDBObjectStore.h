@@ -105,10 +105,9 @@ public:
                    StructuredCloneReadInfo& aCloneReadInfo,
                    JS::MutableHandle<JS::Value> aValue);
 
-  static bool
-  DeserializeUpgradeValue(JSContext* aCx,
-                          StructuredCloneReadInfo& aCloneReadInfo,
-                          JS::MutableHandle<JS::Value> aValue);
+  static nsresult
+  DeserializeUpgradeValueToFileIds(StructuredCloneReadInfo& aCloneReadInfo,
+                                   nsAString& aFileIds);
 
   static const JSClass*
   DummyPropClass()
