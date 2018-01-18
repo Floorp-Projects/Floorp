@@ -1091,10 +1091,10 @@ gfx.omtp:
       for a paint for more than 200us, versus the total number of paints.
     keyed: false
     kind: uint
-    expires: "61"
+    expires: "66"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
-      - danderson@mozilla.com
+      - rhunt@mozilla.com
     record_in_processes:
       - 'content'
 

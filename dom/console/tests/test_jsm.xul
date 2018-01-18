@@ -38,6 +38,7 @@ consoleListener.prototype  = {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "", "No consoleID for console API");
+        is(obj.prefix, "", "prefix is empty by default");
 
         // We want to see 2 messages from this innerID, the first is generated
         // by console.log, the second one from createInstance().log();
@@ -46,11 +47,13 @@ consoleListener.prototype  = {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
+        is(obj.prefix, "_PREFIX_", "prefix is set by consoleInstance");
         ++this.count;
       } else if (obj.innerID == "LEVEL") {
         // Nothing special... just we don't want to see 'invisible' messages.
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
+        is(obj.prefix, "", "prefix is empty by default");
         ++this.count;
       }
 

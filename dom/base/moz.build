@@ -444,6 +444,7 @@ LOCAL_INCLUDES += [
     '/dom/xul',
     '/gfx/2d',
     '/image',
+    '/js/xpconnect/loader',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
     '/layout/base',
