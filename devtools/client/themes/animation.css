@@ -119,7 +119,8 @@
   opacity: 0.3;
 }
 
-.animation-negative-delay-path path {
+.animation-negative-delay-path path,
+.animation-negative-end-delay-path path {
   fill: none;
   stroke: var(--theme-graphs-grey);
   stroke-dasharray: 2px 2px;
