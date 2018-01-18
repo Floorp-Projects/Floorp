@@ -7,6 +7,9 @@
 // BOUND_EXCLUDING_TIME should be less than 1ms and is used to exclude start
 // and end bounds when dividing  duration in createPathSegments.
 const BOUND_EXCLUDING_TIME = 0.001;
+// We define default graph height since if the height of viewport in SVG is
+// too small (e.g. 1), vector-effect may not be able to calculate correctly.
+const DEFAULT_GRAPH_HEIGHT = 100;
 // DEFAULT_MIN_PROGRESS_THRESHOLD shoud be between more than 0 to 1.
 const DEFAULT_MIN_PROGRESS_THRESHOLD = 0.1;
 // In the createPathSegments function, an animation duration is divided by
@@ -14,8 +17,8 @@ const DEFAULT_MIN_PROGRESS_THRESHOLD = 0.1;
 // But depending on the timing-function, we may be not able to make the graph
 // smoothly progress if this resolution is not high enough.
 // So, if the difference of animation progress between 2 divisions is more than
-// DEFAULT_MIN_PROGRESS_THRESHOLD, then createPathSegments re-divides
-// by DURATION_RESOLUTION.
+// DEFAULT_MIN_PROGRESS_THRESHOLD * DEFAULT_GRAPH_HEIGHT, then createPathSegments
+// re-divides by DURATION_RESOLUTION.
 // DURATION_RESOLUTION shoud be integer and more than 2.
 const DURATION_RESOLUTION = 4;
 
@@ -45,7 +48,8 @@ class SummaryGraphHelper {
               getValueFunc, toPathStringFunc) {
     this.totalDuration = totalDuration;
     this.minSegmentDuration = minSegmentDuration;
-    this.minProgressThreshold = getPreferredProgressThreshold(state, keyframes);
+    this.minProgressThreshold =
+      getPreferredProgressThreshold(state, keyframes) * DEFAULT_GRAPH_HEIGHT;
     this.durationResolution = getPreferredDurationResolution(keyframes);
     this.getValue = getValueFunc;
     this.toPathString = toPathStringFunc;
@@ -79,7 +83,7 @@ class SummaryGraphHelper {
    */
   getSegment(time) {
     const value = this.getValue(time);
-    return { x: time, y: value };
+    return { x: time, y: value * DEFAULT_GRAPH_HEIGHT };
   }
 }
 
@@ -235,5 +239,6 @@ function toPathString(segments) {
   return pathString;
 }
 
+module.exports.DEFAULT_GRAPH_HEIGHT = DEFAULT_GRAPH_HEIGHT;
 exports.SummaryGraphHelper = SummaryGraphHelper;
 exports.toPathString = toPathString;

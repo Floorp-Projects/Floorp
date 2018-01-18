@@ -58,14 +58,17 @@
 
 .animation-item.cssanimation {
   --computed-timing-graph-color: var(--theme-contrast-background);
+  --effect-timing-graph-color: var(--theme-highlight-lightorange);
 }
 
 .animation-item.csstransition {
   --computed-timing-graph-color: var(--theme-highlight-blue);
+  --effect-timing-graph-color: var(--theme-highlight-bluegrey);
 }
 
 .animation-item.scriptanimation {
   --computed-timing-graph-color: var(--theme-graphs-green);
+  --effect-timing-graph-color: var(--theme-highlight-green);
 }
 
 /* Animation Target */
@@ -100,6 +103,18 @@
 }
 
 .animation-computed-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
+}
+
+.animation-effect-timing-path path {
+  fill: none;
+  stroke: var(--effect-timing-graph-color);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
+.animation-effect-timing-path path.infinity:nth-child(n+2) {
   opacity: 0.3;
 }
 
