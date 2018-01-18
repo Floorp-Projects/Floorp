@@ -98,7 +98,7 @@ URLParams::Delete(const nsAString& aName)
   }
 }
 
-void
+/* static */ void
 URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
 {
   if (NS_FAILED(UTF_8_ENCODING->DecodeWithoutBOMHandling(aInput, aOutput))) {
@@ -106,7 +106,7 @@ URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
   }
 }
 
-void
+/* static */ void
 URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
 {
   nsACString::const_iterator start, end;

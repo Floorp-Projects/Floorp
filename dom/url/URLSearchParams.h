@@ -113,8 +113,8 @@ public:
   WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
 
 private:
-  void DecodeString(const nsACString& aInput, nsAString& aOutput);
-  void ConvertString(const nsACString& aInput, nsAString& aOutput);
+  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
+  static void ConvertString(const nsACString& aInput, nsAString& aOutput);
 
   struct Param
   {
