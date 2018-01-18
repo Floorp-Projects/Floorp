@@ -19,6 +19,18 @@
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
 }
 
+/* Root element of animation inspector */
+#animation-container {
+  height: 100%;
+}
+
+/* Animation List Container */
+.animation-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 /* Animation List Header */
 .animation-list-header {
   display: flex;
@@ -41,8 +53,10 @@
 
 /* Animation List */
 .animation-list {
+  flex: 1;
   list-style-type: none;
   margin-top: 0;
+  overflow: auto;
   padding: 0;
 }
 
