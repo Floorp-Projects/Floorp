@@ -159,86 +159,6 @@ MacroAssemblerX64::convertUInt64ToFloat32(Register64 input, FloatRegister output
 }
 
 void
-MacroAssemblerX64::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                             Label* oolRejoin, FloatRegister tempReg)
-{
-    vcvttsd2sq(input, output.reg);
-    cmpq(Imm32(1), output.reg);
-    j(Assembler::Overflow, oolEntry);
-    bind(oolRejoin);
-}
-
-void
-MacroAssemblerX64::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                              Label* oolRejoin, FloatRegister tempReg)
-{
-    vcvttss2sq(input, output.reg);
-    cmpq(Imm32(1), output.reg);
-    j(Assembler::Overflow, oolEntry);
-    bind(oolRejoin);
-}
-
-void
-MacroAssemblerX64::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                              Label* oolRejoin, FloatRegister tempReg)
-{
-    // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
-    // we use it directly. Else, we subtract INT64_MAX, convert to int64,
-    // and then add INT64_MAX to the result.
-
-    Label isLarge;
-
-    ScratchDoubleScope scratch(asMasm());
-    loadConstantDouble(double(0x8000000000000000), scratch);
-    asMasm().branchDouble(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
-    vcvttsd2sq(input, output.reg);
-    testq(output.reg, output.reg);
-    j(Assembler::Signed, oolEntry);
-    jump(oolRejoin);
-
-    bind(&isLarge);
-
-    moveDouble(input, tempReg);
-    vsubsd(scratch, tempReg, tempReg);
-    vcvttsd2sq(tempReg, output.reg);
-    testq(output.reg, output.reg);
-    j(Assembler::Signed, oolEntry);
-    asMasm().or64(Imm64(0x8000000000000000), output);
-
-    bind(oolRejoin);
-}
-
-void
-MacroAssemblerX64::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
-                                               Label* oolRejoin, FloatRegister tempReg)
-{
-    // If the input < INT64_MAX, vcvttss2sq will do the right thing, so
-    // we use it directly. Else, we subtract INT64_MAX, convert to int64,
-    // and then add INT64_MAX to the result.
-
-    Label isLarge;
-
-    ScratchFloat32Scope scratch(asMasm());
-    loadConstantFloat32(float(0x8000000000000000), scratch);
-    asMasm().branchFloat(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
-    vcvttss2sq(input, output.reg);
-    testq(output.reg, output.reg);
-    j(Assembler::Signed, oolEntry);
-    jump(oolRejoin);
-
-    bind(&isLarge);
-
-    moveFloat32(input, tempReg);
-    vsubss(scratch, tempReg, tempReg);
-    vcvttss2sq(tempReg, output.reg);
-    testq(output.reg, output.reg);
-    j(Assembler::Signed, oolEntry);
-    asMasm().or64(Imm64(0x8000000000000000), output);
-
-    bind(oolRejoin);
-}
-
-void
 MacroAssemblerX64::bindOffsets(const MacroAssemblerX86Shared::UsesVector& uses)
 {
     for (CodeOffset use : uses) {
@@ -921,6 +841,86 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     move32(Imm32(0xffffffff), scratch);
     cmpq(scratch, output);
     j(Assembler::Above, oolEntry);
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                          Label* oolRejoin, FloatRegister tempReg)
+{
+    vcvttsd2sq(input, output.reg);
+    cmpq(Imm32(1), output.reg);
+    j(Assembler::Overflow, oolEntry);
+    bind(oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempReg)
+{
+    vcvttss2sq(input, output.reg);
+    cmpq(Imm32(1), output.reg);
+    j(Assembler::Overflow, oolEntry);
+    bind(oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempReg)
+{
+    // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
+    // we use it directly. Else, we subtract INT64_MAX, convert to int64,
+    // and then add INT64_MAX to the result.
+
+    Label isLarge;
+
+    ScratchDoubleScope scratch(*this);
+    loadConstantDouble(double(0x8000000000000000), scratch);
+    branchDouble(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
+    vcvttsd2sq(input, output.reg);
+    testq(output.reg, output.reg);
+    j(Assembler::Signed, oolEntry);
+    jump(oolRejoin);
+
+    bind(&isLarge);
+
+    moveDouble(input, tempReg);
+    vsubsd(scratch, tempReg, tempReg);
+    vcvttsd2sq(tempReg, output.reg);
+    testq(output.reg, output.reg);
+    j(Assembler::Signed, oolEntry);
+    or64(Imm64(0x8000000000000000), output);
+
+    bind(oolRejoin);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                            Label* oolRejoin, FloatRegister tempReg)
+{
+    // If the input < INT64_MAX, vcvttss2sq will do the right thing, so
+    // we use it directly. Else, we subtract INT64_MAX, convert to int64,
+    // and then add INT64_MAX to the result.
+
+    Label isLarge;
+
+    ScratchFloat32Scope scratch(*this);
+    loadConstantFloat32(float(0x8000000000000000), scratch);
+    branchFloat(Assembler::DoubleGreaterThanOrEqual, input, scratch, &isLarge);
+    vcvttss2sq(input, output.reg);
+    testq(output.reg, output.reg);
+    j(Assembler::Signed, oolEntry);
+    jump(oolRejoin);
+
+    bind(&isLarge);
+
+    moveFloat32(input, tempReg);
+    vsubss(scratch, tempReg, tempReg);
+    vcvttss2sq(tempReg, output.reg);
+    testq(output.reg, output.reg);
+    j(Assembler::Signed, oolEntry);
+    or64(Imm64(0x8000000000000000), output);
+
+    bind(oolRejoin);
 }
 
 // ========================================================================
