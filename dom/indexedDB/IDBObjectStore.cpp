@@ -872,6 +872,24 @@ public:
                            JS::MutableHandle<JSObject*> aResult)
   {
     MOZ_ASSERT(aCx);
+
+    // If we have eBlob, we are in an IDB SQLite schema upgrade where we don't
+    // care about a real 'MutableFile', but we just care of having a propert
+    // |mType| flag.
+    if (aFile.mType == StructuredCloneFile::eBlob) {
+      aFile.mType = StructuredCloneFile::eMutableFile;
+
+      // Just make a dummy object.
+      JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+
+      if (NS_WARN_IF(!obj)) {
+        return false;
+      }
+
+      aResult.set(obj);
+      return true;
+    }
+
     MOZ_ASSERT(aFile.mType == StructuredCloneFile::eMutableFile);
 
     if (!aFile.mMutableFile || !NS_IsMainThread()) {
@@ -1006,74 +1024,6 @@ public:
 
     aResult.set(moduleObj);
     return true;
-  }
-};
-
-// We don't need to upgrade database on B2G. See the comment in ActorsParent.cpp,
-// UpgradeSchemaFrom18_0To19_0()
-class UpgradeDeserializationHelper
-{
-public:
-  static bool
-  CreateAndWrapMutableFile(JSContext* aCx,
-                           StructuredCloneFile& aFile,
-                           const MutableFileData& aData,
-                           JS::MutableHandle<JSObject*> aResult)
-  {
-    MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
-
-    aFile.mType = StructuredCloneFile::eMutableFile;
-
-    // Just make a dummy object. The file_ids upgrade function is only
-    // interested in the |mType| flag.
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-    if (NS_WARN_IF(!obj)) {
-      return false;
-    }
-
-    aResult.set(obj);
-    return true;
-  }
-
-  static bool
-  CreateAndWrapBlobOrFile(JSContext* aCx,
-                          IDBDatabase* aDatabase,
-                          StructuredCloneFile& aFile,
-                          const BlobOrFileData& aData,
-                          JS::MutableHandle<JSObject*> aResult)
-  {
-    MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
-    MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
-               aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
-               aData.tag == SCTAG_DOM_BLOB);
-
-    // Just make a dummy object. The file_ids upgrade function is only interested
-    // in the |mType| flag.
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-    if (NS_WARN_IF(!obj)) {
-      return false;
-    }
-
-    aResult.set(obj);
-    return true;
-  }
-
-  static bool
-  CreateAndWrapWasmModule(JSContext* aCx,
-                          StructuredCloneFile& aFile,
-                          const WasmModuleData& aData,
-                          JS::MutableHandle<JSObject*> aResult)
-  {
-    MOZ_ASSERT(aCx);
-    MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
-
-    MOZ_ASSERT(false, "This should never be possible!");
-
-    return false;
   }
 };
 
@@ -1569,6 +1519,130 @@ private:
   nsresult mStatus;
 };
 
+class DeserializeUpgradeValueHelper final : public Runnable
+{
+public:
+  explicit DeserializeUpgradeValueHelper(StructuredCloneReadInfo& aCloneReadInfo)
+    : Runnable("DeserializeUpgradeValueHelper")
+    , mMonitor("DeserializeUpgradeValueHelper::mMonitor")
+    , mCloneReadInfo(aCloneReadInfo)
+    , mStatus(NS_ERROR_FAILURE)
+  {}
+
+  nsresult
+  DispatchAndWait(nsAString& aFileIds)
+  {
+    // We don't need to go to the main-thread and use the sandbox.
+    if (!mCloneReadInfo.mData.Size()) {
+      PopulateFileIds(aFileIds);
+      return NS_OK;
+    }
+
+    // The operation will continue on the main-thread.
+
+    MOZ_ASSERT(!(mCloneReadInfo.mData.Size() % sizeof(uint64_t)));
+
+    MonitorAutoLock lock(mMonitor);
+
+    RefPtr<Runnable> self = this;
+    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, self.forget());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    lock.Wait();
+
+    if (NS_FAILED(mStatus)) {
+      return mStatus;
+    }
+
+    PopulateFileIds(aFileIds);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
+
+    JS::Rooted<JSObject*> global(cx, SandboxHolder::GetSandbox(cx));
+    if (NS_WARN_IF(!global)) {
+      OperationCompleted(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    JSAutoCompartment ac(cx, global);
+
+    JS::Rooted<JS::Value> value(cx);
+    nsresult rv = DeserializeUpgradeValue(cx, &value);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      OperationCompleted(rv);
+      return NS_OK;
+    }
+
+    OperationCompleted(NS_OK);
+    return NS_OK;
+  }
+
+private:
+  nsresult
+  DeserializeUpgradeValue(JSContext* aCx, JS::MutableHandle<JS::Value> aValue)
+  {
+    static const JSStructuredCloneCallbacks callbacks = {
+      CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr
+    };
+
+    if (!JS_ReadStructuredClone(aCx, mCloneReadInfo.mData,
+                                JS_STRUCTURED_CLONE_VERSION,
+                                JS::StructuredCloneScope::SameProcessSameThread,
+                                aValue, &callbacks, &mCloneReadInfo)) {
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+    }
+
+    return NS_OK;
+  }
+
+  void
+  PopulateFileIds(nsAString& aFileIds)
+  {
+    for (uint32_t count = mCloneReadInfo.mFiles.Length(), index = 0;
+         index < count;
+         index++) {
+      StructuredCloneFile& file = mCloneReadInfo.mFiles[index];
+      MOZ_ASSERT(file.mFileInfo);
+
+      const int64_t id = file.mFileInfo->Id();
+
+      if (index) {
+        aFileIds.Append(' ');
+      }
+      aFileIds.AppendInt(file.mType == StructuredCloneFile::eBlob ? id : -id);
+    }
+  }
+
+  void
+  OperationCompleted(nsresult aStatus)
+  {
+    mStatus = aStatus;
+
+    MonitorAutoLock lock(mMonitor);
+    lock.Notify();
+  }
+
+  Monitor mMonitor;
+  StructuredCloneReadInfo& mCloneReadInfo;
+  nsresult mStatus;
+};
+
 } // anonymous
 
 // static
@@ -1590,39 +1664,15 @@ IDBObjectStore::DeserializeIndexValueToUpdateInfos(int64_t aIndexID,
 }
 
 // static
-bool
-IDBObjectStore::DeserializeUpgradeValue(JSContext* aCx,
-                                        StructuredCloneReadInfo& aCloneReadInfo,
-                                        JS::MutableHandle<JS::Value> aValue)
+nsresult
+IDBObjectStore::DeserializeUpgradeValueToFileIds(StructuredCloneReadInfo& aCloneReadInfo,
+                                                 nsAString& aFileIds)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aCx);
 
-  if (!aCloneReadInfo.mData.Size()) {
-    aValue.setUndefined();
-    return true;
-  }
-
-  MOZ_ASSERT(!(aCloneReadInfo.mData.Size() % sizeof(uint64_t)));
-
-  JSAutoRequest ar(aCx);
-
-  static JSStructuredCloneCallbacks callbacks = {
-    CommonStructuredCloneReadCallback<UpgradeDeserializationHelper>,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr
-  };
-
-  if (!JS_ReadStructuredClone(aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
-                              JS::StructuredCloneScope::SameProcessSameThread,
-                              aValue, &callbacks, &aCloneReadInfo)) {
-    return false;
-  }
-
-  return true;
+  RefPtr<DeserializeUpgradeValueHelper> helper =
+    new DeserializeUpgradeValueHelper(aCloneReadInfo);
+  return helper->DispatchAndWait(aFileIds);
 }
 
 #ifdef DEBUG
