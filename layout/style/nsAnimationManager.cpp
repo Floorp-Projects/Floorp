@@ -29,6 +29,7 @@
 #include "nsDOMMutationObserver.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
+#include "nsRFPService.h"
 #include <algorithm> // std::stable_sort
 #include <math.h>
 
@@ -237,10 +238,14 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
   auto appendAnimationEvent = [&](EventMessage aMessage,
                                   const StickyTimeDuration& aElapsedTime,
                                   const TimeStamp& aTimeStamp) {
+    double elapsedTime = aElapsedTime.ToSeconds();
+    if (aMessage == eAnimationCancel) {
+      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
+    }
     events.AppendElement(AnimationEventInfo(mOwningElement.Target(),
                                             aMessage,
                                             mAnimationName,
-                                            aElapsedTime,
+                                            elapsedTime,
                                             aTimeStamp,
                                             this));
   };
