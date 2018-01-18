@@ -65,7 +65,7 @@ PutBytesNull(void* info, const void* buffer, size_t count)
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
+PrintTargetCG::GetReferenceDrawTarget()
 {
   if (!mRefDT) {
     const IntSize size(1, 1);
@@ -95,27 +95,6 @@ PrintTargetCG::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
       return nullptr;
     }
     mRefDT = dt.forget();
-  }
-
-  if (aRecorder) {
-    if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
-      if (!dt || !dt->IsValid()) {
-        return nullptr;
-      }
-      mRecordingRefDT = dt.forget();
-#ifdef DEBUG
-      mRecorder = aRecorder;
-#endif
-    }
-#ifdef DEBUG
-    else {
-      MOZ_ASSERT(aRecorder == mRecorder,
-                 "Caching mRecordingRefDT assumes the aRecorder is an invariant");
-    }
-#endif
-
-    return do_AddRef(mRecordingRefDT);
   }
 
   return do_AddRef(mRefDT);

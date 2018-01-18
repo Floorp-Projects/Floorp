@@ -34,7 +34,7 @@ public:
   virtual nsresult EndPage() final override;
 
   virtual already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final override;
+  GetReferenceDrawTarget() final override;
 
 private:
   PrintTargetCG(PMPrintSession aPrintSession,
