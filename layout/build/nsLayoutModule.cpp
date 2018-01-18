@@ -109,8 +109,7 @@ using mozilla::dom::AudioChannelAgent;
 #include "mozilla/EditorController.h" //CID
 #include "mozilla/HTMLEditor.h"
 
-#include "nsTextServicesDocument.h"
-#include "nsTextServicesCID.h"
+#include "mozilla/TextServicesDocument.h"
 
 #include "nsScriptSecurityManager.h"
 #include "ContentPrincipal.h"
@@ -208,7 +207,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(TextEditor)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
+NS_GENERIC_FACTORY_CONSTRUCTOR(TextServicesDocument)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(HTMLEditor)
 
@@ -883,7 +882,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
   { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
-  { &kNS_TEXTSERVICESDOCUMENT_CID, false, nullptr, nsTextServicesDocumentConstructor },
+  { &kNS_TEXTSERVICESDOCUMENT_CID, false, nullptr, TextServicesDocumentConstructor },
   { &kNS_GEOLOCATION_SERVICE_CID, false, nullptr, nsGeolocationServiceConstructor },
   { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
   { &kNS_AUDIOCHANNEL_SERVICE_CID, false, nullptr, AudioChannelServiceConstructor },

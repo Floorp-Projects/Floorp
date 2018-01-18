@@ -50,7 +50,6 @@ LOCAL_INCLUDES += [
     '/dom/xul',
     '/editor/composer',
     '/editor/txmgr',
-    '/editor/txtsvc',
     '/extensions/cookie',
     '/js/xpconnect/loader',
     '/js/xpconnect/src',

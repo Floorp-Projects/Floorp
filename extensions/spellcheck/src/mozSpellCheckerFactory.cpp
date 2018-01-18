@@ -9,7 +9,6 @@
 #include "mozHunspellDirProvider.h"
 #include "mozSpellChecker.h"
 #include "mozInlineSpellChecker.h"
-#include "nsTextServicesCID.h"
 #include "mozPersonalDictionary.h"
 #include "mozSpellI18NManager.h"
 #include "nsIFile.h"
