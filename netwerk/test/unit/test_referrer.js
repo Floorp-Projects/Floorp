@@ -62,7 +62,7 @@ function run_test() {
   Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
   Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https));
 
-  // tests for referer.defaultPolicy
+  // tests for referer.defaultPolicy.pbmode
   prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 0);
   Assert.equal(null, getTestReferrer(server_uri, referer_uri, true));
   prefs.setIntPref("network.http.referer.defaultPolicy.pbmode", 1);

@@ -1567,10 +1567,8 @@ HttpBaseChannel::GetReferrer(nsIURI **referrer)
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrer(nsIURI *referrer)
 {
-  if (mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0) {
-    return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy(true));
-  }
-  return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy());
+  bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy(isPrivate));
 }
 
 NS_IMETHODIMP
@@ -1627,11 +1625,8 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   }
 
   if (mReferrerPolicy == REFERRER_POLICY_UNSET) {
-    if (mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0) {
-      mReferrerPolicy = NS_GetDefaultReferrerPolicy(true);
-    } else {
-      mReferrerPolicy = NS_GetDefaultReferrerPolicy();
-    }
+    bool isPrivate = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+    mReferrerPolicy = NS_GetDefaultReferrerPolicy(isPrivate);
   }
 
   if (!referrer) {
