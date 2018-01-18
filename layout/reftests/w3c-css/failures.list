@@ -207,13 +207,9 @@ fuzzy(135,530) css-multicol/multicol-containing-001.xht
 fuzzy(215,241) css-multicol/multicol-containing-002.xht
 fuzzy(87,180) css-multicol/multicol-count-001.xht
 fails css-multicol/multicol-count-002.xht
-fails css-multicol/multicol-count-computed-001.xht
-fails css-multicol/multicol-count-computed-002.xht
 fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-003.xht
 fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) css-multicol/multicol-count-computed-004.xht
 fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-005.xht
-fails css-multicol/multicol-count-large-001.xht
-fuzzy(255,132) css-multicol/multicol-count-large-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-negative-001.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-negative-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-integer-001.xht
@@ -221,7 +217,6 @@ fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-int
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-count-non-integer-003.xht
 fuzzy(135,80) css-multicol/multicol-fill-auto-002.xht
 fuzzy(135,3270) css-multicol/multicol-fill-auto-003.xht
-fails css-multicol/multicol-fill-auto.xht
 fuzzy(135,80) css-multicol/multicol-fill-balance-001.xht
 fuzzy(135,821) css-multicol/multicol-gap-000.xht
 fuzzy(255,290) css-multicol/multicol-gap-001.xht
@@ -235,7 +230,6 @@ fails css-multicol/multicol-height-block-child-001.xht
 fuzzy(255,3762) css-multicol/multicol-inherit-001.xht
 fuzzy(135,1893) css-multicol/multicol-inherit-002.xht
 fails css-multicol/multicol-inherit-003.xht
-fails css-multicol/multicol-inherit-004.xht
 fuzzy(96,264) css-multicol/multicol-list-item-001.xht
 fuzzy(73,1200) css-multicol/multicol-margin-001.xht
 fuzzy(73,1200) css-multicol/multicol-margin-002.xht
@@ -269,23 +263,16 @@ fails css-multicol/multicol-rule-px-001.xht
 fuzzy(127,500) css-multicol/multicol-rule-ridge-000.xht
 fuzzy(106,354) css-multicol/multicol-rule-solid-000.xht
 fails css-multicol/multicol-rule-stacking-001.xht
-css-multicol/multicol-rule-style-groove-001.xht
-css-multicol/multicol-rule-style-inset-001.xht
-css-multicol/multicol-rule-style-outset-001.xht
-css-multicol/multicol-rule-style-ridge-001.xht
 fails css-multicol/multicol-shorthand-001.xht
 fails css-multicol/multicol-span-000.xht
 fails css-multicol/multicol-span-all-001.xht
 fails css-multicol/multicol-span-all-002.xht
 fails css-multicol/multicol-span-all-003.xht
-fails css-multicol/multicol-span-all-child-001.xht
-fails-if(OSX||winWidget) css-multicol/multicol-span-all-child-002.xht
 fails css-multicol/multicol-span-all-margin-001.xht
 fails css-multicol/multicol-span-all-margin-002.xht
 fails css-multicol/multicol-span-all-margin-bottom-001.xht
 fails css-multicol/multicol-span-all-margin-nested-001.xht
 fails css-multicol/multicol-span-all-margin-nested-002.xht
-fails css-multicol/multicol-span-all-margin-nested-003.xht
 fails css-multicol/multicol-span-all-margin-nested-firstchild-001.xht
 fails css-multicol/multicol-span-float-001.xht
 fails css-multicol/multicol-span-none-001.xht
@@ -295,7 +282,6 @@ fails css-multicol/multicol-table-cell-height-002.xht
 fails css-multicol/multicol-table-cell-vertical-align-001.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol/multicol-width-002.xht
 fails css-multicol/multicol-width-count-002.xht
-fails css-multicol/multicol-width-ems-001.xht
 fails css-multicol/multicol-width-negative-001.xht
 fuzzy(225,1060) css-multicol/multicol-width-large-001.xht
 fails css-multicol/multicol-width-small-001.xht
@@ -313,3 +299,36 @@ fuzzy(255,2808) css-multicol/multicol-rule-large-001.xht
 fails css-multicol/multicol-fill-auto-block-children-001.xht
 fails css-multicol/multicol-fill-auto-block-children-002.xht
 fails css-multicol/multicol-span-all-block-sibling-003.xht
+
+# skip these tests since they haven't been triaged yet.
+# These tests were added to the tree as part of an update for Bug 1430939.
+skip css-multicol/multicol-fill-balance-002.html
+skip css-multicol/multicol-gap-fraction-002.html
+skip css-multicol/multicol-rule-shorthand-2.xht
+skip css-multicol/multicol-width-ch-001.xht
+skip css-values/ex-calc-expression-001.html
+skip css-values/ic-unit-001.html
+skip css-values/ic-unit-002.html
+skip css-values/ic-unit-003.html
+skip css-values/ic-unit-004.html
+skip css-values/lh-unit-001.html
+skip css-values/lh-unit-002.html
+skip css-values/support/vh-support-transform-origin-iframe.html
+skip css-values/support/vh-support-transform-translate-iframe.html
+skip css-writing-modes/bidi-table-001.html
+skip css-writing-modes/block-plaintext-006.html
+skip css-writing-modes/table-cell-001.html
+skip css-writing-modes/table-cell-002.html
+skip selectors/any-link-dynamic-001.html
+skip selectors/root-siblings.htm
+skip selectors/scope-without-scoping.html
+skip selectors/selector-placeholder-shown-type-change-001.html
+skip selectors/selector-placeholder-shown-type-change-002.html
+skip selectors/selector-placeholder-shown-type-change-003.html
+skip selectors/selector-read-write-type-change-001.html
+skip selectors/selector-read-write-type-change-002.html
+skip selectors/selector-required-type-change-001.html
+skip selectors/selector-required-type-change-002.html
+skip selectors/selectors-attr-white-space-001.html
+skip selectors/selectors-empty-001.xml
+skip selectors/selectors-namespace-001.xml

@@ -16,7 +16,7 @@
 }
 ]]></style>
   <style type="text/css"><![CDATA[
-  div
+  body > div
   {
   background-color: yellow;
   border: gray solid 1em;
@@ -29,20 +29,23 @@
   -moz-column-gap: 0;
   -moz-column-width: 1em;
   }
+  div > div { overflow: hidden; }
 
   span {color: blue;}
   ]]></style>
  </head>
  <body>
   <div>
-  Bl ac
-    <span>
-    bl ue
-    </span>
-    <span>
-    bl ue
-    </span>
-  Bl ac
+    <div>
+      Bl ac
+      <span>
+        bl ue
+      </span>
+      <span>
+        bl ue
+      </span>
+      Bl ac
+    </div>
   </div>
 
   <!--
