@@ -567,7 +567,7 @@ TokenStreamAnyChars::undoGetChar()
 
 template<typename CharT, class AnyCharsAccess>
 void
-TokenStreamSpecific<CharT, AnyCharsAccess>::ungetChar(int32_t c)
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
 {
     if (c == EOF)
         return;
