@@ -8,9 +8,11 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const BYTES_PER_MEBIBYTE = 1048576;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+});
 
 this.EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 
@@ -37,7 +39,8 @@ this.PlacesDBUtils = {
       this.checkIntegrity,
       this.invalidateCaches,
       this.checkCoherence,
-      this._refreshUI
+      this._refreshUI,
+      this.incrementalVacuum
     ];
     let telemetryStartTime = Date.now();
     let taskStatusMap = await PlacesDBUtils.runTasks(tasks);
@@ -113,7 +116,7 @@ this.PlacesDBUtils = {
     }
     try {
       // Run a integrity check, but stop at the first error.
-      await PlacesUtils.withConnectionWrapper("PlacesDBUtils: check the integrity", async (db) => {
+      await PlacesUtils.withConnectionWrapper("PlacesDBUtils: check the integrity", async db => {
         let isOk = await integrity(db);
         if (isOk) {
           logs.push("The database is sane");
@@ -144,28 +147,23 @@ this.PlacesDBUtils = {
     return logs;
   },
 
-  async invalidateCaches() {
+  invalidateCaches() {
     let logs = [];
-    try {
-      await PlacesUtils.withConnectionWrapper(
-        "PlacesDBUtils: invalidate caches",
-        async (db) => {
-          let idsWithInvalidGuidsRows = await db.execute(`
-            SELECT id FROM moz_bookmarks
-            WHERE guid IS NULL OR
-                  NOT IS_VALID_GUID(guid)`);
-          for (let row of idsWithInvalidGuidsRows) {
-            let id = row.getResultByName("id");
-            PlacesUtils.invalidateCachedGuidFor(id);
-          }
-        }
-      );
+    return PlacesUtils.withConnectionWrapper("PlacesDBUtils: invalidate caches", async db => {
+      let idsWithInvalidGuidsRows = await db.execute(`
+        SELECT id FROM moz_bookmarks
+        WHERE guid IS NULL OR
+              NOT IS_VALID_GUID(guid)`);
+      for (let row of idsWithInvalidGuidsRows) {
+        let id = row.getResultByName("id");
+        PlacesUtils.invalidateCachedGuidFor(id);
+      }
       logs.push("The caches have been invalidated");
-    } catch (ex) {
+      return logs;
+    }).catch(ex => {
       PlacesDBUtils.clearPendingTasks();
       throw new Error("Unable to invalidate caches");
-    }
-    return logs;
+    });
   },
 
   /**
@@ -200,6 +198,33 @@ this.PlacesDBUtils = {
       throw new Error("Unable to complete the coherence check");
     }
     return logs;
+  },
+
+  /**
+   * Runs incremental vacuum on databases supporting it.
+   *
+   * @return {Promise} resolves when done.
+   * @resolves to an array of logs for this task.
+   * @rejects if we were unable to vacuum.
+   */
+  async incrementalVacuum() {
+    let logs = [];
+    return PlacesUtils.withConnectionWrapper("PlacesDBUtils: incrementalVacuum",
+      async db => {
+        let count = (await db.execute("PRAGMA favicons.freelist_count"))[0].getResultByIndex(0);
+        if (count < 10) {
+          logs.push(`The favicons database has only ${count} free pages, not vacuuming.`);
+        } else {
+          logs.push(`The favicons database has ${count} free pages, vacuuming.`);
+          await db.execute("PRAGMA favicons.incremental_vacuum");
+          count = (await db.execute("PRAGMA favicons.freelist_count"))[0].getResultByIndex(0);
+          logs.push(`The database has been vacuumed and has now ${count} free pages.`);
+        }
+        return logs;
+      }).catch(ex => {
+        PlacesDBUtils.clearPendingTasks();
+        throw new Error("Unable to incrementally vacuum the favicons database " + ex);
+      });
   },
 
   async _getCoherenceStatements() {
@@ -794,25 +819,19 @@ this.PlacesDBUtils = {
    */
   async vacuum() {
     let logs = [];
-    let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    DBFile.append("places.sqlite");
-    logs.push("Initial database size is " +
-                parseInt(DBFile.fileSize / 1024) + " KiB");
-    return PlacesUtils.withConnectionWrapper(
-      "PlacesDBUtils: vacuum",
-      async (db) => {
-        await db.execute("VACUUM");
-      }).then(() => {
-        logs.push("The database has been vacuumed");
-        let vacuumedDBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-        vacuumedDBFile.append("places.sqlite");
-        logs.push("Final database size is " +
-                   parseInt(vacuumedDBFile.fileSize / 1024) + " KiB");
-        return logs;
-      }).catch(() => {
-        PlacesDBUtils.clearPendingTasks();
-        throw new Error("Unable to vacuum database");
-      });
+    let placesDbPath = OS.Path.join(OS.Constants.Path.profileDir, "places.sqlite");
+    let info = await OS.File.stat(placesDbPath);
+    logs.push(`Initial database size is ${parseInt(info.size / 1024)}KiB`);
+    return PlacesUtils.withConnectionWrapper("PlacesDBUtils: vacuum", async db => {
+      await db.execute("VACUUM");
+      logs.push("The database has been vacuumed");
+      info = await OS.File.stat(placesDbPath);
+      logs.push(`Final database size is ${parseInt(info.size / 1024)}KiB`);
+      return logs;
+    }).catch(() => {
+      PlacesDBUtils.clearPendingTasks();
+      throw new Error("Unable to vacuum database");
+    });
   },
 
   /**
@@ -853,9 +872,12 @@ this.PlacesDBUtils = {
    */
   async stats() {
     let logs = [];
-    let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    DBFile.append("places.sqlite");
-    logs.push("Database size is " + parseInt(DBFile.fileSize / 1024) + " KiB");
+    let placesDbPath = OS.Path.join(OS.Constants.Path.profileDir, "places.sqlite");
+    let info = await OS.File.stat(placesDbPath);
+    logs.push(`Places.sqlite size is ${parseInt(info.size / 1024)}KiB`);
+    let faviconsDbPath = OS.Path.join(OS.Constants.Path.profileDir, "favicons.sqlite");
+    info = await OS.File.stat(faviconsDbPath);
+    logs.push(`Favicons.sqlite size is ${parseInt(info.size / 1024)}KiB`);
 
     // Execute each step async.
     let pragmas = [ "user_version",
@@ -865,16 +887,14 @@ this.PlacesDBUtils = {
                     "synchronous"
                   ].map(p => `pragma_${p}`);
     let pragmaQuery = `SELECT * FROM ${ pragmas.join(", ") }`;
-    await PlacesUtils.withConnectionWrapper(
-      "PlacesDBUtils: pragma for stats",
-      async (db) => {
-        let row = (await db.execute(pragmaQuery))[0];
-        for (let i = 0; i != pragmas.length; i++) {
-          logs.push(`${ pragmas[i] } is ${ row.getResultByIndex(i) }`);
-        }
-      }).catch(() => {
-        logs.push("Could not set pragma for stat collection");
-      });
+    await PlacesUtils.withConnectionWrapper("PlacesDBUtils: pragma for stats", async db => {
+      let row = (await db.execute(pragmaQuery))[0];
+      for (let i = 0; i != pragmas.length; i++) {
+        logs.push(`${ pragmas[i] } is ${ row.getResultByIndex(i) }`);
+      }
+    }).catch(() => {
+      logs.push("Could not set pragma for stat collection");
+    });
 
     // Get maximum number of unique URIs.
     try {
@@ -950,11 +970,20 @@ this.PlacesDBUtils = {
         query:     `SELECT count(*) FROM moz_bookmarks b
                     JOIN moz_bookmarks t ON t.id = b.parent
                     AND t.parent <> :tags_folder
-                    WHERE b.type = :type_bookmark` },
+                    WHERE b.type = :type_bookmark`,
+        params: {
+          tags_folder: PlacesUtils.tagsFolderId,
+          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        }
+      },
 
       { histogram: "PLACES_TAGS_COUNT",
         query:     `SELECT count(*) FROM moz_bookmarks
-                    WHERE parent = :tags_folder` },
+                    WHERE parent = :tags_folder`,
+        params: {
+          tags_folder: PlacesUtils.tagsFolderId,
+        }
+      },
 
       { histogram: "PLACES_KEYWORDS_COUNT",
         query:     "SELECT count(*) FROM moz_keywords" },
@@ -970,7 +999,13 @@ this.PlacesDBUtils = {
                       JOIN moz_bookmarks t ON t.id = b.parent
                       AND t.parent <> :tags_folder
                       WHERE b.type = :type_bookmark
-                    )), 0)` },
+                    )), 0)`,
+        params: {
+          places_root: PlacesUtils.placesRootId,
+          tags_folder: PlacesUtils.tagsFolderId,
+          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        }
+      },
 
       { histogram: "PLACES_TAGGED_BOOKMARKS_PERC",
         query:     `SELECT IFNULL(ROUND((
@@ -982,13 +1017,18 @@ this.PlacesDBUtils = {
                       JOIN moz_bookmarks t ON t.id = b.parent
                       AND t.parent <> :tags_folder
                       WHERE b.type = :type_bookmark
-                    )), 0)` },
+                    )), 0)`,
+        params: {
+          tags_folder: PlacesUtils.tagsFolderId,
+          type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        }
+      },
 
       { histogram: "PLACES_DATABASE_FILESIZE_MB",
-        callback() {
-          let DBFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-          DBFile.append("places.sqlite");
-          return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
+        async callback() {
+          let placesDbPath = OS.Path.join(OS.Constants.Path.profileDir, "places.sqlite");
+          let info = await OS.File.stat(placesDbPath);
+          return parseInt(info.size / BYTES_PER_MEBIBYTE);
         }
       },
 
@@ -1003,6 +1043,14 @@ this.PlacesDBUtils = {
           let dbPageSize = probeValues.PLACES_DATABASE_PAGESIZE_B;
           let placesPageCount = probeValues.PLACES_PAGES_COUNT;
           return Math.round((dbPageSize * aDbPageCount) / placesPageCount);
+        }
+      },
+
+      { histogram: "PLACES_DATABASE_FAVICONS_FILESIZE_MB",
+        async callback() {
+          let faviconsDbPath = OS.Path.join(OS.Constants.Path.profileDir, "favicons.sqlite");
+          let info = await OS.File.stat(faviconsDbPath);
+          return parseInt(info.size / BYTES_PER_MEBIBYTE);
         }
       },
 
@@ -1025,43 +1073,19 @@ this.PlacesDBUtils = {
       },
     ];
 
-    let params = {
-      tags_folder: PlacesUtils.tagsFolderId,
-      type_folder: PlacesUtils.bookmarks.TYPE_FOLDER,
-      type_bookmark: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      places_root: PlacesUtils.placesRootId
-    };
-
-    for (let i = 0; i < probes.length; i++) {
-      let probe = probes[i];
-
-      let promiseDone = new Promise((resolve, reject) => {
-        if (!("query" in probe)) {
-          resolve([probe]);
-          return;
-        }
-
-        let filteredParams = {};
-        for (let p in params) {
-          if (probe.query.includes(`:${p}`)) {
-            filteredParams[p] = params[p];
-          }
-        }
-        PlacesUtils.promiseDBConnection()
-          .then(db => db.execute(probe.query, filteredParams))
-          .then(rows => resolve([probe, rows[0].getResultByIndex(0)]))
-          .catch(ex => reject(new Error("Unable to get telemetry from database.")));
-      });
+    for (let probe of probes) {
+      let val;
+      if (("query" in probe)) {
+        let db = await PlacesUtils.promiseDBConnection();
+        val = (await db.execute(probe.query, probe.params || {}))[0].getResultByIndex(0);
+      }
       // Report the result of the probe through Telemetry.
       // The resulting promise cannot reject.
-      promiseDone.then(([aProbe, aValue]) => {
-        let value = aValue;
-        if ("callback" in aProbe) {
-          value = aProbe.callback(value);
-        }
-        probeValues[aProbe.histogram] = value;
-        Services.telemetry.getHistogramById(aProbe.histogram).add(value);
-      }).catch(Cu.reportError);
+      if ("callback" in probe) {
+        val = await probe.callback(val);
+      }
+      probeValues[probe.histogram] = val;
+      Services.telemetry.getHistogramById(probe.histogram).add(val);
     }
   },
 
