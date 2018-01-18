@@ -6582,6 +6582,14 @@ CodeGenerator::visitComputeThis(LComputeThis* lir)
 }
 
 void
+CodeGenerator::visitImplicitThis(LImplicitThis* lir)
+{
+    pushArg(ImmGCPtr(lir->mir()->name()));
+    pushArg(ToRegister(lir->env()));
+    callVM(ImplicitThisInfo, lir);
+}
+
+void
 CodeGenerator::visitArrowNewTarget(LArrowNewTarget* lir)
 {
     Register callee = ToRegister(lir->callee());

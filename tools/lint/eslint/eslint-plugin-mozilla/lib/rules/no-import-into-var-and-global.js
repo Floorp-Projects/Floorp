@@ -35,7 +35,7 @@ module.exports = function(context) {
         // Is the expression starting with `Cu` or `Components.utils`?
         let isACu =
           ((memexp.object.type === "Identifier" &&
-            memexp.object.name === "Cu") ||
+            (memexp.object.name === "Cu" || memexp.object.name === "ChromeUtils")) ||
            (memexp.object.type === "MemberExpression" &&
             memexp.object.object && memexp.object.property &&
             memexp.object.object.name === "Components" &&

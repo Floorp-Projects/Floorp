@@ -2030,18 +2030,6 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
           mScratchArray.AppendElement(nsGkAtoms::checked);
       }
     }
-    else if (aCol->GetType() == nsITreeColumn::TYPE_PROGRESSMETER) {
-      mScratchArray.AppendElement(nsGkAtoms::progressmeter);
-
-      if (aRowIndex != -1) {
-        int32_t state;
-        mView->GetProgressMode(aRowIndex, aCol, &state);
-        if (state == nsITreeView::PROGRESS_NORMAL)
-          mScratchArray.AppendElement(nsGkAtoms::progressNormal);
-        else if (state == nsITreeView::PROGRESS_UNDETERMINED)
-          mScratchArray.AppendElement(nsGkAtoms::progressUndetermined);
-      }
-    }
 
     // Read special properties from attributes on the column content node
     if (aCol->mContent->IsElement() &&
@@ -3415,23 +3403,6 @@ nsTreeBodyFrame::PaintCell(int32_t               aRowIndex,
           result &= PaintCheckbox(aRowIndex, aColumn, elementRect, aPresContext,
                                   aRenderingContext, aDirtyRect);
           break;
-        case nsITreeColumn::TYPE_PROGRESSMETER:
-          int32_t state;
-          mView->GetProgressMode(aRowIndex, aColumn, &state);
-          switch (state) {
-            case nsITreeView::PROGRESS_NORMAL:
-            case nsITreeView::PROGRESS_UNDETERMINED:
-              result &= PaintProgressMeter(aRowIndex, aColumn, elementRect,
-                                           aPresContext, aRenderingContext,
-                                           aDirtyRect, aBuilder);
-              break;
-            case nsITreeView::PROGRESS_NONE:
-            default:
-              result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
-                                  aRenderingContext, aDirtyRect, currX);
-              break;
-          }
-          break;
       }
     }
   }
@@ -3929,110 +3900,6 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
 
   return result;
 }
-
-ImgDrawResult
-nsTreeBodyFrame::PaintProgressMeter(int32_t               aRowIndex,
-                                    nsTreeColumn*         aColumn,
-                                    const nsRect&         aProgressMeterRect,
-                                    nsPresContext*        aPresContext,
-                                    gfxContext&           aRenderingContext,
-                                    const nsRect&         aDirtyRect,
-                                    nsDisplayListBuilder* aBuilder)
-{
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
-
-  // Resolve style for the progress meter.  It contains all the info we need
-  // to lay ourselves out and to paint.
-  nsStyleContext* meterContext = GetPseudoStyleContext(nsCSSAnonBoxes::mozTreeProgressmeter);
-
-  // Obtain the margins for the progress meter and then deflate our rect by that
-  // amount. The progress meter is assumed to be contained within the deflated
-  // rect.
-  nsRect meterRect(aProgressMeterRect);
-  nsMargin meterMargin;
-  meterContext->StyleMargin()->GetMargin(meterMargin);
-  meterRect.Deflate(meterMargin);
-
-  // Paint our borders and background for our progress meter rect.
-  ImgDrawResult result = PaintBackgroundLayer(meterContext, aPresContext,
-                                           aRenderingContext, meterRect,
-                                           aDirtyRect);
-
-  // Time to paint our progress.
-  int32_t state;
-  mView->GetProgressMode(aRowIndex, aColumn, &state);
-  if (state == nsITreeView::PROGRESS_NORMAL) {
-    // Adjust the rect for its border and padding.
-    AdjustForBorderPadding(meterContext, meterRect);
-
-    // Now obtain the value for our cell.
-    nsAutoString value;
-    mView->GetCellValue(aRowIndex, aColumn, value);
-
-    nsresult rv;
-    int32_t intValue = value.ToInteger(&rv);
-    if (intValue < 0)
-      intValue = 0;
-    else if (intValue > 100)
-      intValue = 100;
-
-    nscoord meterWidth = NSToCoordRound((float)intValue / 100 * meterRect.width);
-    if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
-      meterRect.x += meterRect.width - meterWidth; // right align
-    meterRect.width = meterWidth;
-    bool useImageRegion = true;
-    nsCOMPtr<imgIContainer> image;
-    GetImage(aRowIndex, aColumn, true, meterContext, useImageRegion, getter_AddRefs(image));
-    if (image) {
-      int32_t width, height;
-      image->GetWidth(&width);
-      image->GetHeight(&height);
-      nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
-                  height*nsDeviceContext::AppUnitsPerCSSPixel());
-      uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
-        imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
-      result &=
-        nsLayoutUtils::DrawImage(aRenderingContext, meterContext,
-          aPresContext, image,
-          nsLayoutUtils::GetSamplingFilterForFrame(this),
-          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
-          aDirtyRect, drawFlags);
-    } else {
-      DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
-      int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
-      Rect rect =
-        NSRectToSnappedRect(meterRect, appUnitsPerDevPixel, *drawTarget);
-      ColorPattern color(ToDeviceColor(meterContext->StyleColor()->mColor));
-      drawTarget->FillRect(rect, color);
-    }
-  }
-  else if (state == nsITreeView::PROGRESS_UNDETERMINED) {
-    // Adjust the rect for its border and padding.
-    AdjustForBorderPadding(meterContext, meterRect);
-
-    bool useImageRegion = true;
-    nsCOMPtr<imgIContainer> image;
-    GetImage(aRowIndex, aColumn, true, meterContext, useImageRegion, getter_AddRefs(image));
-    if (image) {
-      int32_t width, height;
-      image->GetWidth(&width);
-      image->GetHeight(&height);
-      nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
-                  height*nsDeviceContext::AppUnitsPerCSSPixel());
-      uint32_t drawFlags = aBuilder && aBuilder->IsPaintingToWindow() ?
-        imgIContainer::FLAG_HIGH_QUALITY_SCALING : imgIContainer::FLAG_NONE;
-      result &=
-        nsLayoutUtils::DrawImage(aRenderingContext, meterContext,
-          aPresContext, image,
-          nsLayoutUtils::GetSamplingFilterForFrame(this),
-          nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
-          aDirtyRect, drawFlags);
-    }
-  }
-
-  return result;
-}
-
 
 ImgDrawResult
 nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,

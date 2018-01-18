@@ -77,6 +77,8 @@ def create_parser(mach_interface=False):
             help="wait for MozAfterPaint event before recording the time")
     add_arg("--firstPaint", action='store_true', dest="firstpaint",
             help="Also report the first paint value in supported tests")
+    add_arg("--useHero", action='store_true', dest="tphero",
+            help="use Hero elementtiming attribute to record the time")
     add_arg("--userReady", action='store_true', dest="userready",
             help="Also report the user ready value in supported tests")
     add_arg('--spsProfile', action="store_true", dest="gecko_profile",

@@ -57,11 +57,14 @@ function isAvailable() {
   if (availablePref == "on") {
     return true;
   } else if (availablePref == "detect") {
-    let locale = Services.locale.getRequestedLocale();
     let region = Services.prefs.getCharPref("browser.search.region", "");
     let supportedCountries = Services.prefs.getCharPref("extensions.formautofill.supportedCountries")
                                            .split(",");
-    return locale == "en-US" && supportedCountries.includes(region);
+    if (!Services.prefs.getBoolPref("extensions.formautofill.supportRTL") &&
+        Services.locale.isAppLocaleRTL) {
+      return false;
+    }
+    return supportedCountries.includes(region);
   }
   return false;
 }

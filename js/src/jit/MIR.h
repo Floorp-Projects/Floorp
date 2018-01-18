@@ -7751,6 +7751,37 @@ class MComputeThis
     // Note: don't override getAliasSet: the thisValue hook can be effectful.
 };
 
+class MImplicitThis
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    CompilerPropertyName name_;
+
+    MImplicitThis(MDefinition* envChain, PropertyName* name)
+      : MUnaryInstruction(classOpcode, envChain),
+        name_(name)
+    {
+        setResultType(MIRType::Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ImplicitThis)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, envChain))
+
+    PropertyName* name() const {
+        return name_;
+    }
+
+    bool appendRoots(MRootList& roots) const override {
+        return roots.append(name_);
+    }
+
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 // Load an arrow function's |new.target| value.
 class MArrowNewTarget
   : public MUnaryInstruction,
