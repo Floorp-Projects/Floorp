@@ -29,7 +29,7 @@ function createTestUrl(aPolicy, aAction, aName, aType, aSchemeFrom, aSchemeTo, c
          "NAME=" + aName + "&" +
          "type=" + aType + "&" +
          "SCHEME_FROM=" + schemeFrom;
-  return url
+  return url;
   }
 
 // test page using iframe referrer attribute
