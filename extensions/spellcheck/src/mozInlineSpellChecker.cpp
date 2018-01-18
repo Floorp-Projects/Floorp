@@ -35,6 +35,7 @@
 #include "mozInlineSpellChecker.h"
 
 #include "mozilla/EditAction.h"
+#include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
@@ -763,24 +764,16 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
     return NS_OK;
   }
 
-  mPendingSpellCheck =
-    do_CreateInstance("@mozilla.org/editor/editorspellchecker;1");
-  NS_ENSURE_STATE(mPendingSpellCheck);
-
   nsCOMPtr<nsITextServicesFilter> filter =
     do_CreateInstance("@mozilla.org/editor/txtsrvfiltermail;1");
-  if (!filter) {
-    mPendingSpellCheck = nullptr;
-    NS_ENSURE_STATE(filter);
+  if (NS_WARN_IF(!filter)) {
+    return NS_ERROR_FAILURE;
   }
+
+  mPendingSpellCheck = new EditorSpellCheck();
   mPendingSpellCheck->SetFilter(filter);
 
   mPendingInitEditorSpellCheckCallback = new InitEditorSpellCheckCallback(this);
-  if (!mPendingInitEditorSpellCheckCallback) {
-    mPendingSpellCheck = nullptr;
-    NS_ENSURE_STATE(mPendingInitEditorSpellCheckCallback);
-  }
-
   nsresult rv = mPendingSpellCheck->InitSpellChecker(
                   mTextEditor, false, mPendingInitEditorSpellCheckCallback);
   if (NS_FAILED(rv)) {
@@ -1977,8 +1970,8 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
   // mSpellCheck is null and mPendingSpellCheck is nonnull while the spell
   // checker is being initialized.  Calling UpdateCurrentDictionary on
   // mPendingSpellCheck simply queues the dictionary update after the init.
-  nsCOMPtr<nsIEditorSpellCheck> spellCheck = mSpellCheck ? mSpellCheck :
-                                             mPendingSpellCheck;
+  RefPtr<EditorSpellCheck> spellCheck =
+    mSpellCheck ? mSpellCheck : mPendingSpellCheck;
   if (!spellCheck) {
     return NS_OK;
   }
