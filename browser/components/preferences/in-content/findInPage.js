@@ -303,7 +303,7 @@ var gSearchResultsPane = {
         let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
         let brandName = document.getElementById("bundleBrand").getString("brandShortName");
         let helpString = strings.getString("searchResults.needHelp3");
-        let helpItems = helpString.split(/%(?:\$1)?S/);
+        let helpItems = helpString.split(/%(?:1\$)?S/);
         let helpContainer = document.getElementById("need-help");
         helpContainer.innerHTML = "";
         helpContainer.appendChild(document.createTextNode(helpItems[0]));
