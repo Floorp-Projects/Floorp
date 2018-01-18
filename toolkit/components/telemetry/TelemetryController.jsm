@@ -67,6 +67,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryModules: "resource://gre/modules/TelemetryModules.jsm",
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
   TelemetryHealthPing: "resource://gre/modules/TelemetryHealthPing.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 /**
@@ -154,6 +155,13 @@ this.TelemetryController = Object.freeze({
    */
   testSetupContent() {
     return Impl.setupContentTelemetry(true);
+  },
+
+  /**
+   * Used only for testing purposes.
+   */
+  testPromiseJsProbeRegistration() {
+    return Promise.resolve(Impl._probeRegistrationPromise);
   },
 
   /**
@@ -322,6 +330,8 @@ var Impl = {
   _testMode: false,
   // The task performing the delayed sending of the "new-profile" ping.
   _delayedNewPingTask: null,
+  // The promise used to wait for the JS probe registration (dynamic builtin).
+  _probeRegistrationPromise: null,
 
   get _log() {
     if (!this._logger) {
@@ -678,6 +688,11 @@ var Impl = {
       this._log.error("setupTelemetry - already initialized");
       return Promise.resolve();
     }
+
+    // Enable adding scalars in artifact builds and build faster modes.
+    // The function is async: we intentionally don't wait for it to complete
+    // as we don't want to delay startup.
+    this._probeRegistrationPromise = this.registerJsProbes();
 
     // This will trigger displaying the datachoices infobar.
     TelemetryReportingPolicy.setup();
@@ -1037,5 +1052,65 @@ var Impl = {
     await TelemetryController.submitExternalPing("new-profile", payload, options)
                              .then(() => TelemetrySession.markNewProfilePingSent(),
                                    e => this._log.error("sendNewProfilePing - failed to submit new-profile ping", e));
+  },
+
+  /**
+   * Register 'dynamic builtin' probes from the JSON definition files.
+   * This is needed to support adding new probes in developer builds
+   * without rebuilding the whole codebase.
+   *
+   * This is not meant to be used outside of local developer builds.
+   */
+  async registerJsProbes() {
+    // We don't support this outside of developer builds.
+    if (AppConstants.MOZILLA_OFFICIAL && !this._testMode) {
+      return;
+    }
+
+    this._log.trace("registerJsProbes - registering builtin JS probes");
+
+    // Load the scalar probes JSON file.
+    const scalarProbeFilename = "ScalarArtifactDefinitions.json";
+    let scalarProbeFile = Services.dirsvc.get("GreBinD", Ci.nsIFile);
+    scalarProbeFile.append(scalarProbeFilename);
+    if (!scalarProbeFile.exists()) {
+      this._log.trace("registerJsProbes - no scalar builtin JS probes");
+      return;
+    }
+
+    // Load the file off the disk.
+    let scalarJSProbes = {};
+    try {
+      let fileContent = await OS.File.read(scalarProbeFile.path, { encoding: "utf-8" });
+      scalarJSProbes = JSON.parse(fileContent, (property, value) => {
+        // Fixup the "kind" property: it's a string, and we need the constant
+        // coming from nsITelemetry.
+        if (property !== "kind" || typeof value != "string") {
+          return value;
+        }
+
+        let newValue;
+        switch (value) {
+          case "nsITelemetry::SCALAR_TYPE_COUNT":
+            newValue = Telemetry.SCALAR_TYPE_COUNT;
+            break;
+          case "nsITelemetry::SCALAR_TYPE_BOOLEAN":
+            newValue = Telemetry.SCALAR_TYPE_BOOLEAN;
+            break;
+          case "nsITelemetry::SCALAR_TYPE_STRING":
+            newValue = Telemetry.SCALAR_TYPE_STRING;
+            break;
+        }
+        return newValue;
+      });
+    } catch (ex) {
+      this._log.error(`registerJsProbes - there was an error loading {$scalarProbeFilename}`,
+                      ex);
+    }
+
+    // Register the builtin probes.
+    for (let category in scalarJSProbes) {
+      Telemetry.registerBuiltinScalars(category, scalarJSProbes[category]);
+    }
   },
 };

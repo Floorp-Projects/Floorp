@@ -56,7 +56,7 @@ void Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, bool aValue);
 void SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey, uint32_t aValue);
 
 nsresult RegisterScalars(const nsACString& aCategoryName, JS::Handle<JS::Value> aScalarData,
-                         JSContext* cx);
+                         bool aBuiltin, JSContext* cx);
 
 // Only to be used for testing.
 void ClearScalars();
