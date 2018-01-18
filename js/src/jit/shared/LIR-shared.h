@@ -5532,6 +5532,23 @@ class LBoundsCheckLower : public LInstructionHelper<0, 1, 0>
     }
 };
 
+class LSpectreMaskIndex : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(SpectreMaskIndex)
+
+    LSpectreMaskIndex(const LAllocation& index, const LAllocation& length) {
+        setOperand(0, index);
+        setOperand(1, length);
+    }
+    const LAllocation* index() {
+        return getOperand(0);
+    }
+    const LAllocation* length() {
+        return getOperand(1);
+    }
+};
+
 // Load a value from a dense array's elements vector. Bail out if it's the hole value.
 class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
 {

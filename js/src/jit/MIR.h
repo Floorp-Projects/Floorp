@@ -9518,6 +9518,38 @@ class MBoundsCheckLower
     void collectRangeInfoPreTrunc() override;
 };
 
+class MSpectreMaskIndex
+  : public MBinaryInstruction,
+    public MixPolicy<IntPolicy<0>, IntPolicy<1>>::Data
+{
+    MSpectreMaskIndex(MDefinition* index, MDefinition* length)
+      : MBinaryInstruction(classOpcode, index, length)
+    {
+        setGuard();
+        setMovable();
+        MOZ_ASSERT(index->type() == MIRType::Int32);
+        MOZ_ASSERT(length->type() == MIRType::Int32);
+
+        // Returns the masked index.
+        setResultType(MIRType::Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SpectreMaskIndex)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, index), (1, length))
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    virtual AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    void computeRange(TempAllocator& alloc) override;
+
+    ALLOW_CLONE(MSpectreMaskIndex)
+};
+
 // Instructions which access an object's elements can either do so on a
 // definition accessing that elements pointer, or on the object itself, if its
 // elements are inline. In the latter case there must be an offset associated
