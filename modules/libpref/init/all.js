@@ -5026,6 +5026,9 @@ pref("extensions.webextensions.remote", false);
 // unless other process sandboxing and extension remoting prefs are changed.
 pref("extensions.webextensions.protocol.remote", true);
 
+// Disable tab hiding API by default.
+pref("extensions.webextensions.tabhide.enabled", false);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
