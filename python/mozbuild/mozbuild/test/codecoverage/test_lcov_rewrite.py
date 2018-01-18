@@ -10,6 +10,7 @@ from StringIO import StringIO
 import json
 from tempfile import NamedTemporaryFile
 
+from mozbuild.codecoverage import chrome_map
 from mozbuild.codecoverage import lcov_rewriter
 import buildconfig
 import mozunit
@@ -119,7 +120,7 @@ class TestLcovParser(unittest.TestCase):
         with TempFile(lcov_string) as fname:
             file_obj = lcov_rewriter.LcovFile([fname])
             out = StringIO()
-            file_obj.print_file(out, lambda s: (s, False), lambda x: x)
+            file_obj.print_file(out, lambda s: (s, None), lambda x, pp: x)
 
         return out.getvalue()
 
@@ -174,43 +175,40 @@ class TestLineRemapping(unittest.TestCase):
             shutil.move(self._old_chrome_info_file, self._chrome_map_file)
 
     def test_map_multiple_included(self):
-        self.pp_rewriter.populate_pp_info(StringIO(multiple_included_files),
-                                          '')
-        actual = self.pp_rewriter.pp_info['']
+        with TempFile(multiple_included_files) as fname:
+            actual = chrome_map.generate_pp_info(fname)
         expected = {
-            (2, 3): ('foo.js', 1),
-            (4, 5): ('bar.js', 2),
-            (6, 7): ('foo.js', 3),
-            (8, 9): ('bar.js', 2),
-            (10, 11): ('test.js', 3),
-            (12, 13): ('baz.js', 1),
-            (14, 15): ('f.js', 6),
+            "2,3": ('foo.js', 1),
+            "4,5": ('bar.js', 2),
+            "6,7": ('foo.js', 3),
+            "8,9": ('bar.js', 2),
+            "10,11": ('test.js', 3),
+            "12,13": ('baz.js', 1),
+            "14,15": ('f.js', 6),
         }
 
         self.assertEqual(actual, expected)
 
     def test_remap_lcov(self):
         pp_remap = {
-            (1941, 2158): ('dropPreview.js', 6),
-            (2159, 2331): ('updater.js', 6),
-            (2584, 2674): ('intro.js', 6),
-            (2332, 2443): ('undo.js', 6),
-            (864, 985): ('cells.js', 6),
-            (2444, 2454): ('search.js', 6),
-            (1567, 1712): ('drop.js', 6),
-            (2455, 2583): ('customize.js', 6),
-            (1713, 1940): ('dropTargetShim.js', 6),
-            (1402, 1548): ('drag.js', 6),
-            (1549, 1566): ('dragDataHelper.js', 6),
-            (453, 602): ('page.js', 141),
-            (2675, 2678): ('newTab.js', 70),
-            (56, 321): ('transformations.js', 6),
-            (603, 863): ('grid.js', 6),
-            (322, 452): ('page.js', 6),
-            (986, 1401): ('sites.js', 6)
+            "1941,2158": ('dropPreview.js', 6),
+            "2159,2331": ('updater.js', 6),
+            "2584,2674": ('intro.js', 6),
+            "2332,2443": ('undo.js', 6),
+            "864,985": ('cells.js', 6),
+            "2444,2454": ('search.js', 6),
+            "1567,1712": ('drop.js', 6),
+            "2455,2583": ('customize.js', 6),
+            "1713,1940": ('dropTargetShim.js', 6),
+            "1402,1548": ('drag.js', 6),
+            "1549,1566": ('dragDataHelper.js', 6),
+            "453,602": ('page.js', 141),
+            "2675,2678": ('newTab.js', 70),
+            "56,321": ('transformations.js', 6),
+            "603,863": ('grid.js', 6),
+            "322,452": ('page.js', 6),
+            "986,1401": ('sites.js', 6)
         }
-
-        self.pp_rewriter.pp_info['lcov_test_newTab.js'] = pp_remap
 
         fpath = os.path.join(here, 'sample_lcov.info')
 
@@ -234,7 +232,7 @@ class TestLineRemapping(unittest.TestCase):
         r_num = []
         def rewrite_source(s):
             r_num.append(1)
-            return s, self.pp_rewriter.has_pp_info(s)
+            return s, pp_remap
 
         out = StringIO()
         lcov_file.print_file(out, rewrite_source, self.pp_rewriter.rewrite_record)
