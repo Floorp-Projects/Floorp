@@ -60,7 +60,7 @@ class ChromeManifestHandler(object):
                 self.handle_manifest_entry(e)
 
 _line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
-def generate_pp_info(path):
+def generate_pp_info(path, topsrcdir):
     with open(path) as fh:
         # (start, end) -> (included_source, start)
         section_info = dict()
@@ -80,6 +80,7 @@ def generate_pp_info(path):
                 if this_section:
                     finish_section(count + 1)
                 inc_start, inc_source = m.groups()
+                inc_source = mozpath.relpath(inc_source, topsrcdir)
                 pp_start = count + 2
                 this_section = pp_start, inc_source, int(inc_start)
 
@@ -120,10 +121,10 @@ class ChromeMapBackend(CommonBackend):
                     obj_path = obj_path[:-3]
                 if is_pp:
                     assert os.path.exists(obj_path), '%s should exist' % obj_path
-                    pp_info = generate_pp_info(obj_path)
+                    pp_info = generate_pp_info(obj_path, obj.topsrcdir)
                 else:
                     pp_info = None
-                self._install_mapping[dest] = f.full_path, pp_info
+                self._install_mapping[dest] = mozpath.relpath(f.full_path, obj.topsrcdir), pp_info
 
     def consume_finished(self):
         # Our result has three parts:
