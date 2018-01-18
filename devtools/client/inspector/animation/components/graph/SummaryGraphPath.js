@@ -11,6 +11,7 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const ComputedTimingPath = createFactory(require("./ComputedTimingPath"));
 const EffectTimingPath = createFactory(require("./EffectTimingPath"));
+const NegativeDelayPath = createFactory(require("./NegativeDelayPath"));
 const { DEFAULT_GRAPH_HEIGHT } = require("../../utils/graph-helper");
 
 // Minimum opacity for semitransparent fill color for keyframes's easing graph.
@@ -182,14 +183,28 @@ class SummaryGraphPath extends PureComponent {
         )
       ),
       animation.state.easing !== "linear" ?
-      EffectTimingPath(
-        {
-          animation,
-          durationPerPixel,
-          simulateAnimation,
-          totalDuration,
-        }
-      )
+        EffectTimingPath(
+          {
+            animation,
+            durationPerPixel,
+            simulateAnimation,
+            totalDuration,
+          }
+        )
+      :
+      null,
+      animation.state.delay < 0 ?
+        keyframesList.map(keyframes => {
+          return NegativeDelayPath(
+            {
+              animation,
+              durationPerPixel,
+              keyframes,
+              simulateAnimation,
+              totalDuration,
+            }
+          );
+        })
       :
       null
     );

@@ -119,6 +119,14 @@
   opacity: 0.3;
 }
 
+.animation-negative-delay-path path {
+  fill: none;
+  stroke: var(--theme-graphs-grey);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
 .animation-delay-sign,
 .animation-end-delay-sign {
   background-color: var(--theme-graphs-grey);
