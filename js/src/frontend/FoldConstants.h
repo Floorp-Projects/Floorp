@@ -13,7 +13,7 @@ namespace js {
 namespace frontend {
 
 class FullParseHandler;
-template <class ParseHandler, typename CharT> class GeneralParser;
+template <class ParseHandler> class PerHandlerParser;
 
 // Perform constant folding on the given AST. For example, the program
 // `print(2 + 2)` would become `print(4)`.
@@ -28,14 +28,12 @@ template <class ParseHandler, typename CharT> class GeneralParser;
 //        return false;
 //    if (!FoldConstants(cx, &pn, parser))
 //        return false;
-template<typename CharT>
-MOZ_MUST_USE bool
-FoldConstants(JSContext* cx, ParseNode** pnp, GeneralParser<FullParseHandler, CharT>* parser);
+extern MOZ_MUST_USE bool
+FoldConstants(JSContext* cx, ParseNode** pnp, PerHandlerParser<FullParseHandler>* parser);
 
-template<typename CharT>
 inline MOZ_MUST_USE bool
 FoldConstants(JSContext* cx, typename SyntaxParseHandler::Node* pnp,
-              GeneralParser<SyntaxParseHandler, CharT>* parser)
+              PerHandlerParser<SyntaxParseHandler>* parser)
 {
     return true;
 }

@@ -796,7 +796,6 @@ ParserBase::errorNoOffset(unsigned errorNumber, ...)
 
 ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
-                       const char16_t* chars, size_t length,
                        bool foldConstants,
                        UsedNameTracker& usedNames)
   : AutoGCRooter(cx, PARSER),
@@ -848,10 +847,9 @@ ParserBase::~ParserBase()
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
                                                  const ReadOnlyCompileOptions& options,
-                                                 const char16_t* chars, size_t length,
                                                  bool foldConstants, UsedNameTracker& usedNames,
                                                  LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames),
+  : ParserBase(cx, alloc, options, foldConstants, usedNames),
     handler(cx, alloc, lazyOuterFunction)
 {
 
@@ -865,7 +863,7 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   UsedNameTracker& usedNames,
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction)
-  : Base(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
+  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction),
     tokenStream(cx, options, chars, length)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
@@ -3412,7 +3410,7 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(Node funcNode, uint32_t t
     Directives directives(pc);
     Directives newDirectives = directives;
 
-    typename TokenStream::Position start(keepAtoms);
+    Position start(keepAtoms);
     tokenStream.tell(&start);
 
     // Parse the inner function. The following is a loop as we may attempt to
@@ -3479,7 +3477,7 @@ Parser<FullParseHandler, CharT>::trySyntaxParseInnerFunction(ParseNode* funcNode
         UsedNameTracker::RewindToken token = usedNames.getRewindToken();
 
         // Move the syntax parser to the current position in the stream.
-        typename TokenStream::Position position(keepAtoms);
+        Position position(keepAtoms);
         tokenStream.tell(&position);
         if (!syntaxParser->tokenStream.seek(position, anyChars))
             return false;
@@ -8083,7 +8081,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
     // Save the tokenizer state in case we find an arrow function and have to
     // rewind.
-    typename TokenStream::Position start(keepAtoms);
+    Position start(keepAtoms);
     tokenStream.tell(&start);
 
     PossibleError possibleErrorInner(*this);
@@ -8953,8 +8951,11 @@ Parser<FullParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Create the regexp and check its syntax.
-    const char16_t* chars = tokenStream.getTokenbuf().begin();
+    const CharT* chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
@@ -8972,12 +8973,15 @@ Parser<SyntaxParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Only check the regexp's syntax, but don't create a regexp object.
-    const char16_t* chars = tokenStream.getTokenbuf().begin();
+    const CharT* chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
-    mozilla::Range<const char16_t> source(chars, length);
+    mozilla::Range<const CharT> source(chars, length);
     if (!js::irregexp::ParsePatternSyntax(anyChars, alloc, source, flags & UnicodeFlag))
         return null();
 

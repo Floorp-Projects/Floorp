@@ -1536,6 +1536,9 @@ pref("javascript.options.shared_memory", false);
 pref("javascript.options.throw_on_debuggee_would_run", false);
 pref("javascript.options.dump_stack_on_debuggee_would_run", false);
 
+// Spectre security vulnerability mitigations.
+pref("javascript.options.spectre.index_masking", false);
+
 // Streams API
 pref("javascript.options.streams", false);
 
