@@ -22,6 +22,7 @@ class SummaryGraphPath extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.object.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -142,6 +143,7 @@ class SummaryGraphPath extends PureComponent {
 
   async updateState(animation) {
     const {
+      emitEventForTest,
       getAnimatedPropertyMap,
       timeScale,
     } = this.props;
@@ -154,6 +156,8 @@ class SummaryGraphPath extends PureComponent {
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
     this.setState({ durationPerPixel, keyframesList });
+
+    emitEventForTest("animation-summary-graph-rendered");
   }
 
   render() {

@@ -56,6 +56,7 @@ class AnimationItem extends PureComponent {
       SummaryGraph(
         {
           animation,
+          emitEventForTest,
           getAnimatedPropertyMap,
           simulateAnimation,
           timeScale,

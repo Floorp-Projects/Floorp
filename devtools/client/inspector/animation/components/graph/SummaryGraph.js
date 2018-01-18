@@ -19,6 +19,7 @@ class SummaryGraph extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -124,6 +125,7 @@ class SummaryGraph extends PureComponent {
   render() {
     const {
       animation,
+      emitEventForTest,
       getAnimatedPropertyMap,
       simulateAnimation,
       timeScale,
@@ -138,6 +140,7 @@ class SummaryGraph extends PureComponent {
       SummaryGraphPath(
         {
           animation,
+          emitEventForTest,
           getAnimatedPropertyMap,
           simulateAnimation,
           timeScale,
