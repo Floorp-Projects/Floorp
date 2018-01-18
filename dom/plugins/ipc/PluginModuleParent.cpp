@@ -43,7 +43,6 @@
 #include "mozilla/plugins/PluginSurfaceParent.h"
 #include "mozilla/widget/AudioSession.h"
 #include "PluginHangUIParent.h"
-#include "FunctionBrokerParent.h"
 #include "PluginUtilsWin.h"
 #endif
 
@@ -487,23 +486,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
         parent->mShutdown = true;
         return nullptr;
     }
-
-#if defined(XP_WIN)
-    Endpoint<PFunctionBrokerParent> brokerParentEnd;
-    Endpoint<PFunctionBrokerChild> brokerChildEnd;
-    rv = PFunctionBroker::CreateEndpoints(base::GetCurrentProcId(), parent->OtherPid(),
-                                        &brokerParentEnd, &brokerChildEnd);
-    if (NS_FAILED(rv)) {
-        parent->mShutdown = true;
-        return nullptr;
-    }
-
-    parent->mBrokerParent =
-      FunctionBrokerParent::Create(Move(brokerParentEnd));
-    if (parent->mBrokerParent) {
-      parent->SendInitPluginFunctionBroker(Move(brokerChildEnd));
-    }
-#endif
     return parent.forget();
 }
 
@@ -640,7 +622,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath,
     , mHangUIParent(nullptr)
     , mHangUIEnabled(true)
     , mIsTimerReset(true)
-    , mBrokerParent(nullptr)
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
@@ -665,6 +646,10 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
     // If we registered for audio notifications, stop.
     mozilla::plugins::PluginUtilsWin::RegisterForAudioDeviceChanges(this,
                                                                     false);
+#endif
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    mSandboxPermissions.RemovePermissionsForProcess(OtherPid());
 #endif
 
     if (!mShutdown) {
@@ -1610,13 +1595,6 @@ PluginModuleChromeParent::ActorDestroy(ActorDestroyReason why)
 
     // We can't broadcast settings changes anymore.
     UnregisterSettingsCallbacks();
-
-#if defined(XP_WIN)
-    if (mBrokerParent) {
-        FunctionBrokerParent::Destroy(mBrokerParent);
-        mBrokerParent = nullptr;
-    }
-#endif
 
     PluginModuleParent::ActorDestroy(why);
 }
@@ -2901,3 +2879,102 @@ PluginModuleChromeParent::OnCrash(DWORD processID)
 }
 
 #endif // MOZ_CRASHREPORTER_INJECTOR
+
+mozilla::ipc::IPCResult
+PluginModuleParent::AnswerGetKeyState(const int32_t& aVirtKey, int16_t* aRet)
+{
+    return IPC_FAIL_NO_REASON(this);
+}
+
+mozilla::ipc::IPCResult
+PluginModuleChromeParent::AnswerGetKeyState(const int32_t& aVirtKey,
+                                            int16_t* aRet)
+{
+#if defined(XP_WIN)
+    *aRet = ::GetKeyState(aVirtKey);
+    return IPC_OK();
+#else
+    return PluginModuleParent::AnswerGetKeyState(aVirtKey, aRet);
+#endif
+}
+
+mozilla::ipc::IPCResult
+PluginModuleChromeParent::AnswerGetFileName(const GetFileNameFunc& aFunc,
+                                            const OpenFileNameIPC& aOfnIn,
+                                            OpenFileNameRetIPC* aOfnOut,
+                                            bool* aResult)
+{
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    OPENFILENAMEW ofn;
+    memset(&ofn, 0, sizeof(ofn));
+    aOfnIn.AllocateOfnStrings(&ofn);
+    aOfnIn.AddToOfn(&ofn);
+    switch (aFunc) {
+    case OPEN_FUNC:
+        *aResult = GetOpenFileName(&ofn);
+        break;
+    case SAVE_FUNC:
+        *aResult = GetSaveFileName(&ofn);
+        break;
+    default:
+        *aResult = false;
+        break;
+    }
+    if (*aResult) {
+        if (ofn.Flags & OFN_ALLOWMULTISELECT) {
+            // We only support multiselect with the OFN_EXPLORER flag.
+            // This guarantees that ofn.lpstrFile follows the pattern below.
+            MOZ_ASSERT(ofn.Flags & OFN_EXPLORER);
+
+            // lpstrFile is one of two things:
+            // 1. A null terminated full path to a file, or
+            // 2. A path to a folder, followed by a NULL, followed by a
+            // list of file names, each NULL terminated, followed by an
+            // additional NULL (so it is also double-NULL terminated).
+            std::wstring path = std::wstring(ofn.lpstrFile);
+            MOZ_ASSERT(ofn.nFileOffset > 0);
+            // For condition #1, nFileOffset points to the file name in the path.
+            // It will be preceeded by a non-NULL character from the path.
+            if (ofn.lpstrFile[ofn.nFileOffset-1] != L'\0') {
+                mSandboxPermissions.GrantFileAccess(OtherPid(), path.c_str(),
+                                                          aFunc == SAVE_FUNC);
+            }
+            else {
+                // This is condition #2
+                wchar_t* nextFile = ofn.lpstrFile + path.size() + 1;
+                while (*nextFile != L'\0') {
+                    std::wstring nextFileStr(nextFile);
+                    std::wstring fullPath =
+                        path + std::wstring(L"\\") + nextFileStr;
+                    mSandboxPermissions.GrantFileAccess(OtherPid(), fullPath.c_str(),
+                                                              aFunc == SAVE_FUNC);
+                    nextFile += nextFileStr.size() + 1;
+                }
+            }
+        }
+        else {
+            mSandboxPermissions.GrantFileAccess(OtherPid(), ofn.lpstrFile,
+                                                 aFunc == SAVE_FUNC);
+        }
+        aOfnOut->CopyFromOfn(&ofn);
+    }
+    aOfnIn.FreeOfnStrings(&ofn);
+    return IPC_OK();
+#else
+    MOZ_ASSERT_UNREACHABLE("GetFileName IPC message is only available on "
+                           "Windows builds with sandbox.");
+    return IPC_FAIL_NO_REASON(this);
+#endif
+}
+
+mozilla::ipc::IPCResult
+PluginModuleChromeParent::AnswerSetCursorPos(const int &x, const int &y,
+                                             bool* aResult)
+{
+#if defined(XP_WIN)
+    *aResult = ::SetCursorPos(x, y);
+    return IPC_OK();
+#else
+    return PluginModuleParent::AnswerSetCursorPos(x, y, aResult);
+#endif
+}
