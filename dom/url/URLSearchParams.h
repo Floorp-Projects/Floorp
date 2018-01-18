@@ -47,7 +47,7 @@ public:
   {
   public:
     virtual bool
-    URLParamsIterator(const nsString& aName, const nsString& aValue) = 0;
+    URLParamsIterator(const nsAString& aName, const nsAString& aValue) = 0;
   };
 
   static bool
@@ -55,18 +55,6 @@ public:
 
   void
   ParseInput(const nsACString& aInput);
-
-  bool
-  ForEach(ForEachIterator& aIterator) const
-  {
-    for (uint32_t i = 0; i < mParams.Length(); ++i) {
-      if (!aIterator.URLParamsIterator(mParams[i].mKey, mParams[i].mValue)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   void Serialize(nsAString& aValue) const;
 
