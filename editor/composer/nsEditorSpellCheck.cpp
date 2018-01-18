@@ -7,11 +7,12 @@
 #include <stdlib.h>                     // for getenv
 
 #include "mozilla/Attributes.h"         // for final
-#include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Selection.h"
 #include "mozilla/intl/LocaleService.h" // for retrieving app locale
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "nsAString.h"                  // for nsAString::IsEmpty, etc
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
@@ -377,16 +378,12 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
   nsresult rv;
 
   // We can spell check with any editor type
-  nsCOMPtr<nsITextServicesDocument>tsDoc =
-     do_CreateInstance("@mozilla.org/textservices/textservicesdocument;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ENSURE_TRUE(tsDoc, NS_ERROR_NULL_POINTER);
-
-  tsDoc->SetFilter(mTxtSrvFilter);
+  RefPtr<TextServicesDocument> textServicesDocument =
+    new TextServicesDocument();
+  textServicesDocument->SetFilter(mTxtSrvFilter);
 
   // Pass the editor to the text services document
-  rv = tsDoc->InitWithEditor(aEditor);
+  rv = textServicesDocument->InitWithEditor(aEditor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aEnableSelectionChecking) {
@@ -412,13 +409,13 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 
         // Make sure the new range spans complete words.
 
-        rv = tsDoc->ExpandRangeToWordBoundaries(rangeBounds);
+        rv = textServicesDocument->ExpandRangeToWordBoundaries(rangeBounds);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Now tell the text services that you only want
         // to iterate over the text in this range.
 
-        rv = tsDoc->SetExtent(rangeBounds);
+        rv = textServicesDocument->SetExtent(rangeBounds);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -429,7 +426,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NULL_POINTER);
 
-  rv = mSpellChecker->SetDocument(tsDoc, true);
+  rv = mSpellChecker->SetDocument(textServicesDocument, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // do not fail if UpdateCurrentDictionary fails because this method may
