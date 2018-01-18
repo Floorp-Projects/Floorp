@@ -14,7 +14,7 @@ sm-package-linux64/opt:
     index:
         job-name: sm-package-linux64-opt
     treeherder:
-        symbol: SM-tc(pkg)
+        symbol: SM(pkg)
         platform: linux64/opt
     run:
         using: spidermonkey-package
@@ -26,7 +26,7 @@ sm-mozjs-sys-linux64/debug:
         job-name: sm-mozjs-sys-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(mozjs-crate)
+        symbol: SM(mozjs-crate)
     run:
         using: spidermonkey-mozjs-crate
         spidermonkey-variant: plain
@@ -37,7 +37,7 @@ sm-rust-bindings-linux64/debug:
     index:
         job-name: sm-rust-bindings-linux64-debug
     treeherder:
-        symbol: SM-tc(rust)
+        symbol: SM(rust)
         tier: 2
         platform: linux64/debug
     run:
@@ -51,7 +51,7 @@ sm-plain-linux64/debug:
         job-name: sm-plain-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(p)
+        symbol: SM(p)
     run:
         spidermonkey-variant: plaindebug
 
@@ -60,7 +60,7 @@ sm-plain-linux64/opt:
     index:
         job-name: sm-plain-linux64-opt
     treeherder:
-        symbol: SM-tc(p)
+        symbol: SM(p)
         platform: linux64/opt
     run:
         spidermonkey-variant: plain
@@ -70,7 +70,7 @@ sm-nojit-linux64/opt:
     index:
         job-name: sm-nojit-linux64-opt
     treeherder:
-        symbol: SM-tc(nojit)
+        symbol: SM(nojit)
         platform: linux64/opt
     run:
         spidermonkey-variant: nojit
@@ -81,7 +81,7 @@ sm-arm-sim-linux32/debug:
         job-name: sm-arm-sim-linux32-debug
     treeherder:
         platform: linux32/debug
-        symbol: SM-tc(arm)
+        symbol: SM(arm)
     run:
         spidermonkey-variant: arm-sim
 
@@ -91,7 +91,7 @@ sm-arm64-sim-linux64/debug:
         job-name: sm-arm64-sim-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(arm64)
+        symbol: SM(arm64)
     run:
         spidermonkey-variant: arm64-sim
 
@@ -100,7 +100,7 @@ sm-asan-linux64/opt:
     index:
         job-name: sm-asan-linux64-opt
     treeherder:
-        symbol: SM-tc(asan)
+        symbol: SM(asan)
         platform: linux64/opt
     run:
         spidermonkey-variant: asan
@@ -111,7 +111,7 @@ sm-compacting-linux64/debug:
         job-name: sm-compacting-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(cgc)
+        symbol: SM(cgc)
     run:
         spidermonkey-variant: compacting
 
@@ -120,7 +120,7 @@ sm-msan-linux64/opt:
     index:
         job-name: sm-msan-linux64-opt
     treeherder:
-        symbol: SM-tc(msan)
+        symbol: SM(msan)
         platform: linux64/opt
     run:
         spidermonkey-variant: msan
@@ -130,7 +130,7 @@ sm-tsan-linux64/opt:
     index:
         job-name: sm-tsan-linux64-opt
     treeherder:
-        symbol: SM-tc(tsan)
+        symbol: SM(tsan)
         tier: 3
         platform: linux64/opt
     run:
@@ -142,7 +142,7 @@ sm-rootanalysis-linux64/debug:
         job-name: sm-rootanalysis-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(r)
+        symbol: SM(r)
     run:
         spidermonkey-variant: rootanalysis
 
@@ -152,7 +152,7 @@ sm-nonunified-linux64/debug:
         job-name: sm-nonunified-linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: SM-tc(nu)
+        symbol: SM(nu)
     run:
         spidermonkey-variant: nonunified
 
@@ -162,6 +162,6 @@ sm-fuzzing-linux64/opt:
         job-name: sm-fuzzing-linux64
     treeherder:
         platform: linux64/opt
-        symbol: SM-tc(f)
+        symbol: SM(f)
     run:
         spidermonkey-variant: fuzzing

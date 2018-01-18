@@ -443,21 +443,6 @@ storage.sync.api.usage:
       - main
 
 services.sync:
-  fxa_verification_method:
-    bug_numbers:
-      - 1353645
-    description: >
-      The method we used ("push" or "poll") to determine the verification of a
-      Firefox Account email.
-    expires: "60"
-    kind: string
-    keyed: false
-    notification_emails:
-      - sync-staff@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
-
   sync_login_state_transitions:
     bug_numbers:
       - 1375635

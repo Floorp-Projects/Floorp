@@ -7,7 +7,7 @@ android-test/opt:
         platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 1
-        symbol: tc-A(test)
+        symbol: A(test)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -54,7 +54,7 @@ android-lint/opt:
         platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 1
-        symbol: tc-A(lint)
+        symbol: A(lint)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -113,7 +113,7 @@ android-checkstyle/opt:
         platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 1
-        symbol: tc-A(checkstyle)
+        symbol: A(checkstyle)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -165,7 +165,7 @@ android-findbugs/opt:
         platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 1
-        symbol: tc-A(findbugs)
+        symbol: A(findbugs)
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         docker-image: {in-tree: android-build}
@@ -216,7 +216,7 @@ android-geckoview-docs/opt:
         platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 3
-        symbol: tc-A(gv-docs)
+        symbol: A(gv-docs)
     run-on-projects: [mozilla-central]
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
