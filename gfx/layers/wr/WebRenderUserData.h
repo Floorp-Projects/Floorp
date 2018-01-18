@@ -104,6 +104,7 @@ public:
 protected:
   void ClearImageKey();
   void CreateExternalImageIfNeeded();
+  void DoClearCachedResources();
 
   wr::MaybeExternalImageId mExternalImageId;
   Maybe<wr::ImageKey> mKey;
@@ -122,6 +123,7 @@ public:
   virtual WebRenderFallbackData* AsFallbackData() override { return this; }
   virtual UserDataType GetType() override { return UserDataType::eFallback; }
   static UserDataType Type() { return UserDataType::eFallback; }
+  void ClearCachedResources() override;
   nsDisplayItemGeometry* GetGeometry() override;
   void SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
   nsRect GetBounds() { return mBounds; }
@@ -168,6 +170,8 @@ public:
   WebRenderCanvasRendererAsync* CreateCanvasRenderer();
   void ClearCachedResources() override;
 protected:
+  void DoClearCachedResources();
+
   UniquePtr<WebRenderCanvasRendererAsync> mCanvasRenderer;
 };
 
