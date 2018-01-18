@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditActionListener.h"
 #include "nsISupportsImpl.h"
-#include "nsITextServicesDocument.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nscore.h"
@@ -25,11 +24,7 @@ class nsINode;
 class nsISelection;
 class nsISelectionController;
 class nsITextServicesFilter;
-
-// 019718E3-CDB5-11d2-8D3C-000000000000
-#define NS_TEXTSERVICESDOCUMENT_CID \
-  { 0x019718e3, 0xcdb5, 0x11d2, \
-    { 0x8d, 0x3c, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+class nsRange;
 
 namespace mozilla {
 
@@ -37,10 +32,10 @@ class OffsetEntry;
 class TextEditor;
 
 /**
- * TODO: Explain what this class manages and rename it to better name.
+ * The TextServicesDocument presents the document in as a bunch of flattened
+ * text blocks. Each text block can be retrieved as an nsString.
  */
-class TextServicesDocument final : public nsITextServicesDocument
-                                 , public nsIEditActionListener
+class TextServicesDocument final : public nsIEditActionListener
 {
 private:
   enum class IteratorStatus : uint8_t
@@ -79,27 +74,149 @@ public:
   TextServicesDocument();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TextServicesDocument,
-                                           nsITextServicesDocument)
+  NS_DECL_CYCLE_COLLECTION_CLASS(TextServicesDocument)
 
-  /* nsITextServicesDocument method implementations. */
-  NS_IMETHOD InitWithEditor(nsIEditor* aEditor) override;
-  NS_IMETHOD GetDocument(nsIDOMDocument** aDoc) override;
-  NS_IMETHOD SetExtent(nsRange* aRange) override;
-  NS_IMETHOD ExpandRangeToWordBoundaries(nsRange* aRange) override;
-  NS_IMETHOD SetFilter(nsITextServicesFilter* aFilter) override;
-  NS_IMETHOD GetCurrentTextBlock(nsString* aStr) override;
-  NS_IMETHOD FirstBlock() override;
-  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus* aSelStatus,
-                               int32_t* aSelOffset,
-                               int32_t* aSelLength) override;
-  NS_IMETHOD PrevBlock() override;
-  NS_IMETHOD NextBlock() override;
-  NS_IMETHOD IsDone(bool* aIsDone) override;
-  NS_IMETHOD SetSelection(int32_t aOffset, int32_t aLength) override;
-  NS_IMETHOD ScrollSelectionIntoView() override;
-  NS_IMETHOD DeleteSelection() override;
-  NS_IMETHOD InsertText(const nsString* aText) override;
+  /**
+   * Initializes the text services document to use a particular editor. The
+   * text services document will use the DOM document and presentation shell
+   * used by the editor.
+   *
+   * @param aEditor             The editor to use.
+   */
+  nsresult InitWithEditor(nsIEditor* aEditor);
+
+  /**
+   * Get the DOM document for the document in use.
+   *
+   * @return aDOMDocument       The dom document.
+   */
+  nsresult GetDocument(nsIDOMDocument** aDOMDocument);
+
+  /**
+   * Sets the range/extent over which the text services document will iterate.
+   * Note that InitWithEditor() should have been called prior to calling this
+   * method.  If this method is never called, the text services defaults to
+   * iterating over the entire document.
+   *
+   * @param aDOMRange           The range to use. aDOMRange must point to a
+   *                            valid range object.
+   */
+  nsresult SetExtent(nsRange* aRange);
+
+  /**
+   * Expands the end points of the range so that it spans complete words.  This
+   * call does not change any internal state of the text services document.
+   *
+   * @param aDOMRange           The range to be expanded/adjusted.
+   */
+  nsresult ExpandRangeToWordBoundaries(nsRange* aRange);
+
+  /**
+   * Sets the filter to be used while iterating over content.
+   *
+   * @param aFilter             The filter to be used while iterating over
+   *                            content.
+   */
+  nsresult SetFilter(nsITextServicesFilter* aFilter);
+
+  /**
+   * Returns the text in the current text block.
+   *
+   * @param aStr                [OUT] This will contain the text.
+   */
+  nsresult GetCurrentTextBlock(nsString* aStr);
+
+  /**
+   * Tells the document to point to the first text block in the document.  This
+   * method does not adjust the current cursor position or selection.
+   */
+  nsresult FirstBlock();
+
+  enum class BlockSelectionStatus
+  {
+    // There is no text block (TB) in or before the selection (S).
+    eBlockNotFound = 0,
+    // No TB in S, but found one before/after S.
+    eBlockOutside,
+    // S extends beyond the start and end of TB.
+    eBlockInside,
+    // TB contains entire S.
+    eBlockContains,
+    // S begins or ends in TB but extends outside of TB.
+    eBlockPartial,
+  };
+
+  /**
+   * Tells the document to point to the last text block that contains the
+   * current selection or caret.
+   *
+   * @param aSelectionStatus    [OUT] This will contain the text block
+   *                            selection status.
+   * @param aSelectionOffset    [OUT] This will contain the offset into the
+   *                            string returned by GetCurrentTextBlock() where
+   *                            the selection begins.
+   * @param aLength             [OUT] This will contain the number of
+   *                            characters that are selected in the string.
+   */
+  nsresult LastSelectedBlock(BlockSelectionStatus* aSelStatus,
+                             int32_t* aSelOffset,
+                             int32_t* aSelLength);
+
+  /**
+   * Tells the document to point to the text block before the current one.
+   * This method will return NS_OK, even if there is no previous block.
+   * Callers should call IsDone() to check if we have gone beyond the first
+   * text block in the document.
+   */
+  nsresult PrevBlock();
+
+  /**
+   * Tells the document to point to the text block after the current one.
+   * This method will return NS_OK, even if there is no next block. Callers
+   * should call IsDone() to check if we have gone beyond the last text block
+   * in the document.
+   */
+  nsresult NextBlock();
+
+  /**
+   * IsDone() will always set aIsDone == false unless the document contains
+   * no text, PrevBlock() was called while the document was already pointing
+   * to the first text block in the document, or NextBlock() was called while
+   * the document was already pointing to the last text block in the document.
+   *
+   * @param aIsDone             [OUT] This will contain the result.
+   */
+  nsresult IsDone(bool* aIsDone);
+
+  /**
+   * SetSelection() allows the caller to set the selection based on an offset
+   * into the string returned by GetCurrentTextBlock().  A length of zero
+   * places the cursor at that offset. A positive non-zero length "n" selects
+   * n characters in the string.
+   *
+   * @param aOffset             Offset into string returned by
+   *                            GetCurrentTextBlock().
+   * @param aLength             Number of characters selected.
+   */
+  nsresult SetSelection(int32_t aOffset, int32_t aLength);
+
+  /**
+   * Scrolls the document so that the current selection is visible.
+   */
+  nsresult ScrollSelectionIntoView();
+
+  /**
+   * Deletes the text selected by SetSelection(). Calling DeleteSelection()
+   * with nothing selected, or with a collapsed selection (cursor) does
+   * nothing and returns NS_OK.
+   */
+  nsresult DeleteSelection();
+
+  /**
+   * Inserts the given text at the current cursor position.  If there is a
+   * selection, it will be deleted before the text is inserted.
+   */
+  nsresult InsertText(const nsString* aText);
 
   /* nsIEditActionListener method implementations. */
   NS_DECL_NSIEDITACTIONLISTENER
@@ -148,11 +265,11 @@ private:
 
   nsresult SetSelectionInternal(int32_t aOffset, int32_t aLength,
                                 bool aDoUpdate);
-  nsresult GetSelection(TSDBlockSelectionStatus* aSelStatus,
+  nsresult GetSelection(BlockSelectionStatus* aSelStatus,
                         int32_t* aSelOffset, int32_t* aSelLength);
-  nsresult GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
+  nsresult GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
                                  int32_t* aSelOffset, int32_t* aSelLength);
-  nsresult GetUncollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
+  nsresult GetUncollapsedSelection(BlockSelectionStatus* aSelStatus,
                                    int32_t* aSelOffset, int32_t* aSelLength);
 
   bool SelectionIsCollapsed();
