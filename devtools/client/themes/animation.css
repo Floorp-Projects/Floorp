@@ -166,6 +166,26 @@
   right: unset;
 }
 
+.animation-name {
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: calc(100% - 20px);
+}
+
+.animation-name text {
+  dominant-baseline: middle;
+  fill: var(--theme-focus-outline-color);
+  paint-order: stroke;
+  stroke: var(--theme-body-background);
+  stroke-linejoin: round;
+  stroke-opacity: .5;
+  stroke-width: 4;
+  text-anchor: end;
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
