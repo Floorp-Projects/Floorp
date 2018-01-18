@@ -218,7 +218,7 @@ public:
       const TimeDuration& aStartTime,
       double aPlaybackRate);
 
-  void MaybeQueueCancelEvent(StickyTimeDuration aActiveTime) override {
+  void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) override {
     QueueEvents(aActiveTime);
   }
 
@@ -233,7 +233,7 @@ protected:
   void UpdateTiming(SeekFlag aSeekFlag,
                     SyncNotifyFlag aSyncNotifyFlag) override;
 
-  void QueueEvents(StickyTimeDuration activeTime = StickyTimeDuration());
+  void QueueEvents(const StickyTimeDuration& activeTime = StickyTimeDuration());
 
 
   enum class TransitionPhase;
@@ -310,7 +310,7 @@ struct TransitionEventInfo {
   TransitionEventInfo(const NonOwningAnimationTarget& aTarget,
                       EventMessage aMessage,
                       nsCSSPropertyID aProperty,
-                      StickyTimeDuration aDuration,
+                      double aElapsedTime,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
     : mElement(aTarget.mElement)
@@ -321,7 +321,7 @@ struct TransitionEventInfo {
     // XXX Looks like nobody initialize WidgetEvent::time
     mEvent.mPropertyName =
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    mEvent.mElapsedTime = aDuration.ToSeconds();
+    mEvent.mElapsedTime = aElapsedTime;
     mEvent.mPseudoElement =
       AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(
         aTarget.mPseudoType);

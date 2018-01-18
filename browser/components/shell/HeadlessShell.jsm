@@ -12,6 +12,10 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
 
 const Ci = Components.interfaces;
 
+// Refrences to the progress listeners to keep them from being gc'ed
+// before they are called.
+const progressListeners = new Map();
+
 function loadContentWindow(webNavigation, uri) {
   return new Promise((resolve, reject) => {
     webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
@@ -31,6 +35,7 @@ function loadContentWindow(webNavigation, uri) {
         }
         let contentWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                     .getInterface(Ci.nsIDOMWindow);
+        progressListeners.delete(progressListener);
         webProgress.removeProgressListener(progressListener);
         contentWindow.addEventListener("load", (event) => {
           resolve(contentWindow);
@@ -39,6 +44,7 @@ function loadContentWindow(webNavigation, uri) {
       QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
                                              "nsISupportsWeakReference"])
     };
+    progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(progressListener,
                                     Ci.nsIWebProgress.NOTIFY_LOCATION);
   });

@@ -104,7 +104,7 @@ job-template:
          android-api-16-nightly: aws-provisioner-v1/gecko-{level}-b-android
          win.*: aws-provisioner-v1/gecko-{level}-b-win2012
    treeherder:
-      symbol: tc-L10n(N)
+      symbol: L10n(N)
       tier: 1
       platform:
          by-build-platform:

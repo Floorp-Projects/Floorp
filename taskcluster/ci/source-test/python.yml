@@ -4,6 +4,11 @@ job-defaults:
     worker-type:
         by-platform:
             linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        by-platform:
+            linux64.*:
+                docker-image: {in-tree: "lint"}
+                max-run-time: 3600
     treeherder:
         kind: test
         tier: 2
@@ -18,9 +23,6 @@ taskgraph-tests:
     description: taskcluster/taskgraph unit tests
     treeherder:
         symbol: py(tg)
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
     run:
         mach: python-test --subsuite taskgraph
     when:
@@ -32,11 +34,6 @@ marionette-harness:
     description: testing/marionette/harness unit tests
     treeherder:
         symbol: py(mnh)
-    worker:
-        by-platform:
-            linux64.*:
-                docker-image: {in-tree: "lint"}
-                max-run-time: 3600
     run:
         mach: python-test --subsuite marionette-harness
     when:
@@ -79,15 +76,8 @@ mochitest-harness:
 
 mozbase:
     description: testing/mozbase unit tests
-    platform:
-        - linux64/opt
     treeherder:
         symbol: py(mb)
-    worker:
-        by-platform:
-            linux64.*:
-                docker-image: {in-tree: "lint"}
-                max-run-time: 3600
     run:
         mach: python-test --subsuite mozbase
     when:
@@ -96,12 +86,8 @@ mozbase:
 
 mozharness:
     description: mozharness integration tests
-    platform: linux64/opt
     treeherder:
         symbol: py(mh)
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
     run:
         using: run-task
         cache-dotcache: true
@@ -114,14 +100,8 @@ mozharness:
 
 mozlint:
     description: python/mozlint unit tests
-    platform: linux64/opt
     treeherder:
         symbol: py(ml)
-    worker:
-        by-platform:
-            linux64.*:
-                docker-image: {in-tree: "lint"}
-                max-run-time: 3600
     run:
         mach: python-test --subsuite mozlint
     when:
@@ -130,14 +110,8 @@ mozlint:
 
 mozterm:
     description: python/mozterm unit tests
-    platform: linux64/opt
     treeherder:
         symbol: py(term)
-    worker:
-        by-platform:
-            linux64.*:
-                docker-image: {in-tree: "lint"}
-                max-run-time: 3600
     run:
         mach: python-test --subsuite mozterm
     when:
@@ -146,14 +120,8 @@ mozterm:
 
 mozversioncontrol:
     description: python/mozversioncontrol unit tests
-    platform: linux64/opt
     treeherder:
         symbol: py(vcs)
-    worker:
-        by-platform:
-            linux64.*:
-                docker-image: {in-tree: "lint"}
-                max-run-time: 3600
     run:
         mach: python-test --subsuite mozversioncontrol
     when:
@@ -189,3 +157,13 @@ reftest-harness:
             - 'testing/mozharness/mozharness/base/log.py'
             - 'testing/mozharness/mozharness/mozilla/structuredlog.py'
             - 'testing/mozharness/mozharness/mozilla/testing/errors.py'
+
+tryselect:
+    description: tools/tryselect unit tests
+    treeherder:
+        symbol: py(try)
+    run:
+        mach: python-test --subsuite try
+    when:
+        files-changed:
+            - 'tools/tryselect/**'

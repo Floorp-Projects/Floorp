@@ -68,6 +68,9 @@ win32-clang-tidy:
             - 'build/build-clang/clang-tidy-win32.json'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+    run-on-projects:
+        - trunk
+        - try
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
@@ -232,3 +235,6 @@ win32-gn:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/build-gn-common.sh'
         toolchain-artifact: public/build/gn.tar.bz2
+    run-on-projects:
+        - trunk
+        - try

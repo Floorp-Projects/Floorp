@@ -159,4 +159,4 @@ def _generate_treeherder_platform(dep_th_platform, build_platform, build_type):
 
 
 def _generate_treeherder_symbol(is_nightly):
-    return 'tc(Ns)' if is_nightly else 'tc(Bs)'
+    return 'Ns' if is_nightly else 'Bs'

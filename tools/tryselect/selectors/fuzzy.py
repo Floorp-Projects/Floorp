@@ -6,12 +6,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import platform
+import re
 import subprocess
 import sys
 from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 from mozterm import Terminal
+from moztest.resolve import TestResolver, TEST_FLAVORS
 
 from .. import preset as pset
 from ..cli import BaseTryParser
@@ -20,6 +22,7 @@ from ..vcs import VCSHelper
 
 terminal = Terminal()
 
+here = os.path.abspath(os.path.dirname(__file__))
 
 FZF_NOT_FOUND = """
 Could not find the `fzf` binary.
@@ -86,19 +89,9 @@ class FuzzyParser(BaseTryParser):
           'default': False,
           'help': "Update fzf before running.",
           }],
-        [['--full'],
-         {'action': 'store_true',
-          'default': False,
-          'help': "Use the full set of tasks as input to fzf (instead of "
-                  "target tasks).",
-          }],
-        [['-p', '--parameters'],
-         {'default': None,
-          'help': "Use the given parameters.yml to generate tasks, "
-                  "defaults to latest parameters.yml from mozilla-central",
-          }],
     ]
-    templates = ['artifact', 'env', 'rebuild']
+    common_groups = ['push', 'task', 'preset']
+    templates = ['artifact', 'path', 'env', 'rebuild']
 
 
 def run(cmd, cwd=None):
@@ -180,9 +173,22 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
+def filter_by_paths(tasks, paths):
+    resolver = TestResolver.from_environment(cwd=here)
+    run_suites, run_tests = resolver.resolve_metadata(paths)
+    flavors = set([t['flavor'] for t in run_tests])
+    task_regexes = [TEST_FLAVORS[f]['task_regex']
+                    for f in flavors if 'task_regex' in TEST_FLAVORS[f]]
+
+    def match_task(task):
+        return any(re.search(pattern, task) for pattern in task_regexes)
+
+    return filter(match_task, tasks)
+
+
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
                   save=False, preset=None, mod_presets=False, push=True, message='{msg}',
-                  **kwargs):
+                  paths=None, **kwargs):
     if mod_presets:
         return getattr(pset, mod_presets)(section='fuzzy')
 
@@ -196,6 +202,9 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     vcs.check_working_directory(push)
 
     all_tasks = generate_tasks(parameters, full, root=vcs.root)
+
+    if paths:
+        all_tasks = filter_by_paths(all_tasks, paths)
 
     key_shortcuts = [k + ':' + v for k, v in fzf_shortcuts.iteritems()]
     cmd = [
@@ -230,7 +239,14 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
     if save:
         pset.save('fuzzy', save, query)
 
-    query = " with query: {}".format(query) if query else ""
-    msg = "Fuzzy{}".format(query)
+    # build commit message
+    msg = "Fuzzy"
+    args = []
+    if paths:
+        args.append("paths={}".format(':'.join(paths)))
+    if query:
+        args.append("query={}".format(query))
+    if args:
+        msg = "{} {}".format(msg, '&'.join(args))
     return vcs.push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
                            closed_tree=kwargs["closed_tree"])
