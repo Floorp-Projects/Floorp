@@ -15,6 +15,7 @@ class AnimationList extends PureComponent {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       emitEventForTest: PropTypes.func.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -28,6 +29,7 @@ class AnimationList extends PureComponent {
     const {
       animations,
       emitEventForTest,
+      getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
@@ -45,6 +47,7 @@ class AnimationList extends PureComponent {
           {
             animation,
             emitEventForTest,
+            getAnimatedPropertyMap,
             getNodeFromActor,
             onHideBoxModelHighlighter,
             onShowBoxModelHighlighterForNode,

@@ -16,6 +16,7 @@ class AnimationItem extends PureComponent {
     return {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -29,6 +30,7 @@ class AnimationItem extends PureComponent {
     const {
       animation,
       emitEventForTest,
+      getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
@@ -54,6 +56,7 @@ class AnimationItem extends PureComponent {
       SummaryGraph(
         {
           animation,
+          getAnimatedPropertyMap,
           simulateAnimation,
           timeScale,
         }
