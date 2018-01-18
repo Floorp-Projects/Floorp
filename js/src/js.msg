@@ -261,6 +261,7 @@ MSG_DEF(JSMSG_FROM_AFTER_IMPORT_CLAUSE, 0, JSEXN_SYNTAXERR, "missing keyword 'fr
 MSG_DEF(JSMSG_FROM_AFTER_EXPORT_STAR,  0, JSEXN_SYNTAXERR, "missing keyword 'from' after export *")
 MSG_DEF(JSMSG_GARBAGE_AFTER_INPUT,     2, JSEXN_SYNTAXERR, "unexpected garbage after {0}, starting with {1}")
 MSG_DEF(JSMSG_IDSTART_AFTER_NUMBER,    0, JSEXN_SYNTAXERR, "identifier starts immediately after numeric literal")
+MSG_DEF(JSMSG_BAD_ESCAPE,              0, JSEXN_SYNTAXERR, "invalid escape sequence")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,       0, JSEXN_SYNTAXERR, "illegal character")
 MSG_DEF(JSMSG_IMPORT_DECL_AT_TOP_LEVEL, 0, JSEXN_SYNTAXERR, "import declarations may only appear at top level of a module")
 MSG_DEF(JSMSG_OF_AFTER_FOR_LOOP_DECL,  0, JSEXN_SYNTAXERR, "a declaration in the head of a for-of loop can't have an initializer")
