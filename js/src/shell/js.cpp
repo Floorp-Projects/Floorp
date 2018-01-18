@@ -8368,6 +8368,15 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             return OptionFailure("cache-ir-stubs", str);
     }
 
+    if (const char* str = op.getStringOption("spectre-mitigations")) {
+        if (strcmp(str, "on") == 0)
+            jit::JitOptions.spectreIndexMasking = true;
+        else if (strcmp(str, "off") == 0)
+            jit::JitOptions.spectreIndexMasking = false;
+        else
+            return OptionFailure("spectre-mitigations", str);
+    }
+
     if (const char* str = op.getStringOption("ion-scalar-replacement")) {
         if (strcmp(str, "on") == 0)
             jit::JitOptions.disableScalarReplacement = false;
@@ -8886,6 +8895,8 @@ main(int argc, char** argv, char** envp)
 #  endif
             )
 #endif
+        || !op.addStringOption('\0', "spectre-mitigations", "on/off",
+                               "Whether Spectre mitigations are enabled (default: off, on to enable)")
         || !op.addStringOption('\0', "cache-ir-stubs", "on/off",
                                "Use CacheIR stubs (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-shared-stubs", "on/off",

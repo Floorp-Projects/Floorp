@@ -708,17 +708,19 @@ APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid)
 void
 APZCTreeManager::NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const
 {
-  const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aGuid.mLayersId);
-  MOZ_ASSERT(state && state->mController);
-  state->mController->NotifyAsyncScrollbarDragRejected(aGuid.mScrollId);
+  RefPtr<GeckoContentController> controller =
+    GetContentController(aGuid.mLayersId);
+  MOZ_ASSERT(controller);
+  controller->NotifyAsyncScrollbarDragRejected(aGuid.mScrollId);
 }
 
 void
 APZCTreeManager::NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) const
 {
-  const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aGuid.mLayersId);
-  MOZ_ASSERT(state && state->mController);
-  state->mController->NotifyAsyncAutoscrollRejected(aGuid.mScrollId);
+  RefPtr<GeckoContentController> controller =
+    GetContentController(aGuid.mLayersId);
+  MOZ_ASSERT(controller);
+  controller->NotifyAsyncAutoscrollRejected(aGuid.mScrollId);
 }
 
 template<class ScrollNode> HitTestingTreeNode*
@@ -989,12 +991,11 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   // ensure any pending paints were flushed. Now, paints are flushed
   // immediately, so it is safe to simply send a notification now.
   APZCTM_LOG("Flushing repaints for layers id 0x%" PRIx64 "\n", aLayersId);
-  const LayerTreeState* state =
-    CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
-  MOZ_ASSERT(state && state->mController);
-  state->mController->DispatchToRepaintThread(
+  RefPtr<GeckoContentController> controller = GetContentController(aLayersId);
+  MOZ_ASSERT(controller);
+  controller->DispatchToRepaintThread(
     NewRunnableMethod("layers::GeckoContentController::NotifyFlushComplete",
-                      state->mController,
+                      controller,
                       &GeckoContentController::NotifyFlushComplete));
 }
 
@@ -1071,9 +1072,10 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       if (apzc) {
         if (gfxPrefs::APZTestLoggingEnabled() && mouseInput.mType == MouseInput::MOUSE_HITTEST) {
           ScrollableLayerGuid guid = apzc->GetGuid();
-          if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(guid.mLayersId)) {
-            state->mApzTestData.RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
-          }
+          CompositorBridgeParent::CallWithIndirectShadowTree(guid.mLayersId,
+            [&](LayerTreeState& aState) -> void {
+              aState.mApzTestData.RecordHitResult(mouseInput.mOrigin, hitResult, guid.mScrollId);
+            });
         }
 
         bool targetConfirmed = (hitResult != CompositorHitTestInfo::eInvisibleToHitTest)
@@ -2857,12 +2859,24 @@ already_AddRefed<wr::WebRenderAPI>
 APZCTreeManager::GetWebRenderAPI() const
 {
   RefPtr<wr::WebRenderAPI> api;
-  if (LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(mRootLayersId)) {
-    if (state->mWrBridge) {
-      api = state->mWrBridge->GetWebRenderAPI();
-    }
-  }
+  CompositorBridgeParent::CallWithIndirectShadowTree(mRootLayersId,
+    [&](LayerTreeState& aState) -> void {
+      if (aState.mWrBridge) {
+        api = aState.mWrBridge->GetWebRenderAPI();
+      }
+    });
   return api.forget();
+}
+
+already_AddRefed<GeckoContentController>
+APZCTreeManager::GetContentController(uint64_t aLayersId) const
+{
+  RefPtr<GeckoContentController> controller;
+  CompositorBridgeParent::CallWithIndirectShadowTree(aLayersId,
+    [&](LayerTreeState& aState) -> void {
+      controller = aState.mController;
+    });
+  return controller.forget();
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
