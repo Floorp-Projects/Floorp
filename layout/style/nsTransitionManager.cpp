@@ -212,7 +212,7 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     return;
   }
 
-  const StickyTimeDuration zeroDuration = StickyTimeDuration();
+  static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
 
   TransitionPhase currentPhase;
   StickyTimeDuration intervalStartTime;

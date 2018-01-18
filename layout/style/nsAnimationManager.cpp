@@ -193,7 +193,7 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
     return;
   }
 
-  const StickyTimeDuration zeroDuration;
+  static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
   uint64_t currentIteration = 0;
   ComputedTiming::AnimationPhase currentPhase;
   StickyTimeDuration intervalStartTime;
