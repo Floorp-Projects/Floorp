@@ -131,10 +131,16 @@ DebuggerPanel.prototype = {
 
   // DebuggerPanel API
 
+  isPaused() {
+    let framesController = this.panelWin.DebuggerController.StackFrames;
+    let thread = framesController.activeThread;
+    return thread && thread.paused;
+  },
+
   getFrames() {
     let framesController = this.panelWin.DebuggerController.StackFrames;
     let thread = framesController.activeThread;
-    if (thread && thread.paused) {
+    if (this.isPaused()) {
       return {
         frames: thread.cachedFrames,
         selected: framesController.currentFrameDepth,
