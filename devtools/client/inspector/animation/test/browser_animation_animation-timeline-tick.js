@@ -3,10 +3,10 @@
 
 "use strict";
 
-// Test for following time tick items.
+// Test for following timeline tick items.
 // * animation list header elements existence
-// * time tick item elements existence
-// * count and label of time tick elements changing by the sidebar width
+// * timeline tick item elements existence
+// * count and label of timeline tick elements changing by the sidebar width
 
 const TimeScale = require("devtools/client/inspector/animation/utils/timescale");
 const { findOptimalTimeInterval } =
