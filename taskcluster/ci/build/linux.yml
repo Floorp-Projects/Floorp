@@ -15,7 +15,6 @@ linux64/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -75,7 +74,6 @@ linux64/pgo:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -105,7 +103,6 @@ linux64-fuzzing/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: fuzzing-debug
@@ -134,7 +131,6 @@ linux64/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
@@ -169,7 +165,6 @@ linux64-devedition-nightly/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - disable_signing.py
-            - balrog/production.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -202,7 +197,6 @@ linux64-base-toolchains/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -232,7 +226,6 @@ linux64-base-toolchains/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
@@ -261,7 +254,6 @@ linux/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -289,7 +281,6 @@ linux/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: debug
@@ -319,7 +310,6 @@ linux/pgo:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -350,7 +340,6 @@ linux-rusttests/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests
@@ -384,7 +373,6 @@ linux-rusttests/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests-debug
@@ -421,7 +409,6 @@ linux-devedition-nightly/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
             - disable_signing.py
-            - balrog/production.py
             - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
@@ -489,7 +476,6 @@ linux64-asan/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-tc
@@ -521,7 +507,6 @@ linux64-asan-fuzzing/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: fuzzing-asan-tc
@@ -552,7 +537,6 @@ linux64-asan-reporter/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-reporter-tc
@@ -583,7 +567,6 @@ linux64-asan/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-tc-and-debug
@@ -647,7 +630,6 @@ linux64-noopt/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: noopt-debug
@@ -681,7 +663,6 @@ linux64-rusttests/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests
@@ -715,7 +696,6 @@ linux64-rusttests/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: rusttests-debug
@@ -748,7 +728,6 @@ linux64-jsdcov/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -778,7 +757,6 @@ linux64-ccov/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: code-coverage
@@ -807,7 +785,6 @@ linux64-add-on-devel/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: add-on-devel
