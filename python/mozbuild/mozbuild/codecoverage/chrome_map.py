@@ -17,6 +17,9 @@ from mozbuild.frontend.data import (
     FinalTargetPreprocessedFiles,
 )
 from mozbuild.frontend.data import JARManifest, ChromeManifestEntry
+from mozpack.copier import FileRegistry
+from mozpack.files import PreprocessedFile
+from mozpack.manifests import InstallManifest
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestChrome,
@@ -115,11 +118,10 @@ class ChromeMapBackend(CommonBackend):
         for path, files in obj.files.walk():
             for f in files:
                 dest = mozpath.join(obj.install_target, path, f.target_basename)
-                is_pp = isinstance(obj, FinalTargetPreprocessedFiles)
                 obj_path = mozpath.join(self.environment.topobjdir, dest)
                 if obj_path.endswith('.in'):
                     obj_path = obj_path[:-3]
-                if is_pp:
+                if isinstance(obj, FinalTargetPreprocessedFiles):
                     assert os.path.exists(obj_path), '%s should exist' % obj_path
                     pp_info = generate_pp_info(obj_path, obj.topsrcdir)
                 else:
@@ -127,6 +129,26 @@ class ChromeMapBackend(CommonBackend):
                 self._install_mapping[dest] = mozpath.relpath(f.full_path, obj.topsrcdir), pp_info
 
     def consume_finished(self):
+        mp = os.path.join(self.environment.topobjdir, '_build_manifests', 'install', '_tests')
+        install_manifest = InstallManifest(mp)
+        reg = FileRegistry()
+        install_manifest.populate_registry(reg)
+
+        for dest, src in reg:
+            if not hasattr(src, 'path'):
+                continue
+
+            if not os.path.isabs(dest):
+                dest = '_tests/' + dest
+
+            obj_path = mozpath.join(self.environment.topobjdir, dest)
+            if isinstance(src, PreprocessedFile):
+                assert os.path.exists(obj_path), '%s should exist' % obj_path
+                pp_info = generate_pp_info(obj_path, self.environment.topsrcdir)
+            else:
+                pp_info = None
+            self._install_mapping[dest] = src.path, pp_info
+
         # Our result has three parts:
         #  A map from url prefixes to objdir directories:
         #  { "chrome://mozapps/content/": [ "dist/bin/chrome/toolkit/content/mozapps" ], ... }
