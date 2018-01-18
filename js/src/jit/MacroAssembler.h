@@ -1894,6 +1894,19 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(Imm32(key.constant()), dest);
     }
 
+  private:
+    template <typename T>
+    void spectreMaskIndexImpl(Register index, const T& length, Register output);
+
+    template <typename T>
+    void spectreMaskIndexImpl(int32_t index, const T& length, Register output);
+
+  public:
+    void spectreMaskIndex(int32_t index, Register length, Register output);
+    void spectreMaskIndex(int32_t index, const Address& length, Register output);
+    void spectreMaskIndex(Register index, Register length, Register output);
+    void spectreMaskIndex(Register index, const Address& length, Register output);
+
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {
         Label done;
