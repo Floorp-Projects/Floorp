@@ -15,12 +15,14 @@ BrowserOpenTab();
 const initialTab = gBrowser.selectedTab;
 gBrowser.removeTab(initialTab);
 
-var tmp = {};
-ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm", tmp);
-ChromeUtils.import("resource:///modules/DirectoryLinksProvider.jsm", tmp);
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm", tmp);
-Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
-var {NewTabUtils, Sanitizer, DirectoryLinksProvider, PlacesTestUtils} = tmp;
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  DirectoryLinksProvider: "resource:///modules/DirectoryLinksProvider.jsm",
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.jsm",
+});
 
 var gWindow = window;
 
