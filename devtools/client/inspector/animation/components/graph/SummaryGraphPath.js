@@ -22,6 +22,7 @@ class SummaryGraphPath extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      getAnimatedPropertyMap: PropTypes.object.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
@@ -31,12 +32,19 @@ class SummaryGraphPath extends PureComponent {
     super(props);
 
     this.state = {
+      // Duration which can display in one pixel.
       durationPerPixel: 0,
+      // List of keyframe which consists by only offset and easing.
+      keyframesList: [],
     };
   }
 
   componentDidMount() {
-    this.updateDurationPerPixel();
+    this.updateState(this.props.animation);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateState(nextProps.animation);
   }
 
   /**
@@ -132,21 +140,24 @@ class SummaryGraphPath extends PureComponent {
     return true;
   }
 
-  updateDurationPerPixel() {
+  async updateState(animation) {
     const {
-      animation,
+      getAnimatedPropertyMap,
       timeScale,
     } = this.props;
+
+    const animatedPropertyMap = await getAnimatedPropertyMap(animation);
+    const keyframesList = this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
 
     const thisEl = ReactDOM.findDOMNode(this);
     const totalDuration = this.getTotalDuration(animation, timeScale);
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
-    this.setState({ durationPerPixel });
+    this.setState({ durationPerPixel, keyframesList });
   }
 
   render() {
-    const { durationPerPixel } = this.state;
+    const { durationPerPixel, keyframesList } = this.state;
 
     if (!durationPerPixel) {
       return dom.svg();
@@ -160,8 +171,6 @@ class SummaryGraphPath extends PureComponent {
 
     const totalDuration = this.getTotalDuration(animation, timeScale);
     const startTime = timeScale.minStartTime;
-    const keyframesList =
-      this.getOffsetAndEasingOnlyKeyframes(animation.animatedPropertyMap);
     const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
 
     return dom.svg(

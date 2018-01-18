@@ -17,6 +17,7 @@ class App extends PureComponent {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       emitEventForTest: PropTypes.func.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -34,6 +35,7 @@ class App extends PureComponent {
     const {
       animations,
       emitEventForTest,
+      getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
@@ -51,6 +53,7 @@ class App extends PureComponent {
         {
           animations,
           emitEventForTest,
+          getAnimatedPropertyMap,
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
