@@ -586,9 +586,9 @@ public:
 
 private:
   const ProfileBufferEntry* const mEntries;
-  int mReadPos;
-  const int mWritePos;
-  const int mEntrySize;
+  uint32_t mReadPos;
+  const uint32_t mWritePos;
+  const uint32_t mEntrySize;
 };
 
 // The following grammar shows legal sequences of profile buffer entries.
@@ -1000,7 +1000,7 @@ ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
   }
 }
 
-int
+Maybe<uint32_t>
 ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
   const
 {
@@ -1010,26 +1010,26 @@ ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
   // ProfileBuffer::reset, since that increments mGeneration by two.
   if (aLS.mGeneration == mGeneration ||
       (mGeneration > 0 && aLS.mGeneration == mGeneration - 1)) {
-    int ix = aLS.mPos;
-
-    if (ix == -1) {
+    if (!aLS.mPos) {
       // There's no record of |aLS|'s thread ever having recorded a sample in
       // the buffer.
-      return -1;
+      return Nothing();
     }
+
+    uint32_t ix = *aLS.mPos;
 
     // It might be that the sample has since been overwritten, so check that it
     // is still valid.
     MOZ_RELEASE_ASSERT(0 <= ix && ix < mEntrySize);
     ProfileBufferEntry& entry = mEntries[ix];
     bool isStillValid = entry.IsThreadId() && entry.u.mInt == aThreadId;
-    return isStillValid ? ix : -1;
+    return isStillValid ? Some(ix) : Nothing();
   }
 
   // |aLS| denotes a sample which is older than either two wraparounds or one
   // call to ProfileBuffer::reset.  In either case it is no longer valid.
   MOZ_ASSERT(aLS.mGeneration <= mGeneration - 2);
-  return -1;
+  return Nothing();
 }
 
 bool
@@ -1037,10 +1037,13 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
                                    const TimeStamp& aProcessStartTime,
                                    LastSample& aLS)
 {
-  int lastSampleStartPos = FindLastSampleOfThread(aThreadId, aLS);
-  if (lastSampleStartPos == -1) {
+  Maybe<uint32_t> maybeLastSampleStartPos =
+    FindLastSampleOfThread(aThreadId, aLS);
+  if (!maybeLastSampleStartPos) {
     return false;
   }
+
+  uint32_t lastSampleStartPos = *maybeLastSampleStartPos;
 
   MOZ_ASSERT(mEntries[lastSampleStartPos].IsThreadId() &&
              mEntries[lastSampleStartPos].u.mInt == aThreadId);
@@ -1048,7 +1051,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
   AddThreadIdEntry(aThreadId, &aLS);
 
   // Go through the whole entry and duplicate it, until we find the next one.
-  for (int readPos = (lastSampleStartPos + 1) % mEntrySize;
+  for (uint32_t readPos = (lastSampleStartPos + 1) % mEntrySize;
        readPos != mWritePos;
        readPos = (readPos + 1) % mEntrySize) {
     switch (mEntries[readPos].GetKind()) {

@@ -349,7 +349,7 @@ private:
     return aFeatures;
   }
 
-  ActivePS(PSLockRef aLock, int aEntries, double aInterval,
+  ActivePS(PSLockRef aLock, uint32_t aEntries, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount)
     : mGeneration(sNextGeneration++)
     , mEntries(aEntries)
@@ -432,7 +432,7 @@ private:
   }
 
 public:
-  static void Create(PSLockRef aLock, int aEntries, double aInterval,
+  static void Create(PSLockRef aLock, uint32_t aEntries, double aInterval,
                      uint32_t aFeatures,
                      const char** aFilters, uint32_t aFilterCount)
   {
@@ -452,7 +452,7 @@ public:
   static bool Exists(PSLockRef) { return !!sInstance; }
 
   static bool Equals(PSLockRef,
-                     int aEntries, double aInterval, uint32_t aFeatures,
+                     uint32_t aEntries, double aInterval, uint32_t aFeatures,
                      const char** aFilters, uint32_t aFilterCount)
   {
     if (sInstance->mEntries != aEntries ||
@@ -489,7 +489,7 @@ public:
 
   PS_GET(uint32_t, Generation)
 
-  PS_GET(int, Entries)
+  PS_GET(uint32_t, Entries)
 
   PS_GET(double, Interval)
 
@@ -540,7 +540,7 @@ private:
   static uint32_t sNextGeneration;
 
   // The number of entries in mBuffer.
-  const int mEntries;
+  const uint32_t mEntries;
 
   // The interval between samples, measured in milliseconds.
   const double mInterval;
@@ -2243,7 +2243,7 @@ NotifyProfilerStarted(const int aEntries, double aInterval, uint32_t aFeatures,
 }
 
 static void
-locked_profiler_start(PSLockRef aLock, const int aEntries, double aInterval,
+locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount);
 
@@ -2746,7 +2746,7 @@ TriggerPollJSSamplingOnMainThread()
 }
 
 static void
-locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
+locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
 {
@@ -2776,7 +2776,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 #endif
 
   // Fall back to the default values if the passed-in values are unreasonable.
-  int entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
+  uint32_t entries = aEntries > 0 ? aEntries : PROFILER_DEFAULT_ENTRIES;
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, entries, interval, aFeatures, aFilters, aFilterCount);
@@ -2832,7 +2832,7 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
 }
 
 void
-profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
+profiler_start(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_start");
@@ -2868,7 +2868,7 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
 }
 
 void
-profiler_ensure_started(int aEntries, double aInterval, uint32_t aFeatures,
+profiler_ensure_started(uint32_t aEntries, double aInterval, uint32_t aFeatures,
                         const char** aFilters, uint32_t aFilterCount)
 {
   LOG("profiler_ensure_started");

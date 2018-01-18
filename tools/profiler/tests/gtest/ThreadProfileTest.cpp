@@ -43,7 +43,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
   }
   ASSERT_TRUE(pb->mEntries != nullptr);
-  int readPos = pb->mReadPos;
+  uint32_t readPos = pb->mReadPos;
   while (readPos != pb->mWritePos) {
     ASSERT_TRUE(pb->mEntries[readPos].IsTime());
     ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == readPos);
@@ -66,7 +66,7 @@ TEST(ThreadProfile, InsertEntriesWrap) {
     pb->AddEntry(ProfileBufferEntry::Time(i));
   }
   ASSERT_TRUE(pb->mEntries != nullptr);
-  int readPos = pb->mReadPos;
+  uint32_t readPos = pb->mReadPos;
   int ctr = 0;
   while (readPos != pb->mWritePos) {
     ASSERT_TRUE(pb->mEntries[readPos].IsTime());

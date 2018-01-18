@@ -16,7 +16,7 @@
 class ProfileBuffer final
 {
 public:
-  explicit ProfileBuffer(int aEntrySize);
+  explicit ProfileBuffer(uint32_t aEntrySize);
 
   ~ProfileBuffer();
 
@@ -26,13 +26,13 @@ public:
   struct LastSample {
     LastSample()
       : mGeneration(0)
-      , mPos(-1)
+      , mPos()
     {}
 
     // The profiler-buffer generation number at which the sample was created.
     uint32_t mGeneration;
-    // And its position in the buffer, or -1 meaning "invalid".
-    int mPos;
+    // And its position in the buffer.
+    mozilla::Maybe<uint32_t> mPos;
   };
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
@@ -75,7 +75,7 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-  int FindLastSampleOfThread(int aThreadId, const LastSample& aLS) const;
+  mozilla::Maybe<uint32_t> FindLastSampleOfThread(int aThreadId, const LastSample& aLS) const;
 
 public:
   // Circular buffer 'Keep One Slot Open' implementation for simplicity
@@ -83,13 +83,13 @@ public:
 
   // Points to the next entry we will write to, which is also the one at which
   // we need to stop reading.
-  int mWritePos;
+  uint32_t mWritePos;
 
   // Points to the entry at which we can start reading.
-  int mReadPos;
+  uint32_t mReadPos;
 
   // The number of entries in our buffer.
-  int mEntrySize;
+  uint32_t mEntrySize;
 
   // How many times mWritePos has wrapped around.
   uint32_t mGeneration;
