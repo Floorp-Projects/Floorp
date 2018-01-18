@@ -50,11 +50,10 @@ Cu.importGlobalProperties(["URL"]);
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
-// code can send dblclick event, also resetClick and cancelTimer
-// after dblclick has happened.
+// code can send dblclick event
 addEventListener("click", event.DoubleClickTracker.setClick);
 addEventListener("dblclick", event.DoubleClickTracker.resetClick);
-addEventListener("dblclick", event.DoubleClickTracker.cancelTimer);
+addEventListener("unload", event.DoubleClickTracker.resetClick);
 
 const seenEls = new element.Store();
 const SUPPORTED_STRATEGIES = new Set([

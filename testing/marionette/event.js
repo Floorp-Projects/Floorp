@@ -76,6 +76,7 @@ event.DoubleClickTracker = {
   },
   resetClick() {
     event.DoubleClickTracker.firstClick = false;
+    event.DoubleClickTracker.cancelTimer();
   },
   startTimer() {
     dblclickTimer.initWithCallback(event.DoubleClickTracker.resetClick,
