@@ -36,17 +36,13 @@ var gEMEHandler = {
   },
   getEMEDisabledFragment(msgId) {
     let mainMessage = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.message");
-    let [prefix, suffix] = mainMessage.split(/%(?:1\$)?S/).map(s => document.createTextNode(s));
     let text = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.learnMoreLabel");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     let link = document.createElement("label");
     link.className = "text-link";
     link.setAttribute("href", baseURL + "drm-content");
     link.textContent = text;
-
-    let fragment = document.createDocumentFragment();
-    [prefix, link, suffix].forEach(n => fragment.appendChild(n));
-    return fragment;
+    return BrowserUtils.getLocalizedFragment(document, mainMessage, link);
   },
   getMessageWithBrandName(notificationId) {
     let msgId = "emeNotifications." + notificationId + ".message";
