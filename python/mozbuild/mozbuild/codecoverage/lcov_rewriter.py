@@ -11,8 +11,6 @@ from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
 from chrome_map import ChromeManifestHandler
 
-import buildconfig
-
 class LcovRecord(object):
     __slots__ = ("test_name",
                  "source_file",
@@ -404,22 +402,21 @@ class UrlFinder(object):
     # Given a "chrome://" or "resource://" url, uses data from the UrlMapBackend
     # and install manifests to find a path to the source file and the corresponding
     # (potentially pre-processed) file in the objdir.
-    def __init__(self, appdir, gredir, extra_chrome_manifests):
-        # Normalized for "startswith" checks below.
-        self.topobjdir = mozpath.normpath(buildconfig.topobjdir)
-
+    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
         # Cached entries
         self._final_mapping = {}
 
-        info_file = os.path.join(self.topobjdir, 'chrome-map.json')
-
         try:
-            with open(info_file) as fh:
-                url_prefixes, overrides, install_info = json.load(fh)
+            with open(chrome_map_path) as fh:
+                url_prefixes, overrides, install_info, buildconfig = json.load(fh)
         except IOError:
             print("Error reading %s. Run |./mach build-backend -b ChromeMap| to "
-                  "populate the ChromeMap backend." % info_file)
+                  "populate the ChromeMap backend." % chrome_map_path)
             raise
+
+        self.topobjdir = buildconfig['topobjdir']
+        self.MOZ_APP_NAME = buildconfig['MOZ_APP_NAME']
+        self.OMNIJAR_NAME = buildconfig['OMNIJAR_NAME']
 
         # These are added dynamically in nsIResProtocolHandler, we might
         # need to get them at run time.
@@ -433,12 +430,17 @@ class UrlFinder(object):
 
         self._respath = None
 
-        mac_bundle_name = buildconfig.substs.get('MOZ_MACBUNDLE_NAME')
+        mac_bundle_name = buildconfig['MOZ_MACBUNDLE_NAME']
         if mac_bundle_name:
             self._respath = mozpath.join('dist',
                                          mac_bundle_name,
                                          'Contents',
                                          'Resources')
+
+        if not extra_chrome_manifests:
+            extra_path = os.path.join(self.topobjdir, '_tests', 'extra.manifest')
+            if os.path.isfile(extra_path):
+                extra_chrome_manifests = [extra_path]
 
         if extra_chrome_manifests:
             self._populate_chrome(extra_chrome_manifests)
@@ -556,8 +558,8 @@ class UrlFinder(object):
 
         url_obj = urlparse.urlparse(url)
         if url_obj.scheme == 'jar':
-            app_name = buildconfig.substs.get('MOZ_APP_NAME')
-            omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
+            app_name = self.MOZ_APP_NAME
+            omnijar_name = self.OMNIJAR_NAME
 
             if app_name in url:
                 if omnijar_name in url:
@@ -603,8 +605,8 @@ class UrlFinder(object):
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(self, appdir, gredir, extra_chrome_manifests):
-        self.url_finder = UrlFinder(appdir, gredir, extra_chrome_manifests)
+    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
+        self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
     def rewrite_files(self, in_paths, output_file, output_suffix):
@@ -652,6 +654,8 @@ def main():
                             "by spidermonkey's code coverage, re-maps file urls "
                             "back to source files and lines in preprocessed files "
                             "back to their original locations.")
+    parser.add_argument("--chrome-map-path", default="chrome-map.json",
+                        help="Path to the chrome-map.json file.")
     parser.add_argument("--app-dir", default="dist/bin/browser/",
                         help="Prefix of the appdir in use. This is used to map "
                              "urls starting with resource:///. It may differ by "
@@ -670,13 +674,8 @@ def main():
                         help="The set of files to process.")
 
     args = parser.parse_args()
-    if not args.extra_chrome_manifests:
-        extra_path = os.path.join(buildconfig.topobjdir, '_tests',
-                                  'extra.manifest')
-        if os.path.isfile(extra_path):
-            args.extra_chrome_manifests = [extra_path]
 
-    rewriter = LcovFileRewriter(args.app_dir, args.gre_dir,
+    rewriter = LcovFileRewriter(args.chrome_map_path, args.app_dir, args.gre_dir,
                                 args.extra_chrome_manifests)
 
     files = []
