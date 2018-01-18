@@ -35,7 +35,6 @@ jobs:
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_linux_64_builds.py
-                - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
             tooltool-downloads: public
