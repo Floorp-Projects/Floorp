@@ -115,15 +115,6 @@ interface nsITreeView : nsISupports
   AString getImageSrc(in long row, in nsITreeColumn col);
 
   /**
-   * The progress mode for a given cell. This method is only called for
-   * columns of type |progressmeter|.
-   */
-  const short PROGRESS_NORMAL = 1;
-  const short PROGRESS_UNDETERMINED = 2;
-  const short PROGRESS_NONE = 3;
-  long getProgressMode(in long row, in nsITreeColumn col);
-
-  /**
    * The value for a given cell. This method is only called for columns
    * of type other than |text|.
    */
