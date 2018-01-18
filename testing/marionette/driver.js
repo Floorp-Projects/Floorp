@@ -19,7 +19,6 @@ Cu.import("chrome://marionette/content/atom.js");
 const {
   browser,
   Context,
-  WindowState,
 } = Cu.import("chrome://marionette/content/browser.js", {});
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
@@ -54,6 +53,7 @@ const {
   PollPromise,
   TimedPromise,
 } = Cu.import("chrome://marionette/content/sync.js", {});
+const {WindowState} = Cu.import("chrome://marionette/content/wm.js", {});
 
 Cu.importGlobalProperties(["URL"]);
 
