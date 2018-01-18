@@ -1740,9 +1740,14 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
   // declaration point further up in this file.
 
   // Populate the static histogram name->id cache.
-  // Note that the histogram names are statically allocated.
+  // Note that the histogram names come from a static table so we can wrap them
+  // in a literal string to avoid allocations when it gets copied.
   for (uint32_t i = 0; i < HistogramCount; i++) {
-    gNameToHistogramIDMap.Put(nsDependentCString(gHistogramInfos[i].name()), HistogramID(i));
+    auto name = gHistogramInfos[i].name();
+
+    nsCString wrappedName;
+    wrappedName.AssignLiteral(name, strlen(name));
+    gNameToHistogramIDMap.Put(wrappedName, HistogramID(i));
   }
 
 #ifdef DEBUG
