@@ -254,7 +254,7 @@ fuzzy(106,354) css-multicol/multicol-rule-dotted-000.xht
 fuzzy(106,354) css-multicol/multicol-rule-double-000.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-fraction-001.xht
 fails-if(OSX||winWidget) css-multicol/multicol-rule-fraction-002.xht
-fails css-multicol/multicol-rule-fraction-003.xht
+fuzzy-if(OSX||winWidget||Android,113,792) css-multicol/multicol-rule-fraction-003.xht
 fuzzy(127,500) css-multicol/multicol-rule-groove-000.xht
 fuzzy(94,256) css-multicol/multicol-rule-hidden-000.xht
 fuzzy(127,500) css-multicol/multicol-rule-inset-000.xht
@@ -287,7 +287,6 @@ fuzzy(225,1060) css-multicol/multicol-width-large-001.xht
 fails css-multicol/multicol-width-small-001.xht
 fuzzy(225,1060) css-multicol/multicol-width-invalid-001.xht
 fuzzy(225,1060) css-multicol/multicol-width-large-002.xht
-fails css-multicol/multicol-zero-height-001.xht
 fuzzy(225,13600) css-multicol/multicol-nested-column-rule-001.xht
 fuzzy(94,256) css-multicol/multicol-rule-none-000.xht
 

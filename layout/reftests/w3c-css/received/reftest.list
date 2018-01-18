@@ -130,7 +130,7 @@ fuzzy(106,354) == css-multicol/multicol-rule-dotted-000.xht css-multicol/multico
 fuzzy(106,354) == css-multicol/multicol-rule-double-000.xht css-multicol/multicol-rule-double-000-ref.xht
 fails-if(OSX||winWidget) == css-multicol/multicol-rule-fraction-001.xht css-multicol/multicol-rule-fraction-001-ref.xht
 fails-if(OSX||winWidget) == css-multicol/multicol-rule-fraction-002.xht css-multicol/multicol-rule-fraction-002-ref.xht
-fails == css-multicol/multicol-rule-fraction-003.xht css-multicol/multicol-rule-fraction-3-ref.xht
+fuzzy-if(OSX||winWidget||Android,113,792) == css-multicol/multicol-rule-fraction-003.xht css-multicol/multicol-rule-fraction-3-ref.xht
 fuzzy(127,500) == css-multicol/multicol-rule-groove-000.xht css-multicol/multicol-rule-groove-000-ref.xht
 fuzzy(94,256) == css-multicol/multicol-rule-hidden-000.xht css-multicol/multicol-rule-hidden-000-ref.xht
 fuzzy(127,500) == css-multicol/multicol-rule-inset-000.xht css-multicol/multicol-rule-ridge-000-ref.xht
@@ -174,7 +174,7 @@ fuzzy(225,1060) == css-multicol/multicol-width-large-001.xht css-multicol/multic
 fuzzy(225,1060) == css-multicol/multicol-width-large-002.xht css-multicol/multicol-width-invalid-001-ref.xht
 fails == css-multicol/multicol-width-negative-001.xht css-multicol/multicol-count-002-ref.xht
 fails == css-multicol/multicol-width-small-001.xht css-multicol/multicol-width-small-001-ref.xht
-fails == css-multicol/multicol-zero-height-001.xht css-multicol/multicol-zero-height-001-ref.xht
+== css-multicol/multicol-zero-height-001.xht css-multicol/multicol-zero-height-001-ref.xht
 == css-namespaces/prefix-001.xml css-namespaces/reftest/ref-lime-1.xml
 == css-namespaces/prefix-002.xml css-namespaces/reftest/ref-lime-1.xml
 == css-namespaces/prefix-003.xml css-namespaces/reftest/ref-lime-1-generic.xml
