@@ -23,14 +23,16 @@ struct BaseScalarInfo {
   uint32_t dataset;
   mozilla::Telemetry::Common::RecordedProcessType record_in_processes;
   bool keyed;
+  bool builtin;
 
   BaseScalarInfo(uint32_t aKind, uint32_t aDataset,
                  mozilla::Telemetry::Common::RecordedProcessType aRecordInProcess,
-                 bool aKeyed)
+                 bool aKeyed, bool aBuiltin = true)
     : kind(aKind)
     , dataset(aDataset)
     , record_in_processes(aRecordInProcess)
     , keyed(aKeyed)
+    , builtin(aBuiltin)
   {}
   virtual ~BaseScalarInfo() {}
 
