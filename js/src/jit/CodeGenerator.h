@@ -250,6 +250,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitBoundsCheck(LBoundsCheck* lir) override;
     void visitBoundsCheckRange(LBoundsCheckRange* lir) override;
     void visitBoundsCheckLower(LBoundsCheckLower* lir) override;
+    void visitSpectreMaskIndex(LSpectreMaskIndex* lir) override;
     void visitLoadFixedSlotV(LLoadFixedSlotV* ins) override;
     void visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* lir) override;
     void visitLoadFixedSlotT(LLoadFixedSlotT* ins) override;
