@@ -10,7 +10,19 @@
 #include "mozilla/webrender/RenderCompositor.h"
 
 namespace mozilla {
+/*
+namespace gl {
+class GLContext;
+}
 
+namespace layers {
+class SyncObjectHost;
+}
+
+namespace widget {
+class CompositorWidget;
+}
+*/
 namespace wr {
 
 class RenderCompositorOGL : public RenderCompositor
@@ -30,7 +42,7 @@ public:
 
   gl::GLContext* gl() const override { return mGL; }
 
-  bool UseANGLE() const override { return false; }
+  bool UseANGLE() const override;
 
   LayoutDeviceIntSize GetClientSize() override;
 
