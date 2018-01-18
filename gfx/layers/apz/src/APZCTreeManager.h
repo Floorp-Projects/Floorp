@@ -622,6 +622,9 @@ private:
   // is for. This might be null (for example, if WebRender is not enabled).
   already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() const;
 
+  // Returns a pointer to the GeckoContentController for the given layers id.
+  already_AddRefed<GeckoContentController> GetContentController(uint64_t aLayersId) const;
+
 protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
