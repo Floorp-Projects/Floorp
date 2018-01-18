@@ -10,7 +10,6 @@
 #include "nsCOMArray.h"
 #include "nsISpellChecker.h"
 #include "nsString.h"
-#include "nsITextServicesDocument.h"
 #include "mozIPersonalDictionary.h"
 #include "mozISpellCheckingEngine.h"
 #include "nsClassHashtable.h"
@@ -34,7 +33,8 @@ public:
   nsresult Init();
 
   // nsISpellChecker
-  NS_IMETHOD SetDocument(nsITextServicesDocument *aDoc, bool aFromStartofDoc) override;
+  NS_IMETHOD SetDocument(mozilla::TextServicesDocument* aTextServicesDocument,
+                         bool aFromStartofDoc) override;
   NS_IMETHOD NextMisspelledWord(nsAString &aWord, nsTArray<nsString> *aSuggestions) override;
   NS_IMETHOD CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray<nsString> *aSuggestions) override;
   NS_IMETHOD Replace(const nsAString &aOldWord, const nsAString &aNewWord, bool aAllOccurrences) override;
@@ -58,7 +58,7 @@ protected:
   virtual ~mozSpellChecker();
 
   nsCOMPtr<mozISpellI18NUtil> mConverter;
-  nsCOMPtr<nsITextServicesDocument> mTsDoc;
+  RefPtr<mozilla::TextServicesDocument> mTextServicesDocument;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
 
   nsCOMPtr<mozISpellCheckingEngine>  mSpellCheckingEngine;
@@ -68,7 +68,9 @@ protected:
 
   nsresult SetupDoc(int32_t *outBlockOffset);
 
-  nsresult GetCurrentBlockIndex(nsITextServicesDocument *aDoc, int32_t *outBlockIndex);
+  nsresult GetCurrentBlockIndex(
+             mozilla::TextServicesDocument* aTextServicesDocument,
+             int32_t* aOutBlockIndex);
 
   nsresult GetEngineList(nsCOMArray<mozISpellCheckingEngine> *aDictionaryList);
 
