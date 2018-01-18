@@ -20,6 +20,7 @@ class AnimationItem extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
   }
@@ -32,6 +33,7 @@ class AnimationItem extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
+      simulateAnimation,
       timeScale,
     } = this.props;
 
@@ -52,6 +54,7 @@ class AnimationItem extends PureComponent {
       SummaryGraph(
         {
           animation,
+          simulateAnimation,
           timeScale,
         }
       )

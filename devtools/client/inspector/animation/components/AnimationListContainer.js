@@ -23,6 +23,7 @@ class AnimationListContainer extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
     };
   }
 
@@ -34,6 +35,7 @@ class AnimationListContainer extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
+      simulateAnimation,
     } = this.props;
     const timeScale = new TimeScale(animations);
 
@@ -54,6 +56,7 @@ class AnimationListContainer extends PureComponent {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           setSelectedNode,
+          simulateAnimation,
           timeScale,
         }
       )
