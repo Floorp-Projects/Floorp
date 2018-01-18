@@ -14,6 +14,7 @@
 #include "mozilla/PRemoteSpellcheckEngineChild.h"
 #include "mozilla/TextServicesDocument.h"
 #include "nsXULAppAPI.h"
+#include "RemoteSpellCheckEngineChild.h"
 
 using mozilla::dom::ContentChild;
 using mozilla::GenericPromise;

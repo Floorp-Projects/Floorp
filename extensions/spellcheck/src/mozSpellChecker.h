@@ -16,7 +16,6 @@
 #include "nsTArray.h"
 #include "mozISpellI18NUtil.h"
 #include "nsCycleCollectionParticipant.h"
-#include "RemoteSpellCheckEngineChild.h"
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
