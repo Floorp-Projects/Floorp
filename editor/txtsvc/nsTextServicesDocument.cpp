@@ -8,6 +8,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
+#include "mozilla/TextEditor.h"         // for TextEditor
 #include "nsAString.h"                  // for nsAString::Length, etc
 #include "nsContentUtils.h"             // for nsContentUtils
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
@@ -98,6 +99,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(nsTextServicesDocument,
                          mDOMDocument,
                          mSelCon,
+                         mTextEditor,
                          mIterator,
                          mPrevTextBlock,
                          mNextTextBlock,
@@ -168,7 +170,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
     }
   }
 
-  mEditor = do_GetWeakReference(aEditor);
+  mTextEditor = aEditor->AsTextEditor();
 
   rv = aEditor->AddEditActionListener(this);
 
@@ -978,25 +980,15 @@ nsTextServicesDocument::ScrollSelectionIntoView()
 NS_IMETHODIMP
 nsTextServicesDocument::DeleteSelection()
 {
-  // We don't allow deletion during a collapsed selection!
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ASSERTION(editor, "DeleteSelection called without an editor present!");
-  NS_ASSERTION(SelectionIsValid(), "DeleteSelection called without a valid selection!");
-
-  if (!editor || !SelectionIsValid()) {
+  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
     return NS_ERROR_FAILURE;
   }
+
   if (SelectionIsCollapsed()) {
     return NS_OK;
   }
 
   LOCK_DOC(this);
-
-  //**** KDEBUG ****
-  // printf("\n---- Before Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  // PrintOffsetTable();
-  //**** KDEBUG ****
 
   // If we have an mExtent, save off its current set of
   // end points so we can compare them against mExtent's
@@ -1069,12 +1061,6 @@ nsTextServicesDocument::DeleteSelection()
       }
     }
 
-  //**** KDEBUG ****
-  // printf("\n---- Middle Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  // PrintOffsetTable();
-  //**** KDEBUG ****
-
     if (i == mSelEndIndex) {
       if (entry->mIsInsertedText) {
         // Inserted text offset entries have no width when
@@ -1130,10 +1116,9 @@ nsTextServicesDocument::DeleteSelection()
   AdjustContentIterator();
 
   // Now delete the actual content!
-
+  RefPtr<TextEditor> textEditor = mTextEditor;
   nsresult rv =
-    editor->DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
-
+    textEditor->DeleteSelection(nsIEditor::ePrevious, nsIEditor::eStrip);
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
     return rv;
@@ -1254,14 +1239,13 @@ nsTextServicesDocument::DeleteSelection()
 NS_IMETHODIMP
 nsTextServicesDocument::InsertText(const nsString *aText)
 {
-  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
-  NS_ASSERTION(editor, "InsertText called without an editor present!");
-
-  if (!editor || !SelectionIsValid()) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aText)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
-  NS_ENSURE_TRUE(aText, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
+    return NS_ERROR_FAILURE;
+  }
 
   // If the selection is not collapsed, we need to save
   // off the selection offsets so we can restore the
@@ -1286,29 +1270,19 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
   LOCK_DOC(this);
 
-  nsresult rv = editor->BeginTransaction();
-
+  RefPtr<TextEditor> textEditor = mTextEditor;
+  nsresult rv = textEditor->BeginTransaction();
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
     return rv;
   }
 
-  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(editor, &rv));
-  if (textEditor) {
-    rv = textEditor->InsertText(*aText);
-  }
-
+  rv = textEditor->InsertText(*aText);
   if (NS_FAILED(rv)) {
-    editor->EndTransaction();
+    textEditor->EndTransaction();
     UNLOCK_DOC(this);
     return rv;
   }
-
-  //**** KDEBUG ****
-  // printf("\n---- Before Insert\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  // PrintOffsetTable();
-  //**** KDEBUG ****
 
   int32_t strLength = aText->Length();
 
@@ -1331,7 +1305,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry = new OffsetEntry(entry->mNode, entry->mStrOffset, strLength);
 
       if (!itEntry) {
-        editor->EndTransaction();
+        textEditor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1340,7 +1314,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry->mNodeOffset = entry->mNodeOffset;
 
       if (!mOffsetTable.InsertElementAt(mSelStartIndex, itEntry)) {
-        editor->EndTransaction();
+        textEditor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_FAILURE;
       }
@@ -1359,7 +1333,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry = mOffsetTable[i];
 
       if (!itEntry) {
-        editor->EndTransaction();
+        textEditor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_FAILURE;
       }
@@ -1379,7 +1353,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
       itEntry = new OffsetEntry(entry->mNode, mSelStartOffset, 0);
 
       if (!itEntry) {
-        editor->EndTransaction();
+        textEditor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1404,7 +1378,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     RefPtr<Selection> selection =
       mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
     if (NS_WARN_IF(!selection)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return rv;
     }
@@ -1413,7 +1387,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
                              itEntry->mNodeOffset + itEntry->mLength);
 
     if (NS_FAILED(rv)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return rv;
     }
@@ -1428,7 +1402,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     rv = SplitOffsetEntry(mSelStartIndex, i);
 
     if (NS_FAILED(rv)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return rv;
     }
@@ -1436,7 +1410,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     itEntry = new OffsetEntry(entry->mNode, mSelStartOffset, strLength);
 
     if (!itEntry) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1445,7 +1419,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     itEntry->mNodeOffset     = entry->mNodeOffset + entry->mLength;
 
     if (!mOffsetTable.InsertElementAt(mSelStartIndex + 1, itEntry)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return NS_ERROR_FAILURE;
     }
@@ -1477,7 +1451,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     rv = SetSelection(savedSelOffset, savedSelLength);
 
     if (NS_FAILED(rv)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return rv;
     }
@@ -1485,13 +1459,13 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     rv = DeleteSelection();
 
     if (NS_FAILED(rv)) {
-      editor->EndTransaction();
+      textEditor->EndTransaction();
       UNLOCK_DOC(this);
       return rv;
     }
   }
 
-  rv = editor->EndTransaction();
+  rv = textEditor->EndTransaction();
 
   UNLOCK_DOC(this);
 
