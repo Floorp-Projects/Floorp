@@ -72,12 +72,23 @@
 /* Summary Graph */
 .animation-summary-graph {
   height: 100%;
+  padding-top: 5px;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .animation-summary-graph-path {
   height: 100%;
   width: 100%;
+}
+
+.animation-computed-timing-path path {
+  fill: lime;
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
+}
+
+.animation-computed-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
 }
 
 /* No Animation Panel */

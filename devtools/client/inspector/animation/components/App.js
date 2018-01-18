@@ -21,6 +21,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
     };
   }
@@ -37,6 +38,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
+      simulateAnimation,
       toggleElementPicker,
     } = this.props;
 
@@ -53,6 +55,7 @@ class App extends PureComponent {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           setSelectedNode,
+          simulateAnimation,
         }
       )
       :
