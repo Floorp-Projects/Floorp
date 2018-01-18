@@ -151,6 +151,7 @@ WHITELISTED_SCHEMA_IDENTIFIERS = [
     lambda path: path.endswith("[u'tuxedo_server_url']"),
     lambda path: path.endswith("[u'release_promotion']"),
     lambda path: path.endswith("[u'generate_bz2_blob']"),
+    lambda path: path.endswith("[u'release_eta']"),
 ]
 
 
