@@ -31,6 +31,8 @@ buildbot_run_schema = Schema({
     Optional('channels'): optionally_keyed_by('project', basestring),
 
     Optional('release-promotion'): bool,
+
+    Optional('release-eta'): basestring,
 })
 
 
@@ -61,6 +63,10 @@ def bb_release_worker(config, worker, run):
 
     if product in ('devedition', 'firefox'):
         release_props['balrog_api_root'] = _get_balrog_api_root(branch)
+
+    if run.get('release-eta'):
+        # TODO Use same property name when we move away from BuildBot
+        release_props['schedule_at'] = run['release-eta']
 
     worker['properties'].update(release_props)
     # Setting script_repo_revision to the gecko revision doesn't work for
