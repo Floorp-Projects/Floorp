@@ -36,6 +36,7 @@ registerCleanupFunction(() => {
 const openAnimationInspector = async function () {
   const { inspector, toolbox } = await openInspectorSidebarTab(TAB_NAME);
   await inspector.once("inspector-updated");
+  await waitForAllAnimationTargets(inspector);
   const { animationinspector: animationInspector } = inspector;
   const panel = inspector.panelWin.document.getElementById("animation-container");
   return { animationInspector, toolbox, inspector, panel };
@@ -104,6 +105,7 @@ const selectNodeAndWaitForAnimations = async function (data, inspector, reason =
   const onUpdated = inspector.once("inspector-updated");
   await selectNode(data, inspector, reason);
   await onUpdated;
+  await waitForAllAnimationTargets(inspector);
 };
 
 /**
@@ -119,4 +121,18 @@ const setSidebarWidth = async function (width, inspector) {
   const onUpdated = inspector.toolbox.once("inspector-sidebar-resized");
   inspector.splitBox.setState({ width });
   await onUpdated;
+};
+
+/**
+ * Wait for all AnimationTarget components to be fully loaded
+ * (fetched their related actor and rendered).
+ *
+ * @param {Inspector} inspector
+ */
+const waitForAllAnimationTargets = async function (inspector) {
+  const { animationinspector: animationInspector } = inspector;
+
+  for (let i = 0; i < animationInspector.animations.length; i++) {
+    await animationInspector.once("animation-target-rendered");
+  }
 };

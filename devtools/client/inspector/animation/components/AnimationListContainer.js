@@ -16,11 +16,23 @@ class AnimationListContainer extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
+      getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { animations } = this.props;
+    const {
+      animations,
+      emitEventForTest,
+      getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
 
     return dom.div(
       {
@@ -33,7 +45,12 @@ class AnimationListContainer extends PureComponent {
       ),
       AnimationList(
         {
-          animations
+          animations,
+          emitEventForTest,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
         }
       )
     );
