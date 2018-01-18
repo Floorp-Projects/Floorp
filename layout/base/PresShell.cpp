@@ -1772,10 +1772,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 
   if (!rootFrame) {
     nsAutoScriptBlocker scriptBlocker;
-    mFrameConstructor->BeginUpdate();
     rootFrame = mFrameConstructor->ConstructRootFrame();
     mFrameConstructor->SetRootFrame(rootFrame);
-    mFrameConstructor->EndUpdate();
   }
 
   NS_ENSURE_STATE(!mHaveShutDown);
@@ -1811,8 +1809,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
   if (root) {
     {
       nsAutoCauseReflowNotifier reflowNotifier(this);
-      mFrameConstructor->BeginUpdate();
-
       // Have the style sheet processor construct frame for the root
       // content object down
       mFrameConstructor->ContentInserted(
@@ -1822,8 +1818,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
       // Something in mFrameConstructor->ContentInserted may have caused
       // Destroy() to get called, bug 337586.
       NS_ENSURE_STATE(!mHaveShutDown);
-
-      mFrameConstructor->EndUpdate();
     }
 
     // nsAutoCauseReflowNotifier (which sets up a script blocker) going out of
@@ -2535,8 +2529,6 @@ PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #ifdef DEBUG
   mUpdateCount++;
 #endif
-  mFrameConstructor->BeginUpdate();
-
   if (aUpdateType & UPDATE_STYLE)
     mStyleSet->BeginUpdate();
 }
@@ -2555,8 +2547,6 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
       RestyleForCSSRuleChanges();
     }
   }
-
-  mFrameConstructor->EndUpdate();
 }
 
 void
@@ -2950,11 +2940,7 @@ PresShell::DestroyFramesForAndRestyle(Element* aElement)
   // Mark ourselves as not safe to flush while we're doing frame destruction.
   ++mChangeNestCount;
 
-  nsCSSFrameConstructor* fc = FrameConstructor();
-  fc->BeginUpdate();
-  bool didReconstruct = fc->DestroyFramesFor(aElement);
-  fc->EndUpdate();
-
+  const bool didReconstruct = FrameConstructor()->DestroyFramesFor(aElement);
   if (aElement->IsStyledByServo()) {
     if (aElement->GetFlattenedTreeParentNode()) {
       // The element is still in the flat tree, but their children may not be
@@ -4561,9 +4547,7 @@ void
 PresShell::NotifyCounterStylesAreDirty()
 {
   nsAutoCauseReflowNotifier reflowNotifier(this);
-  mFrameConstructor->BeginUpdate();
   mFrameConstructor->NotifyCounterStylesAreDirty();
-  mFrameConstructor->EndUpdate();
 }
 
 void
@@ -4590,10 +4574,8 @@ PresShell::ReconstructFrames()
   }
 
   nsAutoCauseReflowNotifier crNotifier(this);
-  mFrameConstructor->BeginUpdate();
   mFrameConstructor->ReconstructDocElementHierarchy(nsCSSFrameConstructor::InsertionKind::Sync);
   VERIFY_STYLE_TREE;
-  mFrameConstructor->EndUpdate();
 }
 
 void
@@ -8813,16 +8795,12 @@ PresShell::WillDoReflow()
 
   mPresContext->FlushFontFeatureValues();
 
-  mFrameConstructor->BeginUpdate();
-
   mLastReflowStart = GetPerformanceNow();
 }
 
 void
 PresShell::DidDoReflow(bool aInterruptible)
 {
-  mFrameConstructor->EndUpdate();
-
   HandlePostedReflowCallbacks(aInterruptible);
 
   nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
