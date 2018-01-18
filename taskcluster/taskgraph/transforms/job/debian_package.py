@@ -47,6 +47,9 @@ run_schema = Schema({
 
     # Command to run before dpkg-buildpackage.
     Optional('pre-build-command'): basestring,
+
+    # List of package tasks to get build dependencies from.
+    Optional('packages'): [basestring],
 })
 
 
@@ -126,6 +129,14 @@ def docker_worker_debian_package(config, job, taskdesc):
         '/{snapshot}/ {dist}-backports main" >> /etc/apt/sources.list && '
         'echo "deb http://snapshot.debian.org/archive/debian-security'
         '/{snapshot}/ {dist}/updates main" >> /etc/apt/sources.list && '
+        'apt-get update -o Acquire::Check-Valid-Until=false -q && '
+        # Add sources for packages coming from other package tasks.
+        'apt-get install -yyq apt-transport-https ca-certificates && '
+        'for task in $PACKAGES; do '
+        '  echo "deb [trusted=yes] https://queue.taskcluster.net/v1/task'
+        '/$task/runs/0/artifacts/public/build/ debian/" '
+        '>> /etc/apt/sources.list; '
+        'done && '
         # Install the base utilities required to build debian packages.
         'apt-get update -o Acquire::Check-Valid-Until=false -q && '
         'apt-get install -yyq fakeroot build-essential devscripts apt-utils && '
@@ -168,5 +179,17 @@ def docker_worker_debian_package(config, job, taskdesc):
     data = list(worker['command'])
     if 'patch' in run:
         data.append(hash_path(os.path.join(GECKO, 'build', 'debian-packages', run['patch'])))
+
+    if run.get('packages'):
+        env = worker.setdefault('env', {})
+        env['PACKAGES'] = {
+            'task-reference': ' '.join('<{}>'.format(p)
+                                       for p in run['packages'])
+        }
+        deps = taskdesc.setdefault('dependencies', {})
+        for p in run['packages']:
+            deps[p] = 'packages-{}'.format(p)
+            data.append(p)
+
     add_optimization(config, taskdesc, cache_type='packages.v1',
                      cache_name=name, digest_data=data)
