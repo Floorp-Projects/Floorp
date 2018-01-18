@@ -2325,17 +2325,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     //
     // Convenience functions for converting values to int32.
     //
-    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail,
-                             bool negativeZeroCheck)
-    {
-        convertValueToInt(value, temp, output, fail, negativeZeroCheck
-                          ? IntConversion_NegativeZeroCheck
-                          : IntConversion_Normal);
-    }
-
     void convertValueToInt32(ValueOperand value, MDefinition* input,
                              FloatRegister temp, Register output, Label* fail,
-                             bool negativeZeroCheck, IntConversionInputKind conversion = IntConversion_Any)
+                             bool negativeZeroCheck,
+                             IntConversionInputKind conversion = IntConversion_Any)
     {
         convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
                           negativeZeroCheck
@@ -2354,6 +2347,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     {
         convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_Truncate);
+    }
+
+    void truncateValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail)
+    {
+        truncateValueToInt32(value, nullptr, nullptr, nullptr, nullptr, InvalidReg, temp, output,
+                             fail);
     }
 
     MOZ_MUST_USE bool truncateConstantOrRegisterToInt32(JSContext* cx,
