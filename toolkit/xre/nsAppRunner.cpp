@@ -5055,12 +5055,6 @@ XRE_IsContentProcess()
 }
 
 bool
-XRE_IsPluginProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Plugin;
-}
-
-bool
 XRE_UseNativeEventProcessing()
 {
   if (XRE_IsContentProcess()) {

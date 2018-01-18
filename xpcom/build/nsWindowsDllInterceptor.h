@@ -1043,31 +1043,6 @@ protected:
             MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
             return;
           }
-        } else if (origBytes[nOrigBytes] == 0x8d) {
-          // LEA reg, addr
-          if ((origBytes[nOrigBytes + 1] & kMaskMod) == 0x0 &&
-              (origBytes[nOrigBytes + 1] & kMaskRm) == 0x5) {
-            // [rip+disp32]
-            // convert 32bit offset to 64bit direct and convert instruction
-            // to a simple 64-bit mov
-            BYTE reg = (origBytes[nOrigBytes + 1] & kMaskReg) >> kRegFieldShift;
-            intptr_t absAddr =
-              reinterpret_cast<intptr_t>(origBytes + nOrigBytes + 6 +
-                                         *reinterpret_cast<int32_t*>(origBytes + nOrigBytes + 2));
-            nOrigBytes += 6;
-            tramp[nTrampBytes] = 0xb8 + reg;    // mov
-            ++nTrampBytes;
-            intptr_t* trampOperandPtr = reinterpret_cast<intptr_t*>(tramp + nTrampBytes);
-            *trampOperandPtr = absAddr;
-            nTrampBytes += 8;
-          } else {
-            // Above we dealt with RIP-relative instructions.  Any other
-            // operand form can simply be copied.
-            int len = CountModRmSib(origBytes + nOrigBytes + 1);
-            // We handled the kModOperand64 -- ie RIP-relative -- case above
-            MOZ_ASSERT(len > 0);
-            COPY_CODES(len + 1);
-          }
         } else if (origBytes[nOrigBytes] == 0x63 &&
                    (origBytes[nOrigBytes + 1] & kMaskMod) == kModReg) {
           // movsxd r64, r32 (move + sign extend)
@@ -1102,17 +1077,6 @@ protected:
             MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
             return;
           }
-        } else if (origBytes[nOrigBytes] == 0x44 &&
-                   origBytes[nOrigBytes+1] == 0x89) {
-          // mov word ptr [reg+disp8], reg
-          COPY_CODES(2);
-          int len = CountModRmSib(origBytes + nOrigBytes);
-          if (len < 0) {
-            // no way to support this yet.
-            MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
-            return;
-          }
-          COPY_CODES(len);
         }
       } else if ((origBytes[nOrigBytes] & 0xf0) == 0x50) {
         // 1-byte push/pop
@@ -1258,19 +1222,6 @@ protected:
           MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
           return;
         }
-      } else if (origBytes[nOrigBytes] == 0x83 &&
-                 (origBytes[nOrigBytes + 1] & 0xf8) == 0x60) {
-        // and [r+d], imm8
-        COPY_CODES(5);
-      } else if (origBytes[nOrigBytes] == 0xc6) {
-        // mov [r+d], imm8
-        int len = CountModRmSib(&origBytes[nOrigBytes + 1]);
-        if (len < 0) {
-          // RIP-relative not yet supported
-          MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
-          return;
-        }
-        COPY_CODES(len + 1);
       } else {
         MOZ_ASSERT_UNREACHABLE("Unrecognized opcode sequence");
         return;
@@ -1401,15 +1352,10 @@ class WindowsDllInterceptor
   int mNHooks;
 
 public:
-  explicit WindowsDllInterceptor(const char* aModuleName = nullptr,
-                                 int aNumHooks = 0)
+  WindowsDllInterceptor()
     : mModuleName(nullptr)
     , mNHooks(0)
-  {
-    if (aModuleName) {
-      Init(aModuleName, aNumHooks);
-    }
-  }
+  {}
 
   void Init(const char* aModuleName, int aNumHooks = 0)
   {
