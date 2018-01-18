@@ -34,6 +34,7 @@ jobs:
       - deb7-mercurial
       - deb7-ninja
       - deb7-python
+      - deb7-xz-utils
   debian7-amd64-build:
     symbol: I(deb7)
     definition: debian7-build
@@ -43,6 +44,7 @@ jobs:
       - deb7-mercurial
       - deb7-python
       - deb7-valgrind
+      - deb7-xz-utils
     args:
       ARCH: amd64
   debian7-i386-build:
@@ -54,6 +56,7 @@ jobs:
       - deb7-mercurial
       - deb7-python
       - deb7-valgrind
+      - deb7-xz-utils
     args:
       ARCH: i386
   lint:
