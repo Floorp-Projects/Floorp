@@ -415,8 +415,8 @@ function test() {
       is(w14.value, expected_args, "The 14th value is correct.");
     }
 
-    is(w15.value, "SyntaxError: unterminated string literal", "The 15th value is correct.");
-    is(w16.value, "SyntaxError: unterminated string literal", "The 16th value is correct.");
+    is(w15.value, "SyntaxError: \"\" literal not terminated before end of script", "The 15th value is correct.");
+    is(w16.value, "SyntaxError: \"\" literal not terminated before end of script", "The 16th value is correct.");
     is(w17.value, "URIError: malformed URI sequence", "The 17th value is correct.");
 
     is(w18.value.type, "undefined", "The 18th value type is correct.");
