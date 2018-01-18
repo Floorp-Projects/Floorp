@@ -306,13 +306,13 @@ void UpdateASR(nsDisplayItem* aItem,
  *
  * The basic algorithm is:
  *
- * For-each item i in the new list:
+ * For-each item in the new list:
  *     If the item has a matching item in the old list:
- *         Remove items from the start of the old list up until we reach an item that also exists in the new list (leaving the matched item in place):
+ *         Remove items from the bottom of the old list until we reach the matching item:
  *             Add valid items to the merged list, destroy invalid items.
- *     Add i into the merged list.
- *     If the start of the old list matches i, remove and destroy it, otherwise mark the old version of i as used.
- * Add all remaining valid items from the old list into the merged list, skipping over (and destroying) any that are marked as used.
+ *         Destroy the matching item from the old list.
+ *     Add the item from the new list into the merged list.
+ * Add all remaining valid items from the old list into the merged list.
  *
  * If any item has a child display list, then we recurse into the merge
  * algorithm once we match up the new/old versions (if present).
@@ -320,7 +320,7 @@ void UpdateASR(nsDisplayItem* aItem,
  * Example 1:
  *
  * Old List: A,B,C,D
- * Modified List: A,D
+ * New List: A,D
  * Invalidations: C,D
  *
  * We first match the A items, and add the new one to the merged list.
@@ -330,23 +330,10 @@ void UpdateASR(nsDisplayItem* aItem,
  *
  * Merged List: A,B,D
  *
- * Example 2 (layout/reftests/retained-dl-zindex-1.html):
+ * Example 2:
  *
  * Old List: A, B
- * Modified List: B, A
- * Invalidations: A
- *
- * In this example A has been explicitly moved to the back.
- *
- * We match the B items, but don't copy A since it's invalid, and then add the
- * new B into the merged list. We then add A, and we're done.
- *
- * Merged List: B, A
- *
- * Example 3:
- *
- * Old List: A, B
- * Modified List: B, A
+ * New List, B, A
  * Invalidations: -
  *
  * This can happen because a prior merge might have changed the ordering
@@ -356,28 +343,6 @@ void UpdateASR(nsDisplayItem* aItem,
  * and then add the new B into the merged list. We then add A, and we're done.
  *
  * Merged List: B, A
- *
- * Example 4 (layout/reftests/retained-dl-zindex-2.html):
- *
- * Element A has two elements covering it (B and C), that don't intersect each
- * other. We then move C to the back.
- *
- * The correct initial ordering has B and C after A, in any order.
- *
- * Old List: A, B, C
- * Modified List: C, A
- * Invalidations: C
- *
- * We match the C items, but don't add anything from the old list because A is present
- * in both lists. We add C to the merged list, and mark the old version of C as reused.
- *
- * We then match A, add the new version the merged list and delete the old version.
- *
- * We then process the remainder of the old list, B is added (since it is valid,
- * and hasn't been mark as reused), C is destroyed since it's marked as reused and
- * is already present in the merged list.
- *
- * Merged List: C, A, B
  */
 void
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
@@ -442,49 +407,39 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
       // The new item has a matching counterpart in the old list that we haven't yet reached,
       // so copy all valid items from the old list into the merged list until we get to the
       // matched item.
-      nsDisplayItem* old = nullptr;
-      while ((old = aOldList->GetBottom()) && old != oldItem) {
-        if (IsAnyAncestorModified(old->FrameForInvalidation())) {
-          // The old item is invalid, discard it.
-          oldListLookup.Remove({ old->Frame(), old->GetPerFrameKey() });
-          aOldList->RemoveBottom();
-          old->Destroy(&mBuilder);
-        } else if (newListLookup.Get({ old->Frame(), old->GetPerFrameKey() })) {
-          // This old item is also in the new list, but we haven't got to it yet.
-          // Stop now, and we'll deal with it when we get to the new entry.
-          break;
-        } else {
-          // Recurse into the child list (without a matching new list) to
-          // ensure that we find and remove any invalidated items.
-          if (old->GetChildren()) {
-            nsDisplayList empty;
-            Maybe<const ActiveScrolledRoot*> containerASRForChildren;
-            MergeDisplayLists(&empty, old->GetChildren(),
-                              old->GetChildren(), containerASRForChildren);
-            UpdateASR(old, containerASRForChildren);
-            old->UpdateBounds(&mBuilder);
+      if (!oldItem->IsReused()) {
+        nsDisplayItem* old = nullptr;
+        while ((old = aOldList->RemoveBottom()) && !IsSameItem(newItem, old)) {
+          if (IsAnyAncestorModified(old->FrameForInvalidation())) {
+            // The old item is invalid, discard it.
+            oldListLookup.Remove({ old->Frame(), old->GetPerFrameKey() });
+            old->Destroy(&mBuilder);
+          } else if (newListLookup.Get({ old->Frame(), old->GetPerFrameKey() })) {
+            // The old item is also in the new list, but we haven't got to it yet.
+            // Mark that we've found it, and we'll deal with it when we get to the new
+            // entry.
+            old->SetReused(true);
+          } else {
+            // Recurse into the child list (without a matching new list) to
+            // ensure that we find and remove any invalidated items.
+            if (old->GetChildren()) {
+              nsDisplayList empty;
+              Maybe<const ActiveScrolledRoot*> containerASRForChildren;
+              MergeDisplayLists(&empty, old->GetChildren(),
+                                old->GetChildren(), containerASRForChildren);
+              UpdateASR(old, containerASRForChildren);
+              old->UpdateBounds(&mBuilder);
+            }
+            ReuseItem(old);
           }
-          aOldList->RemoveBottom();
-          ReuseItem(old);
         }
-      }
-      bool destroy = false;
-      if (old == oldItem) {
-        // If we advanced the old list until the matching item then we can pop
-        // the matching item off the old list and make sure we clean it up.
-        aOldList->RemoveBottom();
-        destroy = true;
-      } else {
-        // If we didn't get to the matching item, then mark the old item
-        // as being reused (since we're adding the new version to the new
-        // list now) so that we don't add it twice at the end.
-        oldItem->SetReused(true);
+        MOZ_ASSERT(old && IsSameItem(newItem, old));
+        MOZ_ASSERT(old == oldItem);
       }
 
       // Recursively merge any child lists, destroy the old item and add
       // the new one to the list.
-      if (destroy &&
-          oldItem->GetType() == DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+      if (oldItem->GetType() == DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
           !IsAnyAncestorModified(oldItem->FrameForInvalidation())) {
         // Event regions items don't have anything interesting other than
         // the lists of regions and frames, so we have no need to use the
@@ -504,9 +459,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
           newItem->UpdateBounds(&mBuilder);
         }
 
-        if (destroy) {
-          oldItem->Destroy(&mBuilder);
-        }
+        oldItem->Destroy(&mBuilder);
         UseItem(newItem);
       }
     } else {
@@ -518,8 +471,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
 
   // Reuse the remaining valid items from the old display list.
   while (nsDisplayItem* old = aOldList->RemoveBottom()) {
-    if (!IsAnyAncestorModified(old->FrameForInvalidation()) &&
-        !old->IsReused()) {
+    if (!IsAnyAncestorModified(old->FrameForInvalidation())) {
       if (old->GetChildren()) {
         // We are calling MergeDisplayLists() to ensure that the display items
         // with modified or deleted children will be correctly handled.
@@ -537,7 +489,7 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
         MergeLayerEventRegions(old, nullptr);
       }
       ReuseItem(old);
-    } else if (!old->IsReused()) {
+    } else {
       old->Destroy(&mBuilder);
     }
   }
