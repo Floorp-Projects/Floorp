@@ -57,7 +57,7 @@ PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
 }
 
 already_AddRefed<DrawTarget>
-PrintTargetThebes::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
+PrintTargetThebes::GetReferenceDrawTarget()
 {
   if (!mRefDT) {
     RefPtr<gfx::DrawTarget> dt =
@@ -66,27 +66,6 @@ PrintTargetThebes::GetReferenceDrawTarget(DrawEventRecorder* aRecorder)
       return nullptr;
     }
     mRefDT = dt->CreateSimilarDrawTarget(IntSize(1,1), dt->GetFormat());
-  }
-
-  if (aRecorder) {
-    if (!mRecordingRefDT) {
-      RefPtr<DrawTarget> dt = CreateWrapAndRecordDrawTarget(aRecorder, mRefDT);
-      if (!dt || !dt->IsValid()) {
-        return nullptr;
-      }
-      mRecordingRefDT = dt.forget();
-#ifdef DEBUG
-      mRecorder = aRecorder;
-#endif
-    }
-#ifdef DEBUG
-    else {
-      MOZ_ASSERT(aRecorder == mRecorder,
-                 "Caching mRecordingRefDT assumes the aRecorder is an invariant");
-    }
-#endif
-
-    return do_AddRef(mRecordingRefDT);
   }
 
   return do_AddRef(mRefDT);

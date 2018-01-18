@@ -52,7 +52,7 @@ public:
                  DrawEventRecorder* aRecorder = nullptr) final override;
 
   already_AddRefed<DrawTarget>
-  GetReferenceDrawTarget(DrawEventRecorder* aRecorder) final override;
+  GetReferenceDrawTarget() final override;
 
   void ConvertToEMFDone(const nsresult& aResult, mozilla::ipc::Shmem&& aEMF);
   bool IsSyncPagePrinting() const final { return false; }
