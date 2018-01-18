@@ -7,8 +7,9 @@ DevToolsModules(
     'AnimationList.js',
     'AnimationListContainer.js',
     'AnimationListHeader.js',
+    'AnimationTarget.js',
     'AnimationTimelineTickItem.js',
     'AnimationTimelineTickList.js',
     'App.js',
-    'NoAnimationPanel.js'
+    'NoAnimationPanel.js',
 )
