@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const url = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
+const url = "http://example.org/browser/browser/base/content/test/sanitize/dummy_page.html";
 
 add_task(async function purgeHistoryTest() {
   await BrowserTestUtils.withNewTab({
@@ -35,14 +35,7 @@ add_task(async function purgeHistoryTest() {
     ok(!backButton.hasAttribute("disabled"), "Back button was enabled");
     ok(!forwardButton.hasAttribute("disabled"), "Forward button was enabled");
 
-
-    let tmp = {};
-    Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
-
-    let {Sanitizer} = tmp;
-    let sanitizer = new Sanitizer();
-
-    await sanitizer.sanitize(["history"]);
+    await Sanitizer.sanitize(["history"]);
 
     await ContentTask.spawn(browser, null, async function() {
       Assert.equal(content.history.length, 1, "SHistory correctly cleared");
