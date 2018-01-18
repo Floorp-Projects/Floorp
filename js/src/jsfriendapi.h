@@ -194,6 +194,11 @@ JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals
 extern JS_FRIEND_API(JSPrincipals*)
 JS_GetScriptPrincipals(JSScript* script);
 
+namespace js {
+extern JS_FRIEND_API(JSCompartment*)
+GetScriptCompartment(JSScript* script);
+} /* namespace js */
+
 extern JS_FRIEND_API(bool)
 JS_ScriptHasMutedErrors(JSScript* script);
 
