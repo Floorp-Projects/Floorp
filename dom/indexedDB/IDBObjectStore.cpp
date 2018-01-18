@@ -23,14 +23,18 @@
 #include "js/Date.h"
 #include "js/StructuredClone.h"
 #include "KeyPath.h"
+#include "NullPrincipal.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/JSObjectHolder.h"
 #include "mozilla/Move.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
@@ -41,6 +45,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/SystemGroup.h"
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
@@ -900,7 +905,26 @@ public:
                aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
                aData.tag == SCTAG_DOM_BLOB);
     MOZ_ASSERT(aFile.mType == StructuredCloneFile::eBlob);
-    MOZ_ASSERT(aFile.mBlob);
+
+    RefPtr<Blob> blob = aFile.mBlob;
+
+    /* If we are creating an index, we do not have an mBlob but do have an
+     * mInfo.  Unlike other index or upgrade cases, we do need a real-looking
+     * Blob/File instance because the index's key path can reference their
+     * properties.  Rather than create a fake-looking object, create a real
+     * Blob. */
+    if (!blob) {
+      MOZ_ASSERT(aFile.mFileInfo);
+      nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(aFile.mFileInfo);
+      if (!file) {
+        return false;
+      }
+
+
+      RefPtr<FileBlobImpl> impl = new FileBlobImpl(file);
+      impl->SetFileId(aFile.mFileInfo->Id());
+      blob = File::Create(nullptr, impl);
+    }
 
     // It can happen that this IDB is chrome code, so there is no parent, but
     // still we want to set a correct parent for the new File object.
@@ -924,22 +948,22 @@ public:
     MOZ_ASSERT(parent);
 
     if (aData.tag == SCTAG_DOM_BLOB) {
-      aFile.mBlob->Impl()->SetLazyData(
+      blob->Impl()->SetLazyData(
         VoidString(), aData.type, aData.size, INT64_MAX);
-      MOZ_ASSERT(!aFile.mBlob->IsFile());
+      MOZ_ASSERT(!blob->IsFile());
 
       // ActorsParent sends here a kind of half blob and half file wrapped into
       // a DOM File object. DOM File and DOM Blob are a WebIDL wrapper around a
       // BlobImpl object. SetLazyData() has just changed the BlobImpl to be a
-      // Blob (see the previous assert), but 'aFile.mBlob' still has the WebIDL
-      // DOM File wrapping.
+      // Blob (see the previous assert), but 'blob' still has the WebIDL DOM
+      // File wrapping.
       // Before exposing it to content, we must recreate a DOM Blob object.
 
-      RefPtr<Blob> blob =
-        Blob::Create(aFile.mBlob->GetParentObject(), aFile.mBlob->Impl());
-      MOZ_ASSERT(blob);
+      RefPtr<Blob> exposedBlob =
+        Blob::Create(blob->GetParentObject(), blob->Impl());
+      MOZ_ASSERT(exposedBlob);
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (!ToJSValue(aCx, blob, &wrappedBlob)) {
+      if (!ToJSValue(aCx, exposedBlob, &wrappedBlob)) {
         return false;
       }
 
@@ -947,12 +971,12 @@ public:
       return true;
     }
 
-    aFile.mBlob->Impl()->SetLazyData(
+    blob->Impl()->SetLazyData(
       aData.name, aData.type, aData.size,
       aData.lastModifiedDate * PR_USEC_PER_MSEC);
 
-    MOZ_ASSERT(aFile.mBlob->IsFile());
-    RefPtr<File> file = aFile.mBlob->ToFile();
+    MOZ_ASSERT(blob->IsFile());
+    RefPtr<File> file = blob->ToFile();
     MOZ_ASSERT(file);
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
@@ -981,114 +1005,6 @@ public:
     }
 
     aResult.set(moduleObj);
-    return true;
-  }
-};
-
-class IndexDeserializationHelper
-{
-public:
-  static bool
-  CreateAndWrapMutableFile(JSContext* aCx,
-                           StructuredCloneFile& aFile,
-                           const MutableFileData& aData,
-                           JS::MutableHandle<JSObject*> aResult)
-  {
-    // MutableFile can't be used in index creation, so just make a dummy object.
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (NS_WARN_IF(!obj)) {
-      return false;
-    }
-
-    aResult.set(obj);
-    return true;
-  }
-
-  static bool
-  CreateAndWrapBlobOrFile(JSContext* aCx,
-                          IDBDatabase* aDatabase,
-                          StructuredCloneFile& aFile,
-                          const BlobOrFileData& aData,
-                          JS::MutableHandle<JSObject*> aResult)
-  {
-    MOZ_ASSERT(aData.tag == SCTAG_DOM_FILE ||
-               aData.tag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
-               aData.tag == SCTAG_DOM_BLOB);
-
-    // The following properties are available for use in index creation
-    //   Blob.size
-    //   Blob.type
-    //   File.name
-    //   File.lastModifiedDate
-
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (NS_WARN_IF(!obj)) {
-      return false;
-    }
-
-    // Technically these props go on the proto, but this detail won't change
-    // the results of index creation.
-
-    JS::Rooted<JSString*> type(aCx,
-      JS_NewUCStringCopyN(aCx, aData.type.get(), aData.type.Length()));
-    if (NS_WARN_IF(!type)) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!JS_DefineProperty(aCx,
-                                      obj,
-                                      "size",
-                                      double(aData.size),
-                                      0))) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "type", type, 0))) {
-      return false;
-    }
-
-    if (aData.tag == SCTAG_DOM_BLOB) {
-      aResult.set(obj);
-      return true;
-    }
-
-    JS::Rooted<JSString*> name(aCx,
-      JS_NewUCStringCopyN(aCx, aData.name.get(), aData.name.Length()));
-    if (NS_WARN_IF(!name)) {
-      return false;
-    }
-
-    JS::ClippedTime time = JS::TimeClip(aData.lastModifiedDate);
-    JS::Rooted<JSObject*> date(aCx, JS::NewDateObject(aCx, time));
-    if (NS_WARN_IF(!date)) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "name", name, 0))) {
-      return false;
-    }
-
-    if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "lastModifiedDate", date, 0))) {
-      return false;
-    }
-
-    aResult.set(obj);
-    return true;
-  }
-
-  static bool
-  CreateAndWrapWasmModule(JSContext* aCx,
-                          StructuredCloneFile& aFile,
-                          const WasmModuleData& aData,
-                          JS::MutableHandle<JSObject*> aResult)
-  {
-    // Wasm module can't be used in index creation, so just make a dummy object.
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-    if (NS_WARN_IF(!obj)) {
-      return false;
-    }
-
-    aResult.set(obj);
     return true;
   }
 };
@@ -1460,37 +1376,217 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
   return true;
 }
 
+namespace {
+
+// This class helps to create only 1 sandbox.
+class SandboxHolder final
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(SandboxHolder)
+
+  static JSObject*
+  GetSandbox(JSContext* aCx)
+  {
+    SandboxHolder* holder = GetOrCreate();
+    return holder->GetSandboxInternal(aCx);
+  }
+
+private:
+  ~SandboxHolder() = default;
+
+  static SandboxHolder*
+  GetOrCreate()
+  {
+    MOZ_ASSERT(XRE_IsParentProcess());
+    MOZ_ASSERT(NS_IsMainThread());
+
+    static StaticRefPtr<SandboxHolder> sHolder;
+    if (!sHolder) {
+      sHolder = new SandboxHolder();
+      ClearOnShutdown(&sHolder);
+    }
+    return sHolder;
+  }
+
+  JSObject*
+  GetSandboxInternal(JSContext* aCx)
+  {
+    if (!mSandbox) {
+      nsIXPConnect* xpc = nsContentUtils::XPConnect();
+      MOZ_ASSERT(xpc, "This should never be null!");
+
+      // Let's use a null principal.
+      nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
+
+      JS::Rooted<JSObject*> sandbox(aCx);
+      nsresult rv = xpc->CreateSandbox(aCx, principal, sandbox.address());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return nullptr;
+      }
+
+      mSandbox = new JSObjectHolder(aCx, sandbox);
+    }
+
+    return mSandbox->GetJSObject();
+  }
+
+  RefPtr<JSObjectHolder> mSandbox;
+};
+
+class DeserializeIndexValueHelper final : public Runnable
+{
+public:
+  DeserializeIndexValueHelper(int64_t aIndexID,
+                              const KeyPath& aKeyPath,
+                              bool aUnique,
+                              bool aMultiEntry,
+                              const nsCString& aLocale,
+                              StructuredCloneReadInfo& aCloneReadInfo,
+                              nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
+    : Runnable("DeserializeIndexValueHelper")
+    , mMonitor("DeserializeIndexValueHelper::mMonitor")
+    , mIndexID(aIndexID)
+    , mKeyPath(aKeyPath)
+    , mUnique(aUnique)
+    , mMultiEntry(aMultiEntry)
+    , mLocale(aLocale)
+    , mCloneReadInfo(aCloneReadInfo)
+    , mUpdateInfoArray(aUpdateInfoArray)
+    , mStatus(NS_ERROR_FAILURE)
+  {}
+
+  nsresult
+  DispatchAndWait()
+  {
+    // We don't need to go to the main-thread and use the sandbox. Let's create
+    // the updateInfo data here.
+    if (!mCloneReadInfo.mData.Size()) {
+      AutoJSAPI jsapi;
+      jsapi.Init();
+
+      JS::Rooted<JS::Value> value(jsapi.cx());
+      value.setUndefined();
+
+      return IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mUnique,
+                                                   mMultiEntry, mLocale,
+                                                   jsapi.cx(), value,
+                                                   mUpdateInfoArray);
+    }
+
+    // The operation will continue on the main-thread.
+
+    MOZ_ASSERT(!(mCloneReadInfo.mData.Size() % sizeof(uint64_t)));
+
+    MonitorAutoLock lock(mMonitor);
+
+    RefPtr<Runnable> self = this;
+    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, self.forget());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    lock.Wait();
+    return mStatus;
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
+
+    JS::Rooted<JSObject*> global(cx, SandboxHolder::GetSandbox(cx));
+    if (NS_WARN_IF(!global)) {
+      OperationCompleted(NS_ERROR_FAILURE);
+      return NS_OK;
+    }
+
+    JSAutoCompartment ac(cx, global);
+
+    JS::Rooted<JS::Value> value(cx);
+    nsresult rv = DeserializeIndexValue(cx, &value);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      OperationCompleted(rv);
+      return NS_OK;
+    }
+
+    rv = IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mUnique,
+                                               mMultiEntry, mLocale, cx,
+                                               value, mUpdateInfoArray);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      OperationCompleted(rv);
+      return NS_OK;
+    }
+
+    OperationCompleted(NS_OK);
+    return NS_OK;
+  }
+
+private:
+  nsresult
+  DeserializeIndexValue(JSContext* aCx, JS::MutableHandle<JS::Value> aValue)
+  {
+    static const JSStructuredCloneCallbacks callbacks = {
+      CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr
+    };
+
+    if (!JS_ReadStructuredClone(aCx, mCloneReadInfo.mData,
+                                JS_STRUCTURED_CLONE_VERSION,
+                                JS::StructuredCloneScope::SameProcessSameThread,
+                                aValue, &callbacks, &mCloneReadInfo)) {
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
+    }
+
+    return NS_OK;
+  }
+
+  void
+  OperationCompleted(nsresult aStatus)
+  {
+    mStatus = aStatus;
+
+    MonitorAutoLock lock(mMonitor);
+    lock.Notify();
+  }
+
+  Monitor mMonitor;
+
+  int64_t mIndexID;
+  const KeyPath& mKeyPath;
+  bool mUnique;
+  bool mMultiEntry;
+  const nsCString mLocale;
+  StructuredCloneReadInfo& mCloneReadInfo;
+  nsTArray<IndexUpdateInfo>& mUpdateInfoArray;
+  nsresult mStatus;
+};
+
+} // anonymous
+
 // static
-bool
-IDBObjectStore::DeserializeIndexValue(JSContext* aCx,
-                                      StructuredCloneReadInfo& aCloneReadInfo,
-                                      JS::MutableHandle<JS::Value> aValue)
+nsresult
+IDBObjectStore::DeserializeIndexValueToUpdateInfos(int64_t aIndexID,
+                                                   const KeyPath& aKeyPath,
+                                                   bool aUnique,
+                                                   bool aMultiEntry,
+                                                   const nsCString& aLocale,
+                                                   StructuredCloneReadInfo& aCloneReadInfo,
+                                                   nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aCx);
 
-  if (!aCloneReadInfo.mData.Size()) {
-    aValue.setUndefined();
-    return true;
-  }
-
-  MOZ_ASSERT(!(aCloneReadInfo.mData.Size() % sizeof(uint64_t)));
-
-  JSAutoRequest ar(aCx);
-
-  static const JSStructuredCloneCallbacks callbacks = {
-    CommonStructuredCloneReadCallback<IndexDeserializationHelper>,
-    nullptr,
-    nullptr
-  };
-
-  if (!JS_ReadStructuredClone(aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
-                              JS::StructuredCloneScope::SameProcessSameThread,
-                              aValue, &callbacks, &aCloneReadInfo)) {
-    return false;
-  }
-
-  return true;
+  RefPtr<DeserializeIndexValueHelper> helper =
+    new DeserializeIndexValueHelper(aIndexID, aKeyPath, aUnique, aMultiEntry,
+                                    aLocale, aCloneReadInfo, aUpdateInfoArray);
+  return helper->DispatchAndWait();
 }
 
 // static
