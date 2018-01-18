@@ -141,29 +141,6 @@ add_task(async function test_migrate_files() {
   });
 });
 
-add_task(async function test_fallback_fhr_state() {
-  let [srcDir, targetDir] = getTestDirs();
-
-  // Test that we fall back to migrating FHR state if the datareporting
-  // state file does not exist.
-  let stateContent = JSON.stringify({
-    clientId: "68d5474e-19dc-45c1-8e9a-81fca592707c",
-  });
-  let subDir = createSubDir(srcDir, "healthreport");
-  writeToFile(subDir, "state.json", stateContent);
-
-  // Perform migration.
-  let ok = await promiseTelemetryMigrator(srcDir, targetDir);
-  Assert.ok(ok, "callback should have been true");
-
-  checkDirectoryContains(targetDir, {
-    "healthreport": {
-      "state.json": stateContent,
-    },
-  });
-});
-
-
 add_task(async function test_datareporting_not_dir() {
   let [srcDir, targetDir] = getTestDirs();
 
