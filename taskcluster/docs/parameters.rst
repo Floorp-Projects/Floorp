@@ -151,6 +151,9 @@ Release Promotion
    The type of desktop release being promoted. One of "beta", "devedition", "esr", "rc",
    or "release".
 
+ ``release_eta``
+   The time and date when a release is scheduled to live. This value is passed to Balrog.
+
 Comm Push Information
 ---------------------
 
