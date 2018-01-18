@@ -32,6 +32,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsDisplayList.h"
+#include "nsRFPService.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
 #include "mozilla/RestyleManager.h"
@@ -253,10 +254,14 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
   auto appendTransitionEvent = [&](EventMessage aMessage,
                                    const StickyTimeDuration& aElapsedTime,
                                    const TimeStamp& aTimeStamp) {
+    double elapsedTime = aElapsedTime.ToSeconds();
+    if (aMessage == eTransitionCancel) {
+      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
+    }
     events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
                                              aMessage,
                                              TransitionProperty(),
-                                             aElapsedTime,
+                                             elapsedTime,
                                              aTimeStamp,
                                              this));
   };
