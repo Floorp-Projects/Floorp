@@ -13,10 +13,30 @@
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "nsDisplayListInvalidation.h"
+#include "nsIFrame.h"
 #include "WebRenderCanvasRenderer.h"
 
 namespace mozilla {
 namespace layers {
+
+/* static */ bool
+WebRenderUserData::SupportsAsyncUpdate(nsIFrame* aFrame)
+{
+  if (!aFrame ||
+      !aFrame->HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+    return false;
+  }
+  RefPtr<WebRenderUserData> data;
+  nsIFrame::WebRenderUserDataTable* userDataTable =
+    aFrame->GetProperty(nsIFrame::WebRenderUserDataProperty());
+
+  userDataTable->Get(static_cast<uint32_t>(DisplayItemType::TYPE_VIDEO), getter_AddRefs(data));
+  if (data && data->AsImageData()) {
+    return data->AsImageData()->IsAsync();
+  }
+
+  return false;
+}
 
 WebRenderUserData::WebRenderUserData(WebRenderLayerManager* aWRManager, nsDisplayItem* aItem)
   : mWRManager(aWRManager)
