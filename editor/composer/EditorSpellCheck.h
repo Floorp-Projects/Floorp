@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEditorSpellCheck_h___
-#define nsEditorSpellCheck_h___
+#ifndef mozilla_EditorSpellCheck_h
+#define mozilla_EditorSpellCheck_h
 
 
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -26,50 +26,52 @@ class nsITextServicesFilter;
     { 0x93, 0x9a, 0xec, 0x63, 0x51, 0xee, 0xa0, 0xcc }\
 }
 
+namespace mozilla {
+
 class DictionaryFetcher;
 
-enum dictCompare {
+enum dictCompare
+{
   DICT_NORMAL_COMPARE,
   DICT_COMPARE_CASE_INSENSITIVE,
   DICT_COMPARE_DASHMATCH
 };
 
-class nsEditorSpellCheck final : public nsIEditorSpellCheck
+class EditorSpellCheck final : public nsIEditorSpellCheck
 {
   friend class DictionaryFetcher;
 
 public:
-  nsEditorSpellCheck();
+  EditorSpellCheck();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsEditorSpellCheck)
+  NS_DECL_CYCLE_COLLECTION_CLASS(EditorSpellCheck)
 
   /* Declare all methods in the nsIEditorSpellCheck interface */
   NS_DECL_NSIEDITORSPELLCHECK
 
 protected:
-  virtual ~nsEditorSpellCheck();
+  virtual ~EditorSpellCheck();
 
   RefPtr<mozSpellChecker> mSpellChecker;
+  nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
+  nsCOMPtr<nsIEditor> mEditor;
 
-  nsTArray<nsString>  mSuggestedWordList;
-  int32_t        mSuggestedWordIndex;
+  nsTArray<nsString> mSuggestedWordList;
 
   // these are the words in the current personal dictionary,
   // GetPersonalDictionary must be called to load them.
   nsTArray<nsString>  mDictionaryList;
-  int32_t        mDictionaryIndex;
-
-  nsresult       DeleteSuggestedWordList();
-
-  nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
-  nsCOMPtr<nsIEditor> mEditor;
 
   nsString mPreferredLang;
 
+  int32_t mSuggestedWordIndex;
+  int32_t mDictionaryIndex;
   uint32_t mDictionaryFetcherGroup;
 
   bool mUpdateDictionaryRunning;
+
+  nsresult DeleteSuggestedWordList();
 
   void BuildDictionaryList(const nsAString& aDictName,
                            const nsTArray<nsString>& aDictList,
@@ -86,6 +88,6 @@ public:
   void EndUpdateDictionary() { mUpdateDictionaryRunning = false ;}
 };
 
-#endif // nsEditorSpellCheck_h___
+} // namespace mozilla
 
-
+#endif // mozilla_EditorSpellCheck_h

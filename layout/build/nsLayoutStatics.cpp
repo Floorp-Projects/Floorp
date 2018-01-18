@@ -99,7 +99,6 @@
 #include "nsFrameMessageManager.h"
 #include "nsDOMMutationObserver.h"
 #include "nsHyphenationManager.h"
-#include "nsEditorSpellCheck.h"
 #include "nsWindowMemoryReporter.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ProcessPriorityManager.h"
