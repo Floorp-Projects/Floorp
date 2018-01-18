@@ -1046,7 +1046,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
     using typename GeneralCharsBase::TokenStreamSpecific;
 
-    bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
+    void matchMultiUnitCodePointSlow(char16_t lead, uint32_t* codePoint);
 
   protected:
     using GeneralCharsBase::anyCharsAccess;
@@ -1056,11 +1056,29 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
     using GeneralCharsBase::GeneralCharsBase;
 
-    MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
+    // |c| must be the code unit just gotten.  If it and the subsequent code
+    // unit form a valid surrogate pair, get the second code unit, set
+    // |*codePoint| to the code point encoded by the surrogate pair, and return
+    // true.  Otherwise do not get a second code unit, set |*codePoint = 0|,
+    // and return true.
+    //
+    // ECMAScript specifically requires that unpaired UTF-16 surrogates be
+    // treated as the corresponding code point and not as an error.  See
+    // <https://tc39.github.io/ecma262/#sec-ecmascript-language-types-string-type>.
+    // Therefore this function always returns true.  The |bool| return type
+    // exists so that a future UTF-8 |TokenStreamChars| can treat malformed
+    // multi-code unit UTF-8 sequences as errors.  (Because ECMAScript only
+    // interprets UTF-16 inputs, the process of translating the UTF-8 to UTF-16
+    // would fail, so no script should execute.  Technically, we shouldn't even
+    // be tokenizing -- but it probably isn't realistic to assume every user
+    // correctly passes only valid UTF-8, at least not without better types in
+    // our codebase for strings that by construction only contain valid UTF-8.)
+    MOZ_ALWAYS_INLINE bool matchMultiUnitCodePoint(char16_t c, uint32_t* codePoint) {
         if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
-            return false;
-
-        return matchTrailForLeadSurrogate(c, codepoint);
+            *codePoint = 0;
+        else
+            matchMultiUnitCodePointSlow(c, codePoint);
+        return true;
     }
 
     void ungetCodePointIgnoreEOL(uint32_t codePoint);
@@ -1144,7 +1162,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::atomizeChars;
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
-    using CharsBase::isMultiUnitCodepoint;
+    using CharsBase::matchMultiUnitCodePoint;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
     using CharsSharedBase::ungetCharIgnoreEOL;
