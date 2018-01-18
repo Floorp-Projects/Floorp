@@ -62,6 +62,24 @@ function* testRuleView(ruleView, nodeFront) {
     "Tooltip contains the correct data-uri image");
 
   yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
+
+  // Do the tooltip test again, but now when hovering on the span that
+  // encloses each and every font family.
+  const fontFamilySpan = valueSpan.querySelector(".ruleview-font-family");
+  fontFamilySpan.scrollIntoView(true);
+
+  previewTooltip = yield assertShowPreviewTooltip(ruleView, fontFamilySpan);
+
+  images = panel.getElementsByTagName("img");
+  is(images.length, 1, "Tooltip contains an image");
+  ok(images[0].getAttribute("src").startsWith("data:"),
+    "Tooltip contains a data-uri image as expected");
+
+  dataURL = yield getFontFamilyDataURL(fontFamilySpan.textContent, nodeFront);
+  is(images[0].getAttribute("src"), dataURL,
+    "Tooltip contains the correct data-uri image");
+
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, fontFamilySpan);
 }
 
 function* testComputedView(computedView, nodeFront) {

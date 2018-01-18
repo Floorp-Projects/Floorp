@@ -15,6 +15,7 @@ const { Task } = require("devtools/shared/task");
 const Services = require("Services");
 const {
   VIEW_NODE_VALUE_TYPE,
+  VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_VARIABLE_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
@@ -171,7 +172,8 @@ TooltipsOverlay.prototype = {
     }
 
     // Font preview tooltip
-    if (type === VIEW_NODE_VALUE_TYPE && prop.property === "font-family") {
+    if ((type === VIEW_NODE_VALUE_TYPE && prop.property === "font-family") ||
+        (type === VIEW_NODE_FONT_TYPE)) {
       let value = prop.value.toLowerCase();
       if (value !== "inherit" && value !== "unset" && value !== "initial") {
         tooltipType = TOOLTIP_FONTFAMILY_TYPE;
@@ -231,6 +233,12 @@ TooltipsOverlay.prototype = {
       let font = nodeInfo.value.value;
       let nodeFront = inspector.selection.nodeFront;
       yield this._setFontPreviewTooltip(font, nodeFront);
+
+      if (nodeInfo.type === VIEW_NODE_FONT_TYPE) {
+        // If the hovered element is on the font family span, anchor
+        // the tooltip on the whole property value instead.
+        return target.parentNode;
+      }
       return true;
     }
 
