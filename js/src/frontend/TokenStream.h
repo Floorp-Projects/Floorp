@@ -1042,6 +1042,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsSharedBase::ungetCharIgnoreEOL;
+    using CharsSharedBase::userbuf;
 
     bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
 
@@ -1060,6 +1061,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
         return matchTrailForLeadSurrogate(c, codepoint);
     }
+
+    void ungetCodePointIgnoreEOL(uint32_t codePoint);
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
@@ -1144,6 +1147,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
     using CharsSharedBase::ungetCharIgnoreEOL;
+    using CharsBase::ungetCodePointIgnoreEOL;
     using CharsSharedBase::userbuf;
 
   public:

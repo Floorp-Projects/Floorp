@@ -601,6 +601,22 @@ TokenStreamCharsBase<CharT>::ungetCharIgnoreEOL(int32_t c)
     userbuf.ungetRawChar();
 }
 
+template<class AnyCharsAccess>
+void
+TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t codePoint)
+{
+    MOZ_ASSERT(!userbuf.atStart());
+
+    unsigned numUnits = 0;
+    char16_t units[2];
+    unicode::UTF16Encode(codePoint, units, &numUnits);
+
+    MOZ_ASSERT(numUnits == 1 || numUnits == 2);
+
+    while (numUnits-- > 0)
+        ungetCharIgnoreEOL(units[numUnits]);
+}
+
 // Return true iff |n| raw characters can be read from this without reading past
 // EOF or a newline, and copy those characters into |cp| if so.  The characters
 // are not consumed: use skipChars(n) to do so after checking that the consumed
@@ -1499,13 +1515,15 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             goto identifier;
         }
 
-        uint32_t codePoint;
+        uint32_t codePoint = c;
         if (isMultiUnitCodepoint(c, &codePoint) && unicode::IsUnicodeIDStart(codePoint)) {
             hadUnicodeEscape = false;
             goto identifier;
         }
 
-        goto badchar;
+        ungetCodePointIgnoreEOL(codePoint);
+        error(JSMSG_ILLEGAL_CHARACTER);
+        goto error;
     }
 
     // Get the token kind, based on the first char.  The ordering of c1kind
@@ -1838,7 +1856,14 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             hadUnicodeEscape = true;
             goto identifier;
         }
-        goto badchar;
+
+        // We could point "into" a mistyped escape, e.g. for "\u{41H}" we could
+        // point at the 'H'.  But we don't do that now, so the character after
+        // the '\' isn't necessarily bad, so just point at the start of
+        // the actually-invalid escape.
+        ungetCharIgnoreEOL('\\');
+        error(JSMSG_BAD_ESCAPE);
+        goto error;
       }
 
       case '|':
@@ -2055,9 +2080,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         }
         goto out;
 
-      badchar:
       default:
-        reportError(JSMSG_ILLEGAL_CHARACTER);
+        // We consumed a bad character/code point.  Put it back so the error
+        // location is the bad character.
+        ungetCodePointIgnoreEOL(c);
+        error(JSMSG_ILLEGAL_CHARACTER);
         goto error;
     }
 
