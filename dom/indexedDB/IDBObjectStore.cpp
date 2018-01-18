@@ -1027,7 +1027,6 @@ public:
   }
 };
 
-template <class Traits>
 JSObject*
 CommonStructuredCloneReadCallback(JSContext* aCx,
                                   JSStructuredCloneReader* aReader,
@@ -1071,10 +1070,10 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
 
       StructuredCloneFile& file = cloneReadInfo->mFiles[data.compiledIndex];
 
-      if (NS_WARN_IF(!Traits::CreateAndWrapWasmModule(aCx,
-                                                      file,
-                                                      data,
-                                                      &result))) {
+      if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapWasmModule(aCx,
+                                                                          file,
+                                                                          data,
+                                                                          &result))) {
         return nullptr;
       }
 
@@ -1094,10 +1093,10 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
         return nullptr;
       }
 
-      if (NS_WARN_IF(!Traits::CreateAndWrapMutableFile(aCx,
-                                                       file,
-                                                       data,
-                                                       &result))) {
+      if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapMutableFile(aCx,
+                                                                           file,
+                                                                           data,
+                                                                           &result))) {
         return nullptr;
       }
 
@@ -1109,11 +1108,11 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
       return nullptr;
     }
 
-    if (NS_WARN_IF(!Traits::CreateAndWrapBlobOrFile(aCx,
-                                                    cloneReadInfo->mDatabase,
-                                                    file,
-                                                    data,
-                                                    &result))) {
+    if (NS_WARN_IF(!ValueDeserializationHelper::CreateAndWrapBlobOrFile(aCx,
+                                                                        cloneReadInfo->mDatabase,
+                                                                        file,
+                                                                        data,
+                                                                        &result))) {
       return nullptr;
     }
 
@@ -1307,7 +1306,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
   JSAutoRequest ar(aCx);
 
   static const JSStructuredCloneCallbacks callbacks = {
-    CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
+    CommonStructuredCloneReadCallback,
     nullptr,
     nullptr,
     nullptr,
@@ -1480,7 +1479,7 @@ private:
   DeserializeIndexValue(JSContext* aCx, JS::MutableHandle<JS::Value> aValue)
   {
     static const JSStructuredCloneCallbacks callbacks = {
-      CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
+      CommonStructuredCloneReadCallback,
       nullptr,
       nullptr,
       nullptr,
@@ -1593,7 +1592,7 @@ private:
   DeserializeUpgradeValue(JSContext* aCx, JS::MutableHandle<JS::Value> aValue)
   {
     static const JSStructuredCloneCallbacks callbacks = {
-      CommonStructuredCloneReadCallback<ValueDeserializationHelper>,
+      CommonStructuredCloneReadCallback,
       nullptr,
       nullptr,
       nullptr,
