@@ -18,6 +18,7 @@
 #include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "Image.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace css {
@@ -394,6 +395,19 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 ImageLoader::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData)
 {
+#ifdef MOZ_GECKO_PROFILER
+  nsCString uriString;
+  if (profiler_is_active()) {
+    nsCOMPtr<nsIURI> uri;
+    aRequest->GetFinalURI(getter_AddRefs(uri));
+    if (uri) {
+      uri->GetSpec(uriString);
+    }
+  }
+
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("ImageLoader::Notify", OTHER, uriString);
+#endif
+
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
