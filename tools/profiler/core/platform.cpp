@@ -2684,25 +2684,23 @@ profiler_get_available_features()
   return features;
 }
 
-void
-profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
-                                uint32_t* aEntries,
-                                uint32_t* aGeneration)
+Maybe<ProfilerBufferInfo>
+profiler_get_buffer_info()
 {
-  // This function is called by profiler_get_buffer_info(), which has already
-  // zeroed the outparams.
-
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
   if (!ActivePS::Exists(lock)) {
-    return;
+    return Nothing();
   }
 
-  *aCurrentPosition = ActivePS::Buffer(lock).mWritePos;
-  *aEntries = ActivePS::Entries(lock);
-  *aGeneration = ActivePS::Buffer(lock).mGeneration;
+  return Some(ProfilerBufferInfo {
+    ActivePS::Buffer(lock).mWritePos,
+    ActivePS::Buffer(lock).mReadPos,
+    ActivePS::Buffer(lock).mGeneration,
+    ActivePS::Entries(lock)
+  });
 }
 
 static void
