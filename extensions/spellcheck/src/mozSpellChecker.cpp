@@ -74,6 +74,12 @@ mozSpellChecker::Init()
   return NS_OK;
 }
 
+TextServicesDocument*
+mozSpellChecker::GetTextServicesDocument()
+{
+  return mTextServicesDocument;
+}
+
 NS_IMETHODIMP
 mozSpellChecker::SetDocument(TextServicesDocument* aTextServicesDocument,
                              bool aFromStartofDoc)

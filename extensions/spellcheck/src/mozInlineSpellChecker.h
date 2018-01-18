@@ -184,6 +184,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMEventListener)
 
+  mozilla::EditorSpellCheck* GetEditorSpellCheck();
+
   // returns true if there are any spell checking dictionaries available
   static bool CanEnableInlineSpellChecking();
   // update the cached value whenever the list of available dictionaries changes

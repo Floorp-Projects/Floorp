@@ -321,6 +321,12 @@ EditorSpellCheck::~EditorSpellCheck()
   mSpellChecker = nullptr;
 }
 
+mozSpellChecker*
+EditorSpellCheck::GetSpellChecker()
+{
+  return mSpellChecker;
+}
+
 // The problem is that if the spell checker does not exist, we can not tell
 // which dictionaries are installed. This function works around the problem,
 // allowing callers to ask if we can spell check without actually doing so (and
