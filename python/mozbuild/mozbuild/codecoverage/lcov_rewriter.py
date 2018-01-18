@@ -531,17 +531,26 @@ class UrlFinder(object):
             source_path, pp_info = self._abs_objdir_install_info(term)
             return source_path, pp_info
 
-        objdir_path = None
         for prefix, dests in self._url_prefixes.iteritems():
             if term.startswith(prefix):
                 for dest in dests:
                     if not dest.endswith('/'):
                         dest += '/'
-                    replaced = url.replace(prefix, dest)
+                    objdir_path = url.replace(prefix, dest)
 
-                    if os.path.isfile(mozpath.join(self.topobjdir, replaced)):
-                        objdir_path = replaced
-                        break
+                    while objdir_path.startswith('//'):
+                        # The mochitest harness produces some wonky file:// uris
+                        # that need to be fixed.
+                        objdir_path = objdir_path[1:]
+
+                    try:
+                        if os.path.isabs(objdir_path) and objdir_path.startswith(self.topobjdir):
+                            return self._abs_objdir_install_info(objdir_path)
+                        else:
+                            src_path, pp_info = self._install_info(objdir_path)
+                            return mozpath.normpath(src_path), pp_info
+                    except UrlFinderError:
+                        pass
 
                     if (dest.startswith('resource://') or
                         dest.startswith('chrome://')):
@@ -549,19 +558,7 @@ class UrlFinder(object):
                         if result:
                             return result
 
-        if not objdir_path:
-            raise UrlFinderError("No objdir path for %s" % term)
-        while objdir_path.startswith('//'):
-            # The mochitest harness produces some wonky file:// uris
-            # that need to be fixed.
-            objdir_path = objdir_path[1:]
-
-        if os.path.isabs(objdir_path) and objdir_path.startswith(self.topobjdir):
-            source_path, pp_info = self._abs_objdir_install_info(objdir_path)
-            return source_path, pp_info
-
-        src_path, pp_info = self._install_info(objdir_path)
-        return mozpath.normpath(src_path), pp_info
+        raise UrlFinderError("No objdir path for %s" % term)
 
     def rewrite_url(self, url):
         # This applies one-off rules and returns None for urls that we aren't
