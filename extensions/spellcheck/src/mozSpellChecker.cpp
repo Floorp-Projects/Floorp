@@ -459,7 +459,7 @@ mozSpellChecker::SetupDoc(int32_t *outBlockOffset)
 {
   nsresult  rv;
 
-  nsITextServicesDocument::TSDBlockSelectionStatus blockStatus;
+  TextServicesDocument::BlockSelectionStatus blockStatus;
   int32_t selOffset;
   int32_t selLength;
   *outBlockOffset = 0;
@@ -467,27 +467,32 @@ mozSpellChecker::SetupDoc(int32_t *outBlockOffset)
   if (!mFromStart) {
     rv = mTextServicesDocument->LastSelectedBlock(&blockStatus, &selOffset,
                                                   &selLength);
-    if (NS_SUCCEEDED(rv) && (blockStatus != nsITextServicesDocument::eBlockNotFound))
-    {
-      switch (blockStatus)
-      {
-        case nsITextServicesDocument::eBlockOutside:  // No TB in S, but found one before/after S.
-        case nsITextServicesDocument::eBlockPartial:  // S begins or ends in TB but extends outside of TB.
+    if (NS_SUCCEEDED(rv) &&
+        blockStatus !=
+          TextServicesDocument::BlockSelectionStatus::eBlockNotFound) {
+      switch (blockStatus) {
+        // No TB in S, but found one before/after S.
+        case TextServicesDocument::BlockSelectionStatus::eBlockOutside:
+        // S begins or ends in TB but extends outside of TB.
+        case TextServicesDocument::BlockSelectionStatus::eBlockPartial:
           // the TS doc points to the block we want.
           *outBlockOffset = selOffset + selLength;
           break;
 
-        case nsITextServicesDocument::eBlockInside:  // S extends beyond the start and end of TB.
+        // S extends beyond the start and end of TB.
+        case TextServicesDocument::BlockSelectionStatus::eBlockInside:
           // we want the block after this one.
           rv = mTextServicesDocument->NextBlock();
           *outBlockOffset = 0;
           break;
 
-        case nsITextServicesDocument::eBlockContains: // TB contains entire S.
+        // TB contains entire S.
+        case TextServicesDocument::BlockSelectionStatus::eBlockContains:
           *outBlockOffset = selOffset + selLength;
           break;
 
-        case nsITextServicesDocument::eBlockNotFound: // There is no text block (TB) in or before the selection (S).
+        // There is no text block (TB) in or before the selection (S).
+        case TextServicesDocument::BlockSelectionStatus::eBlockNotFound:
         default:
           NS_NOTREACHED("Shouldn't ever get this status");
       }

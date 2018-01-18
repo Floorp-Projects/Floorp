@@ -13,8 +13,6 @@ XPIDL_MODULE = 'txtsvc'
 
 EXPORTS += [
     'nsISpellChecker.h',
-    'nsITextService.h',
-    'nsITextServicesDocument.h',
 ]
 
 EXPORTS.mozilla += [
