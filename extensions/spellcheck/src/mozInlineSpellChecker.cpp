@@ -566,6 +566,12 @@ mozInlineSpellChecker::~mozInlineSpellChecker()
 {
 }
 
+EditorSpellCheck*
+mozInlineSpellChecker::GetEditorSpellCheck()
+{
+  return mSpellCheck ? mSpellCheck : mPendingSpellCheck;
+}
+
 NS_IMETHODIMP
 mozInlineSpellChecker::GetSpellChecker(nsIEditorSpellCheck **aSpellCheck)
 {

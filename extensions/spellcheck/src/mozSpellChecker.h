@@ -53,6 +53,8 @@ public:
     mEngine = nullptr;
   }
 
+  mozilla::TextServicesDocument* GetTextServicesDocument();
+
 protected:
   virtual ~mozSpellChecker();
 
