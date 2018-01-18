@@ -176,8 +176,8 @@ public:
     mOriginAttributes->mPrivateBrowsingId = 0;
   }
 
-  bool URLParamsIterator(const nsString& aName,
-                         const nsString& aValue) override
+  bool URLParamsIterator(const nsAString& aName,
+                         const nsAString& aValue) override
   {
     if (aName.EqualsLiteral("appId")) {
       nsresult rv;
