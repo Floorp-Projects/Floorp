@@ -56,6 +56,18 @@
   background-color: var(--animation-even-background-color);
 }
 
+.animation-item.cssanimation {
+  --computed-timing-graph-color: var(--theme-contrast-background);
+}
+
+.animation-item.csstransition {
+  --computed-timing-graph-color: var(--theme-highlight-blue);
+}
+
+.animation-item.scriptanimation {
+  --computed-timing-graph-color: var(--theme-graphs-green);
+}
+
 /* Animation Target */
 .animation-target {
   align-items: center;
@@ -82,7 +94,7 @@
 }
 
 .animation-computed-timing-path path {
-  fill: lime;
+  fill: var(--computed-timing-graph-color);
   vector-effect: non-scaling-stroke;
   transform: scale(1, -1);
 }
