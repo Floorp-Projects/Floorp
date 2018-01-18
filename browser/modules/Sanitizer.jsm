@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from sanitizeDialog.js */
+var EXPORTED_SYMBOLS = ["Sanitizer"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
-
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");
@@ -27,26 +26,166 @@ XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
 
-var {classes: Cc, interfaces: Ci, results: Cr} = Components;
-
 /**
  * A number of iterations after which to yield time back
  * to the system.
  */
 const YIELD_PERIOD = 10;
 
-function Sanitizer() {
-}
-Sanitizer.prototype = {
-  // warning to the caller: this one may raise an exception (e.g. bug #265028)
-  clearItem(aItemName) {
-    this.items[aItemName].clear();
+var Sanitizer = {
+  /**
+   * Whether we should sanitize on shutdown.
+   */
+  PREF_SANITIZE_ON_SHUTDOWN: "privacy.sanitize.sanitizeOnShutdown",
+
+  /**
+   * During a sanitization this is set to a json containing the array of items
+   * being sanitized, then cleared once the sanitization is complete.
+   * This allows to retry a sanitization on startup in case it was interrupted
+   * by a crash.
+   */
+  PREF_SANITIZE_IN_PROGRESS: "privacy.sanitize.sanitizeInProgress",
+
+  /**
+   * Whether the previous shutdown sanitization completed successfully.
+   * This is used to detect cases where we were supposed to sanitize on shutdown
+   * but due to a crash we were unable to.  In such cases there may not be any
+   * sanitization in progress, cause we didn't have a chance to start it yet.
+   */
+  PREF_SANITIZE_DID_SHUTDOWN: "privacy.sanitize.didShutdownSanitize",
+
+  /**
+   * The fallback timestamp used when no argument is given to
+   * Sanitizer.getClearRange.
+   */
+  PREF_TIMESPAN: "privacy.sanitize.timeSpan",
+
+  /**
+   * Time span constants corresponding to values of the privacy.sanitize.timeSpan
+   * pref.  Used to determine how much history to clear, for various items
+   */
+  TIMESPAN_EVERYTHING: 0,
+  TIMESPAN_HOUR:       1,
+  TIMESPAN_2HOURS:     2,
+  TIMESPAN_4HOURS:     3,
+  TIMESPAN_TODAY:      4,
+  TIMESPAN_5MIN:       5,
+  TIMESPAN_24HOURS:    6,
+
+  /**
+   * Shows a sanitization dialog to the user.
+   *
+   * @param [optional] parentWindow the window to use as
+   *                   parent for the created dialog.
+   */
+  showUI(parentWindow) {
+    let win = AppConstants.platform == "macosx" ?
+      null : // make this an app-modal window on Mac
+      parentWindow;
+    Services.ww.openWindow(win,
+                           "chrome://browser/content/sanitize.xul",
+                           "Sanitize",
+                           "chrome,titlebar,dialog,centerscreen,modal",
+                           null);
   },
 
-  prefDomain: "",
+  /**
+   * Performs startup tasks:
+   *  - Checks if sanitization was interrupted during last shutdown.
+   *  - Registers sanitize-on-shutdown.
+   */
+  async onStartup() {
+    // Check if we were interrupted during the last shutdown sanitization.
+    let shutdownSanitizationWasInterrupted =
+      Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
+      Services.prefs.getPrefType(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN) == Ci.nsIPrefBranch.PREF_INVALID;
 
-  getNameFromPreference(aPreferenceName) {
-    return aPreferenceName.substr(this.prefDomain.length);
+    if (Services.prefs.prefHasUserValue(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
+      // Reset the pref, so that if we crash before having a chance to
+      // sanitize on shutdown, we will do at the next startup.
+      // Flushing prefs has a cost, so do this only if necessary.
+      Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
+      Services.prefs.savePrefFile(null);
+    }
+
+    // Make sure that we are triggered during shutdown.
+    let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
+    // We need to pass to sanitize() (through sanitizeOnShutdown) a state object
+    // that tracks the status of the shutdown blocker. This `progress` object
+    // will be updated during sanitization and reported with the crash in case of
+    // a shutdown timeout.
+    // We use the `options` argument to pass the `progress` object to sanitize().
+    let progress = { isShutdown: true };
+    shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
+      () => sanitizeOnShutdown({ progress }),
+      {
+        fetchState: () => ({ progress })
+      }
+    );
+
+    // Check if Firefox crashed during a sanitization.
+    let lastInterruptedSanitization = Services.prefs.getStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
+    if (lastInterruptedSanitization) {
+      // If the json is invalid this will just throw and reject the Task.
+      let {itemsToClear, options} = JSON.parse(lastInterruptedSanitization);
+      await this.sanitize(itemsToClear, options);
+    } else if (shutdownSanitizationWasInterrupted) {
+      // Otherwise, could be we were supposed to sanitize on shutdown but we
+      // didn't have a chance, due to an earlier crash.
+      // In such a case, just redo a shutdown sanitize now, during startup.
+      await sanitizeOnShutdown();
+    }
+  },
+
+  /**
+   * Returns a 2 element array representing the start and end times,
+   * in the uSec-since-epoch format that PRTime likes. If we should
+   * clear everything, this function returns null.
+   *
+   * @param ts [optional] a timespan to convert to start and end time.
+   *                      Falls back to the privacy.sanitize.timeSpan preference
+   *                      if this argument is omitted.
+   *                      If this argument is provided, it has to be one of the
+   *                      Sanitizer.TIMESPAN_* constants. This function will
+   *                      throw an error otherwise.
+   *
+   * @return {Array} a 2-element Array containing the start and end times.
+   */
+  getClearRange(ts) {
+    if (ts === undefined)
+      ts = Services.prefs.getIntPref(Sanitizer.PREF_TIMESPAN);
+    if (ts === Sanitizer.TIMESPAN_EVERYTHING)
+      return null;
+
+    // PRTime is microseconds while JS time is milliseconds
+    var endDate = Date.now() * 1000;
+    switch (ts) {
+      case Sanitizer.TIMESPAN_5MIN :
+        var startDate = endDate - 300000000; // 5*60*1000000
+        break;
+      case Sanitizer.TIMESPAN_HOUR :
+        startDate = endDate - 3600000000; // 1*60*60*1000000
+        break;
+      case Sanitizer.TIMESPAN_2HOURS :
+        startDate = endDate - 7200000000; // 2*60*60*1000000
+        break;
+      case Sanitizer.TIMESPAN_4HOURS :
+        startDate = endDate - 14400000000; // 4*60*60*1000000
+        break;
+      case Sanitizer.TIMESPAN_TODAY :
+        var d = new Date(); // Start with today
+        d.setHours(0); // zero us back to midnight...
+        d.setMinutes(0);
+        d.setSeconds(0);
+        startDate = d.valueOf() * 1000; // convert to epoch usec
+        break;
+      case Sanitizer.TIMESPAN_24HOURS :
+        startDate = endDate - 86400000000; // 24*60*60*1000000
+        break;
+      default:
+        throw "Invalid time span for clear private data: " + ts;
+    }
+    return [startDate, endDate];
   },
 
   /**
@@ -59,12 +198,22 @@ Sanitizer.prototype = {
    *        Array of items to be cleared. if specified only those
    *        items get cleared, irrespectively of the preference settings.
    * @param [optional] options
-   *        Object whose properties are options for this sanitization.
-   *        TODO (bug 1167238) document options here.
+   *        Object whose properties are options for this sanitization:
+   *         - ignoreTimespan (default: true): Time span only makes sense in
+   *           certain cases.  Consumers who want to only clear some private
+   *           data can opt in by setting this to false, and can optionally
+   *           specify a specific range.
+   *           If timespan is not ignored, and range is not set, sanitize() will
+   *           use the value of the timespan pref to determine a range.
+   *         - range (default: null)
+   *         - prefDomain (default: "privacy.cpd."): indicates the preferences
+   *           branch to collect the list of items to sanitize from.
+   *         - privateStateForNewWindow (default: "non-private"): when clearing
+   *           open windows, defines the private state for the newly opened window.
    */
   async sanitize(itemsToClear = null, options = {}) {
     let progress = options.progress || {};
-    let promise = this._sanitize(itemsToClear, progress);
+    let promise = sanitizeInternal(this.items, itemsToClear, progress, options);
 
     // Depending on preferences, the sanitizer may perform asynchronous
     // work before it starts cleaning up the Places database (e.g. closing
@@ -90,108 +239,6 @@ Sanitizer.prototype = {
       Services.obs.notifyObservers(null, "sanitizer-sanitization-complete");
     }
   },
-
-  async _sanitize(aItemsToClear, progress = {}) {
-    let seenError = false;
-    let itemsToClear;
-    if (Array.isArray(aItemsToClear)) {
-      // Shallow copy the array, as we are going to modify
-      // it in place later.
-      itemsToClear = [...aItemsToClear];
-    } else {
-      let branch = Services.prefs.getBranch(this.prefDomain);
-      itemsToClear = Object.keys(this.items).filter(itemName => {
-        try {
-          return branch.getBoolPref(itemName);
-        } catch (ex) {
-          return false;
-        }
-      });
-    }
-
-    // Store the list of items to clear, in case we are killed before we
-    // get a chance to complete.
-    Services.prefs.setStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS,
-                                 JSON.stringify(itemsToClear));
-
-    // Store the list of items to clear, for debugging/forensics purposes
-    for (let k of itemsToClear) {
-      progress[k] = "ready";
-    }
-
-    // Ensure open windows get cleared first, if they're in our list, so that they don't stick
-    // around in the recently closed windows list, and so we can cancel the whole thing
-    // if the user selects to keep a window open from a beforeunload prompt.
-    let openWindowsIndex = itemsToClear.indexOf("openWindows");
-    if (openWindowsIndex != -1) {
-      itemsToClear.splice(openWindowsIndex, 1);
-      await this.items.openWindows.clear();
-      progress.openWindows = "cleared";
-    }
-
-    // Cache the range of times to clear
-    let range = null;
-    // If we ignore timespan, clear everything,
-    // otherwise, pick a range.
-    if (!this.ignoreTimespan) {
-      range = this.range || Sanitizer.getClearRange();
-    }
-
-    // For performance reasons we start all the clear tasks at once, then wait
-    // for their promises later.
-    // Some of the clear() calls may raise exceptions (for example bug 265028),
-    // we catch and store them, but continue to sanitize as much as possible.
-    // Callers should check returned errors and give user feedback
-    // about items that could not be sanitized
-    let refObj = {};
-    TelemetryStopwatch.start("FX_SANITIZE_TOTAL", refObj);
-
-    let annotateError = (name, ex) => {
-      progress[name] = "failed";
-      seenError = true;
-      console.error("Error sanitizing " + name, ex);
-    };
-
-    // Array of objects in form { name, promise }.
-    // `name` is the item's name and `promise` may be a promise, if the
-    // sanitization is asynchronous, or the function return value, otherwise.
-    let handles = [];
-    for (let name of itemsToClear) {
-      let item = this.items[name];
-      try {
-        // Catch errors here, so later we can just loop through these.
-        handles.push({ name,
-                       promise: item.clear(range)
-                                    .then(() => progress[name] = "cleared",
-                                          ex => annotateError(name, ex))
-                     });
-      } catch (ex) {
-        annotateError(name, ex);
-      }
-    }
-    for (let handle of handles) {
-      progress[handle.name] = "blocking";
-      await handle.promise;
-    }
-
-    // Sanitization is complete.
-    TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
-    // Reset the inProgress preference since we were not killed during
-    // sanitization.
-    Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS);
-    progress = {};
-    if (seenError) {
-      throw new Error("Error sanitizing");
-    }
-  },
-
-  // Time span only makes sense in certain cases.  Consumers who want
-  // to only clear some private data can opt in by setting this to false,
-  // and can optionally specify a specific range.  If timespan is not ignored,
-  // and range is not set, sanitize() will use the value of the timespan
-  // pref to determine a range
-  ignoreTimespan: true,
-  range: null,
 
   items: {
     cache: {
@@ -271,7 +318,7 @@ Sanitizer.prototype = {
 
         // Clear plugin data.
         try {
-          await Sanitizer.clearPluginData(range);
+          await clearPluginData(range);
         } catch (ex) {
           seenException = ex;
         }
@@ -561,23 +608,22 @@ Sanitizer.prototype = {
     },
 
     openWindows: {
-      privateStateForNewWindow: "non-private",
-      _canCloseWindow(aWindow) {
-        if (aWindow.CanCloseWindow()) {
+      _canCloseWindow(win) {
+        if (win.CanCloseWindow()) {
           // We already showed PermitUnload for the window, so let's
           // make sure we don't do it again when we actually close the
           // window.
-          aWindow.skipNextCanClose = true;
+          win.skipNextCanClose = true;
           return true;
         }
         return false;
       },
-      _resetAllWindowClosures(aWindowList) {
-        for (let win of aWindowList) {
+      _resetAllWindowClosures(windowList) {
+        for (let win of windowList) {
           win.skipNextCanClose = false;
         }
       },
-      async clear() {
+      async clear(range, privateStateForNewWindow = "non-private") {
         // NB: this closes all *browser* windows, not other windows like the library, about window,
         // browser console, etc.
 
@@ -617,7 +663,7 @@ Sanitizer.prototype = {
         // accidentally close the app by closing all the windows.
         let handler = Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler);
         let defaultArgs = handler.defaultArgs;
-        let features = "chrome,all,dialog=no," + this.privateStateForNewWindow;
+        let features = "chrome,all,dialog=no," + privateStateForNewWindow;
         let newWindow = existingWindow.openDialog("chrome://browser/content/", "_blank",
                                                   features, defaultArgs);
 
@@ -689,79 +735,107 @@ Sanitizer.prototype = {
 
     pluginData: {
       async clear(range) {
-        await Sanitizer.clearPluginData(range);
+        await clearPluginData(range);
       },
     },
-  }
+  },
 };
 
-// The preferences branch for the sanitizer.
-Sanitizer.PREF_DOMAIN = "privacy.sanitize.";
-// Whether we should sanitize on shutdown.
-Sanitizer.PREF_SANITIZE_ON_SHUTDOWN = "privacy.sanitize.sanitizeOnShutdown";
-// During a sanitization this is set to a json containing the array of items
-// being sanitized, then cleared once the sanitization is complete.
-// This allows to retry a sanitization on startup in case it was interrupted
-// by a crash.
-Sanitizer.PREF_SANITIZE_IN_PROGRESS = "privacy.sanitize.sanitizeInProgress";
-// Whether the previous shutdown sanitization completed successfully.
-// This is used to detect cases where we were supposed to sanitize on shutdown
-// but due to a crash we were unable to.  In such cases there may not be any
-// sanitization in progress, cause we didn't have a chance to start it yet.
-Sanitizer.PREF_SANITIZE_DID_SHUTDOWN = "privacy.sanitize.didShutdownSanitize";
-
-// Time span constants corresponding to values of the privacy.sanitize.timeSpan
-// pref.  Used to determine how much history to clear, for various items
-Sanitizer.TIMESPAN_EVERYTHING = 0;
-Sanitizer.TIMESPAN_HOUR       = 1;
-Sanitizer.TIMESPAN_2HOURS     = 2;
-Sanitizer.TIMESPAN_4HOURS     = 3;
-Sanitizer.TIMESPAN_TODAY      = 4;
-Sanitizer.TIMESPAN_5MIN       = 5;
-Sanitizer.TIMESPAN_24HOURS    = 6;
-
-// Return a 2 element array representing the start and end times,
-// in the uSec-since-epoch format that PRTime likes.  If we should
-// clear everything, return null.  Use ts if it is defined; otherwise
-// use the timeSpan pref.
-Sanitizer.getClearRange = function(ts) {
-  if (ts === undefined)
-    ts = Sanitizer.prefs.getIntPref("timeSpan");
-  if (ts === Sanitizer.TIMESPAN_EVERYTHING)
-    return null;
-
-  // PRTime is microseconds while JS time is milliseconds
-  var endDate = Date.now() * 1000;
-  switch (ts) {
-    case Sanitizer.TIMESPAN_5MIN :
-      var startDate = endDate - 300000000; // 5*60*1000000
-      break;
-    case Sanitizer.TIMESPAN_HOUR :
-      startDate = endDate - 3600000000; // 1*60*60*1000000
-      break;
-    case Sanitizer.TIMESPAN_2HOURS :
-      startDate = endDate - 7200000000; // 2*60*60*1000000
-      break;
-    case Sanitizer.TIMESPAN_4HOURS :
-      startDate = endDate - 14400000000; // 4*60*60*1000000
-      break;
-    case Sanitizer.TIMESPAN_TODAY :
-      var d = new Date(); // Start with today
-      d.setHours(0); // zero us back to midnight...
-      d.setMinutes(0);
-      d.setSeconds(0);
-      startDate = d.valueOf() * 1000; // convert to epoch usec
-      break;
-    case Sanitizer.TIMESPAN_24HOURS :
-      startDate = endDate - 86400000000; // 24*60*60*1000000
-      break;
-    default:
-      throw "Invalid time span for clear private data: " + ts;
+async function sanitizeInternal(items, aItemsToClear, progress, options = {}) {
+  let { prefDomain = "privacy.cpd.", ignoreTimespan = true, range } = options;
+  let seenError = false;
+  let itemsToClear;
+  if (Array.isArray(aItemsToClear)) {
+    // Shallow copy the array, as we are going to modify
+    // it in place later.
+    itemsToClear = [...aItemsToClear];
+  } else {
+    let branch = Services.prefs.getBranch(prefDomain);
+    itemsToClear = Object.keys(items).filter(itemName => {
+      try {
+        return branch.getBoolPref(itemName);
+      } catch (ex) {
+        return false;
+      }
+    });
   }
-  return [startDate, endDate];
-};
 
-Sanitizer.clearPluginData = async function(range) {
+  // Store the list of items to clear, in case we are killed before we
+  // get a chance to complete.
+  Services.prefs.setStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS,
+                               JSON.stringify({itemsToClear, options}));
+
+  // Store the list of items to clear, for debugging/forensics purposes
+  for (let k of itemsToClear) {
+    progress[k] = "ready";
+  }
+
+  // Ensure open windows get cleared first, if they're in our list, so that
+  // they don't stick around in the recently closed windows list, and so we
+  // can cancel the whole thing if the user selects to keep a window open
+  // from a beforeunload prompt.
+  let openWindowsIndex = itemsToClear.indexOf("openWindows");
+  if (openWindowsIndex != -1) {
+    itemsToClear.splice(openWindowsIndex, 1);
+    await items.openWindows.clear(null, options);
+    progress.openWindows = "cleared";
+  }
+
+  // If we ignore timespan, clear everything,
+  // otherwise, pick a range.
+  if (!ignoreTimespan && !range) {
+    range = Sanitizer.getClearRange();
+  }
+
+  // For performance reasons we start all the clear tasks at once, then wait
+  // for their promises later.
+  // Some of the clear() calls may raise exceptions (for example bug 265028),
+  // we catch and store them, but continue to sanitize as much as possible.
+  // Callers should check returned errors and give user feedback
+  // about items that could not be sanitized
+  let refObj = {};
+  TelemetryStopwatch.start("FX_SANITIZE_TOTAL", refObj);
+
+  let annotateError = (name, ex) => {
+    progress[name] = "failed";
+    seenError = true;
+    console.error("Error sanitizing " + name, ex);
+  };
+
+  // Array of objects in form { name, promise }.
+  // `name` is the item's name and `promise` may be a promise, if the
+  // sanitization is asynchronous, or the function return value, otherwise.
+  let handles = [];
+  for (let name of itemsToClear) {
+    let item = items[name];
+    try {
+      // Catch errors here, so later we can just loop through these.
+      handles.push({ name,
+                     promise: item.clear(range, options)
+                                  .then(() => progress[name] = "cleared",
+                                        ex => annotateError(name, ex))
+                   });
+    } catch (ex) {
+      annotateError(name, ex);
+    }
+  }
+  for (let handle of handles) {
+    progress[handle.name] = "blocking";
+    await handle.promise;
+  }
+
+  // Sanitization is complete.
+  TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
+  // Reset the inProgress preference since we were not killed during
+  // sanitization.
+  Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS);
+  progress = {};
+  if (seenError) {
+    throw new Error("Error sanitizing");
+  }
+}
+
+async function clearPluginData(range) {
   // Clear plugin data.
   // As evidenced in bug 1253204, clearing plugin data can sometimes be
   // very, very long, for mysterious reasons. Unfortunately, this is not
@@ -823,91 +897,17 @@ Sanitizer.clearPluginData = async function(range) {
   if (seenException) {
     throw seenException;
   }
-};
+}
 
-Sanitizer._prefs = null;
-Sanitizer.__defineGetter__("prefs", function() {
-  return Sanitizer._prefs ? Sanitizer._prefs
-    : Sanitizer._prefs = Services.prefs.getBranch(Sanitizer.PREF_DOMAIN);
-});
-
-// Shows sanitization UI
-Sanitizer.showUI = function(aParentWindow) {
-  let win = AppConstants.platform == "macosx" ?
-    null : // make this an app-modal window on Mac
-    aParentWindow;
-  Services.ww.openWindow(win,
-                         "chrome://browser/content/sanitize.xul",
-                         "Sanitize",
-                         "chrome,titlebar,dialog,centerscreen,modal",
-                         null);
-};
-
-/**
- * Deletes privacy sensitive data in a batch, optionally showing the
- * sanitize UI, according to user preferences
- */
-Sanitizer.sanitize = function(aParentWindow) {
-  Sanitizer.showUI(aParentWindow);
-};
-
-Sanitizer.onStartup = async function() {
-  // Check if we were interrupted during the last shutdown sanitization.
-  let shutownSanitizationWasInterrupted =
-    Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, false) &&
-    Services.prefs.getPrefType(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN) == Ci.nsIPrefBranch.PREF_INVALID;
-
-  if (Services.prefs.prefHasUserValue(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN)) {
-    // Reset the pref, so that if we crash before having a chance to
-    // sanitize on shutdown, we will do at the next startup.
-    // Flushing prefs has a cost, so do this only if necessary.
-    Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN);
-    Services.prefs.savePrefFile(null);
-  }
-
-  // Make sure that we are triggered during shutdown.
-  let shutdownClient = Cc["@mozilla.org/browser/nav-history-service;1"]
-                         .getService(Ci.nsPIPlacesDatabase)
-                         .shutdownClient
-                         .jsclient;
-  // We need to pass to sanitize() (through sanitizeOnShutdown) a state object
-  // that tracks the status of the shutdown blocker. This `progress` object
-  // will be updated during sanitization and reported with the crash in case of
-  // a shutdown timeout.
-  // We use the `options` argument to pass the `progress` object to sanitize().
-  let progress = { isShutdown: true };
-  shutdownClient.addBlocker("sanitize.js: Sanitize on shutdown",
-    () => sanitizeOnShutdown({ progress }),
-    {
-      fetchState: () => ({ progress })
-    }
-  );
-
-  // Check if Firefox crashed during a sanitization.
-  let lastInterruptedSanitization = Services.prefs.getStringPref(Sanitizer.PREF_SANITIZE_IN_PROGRESS, "");
-  if (lastInterruptedSanitization) {
-    let s = new Sanitizer();
-    // If the json is invalid this will just throw and reject the Task.
-    let itemsToClear = JSON.parse(lastInterruptedSanitization);
-    await s.sanitize(itemsToClear);
-  } else if (shutownSanitizationWasInterrupted) {
-    // Otherwise, could be we were supposed to sanitize on shutdown but we
-    // didn't have a chance, due to an earlier crash.
-    // In such a case, just redo a shutdown sanitize now, during startup.
-    await sanitizeOnShutdown();
-  }
-};
-
-var sanitizeOnShutdown = async function(options = {}) {
+async function sanitizeOnShutdown(options = {}) {
   if (!Services.prefs.getBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN)) {
     return;
   }
   // Need to sanitize upon shutdown
-  let s = new Sanitizer();
-  s.prefDomain = "privacy.clearOnShutdown.";
-  await s.sanitize(null, options);
+  options.prefDomain = "privacy.clearOnShutdown.";
+  await Sanitizer.sanitize(null, options);
   // We didn't crash during shutdown sanitization, so annotate it to avoid
   // sanitizing again on startup.
   Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_DID_SHUTDOWN, true);
   Services.prefs.savePrefFile(null);
-};
+}
