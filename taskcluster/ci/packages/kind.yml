@@ -102,3 +102,60 @@ jobs:
         url: http://snapshot.debian.org/archive/debian/20170725T040438Z/pool/main/v/valgrind/valgrind_3.13.0-1.dsc
         sha256: ab84e017d1660efd30e9e0593a4c8b976aeda013cefb8c416dd284cc7222c11c
       patch: valgrind-wheezy.diff
+
+  deb7-dpkg-1.17:
+    description: "dpkg 1.17 for Debian wheezy"
+    treeherder:
+      symbol: Deb7(dpkg)
+    worker:
+      env:
+        # The compiler in wheezy doesn't support the stackprotector flags.
+        DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20141023T043132Z/pool/main/d/dpkg/dpkg_1.17.20.dsc
+        sha256: c706ad3f5db11968086ab2e0767f87d6e3522b13ebf136ae46f7722a82f645f6
+      patch: dpkg-wheezy.diff
+
+  deb7-devscripts-2.14:
+    description: "devscripts 2.14 for Debian wheezy"
+    treeherder:
+      symbol: Deb7(devscripts)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20141204T100716Z/pool/main/d/devscripts/devscripts_2.14.11.dsc
+        sha256: 47009dd76b2e8ce0f64b9f0d1caa4f648e0815ae5f79624bb96e3d06de1cb0d6
+      resolver: aptitude
+
+  deb7-automake-1.14:
+    description: "automake 1.14 for Debian wheezy"
+    treeherder:
+      symbol: Deb7(am)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20141027T102134Z/pool/main/a/automake-1.14/automake-1.14_1.14.1-4.dsc
+        sha256: d798619c504a686a5ebe46d106fd992971e805916032607e473541182da12167
+
+  deb7-xz-utils:
+    description: "xz-utils for Debian wheezy"
+    treeherder:
+      symbol: Deb7(xz)
+    worker:
+      env:
+        # The compiler in wheezy doesn't support the stackprotector flags.
+        DEB_BUILD_MAINT_OPTIONS: hardening=-stackprotector
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20161010T223637Z/pool/main/x/xz-utils/xz-utils_5.2.2-1.2.dsc
+        sha256: 13c8d8d0c243af78dc89b6e2cd670c8d8a2522379e1fcd196957c95d988d5961
+      packages:
+        - deb7-automake-1.14
+        # The xz debian source is in a format not supported by dpkg in wheezy,
+        # so we need a newer version of dpkg, which also needs a newer version
+        # of devscripts.
+        - deb7-devscripts-2.14
+        - deb7-dpkg-1.17
