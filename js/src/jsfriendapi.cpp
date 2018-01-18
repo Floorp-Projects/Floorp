@@ -198,6 +198,12 @@ JS_GetScriptPrincipals(JSScript* script)
     return script->principals();
 }
 
+JS_FRIEND_API(JSCompartment*)
+js::GetScriptCompartment(JSScript* script)
+{
+    return script->compartment();
+}
+
 JS_FRIEND_API(bool)
 JS_ScriptHasMutedErrors(JSScript* script)
 {
