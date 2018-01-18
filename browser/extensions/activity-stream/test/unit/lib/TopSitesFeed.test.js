@@ -644,6 +644,24 @@ describe("Top Sites Feed", () => {
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 1);
     });
+    it("should unpin the site if all slots are already pinned", () => {
+      const site1 = {url: "example.com"};
+      const site2 = {url: "example.org"};
+      const site3 = {url: "example.net"};
+      const site4 = {url: "example.biz"};
+      const site5 = {url: "example.info"};
+      const site6 = {url: "example.news"};
+      fakeNewTabUtils.pinnedLinks.links = [site1, site2, site3, site4, site5, site6];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.insert({data: {site}});
+      assert.equal(fakeNewTabUtils.pinnedLinks.pin.callCount, 6);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 1);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site2, 2);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site3, 3);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site4, 4);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site5, 5);
+    });
   });
   describe("#pin", () => {
     it("should pin site in specified slot empty pinned list", () => {
@@ -671,24 +689,36 @@ describe("Top Sites Feed", () => {
     it("should pin site in specified slot that is free", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, {url: "example.com"}];
       const site = {url: "foo.bar", label: "foo"};
-      feed.insert({data: {index: 2, site}});
+      feed.insert({data: {index: 2, site, draggedFromIndex: 0}});
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
     });
     it("should move a pinned site in specified slot to the next slot", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "example.com"}];
       const site = {url: "foo.bar", label: "foo"};
-      feed.insert({data: {index: 2, site}});
+      feed.insert({data: {index: 2, site, draggedFromIndex: 3}});
       assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, {url: "example.com"}, 3);
     });
-    it("should NOT move a pinned site if specified slot is the last visible slot", () => {
-      fakeNewTabUtils.pinnedLinks.links = [null, null, null, null, null, {url: "example.com"}];
-      const site = {url: "foo.bar", label: "foo"};
-      feed.insert({data: {index: 5, site}});
-      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
-      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 5);
+    it("should move pinned sites in the direction of the dragged site", () => {
+      const site1 = {url: "foo.bar", label: "foo"};
+      const site2 = {url: "example.com", label: "example"};
+      fakeNewTabUtils.pinnedLinks.links = [null, null, site2];
+      feed.insert({data: {index: 2, site: site1, draggedFromIndex: 0}});
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 2);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site2, 1);
+      fakeNewTabUtils.pinnedLinks.pin.reset();
+      feed.insert({data: {index: 2, site: site1, draggedFromIndex: 5}});
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 2);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site2, 3);
+    });
+    it("should not insert past the topSitesCount", () => {
+      const site1 = {url: "foo.bar", label: "foo"};
+      feed.insert({data: {index: 42, site: site1, draggedFromIndex: 0}});
+      assert.notCalled(fakeNewTabUtils.pinnedLinks.pin);
     });
   });
   describe("integration", () => {
