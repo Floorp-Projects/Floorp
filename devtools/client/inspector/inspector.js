@@ -807,7 +807,7 @@ Inspector.prototype = {
             panel: () => {
               const AnimationInspector =
                 this.browserRequire("devtools/client/inspector/animation/animation");
-              this.animationinspector = new AnimationInspector(this);
+              this.animationinspector = new AnimationInspector(this, this.panelWin);
               return this.animationinspector.provider;
             }
           },

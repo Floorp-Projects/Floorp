@@ -10,11 +10,14 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const ComputedTimingPath = createFactory(require("./ComputedTimingPath"));
+// Minimum opacity for semitransparent fill color for keyframes's easing graph.
+const MIN_KEYFRAMES_EASING_OPACITY = 0.5;
 
 class SummaryGraphPath extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
   }
@@ -146,6 +149,7 @@ class SummaryGraphPath extends PureComponent {
 
     const {
       animation,
+      simulateAnimation,
       timeScale,
     } = this.props;
 
@@ -153,6 +157,7 @@ class SummaryGraphPath extends PureComponent {
     const startTime = timeScale.minStartTime;
     const keyframesList =
       this.getOffsetAndEasingOnlyKeyframes(animation.animatedPropertyMap);
+    const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
 
     return dom.svg(
       {
@@ -166,6 +171,8 @@ class SummaryGraphPath extends PureComponent {
             animation,
             durationPerPixel,
             keyframes,
+            opacity,
+            simulateAnimation,
             totalDuration,
           }
         )
