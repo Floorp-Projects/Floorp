@@ -18740,7 +18740,7 @@ function isNotJavaScript(source) {
 }
 
 function isInvalidUrl(url, source) {
-  return IGNORED_URLS.indexOf(url) != -1 || !source.get("url") || source.get("loadedState") === "loading" || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
+  return IGNORED_URLS.indexOf(url) != -1 || !source.get("url") || !url.group || (0, _source.isPretty)(source) || isNotJavaScript(source);
 }
 
 function partIsFile(index, parts, url) {
@@ -21547,8 +21547,8 @@ function setSymbols(sourceId) {
 
     const symbols = await (0, _parser.getSymbols)(source);
     dispatch({ type: "SET_SYMBOLS", source, symbols });
-    dispatch(setEmptyLines(source.id));
-    dispatch(setSourceMetaData(source.id));
+    dispatch(setEmptyLines(sourceId));
+    dispatch(setSourceMetaData(sourceId));
   };
 }
 
@@ -21584,7 +21584,10 @@ function setOutOfScopeLocations() {
 
     const source = (0, _selectors.getSource)(getState(), location.sourceId);
 
-    const locations = !location.line || !source ? null : await (0, _parser.findOutOfScopeLocations)(source.toJS(), location);
+    let locations = null;
+    if (location.line && source && (0, _selectors.isPaused)(getState())) {
+      locations = await (0, _parser.findOutOfScopeLocations)(source.toJS(), location);
+    }
 
     dispatch({
       type: "OUT_OF_SCOPE_LOCATIONS",
@@ -24436,8 +24439,6 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 
 var _promise = __webpack_require__(1653);
 
-var _ast = __webpack_require__(1399);
-
 var _selectors = __webpack_require__(1352);
 
 var _parser = __webpack_require__(1365);
@@ -24456,11 +24457,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const requests = new Map();
+const requests = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
+                             * License, v. 2.0. If a copy of the MPL was not distributed with this
+                             * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 async function loadSource(source, { sourceMaps, client }) {
   const id = source.get("id");
@@ -24536,7 +24535,6 @@ function loadSourceText(source) {
 
     if (!newSource.isWasm) {
       await parser.setSource(newSource);
-      dispatch((0, _ast.setSymbols)(id));
     }
 
     // signal that the action is finished
@@ -49179,14 +49177,23 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   };
 }
 
+// TODO: It would be nice to make getOriginalURLs a safer api
+async function loadOriginalSourceUrls(sourceMaps, generatedSource) {
+  try {
+    return await sourceMaps.getOriginalURLs(generatedSource);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
 /**
  * @memberof actions/sources
  * @static
  */
 function loadSourceMap(generatedSource) {
   return async function ({ dispatch, getState, sourceMaps }) {
-    const urls = await sourceMaps.getOriginalURLs(generatedSource);
-
+    const urls = await loadOriginalSourceUrls(sourceMaps, generatedSource);
     if (!urls) {
       // If this source doesn't have a sourcemap, do nothing.
       return;
@@ -49448,11 +49455,17 @@ function selectLocation(location, tabIndex = "") {
 
     await dispatch((0, _loadSourceText.loadSourceText)(source));
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
-    if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), selectedSource.get("id")) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
-      await dispatch((0, _prettyPrint.togglePrettyPrint)(source.get("id")));
+    if (!selectedSource) {
+      return;
+    }
+
+    const sourceId = selectedSource.get("id");
+    if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), sourceId) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
+      await dispatch((0, _prettyPrint.togglePrettyPrint)(sourceId));
       dispatch((0, _tabs.closeTab)(source.get("url")));
     }
 
+    dispatch((0, _ast.setSymbols)(sourceId));
     dispatch((0, _ast.setOutOfScopeLocations)());
   };
 }
