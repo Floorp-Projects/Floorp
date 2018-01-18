@@ -882,6 +882,34 @@ MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output,
     MOZ_CRASH("NYI");
 }
 
+void
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                          Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                            Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
 // ========================================================================
 // Primitive atomic operations.
 

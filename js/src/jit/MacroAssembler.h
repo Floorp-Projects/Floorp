@@ -1506,9 +1506,22 @@ class MacroAssembler : public MacroAssemblerSpecific
                                              wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(x86_shared);
 
+    void wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                   Label* oolRejoin, FloatRegister tempDouble)
+        DEFINED_ON(arm64, x86, x64);
+    void wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                    Label* oolRejoin, FloatRegister tempDouble)
+        DEFINED_ON(arm64, x86, x64);
     void outOfLineWasmTruncateDoubleToInt64(FloatRegister input, bool isUnsigned,
                                             wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(x86_shared);
+
+    void wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                    Label* oolRejoin, FloatRegister tempDouble)
+        DEFINED_ON(arm64, x86, x64);
+    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                     Label* oolRejoin, FloatRegister tempDouble)
+        DEFINED_ON(arm64, x86, x64);
     void outOfLineWasmTruncateFloat32ToInt64(FloatRegister input, bool isUnsigned,
                                              wasm::BytecodeOffset off, Label* rejoin)
         DEFINED_ON(x86_shared);
