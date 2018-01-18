@@ -399,6 +399,16 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
     new TextServicesDocument();
   textServicesDocument->SetFilter(mTxtSrvFilter);
 
+  // EditorBase::AddEditActionListener() needs to access mSpellChecker and
+  // mSpellChecker->GetTextServicesDocument().  Therefore, we need to
+  // initialize them before calling TextServicesDocument::InitWithEditor()
+  // since it calls EditorBase::AddEditActionListener().
+  mSpellChecker = new mozSpellChecker();
+  rv = mSpellChecker->SetDocument(textServicesDocument, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   // Pass the editor to the text services document
   rv = textServicesDocument->InitWithEditor(aEditor);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -438,12 +448,8 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
     }
   }
 
-  mSpellChecker = new mozSpellChecker();
   rv = mSpellChecker->Init();
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = mSpellChecker->SetDocument(textServicesDocument, true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // do not fail if UpdateCurrentDictionary fails because this method may
   // succeed later.
   rv = UpdateCurrentDictionary(aCallback);
