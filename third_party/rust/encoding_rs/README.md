@@ -9,6 +9,11 @@ encoding_rs an implementation of the (non-JavaScript parts of) the
 [Encoding Standard](https://encoding.spec.whatwg.org/) written in Rust and
 used in Gecko (starting with Firefox 56).
 
+Additionally, the `mem` module provides various operations for dealing with
+in-RAM text (as opposed to data that's coming from or going to an IO boundary).
+The `mem` module is a module instead of a separate crate due to internal
+implementation detail efficiencies.
+
 ## Functionality
 
 Due to the Gecko use case, encoding_rs supports decoding to and encoding from
@@ -43,6 +48,26 @@ Specifically, encoding_rs does the following:
   workloads than the standard library; hopefully will get upstreamed some
   day) and ASCII.
 
+Additionally, `encoding_rs::mem` does the following:
+
+* Checks if a byte buffer contains only ASCII.
+* Checks if a potentially-invalid UTF-16 buffer contains only Basic Latin (ASCII).
+* Checks if a valid UTF-8, potentially-invalid UTF-8 or potentially-invalid UTF-16
+  buffer contains only Latin1 code points (below U+0100).
+* Checks if a valid UTF-8, potentially-invalid UTF-8 or potentially-invalid UTF-16
+  buffer or a code point or a UTF-16 code unit can trigger right-to-left behavior
+  (suitable for checking if the Unicode Bidirectional Algorithm can be optimized
+  out).
+* Combined versions of the above two checks.
+* Converts valid UTF-8, potentially-invalid UTF-8 and Latin1 to UTF-16.
+* Converts potentially-invalid UTF-16 and Latin1 to UTF-8.
+* Converts UTF-8 and UTF-16 to Latin1 (if in range).
+* Finds the first invalid code unit in a buffer of potentially-invalid UTF-16.
+* Makes a mutable buffer of potential-invalid UTF-16 contain valid UTF-16.
+* Copies ASCII from one buffer to another up to the first non-ASCII byte.
+* Converts ASCII to UTF-16 up to the first non-ASCII byte.
+* Converts UTF-16 to ASCII up to the first non-Basic Latin code unit.
+
 ## Licensing
 
 Please see the file named
@@ -62,6 +87,8 @@ using the C++ standard library and [GSL](https://github.com/Microsoft/GSL/) type
 
 For the Gecko context, there's a
 [C++ wrapper using the MFBT/XPCOM types](https://searchfox.org/mozilla-central/source/intl/Encoding.h#100).
+
+These bindings do not cover the `mem` module.
 
 ## Sample programs
 
@@ -133,9 +160,9 @@ decode-optimized tables. With realistic work loads, this seemed fast enough
 not to be user-visibly slow on Raspberry Pi 3 (which stood in for a phone
 for testing) in the Web-exposed encoder use cases.
 
-A framework for measuring performance is [available separately][1].
+A framework for measuring performance is [available separately][2].
 
-[1]: https://github.com/hsivonen/encoding_bench/
+[2]: https://github.com/hsivonen/encoding_bench/
 
 ## Rust Version Compatibility
 
@@ -192,6 +219,12 @@ used in Firefox.
       adapted to Rust in rust-encoding.
 
 ## Release Notes
+
+### 0.7.2
+
+* Add the `mem` module.
+* Refactor SIMD code which can affect performance outside the `mem`
+  module.
 
 ### 0.7.1
 

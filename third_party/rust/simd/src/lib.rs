@@ -1,4 +1,5 @@
 //! `simd` offers a basic interface to the SIMD functionality of CPUs.
+#![no_std]
 
 #![feature(cfg_target_feature, repr_simd, platform_intrinsics, const_fn)]
 #![allow(non_camel_case_types)]
@@ -8,6 +9,8 @@ extern crate serde;
 #[cfg(feature = "with-serde")]
 #[macro_use]
 extern crate serde_derive;
+
+use core::mem;
 
 /// Boolean type for 8-bit integers.
 #[cfg_attr(feature = "with-serde", derive(Serialize, Deserialize))]
@@ -172,9 +175,9 @@ simd! {
 #[allow(dead_code)]
 #[inline]
 fn bitcast<T: Simd, U: Simd>(x: T) -> U {
-    assert_eq!(std::mem::size_of::<T>(),
-               std::mem::size_of::<U>());
-    unsafe {std::mem::transmute_copy(&x)}
+    assert_eq!(mem::size_of::<T>(),
+               mem::size_of::<U>());
+    unsafe {mem::transmute_copy(&x)}
 }
 
 #[allow(dead_code)]
@@ -207,8 +210,14 @@ extern "platform-intrinsic" {
     fn simd_xor<T: Simd>(x: T, y: T) -> T;
 }
 #[repr(packed)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy)]
 struct Unalign<T>(T);
+
+impl<T: Clone> Clone for Unalign<T> {
+    fn clone(&self) -> Unalign<T> {
+        Unalign(unsafe { self.0.clone() })
+    }
+}
 
 #[macro_use]
 mod common;
