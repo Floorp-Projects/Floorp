@@ -10,6 +10,18 @@
 #include "gfxDWriteCommon.h"
 #include "dwrite_3.h"
 
+ // Currently, we build with WINVER=0x601 (Win7), which means newer
+ // declarations in dwrite_3.h will not be visible. Also, we don't
+ // yet have the Fall Creators Update SDK available on build machines,
+ // so even with updated WINVER, some of the interfaces we need would
+ // not be present.
+ // To work around this, until the build environment is updated,
+ // we #include an extra header that contains copies of the relevant
+ // classes/interfaces we need.
+#if WINVER < 0x0A00
+#include "dw-extra.h"
+#endif
+
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
 #include "cairo-win32.h"
