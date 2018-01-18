@@ -88,7 +88,7 @@ https://trac.torproject.org/projects/tor/ticket/1517
           ok(isRounded(timeStamp, expectedPrecision),
             "pref: " + prefname + " - '" +
              "'" + timeStampCodes[i] +
-             "' should be rounded to nearest " + expectedPrecision + " us in workers; saw " +
+             "' should be rounded to nearest " + expectedPrecision + " ms in workers; saw " +
              timeStamp);
         }
         resolve();
@@ -120,6 +120,13 @@ https://trac.torproject.org/projects/tor/ticket/1517
               ["privacy.reduceTimerPrecision", reduceTimerPrecision],
               ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
               ]});
+
+    // No matter what we set the precision to, if we're in ResistFingerprinting mode
+    // we use the larger of the precision pref and the constant 100ms
+    if (resistFingerprinting) {
+      expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+    }
+
     let worker2 = new Worker("worker_child.js");
     // Allow ~550 ms to elapse, so we can get non-zero
     // time values for all elements.
@@ -153,6 +160,12 @@ https://trac.torproject.org/projects/tor/ticket/1517
               ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
               ]});
 
+    // No matter what we set the precision to, if we're in ResistFingerprinting mode
+    // we use the larger of the precision pref and the constant 100ms
+    if (resistFingerprinting) {
+      expectedPrecision = expectedPrecision < 100 ? 100 : expectedPrecision;
+    }
+
     // Loop through each timeStampCode, evaluate it,
     // and check if it is rounded
     for (let timeStampCode of timeStampCodesDOM) {
@@ -161,13 +174,13 @@ https://trac.torproject.org/projects/tor/ticket/1517
         "pref: " + prefname + " - '" +
          "'" + timeStampCode +
          "' should be rounded to nearest " +
-         expectedPrecision + " us; saw " +
+         expectedPrecision + " ms; saw " +
          timeStamp);
     }
   }
 
   add_task(async function testDOMRFP() {
-    await testDOM(true, false, 100);
+    await testDOM(true, true, 100);
     await testDOM(true, false, 13);
     await testDOM(true, false, .13);
   });
