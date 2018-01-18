@@ -32,6 +32,7 @@ class UpdateCurrentDictionaryCallback;
 class mozInlineSpellResume;
 
 namespace mozilla {
+class EditorSpellCheck;
 enum class EditAction : int32_t;
 } // namespace mozilla
 
@@ -137,8 +138,8 @@ private:
   static SpellCheckingState gCanEnableSpellChecking;
 
   RefPtr<mozilla::TextEditor> mTextEditor;
-  nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
-  nsCOMPtr<nsIEditorSpellCheck> mPendingSpellCheck;
+  RefPtr<mozilla::EditorSpellCheck> mSpellCheck;
+  RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;
   nsCOMPtr<mozISpellI18NUtil> mConverter;
 
