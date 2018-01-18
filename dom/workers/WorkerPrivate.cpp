@@ -1929,8 +1929,12 @@ WorkerPrivate::ParentWindowResumed()
     }
   }
 
-  // Execute queued runnables before waking up, otherwise the worker could post
-  // new messages before we run those that have been queued.
+  // When a debugger pause has ended, we must not execute the queued runnables
+  // immediately as we do in Thaw, as we are still in the midst of whatever
+  // JavaScript execution the debugger interrupted. Re-queueing them is not
+  // correct either, as doing so can re-order messages in some cases (bug
+  // 1433317), but executing them immediately can re-order them as well; see bug
+  // 1426467 comment 14 for an example.
   if (!IsFrozen() && !mQueuedRunnables.IsEmpty()) {
     MOZ_ASSERT(IsDedicatedWorker());
 
@@ -1938,7 +1942,7 @@ WorkerPrivate::ParentWindowResumed()
     mQueuedRunnables.SwapElements(runnables);
 
     for (uint32_t index = 0; index < runnables.Length(); index++) {
-      runnables[index]->Run();
+      MOZ_ALWAYS_SUCCEEDS(DispatchToMainThread(runnables[index].forget()));
     }
   }
 }
