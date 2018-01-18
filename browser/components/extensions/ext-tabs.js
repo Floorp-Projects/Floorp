@@ -20,6 +20,11 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
+const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
+
+// WeakMap[Tab -> ExtensionID]
+let hiddenTabs = new WeakMap();
+
 let tabListener = {
   tabReadyInitialized: false,
   tabReadyPromises: new WeakMap(),
@@ -77,6 +82,27 @@ let tabListener = {
 };
 
 this.tabs = class extends ExtensionAPI {
+  onShutdown(reason) {
+    if (!this.extension.hasPermission("tabHide")) {
+      return;
+    }
+    if (reason == "ADDON_DISABLE" ||
+        reason == "ADDON_UNINSTALL") {
+      // Show all hidden tabs if a tab managing extension is uninstalled or
+      // disabled.  If a user has more than one, the extensions will need to
+      // self-manage re-hiding tabs.
+      for (let tab of this.extension.tabManager.query()) {
+        let nativeTab = tabTracker.getTab(tab.id);
+        if (hiddenTabs.get(nativeTab) === this.extension.id) {
+          hiddenTabs.delete(nativeTab);
+          if (nativeTab.ownerGlobal) {
+            nativeTab.ownerGlobal.gBrowser.showTab(nativeTab);
+          }
+        }
+      }
+    }
+  }
+
   getAPI(context) {
     let {extension} = context;
 
@@ -275,6 +301,8 @@ this.tabs = class extends ExtensionAPI {
               needed.push("discarded");
             } else if (event.type == "TabShow") {
               needed.push("hidden");
+              // Always remove the tab from the hiddenTabs map.
+              hiddenTabs.delete(event.originalTarget);
             } else if (event.type == "TabHide") {
               needed.push("hidden");
             }
@@ -988,6 +1016,47 @@ this.tabs = class extends ExtensionAPI {
           tab = getTabOrActive(tabId);
 
           tab.linkedBrowser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");
+        },
+
+        show(tabIds) {
+          if (!Services.prefs.getBoolPref(TABHIDE_PREFNAME, false)) {
+            throw new ExtensionError(`tabs.show is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`);
+          }
+
+          if (!Array.isArray(tabIds)) {
+            tabIds = [tabIds];
+          }
+
+          for (let tabId of tabIds) {
+            let tab = tabTracker.getTab(tabId);
+            if (tab.ownerGlobal) {
+              hiddenTabs.delete(tab);
+              tab.ownerGlobal.gBrowser.showTab(tab);
+            }
+          }
+        },
+
+        hide(tabIds) {
+          if (!Services.prefs.getBoolPref(TABHIDE_PREFNAME, false)) {
+            throw new ExtensionError(`tabs.hide is currently experimental and must be enabled with the ${TABHIDE_PREFNAME} preference.`);
+          }
+
+          if (!Array.isArray(tabIds)) {
+            tabIds = [tabIds];
+          }
+
+          let hidden = [];
+          let tabs = tabIds.map(tabId => tabTracker.getTab(tabId));
+          for (let tab of tabs) {
+            if (tab.ownerGlobal && !tab.hidden) {
+              tab.ownerGlobal.gBrowser.hideTab(tab);
+              if (tab.hidden) {
+                hiddenTabs.set(tab, extension.id);
+                hidden.push(tabTracker.getId(tab));
+              }
+            }
+          }
+          return hidden;
         },
       },
     };

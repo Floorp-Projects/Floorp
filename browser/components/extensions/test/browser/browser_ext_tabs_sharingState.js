@@ -1,6 +1,10 @@
 "use strict";
 
 add_task(async function test_tabs_mediaIndicators() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.webextensions.tabhide.enabled", true]],
+  });
+
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   // setBrowserSharing is called when a request for media icons occurs.  We're
   // just testing that extension tabs get the info and are updated when it is
@@ -25,6 +29,12 @@ add_task(async function test_tabs_mediaIndicators() {
     tabs = await browser.tabs.query({screen: "Screen"});
     browser.test.assertEq(tabs.length, 0, "screen sharing tab was not found");
 
+    // Verify we cannot hide a sharing tab.
+    let hidden = await browser.tabs.hide(testTab.id);
+    browser.test.assertEq(hidden.length, 0, "unable to hide sharing tab");
+    tabs = await browser.tabs.query({hidden: true});
+    browser.test.assertEq(tabs.length, 0, "unable to hide sharing tab");
+
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (testTab.id !== tabId) {
         return;
@@ -39,7 +49,7 @@ add_task(async function test_tabs_mediaIndicators() {
   }
 
   let extdata = {
-    manifest: {permissions: ["tabs"]},
+    manifest: {permissions: ["tabs", "tabHide"]},
     useAddonManager: "temporary",
     background,
   };
