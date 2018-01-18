@@ -46,7 +46,7 @@ PushOverLine(nsACString::const_iterator& aStart,
 }
 
 class MOZ_STACK_CLASS FillFormIterator final
-  : public URLSearchParams::ForEachIterator
+  : public URLParams::ForEachIterator
 {
 public:
   explicit FillFormIterator(FormData* aFormData)
