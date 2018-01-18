@@ -109,7 +109,8 @@ this.ShieldPreferences = {
     checkbox.setAttribute("class", "tail-with-learn-more");
     checkbox.setAttribute("label", "Allow Firefox to install and run studies");
     checkbox.setAttribute("preference", OPT_OUT_STUDIES_ENABLED_PREF);
-    checkbox.setAttribute("disabled", !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF));
+    checkbox.setAttribute("disabled", Services.prefs.prefIsLocked(FHR_UPLOAD_ENABLED_PREF) ||
+      !AppConstants.MOZ_TELEMETRY_REPORTING);
     hContainer.appendChild(checkbox);
 
     const viewStudies = doc.createElementNS(XUL_NS, "label");
@@ -137,7 +138,7 @@ this.ShieldPreferences = {
     });
 
     // Actually inject the elements we've created.
-    const parent = doc.getElementById("submitHealthReportBox").closest("vbox");
+    const parent = doc.getElementById("submitHealthReportBox").closest("description");
     parent.appendChild(container);
   },
 };
