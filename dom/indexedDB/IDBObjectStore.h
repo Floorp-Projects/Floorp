@@ -88,6 +88,15 @@ public:
                         JS::Handle<JS::Value> aObject,
                         nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
+  static nsresult
+  DeserializeIndexValueToUpdateInfos(int64_t aIndexID,
+                                     const KeyPath& aKeyPath,
+                                     bool aUnique,
+                                     bool aMultiEntry,
+                                     const nsCString& aLocale,
+                                     StructuredCloneReadInfo& aCloneInfo,
+                                     nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
   static void
   ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo);
 
@@ -95,11 +104,6 @@ public:
   DeserializeValue(JSContext* aCx,
                    StructuredCloneReadInfo& aCloneReadInfo,
                    JS::MutableHandle<JS::Value> aValue);
-
-  static bool
-  DeserializeIndexValue(JSContext* aCx,
-                        StructuredCloneReadInfo& aCloneReadInfo,
-                        JS::MutableHandle<JS::Value> aValue);
 
   static bool
   DeserializeUpgradeValue(JSContext* aCx,
