@@ -159,7 +159,6 @@ macosx64-noopt/debug:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: cross-noopt-debug
@@ -195,7 +194,6 @@ macosx64-add-on-devel/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
-            - balrog/production.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: add-on-devel
