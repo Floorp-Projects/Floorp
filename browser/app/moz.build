@@ -43,9 +43,6 @@ SOURCES += [
 # Neither channel-prefs.js nor firefox.exe want to end up in dist/bin/browser.
 DIST_SUBDIR = ""
 
-# channel-prefs.js is handled separate from other prefs due to bug 756325
-JS_PREFERENCE_PP_FILES += ['profile/channel-prefs.js']
-
 LOCAL_INCLUDES += [
     '!/build',
     '/toolkit/xre',
