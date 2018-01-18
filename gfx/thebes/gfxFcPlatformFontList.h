@@ -115,6 +115,9 @@ public:
 
     FT_Face GetFTFace();
 
+    bool HasVariations() override;
+    void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes) override;
+
     hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
     void ForgetHBFace() override;
