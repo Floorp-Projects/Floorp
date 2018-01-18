@@ -1,7 +1,7 @@
 geckoview:
     description: "Geckoview run"
     suite: geckoview
-    treeherder-symbol: tc(gv)
+    treeherder-symbol: gv
     instance-size: xlarge
     loopback-video: true
     e10s: false
@@ -20,7 +20,7 @@ geckoview:
 robocop:
     description: "Robocop run"
     suite: robocop
-    treeherder-symbol: tc-M(rc)
+    treeherder-symbol: M(rc)
     instance-size: xlarge
     chunks:
         by-test-platform:
@@ -40,7 +40,7 @@ robocop:
 telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
-    treeherder-symbol: tc-e10s
+    treeherder-symbol: tt-c()
     max-run-time: 5400
     checkout: true
     tier: 3
@@ -55,7 +55,7 @@ telemetry-tests-client:
 test-verify:
     description: "Extra verification of tests modified on this push"
     suite: test-verify
-    treeherder-symbol: tc(TV)
+    treeherder-symbol: TV
     loopback-video: true
     instance-size:
         by-test-platform:

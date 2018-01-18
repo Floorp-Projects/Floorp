@@ -21,7 +21,7 @@ job-defaults:
 cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
-    treeherder-symbol: tc(Cpp)
+    treeherder-symbol: Cpp
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -39,7 +39,7 @@ cppunit:
 gtest:
     description: "GTests run"
     suite: gtest
-    treeherder-symbol: tc(GTest)
+    treeherder-symbol: GTest
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
@@ -58,7 +58,7 @@ gtest:
 jittest:
     description: "JIT Test run"
     suite: jittest/jittest-chunked
-    treeherder-symbol: tc(Jit)
+    treeherder-symbol: Jit
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']

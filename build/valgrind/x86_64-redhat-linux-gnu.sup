@@ -284,6 +284,16 @@
   fun:_ZN52_$LT$selectors..parser..SelectorList*
 }
 
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x118720EA: <core::slice::Iter<'a, T> as core::iter::iterator::Iterator>::all::{{closure}} (mod.rs:1173)
+#    by 0x11871EF6: style::media_queries::MediaList::evaluate (mod.rs:1277)
+{
+  Bug 1430608 nsMediaFeatures, January 2018
+	Memcheck:Cond
+	fun:_ZN91_$LT$core..slice..Iter$LT$$u27$a$C$$u20$T$GT$$u20$as$u20$core..iter..iterator..Iterator$GT$3all*
+	fun:_ZN5style13media_queries9MediaList8evaluate17he4027f6becef129cE
+}
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.
