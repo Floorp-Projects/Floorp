@@ -224,6 +224,24 @@ XPCWrappedNativeScope::ForcePrivilegedComponents()
         mComponents = new nsXPCComponents(this);
 }
 
+static bool
+DefineSubcomponentProperty(JSContext* aCx,
+                           HandleObject aGlobal,
+                           nsISupports* aSubcomponent,
+                           const nsID* aIID,
+                           unsigned int aStringIndex)
+{
+    RootedValue subcompVal(aCx);
+    xpcObjectHelper helper(aSubcomponent);
+    if (!XPCConvert::NativeInterface2JSObject(&subcompVal, helper,
+                                              aIID, false, nullptr))
+        return false;
+    if (NS_WARN_IF(!subcompVal.isObject()))
+        return false;
+    RootedId id(aCx, XPCJSContext::Get()->GetStringID(aStringIndex));
+    return JS_DefinePropertyById(aCx, aGlobal, id, subcompVal, 0);
+}
+
 bool
 XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
 {
@@ -243,7 +261,30 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
         attrs |= JSPROP_PERMANENT;
 
     RootedId id(aCx, XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS));
-    return JS_DefinePropertyById(aCx, global, id, components, attrs);
+    if (!JS_DefinePropertyById(aCx, global, id, components, attrs))
+        return false;
+
+// _iid can be nullptr if the object implements classinfo.
+#define DEFINE_SUBCOMPONENT_PROPERTY(_comp, _type, _iid, _id)                     \
+    nsCOMPtr<nsIXPCComponents_ ## _type> obj ## _type;                            \
+    if (NS_FAILED(_comp->Get ## _type(getter_AddRefs( obj ## _type ))))           \
+        return false;                                                             \
+    if (!DefineSubcomponentProperty(aCx, global, obj ## _type, _iid,              \
+                                    XPCJSContext::IDX_ ## _id))                   \
+        return false;
+
+    DEFINE_SUBCOMPONENT_PROPERTY(mComponents, Interfaces, nullptr, CI)
+    DEFINE_SUBCOMPONENT_PROPERTY(mComponents, Results, nullptr, CR)
+
+    if (!c)
+        return true;
+
+    DEFINE_SUBCOMPONENT_PROPERTY(c, Classes, nullptr, CC)
+    DEFINE_SUBCOMPONENT_PROPERTY(c, Utils, &NS_GET_IID(nsIXPCComponents_Utils), CU)
+
+#undef DEFINE_SUBCOMPONENT_PROPERTY
+
+    return true;
 }
 
 static bool
