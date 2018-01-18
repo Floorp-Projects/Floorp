@@ -50,6 +50,9 @@ public:
     URLParamsIterator(const nsString& aName, const nsString& aValue) = 0;
   };
 
+  static bool
+  Parse(const nsACString& aInput, ForEachIterator& aIterator);
+
   void
   ParseInput(const nsACString& aInput);
 
