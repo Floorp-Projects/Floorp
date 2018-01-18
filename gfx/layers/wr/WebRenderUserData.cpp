@@ -57,7 +57,7 @@ WebRenderImageData::WebRenderImageData(WebRenderLayerManager* aWRManager, nsDisp
 
 WebRenderImageData::~WebRenderImageData()
 {
-  ClearCachedResources();
+  DoClearCachedResources();
 }
 
 void
@@ -76,6 +76,12 @@ WebRenderImageData::ClearImageKey()
 
 void
 WebRenderImageData::ClearCachedResources()
+{
+  DoClearCachedResources();
+}
+
+void
+WebRenderImageData::DoClearCachedResources()
 {
   ClearImageKey();
 
@@ -259,6 +265,14 @@ WebRenderFallbackData::~WebRenderFallbackData()
 {
 }
 
+void
+WebRenderFallbackData::ClearCachedResources()
+{
+  WebRenderImageData::ClearCachedResources();
+  mBasicLayerManager = nullptr;
+  mInvalid = true;
+}
+
 nsDisplayItemGeometry*
 WebRenderFallbackData::GetGeometry()
 {
@@ -296,11 +310,17 @@ WebRenderCanvasData::WebRenderCanvasData(WebRenderLayerManager* aWRManager, nsDi
 
 WebRenderCanvasData::~WebRenderCanvasData()
 {
-  ClearCachedResources();
+  DoClearCachedResources();
 }
 
 void
 WebRenderCanvasData::ClearCachedResources()
+{
+  DoClearCachedResources();
+}
+
+void
+WebRenderCanvasData::DoClearCachedResources()
 {
   if (mCanvasRenderer) {
     mCanvasRenderer->ClearCachedResources();
