@@ -61,6 +61,37 @@ gfxDWriteFontFamily::~gfxDWriteFontFamily()
 {
 }
 
+static bool
+GetEnglishOrFirstName(nsAString& aName, IDWriteLocalizedStrings* aStrings)
+{
+    UINT32 englishIdx = 0;
+    BOOL exists;
+    HRESULT hr = aStrings->FindLocaleName(L"en-us", &englishIdx, &exists);
+    if (FAILED(hr)) {
+        return false;
+    }
+    if (!exists) {
+        // Use 0 index if english is not found.
+        englishIdx = 0;
+    }
+    AutoTArray<WCHAR, 32> enName;
+    UINT32 length;
+    hr = aStrings->GetStringLength(englishIdx, &length);
+    if (FAILED(hr)) {
+        return false;
+    }
+    if (!enName.SetLength(length + 1, fallible)) {
+        // Eeep - running out of memory. Unlikely to end well.
+        return false;
+    }
+    hr = aStrings->GetString(englishIdx, enName.Elements(), length + 1);
+    if (FAILED(hr)) {
+        return false;
+    }
+    aName.Assign(enName.Elements());
+    return true;
+}
+
 static HRESULT
 GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
 {
@@ -72,30 +103,10 @@ GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
         return hr;
     }
 
-    BOOL exists;
-    AutoTArray<wchar_t,32> faceName;
-    UINT32 englishIdx = 0;
-    hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
-    if (FAILED(hr)) {
-        return hr;
+    if (!GetEnglishOrFirstName(aFontName, names)) {
+        return E_FAIL;
     }
 
-    if (!exists) {
-        // No english found, use whatever is first in the list.
-        englishIdx = 0;
-    }
-    UINT32 length;
-    hr = names->GetStringLength(englishIdx, &length);
-    if (FAILED(hr)) {
-        return hr;
-    }
-    faceName.SetLength(length + 1);
-    hr = names->GetString(englishIdx, faceName.Elements(), length + 1);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    aFontName.Assign(faceName.Elements());
     return S_OK;
 }
 
@@ -117,29 +128,10 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
         return E_FAIL;
     }
 
-    AutoTArray<wchar_t,32> faceName;
-    UINT32 englishIdx = 0;
-    hr = infostrings->FindLocaleName(L"en-us", &englishIdx, &exists);
-    if (FAILED(hr)) {
-        return hr;
+    if (!GetEnglishOrFirstName(aFontName, infostrings)) {
+        return E_FAIL;
     }
 
-    if (!exists) {
-        // No english found, use whatever is first in the list.
-        englishIdx = 0;
-    }
-    UINT32 length;
-    hr = infostrings->GetStringLength(englishIdx, &length);
-    if (FAILED(hr)) {
-        return hr;
-    }
-    faceName.SetLength(length + 1);
-    hr = infostrings->GetString(englishIdx, faceName.Elements(), length + 1);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    aFontName.Assign(faceName.Elements());
     return S_OK;
 }
 
@@ -1154,37 +1146,12 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
             continue;
         }
 
-        UINT32 englishIdx = 0;
-
-        BOOL exists;
-        hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
-        if (FAILED(hr)) {
+        nsAutoString name;
+        if (!GetEnglishOrFirstName(name, names)) {
             continue;
         }
-        if (!exists) {
-            // Use 0 index if english is not found.
-            englishIdx = 0;
-        }
+        nsAutoString familyName(name); // keep a copy before we lowercase it as a key
 
-        AutoTArray<WCHAR, 32> enName;
-        UINT32 length;
-
-        hr = names->GetStringLength(englishIdx, &length);
-        if (FAILED(hr)) {
-            continue;
-        }
-
-        if (!enName.SetLength(length + 1, fallible)) {
-            // Eeep - running out of memory. Unlikely to end well.
-            continue;
-        }
-
-        hr = names->GetString(englishIdx, enName.Elements(), length + 1);
-        if (FAILED(hr)) {
-            continue;
-        }
-
-        nsAutoString name(enName.Elements());
         BuildKeyNameFromFontName(name);
 
         RefPtr<gfxFontFamily> fam;
@@ -1192,8 +1159,6 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
         if (mFontFamilies.GetWeak(name)) {
             continue;
         }
-
-        nsDependentString familyName(enName.Elements());
 
         fam = new gfxDWriteFontFamily(familyName, family, aCollection == mSystemFonts);
         if (!fam) {
@@ -1209,36 +1174,43 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
         uint32_t nameCount = names->GetCount();
         uint32_t nameIndex;
 
-        for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
-            UINT32 nameLen;
-            AutoTArray<WCHAR, 32> localizedName;
+        if (nameCount > 1) {
+            UINT32 englishIdx = 0;
+            BOOL exists;
+            // if this fails/doesn't exist, we'll have used name index 0,
+            // so that's the one we'll want to skip here
+            names->FindLocaleName(L"en-us", &englishIdx, &exists);
 
-            // only add other names
-            if (nameIndex == englishIdx) {
-                continue;
+            for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
+                UINT32 nameLen;
+                AutoTArray<WCHAR, 32> localizedName;
+
+                // only add other names
+                if (nameIndex == englishIdx) {
+                    continue;
+                }
+
+                hr = names->GetStringLength(nameIndex, &nameLen);
+                if (FAILED(hr)) {
+                    continue;
+                }
+
+                if (!localizedName.SetLength(nameLen + 1, fallible)) {
+                    continue;
+                }
+
+                hr = names->GetString(nameIndex, localizedName.Elements(),
+                                      nameLen + 1);
+                if (FAILED(hr)) {
+                    continue;
+                }
+
+                nsDependentString locName(localizedName.Elements());
+
+                if (!familyName.Equals(locName)) {
+                    AddOtherFamilyName(fam, locName);
+                }
             }
-
-            hr = names->GetStringLength(nameIndex, &nameLen);
-            if (FAILED(hr)) {
-                continue;
-            }
-
-            if (!localizedName.SetLength(nameLen + 1, fallible)) {
-                continue;
-            }
-
-            hr = names->GetString(nameIndex, localizedName.Elements(),
-                                  nameLen + 1);
-            if (FAILED(hr)) {
-                continue;
-            }
-
-            nsDependentString locName(localizedName.Elements());
-
-            if (!familyName.Equals(locName)) {
-                AddOtherFamilyName(fam, locName);
-            }
-
         }
 
         // at this point, all family names have been read in
@@ -1427,36 +1399,10 @@ static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
         return hr;
     }
 
-    UINT32 index = 0;
-    BOOL exists = false;
-
-    hr = familyNames->FindLocaleName(L"en-us", &index, &exists);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    // If the specified locale doesn't exist, select the first on the list.
-    if (!exists) {
-        index = 0;
-    }
-
-    AutoTArray<WCHAR, 32> name;
-    UINT32 length;
-
-    hr = familyNames->GetStringLength(index, &length);
-    if (FAILED(hr)) {
-        return hr;
-    }
-
-    if (!name.SetLength(length + 1, fallible)) {
+    if (!GetEnglishOrFirstName(aFamilyName, familyNames)) {
         return E_FAIL;
     }
-    hr = familyNames->GetString(index, name.Elements(), length + 1);
-    if (FAILED(hr)) {
-        return hr;
-    }
 
-    aFamilyName.Assign(name.Elements());
     return S_OK;
 }
 
