@@ -66,6 +66,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RecentWindow: "resource:///modules/RecentWindow.jsm",
   RemotePrompt: "resource:///modules/RemotePrompt.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
+  Sanitizer: "resource:///modules/Sanitizer.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
@@ -246,13 +247,6 @@ function BrowserGlue() {
                                 ChromeUtils.import("resource:///modules/distribution.js");
                                 return new DistributionCustomizer();
                               });
-
-  XPCOMUtils.defineLazyGetter(this, "_sanitizer",
-    function() {
-      let sanitizerScope = {};
-      Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", sanitizerScope);
-      return sanitizerScope.Sanitizer;
-    });
 
   ChromeUtils.defineModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
   XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-service;1", "nsIAlertsService");
@@ -512,7 +506,7 @@ BrowserGlue.prototype = {
         });
         break;
       case "test-initialize-sanitizer":
-        this._sanitizer.onStartup();
+        Sanitizer.onStartup();
         break;
       case "sync-ui-state:update":
         this._updateFxaBadges();
@@ -1064,7 +1058,7 @@ BrowserGlue.prototype = {
       UnsubmittedCrashHandler.init();
     }
 
-    this._sanitizer.onStartup();
+    Sanitizer.onStartup();
     this._scheduleStartupIdleTasks();
     this._lateTasksIdleObserver = (idleService, topic, data) => {
       if (topic == "idle") {
@@ -2398,7 +2392,7 @@ BrowserGlue.prototype = {
   // ------------------------------
 
   sanitize: function BG_sanitize(aParentWindow) {
-    this._sanitizer.sanitize(aParentWindow);
+    Sanitizer.showUI(aParentWindow);
   },
 
   async ensurePlacesDefaultQueriesInitialized() {
