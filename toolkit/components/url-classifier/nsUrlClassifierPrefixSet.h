@@ -59,7 +59,13 @@ private:
   static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
   static const uint32_t DELTAS_LIMIT = 120;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
+#ifdef ANDROID
+  // Temporarily increase the version number for 58, so we don't reuse any
+  // potentially-bad v2 databases from 57 that can cause bug 1420641.
+  static const uint32_t PREFIXSET_VERSION_MAGIC = 2;
+#else
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
+#endif
 
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
