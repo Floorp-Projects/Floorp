@@ -15,12 +15,15 @@ EXPORTS += [
     'nsISpellChecker.h',
     'nsITextService.h',
     'nsITextServicesDocument.h',
-    'nsTextServicesCID.h',
+]
+
+EXPORTS.mozilla += [
+    'TextServicesDocument.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsFilteredContentIterator.cpp',
-    'nsTextServicesDocument.cpp',
+    'TextServicesDocument.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
