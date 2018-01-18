@@ -984,11 +984,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::error(unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
     ErrorMetadata metadata;
-    if (computeErrorMetadata(&metadata, anyChars.currentToken().pos.begin))
+    if (computeErrorMetadata(&metadata, userbuf.offset())) {
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
         ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            args);
+    }
 
     va_end(args);
 }
@@ -1000,11 +1001,12 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::errorAt(uint32_t offset, unsigned er
     va_list args;
     va_start(args, errorNumber);
 
-    TokenStreamAnyChars& anyChars = anyCharsAccess();
     ErrorMetadata metadata;
-    if (computeErrorMetadata(&metadata, offset))
+    if (computeErrorMetadata(&metadata, offset)) {
+        TokenStreamAnyChars& anyChars = anyCharsAccess();
         ReportCompileError(anyChars.cx, Move(metadata), nullptr, JSREPORT_ERROR, errorNumber,
                            args);
+    }
 
     va_end(args);
 }
@@ -1707,7 +1709,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
     // Look for a string or a template string.
     //
     if (c1kind == String) {
-        if (!getStringOrTemplateToken(c, &tp))
+        if (!getStringOrTemplateToken(static_cast<char>(c), &tp))
             goto error;
         goto out;
     }
@@ -2131,8 +2133,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
 
 template<typename CharT, class AnyCharsAccess>
 bool
-TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(int untilChar, Token** tp)
+TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilChar, Token** tp)
 {
+    MOZ_ASSERT(untilChar == '\'' || untilChar == '"' || untilChar == '`',
+               "unexpected string/template literal delimiter");
+
     int c;
     int nc = -1;
 
@@ -2147,7 +2152,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(int untilCh
     while ((c = getCharIgnoreEOL()) != untilChar) {
         if (c == EOF) {
             ungetCharIgnoreEOL(c);
-            error(JSMSG_UNTERMINATED_STRING);
+            const char delimiters[] = { untilChar, untilChar, '\0' };
+            error(JSMSG_EOF_BEFORE_END_OF_LITERAL, delimiters);
             return false;
         }
 
@@ -2159,7 +2165,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(int untilCh
             if (!getChar(&c))
                 return false;
 
-            switch (c) {
+            if (c == EOF) {
+                const char delimiters[] = { untilChar, untilChar, '\0' };
+                error(JSMSG_EOF_IN_ESCAPE_IN_LITERAL, delimiters);
+                return false;
+            }
+
+            switch (static_cast<CharT>(c)) {
               case 'b': c = '\b'; break;
               case 'f': c = '\f'; break;
               case 'n': c = '\n'; break;
@@ -2345,7 +2357,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(int untilCh
         } else if (TokenBuf::isRawEOLChar(c)) {
             if (!parsingTemplate) {
                 ungetCharIgnoreEOL(c);
-                error(JSMSG_UNTERMINATED_STRING);
+                const char delimiters[] = { untilChar, untilChar, '\0' };
+                error(JSMSG_EOL_BEFORE_END_OF_STRING, delimiters);
                 return false;
             }
             if (c == '\r') {
