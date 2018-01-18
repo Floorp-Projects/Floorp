@@ -7,10 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  getResponseHeader,
-  fetchNetworkUpdatePacket
-} = require("../utils/request-utils");
+const { getResponseHeader } = require("../utils/request-utils");
 
 const { div } = dom;
 
@@ -21,20 +18,9 @@ const { div } = dom;
 class RequestListColumnResponseHeader extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object.isRequired,
       item: PropTypes.object.isRequired,
       header: PropTypes.string.isRequired,
     };
-  }
-
-  componentDidMount() {
-    let { item, connector } = this.props;
-    fetchNetworkUpdatePacket(connector.requestData, item, ["responseHeaders"]);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    let { item, connector } = nextProps;
-    fetchNetworkUpdatePacket(connector.requestData, item, ["responseHeaders"]);
   }
 
   shouldComponentUpdate(nextProps) {

@@ -252,11 +252,7 @@ class RequestListItem extends Component {
         columns.duration && RequestListColumnDuration({ item }),
         columns.latency && RequestListColumnLatency({ item }),
         ...RESPONSE_HEADERS.filter(header => columns[header]).map(
-          header => RequestListColumnResponseHeader({
-            connector,
-            item,
-            header
-          }),
+          header => RequestListColumnResponseHeader({ item, header }),
         ),
         columns.waterfall && RequestListColumnWaterfall({
           connector,
