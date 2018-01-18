@@ -95,9 +95,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TextServicesDocument)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TextServicesDocument)
 
 NS_INTERFACE_MAP_BEGIN(TextServicesDocument)
-  NS_INTERFACE_MAP_ENTRY(nsITextServicesDocument)
   NS_INTERFACE_MAP_ENTRY(nsIEditActionListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITextServicesDocument)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditActionListener)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(TextServicesDocument)
 NS_INTERFACE_MAP_END
 
@@ -111,7 +110,7 @@ NS_IMPL_CYCLE_COLLECTION(TextServicesDocument,
                          mExtent,
                          mTxtSvcFilter)
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::InitWithEditor(nsIEditor* aEditor)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -184,7 +183,7 @@ TextServicesDocument::InitWithEditor(nsIEditor* aEditor)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::GetDocument(nsIDOMDocument** aDoc)
 {
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
@@ -198,7 +197,7 @@ TextServicesDocument::GetDocument(nsIDOMDocument** aDoc)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::SetExtent(nsRange* aRange)
 {
   NS_ENSURE_ARG_POINTER(aRange);
@@ -232,7 +231,7 @@ TextServicesDocument::SetExtent(nsRange* aRange)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange)
 {
   NS_ENSURE_ARG_POINTER(aRange);
@@ -385,7 +384,7 @@ TextServicesDocument::ExpandRangeToWordBoundaries(nsRange* aRange)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::SetFilter(nsITextServicesFilter* aFilter)
 {
   // Hang on to the filter so we can set it into the filtered iterator.
@@ -394,7 +393,7 @@ TextServicesDocument::SetFilter(nsITextServicesFilter* aFilter)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::GetCurrentTextBlock(nsString *aStr)
 {
   NS_ENSURE_TRUE(aStr, NS_ERROR_NULL_POINTER);
@@ -413,7 +412,7 @@ TextServicesDocument::GetCurrentTextBlock(nsString *aStr)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::FirstBlock()
 {
   NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
@@ -446,8 +445,8 @@ TextServicesDocument::FirstBlock()
   return rv;
 }
 
-NS_IMETHODIMP
-TextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus* aSelStatus,
+nsresult
+TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
                                         int32_t* aSelOffset,
                                         int32_t* aSelLength)
 {
@@ -457,7 +456,7 @@ TextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus* aSelStatus,
 
   mIteratorStatus = IteratorStatus::eDone;
 
-  *aSelStatus = nsITextServicesDocument::eBlockNotFound;
+  *aSelStatus = BlockSelectionStatus::eBlockNotFound;
   *aSelOffset = *aSelLength = -1;
 
   if (!mSelCon || !mIterator) {
@@ -532,7 +531,7 @@ TextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus* aSelStatus,
         return rv;
       }
 
-      if (*aSelStatus == nsITextServicesDocument::eBlockContains) {
+      if (*aSelStatus == BlockSelectionStatus::eBlockContains) {
         rv = SetSelectionInternal(*aSelOffset, *aSelLength, false);
       }
     } else {
@@ -791,7 +790,7 @@ TextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus* aSelStatus,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::PrevBlock()
 {
   NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
@@ -855,7 +854,7 @@ TextServicesDocument::PrevBlock()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::NextBlock()
 {
   NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
@@ -926,7 +925,7 @@ TextServicesDocument::NextBlock()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::IsDone(bool* aIsDone)
 {
   NS_ENSURE_TRUE(aIsDone, NS_ERROR_NULL_POINTER);
@@ -944,7 +943,7 @@ TextServicesDocument::IsDone(bool* aIsDone)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::SetSelection(int32_t aOffset,
                                    int32_t aLength)
 {
@@ -963,7 +962,7 @@ TextServicesDocument::SetSelection(int32_t aOffset,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::ScrollSelectionIntoView()
 {
   NS_ENSURE_TRUE(mSelCon, NS_ERROR_FAILURE);
@@ -983,7 +982,7 @@ TextServicesDocument::ScrollSelectionIntoView()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::DeleteSelection()
 {
   if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
@@ -1242,7 +1241,7 @@ TextServicesDocument::DeleteSelection()
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 TextServicesDocument::InsertText(const nsString* aText)
 {
   if (NS_WARN_IF(!aText)) {
@@ -2149,13 +2148,13 @@ TextServicesDocument::SetSelectionInternal(int32_t aOffset,
 }
 
 nsresult
-TextServicesDocument::GetSelection(TSDBlockSelectionStatus* aSelStatus,
+TextServicesDocument::GetSelection(BlockSelectionStatus* aSelStatus,
                                    int32_t* aSelOffset,
                                    int32_t* aSelLength)
 {
   NS_ENSURE_TRUE(aSelStatus && aSelOffset && aSelLength, NS_ERROR_NULL_POINTER);
 
-  *aSelStatus = nsITextServicesDocument::eBlockNotFound;
+  *aSelStatus = BlockSelectionStatus::eBlockNotFound;
   *aSelOffset = -1;
   *aSelLength = -1;
 
@@ -2188,7 +2187,7 @@ TextServicesDocument::GetSelection(TSDBlockSelectionStatus* aSelStatus,
 }
 
 nsresult
-TextServicesDocument::GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
+TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
                                             int32_t* aSelOffset,
                                             int32_t* aSelLength)
 {
@@ -2203,7 +2202,7 @@ TextServicesDocument::GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
 
   // The calling function should have done the GetIsCollapsed()
   // check already. Just assume it's collapsed!
-  *aSelStatus = nsITextServicesDocument::eBlockOutside;
+  *aSelStatus = BlockSelectionStatus::eBlockOutside;
   *aSelOffset = *aSelLength = -1;
 
   int32_t tableCount = mOffsetTable.Length();
@@ -2258,7 +2257,7 @@ TextServicesDocument::GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
       if (entry->mNode == parent &&
           entry->mNodeOffset <= static_cast<int32_t>(offset) &&
           static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
-        *aSelStatus = nsITextServicesDocument::eBlockContains;
+        *aSelStatus = BlockSelectionStatus::eBlockContains;
         *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
         *aSelLength = 0;
 
@@ -2373,7 +2372,7 @@ TextServicesDocument::GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
     if (entry->mNode == node &&
         entry->mNodeOffset <= static_cast<int32_t>(offset) &&
         static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
-      *aSelStatus = nsITextServicesDocument::eBlockContains;
+      *aSelStatus = BlockSelectionStatus::eBlockContains;
       *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
       *aSelLength = 0;
 
@@ -2392,7 +2391,7 @@ TextServicesDocument::GetCollapsedSelection(TSDBlockSelectionStatus* aSelStatus,
 
 nsresult
 TextServicesDocument::GetUncollapsedSelection(
-                        TSDBlockSelectionStatus* aSelStatus,
+                        BlockSelectionStatus* aSelStatus,
                         int32_t* aSelOffset,
                         int32_t* aSelLength)
 {
@@ -2465,7 +2464,7 @@ TextServicesDocument::GetUncollapsedSelection(
   // We're done if we didn't find an intersecting range.
 
   if (rangeCount < 1 || e1s2 > 0 || e2s1 < 0) {
-    *aSelStatus = nsITextServicesDocument::eBlockOutside;
+    *aSelStatus = BlockSelectionStatus::eBlockOutside;
     *aSelOffset = *aSelLength = -1;
     return NS_OK;
   }
@@ -2481,18 +2480,18 @@ TextServicesDocument::GetUncollapsedSelection(
     // There are multiple selection ranges, we only deal
     // with the first one that intersects the current,
     // text block, so mark this a as a partial.
-    *aSelStatus = nsITextServicesDocument::eBlockPartial;
+    *aSelStatus = BlockSelectionStatus::eBlockPartial;
   } else if (e1s1 > 0 && e2s2 < 0) {
     // The range extends beyond the start and
     // end of the current text block.
-    *aSelStatus = nsITextServicesDocument::eBlockInside;
+    *aSelStatus = BlockSelectionStatus::eBlockInside;
   } else if (e1s1 <= 0 && e2s2 >= 0) {
     // The current text block contains the entire
     // range.
-    *aSelStatus = nsITextServicesDocument::eBlockContains;
+    *aSelStatus = BlockSelectionStatus::eBlockContains;
   } else {
     // The range partially intersects the block.
-    *aSelStatus = nsITextServicesDocument::eBlockPartial;
+    *aSelStatus = BlockSelectionStatus::eBlockPartial;
   }
 
   // Now create a range based on the intersection of the

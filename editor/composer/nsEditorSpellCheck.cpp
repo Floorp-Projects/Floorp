@@ -31,7 +31,6 @@
 #include "nsISpellChecker.h"            // for nsISpellChecker, etc
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_ADDREF
-#include "nsITextServicesDocument.h"    // for nsITextServicesDocument
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
 #include "nsIURI.h"                     // for nsIURI
 #include "nsThreadUtils.h"              // for GetMainThreadSerialEventTarget
