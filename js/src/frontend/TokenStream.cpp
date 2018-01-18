@@ -547,7 +547,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getChar(int32_t* cp)
 // before it's ungotten.
 template<typename CharT, class AnyCharsAccess>
 int32_t
-TokenStreamSpecific<CharT, AnyCharsAccess>::getCharIgnoreEOL()
+GeneralTokenStreamChars<CharT, AnyCharsAccess>::getCharIgnoreEOL()
 {
     if (MOZ_LIKELY(userbuf.hasRawChars()))
         return userbuf.getRawChar();
@@ -590,9 +590,9 @@ GeneralTokenStreamChars<CharT, AnyCharsAccess>::ungetChar(int32_t c)
     }
 }
 
-template<typename CharT, class AnyCharsAccess>
+template<typename CharT>
 void
-TokenStreamSpecific<CharT, AnyCharsAccess>::ungetCharIgnoreEOL(int32_t c)
+TokenStreamCharsBase<CharT>::ungetCharIgnoreEOL(int32_t c)
 {
     if (c == EOF)
         return;
@@ -1278,11 +1278,9 @@ bool
 TokenStreamChars<char16_t, AnyCharsAccess>::matchTrailForLeadSurrogate(char16_t lead,
                                                                        uint32_t* codePoint)
 {
-    TokenStreamSpecific* ts = asSpecific();
-
-    int32_t maybeTrail = ts->getCharIgnoreEOL();
+    int32_t maybeTrail = getCharIgnoreEOL();
     if (!unicode::IsTrailSurrogate(maybeTrail)) {
-        ts->ungetCharIgnoreEOL(maybeTrail);
+        ungetCharIgnoreEOL(maybeTrail);
         return false;
     }
 

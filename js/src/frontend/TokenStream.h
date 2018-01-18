@@ -813,6 +813,9 @@ class TokenStreamAnyChars
 template<typename CharT>
 class TokenStreamCharsBase
 {
+  protected:
+    void ungetCharIgnoreEOL(int32_t c);
+
   public:
     using CharBuffer = Vector<CharT, 32>;
 
@@ -1023,6 +1026,8 @@ class GeneralTokenStreamChars
         return static_cast<TokenStreamSpecific*>(this);
     }
 
+    int32_t getCharIgnoreEOL();
+
     void ungetChar(int32_t c);
 };
 
@@ -1032,17 +1037,21 @@ template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public GeneralTokenStreamChars<char16_t, AnyCharsAccess>
 {
+  private:
     using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
     using GeneralCharsBase = GeneralTokenStreamChars<char16_t, AnyCharsAccess>;
     using CharsSharedBase = TokenStreamCharsBase<char16_t>;
 
-    bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
+    using GeneralCharsBase::asSpecific;
 
-  public:
     using typename GeneralCharsBase::TokenStreamSpecific;
 
-    using GeneralCharsBase::asSpecific;
+    bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
+
+  protected:
     using GeneralCharsBase::anyCharsAccess;
+    using GeneralCharsBase::getCharIgnoreEOL;
+    using CharsSharedBase::ungetCharIgnoreEOL;
 
   public:
     using GeneralCharsBase::GeneralCharsBase;
@@ -1132,9 +1141,11 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
     using CharsSharedBase::atomizeChars;
     using CharsSharedBase::copyTokenbufTo;
+    using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::isMultiUnitCodepoint;
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
+    using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsSharedBase::userbuf;
 
   public:
@@ -1412,9 +1423,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // and store the character in |*c|.  Return false and leave |*c| undefined
     // on failure.
     MOZ_MUST_USE bool getChar(int32_t* cp);
-    int32_t getCharIgnoreEOL();
 
-    void ungetCharIgnoreEOL(int32_t c);
     Token* newToken(ptrdiff_t adjust);
     uint32_t peekUnicodeEscape(uint32_t* codePoint);
     uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
