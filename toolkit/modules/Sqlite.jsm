@@ -1171,8 +1171,8 @@ OpenedConnection.prototype = Object.freeze({
    *
    * @return Promise<int>
    */
-  getSchemaVersion(schemaName = "main") {
-    return this.execute(`PRAGMA ${schemaName}.user_version`).then(
+  getSchemaVersion() {
+    return this.execute("PRAGMA user_version").then(
       function onSuccess(result) {
         if (result == null) {
           return 0;
@@ -1182,13 +1182,13 @@ OpenedConnection.prototype = Object.freeze({
     );
   },
 
-  setSchemaVersion(value, schemaName = "main") {
+  setSchemaVersion(value) {
     if (!Number.isInteger(value)) {
       // Guarding against accidental SQLi
       throw new TypeError("Schema version must be an integer. Got " + value);
     }
     this._connectionData.ensureOpen();
-    return this.execute(`PRAGMA ${schemaName}.user_version = ${value}`);
+    return this.execute("PRAGMA user_version = " + value);
   },
 
   /**

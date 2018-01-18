@@ -132,25 +132,6 @@ add_task(async function test_schema_version() {
     Assert.equal(version, 14);
   }
 
-  await db.execute("ATTACH :memory AS attached");
-
-  let attachedVersion = await db.getSchemaVersion("attached");
-  Assert.equal(attachedVersion, 0,
-    "Should return 0 for initial attached schema version");
-
-  await db.setSchemaVersion(3, "attached");
-  attachedVersion = await db.getSchemaVersion("attached");
-  Assert.equal(attachedVersion, 3, "Should set attached schema version");
-
-  version = await db.getSchemaVersion();
-  Assert.equal(version, 14,
-    "Setting attached schema version should not change main schema version");
-
-  await db.setSchemaVersion(15);
-  attachedVersion = await db.getSchemaVersion("attached");
-  Assert.equal(attachedVersion, 3,
-    "Setting main schema version should not change attached schema version");
-
   await db.close();
 });
 
