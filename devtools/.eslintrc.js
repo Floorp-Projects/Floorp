@@ -27,6 +27,7 @@ module.exports = {
     // subdirectories of this directory.
     "mozilla/reject-some-requires": ["error", "^devtools/shared/platform/(chome|content)/"],
     "mozilla/var-only-at-top-level": "error",
+    "mozilla/use-chromeutils-import": ["error", {allowCu: true}],
 
     // Rules from the React plugin
     "react/display-name": "error",
