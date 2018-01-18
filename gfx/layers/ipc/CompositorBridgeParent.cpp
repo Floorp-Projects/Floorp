@@ -2066,12 +2066,34 @@ UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig
 /* static */ CompositorBridgeParent::LayerTreeState*
 CompositorBridgeParent::GetIndirectShadowTree(uint64_t aId)
 {
+  // Only the compositor thread should use this method variant, however it is
+  // safe to be called on the main thread during APZ gtests.
+  APZThreadUtils::AssertOnCompositorThread();
+
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aId);
   if (sIndirectLayerTrees.end() == cit) {
     return nullptr;
   }
   return &cit->second;
+}
+
+/* static */ bool
+CompositorBridgeParent::CallWithIndirectShadowTree(uint64_t aId,
+                                                   const std::function<void(CompositorBridgeParent::LayerTreeState&)>& aFunc)
+{
+  // Note that this does not make things universally threadsafe just because the
+  // sIndirectLayerTreesLock mutex is held. This is because the compositor
+  // thread can mutate the LayerTreeState outside the lock. It does however
+  // ensure that the *storage* for the LayerTreeState remains stable, since we
+  // should always hold the lock when adding/removing entries to the map.
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  LayerTreeMap::iterator cit = sIndirectLayerTrees.find(aId);
+  if (sIndirectLayerTrees.end() == cit) {
+    return false;
+  }
+  aFunc(cit->second);
+  return true;
 }
 
 static CompositorBridgeParent::LayerTreeState*

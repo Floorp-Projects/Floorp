@@ -1,13 +1,13 @@
+# mozharness configuration for Android x86 unit tests
+#
+# This configuration should be combined with suite definitions and other
+# mozharness configuration from android_common.py, or similar.
+
 import os
 
 config = {
-    "buildbot_json_path": "buildprops.json",
-    "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
+    "deprecated_sdk_path": True,
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86/releng.manifest",
-    "tooltool_cache": "/builds/worker/tooltool_cache",
-    "download_tooltool": True,
-    "tooltool_servers": ['http://relengapi/tooltool/'],
-    "avds_dir": "/builds/worker/workspace/build/.android",
     "emulator_manifest": """
         [
         {
@@ -28,74 +28,10 @@ config = {
         "PATH": "%(PATH)s:%(abs_work_dir)s/android-sdk18/tools:%(abs_work_dir)s/android-sdk18/platform-tools",
         "MINIDUMP_SAVEPATH": "%(abs_work_dir)s/../minidumps"
     },
-    "default_actions": [
-        'clobber',
-        'read-buildbot-config',
-        'setup-avds',
-        'start-emulator',
-        'download-and-extract',
-        'create-virtualenv',
-        'verify-emulator',
-        'install',
-        'run-tests',
-    ],
     "emulator": {
         "name": "test-1",
         "device_id": "emulator-5554",
         "http_port": "8854",  # starting http port to use for the mochitest server
         "ssl_port": "4454",  # starting ssl port to use for the server
-        "emulator_port": 5554,
     },
-    "suite_definitions": {
-        "xpcshell": {
-            "run_filename": "remotexpcshelltests.py",
-            "testsdir": "xpcshell",
-            "install": False,
-            "options": [
-                "--xre-path=%(xre_path)s",
-                "--testing-modules-dir=%(modules_dir)s",
-                "--apk=%(installer_path)s",
-                "--no-logfiles",
-                "--symbols-path=%(symbols_path)s",
-                "--manifest=tests/xpcshell.ini",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--test-plugin-path=none",
-            ],
-        },
-        "mochitest-chrome": {
-            "run_filename": "runtestsremote.py",
-            "testsdir": "mochitest",
-            "options": [
-                "--app=%(app)s",
-                "--remote-webserver=%(remote_webserver)s",
-                "--xre-path=%(xre_path)s",
-                "--utility-path=%(utility_path)s",
-                "--http-port=%(http_port)s",
-                "--ssl-port=%(ssl_port)s",
-                "--certificate-path=%(certs_path)s",
-                "--symbols-path=%(symbols_path)s",
-                "--quiet",
-                "--log-raw=%(raw_log_file)s",
-                "--log-errorsummary=%(error_summary_file)s",
-                "--extra-profile-file=fonts",
-                "--extra-profile-file=hyphenation",
-                "--screenshot-on-fail",
-                "--flavor=chrome",
-            ],
-        },
-        "geckoview": {
-            "run_filename": "rungeckoview.py",
-            "testsdir": "mochitest",
-            "options": [
-                "--utility-path=%(utility_path)s",
-                "--symbols-path=%(symbols_path)s",
-            ],
-        },
-    },  # end suite_definitions
-    "download_minidump_stackwalk": True,
-    "default_blob_upload_servers": [
-        "https://blobupload.elasticbeanstalk.com",
-    ],
-    "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
 }

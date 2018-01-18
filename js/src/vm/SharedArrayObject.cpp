@@ -357,31 +357,21 @@ SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer, uin
 }
 
 SharedArrayBufferObject*
-SharedArrayBufferObject::createEmpty(JSContext* cx)
+SharedArrayBufferObject::createFromNewRawBuffer(JSContext* cx, SharedArrayRawBuffer* buffer,
+                                                uint32_t initialSize)
 {
     MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
     AutoSetNewObjectMetadata metadata(cx);
-    Rooted<SharedArrayBufferObject*> obj(cx,
-        NewObjectWithClassProto<SharedArrayBufferObject>(cx, nullptr));
-    if (!obj)
+    SharedArrayBufferObject* obj = NewObjectWithClassProto<SharedArrayBufferObject>(cx, nullptr);
+    if (!obj) {
+        buffer->dropReference();
         return nullptr;
+    }
 
-    MOZ_ASSERT(obj->getClass() == &class_);
-
-    obj->setReservedSlot(RAWBUF_SLOT, UndefinedValue());
-    obj->setReservedSlot(LENGTH_SLOT, UndefinedValue());
+    obj->acceptRawBuffer(buffer, initialSize);
 
     return obj;
-}
-
-void
-SharedArrayBufferObject::initializeRawBuffer(JSContext* cx, SharedArrayRawBuffer* buffer, uint32_t length)
-{
-    MOZ_ASSERT(getReservedSlot(RAWBUF_SLOT).isUndefined());
-    MOZ_ASSERT(getReservedSlot(LENGTH_SLOT).isUndefined());
-
-    acceptRawBuffer(buffer, length);
 }
 
 static JSObject*

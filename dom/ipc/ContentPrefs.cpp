@@ -124,6 +124,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "javascript.options.native_regexp",
   "javascript.options.parallel_parsing",
   "javascript.options.shared_memory",
+  "javascript.options.spectre.index_masking",
   "javascript.options.streams",
   "javascript.options.strict",
   "javascript.options.strict.debug",
