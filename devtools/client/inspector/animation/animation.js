@@ -8,17 +8,20 @@ const { AnimationsFront } = require("devtools/shared/fronts/animation");
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const EventEmitter = require("devtools/shared/event-emitter");
+
 const App = createFactory(require("./components/App"));
-const { isAllTimingEffectEqual } = require("./utils/utils");
 
 const { updateAnimations } = require("./actions/animations");
 const { updateElementPickerEnabled } = require("./actions/element-picker");
 const { updateSidebarSize } = require("./actions/sidebar");
+const { isAllAnimationEqual } = require("./utils/utils");
 
 class AnimationInspector {
   constructor(inspector) {
     this.inspector = inspector;
 
+    this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
@@ -26,10 +29,28 @@ class AnimationInspector {
     this.onSidebarResized = this.onSidebarResized.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
 
+    EventEmitter.decorate(this);
+    this.emit = this.emit.bind(this);
+
     this.init();
   }
 
   init() {
+    const {
+      setSelectedNode,
+      onShowBoxModelHighlighterForNode,
+    } = this.inspector.getCommonComponentProps();
+
+    const {
+      onHideBoxModelHighlighter,
+    } = this.inspector.getPanel("boxmodel").getComponentProps();
+
+    const {
+      emit: emitEventForTest,
+      getNodeFromActor,
+      toggleElementPicker,
+    } = this;
+
     const target = this.inspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
 
@@ -41,7 +62,12 @@ class AnimationInspector {
       },
       App(
         {
-          toggleElementPicker: this.toggleElementPicker
+          emitEventForTest,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
+          toggleElementPicker,
         }
       )
     );
@@ -78,7 +104,7 @@ class AnimationInspector {
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
 
-    if (!this.animations || !isAllTimingEffectEqual(animations, this.animations)) {
+    if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
     }
@@ -90,6 +116,10 @@ class AnimationInspector {
     return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
            this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
+  }
+
+  getNodeFromActor(actorID) {
+    return this.inspector.walker.getNodeFromActor(actorID, ["node"]);
   }
 
   toggleElementPicker() {

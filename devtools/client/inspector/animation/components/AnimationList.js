@@ -14,15 +14,40 @@ class AnimationList extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
+      getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
+    const {
+      animations,
+      emitEventForTest,
+      getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
+
     return dom.ul(
       {
         className: "animation-list"
       },
-      this.props.animations.map(animation => AnimationItem({ animation }))
+      animations.map(animation =>
+        AnimationItem(
+          {
+            animation,
+            emitEventForTest,
+            getNodeFromActor,
+            onHideBoxModelHighlighter,
+            onShowBoxModelHighlighterForNode,
+            setSelectedNode,
+          }
+        )
+      )
     );
   }
 }

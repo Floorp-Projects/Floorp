@@ -4,22 +4,48 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const AnimationTarget = createFactory(require("./AnimationTarget"));
 
 class AnimationItem extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
+      getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
     };
   }
 
   render() {
+    const {
+      animation,
+      emitEventForTest,
+      getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+    } = this.props;
+
     return dom.li(
       {
         className: "animation-item"
-      }
+      },
+      AnimationTarget(
+        {
+          animation,
+          emitEventForTest,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
+        }
+      )
     );
   }
 }

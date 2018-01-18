@@ -7,6 +7,7 @@
 :root {
   --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --sidebar-width: 200px;
 }
 
 :root.theme-dark {
@@ -28,7 +29,7 @@
 .animation-timeline-tick-list {
   margin-right: 10px;
   position: relative;
-  width: calc(100% - 210px);
+  width: calc(100% - var(--sidebar-width) - 10px);
 }
 
 .animation-timeline-tick-item {
@@ -51,6 +52,19 @@
 
 .animation-item:nth-child(2n+1) {
   background-color: var(--animation-even-background-color);
+}
+
+/* Animation Target */
+.animation-target {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  padding-left: 4px;
+  width: var(--sidebar-width);
+}
+
+.animation-target .tag-name {
+  cursor: default;
 }
 
 /* No Animation Panel */
