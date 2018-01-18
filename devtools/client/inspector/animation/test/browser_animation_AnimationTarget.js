@@ -3,7 +3,10 @@
 
 "use strict";
 
-// Test existance and content of animation target.
+// Test for following AnimationTarget component works.
+// * element existance
+// * number of elements
+// * content of element
 
 add_task(async function () {
   await addTab(URL_ROOT + "doc_simple_animation.html");
