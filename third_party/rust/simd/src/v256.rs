@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-use std::ops;
-use std::mem;
+use core::{mem,ops};
 #[allow(unused_imports)]
 use super::{
 	Simd,
@@ -325,6 +324,19 @@ impl i32x8 {
     /// Convert each lane to a 32-bit float.
     #[inline]
     pub fn to_f32(self) -> f32x8 {
+        unsafe {simd_cast(self)}
+    }
+}
+
+impl f32x8 {
+    /// Convert each lane to a signed integer.
+    #[inline]
+    pub fn to_i32(self) -> i32x8 {
+        unsafe {simd_cast(self)}
+    }
+    /// Convert each lane to an unsigned integer.
+    #[inline]
+    pub fn to_u32(self) -> u32x8 {
         unsafe {simd_cast(self)}
     }
 }

@@ -1,4 +1,4 @@
-#![feature(step_by, test)]
+#![feature(iterator_step_by, test)]
 
 extern crate test;
 extern crate simd;
