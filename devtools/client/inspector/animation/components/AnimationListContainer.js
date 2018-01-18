@@ -12,6 +12,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const AnimationList = createFactory(require("./AnimationList"));
 const AnimationListHeader = createFactory(require("./AnimationListHeader"));
 
+const TimeScale = require("../utils/timescale");
+
 class AnimationListContainer extends PureComponent {
   static get propTypes() {
     return {
@@ -33,6 +35,7 @@ class AnimationListContainer extends PureComponent {
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
     } = this.props;
+    const timeScale = new TimeScale(animations);
 
     return dom.div(
       {
@@ -40,7 +43,7 @@ class AnimationListContainer extends PureComponent {
       },
       AnimationListHeader(
         {
-          animations
+          timeScale,
         }
       ),
       AnimationList(
@@ -51,6 +54,7 @@ class AnimationListContainer extends PureComponent {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           setSelectedNode,
+          timeScale,
         }
       )
     );
