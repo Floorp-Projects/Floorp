@@ -163,6 +163,14 @@ URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
   ConvertString(unescaped, aOutput);
 }
 
+/* static */ bool
+URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator)
+{
+    URLParams params;
+    params.ParseInput(aInput);
+    return params.ForEach(aIterator);
+}
+
 void
 URLParams::ParseInput(const nsACString& aInput)
 {

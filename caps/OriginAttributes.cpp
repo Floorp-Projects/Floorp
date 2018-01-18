@@ -251,11 +251,8 @@ OriginAttributes::PopulateFromSuffix(const nsACString& aStr)
     return false;
   }
 
-  URLParams params;
-  params.ParseInput(Substring(aStr, 1, aStr.Length() - 1));
-
   PopulateFromSuffixIterator iterator(this);
-  return params.ForEach(iterator);
+  return URLParams::Parse(Substring(aStr, 1, aStr.Length() - 1), iterator);
 }
 
 bool
