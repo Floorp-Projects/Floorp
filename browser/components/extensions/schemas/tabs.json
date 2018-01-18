@@ -53,6 +53,26 @@
         }
       },
       {
+        "id": "SharingState",
+        "type": "object",
+        "description": "Tab sharing state for screen, microphone and camera.",
+        "properties": {
+          "screen": {
+            "type": "string",
+            "optional": true,
+            "description": "If the tab is sharing the screen the value will be one of \"Screen\", \"Window\", or \"Application\", or undefined if not screen sharing."
+          },
+          "camera": {
+            "type": "boolean",
+            "description": "True if the tab is using the camera."
+          },
+          "microphone": {
+            "type": "boolean",
+            "description": "True if the tab is using the microphone."
+          }
+        }
+      },
+      {
         "id": "Tab",
         "type": "object",
         "properties": {
@@ -75,10 +95,12 @@
           "incognito": {"type": "boolean", "description": "Whether the tab is in an incognito window."},
           "width": {"type": "integer", "optional": true, "description": "The width of the tab in pixels."},
           "height": {"type": "integer", "optional": true, "description": "The height of the tab in pixels."},
+          "hidden": {"type": "boolean", "optional": true, "description": "True if the tab is hidden."},
           "sessionId": {"type": "string", "optional": true, "description": "The session ID used to uniquely identify a Tab obtained from the $(ref:sessions) API."},
           "cookieStoreId": {"type": "string", "optional": true, "description": "The CookieStoreId used for the tab."},
           "isArticle": {"type": "boolean", "optional": true, "description": "Whether the document in the tab can be rendered in reader mode."},
-          "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."}
+          "isInReaderMode": {"type": "boolean", "optional": true, "description": "Whether the document in the tab is being rendered in reader mode."},
+          "sharingState": {"$ref": "SharingState", "optional": true, "description": "Current tab sharing state for screen, microphone and camera."}
         }
       },
       {
@@ -600,6 +622,11 @@
                 "optional": true,
                 "description": "True while the tabs are not loaded with content."
               },
+              "hidden": {
+                "type": "boolean",
+                "optional": true,
+                "description": "True while the tabs are hidden."
+              },
               "title": {
                 "type": "string",
                 "optional": true,
@@ -640,6 +667,24 @@
                 "minimum": 0,
                 "optional": true,
                 "description": "The ID of the tab that opened this tab. If specified, the opener tab must be in the same window as this tab."
+              },
+              "screen": {
+                "choices": [
+                  {"type": "string", "enum": ["Screen", "Window", "Application"]},
+                  {"type": "boolean"}
+                ],
+                "optional": true,
+                "description": "True for any screen sharing, or a string to specify type of screen sharing."
+              },
+              "camera": {
+                "type": "boolean",
+                "optional": true,
+                "description": "True if the tab is using the camera."
+              },
+              "microphone": {
+                "type": "boolean",
+                "optional": true,
+                "description": "True if the tab is using the microphone."
               }
             }
           },
