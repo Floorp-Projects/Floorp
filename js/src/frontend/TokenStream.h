@@ -1052,8 +1052,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using GeneralCharsBase::anyCharsAccess;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsSharedBase::ungetCharIgnoreEOL;
+    using GeneralCharsBase::userbuf;
 
-  public:
     using GeneralCharsBase::GeneralCharsBase;
 
     MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
@@ -1062,6 +1062,8 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
 
         return matchTrailForLeadSurrogate(c, codepoint);
     }
+
+    void ungetCodePointIgnoreEOL(uint32_t codePoint);
 };
 
 // TokenStream is the lexical scanner for JavaScript source text.
@@ -1146,6 +1148,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::tokenbuf;
     using GeneralCharsBase::ungetChar;
     using CharsSharedBase::ungetCharIgnoreEOL;
+    using CharsBase::ungetCodePointIgnoreEOL;
     using CharsSharedBase::userbuf;
 
   public:
