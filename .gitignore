@@ -104,6 +104,10 @@ mobile/android/gradle/.gradle
 embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/project.xcworkspace/xcuserdata
 embedding/ios/GeckoEmbed/GeckoEmbed.xcodeproj/xcuserdata
 
+# Rust port of mozbase are libraries
+testing/mozbase/rust/*/target
+testing/mozbase/rust/*/Cargo.lock
+
 # Ignore mozharness execution files
 testing/mozharness/.tox/
 testing/mozharness/build/

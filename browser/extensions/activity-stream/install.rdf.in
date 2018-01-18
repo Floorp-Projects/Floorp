@@ -8,7 +8,7 @@
     <em:type>2</em:type>
     <em:bootstrap>true</em:bootstrap>
     <em:unpack>false</em:unpack>
-    <em:version>2018.01.12.1332-b114acab</em:version>
+    <em:version>2018.01.18.1095-7f6ab9f3</em:version>
     <em:name>Activity Stream</em:name>
     <em:description>A rich visual history feed and a reimagined home page make it easier than ever to find exactly what you're looking for in Firefox.</em:description>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>

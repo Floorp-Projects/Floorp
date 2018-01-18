@@ -3549,7 +3549,7 @@ BaselineCompiler::emit_JSOP_OPTIMIZE_SPREADCALL()
 
 typedef bool (*ImplicitThisFn)(JSContext*, HandleObject, HandlePropertyName,
                                MutableHandleValue);
-static const VMFunction ImplicitThisInfo =
+const VMFunction jit::ImplicitThisInfo =
     FunctionInfo<ImplicitThisFn>(ImplicitThisOperation, "ImplicitThisOperation");
 
 bool

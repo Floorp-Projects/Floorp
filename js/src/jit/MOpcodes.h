@@ -66,6 +66,7 @@ namespace jit {
     _(GetArgumentsObjectArg)                                                \
     _(SetArgumentsObjectArg)                                                \
     _(ComputeThis)                                                          \
+    _(ImplicitThis)                                                         \
     _(Call)                                                                 \
     _(ApplyArgs)                                                            \
     _(ApplyArray)                                                           \
