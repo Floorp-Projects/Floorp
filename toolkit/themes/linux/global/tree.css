@@ -174,21 +174,6 @@ treechildren::-moz-tree-drop-feedback {
   margin-inline-start: 5px;
 }
 
-/* ::::: tree progress meter ::::: */
-
-treechildren::-moz-tree-progressmeter {
-  margin: 2px 4px;
-  padding: 1px;
-  border: 1px solid;
-  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  background-color: -moz-Dialog;
-  color: ThreeDShadow;
-}
-
-treechildren::-moz-tree-cell-text(progressmeter) {
-  margin: 2px 4px;
-}
-
 /* ::::: tree columns ::::: */
 
 treecol,

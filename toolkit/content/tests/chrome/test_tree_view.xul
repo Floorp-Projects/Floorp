@@ -35,7 +35,6 @@ var view =
   isSorted: function(row) { return false; },
   isSelectable: function(row, column) { return true; },
   isEditable: function(row, column) { return row != 2 || column.index != 1; },
-  getProgressMode: function(row, column) { return Components.interfaces.nsITreeView.PROGRESS_NORMAL; },
   getParentIndex: function(row, column) { return -1; },
   getLevel: function(row) { return 0; },
   hasNextSibling: function(row, column) { return row != this.rowCount - 1; },
@@ -65,8 +64,7 @@ function getCustomTreeViewCellInfo()
                       properties: "",
                       editable: row != 2 || column.index != 1,
                       selectable: true,
-                      image: "",
-                      mode: Components.interfaces.nsITreeView.PROGRESS_NORMAL });
+                      image: "" });
     }
 
     obj.rows.push({ cells: cellInfo,

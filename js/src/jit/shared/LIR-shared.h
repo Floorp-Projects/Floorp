@@ -1855,6 +1855,24 @@ class LComputeThis : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
     }
 };
 
+class LImplicitThis : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(ImplicitThis)
+
+    explicit LImplicitThis(const LAllocation& env) {
+        setOperand(0, env);
+    }
+
+    const LAllocation* env() {
+        return getOperand(0);
+    }
+
+    MImplicitThis* mir() const {
+        return mir_->toImplicitThis();
+    }
+};
+
 // Writes a typed argument for a function call to the frame's argument vector.
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {
