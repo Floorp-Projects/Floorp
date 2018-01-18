@@ -31,9 +31,4 @@ add_task(async function () {
   await selectNodeAndWaitForAnimations(animatedNode, inspector);
   is(panel.querySelectorAll(".animation-list .animation-item").length, 1,
      "The number of animations displayed should be 1 for .animated element");
-
-  // TODO: We need to add following tests after implement since this test has same role
-  // of animationinspector/test/browser_animation_timeline_ui.js
-  // * name label in animation element existance.
-  // * summary graph in animation element existance.
 });
