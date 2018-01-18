@@ -1289,21 +1289,6 @@ IsTokenSane(Token* tp)
 }
 #endif
 
-template<class AnyCharsAccess>
-bool
-TokenStreamChars<char16_t, AnyCharsAccess>::matchTrailForLeadSurrogate(char16_t lead,
-                                                                       uint32_t* codePoint)
-{
-    int32_t maybeTrail = getCharIgnoreEOL();
-    if (!unicode::IsTrailSurrogate(maybeTrail)) {
-        ungetCharIgnoreEOL(maybeTrail);
-        return false;
-    }
-
-    *codePoint = unicode::UTF16Decode(lead, maybeTrail);
-    return true;
-}
-
 template<>
 MOZ_MUST_USE bool
 TokenStreamCharsBase<char16_t>::appendMultiUnitCodepointToTokenbuf(uint32_t codepoint)
@@ -1312,6 +1297,24 @@ TokenStreamCharsBase<char16_t>::appendMultiUnitCodepointToTokenbuf(uint32_t code
     unicode::UTF16Encode(codepoint, &lead, &trail);
 
     return tokenbuf.append(lead) && tokenbuf.append(trail);
+}
+
+template<class AnyCharsAccess>
+void
+TokenStreamChars<char16_t, AnyCharsAccess>::matchMultiUnitCodePointSlow(char16_t lead,
+                                                                        uint32_t* codePoint)
+{
+    MOZ_ASSERT(unicode::IsLeadSurrogate(lead),
+               "matchMultiUnitCodepoint should have ensured |lead| is a lead "
+               "surrogate");
+
+    int32_t maybeTrail = getCharIgnoreEOL();
+    if (MOZ_LIKELY(unicode::IsTrailSurrogate(maybeTrail))) {
+        *codePoint = unicode::UTF16Decode(lead, maybeTrail);
+    } else {
+        ungetCharIgnoreEOL(maybeTrail);
+        *codePoint = 0;
+    }
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -1331,7 +1334,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
         int32_t c = getCharIgnoreEOL();
 
         uint32_t codePoint;
-        if (isMultiUnitCodepoint(c, &codePoint)) {
+        if (!matchMultiUnitCodePoint(c, &codePoint))
+            return false;
+        if (codePoint) {
             if (!unicode::IsIdentifierPart(codePoint))
                 break;
 
@@ -1516,7 +1521,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
         }
 
         uint32_t codePoint = c;
-        if (isMultiUnitCodepoint(c, &codePoint) && unicode::IsUnicodeIDStart(codePoint)) {
+        if (!matchMultiUnitCodePoint(c, &codePoint))
+            goto error;
+        if (codePoint && unicode::IsUnicodeIDStart(codePoint)) {
             hadUnicodeEscape = false;
             goto identifier;
         }
@@ -1575,7 +1582,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 break;
 
             uint32_t codePoint;
-            if (isMultiUnitCodepoint(c, &codePoint)) {
+            if (!matchMultiUnitCodePoint(c, &codePoint))
+                goto error;
+            if (codePoint) {
                 if (!unicode::IsIdentifierPart(codePoint))
                     break;
 
@@ -1664,9 +1673,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
 
             uint32_t codePoint;
-            if (isMultiUnitCodepoint(c, &codePoint) &&
-                unicode::IsIdentifierStart(codePoint))
-            {
+            if (!matchMultiUnitCodePoint(c, &codePoint))
+                goto error;
+            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
                 reportError(JSMSG_IDSTART_AFTER_NUMBER);
                 goto error;
             }
@@ -1789,9 +1798,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             }
 
             uint32_t codePoint;
-            if (isMultiUnitCodepoint(c, &codePoint) &&
-                unicode::IsIdentifierStart(codePoint))
-            {
+            if (!matchMultiUnitCodePoint(c, &codePoint))
+                goto error;
+            if (codePoint && unicode::IsIdentifierStart(codePoint)) {
                 reportError(JSMSG_IDSTART_AFTER_NUMBER);
                 goto error;
             }
