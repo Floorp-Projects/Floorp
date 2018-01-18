@@ -8,14 +8,6 @@ config = {
     # code block and also make sure this is synced with
     # releng_base_linux_64_builds.py
 
-    # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
-    'default_actions': [
-        'clobber',
-        'checkout-sources',
-        'build',
-        'upload-files',
-        'update',  # decided by query_is_nightly()
-    ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
