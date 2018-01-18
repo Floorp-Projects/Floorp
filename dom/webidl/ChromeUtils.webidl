@@ -234,6 +234,33 @@ partial namespace ChromeUtils {
   [Throws]
   void idleDispatch(IdleRequestCallback callback,
                     optional IdleRequestOptions options);
+
+  /**
+   * Synchronously loads and evaluates the js file located at
+   * 'aResourceURI' with a new, fully privileged global object.
+   *
+   * If 'aTargetObj' is specified and null, this method just returns
+   * the module's global object. Otherwise (if 'aTargetObj' is not
+   * specified, or 'aTargetObj' is != null) looks for a property
+   * 'EXPORTED_SYMBOLS' on the new global object. 'EXPORTED_SYMBOLS'
+   * is expected to be an array of strings identifying properties on
+   * the global object.  These properties will be installed as
+   * properties on 'targetObj', or, if 'aTargetObj' is not specified,
+   * on the caller's global object. If 'EXPORTED_SYMBOLS' is not
+   * found, an error is thrown.
+   *
+   * @param aResourceURI A resource:// URI string to load the module from.
+   * @param aTargetObj the object to install the exported properties on or null.
+   * @returns the module code's global object.
+   *
+   * The implementation maintains a hash of aResourceURI->global obj.
+   * Subsequent invocations of import with 'aResourceURI' pointing to
+   * the same file will not cause the module to be re-evaluated, but
+   * the symbols in EXPORTED_SYMBOLS will be exported into the
+   * specified target object and the global object returned as above.
+   */
+  [Throws]
+  object import(DOMString aResourceURI, optional object? aTargetObj);
 };
 
 /**

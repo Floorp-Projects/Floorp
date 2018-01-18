@@ -1537,6 +1537,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
   event.mConsoleID = mConsoleID;
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
+  event.mPrefix = mPrefix;
 
   nsCOMPtr<nsIURI> filenameURI;
   nsAutoCString pass;
@@ -2602,8 +2603,8 @@ Console::MaybeExecuteDumpFunction(JSContext* aCx,
   message.Append(aMethodName);
   message.AppendLiteral(": ");
 
-  if (!mDumpPrefix.IsEmpty()) {
-    message.Append(mDumpPrefix);
+  if (!mPrefix.IsEmpty()) {
+    message.Append(mPrefix);
     message.AppendLiteral(": ");
   }
 
@@ -2640,8 +2641,8 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
   nsAutoString message;
   message.AssignLiteral("console.trace:\n");
 
-  if (!mDumpPrefix.IsEmpty()) {
-    message.Append(mDumpPrefix);
+  if (!mPrefix.IsEmpty()) {
+    message.Append(mPrefix);
     message.AppendLiteral(": ");
   }
 

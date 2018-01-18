@@ -1259,24 +1259,22 @@
   },
   "GPU_PROCESS_LAUNCH_TIME_MS_2" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com"],
-    "expires_in_version": "never",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "expires_in_version": "66",
     "bug_numbers": [1297790, 1317796],
     "kind": "exponential",
     "high": 64000,
     "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
     "description": "GPU process launch time in milliseconds"
   },
   "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["danderson@mozilla.com"],
-    "expires_in_version": "never",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
+    "expires_in_version": "66",
     "bug_numbers": [1324095],
     "kind": "exponential",
     "high": 64000,
     "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
     "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
   },
   "GPU_PROCESS_CRASH_FALLBACKS": {
@@ -12260,7 +12258,7 @@
   "D3D11_SYNC_HANDLE_FAILURE": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bschouten@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com","ashughes@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "66",
     "releaseChannelCollection": "opt-out",
     "kind": "count",
     "description": "Number of times the D3D11 compositor failed to get a texture sync handle."
@@ -12445,7 +12443,7 @@
   },
   "PLUGIN_DRAWING_MODEL": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "bug_numbers": [1229961],
@@ -12624,7 +12622,7 @@
   },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
     "bug_numbers": [1259695],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -13018,9 +13016,9 @@
   },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1309442],
-    "expires_in_version": "60",
+    "expires_in_version": "66",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
@@ -13028,9 +13026,9 @@
   },
   "CONTENT_LARGE_PAINT_PHASE_WEIGHT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["danderson@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1309442],
-    "expires_in_version": "60",
+    "expires_in_version": "66",
     "keyed": true,
     "kind": "linear",
     "high": 100,
@@ -13841,8 +13839,8 @@
   },
   "GFX_OMTP_PAINT_WAIT_TIME": {
     "record_in_processes": ["content"],
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com"],
-    "expires_in_version": "61",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","rhunt@mozilla.com"],
+    "expires_in_version": "66",
     "kind": "exponential",
     "high": 200,
     "n_buckets": 50,
