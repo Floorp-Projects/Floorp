@@ -47,7 +47,6 @@ var gPermissionManager = {
     isContainer(aIndex) { return false; },
     setTree(aTree) {},
     getImageSrc(aRow, aColumn) {},
-    getProgressMode(aRow, aColumn) {},
     getCellValue(aRow, aColumn) {},
     cycleHeader(column) {},
     getRowProperties(row) { return ""; },
