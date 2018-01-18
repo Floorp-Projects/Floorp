@@ -37,8 +37,8 @@ rustc.
 
 ## rustfmt
 
-Please install [`rustfmt`](https://github.com/rust-lang-nursery/rustfmt) and
-run `cargo fmt` before creating a pull request.
+The `rustfmt` version used for this code is 0.8.4. Please either use that
+version or avoid using `rustfmt` (so as not to reformat all the code).
 
 ## Unit tests
 

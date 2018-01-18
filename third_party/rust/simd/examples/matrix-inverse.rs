@@ -25,6 +25,7 @@ fn mul(x: &[f32x4; 4], y: &[f32x4; 4]) -> [f32x4; 4] {
      ]
 }
 
+#[allow(dead_code)]
 fn inverse_naive(x: &[[f32; 4]; 4]) -> [[f32; 4]; 4] {
     let mut t = [[0_f32; 4]; 4];
     for i in 0..4 {
