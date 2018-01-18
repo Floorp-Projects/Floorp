@@ -6,6 +6,7 @@ DevToolsModules(
     'ComputedTimingPath.js',
     'DelaySign.js',
     'EffectTimingPath.js',
+    'EndDelaySign.js',
     'SummaryGraph.js',
     'SummaryGraphPath.js',
     'TimingPath.js'

@@ -119,31 +119,42 @@
   opacity: 0.3;
 }
 
-.animation-delay-sign {
+.animation-delay-sign,
+.animation-end-delay-sign {
   background-color: var(--theme-graphs-grey);
   height: 3px;
   position: absolute;
   top: calc(100% - 1.5px);
 }
 
-.animation-delay-sign::before {
+.animation-delay-sign::before,
+.animation-end-delay-sign::before {
   background-color: inherit;
   border-radius: 50%;
   content: "";
   height: 6px;
-  left: -3px;
   position: absolute;
   top: -1.5px;
   width: 6px;
 }
 
-.animation-delay-sign.fill {
+.animation-delay-sign.fill,
+.animation-end-delay-sign.fill {
   background-color: var(--effect-timing-graph-color);
 }
 
 .animation-delay-sign.negative::before {
   left: unset;
   right: -3px;
+}
+
+.animation-end-delay-sign::before {
+  right: -3px;
+}
+
+.animation-end-delay-sign.negative::before {
+  left: -3px;
+  right: unset;
 }
 
 /* No Animation Panel */
