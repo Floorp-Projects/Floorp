@@ -66,14 +66,14 @@
       () => animation.currentTime > 100,
         () => {
           opener.ok(isRounded(animation.startTime),
-             "pref: " + opener.currentPref + " - animation.startTime with precision " + expectedPrecision + " is not rounded: " + animation.startTime);
+             "pref: " + opener.prefName + " - animation.startTime with precision " + expectedPrecision + " is not rounded: " + animation.startTime);
           opener.ok(isRounded(animation.currentTime),
-             "pref: " + opener.currentPref + " - animation.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.currentTime);
+             "pref: " + opener.prefName + " - animation.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.currentTime);
           opener.ok(isRounded(animation.timeline.currentTime),
-             "pref: " + opener.currentPref + " - animation.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.timeline.currentTime);
+             "pref: " + opener.prefName + " - animation.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.timeline.currentTime);
           if (document.timeline) {
             opener.ok(isRounded(document.timeline.currentTime),
-               "pref: " + opener.currentPref + " - document.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + document.timeline.currentTime);
+               "pref: " + opener.prefName + " - document.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + document.timeline.currentTime);
           }
           opener.done();
           window.close();

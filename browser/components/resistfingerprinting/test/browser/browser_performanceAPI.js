@@ -60,6 +60,24 @@ let isRounded = (x, expectedPrecision) => {
   return false;
 };
 
+let setupTest = async function(tab, resistFingerprinting, reduceTimerPrecision, expectedPrecision, runTests, workerCall) {
+  await SpecialPowers.pushPrefEnv({"set":
+    // Run one set of tests with both true to confirm p.rP overrides p.rTP
+    [["privacy.resistFingerprinting", resistFingerprinting],
+     ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+     ]
+  });
+  await ContentTask.spawn(tab.linkedBrowser, {
+      list: PERFORMANCE_TIMINGS,
+      precision: expectedPrecision,
+      isRoundedFunc: isRounded.toString(),
+      workerCall
+    },
+    runTests);
+};
+// ================================================================================================
+// ================================================================================================
 add_task(async function runRPTests() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, TEST_PATH + "file_dummy.html");
@@ -91,88 +109,15 @@ add_task(async function runRPTests() {
 
   };
 
-  let expectedPrecision = 100;
-  await SpecialPowers.pushPrefEnv({"set":
-    // Run one set of tests with both true to confirm p.rP overrides p.rTP
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-     ]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
-
-  expectedPrecision = 13;
-  await SpecialPowers.pushPrefEnv({"set":
-    // Run one set of tests with both true to confirm p.rP overrides p.rTP
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-     ]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
-
-  expectedPrecision = .13;
-  await SpecialPowers.pushPrefEnv({"set":
-    // Run one set of tests with both true to confirm p.rP overrides p.rTP
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-     ]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
+  await setupTest(tab, true, true, 100, runTests);
+  await setupTest(tab, true, false, 13, runTests);
+  await setupTest(tab, true, false, .13, runTests);
 
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function runRPTestsForWorker() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser, TEST_PATH + "file_dummy.html");
-
-  let runTest = async function(expectedPrecision) {
-    await new Promise(resolve => {
-      let worker = new content.Worker("file_workerPerformance.js");
-      worker.onmessage = function(e) {
-        if (e.data.type == "status") {
-          ok(e.data.status, e.data.msg);
-        } else if (e.data.type == "finish") {
-          resolve();
-        } else {
-          ok(false, "Unknown message type");
-          resolve();
-        }
-      };
-      worker.postMessage({type: "runRPTests", precision: expectedPrecision});
-    });
-  };
-
-  let expectedPrecision = 100;
-    // Run one set of tests with both true to confirm p.rP overrides p.rTP
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
-
-  expectedPrecision = 13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", false],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
-
-  expectedPrecision = .13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", true],
-     ["privacy.reduceTimerPrecision", false],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
-
-  await BrowserTestUtils.removeTab(tab);
-});
-
+// ================================================================================================
+// ================================================================================================
 add_task(async function runRTPTests() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser, TEST_PATH + "file_dummy.html");
@@ -212,41 +157,18 @@ add_task(async function runRTPTests() {
     content.performance.clearResourceTimings();
   };
 
-  let expectedPrecision = 100;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-    ]
-    });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
-
-  expectedPrecision = 13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-    ]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
-
-  expectedPrecision = .13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
-    ]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, { list: PERFORMANCE_TIMINGS, precision: expectedPrecision, isRoundedFunc: isRounded.toString() }, runTests);
+  await setupTest(tab, false, true, 100, runTests);
+  await setupTest(tab, false, true, 13, runTests);
+  await setupTest(tab, false, true, .13, runTests);
 
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function runRTPTestsForWorker() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser, TEST_PATH + "file_dummy.html");
-
-  let runTest = async function(expectedPrecision) {
+// ================================================================================================
+// ================================================================================================
+let runWorkerTest = async function(data) {
+  let expectedPrecision = data.precision;
+  let workerCall = data.workerCall;
     await new Promise(resolve => {
       let worker = new content.Worker("file_workerPerformance.js");
       worker.onmessage = function(e) {
@@ -259,32 +181,28 @@ add_task(async function runRTPTestsForWorker() {
           resolve();
         }
       };
-      worker.postMessage({type: "runRTPTests", precision: expectedPrecision});
+    worker.postMessage({type: workerCall, precision: expectedPrecision});
     });
   };
 
-  let expectedPrecision = 100;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
+add_task(async function runRPTestsForWorker() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser, TEST_PATH + "file_dummy.html");
 
-  expectedPrecision = 13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
-  });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
+  await setupTest(tab, true, true, 100, runWorkerTest, "runRPTests");
+  await setupTest(tab, true, false, 13, runWorkerTest, "runRPTests");
+  await setupTest(tab, true, false, .13, runWorkerTest, "runRPTests");
 
-  expectedPrecision = .13;
-  await SpecialPowers.pushPrefEnv({"set":
-    [["privacy.resistFingerprinting", false],
-     ["privacy.reduceTimerPrecision", true],
-     ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]]
+  await BrowserTestUtils.removeTab(tab);
   });
-  await ContentTask.spawn(tab.linkedBrowser, expectedPrecision, runTest);
+
+add_task(async function runRTPTestsForWorker() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser, TEST_PATH + "file_dummy.html");
+
+  await setupTest(tab, false, true, 100, runWorkerTest, "runRTPTests");
+  await setupTest(tab, false, true, 13, runWorkerTest, "runRTPTests");
+  await setupTest(tab, false, true, .13, runWorkerTest, "runRTPTests");
+
   await BrowserTestUtils.removeTab(tab);
 });
