@@ -39,7 +39,7 @@ class AnimationItem extends PureComponent {
 
     return dom.li(
       {
-        className: "animation-item"
+        className: `animation-item ${ animation.state.type }`
       },
       AnimationTarget(
         {
