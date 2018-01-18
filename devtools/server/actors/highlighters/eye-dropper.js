@@ -524,7 +524,7 @@ function toColorString(rgb, format) {
  */
 function hexString([r, g, b]) {
   let val = (1 << 24) + (r << 16) + (g << 8) + (b << 0);
-  return "#" + val.toString(16).substr(-6).toUpperCase();
+  return "#" + val.toString(16).substr(-6);
 }
 
 function cap(value, min, max) {
