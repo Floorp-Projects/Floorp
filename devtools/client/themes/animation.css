@@ -92,6 +92,21 @@
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
+.animation-summary-graph.compositor::after {
+  background-image: url("images/animation-fast-track.svg");
+  background-repeat: no-repeat;
+  content: "";
+  display: block;
+  fill: var(--theme-content-color3);
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 5px;
+  width: 15px;
+  z-index: 1;
+  -moz-context-properties: fill;
+}
+
 .animation-summary-graph-path {
   height: 100%;
   width: 100%;

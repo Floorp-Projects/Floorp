@@ -129,7 +129,8 @@ class SummaryGraph extends PureComponent {
 
     return dom.div(
       {
-        className: "animation-summary-graph",
+        className: "animation-summary-graph" +
+                   (animation.state.isRunningOnCompositor ? " compositor" : ""),
         title: this.getTitleText(animation.state),
       },
       SummaryGraphPath(
