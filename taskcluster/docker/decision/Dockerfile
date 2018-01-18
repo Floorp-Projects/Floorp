@@ -12,6 +12,9 @@ ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /tmp/tooltool.py
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
+# %include taskcluster/docker/recipes/hgrc
+COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
+
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /tmp/install-mercurial.sh
 
