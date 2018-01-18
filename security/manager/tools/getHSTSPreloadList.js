@@ -17,6 +17,9 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
+var gSSService = Cc["@mozilla.org/ssservice;1"]
+                   .getService(Ci.nsISiteSecurityService);
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -45,7 +48,7 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 const GPERF_DELIM = "%%\n";
 
 function download() {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
   req.open("GET", SOURCE, false); // doing the request synchronously
   try {
@@ -59,7 +62,7 @@ function download() {
                     req.status);
   }
 
-  var resultDecoded;
+  let resultDecoded;
   try {
     resultDecoded = atob(req.responseText);
   } catch (e) {
@@ -68,8 +71,8 @@ function download() {
   }
 
   // we have to filter out '//' comments, while not mangling the json
-  var result = resultDecoded.replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
-  var data = null;
+  let result = resultDecoded.replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
+  let data = null;
   try {
     data = JSON.parse(result);
   } catch (e) {
@@ -79,7 +82,7 @@ function download() {
 }
 
 function getHosts(rawdata) {
-  var hosts = [];
+  let hosts = [];
 
   if (!rawdata || !rawdata.entries) {
     throw new Error("ERROR: source data not formatted correctly: 'entries' " +
@@ -105,17 +108,14 @@ function getHosts(rawdata) {
   return hosts;
 }
 
-var gSSService = Cc["@mozilla.org/ssservice;1"]
-                   .getService(Ci.nsISiteSecurityService);
-
 function processStsHeader(host, header, status, securityInfo) {
-  var maxAge = { value: 0 };
-  var includeSubdomains = { value: false };
-  var error = ERROR_NONE;
+  let maxAge = { value: 0 };
+  let includeSubdomains = { value: false };
+  let error = ERROR_NONE;
   if (header != null && securityInfo != null) {
     try {
-      var uri = Services.io.newURI("https://" + host.name);
-      var sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+      let uri = Services.io.newURI("https://" + host.name);
+      let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                                   .SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                                uri, header, sslStatus, 0,
@@ -171,10 +171,10 @@ RedirectAndAuthStopper.prototype = {
 };
 
 function getHSTSStatus(host, resultList) {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
-  var inResultList = false;
-  var uri = "https://" + host.name + "/";
+  let inResultList = false;
+  let uri = "https://" + host.name + "/";
   req.open("GET", uri, true);
   req.setRequestHeader("X-Automated-Tool",
                        "https://hg.mozilla.org/mozilla-central/file/tip/security/manager/tools/getHSTSPreloadList.js");
@@ -227,11 +227,11 @@ function writeTo(string, fos) {
 // preload list should no longer be used.
 // This is the current time plus MINIMUM_REQUIRED_MAX_AGE.
 function getExpirationTimeString() {
-  var now = new Date();
-  var nowMillis = now.getTime();
+  let now = new Date();
+  let nowMillis = now.getTime();
   // MINIMUM_REQUIRED_MAX_AGE is in seconds, so convert to milliseconds
-  var expirationMillis = nowMillis + (MINIMUM_REQUIRED_MAX_AGE * 1000);
-  var expirationMicros = expirationMillis * 1000;
+  let expirationMillis = nowMillis + (MINIMUM_REQUIRED_MAX_AGE * 1000);
+  let expirationMicros = expirationMillis * 1000;
   return "const PRTime gPreloadListExpirationTime = INT64_C(" + expirationMicros + ");\n";
 }
 
@@ -243,10 +243,10 @@ function errorToString(status) {
 
 function output(sortedStatuses, currentList) {
   try {
-    var file = FileUtils.getFile("CurWorkD", [OUTPUT]);
-    var errorFile = FileUtils.getFile("CurWorkD", [ERROR_OUTPUT]);
-    var fos = FileUtils.openSafeFileOutputStream(file);
-    var eos = FileUtils.openSafeFileOutputStream(errorFile);
+    let file = FileUtils.getFile("CurWorkD", [OUTPUT]);
+    let errorFile = FileUtils.getFile("CurWorkD", [ERROR_OUTPUT]);
+    let fos = FileUtils.openSafeFileOutputStream(file);
+    let eos = FileUtils.openSafeFileOutputStream(errorFile);
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
 
