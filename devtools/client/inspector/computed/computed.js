@@ -20,6 +20,7 @@ const {
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
+  VIEW_NODE_FONT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
@@ -374,6 +375,23 @@ CssComputedView.prototype = {
         value: node.textContent
       };
     }
+    if (classes.contains("computed-font-family")) {
+      if (propertyView) {
+        value = {
+          property: parent.querySelector(
+            ".computed-property-name").firstChild.textContent,
+          value: node.parentNode.textContent
+        };
+      } else if (propertyContent) {
+        let view = propertyContent.previousSibling;
+        value = {
+          property: view.querySelector(".computed-property-name").firstChild.textContent,
+          value: node.parentNode.textContent
+        };
+      } else {
+        return null;
+      }
+    }
 
     // Get the type
     if (classes.contains("computed-property-name")) {
@@ -381,6 +399,8 @@ CssComputedView.prototype = {
     } else if (classes.contains("computed-property-value") ||
                classes.contains("computed-other-property-value")) {
       type = VIEW_NODE_VALUE_TYPE;
+    } else if (classes.contains("computed-font-family")) {
+      type = VIEW_NODE_FONT_TYPE;
     } else if (isHref) {
       type = VIEW_NODE_IMAGE_URL_TYPE;
       value.url = node.href;
@@ -1060,7 +1080,8 @@ PropertyView.prototype = {
       {
         colorSwatchClass: "computed-colorswatch",
         colorClass: "computed-color",
-        urlClass: "theme-link"
+        urlClass: "theme-link",
+        fontFamilyClass: "computed-font-family",
         // No need to use baseURI here as computed URIs are never relative.
       });
     this.valueNode.innerHTML = "";
@@ -1334,6 +1355,7 @@ SelectorView.prototype = {
         colorSwatchClass: "computed-colorswatch",
         colorClass: "computed-color",
         urlClass: "theme-link",
+        fontFamilyClass: "computed-font-family",
         baseURI: this.selectorInfo.rule.href
       }
     );

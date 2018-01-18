@@ -678,7 +678,8 @@ TextPropertyEditor.prototype = {
       computed.name, computed.value, {
         colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
         urlClass: "theme-link",
-        baseURI: this.sheetHref
+        baseURI: this.sheetHref,
+        fontFamilyClass: "ruleview-font-family"
       }
     );
 
