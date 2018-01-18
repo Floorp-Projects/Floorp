@@ -125,7 +125,6 @@ CSS_ANON_BOX(mozTreeTwisty, ":-moz-tree-twisty")
 CSS_ANON_BOX(mozTreeImage, ":-moz-tree-image")
 CSS_ANON_BOX(mozTreeCellText, ":-moz-tree-cell-text")
 CSS_ANON_BOX(mozTreeCheckbox, ":-moz-tree-checkbox")
-CSS_ANON_BOX(mozTreeProgressmeter, ":-moz-tree-progressmeter")
 CSS_ANON_BOX(mozTreeDropFeedback, ":-moz-tree-drop-feedback")
 #endif
 
