@@ -14,7 +14,6 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRFPService.h"
 
 class nsIGlobalObject;
 class nsStyleContext;
@@ -44,7 +43,7 @@ struct AnimationEventInfo {
   AnimationEventInfo(const NonOwningAnimationTarget& aTarget,
                      EventMessage aMessage,
                      nsAtom* aAnimationName,
-                     const StickyTimeDuration& aElapsedTime,
+                     double aElapsedTime,
                      const TimeStamp& aTimeStamp,
                      dom::Animation* aAnimation)
     : mElement(aTarget.mElement)
@@ -54,8 +53,7 @@ struct AnimationEventInfo {
   {
     // XXX Looks like nobody initialize WidgetEvent::time
     aAnimationName->ToString(mEvent.mAnimationName);
-    mEvent.mElapsedTime =
-      nsRFPService::ReduceTimePrecisionAsSecs(aElapsedTime.ToSeconds());
+    mEvent.mElapsedTime = aElapsedTime;
     mEvent.mPseudoElement =
       AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(
         aTarget.mPseudoType);
@@ -152,7 +150,7 @@ public:
   }
 
   void Tick() override;
-  void QueueEvents(StickyTimeDuration aActiveTime = StickyTimeDuration());
+  void QueueEvents(const StickyTimeDuration& aActiveTime = StickyTimeDuration());
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
@@ -181,7 +179,7 @@ public:
   // reflect changes to that markup.
   bool IsTiedToMarkup() const { return mOwningElement.IsSet(); }
 
-  void MaybeQueueCancelEvent(StickyTimeDuration aActiveTime) override {
+  void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) override {
     QueueEvents(aActiveTime);
   }
 

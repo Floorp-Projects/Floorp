@@ -8,6 +8,9 @@ CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
 SPHINX_TREES['browser'] = 'docs'
 
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 DIRS += [
     'base',
     'components',

@@ -7,7 +7,7 @@ Test custom commit messages with fuzzy selector
   Commit message:
   Foobar
   
-  Fuzzy with query: foo
+  Fuzzy query=foo
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -20,7 +20,7 @@ Test custom commit messages with fuzzy selector
   
   $ ./mach try fuzzy $testargs -q foo -m "Foobar: {msg}"
   Commit message:
-  Foobar: Fuzzy with query: foo
+  Foobar: Fuzzy query=foo
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:

@@ -959,7 +959,7 @@ PresShell::Init(nsIDocument* aDocument,
   // calling Init, since various subroutines need to find the style set off
   // the PresContext during initialization.
   mStyleSet = aStyleSet;
-  mStyleSet->Init(aPresContext, mDocument->BindingManager());
+  mStyleSet->Init(aPresContext);
 
   // Notify our prescontext that it now has a compatibility mode.  Note that
   // this MUST happen after we set up our style set but before we create any
@@ -1954,13 +1954,11 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
 
   WritingMode wm = rootFrame->GetWritingMode();
   const bool shrinkToFit = aOptions == ResizeReflowOptions::eBSizeLimit;
-  NS_PRECONDITION(shrinkToFit ||
-                  (wm.IsVertical() ? aWidth : aHeight) !=
-                    NS_UNCONSTRAINEDSIZE,
-                  "unconstrained bsize only usable with eBSizeLimit");
-  NS_PRECONDITION((wm.IsVertical() ? aHeight : aWidth) !=
-                    NS_UNCONSTRAINEDSIZE,
-                  "unconstrained isize not allowed");
+  MOZ_ASSERT(shrinkToFit ||
+             (wm.IsVertical() ? aWidth : aHeight) != NS_UNCONSTRAINEDSIZE,
+             "unconstrained bsize only usable with eBSizeLimit");
+  MOZ_ASSERT((wm.IsVertical() ? aHeight : aWidth) != NS_UNCONSTRAINEDSIZE,
+             "unconstrained isize not allowed");
   bool isBSizeChanging = wm.IsVertical() ? aOldWidth != aWidth
                                          : aOldHeight != aHeight;
   nscoord targetWidth = aWidth;
@@ -1975,20 +1973,36 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     isBSizeChanging = true;
   }
 
-  mPresContext->SetVisibleArea(nsRect(0, 0, targetWidth, targetHeight));
+  const bool suppressingResizeReflow =
+    GetPresContext()->SuppressingResizeReflow();
 
   RefPtr<nsViewManager> viewManager = mViewManager;
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
 
-  if (!GetPresContext()->SuppressingResizeReflow()) {
-    // Have to make sure that the content notifications are flushed before we
-    // start messing with the frame model; otherwise we can get content doubling.
-    mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
+  if (!suppressingResizeReflow && shrinkToFit) {
+    // Make sure that style is flushed before setting the pres context
+    // VisibleArea if we're shrinking to fit.
+    //
+    // Otherwise we may end up with bogus viewport units resolved against the
+    // unconstrained bsize, or restyling the whole document resolving viewport
+    // units against targetWidth, which may end up doing wasteful work.
+    mDocument->FlushPendingNotifications(FlushType::Frames);
+  }
 
-    // Make sure style is up to date
-    {
-      nsAutoScriptBlocker scriptBlocker;
-      mPresContext->RestyleManager()->ProcessPendingRestyles();
+  if (!mIsDestroying) {
+    mPresContext->SetVisibleArea(nsRect(0, 0, targetWidth, targetHeight));
+  }
+
+  if (!mIsDestroying && !suppressingResizeReflow) {
+    if (!shrinkToFit) {
+      // Flush styles _now_ (with the correct visible area) if not computing the
+      // shrink-to-fit size.
+      //
+      // We've asserted above that sizes are not unconstrained, so this is going
+      // to be the final size, which means that we'll get the (correct) final
+      // styles now, and avoid a further potentially-wasteful full recascade on
+      // the next flush.
+      mDocument->FlushPendingNotifications(FlushType::Frames);
     }
 
     rootFrame = mFrameConstructor->GetRootFrame();

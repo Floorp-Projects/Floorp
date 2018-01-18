@@ -2215,6 +2215,16 @@ public:
     mIsBeingUsedAsImage = true;
   }
 
+  bool IsSVGGlyphsDocument() const
+  {
+    return mIsSVGGlyphsDocument;
+  }
+
+  void SetIsSVGGlyphsDocument()
+  {
+    mIsSVGGlyphsDocument = true;
+  }
+
   bool IsResourceDoc() const {
     return IsBeingUsedAsImage() || // Are we a helper-doc for an SVG image?
       mHasDisplayDocument;         // Are we an external resource doc?
@@ -3541,6 +3551,9 @@ protected:
   // True if dom.webcomponents.shadowdom.enabled pref is set when document is
   // created.
   bool mIsShadowDOMEnabled : 1;
+
+  // True if this document is for an SVG-in-OpenType font.
+  bool mIsSVGGlyphsDocument : 1;
 
   // Whether <style scoped> support is enabled in this document.
   enum { eScopedStyle_Unknown, eScopedStyle_Disabled, eScopedStyle_Enabled };

@@ -157,11 +157,8 @@ gfxSVGGlyphsDocument::SetupPresentation()
     nsCOMPtr<nsIPresShell> presShell;
     rv = viewer->GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsPresContext* presContext = presShell->GetPresContext();
-    presContext->SetIsGlyph(true);
-
     if (!presShell->DidInitialize()) {
-        nsRect rect = presContext->GetVisibleArea();
+        nsRect rect = presShell->GetPresContext()->GetVisibleArea();
         rv = presShell->Initialize(rect.Width(), rect.Height());
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -395,6 +392,7 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
 
     // Set this early because various decisions during page-load depend on it.
     document->SetIsBeingUsedAsImage();
+    document->SetIsSVGGlyphsDocument();
     document->SetReadyStateInternal(nsIDocument::READYSTATE_UNINITIALIZED);
 
     nsCOMPtr<nsIStreamListener> listener;

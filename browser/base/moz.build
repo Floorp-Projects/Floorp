@@ -9,6 +9,9 @@ with Files("**"):
 
 SPHINX_TREES['sslerrorreport'] = 'content/docs/sslerrorreport'
 
+with Files('content/docs/sslerrorreport/**'):
+    SCHEDULES.exclusive = ['docs']
+
 MOCHITEST_MANIFESTS += [
     'content/test/general/mochitest.ini',
 ]

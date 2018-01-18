@@ -201,7 +201,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../workers',
-    '/', # Allow including relpaths from root.
     '/dom/base',
     '/dom/html',
     '/dom/svg',

@@ -8599,6 +8599,14 @@
     "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
     "bug_numbers": [1360438]
   },
+  "MEDIA_MKV_CANPLAY_REQUESTED": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["ayang@mozilla.com"],
+    "expires_in_version": "65",
+    "kind": "boolean",
+    "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
+    "bug_numbers": [1429986]
+  },
   "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
@@ -9452,7 +9460,7 @@
     "record_in_processes": ["main"],
     "bug_numbers": [1378863],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "apoirot@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine"],
     "releaseChannelCollection": "opt-out",

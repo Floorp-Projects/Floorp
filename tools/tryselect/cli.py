@@ -58,6 +58,19 @@ COMMON_ARGUMENT_GROUPS = {
           'help': 'Edit the preset file.',
           }],
     ],
+    'task': [
+        [['--full'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Use the full set of tasks as input to fzf (instead of "
+                  "target tasks).",
+          }],
+        [['-p', '--parameters'],
+         {'default': None,
+          'help': "Use the given parameters.yml to generate tasks, "
+                  "defaults to latest parameters.yml from mozilla-central",
+          }],
+    ],
 }
 
 
@@ -104,9 +117,9 @@ class BaseTryParser(ArgumentParser):
 
         if self.templates:
             args.templates = {}
-            for name, cls in self.templates.iteritems():
+            for cls in self.templates.itervalues():
                 context = cls.context(**vars(args))
                 if context is not None:
-                    args.templates[name] = context
+                    args.templates.update(context)
 
         return args, remainder
