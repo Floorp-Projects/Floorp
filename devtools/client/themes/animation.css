@@ -7,6 +7,7 @@
 :root {
   --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --graph-right-offset: 10px;
   --sidebar-width: 200px;
 }
 
@@ -27,9 +28,9 @@
 
 /* Animation Timeline Tick List */
 .animation-timeline-tick-list {
-  margin-right: 10px;
+  margin-right: var(--graph-right-offset);
   position: relative;
-  width: calc(100% - var(--sidebar-width) - 10px);
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .animation-timeline-tick-item {
@@ -47,6 +48,7 @@
 
 /* Animation Item */
 .animation-item {
+  display: flex;
   height: 30px;
 }
 
@@ -65,6 +67,17 @@
 
 .animation-target .tag-name {
   cursor: default;
+}
+
+/* Summary Graph */
+.animation-summary-graph {
+  height: 100%;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.animation-summary-graph-path {
+  height: 100%;
+  width: 100%;
 }
 
 /* No Animation Panel */

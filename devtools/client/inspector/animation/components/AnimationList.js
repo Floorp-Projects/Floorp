@@ -19,6 +19,7 @@ class AnimationList extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -30,6 +31,7 @@ class AnimationList extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
+      timeScale,
     } = this.props;
 
     return dom.ul(
@@ -45,6 +47,7 @@ class AnimationList extends PureComponent {
             onHideBoxModelHighlighter,
             onShowBoxModelHighlighterForNode,
             setSelectedNode,
+            timeScale,
           }
         )
       )

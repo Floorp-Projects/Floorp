@@ -9,6 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimationTarget = createFactory(require("./AnimationTarget"));
+const SummaryGraph = createFactory(require("./graph/SummaryGraph"));
 
 class AnimationItem extends PureComponent {
   static get propTypes() {
@@ -19,6 +20,7 @@ class AnimationItem extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -30,6 +32,7 @@ class AnimationItem extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       setSelectedNode,
+      timeScale,
     } = this.props;
 
     return dom.li(
@@ -44,6 +47,12 @@ class AnimationItem extends PureComponent {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           setSelectedNode,
+        }
+      ),
+      SummaryGraph(
+        {
+          animation,
+          timeScale,
         }
       )
     );
