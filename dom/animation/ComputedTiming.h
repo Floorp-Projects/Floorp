@@ -11,10 +11,6 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/ComputedTimingFunction.h"
 
-// X11 has a #define for None
-#ifdef None
-#undef None
-#endif
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // FillMode
 
 namespace mozilla {
