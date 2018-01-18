@@ -105,7 +105,13 @@ namespace mozilla {
 namespace safebrowsing {
 
 const uint32_t STORE_MAGIC = 0x1231af3b;
+#ifdef ANDROID
+// Temporarily increase the version number for 58, so we don't reuse any
+// potentially-bad v2 databases from 57 that can cause bug 1420641.
+const uint32_t CURRENT_VERSION = 4;
+#else
 const uint32_t CURRENT_VERSION = 3;
+#endif
 
 nsresult
 TableUpdateV2::NewAddPrefix(uint32_t aAddChunk, const Prefix& aHash)
