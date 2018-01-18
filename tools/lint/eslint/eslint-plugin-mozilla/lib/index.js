@@ -57,6 +57,7 @@ module.exports = {
     "reject-importGlobalProperties":
       require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
+    "use-chromeutils-import": require("../lib/rules/use-chromeutils-import"),
     "use-default-preference-values":
       require("../lib/rules/use-default-preference-values"),
     "use-ownerGlobal": require("../lib/rules/use-ownerGlobal"),
@@ -83,6 +84,7 @@ module.exports = {
     "no-useless-removeEventListener": "off",
     "reject-importGlobalProperties": "off",
     "reject-some-requires": "off",
+    "use-chromeutils-import": "off",
     "use-default-preference-values": "off",
     "use-ownerGlobal": "off",
     "use-services": "off",
