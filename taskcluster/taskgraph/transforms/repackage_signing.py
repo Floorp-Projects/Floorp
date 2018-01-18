@@ -50,7 +50,7 @@ def make_repackage_signing_description(config, jobs):
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'tc-rs(N)')
+        treeherder.setdefault('symbol', 'rs(N)')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
@@ -79,7 +79,7 @@ def make_repackage_signing_description(config, jobs):
 
         locale_str = ""
         if dep_job.attributes.get('locale'):
-            treeherder['symbol'] = 'tc-rs({})'.format(dep_job.attributes.get('locale'))
+            treeherder['symbol'] = 'rs({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')
             locale_str = "{}/".format(dep_job.attributes.get('locale'))
 

@@ -12,11 +12,11 @@
 #include "nsCSSProps.h"
 
 class nsAtom;
-class nsPresContext;
+class nsIDocument;
 class nsCSSValue;
 
 struct nsMediaFeature;
-typedef void (*nsMediaFeatureValueGetter)(nsPresContext* aPresContext,
+typedef void (*nsMediaFeatureValueGetter)(nsIDocument* aDocument,
                                           const nsMediaFeature* aFeature,
                                           nsCSSValue& aResult);
 

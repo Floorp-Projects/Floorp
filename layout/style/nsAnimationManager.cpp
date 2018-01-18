@@ -29,6 +29,7 @@
 #include "nsDOMMutationObserver.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
+#include "nsRFPService.h"
 #include <algorithm> // std::stable_sort
 #include <math.h>
 
@@ -164,7 +165,7 @@ CSSAnimation::HasLowerCompositeOrderThan(const CSSAnimation& aOther) const
 }
 
 void
-CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
+CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
 {
   // If the animation is pending, we ignore animation events until we finish
   // pending.
@@ -193,7 +194,7 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
     return;
   }
 
-  const StickyTimeDuration zeroDuration;
+  static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
   uint64_t currentIteration = 0;
   ComputedTiming::AnimationPhase currentPhase;
   StickyTimeDuration intervalStartTime;
@@ -235,12 +236,16 @@ CSSAnimation::QueueEvents(StickyTimeDuration aActiveTime)
   AutoTArray<AnimationEventInfo, 2> events;
 
   auto appendAnimationEvent = [&](EventMessage aMessage,
-                                  StickyTimeDuration aElapsedTime,
-                                  TimeStamp aTimeStamp) {
+                                  const StickyTimeDuration& aElapsedTime,
+                                  const TimeStamp& aTimeStamp) {
+    double elapsedTime = aElapsedTime.ToSeconds();
+    if (aMessage == eAnimationCancel) {
+      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
+    }
     events.AppendElement(AnimationEventInfo(mOwningElement.Target(),
                                             aMessage,
                                             mAnimationName,
-                                            aElapsedTime,
+                                            elapsedTime,
                                             aTimeStamp,
                                             this));
   };

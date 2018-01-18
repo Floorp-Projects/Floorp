@@ -92,4 +92,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 
 SPHINX_TREES['webextensions'] = 'docs'
 
+with Files('docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 include('/ipc/chromium/chromium-config.mozbuild')

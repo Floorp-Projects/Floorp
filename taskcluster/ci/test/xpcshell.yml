@@ -31,7 +31,7 @@ xpcshell:
         by-test-platform:
             linux64-jsdcov/opt: xpcshell/xpcshell-coverage
             default: xpcshell
-    treeherder-symbol: tc-X(X)
+    treeherder-symbol: X(X)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']

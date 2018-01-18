@@ -107,15 +107,18 @@ TEST_FLAVORS = {
     'a11y': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'a11y', 'test_paths': []},
+        'task_regex': 'mochitest-a11y(?:-1)?$',
     },
     'browser-chrome': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
+        'task_regex': 'mochitest-browser-chrome(?:-e10s)?(?:-1)?$',
     },
     'crashtest': {},
     'chrome': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'chrome', 'test_paths': []},
+        'task_regex': 'mochitest-chrome(?:-e10s)?(?:-1)?$',
     },
     'firefox-ui-functional': {
         'mach_command': 'firefox-ui-functional',
@@ -132,6 +135,7 @@ TEST_FLAVORS = {
     'mochitest': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'mochitest', 'test_paths': []},
+        'task_regex': 'mochitest(?:-e10s)?(?:-1)?$',
     },
     'python': {
         'mach_command': 'python-test',
@@ -140,15 +144,18 @@ TEST_FLAVORS = {
     'reftest': {
         'mach_command': 'reftest',
         'kwargs': {'tests': []},
+        'task_regex': '(opt|debug)-reftest(?:-no-accel|-gpu|-stylo)?(?:-e10s)?(?:-1)?$',
     },
     'steeplechase': {},
     'web-platform-tests': {
         'mach_command': 'web-platform-tests',
         'kwargs': {'include': []},
+        'task_regex': 'web-platform-tests(?:-reftests|-wdspec)?(?:-e10s)?(?:-1)?$',
     },
     'xpcshell': {
         'mach_command': 'xpcshell-test',
         'kwargs': {'test_paths': []},
+        'task_regex': 'xpcshell(?:-1)?$',
     },
 }
 
