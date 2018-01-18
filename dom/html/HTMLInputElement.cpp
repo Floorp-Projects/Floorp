@@ -6600,7 +6600,7 @@ HTMLInputElement::IntrinsicState() const
 
   if (PlaceholderApplies() &&
       HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      ShouldShowPlaceholder()) {
+      IsValueEmpty()) {
     state |= NS_EVENT_STATE_PLACEHOLDERSHOWN;
   }
 
@@ -6609,24 +6609,6 @@ HTMLInputElement::IntrinsicState() const
   }
 
   return state;
-}
-
-bool
-HTMLInputElement::ShouldShowPlaceholder() const
-{
-  MOZ_ASSERT(PlaceholderApplies());
-
-  if (IsValueEmpty()) {
-    return true;
-  }
-
-  // For number controls, even though the (sanitized) value is empty, there may
-  // be text in the anon text control.
-  if (nsNumberControlFrame* frame = do_QueryFrame(GetPrimaryFrame())) {
-    return frame->AnonTextControlIsEmpty();
-  }
-
-  return false;
 }
 
 void
@@ -7044,7 +7026,7 @@ HTMLInputElement::PlaceholderApplies() const
     return false;
   }
 
-  return IsSingleLineTextOrNumberControl(false);
+  return IsSingleLineTextControl(false);
 }
 
 bool
