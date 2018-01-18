@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.release_balrog_publishing:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 

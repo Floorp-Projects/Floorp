@@ -195,6 +195,7 @@ def get_decision_parameters(options):
     parameters['build_number'] = 1
     parameters['next_version'] = None
     parameters['desktop_release_type'] = ''
+    parameters['release_eta'] = ''
 
     # owner must be an email, but sometimes (e.g., for ffxbld) it is not, in which
     # case, fake it
