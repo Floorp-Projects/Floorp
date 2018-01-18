@@ -177,16 +177,6 @@ public:
     Serialize(aRetval);
   }
 
-  typedef URLParams::ForEachIterator ForEachIterator;
-
-  bool
-  ForEach(ForEachIterator& aIterator) const
-  {
-    return mParams->ForEach(aIterator);
-
-    return true;
-  }
-
   bool
   ReadStructuredClone(JSStructuredCloneReader* aReader);
 
