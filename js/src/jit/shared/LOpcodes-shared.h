@@ -105,6 +105,7 @@
     _(SetArgumentsObjectArg)        \
     _(ReturnFromCtor)               \
     _(ComputeThis)                  \
+    _(ImplicitThis)                 \
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \

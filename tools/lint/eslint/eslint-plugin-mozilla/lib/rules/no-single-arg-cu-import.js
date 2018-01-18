@@ -23,8 +23,9 @@ module.exports = function(context) {
       if (node.callee.type === "MemberExpression") {
         let memexp = node.callee;
         if (memexp.object.type === "Identifier" &&
-            // Only Cu, not Components.utils; see bug 1230369.
-            memexp.object.name === "Cu" &&
+            // Only Cu and ChromeUtils, not Components.utils; see bug 1230369.
+            (memexp.object.name === "Cu" ||
+             memexp.object.name === "ChromeUtils") &&
             memexp.property.type === "Identifier" &&
             memexp.property.name === "import" &&
             node.arguments.length === 1) {

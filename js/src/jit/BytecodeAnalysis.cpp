@@ -174,12 +174,14 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
           case JSOP_DEFVAR:
           case JSOP_PUSHLEXICALENV:
           case JSOP_POPLEXICALENV:
+          case JSOP_IMPLICITTHIS:
             usesEnvironmentChain_ = true;
             break;
 
           case JSOP_GETGNAME:
           case JSOP_SETGNAME:
           case JSOP_STRICTSETGNAME:
+          case JSOP_GIMPLICITTHIS:
             if (script_->hasNonSyntacticScope())
                 usesEnvironmentChain_ = true;
             break;
