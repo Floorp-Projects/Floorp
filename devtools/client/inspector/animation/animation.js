@@ -22,6 +22,7 @@ class AnimationInspector {
     this.inspector = inspector;
     this.win = win;
 
+    this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
@@ -49,6 +50,7 @@ class AnimationInspector {
 
     const {
       emit: emitEventForTest,
+      getAnimatedPropertyMap,
       getNodeFromActor,
       simulateAnimation,
       toggleElementPicker,
@@ -66,6 +68,7 @@ class AnimationInspector {
       App(
         {
           emitEventForTest,
+          getAnimatedPropertyMap,
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
@@ -215,15 +218,6 @@ class AnimationInspector {
       : [];
 
     if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
-      await Promise.all(animations.map(animation => {
-        return new Promise(resolve => {
-          this.getAnimatedPropertyMap(animation).then(animatedPropertyMap => {
-            animation.animatedPropertyMap = animatedPropertyMap;
-            resolve();
-          });
-        });
-      }));
-
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
     }
