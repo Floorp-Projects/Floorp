@@ -88,6 +88,7 @@
 .animation-summary-graph {
   height: 100%;
   padding-top: 5px;
+  position: relative;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
@@ -116,6 +117,33 @@
 
 .animation-effect-timing-path path.infinity:nth-child(n+2) {
   opacity: 0.3;
+}
+
+.animation-delay-sign {
+  background-color: var(--theme-graphs-grey);
+  height: 3px;
+  position: absolute;
+  top: calc(100% - 1.5px);
+}
+
+.animation-delay-sign::before {
+  background-color: inherit;
+  border-radius: 50%;
+  content: "";
+  height: 6px;
+  left: -3px;
+  position: absolute;
+  top: -1.5px;
+  width: 6px;
+}
+
+.animation-delay-sign.fill {
+  background-color: var(--effect-timing-graph-color);
+}
+
+.animation-delay-sign.negative::before {
+  left: unset;
+  right: -3px;
 }
 
 /* No Animation Panel */
