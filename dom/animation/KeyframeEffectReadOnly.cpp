@@ -1470,7 +1470,7 @@ KeyframeEffectReadOnly::CanThrottle() const
     // If this is a transform animation that affects the overflow region,
     // we should unthrottle the animation periodically.
     if (record.mProperty == eCSSProperty_transform &&
-        !CanThrottleTransformChanges(*frame)) {
+        !CanThrottleTransformChangesForCompositor(*frame)) {
       return false;
     }
   }
@@ -1485,16 +1485,8 @@ KeyframeEffectReadOnly::CanThrottle() const
 }
 
 bool
-KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
+KeyframeEffectReadOnly::CanThrottleTransformChanges(const nsIFrame& aFrame) const
 {
-  // If we know that the animation cannot cause overflow,
-  // we can just disable flushes for this animation.
-
-  // If we don't show scrollbars, we don't care about overflow.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
-    return true;
-  }
-
   TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
   EffectSet* effectSet = EffectSet::GetEffectSet(mTarget->mElement,
@@ -1505,8 +1497,22 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
                          " on an effect with a parent animation");
   TimeStamp lastSyncTime = effectSet->LastTransformSyncTime();
   // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!lastSyncTime.IsNull() &&
-      (now - lastSyncTime) < OverflowRegionRefreshInterval()) {
+  return (!lastSyncTime.IsNull() &&
+    (now - lastSyncTime) < OverflowRegionRefreshInterval());
+}
+
+bool
+KeyframeEffectReadOnly::CanThrottleTransformChangesForCompositor(nsIFrame& aFrame) const
+{
+  // If we know that the animation cannot cause overflow,
+  // we can just disable flushes for this animation.
+
+  // If we don't show scrollbars, we don't care about overflow.
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
+    return true;
+  }
+
+  if (CanThrottleTransformChanges(aFrame)) {
     return true;
   }
 

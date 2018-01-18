@@ -8,8 +8,10 @@ job-defaults:
         config:
             by-test-platform:
                 android-4.2-x86/opt:
+                    - android/android_common.py
                     - android/androidx86.py
                 android.*:
+                    - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
                     - unittests/linux_unittest.py
