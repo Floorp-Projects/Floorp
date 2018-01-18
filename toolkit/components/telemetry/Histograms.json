@@ -5059,7 +5059,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "count",
     "description": "Number of unique pages that contain a CSP"
   },
@@ -5067,7 +5067,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-inline CSP directive"
   },
@@ -5075,7 +5075,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1252829],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "count",
     "description": "Number of unique pages that contain an unsafe-eval CSP directive"
   },
@@ -5083,7 +5083,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "bug_numbers": [1303685],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "boolean",
     "description": "Whether a document with a CSP policy (report-only or enforcing) contains a referrer directive ('true') or not ('false')."
   },
