@@ -218,8 +218,21 @@ public:
    */
   nsresult InsertText(const nsString* aText);
 
-  /* nsIEditActionListener method implementations. */
+  /**
+   * nsIEditActionListener method implementations.
+   */
   NS_DECL_NSIEDITACTIONLISTENER
+
+  /**
+   * Actual edit action listeners.  When you add new method here for listening
+   * to new edit action, you need to make it called by EditorBase.
+   * Additionally, you need to call it from proper method of
+   * nsIEditActionListener too because if this is created not for inline
+   * spell checker of the editor, edit actions will be notified via
+   * nsIEditActionListener (slow path, though).
+   */
+  void DidDeleteNode(nsINode* aChild);
+  void DidJoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
 
   static nsresult GetRangeEndPoints(nsRange* aRange,
                                     nsINode** aStartContainer,

@@ -76,6 +76,7 @@ class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
+class TextServicesDocument;
 enum class EditAction : int32_t;
 
 namespace dom {
@@ -1385,6 +1386,8 @@ protected:
   nsCString mContentMIMEType;
 
   RefPtr<mozInlineSpellChecker> mInlineSpellChecker;
+  // Reference to text services document for mInlineSpellChecker.
+  RefPtr<TextServicesDocument> mTextServicesDocument;
 
   RefPtr<nsTransactionManager> mTxnMgr;
   // Cached root node.

@@ -27,26 +27,28 @@
 #include "SplitNodeTransaction.h"       // for SplitNodeTransaction
 #include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc.
 #include "TextEditUtils.h"              // for TextEditUtils
-#include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "mozilla/EditAction.h"         // for EditAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
+#include "mozilla/EditorSpellCheck.h"   // for EditorSpellCheck
 #include "mozilla/EditorUtils.h"        // for AutoRules, etc.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
+#include "mozilla/mozalloc.h"           // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h" // for mozInlineSpellChecker
+#include "mozilla/mozSpellChecker.h"    // for mozSpellChecker
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/TextComposition.h"    // for TextComposition
+#include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/mozalloc.h"           // for operator new, etc.
 #include "nsAString.h"                  // for nsAString::Length, etc.
 #include "nsCCUncollectableMarker.h"    // for nsCCUncollectableMarker
 #include "nsCaret.h"                    // for nsCaret
@@ -166,6 +168,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextServicesDocument)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
@@ -188,6 +191,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionController)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInlineSpellChecker)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextServicesDocument)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorObservers)
@@ -466,6 +470,7 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
   mEditorObservers.Clear();
   mDocStateListeners.Clear();
   mInlineSpellChecker = nullptr;
+  mTextServicesDocument = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nullptr;
 
@@ -1634,6 +1639,11 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
     htmlEditRules->DidJoinNodes(aLeftNode, aRightNode);
   }
 
+  if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
+    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
+    textServicesDocument->DidJoinNodes(aLeftNode, aRightNode);
+  }
+
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
@@ -1672,6 +1682,11 @@ EditorBase::DeleteNode(nsINode* aNode)
     DeleteNodeTransaction::MaybeCreate(*this, *aNode);
   nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
                                         NS_ERROR_FAILURE;
+
+  if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
+    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
+    textServicesDocument->DidDeleteNode(aNode);
+  }
 
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
@@ -2175,6 +2190,26 @@ EditorBase::AddEditActionListener(nsIEditActionListener* aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
+  // If given edit action listener is text services document for the inline
+  // spell checker, store it as reference of concrete class for performance
+  // reason.
+  if (mInlineSpellChecker) {
+    EditorSpellCheck* editorSpellCheck =
+      mInlineSpellChecker->GetEditorSpellCheck();
+    if (editorSpellCheck) {
+      mozSpellChecker* spellChecker = editorSpellCheck->GetSpellChecker();
+      if (spellChecker) {
+        TextServicesDocument* textServicesDocument =
+          spellChecker->GetTextServicesDocument();
+        if (static_cast<nsIEditActionListener*>(textServicesDocument) ==
+              aListener) {
+          mTextServicesDocument = textServicesDocument;
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   // Make sure the listener isn't already on the list
   if (!mActionListeners.Contains(aListener)) {
     mActionListeners.AppendElement(*aListener);
@@ -2187,6 +2222,11 @@ NS_IMETHODIMP
 EditorBase::RemoveEditActionListener(nsIEditActionListener* aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
+
+  if (static_cast<nsIEditActionListener*>(mTextServicesDocument) == aListener) {
+    mTextServicesDocument = nullptr;
+    return NS_OK;
+  }
 
   mActionListeners.RemoveElement(aListener);
 
@@ -4390,6 +4430,12 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
   if (mRules && mRules->AsHTMLEditRules() && deleteCharData) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     htmlEditRules->DidDeleteText(deleteNode, deleteCharOffset, 1);
+  }
+
+  if (mTextServicesDocument && NS_SUCCEEDED(rv) &&
+      deleteNode && !deleteCharData) {
+    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
+    textServicesDocument->DidDeleteNode(deleteNode);
   }
 
   // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
