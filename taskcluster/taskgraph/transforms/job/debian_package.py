@@ -50,6 +50,12 @@ run_schema = Schema({
 
     # List of package tasks to get build dependencies from.
     Optional('packages'): [basestring],
+
+    # What resolver to use to install build dependencies. The default
+    # (apt-get) is good in most cases, but in subtle cases involving
+    # a *-backports archive, its solver might not be able to find a
+    # solution that satisfies the build dependencies.
+    Optional('resolver'): Any('apt-get', 'aptitude'),
 })
 
 
@@ -87,6 +93,24 @@ def docker_worker_debian_package(config, job, taskdesc):
     src_sha256 = src['sha256']
     package = package_re.match(src_file).group(0)
     unpack = unpack.format(src_file=src_file, package=package)
+
+    base_deps = [
+        'apt-utils',
+        'build-essential',
+        'devscripts',
+        'fakeroot',
+    ]
+
+    resolver = run.get('resolver', 'apt-get')
+    if resolver == 'apt-get':
+        resolver = 'apt-get -yyq --no-install-recommends'
+    elif resolver == 'aptitude':
+        resolver = ('aptitude -y --without-recommends -o '
+                    'Aptitude::ProblemResolver::Hints::KeepBuildDeps='
+                    '"reject {}-build-deps :UNINST"').format(package)
+        base_deps.append('aptitude')
+    else:
+        raise RuntimeError('Unreachable')
 
     adjust = ''
     if 'patch' in run:
@@ -139,7 +163,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'done && '
         # Install the base utilities required to build debian packages.
         'apt-get update -o Acquire::Check-Valid-Until=false -q && '
-        'apt-get install -yyq fakeroot build-essential devscripts apt-utils && '
+        'apt-get install -yyq {base_deps} && '
         'cd /tmp && '
         # Get, validate and extract the package source.
         'dget -d -u {src_url} && '
@@ -149,7 +173,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         # Optionally apply patch and/or pre-build command.
         '{adjust}'
         # Install the necessary build dependencies.
-        'mk-build-deps -i -r debian/control -t "apt-get -yyq --no-install-recommends" && '
+        'mk-build-deps -i -r debian/control -t \'{resolver}\' && '
         # Build the package
         'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage && '
         # Copy the artifacts
@@ -171,6 +195,8 @@ def docker_worker_debian_package(config, job, taskdesc):
             unpack=unpack,
             adjust=adjust,
             artifacts='/tmp/artifacts',
+            base_deps=' '.join(base_deps),
+            resolver=resolver,
         )
     ]
 
