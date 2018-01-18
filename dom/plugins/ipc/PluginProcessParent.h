@@ -20,8 +20,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
 
 namespace mozilla {
 namespace plugins {
