@@ -7,9 +7,6 @@ import json
 import os
 import urlparse
 
-from mozpack.copier import FileRegistry
-from mozpack.files import PreprocessedFile
-from mozpack.manifests import InstallManifest
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
 from chrome_map import ChromeManifestHandler
@@ -447,7 +444,6 @@ class UrlFinder(object):
             self._populate_chrome(extra_chrome_manifests)
 
         self._install_mapping = install_info
-        self._populate_install_manifest()
 
     def _populate_chrome(self, manifests):
         handler = ChromeManifestHandler()
@@ -457,23 +453,6 @@ class UrlFinder(object):
                 handler.handle_manifest_entry(e)
         self._url_overrides.update(handler.overrides)
         self._url_prefixes.update(handler.chrome_mapping)
-
-    def _load_manifest(self, path, root):
-        install_manifest = InstallManifest(path)
-        reg = FileRegistry()
-        install_manifest.populate_registry(reg)
-
-        for dest, src in reg:
-            if hasattr(src, 'path'):
-                if not os.path.isabs(dest):
-                    dest = root + dest
-                self._install_mapping[dest] = (src.path,
-                                               isinstance(src, PreprocessedFile))
-
-    def _populate_install_manifest(self):
-        mp = os.path.join(self.topobjdir, '_build_manifests', 'install',
-                          '_tests')
-        self._load_manifest(mp, root='_tests/')
 
     def _find_install_prefix(self, objdir_path):
 
