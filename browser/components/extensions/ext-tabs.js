@@ -261,6 +261,9 @@ this.tabs = class extends ExtensionAPI {
               if (changed.includes("label")) {
                 needed.push("title");
               }
+              if (changed.includes("sharing")) {
+                needed.push("sharingState");
+              }
             } else if (event.type == "TabPinned") {
               needed.push("pinned");
             } else if (event.type == "TabUnpinned") {
@@ -270,6 +273,10 @@ this.tabs = class extends ExtensionAPI {
               needed.push("discarded");
             } else if (event.type == "TabBrowserDiscarded") {
               needed.push("discarded");
+            } else if (event.type == "TabShow") {
+              needed.push("hidden");
+            } else if (event.type == "TabHide") {
+              needed.push("hidden");
             }
 
             let tab = tabManager.getWrapper(event.originalTarget);
@@ -310,6 +317,8 @@ this.tabs = class extends ExtensionAPI {
           windowTracker.addListener("TabUnpinned", listener);
           windowTracker.addListener("TabBrowserInserted", listener);
           windowTracker.addListener("TabBrowserDiscarded", listener);
+          windowTracker.addListener("TabShow", listener);
+          windowTracker.addListener("TabHide", listener);
 
           tabTracker.on("tab-isarticle", isArticleChangeListener);
 
@@ -320,6 +329,8 @@ this.tabs = class extends ExtensionAPI {
             windowTracker.removeListener("TabUnpinned", listener);
             windowTracker.removeListener("TabBrowserInserted", listener);
             windowTracker.removeListener("TabBrowserDiscarded", listener);
+            windowTracker.removeListener("TabShow", listener);
+            windowTracker.removeListener("TabHide", listener);
             tabTracker.off("tab-isarticle", isArticleChangeListener);
           };
         }).api(),
