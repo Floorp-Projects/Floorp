@@ -1745,6 +1745,11 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
   for (uint32_t i = 0; i < HistogramCount; i++) {
     auto name = gHistogramInfos[i].name();
 
+    // Make sure the name pointer is in a valid region. See bug 1428612.
+    MOZ_DIAGNOSTIC_ASSERT(name >= gHistogramStringTable);
+    MOZ_DIAGNOSTIC_ASSERT(
+        uintptr_t(name) < (uintptr_t(gHistogramStringTable) + sizeof(gHistogramStringTable)));
+
     nsCString wrappedName;
     wrappedName.AssignLiteral(name, strlen(name));
     gNameToHistogramIDMap.Put(wrappedName, HistogramID(i));
