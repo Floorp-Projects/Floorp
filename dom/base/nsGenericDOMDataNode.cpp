@@ -349,7 +349,7 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     if (aLength) {
       to.Append(aBuffer, aLength);
       if (!bidi && (!document || !document->GetBidiEnabled())) {
-        bidi = HasRTLChars(aBuffer, aLength);
+        bidi = HasRTLChars(MakeSpan(aBuffer, aLength));
       }
     }
     if (endOffset != textLength) {
