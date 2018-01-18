@@ -1289,14 +1289,10 @@ pref("dom.min_timeout_value", 4);
 pref("dom.min_background_timeout_value", 1000);
 // Timeout clamp in ms for tracking timeouts we clamp
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-#ifdef NIGHTLY_BUILD
-pref("dom.min_tracking_timeout_value", 10000);
-#else
 pref("dom.min_tracking_timeout_value", 4);
-#endif
 // And for background windows
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_background_timeout_value", 10000);
+pref("dom.min_tracking_background_timeout_value", 4);
 // Delay in ms from document load until we start throttling background timeouts.
 pref("dom.timeout.throttling_delay", 30000);
 
