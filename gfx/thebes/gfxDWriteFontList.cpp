@@ -600,6 +600,55 @@ gfxDWriteFontEntry::HasVariations()
     return mHasVariations;
 }
 
+void
+gfxDWriteFontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
+{
+    if (!HasVariations()) {
+        return;
+    }
+    // HasVariations() will have ensured the mFontFace5 interface is available;
+    // so we can get an IDWriteFontResource and ask it for the axis info.
+    RefPtr<IDWriteFontResource> resource;
+    HRESULT hr = mFontFace5->GetFontResource(getter_AddRefs(resource));
+    MOZ_ASSERT(SUCCEEDED(hr));
+
+    uint32_t count = resource->GetFontAxisCount();
+    AutoTArray<DWRITE_FONT_AXIS_VALUE, 4> defaultValues;
+    AutoTArray<DWRITE_FONT_AXIS_RANGE, 4> ranges;
+    defaultValues.SetLength(count);
+    ranges.SetLength(count);
+    resource->GetDefaultFontAxisValues(defaultValues.Elements(), count);
+    resource->GetFontAxisRanges(ranges.Elements(), count);
+    for (uint32_t i = 0; i < count; ++i) {
+        gfxFontVariationAxis axis;
+        MOZ_ASSERT(ranges[i].axisTag == defaultValues[i].axisTag);
+        DWRITE_FONT_AXIS_ATTRIBUTES attrs = resource->GetFontAxisAttributes(i);
+        if (attrs & DWRITE_FONT_AXIS_ATTRIBUTES_HIDDEN) {
+            continue;
+        }
+        if (!(attrs & DWRITE_FONT_AXIS_ATTRIBUTES_VARIABLE)) {
+            continue;
+        }
+        // Extract the 4 chars of the tag from DWrite's packed version,
+        // and reassemble them in the order we use for TRUETYPE_TAG.
+        uint32_t t = defaultValues[i].axisTag;
+        axis.mTag = TRUETYPE_TAG(t & 0xff,
+                                 (t >> 8) & 0xff,
+                                 (t >> 16) & 0xff,
+                                 (t >> 24) & 0xff);
+        // Try to get a human-friendly name (may not be present)
+        RefPtr<IDWriteLocalizedStrings> names;
+        resource->GetAxisNames(i, getter_AddRefs(names));
+        if (names) {
+            GetEnglishOrFirstName(axis.mName, names);
+        }
+        axis.mMinValue = ranges[i].minValue;
+        axis.mMaxValue = ranges[i].maxValue;
+        axis.mDefaultValue = defaultValues[i].value;
+        aAxes.AppendElement(axis);
+    }
+}
+
 gfxFont *
 gfxDWriteFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle,
                                        bool aNeedsBold)
