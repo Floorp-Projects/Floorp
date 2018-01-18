@@ -447,7 +447,7 @@ class BaseBootstrapper(object):
 
         return LooseVersion(match.group(1))
 
-    def _hg_cleanenv(self):
+    def _hg_cleanenv(self, load_hgrc=False):
         """ Returns a copy of the current environment updated with the HGPLAIN
         and HGRCPATH environment variables.
 
@@ -459,7 +459,8 @@ class BaseBootstrapper(object):
         """
         env = os.environ.copy()
         env[b'HGPLAIN'] = b'1'
-        env[b'HGRCPATH'] = b''
+        if not load_hgrc:
+            env[b'HGRCPATH'] = b''
 
         return env
 

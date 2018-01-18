@@ -10,12 +10,15 @@ tasks. They live under taskcluster/taskgraph/templates.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import sys
 from abc import ABCMeta, abstractmethod
 from argparse import Action
 
+import mozpack.path as mozpath
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
 here = os.path.abspath(os.path.dirname(__file__))
+build = MozbuildObject.from_environment(cwd=here)
 
 
 class Template(object):
@@ -41,18 +44,45 @@ class Artifact(Template):
 
     def context(self, artifact, no_artifact, **kwargs):
         if artifact:
-            return {'enabled': '1'}
+            return {
+                'artifact': {'enabled': '1'}
+            }
 
         if no_artifact:
             return
 
-        build = MozbuildObject.from_environment(cwd=here)
         try:
             if build.substs.get("MOZ_ARTIFACT_BUILDS"):
                 print("Artifact builds enabled, pass --no-artifact to disable")
-                return {'enabled': '1'}
+                return {
+                    'artifact': {'enabled': '1'}
+                }
         except BuildEnvironmentNotFoundException:
             pass
+
+
+class Path(Template):
+
+    def add_arguments(self, parser):
+        parser.add_argument('paths', nargs='*',
+                            help='Run tasks containing tests under the specified path(s).')
+
+    def context(self, paths, **kwargs):
+        if not paths:
+            return
+
+        for p in paths:
+            if not os.path.exists(p):
+                print("error: '{}' is not a valid path.".format(p), file=sys.stderr)
+                sys.exit(1)
+
+        paths = [mozpath.relpath(mozpath.join(os.getcwd(), p), build.topsrcdir) for p in paths]
+        return {
+            'env': {
+                # can't use os.pathsep as machine splitting could be a different platform
+                'MOZHARNESS_TEST_PATHS': ':'.join(paths),
+            }
+        }
 
 
 class Environment(Template):
@@ -65,7 +95,9 @@ class Environment(Template):
     def context(self, env, **kwargs):
         if not env:
             return
-        return dict(e.split('=', 1) for e in env)
+        return {
+            'env': dict(e.split('=', 1) for e in env),
+        }
 
 
 class RangeAction(Action):
@@ -94,11 +126,14 @@ class Rebuild(Template):
         if not rebuild:
             return
 
-        return rebuild
+        return {
+            'rebuild': rebuild,
+        }
 
 
 all_templates = {
     'artifact': Artifact,
+    'path': Path,
     'env': Environment,
     'rebuild': Rebuild,
 }

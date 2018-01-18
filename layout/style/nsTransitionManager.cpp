@@ -32,6 +32,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsDisplayList.h"
+#include "nsRFPService.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
 #include "mozilla/RestyleManager.h"
@@ -201,7 +202,7 @@ CSSTransition::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 }
 
 void
-CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
+CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
 {
   if (!mOwningElement.IsSet()) {
     return;
@@ -212,7 +213,7 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
     return;
   }
 
-  const StickyTimeDuration zeroDuration = StickyTimeDuration();
+  static constexpr StickyTimeDuration zeroDuration = StickyTimeDuration();
 
   TransitionPhase currentPhase;
   StickyTimeDuration intervalStartTime;
@@ -251,12 +252,16 @@ CSSTransition::QueueEvents(StickyTimeDuration aActiveTime)
   AutoTArray<TransitionEventInfo, 3> events;
 
   auto appendTransitionEvent = [&](EventMessage aMessage,
-                                   StickyTimeDuration aElapsedTime,
-                                   TimeStamp aTimeStamp) {
+                                   const StickyTimeDuration& aElapsedTime,
+                                   const TimeStamp& aTimeStamp) {
+    double elapsedTime = aElapsedTime.ToSeconds();
+    if (aMessage == eTransitionCancel) {
+      elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
+    }
     events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
                                              aMessage,
                                              TransitionProperty(),
-                                             aElapsedTime,
+                                             elapsedTime,
                                              aTimeStamp,
                                              this));
   };

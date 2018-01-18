@@ -21,7 +21,6 @@ DisableStlWrapping()
 
 LOCAL_INCLUDES += [
     '../',
-    '/',
     '/ipc/chromium/src/',
     '/media/libopus/celt/',
     '/media/libopus/include',

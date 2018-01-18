@@ -229,6 +229,7 @@ def main(*args, **kwargs):
         args.extend([
             '--verbose',
             '-p', 'mozlog.pytest_mozlog.plugin',
+            '-p', 'no:cacheprovider',
             module.__file__,
         ])
         sys.exit(pytest.main(args))

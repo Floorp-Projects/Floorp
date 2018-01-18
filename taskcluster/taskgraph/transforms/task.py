@@ -589,7 +589,8 @@ TC_TREEHERDER_SCHEMA_URL = 'https://github.com/taskcluster/taskcluster-treeherde
                            'blob/master/schemas/task-treeherder-config.yml'
 
 
-UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to taskcluster/ci/config.yml"
+UNKNOWN_GROUP_NAME = "Treeherder group {} (from {}) has no name; " \
+                     "add it to taskcluster/ci/config.yml"
 
 V2_ROUTE_TEMPLATES = [
     "index.{trust-domain}.v2.{project}.latest.{product}.{job-name}",
@@ -830,17 +831,16 @@ def build_docker_worker_payload(config, task, task_def):
             }
         payload['artifacts'] = artifacts
 
+    run_task = payload.get('command', [''])[0].endswith('run-task')
+
     if isinstance(worker.get('docker-image'), basestring):
         out_of_tree_image = worker['docker-image']
+        run_task = run_task or out_of_tree_image.startswith(
+            'taskcluster/image_builder')
     else:
         out_of_tree_image = None
-
-    run_task = any([
-        payload.get('command', [''])[0].endswith('run-task'),
-        # image_builder is special and doesn't get detected like other tasks.
-        # It uses run-task so it needs our cache manipulations.
-        (out_of_tree_image or '').startswith('taskcluster/image_builder'),
-    ])
+        image = worker.get('docker-image', {}).get('in-tree')
+        run_task = run_task or image == 'image_builder'
 
     if 'caches' in worker:
         caches = {}
@@ -1396,7 +1396,8 @@ def build_task(config, tasks):
             if groupSymbol != '?':
                 treeherder['groupSymbol'] = groupSymbol
                 if groupSymbol not in group_names:
-                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol))
+                    path = os.path.join(config.path, task.get('job-from', ''))
+                    raise Exception(UNKNOWN_GROUP_NAME.format(groupSymbol, path))
                 treeherder['groupName'] = group_names[groupSymbol]
             treeherder['symbol'] = symbol
             if len(symbol) > 25 or len(groupSymbol) > 25:

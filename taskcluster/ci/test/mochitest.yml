@@ -25,7 +25,7 @@ mochitest:
         by-test-platform:
             linux64-jsdcov/opt: mochitest/plain-chunked-coverage
             default: mochitest/plain-chunked
-    treeherder-symbol: tc-M()
+    treeherder-symbol: M()
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -70,7 +70,7 @@ mochitest:
 mochitest-a11y:
     description: "Mochitest a11y run"
     suite: mochitest/a11y
-    treeherder-symbol: tc-M(a11y)
+    treeherder-symbol: M(a11y)
     loopback-video: true
     e10s: false
     run-on-projects:
@@ -90,7 +90,7 @@ mochitest-browser-chrome:
         by-test-platform:
             linux64-jsdcov/opt: mochitest/browser-chrome-coverage
             default: mochitest/browser-chrome-chunked
-    treeherder-symbol: tc-M(bc)
+    treeherder-symbol: M(bc)
     loopback-video: true
     chunks:
         by-test-platform:
@@ -125,7 +125,7 @@ mochitest-browser-chrome:
 browser-instrumentation:
     description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
     suite: mochitest/browser-chrome-instrumentation
-    treeherder-symbol: tc-M(inst)
+    treeherder-symbol: M(inst)
     loopback-video: true
     tier: 3
     run-on-projects:
@@ -140,7 +140,7 @@ browser-instrumentation:
 browser-screenshots:
     description: "Browser Screenshots"
     suite: mochitest/browser-chrome-screenshots
-    treeherder-symbol: tc-M(ss)
+    treeherder-symbol: M(ss)
     loopback-video: true
     run-on-projects:
         by-test-platform:
@@ -158,7 +158,7 @@ browser-screenshots:
 mochitest-chrome:
     description: "Mochitest chrome run"
     suite: mochitest/chrome
-    treeherder-symbol: tc-M(c)
+    treeherder-symbol: M(c)
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -194,7 +194,7 @@ mochitest-chrome:
 mochitest-clipboard:
     description: "Mochitest clipboard run"
     suite: mochitest/clipboard
-    treeherder-symbol: tc-M(cl)
+    treeherder-symbol: M(cl)
     loopback-video: true
     instance-size: xlarge
     e10s:
@@ -225,7 +225,7 @@ mochitest-devtools-chrome:
         by-test-platform:
             linux64-jsdcov/opt: mochitest/mochitest-devtools-chrome-coverage
             default: mochitest/mochitest-devtools-chrome-chunked
-    treeherder-symbol: tc-M(dt)
+    treeherder-symbol: M(dt)
     loopback-video: true
     max-run-time: 5400
     chunks: 8
@@ -251,7 +251,7 @@ mochitest-devtools-chrome:
 mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
-    treeherder-symbol: tc-M(gpu)
+    treeherder-symbol: M(gpu)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
@@ -284,7 +284,7 @@ mochitest-gpu:
 mochitest-media:
     description: "Mochitest media run"
     suite: mochitest/mochitest-media
-    treeherder-symbol: tc-M(mda)
+    treeherder-symbol: M(mda)
     max-run-time: 5400
     loopback-video: true
     instance-size:
@@ -313,7 +313,7 @@ mochitest-media:
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
     suite: mochitest/plain-chunked
-    treeherder-symbol: tc-M(h)
+    treeherder-symbol: M(h)
     loopback-video: true
     chunks:
         by-test-platform:
@@ -332,7 +332,7 @@ mochitest-plain-headless:
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
     suite: mochitest/valgrind-plain
-    treeherder-symbol: tc-M-V()
+    treeherder-symbol: M-V()
     run-on-projects: []
     tier: 3
     loopback-video: true
@@ -349,7 +349,7 @@ mochitest-valgrind:
 mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
-    treeherder-symbol: tc-M(gl)
+    treeherder-symbol: M(gl)
     run-on-projects:
         by-test-platform:
             windows10-64-ccov/.*: []  # Do not run on Windows ccov, see bug 1419475.

@@ -23,7 +23,7 @@ def make_signing_description(config, jobs):
 
         # add the chunk number to the TH symbol
         symbol = 'Ns{}'.format(dep_job.attributes.get('l10n_chunk'))
-        group = 'tc-L10n'
+        group = 'L10n'
 
         job['treeherder'] = {
             'symbol': join_symbol(group, symbol),
