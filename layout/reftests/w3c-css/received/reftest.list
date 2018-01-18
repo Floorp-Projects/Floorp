@@ -212,8 +212,8 @@ fails == css-values/attr-px-invalid-cast.html css-values/reference/200-200-green
 == css-values/attr-px-invalid-fallback.html css-values/reference/200-200-green.html
 fails == css-values/attr-px-valid.html css-values/reference/200-200-green.html
 == css-values/calc-in-calc.html css-values/reference/all-green.html
-fails-if(!stylo) == css-values/calc-in-media-queries-001.html css-values/reference/all-green.html
-fails-if(!stylo) == css-values/calc-in-media-queries-002.html css-values/reference/all-green.html
+fails-if(!stylo||styloVsGecko) == css-values/calc-in-media-queries-001.html css-values/reference/all-green.html
+fails-if(!stylo||styloVsGecko) == css-values/calc-in-media-queries-002.html css-values/reference/all-green.html
 == css-values/calc-invalid-range-clamping.html css-values/reference/200-200-green.html
 == css-values/calc-parenthesis-stack.html css-values/reference/all-green.html
 fuzzy-if(OSX||Android,78,197) == css-values/ch-unit-001.html css-values/reference/ch-unit-001-ref.html
