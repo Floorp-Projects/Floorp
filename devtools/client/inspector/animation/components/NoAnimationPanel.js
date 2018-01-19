@@ -16,17 +16,17 @@ const L10N =
 class NoAnimationPanel extends PureComponent {
   static get propTypes() {
     return {
-      elementPicker: PropTypes.object.isRequired,
+      elementPickerEnabled: PropTypes.bool.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
     };
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return this.props.elementPicker.isEnabled != nextProps.elementPicker.isEnabled;
+    return this.props.elementPickerEnabled != nextProps.elementPickerEnabled;
   }
 
   render() {
-    const { elementPicker, toggleElementPicker } = this.props;
+    const { elementPickerEnabled, toggleElementPicker } = this.props;
 
     return dom.div(
       {
@@ -38,8 +38,8 @@ class NoAnimationPanel extends PureComponent {
       ),
       dom.button(
         {
-          className: "animation-element-picker devtools-button"
-                     + (elementPicker.isEnabled ? " checked" : ""),
+          className: "animation-element-picker devtools-button" +
+                     (elementPickerEnabled ? " checked" : ""),
           "data-standalone": true,
           onClick: toggleElementPicker
         }
@@ -50,7 +50,7 @@ class NoAnimationPanel extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    elementPicker: state.animationElementPicker
+    elementPickerEnabled: state.animations.elementPickerEnabled
   };
 };
 

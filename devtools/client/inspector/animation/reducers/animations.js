@@ -4,17 +4,42 @@
 
 "use strict";
 
-const { UPDATE_ANIMATIONS } = require("../actions/index");
+const {
+  UPDATE_ANIMATIONS,
+  UPDATE_ELEMENT_PICKER_ENABLED,
+  UPDATE_SIDEBAR_SIZE,
+} = require("../actions/index");
 
-const INITIAL_ANIMATIONS = [];
-
-const reducers = {
-  [UPDATE_ANIMATIONS](_, { animations }) {
-    return animations;
-  }
+const INITIAL_STATE = {
+  animations: [],
+  elementPickerEnabled: false,
+  sidebarSize: {
+    height: 0,
+    width: 0,
+  },
 };
 
-module.exports = function (animations = INITIAL_ANIMATIONS, action) {
+const reducers = {
+  [UPDATE_ANIMATIONS](state, { animations }) {
+    return Object.assign({}, state, {
+      animations
+    });
+  },
+
+  [UPDATE_ELEMENT_PICKER_ENABLED](state, { elementPickerEnabled }) {
+    return Object.assign({}, state, {
+      elementPickerEnabled
+    });
+  },
+
+  [UPDATE_SIDEBAR_SIZE](state, { sidebarSize }) {
+    return Object.assign({}, state, {
+      sidebarSize
+    });
+  },
+};
+
+module.exports = function (state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];
-  return reducer ? reducer(animations, action) : animations;
+  return reducer ? reducer(state, action) : state;
 };
