@@ -221,6 +221,15 @@
   text-anchor: end;
 }
 
+/* Animation Detail */
+.animation-detail-container {
+  width: 100%;
+}
+
+.animation-detail-header {
+  white-space: nowrap;
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;
