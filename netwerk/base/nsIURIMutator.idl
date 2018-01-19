@@ -75,7 +75,7 @@ protected:
       uri = new T();
     }
 
-    rv = uri->SetSpec(aSpec);
+    rv = uri->SetSpecInternal(aSpec);
     if (NS_FAILED(rv)) {
       return rv;
     }
