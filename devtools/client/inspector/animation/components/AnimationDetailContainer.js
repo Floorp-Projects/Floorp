@@ -10,6 +10,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimationDetailHeader = createFactory(require("./AnimationDetailHeader"));
+const AnimatedPropertyListContainer =
+  createFactory(require("./AnimatedPropertyListContainer"));
 
 class AnimationDetailContainer extends PureComponent {
   static get propTypes() {
@@ -26,13 +28,17 @@ class AnimationDetailContainer extends PureComponent {
         className: "animation-detail-container"
       },
       animation ?
-      AnimationDetailHeader(
-        {
-          animation,
-        }
-      )
+        AnimationDetailHeader(
+          {
+            animation,
+          }
+        )
       :
-      null
+        null,
+      animation ?
+        AnimatedPropertyListContainer()
+      :
+        null
     );
   }
 }
