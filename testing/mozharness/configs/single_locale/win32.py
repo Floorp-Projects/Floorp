@@ -30,10 +30,5 @@ config = {
 
     # use mozmake?
     "enable_mozmake": True,
-    'exes': {
-        'virtualenv': [
-            sys.executable,
-            'c:/mozilla-build/buildbotve/virtualenv.py'
-        ],
-    }
+    'exes': {}
 }
