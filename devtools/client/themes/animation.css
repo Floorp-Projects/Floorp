@@ -258,6 +258,22 @@
   border-right: var(--tick-line-style);
 }
 
+/* Animated Property List */
+.animated-property-list {
+  list-style-type: none;
+  margin-top: 0;
+  padding: 0;
+}
+
+/* Animated Property Item */
+.animated-property-item {
+  height: 30px;
+}
+
+.animated-property-item:nth-child(2n+1) {
+  background-color: var(--animation-even-background-color);
+}
+
 /* No Animation Panel */
 .animation-error-message {
   overflow: auto;

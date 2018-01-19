@@ -55,7 +55,11 @@ class App extends PureComponent {
       animations.length ?
       SplitBox({
         className: "animation-container-splitter",
-        endPanel: AnimationDetailContainer(),
+        endPanel: AnimationDetailContainer(
+          {
+            getAnimatedPropertyMap,
+          }
+        ),
         endPanelControl: true,
         initialHeight: "50%",
         splitterSize: 1,

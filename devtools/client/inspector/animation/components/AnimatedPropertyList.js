@@ -4,15 +4,62 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const AnimatedPropertyItem = createFactory(require("./AnimatedPropertyItem"));
 
 class AnimatedPropertyList extends PureComponent {
+  static get propTypes() {
+    return {
+      animation: PropTypes.object.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      animatedPropertyMap: null
+    };
+  }
+
+  componentDidMount() {
+    this.updateKeyframesList(this.props.animation);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateKeyframesList(nextProps.animation);
+  }
+
+  async updateKeyframesList(animation) {
+    const { getAnimatedPropertyMap } = this.props;
+    const animatedPropertyMap = await getAnimatedPropertyMap(animation);
+
+    this.setState({ animatedPropertyMap });
+  }
+
   render() {
+    const { animatedPropertyMap } = this.state;
+
+    if (!animatedPropertyMap) {
+      return null;
+    }
+
     return dom.ul(
       {
         className: "animated-property-list"
-      }
+      },
+      [...animatedPropertyMap.entries()].map(([property, values]) => {
+        return AnimatedPropertyItem(
+          {
+            property,
+            values,
+          }
+        );
+      })
     );
   }
 }

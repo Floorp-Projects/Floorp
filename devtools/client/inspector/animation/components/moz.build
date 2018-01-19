@@ -7,6 +7,7 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'AnimatedPropertyItem.js',
     'AnimatedPropertyList.js',
     'AnimatedPropertyListContainer.js',
     'AnimatedPropertyListHeader.js',
