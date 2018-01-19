@@ -8,6 +8,7 @@ DIRS += [
 
 DevToolsModules(
     'AnimationDetailContainer.js',
+    'AnimationDetailHeader.js',
     'AnimationItem.js',
     'AnimationList.js',
     'AnimationListContainer.js',

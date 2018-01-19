@@ -4,17 +4,43 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const AnimationDetailHeader = createFactory(require("./AnimationDetailHeader"));
 
 class AnimationDetailContainer extends PureComponent {
+  static get propTypes() {
+    return {
+      animation: PropTypes.object.isRequired,
+    };
+  }
+
   render() {
+    const { animation } = this.props;
+
     return dom.div(
       {
         className: "animation-detail-container"
-      }
+      },
+      animation ?
+      AnimationDetailHeader(
+        {
+          animation,
+        }
+      )
+      :
+      null
     );
   }
 }
 
-module.exports = AnimationDetailContainer;
+const mapStateToProps = state => {
+  return {
+    animation: state.animations.selectedAnimation,
+  };
+};
+
+module.exports = connect(mapStateToProps)(AnimationDetailContainer);
