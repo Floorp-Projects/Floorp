@@ -220,9 +220,18 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
 void
 MacroAssemblerCompat::profilerEnterFrame(Register framePtr, Register scratch)
 {
+    profilerEnterFrame(RegisterOrSP(framePtr), scratch);
+}
+
+void
+MacroAssemblerCompat::profilerEnterFrame(RegisterOrSP framePtr, Register scratch)
+{
     asMasm().loadJSContext(scratch);
     loadPtr(Address(scratch, offsetof(JSContext, profilingActivation_)), scratch);
-    storePtr(framePtr, Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    if (IsHiddenSP(framePtr))
+        storeStackPtr(Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
+    else
+        storePtr(AsRegister(framePtr), Address(scratch, JitActivation::offsetOfLastProfilingFrame()));
     storePtr(ImmPtr(nullptr), Address(scratch, JitActivation::offsetOfLastProfilingCallSite()));
 }
 
@@ -240,6 +249,16 @@ MacroAssembler::reserveStack(uint32_t amount)
     // It would save some instructions if we had a fixed frame size.
     vixl::MacroAssembler::Claim(Operand(amount));
     adjustFrame(amount);
+}
+
+void
+MacroAssembler::Push(RegisterOrSP reg)
+{
+    if (IsHiddenSP(reg))
+        push(sp);
+    else
+        push(AsRegister(reg));
+    adjustFrame(sizeof(intptr_t));
 }
 
 //{{{ check_macroassembler_style
