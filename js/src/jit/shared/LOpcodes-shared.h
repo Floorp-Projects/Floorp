@@ -277,6 +277,7 @@
     _(BoundsCheck)                  \
     _(BoundsCheckRange)             \
     _(BoundsCheckLower)             \
+    _(SpectreMaskIndex)             \
     _(LoadElementV)                 \
     _(LoadElementT)                 \
     _(LoadElementHole)              \
