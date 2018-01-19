@@ -1,0 +1,19 @@
+Index: cmake/Modules/AddCompilerRT.cmake
+===================================================================
+--- a/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(revision 312553)
++++ b/compiler-rt/cmake/Modules/AddCompilerRT.cmake	(working copy)
+@@ -224,14 +224,6 @@
+         set_target_properties(${libname} PROPERTIES IMPORT_PREFIX "")
+         set_target_properties(${libname} PROPERTIES IMPORT_SUFFIX ".lib")
+       endif()
+-      if(APPLE)
+-        # Ad-hoc sign the dylibs
+-        add_custom_command(TARGET ${libname}
+-          POST_BUILD  
+-          COMMAND codesign --sign - $<TARGET_FILE:${libname}>
+-          WORKING_DIRECTORY ${COMPILER_RT_LIBRARY_OUTPUT_DIR}
+-        )
+-      endif()
+     endif()
+     install(TARGETS ${libname}
+       ARCHIVE DESTINATION ${COMPILER_RT_LIBRARY_INSTALL_DIR}
