@@ -465,7 +465,15 @@ pref("browser.link.open_newwindow.disabled_in_fullscreen", false);
 // Tabbed browser
 pref("browser.tabs.closeTabByDblclick", false);
 pref("browser.tabs.closeWindowWithLastTab", true);
+// Open related links to a tab, e.g., link in current tab, at next to the
+// current tab if |insertRelatedAfterCurrent| is true.  Otherwise, always
+// append new tab to the end.
 pref("browser.tabs.insertRelatedAfterCurrent", true);
+// Open all links, e.g., bookmarks, history items at next to current tab
+// if |insertAfterCurrent| is true.  Otherwise, append new tab to the end
+// for non-related links. Note that if this is set to true, it will trump
+// the value of browser.tabs.insertRelatedAfterCurrent.
+pref("browser.tabs.insertAfterCurrent", false);
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
 pref("browser.tabs.warnOnOpen", true);

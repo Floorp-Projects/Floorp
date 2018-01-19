@@ -137,6 +137,10 @@
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden new tab page. Read-only."
       },
+      "newTabPosition": {
+        "$ref": "types.Setting",
+        "description": "Controls where new tabs are opened. `afterCurrent` will open all new tabs next to the current tab, `relatedAfterCurrent` will open only related tabs next to the current tab, and `atEnd` will open all tabs at the end of the tab strip. The default is `relatedAfterCurrent`."
+      },
       "openBookmarksInNewTabs": {
         "$ref": "types.Setting",
         "description": "This boolean setting controls whether bookmarks are opened in the current tab or in a new tab."
