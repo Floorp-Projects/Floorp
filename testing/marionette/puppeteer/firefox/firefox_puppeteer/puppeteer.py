@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from decorators import use_class_as_property
+from __future__ import absolute_import
+
+from .decorators import use_class_as_property
 
 
 class Puppeteer(object):

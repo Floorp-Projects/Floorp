@@ -7,10 +7,6 @@
 #ifndef mozilla_KeyframeEffectParams_h
 #define mozilla_KeyframeEffectParams_h
 
-// X11 has a #define for None
-#ifdef None
-#undef None
-#endif
 #include "mozilla/dom/KeyframeEffectBinding.h" // IterationCompositeOperation
 
 namespace mozilla {

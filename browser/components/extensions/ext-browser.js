@@ -616,6 +616,14 @@ class Tab extends TabBase {
     return super.frameLoader || {lazyWidth: 0, lazyHeight: 0};
   }
 
+  get hidden() {
+    return this.nativeTab.hidden;
+  }
+
+  get sharingState() {
+    return this.window.gBrowser.getTabSharingState(this.nativeTab);
+  }
+
   get cookieStoreId() {
     return getCookieStoreIdForTab(this, this.nativeTab);
   }
@@ -717,6 +725,7 @@ class Tab extends TabBase {
       highlighted: false,
       active: false,
       pinned: false,
+      hidden: tabData.state ? tabData.state.hidden : tabData.hidden,
       incognito: Boolean(tabData.state && tabData.state.isPrivate),
       lastAccessed: tabData.state ? tabData.state.lastAccessed : tabData.lastAccessed,
     };

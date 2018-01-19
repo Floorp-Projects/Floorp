@@ -280,7 +280,6 @@ GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
 GeckoDriver.prototype.init = function() {
   this.mm.addMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.addMessageListener("Marionette:GetLogLevel", this);
-  this.mm.addMessageListener("Marionette:getVisibleCookies", this);
   this.mm.addMessageListener("Marionette:ListenersAttached", this);
   this.mm.addMessageListener("Marionette:Register", this);
   this.mm.addMessageListener("Marionette:switchedToFrame", this);
@@ -289,7 +288,6 @@ GeckoDriver.prototype.init = function() {
 GeckoDriver.prototype.uninit = function() {
   this.mm.removeMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.removeMessageListener("Marionette:GetLogLevel", this);
-  this.mm.removeMessageListener("Marionette:getVisibleCookies", this);
   this.mm.removeMessageListener("Marionette:ListenersAttached", this);
   this.mm.removeMessageListener("Marionette:Register", this);
   this.mm.removeMessageListener("Marionette:switchedToFrame", this);

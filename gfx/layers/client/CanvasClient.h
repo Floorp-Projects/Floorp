@@ -16,8 +16,6 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/PersistentBufferProvider.h"
 
-// Fix X11 header brain damage that conflicts with MaybeOneOf::None
-#undef None
 #include "mozilla/MaybeOneOf.h"
 
 #include "mozilla/mozalloc.h"           // for operator delete
