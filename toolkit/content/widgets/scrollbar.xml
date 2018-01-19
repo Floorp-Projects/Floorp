@@ -8,8 +8,6 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
-  
-  <binding id="thumb" extends="xul:button" />
 
   <binding id="scrollbar" bindToUntrustedContent="true">
     <content clickthrough="always">
