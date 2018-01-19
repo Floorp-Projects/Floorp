@@ -421,6 +421,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         return size();
     }
 
+#ifdef JS_HAS_HIDDEN_SP
+    void Push(RegisterOrSP reg);
+#endif
+
     //{{{ check_macroassembler_decl_style
   public:
     // ===============================================================
@@ -1564,7 +1568,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void wasmEmitOldTrapOutOfLineCode();
 
     // Perform a stack-overflow test, branching to the given Label on overflow.
-    void wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow);
+    void wasmEmitStackCheck(RegisterOrSP sp, Register scratch, Label* onOverflow);
 
     void emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register temp1, Register temp2,
                                 Register temp3, Label* noBarrier);

@@ -10,9 +10,13 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include "jit/arm64/vixl/Instructions-vixl.h"
 #include "jit/shared/Architecture-shared.h"
 
 #include "js/Utility.h"
+
+#define JS_HAS_HIDDEN_SP
+static const uint32_t HiddenSPEncoding = vixl::kSPRegInternalCode;
 
 namespace js {
 namespace jit {
