@@ -807,8 +807,7 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
       case ExprType::Void:
         break;
       case ExprType::I32:
-        masm.convertValueToInt32(JSReturnOperand, ReturnDoubleReg, ReturnReg, &oolConvert,
-                                 /* -0 check */ false);
+        masm.truncateValueToInt32(JSReturnOperand, ReturnDoubleReg, ReturnReg, &oolConvert);
         break;
       case ExprType::I64:
         masm.breakpoint();

@@ -121,7 +121,6 @@ FrameLayerBuilder::FrameLayerBuilder()
   : mRetainingManager(nullptr)
   , mContainingPaintedLayer(nullptr)
   , mInactiveLayerClip(nullptr)
-  , mDetectedDOMModification(false)
   , mInvalidateAllLayers(false)
   , mInLayerTreeCompressionMode(false)
   , mIsInactiveLayerManager(false)
@@ -1791,9 +1790,6 @@ FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
 {
   mDisplayListBuilder = aBuilder;
   mRootPresContext = aBuilder->RootReferenceFrame()->PresContext()->GetRootPresContext();
-  if (mRootPresContext) {
-    mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
-  }
   mContainingPaintedLayer = aLayerData;
   mIsInactiveLayerManager = aIsInactiveLayerManager;
   mInactiveLayerClip = aInactiveLayerClip;
@@ -6033,9 +6029,6 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
         cdi->mItem->Paint(aBuilder, aContext);
       }
     }
-
-    if (CheckDOMModified())
-      break;
   }
 
   if (currentClipIsSetInContext) {
@@ -6115,9 +6108,6 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
 
   FrameLayerBuilder *layerBuilder = aLayer->Manager()->GetLayerBuilder();
   NS_ASSERTION(layerBuilder, "Unexpectedly null layer builder!");
-
-  if (layerBuilder->CheckDOMModified())
-    return;
 
   PaintedLayerItemsEntry* entry = layerBuilder->mPaintedLayerItems.GetEntry(aLayer);
   NS_ASSERTION(entry, "We shouldn't be drawing into a layer with no items!");
@@ -6232,24 +6222,6 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
   if (!aRegionToInvalidate.IsEmpty()) {
     aLayer->AddInvalidRect(aRegionToInvalidate.GetBounds());
   }
-}
-
-bool
-FrameLayerBuilder::CheckDOMModified()
-{
-  if (!mRootPresContext ||
-      mInitialDOMGeneration == mRootPresContext->GetDOMGeneration())
-    return false;
-  if (mDetectedDOMModification) {
-    // Don't spam the console with extra warnings
-    return true;
-  }
-  mDetectedDOMModification = true;
-  // Painting is not going to complete properly. There's not much
-  // we can do here though. Invalidating the window to get another repaint
-  // is likely to lead to an infinite repaint loop.
-  NS_WARNING("Detected DOM modification during paint, bailing out!");
-  return true;
 }
 
 /* static */ void

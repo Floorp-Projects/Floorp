@@ -7751,6 +7751,37 @@ class MComputeThis
     // Note: don't override getAliasSet: the thisValue hook can be effectful.
 };
 
+class MImplicitThis
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    CompilerPropertyName name_;
+
+    MImplicitThis(MDefinition* envChain, PropertyName* name)
+      : MUnaryInstruction(classOpcode, envChain),
+        name_(name)
+    {
+        setResultType(MIRType::Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ImplicitThis)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, envChain))
+
+    PropertyName* name() const {
+        return name_;
+    }
+
+    bool appendRoots(MRootList& roots) const override {
+        return roots.append(name_);
+    }
+
+    bool possiblyCalls() const override {
+        return true;
+    }
+};
+
 // Load an arrow function's |new.target| value.
 class MArrowNewTarget
   : public MUnaryInstruction,
@@ -9516,6 +9547,38 @@ class MBoundsCheckLower
         return fallible_;
     }
     void collectRangeInfoPreTrunc() override;
+};
+
+class MSpectreMaskIndex
+  : public MBinaryInstruction,
+    public MixPolicy<IntPolicy<0>, IntPolicy<1>>::Data
+{
+    MSpectreMaskIndex(MDefinition* index, MDefinition* length)
+      : MBinaryInstruction(classOpcode, index, length)
+    {
+        setGuard();
+        setMovable();
+        MOZ_ASSERT(index->type() == MIRType::Int32);
+        MOZ_ASSERT(length->type() == MIRType::Int32);
+
+        // Returns the masked index.
+        setResultType(MIRType::Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SpectreMaskIndex)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, index), (1, length))
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    virtual AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    void computeRange(TempAllocator& alloc) override;
+
+    ALLOW_CLONE(MSpectreMaskIndex)
 };
 
 // Instructions which access an object's elements can either do so on a

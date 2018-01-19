@@ -473,12 +473,6 @@ cubeb* GetCubebContextUnlocked()
   NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
   sCubebState = (rv == CUBEB_OK) ? CubebState::Initialized : CubebState::Uninitialized;
 
-  if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
-    cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
-  } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
-    cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
-  }
-
   return sCubebContext;
 }
 
@@ -550,10 +544,15 @@ void InitLibrary()
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_LATENCY_MSG);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_SANDBOX);
+  if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
+    cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
+  } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
+    cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
+  }
   // We don't want to call the callback on startup, because the pref is the
   // empty string by default ("", which means "logging disabled"). Because the
   // logging can be enabled via environment variables (MOZ_LOG="module:5"),
-  // calling this callback on init would immediately re-disble the logging.
+  // calling this callback on init would immediately re-disable the logging.
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
   AbstractThread::MainThread()->Dispatch(

@@ -277,15 +277,6 @@ protected:
                            gfxContext&          aRenderingContext,
                            const nsRect&        aDirtyRect);
 
-  // This method paints the progress meter inside a particular cell of the tree.
-  ImgDrawResult PaintProgressMeter(int32_t               aRowIndex,
-                                nsTreeColumn*         aColumn,
-                                const nsRect&         aProgressMeterRect,
-                                nsPresContext*        aPresContext,
-                                gfxContext&           aRenderingContext,
-                                const nsRect&         aDirtyRect,
-                                nsDisplayListBuilder* aBuilder);
-
   // This method paints a drop feedback of the tree.
   ImgDrawResult PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                nsPresContext*       aPresContext,

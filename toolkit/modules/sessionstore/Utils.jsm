@@ -119,10 +119,17 @@ this.Utils = Object.freeze({
    * @return {String} The base64 encoded principal data.
    */
   serializePrincipal(principal) {
-    if (!principal)
-      return null;
+    let serializedPrincipal = null;
 
-    return serializationHelper.serializeToString(principal);
+    try {
+      if (principal) {
+        serializedPrincipal = serializationHelper.serializeToString(principal);
+      }
+    } catch (e) {
+      debug(`Failed to serialize principal '${principal}' ${e}`);
+    }
+
+    return serializedPrincipal;
   },
 
   /**

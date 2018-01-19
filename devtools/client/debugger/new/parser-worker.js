@@ -35475,11 +35475,6 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 exports.parseScript = parseScript;
 exports.getAst = getAst;
 exports.clearASTs = clearASTs;
@@ -35505,14 +35500,23 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 let ASTs = new Map();
 
 function _parse(code, opts) {
-  return babylon.parse(code, _extends({}, opts, {
+  return babylon.parse(code, opts);
+}
+
+const sourceOptions = {
+  generated: {},
+  original: {
     sourceType: "module",
     plugins: ["jsx", "flow", "doExpressions", "objectRestSpread", "classProperties", "exportExtensions", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "templateInvalidEscapes"]
-  }));
-}
+  }
+};
 
 function parse(text, opts) {
   let ast;
@@ -35532,9 +35536,7 @@ function parse(text, opts) {
 // Custom parser for parse-script-tags that adapts its input structure to
 // our parser's signature
 function htmlParser({ source, line }) {
-  return parse(source, {
-    startLine: line
-  });
+  return parse(source, { startLine: line });
 }
 
 function parseScript(text, opts) {
@@ -35555,7 +35557,9 @@ function getAst(source) {
   if (contentType == "text/html") {
     ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
   } else if (contentType && contentType.match(/(javascript|jsx)/)) {
-    ast = parse(source.text);
+    const type = source.id.includes("original") ? "original" : "generated";
+    const options = sourceOptions[type];
+    ast = parse(source.text, options);
   }
 
   ASTs.set(source.id, ast);

@@ -68,7 +68,15 @@ module.exports = {
       "browser": false,
       "mozilla/jsm": true
     },
-    "files": "**/*.jsm"
+    "files": "**/*.jsm",
+    "rules": {
+      "mozilla/mark-exported-symbols-as-used": "error"
+      // "no-unused-vars": ["error", {
+      //   "args": "none",
+      //   "vars": "all",
+      //   "varsIgnorePattern": "^Cc|Ci|Cu|Cr|EXPORTED_SYMBOLS"
+      // }]
+    }
   }],
 
   "parserOptions": {
@@ -171,6 +179,7 @@ module.exports = {
     // Use [] instead of Array()
     "no-array-constructor": "error",
 
+    // Disallow use of arguments.caller or arguments.callee.
     "no-caller": "error",
 
     // Disallow modifying variables of class declarations.

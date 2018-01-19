@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
@@ -4327,7 +4326,7 @@ nsDocumentViewer::SetIsPrintingInDocShellTree(nsIDocShellTreeItem* aParentNode,
   }
 
   // Check to see if the DocShell's ContentViewer is printing/PP
-  nsCOMPtr<nsIContentViewerContainer> viewerContainer(do_QueryInterface(parentItem));
+  nsCOMPtr<nsIDocShell> viewerContainer = do_QueryInterface(parentItem);
   if (viewerContainer) {
     viewerContainer->SetIsPrinting(aIsPrintingOrPP);
   }

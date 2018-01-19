@@ -137,7 +137,6 @@ partial interface Document {
   // user interaction
   [Pure]
   readonly attribute WindowProxy? defaultView;
-  readonly attribute Element? activeElement;
   [Throws]
   boolean hasFocus();
   //(HTML only)         attribute DOMString designMode;
@@ -274,8 +273,6 @@ partial interface Document {
 
 // http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface
 partial interface Document {
-    [Constant]
-    readonly attribute StyleSheetList styleSheets;
     attribute DOMString? selectedStyleSheetSet;
     readonly attribute DOMString? lastStyleSheetSet;
     readonly attribute DOMString? preferredStyleSheetSet;
@@ -482,3 +479,4 @@ Document implements ParentNode;
 Document implements OnErrorEventHandlerForNodes;
 Document implements GeometryUtils;
 Document implements FontFaceSource;
+Document implements DocumentOrShadowRoot;

@@ -53,7 +53,8 @@ def set_tp_preferences(test, browser_config):
             if test[cycle_var] > 2:
                 test[cycle_var] = 2
 
-    CLI_bool_options = ['tpchrome', 'tpmozafterpaint', 'tploadnocache', 'tpscrolltest', 'fnbpaint']
+    CLI_bool_options = ['tpchrome', 'tphero', 'tpmozafterpaint', 'tploadnocache', 'tpscrolltest',
+                        'fnbpaint']
     CLI_options = ['tpcycles', 'tppagecycles', 'tptimeout', 'tpmanifest']
     for key in CLI_bool_options:
         if key in test:

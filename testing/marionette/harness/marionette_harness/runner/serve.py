@@ -9,6 +9,8 @@ processes.
 
 """
 
+from __future__ import absolute_import, print_function
+
 import argparse
 import multiprocessing
 import os
@@ -16,7 +18,7 @@ import sys
 
 from collections import defaultdict
 
-import httpd
+from . import httpd
 
 
 __all__ = ["default_doc_root",
@@ -212,7 +214,7 @@ def main(args):
 
     servers = start(args.doc_root)
     for url in iter_url(servers):
-        print >>sys.stderr, "{}: listening on {}".format(sys.argv[0], url)
+        print("{}: listening on {}".format(sys.argv[0], url), file=sys.stderr)
 
     try:
         while any(proc.is_alive for proc in iter_proc(servers)):

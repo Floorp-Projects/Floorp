@@ -229,8 +229,10 @@ nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck,
 
     if (giovfs) {
       handler.Truncate();
+      nsCOMPtr<nsIHandlerApp> handlerApp;
       giovfs->GetAppForURIScheme(nsDependentCString(appProtocols[i].name),
-                                 getter_AddRefs(gioApp));
+                                 getter_AddRefs(handlerApp));
+      gioApp = do_QueryInterface(handlerApp);
       if (!gioApp)
         return NS_OK;
 
@@ -571,10 +573,10 @@ nsGNOMEShellService::OpenApplication(int32_t aApplication)
 
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (giovfs) {
-    nsCOMPtr<nsIGIOMimeApp> gioApp;
-    giovfs->GetAppForURIScheme(scheme, getter_AddRefs(gioApp));
-    if (gioApp)
-      return gioApp->Launch(EmptyCString());
+    nsCOMPtr<nsIHandlerApp> handlerApp;
+    giovfs->GetAppForURIScheme(scheme, getter_AddRefs(handlerApp));
+    if (handlerApp)
+      return handlerApp->LaunchWithURI(nullptr, nullptr);
   }
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);

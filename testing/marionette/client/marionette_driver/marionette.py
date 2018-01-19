@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import base64
 import datetime
 import json
@@ -14,9 +16,10 @@ import warnings
 
 from contextlib import contextmanager
 
-import errors
-import transport
+from six import reraise
 
+from . import errors
+from . import transport
 from .decorators import do_process_check
 from .geckoinstance import GeckoInstance
 from .keys import Keys
@@ -639,7 +642,7 @@ class Marionette(object):
             msg = "Process killed after {}s because no connection to Marionette "\
                   "server could be established. Check gecko.log for errors"
             _, _, tb = sys.exc_info()
-            raise IOError, msg.format(timeout), tb
+            reraise(IOError, msg.format(timeout), tb)
 
     def cleanup(self):
         if self.session is not None:
@@ -796,7 +799,7 @@ class Marionette(object):
         # If the application hasn't been launched by Marionette no further action can be done.
         # In such cases we simply re-throw the exception.
         if not self.instance:
-            raise exc, val, tb
+            reraise(exc, val, tb)
 
         else:
             # Somehow the socket disconnected. Give the application some time to shutdown
@@ -824,7 +827,7 @@ class Marionette(object):
 
             message += ' (Reason: {reason})'
 
-            raise IOError, message.format(returncode=returncode, reason=val), tb
+            reraise(IOError, message.format(returncode=returncode, reason=val), tb)
 
     @staticmethod
     def convert_keys(*string):
@@ -1152,7 +1155,7 @@ class Marionette(object):
                 if self.instance.runner.returncode is not None:
                     exc, val, tb = sys.exc_info()
                     self.cleanup()
-                    raise exc, "Requested restart of the application was aborted", tb
+                    reraise(exc, "Requested restart of the application was aborted", tb)
 
         else:
             self.delete_session()

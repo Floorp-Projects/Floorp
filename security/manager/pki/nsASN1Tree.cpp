@@ -268,12 +268,6 @@ nsNSSASN1Tree::GetImageSrc(int32_t, nsITreeColumn*, nsAString&)
 }
 
 NS_IMETHODIMP
-nsNSSASN1Tree::GetProgressMode(int32_t, nsITreeColumn*, int32_t*)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSASN1Tree::GetCellValue(int32_t, nsITreeColumn*, nsAString&)
 {
   return NS_OK;

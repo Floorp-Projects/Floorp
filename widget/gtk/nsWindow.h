@@ -23,6 +23,7 @@
 
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
+#include "X11UndefineNone.h"
 #endif /* MOZ_X11 */
 #ifdef MOZ_WAYLAND
 #include <gdk/gdkwayland.h>

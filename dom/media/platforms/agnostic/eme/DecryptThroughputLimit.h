@@ -35,8 +35,8 @@ public:
     // We should only have one decrypt request being processed at once.
     MOZ_RELEASE_ASSERT(!mThrottleScheduler.IsScheduled());
 
-    const TimeDuration WindowSize = TimeDuration::FromSeconds(1.0);
-    const TimeDuration MaxThroughput = TimeDuration::FromSeconds(2.0);
+    const TimeDuration WindowSize = TimeDuration::FromSeconds(0.1);
+    const TimeDuration MaxThroughput = TimeDuration::FromSeconds(0.2);
 
     // Forget decrypts that happened before the start of our window.
     const TimeStamp now = TimeStamp::Now();

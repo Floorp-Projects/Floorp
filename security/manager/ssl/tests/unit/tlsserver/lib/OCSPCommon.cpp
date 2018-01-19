@@ -7,18 +7,10 @@
 #include <stdio.h>
 
 #include "pkixtestutil.h"
+#include "pkixtestnss.h"
 #include "TLSServer.h"
 #include "secder.h"
 #include "secerr.h"
-
-namespace mozilla { namespace pkix { namespace test {
-
-// Ownership of privateKey is transfered.
-TestKeyPair* CreateTestKeyPair(const TestPublicKeyAlgorithm publicKeyAlg,
-                               const SECKEYPublicKey& publicKey,
-                               SECKEYPrivateKey* privateKey);
-
-} } } // namespace mozilla::pkix::test
 
 using namespace mozilla;
 using namespace mozilla::pkix;
@@ -28,15 +20,15 @@ using namespace mozilla::test;
 static TestKeyPair*
 CreateTestKeyPairFromCert(const UniqueCERTCertificate& cert)
 {
-  UniqueSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(cert.get(), nullptr));
+  ScopedSECKEYPrivateKey privateKey(PK11_FindKeyByAnyCert(cert.get(), nullptr));
   if (!privateKey) {
     return nullptr;
   }
-  UniqueSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
+  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
   if (!publicKey) {
     return nullptr;
   }
-  return CreateTestKeyPair(RSA_PKCS1(), *publicKey.get(), privateKey.release());
+  return CreateTestKeyPair(RSA_PKCS1(), publicKey, privateKey);
 }
 
 SECItemArray*

@@ -6,6 +6,12 @@ All notable changes to this program is documented in this file.
 Unreleased
 ----------
 
+### Added
+
+- Introduced the temporary, boolean capability
+  `moz:useNonSpecCompliantPointerOrigin` to
+  disable the WebDriver conforming behavior of calculating the Pointer Origin.
+
 ### Changed
 
 - HTTP status code for the [`StaleElementReference`] error changed
@@ -14,7 +20,7 @@ Unreleased
 - Backtraces from geckodriver no longer substitute for missing
   Marionette stacktraces
 
-- `Delete Session` now allows Firefox to safely shutdown within 130s before
+- `Delete Session` now allows Firefox to safely shutdown within 70s before
   force-killing the process
 
 

@@ -186,7 +186,6 @@ let gSiteDataRemoveSelected = {
     getColumnProperties() {},
     hasPreviousSibling(index) {},
     getImageSrc() {},
-    getProgressMode() {},
     getCellValue() {},
     cycleHeader() {},
     selectionChanged() {},

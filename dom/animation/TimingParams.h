@@ -15,10 +15,6 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h" // for TimeDuration
 
-// X11 has a #define for None
-#ifdef None
-#undef None
-#endif
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for FillMode
                                                         // and PlaybackDirection
 

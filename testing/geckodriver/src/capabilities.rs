@@ -159,13 +159,6 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
             return Ok(())
         }
         match name {
-            "moz:webdriverClick" => {
-                if !value.is_boolean() {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        "moz:webdriverClick is not a boolean"));
-                }
-            }
             "moz:firefoxOptions" => {
                 let data = try_opt!(value.as_object(),
                                     ErrorStatus::InvalidArgument,
@@ -235,6 +228,20 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                             ErrorStatus::InvalidArgument,
                             format!("Invalid moz:firefoxOptions field {}", x)))
                     }
+                }
+            }
+            "moz:useNonSpecCompliantPointerOrigin" => {
+                if !value.is_boolean() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "moz:useNonSpecCompliantPointerOrigin is not a boolean"));
+                }
+            }
+            "moz:webdriverClick" => {
+                if !value.is_boolean() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "moz:webdriverClick is not a boolean"));
                 }
             }
             _ => return Err(WebDriverError::new(ErrorStatus::InvalidArgument,

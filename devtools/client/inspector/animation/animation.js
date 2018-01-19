@@ -8,17 +8,23 @@ const { AnimationsFront } = require("devtools/shared/fronts/animation");
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const EventEmitter = require("devtools/shared/event-emitter");
+
 const App = createFactory(require("./components/App"));
-const { isAllTimingEffectEqual } = require("./utils/utils");
 
 const { updateAnimations } = require("./actions/animations");
 const { updateElementPickerEnabled } = require("./actions/element-picker");
 const { updateSidebarSize } = require("./actions/sidebar");
+const { isAllAnimationEqual } = require("./utils/utils");
 
 class AnimationInspector {
-  constructor(inspector) {
+  constructor(inspector, win) {
     this.inspector = inspector;
+    this.win = win;
 
+    this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
+    this.getNodeFromActor = this.getNodeFromActor.bind(this);
+    this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
@@ -26,10 +32,30 @@ class AnimationInspector {
     this.onSidebarResized = this.onSidebarResized.bind(this);
     this.onSidebarSelect = this.onSidebarSelect.bind(this);
 
+    EventEmitter.decorate(this);
+    this.emit = this.emit.bind(this);
+
     this.init();
   }
 
   init() {
+    const {
+      setSelectedNode,
+      onShowBoxModelHighlighterForNode,
+    } = this.inspector.getCommonComponentProps();
+
+    const {
+      onHideBoxModelHighlighter,
+    } = this.inspector.getPanel("boxmodel").getComponentProps();
+
+    const {
+      emit: emitEventForTest,
+      getAnimatedPropertyMap,
+      getNodeFromActor,
+      simulateAnimation,
+      toggleElementPicker,
+    } = this;
+
     const target = this.inspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
 
@@ -41,7 +67,14 @@ class AnimationInspector {
       },
       App(
         {
-          toggleElementPicker: this.toggleElementPicker
+          emitEventForTest,
+          getAnimatedPropertyMap,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
+          simulateAnimation,
+          toggleElementPicker,
         }
       )
     );
@@ -61,7 +94,113 @@ class AnimationInspector {
     this.inspector.toolbox.off("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
 
+    if (this.simulatedAnimation) {
+      this.simulatedAnimation.cancel();
+      this.simulatedAnimation = null;
+    }
+
+    if (this.simulatedElement) {
+      this.simulatedElement.remove();
+      this.simulatedElement = null;
+    }
+
     this.inspector = null;
+    this.win = null;
+  }
+
+  /**
+   * Return a map of animated property from given animation actor.
+   *
+   * @param {Object} animation
+   * @return {Map} A map of animated property
+   *         key: {String} Animated property name
+   *         value: {Array} Array of keyframe object
+   *         Also, the keyframe object is consisted as following.
+   *         {
+   *           value: {String} style,
+   *           offset: {Number} offset of keyframe,
+   *           easing: {String} easing from this keyframe to next keyframe,
+   *           distance: {Number} use as y coordinate in graph,
+   *         }
+   */
+  async getAnimatedPropertyMap(animation) {
+    let properties = [];
+
+    try {
+      properties = await animation.getProperties();
+    } catch (e) {
+      // Expected if we've already been destroyed in the meantime.
+      console.error(e);
+    }
+
+    const animatedPropertyMap = new Map();
+
+    for (const { name, values } of properties) {
+      const keyframes = values.map(({ value, offset, easing, distance = 0 }) => {
+        offset = parseFloat(offset.toFixed(3));
+        return { value, offset, easing, distance };
+      });
+
+      animatedPropertyMap.set(name, keyframes);
+    }
+
+    return animatedPropertyMap;
+  }
+
+  getNodeFromActor(actorID) {
+    return this.inspector.walker.getNodeFromActor(actorID, ["node"]);
+  }
+
+  isPanelVisible() {
+    return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
+           this.inspector.toolbox.currentToolId === "inspector" &&
+           this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
+  }
+
+  /**
+   * Returns simulatable animation by given parameters.
+   * The returned animation is implementing Animation interface of Web Animation API.
+   * https://drafts.csswg.org/web-animations/#the-animation-interface
+   *
+   * @param {Array} keyframes
+   *        e.g. [{ opacity: 0 }, { opacity: 1 }]
+   * @param {Object} effectTiming
+   *        e.g. { duration: 1000, fill: "both" }
+   * @param {Boolean} isElementNeeded
+   *        true:  create animation with an element.
+   *               If want to know computed value of the element, turn on.
+   *        false: create animation without an element,
+   *               If need to know only timing progress.
+   * @return {Animation}
+   *         https://drafts.csswg.org/web-animations/#the-animation-interface
+   */
+  simulateAnimation(keyframes, effectTiming, isElementNeeded) {
+    let targetEl = null;
+
+    if (isElementNeeded) {
+      if (!this.simulatedElement) {
+        this.simulatedElement = this.win.document.createElement("div");
+        this.win.document.documentElement.appendChild(this.simulatedElement);
+      } else {
+        // Reset styles.
+        this.simulatedElement.style.cssText = "";
+      }
+
+      targetEl = this.simulatedElement;
+    }
+
+    if (!this.simulatedAnimation) {
+      this.simulatedAnimation = new this.win.Animation();
+    }
+
+    this.simulatedAnimation.effect =
+      new this.win.KeyframeEffect(targetEl, keyframes, effectTiming);
+
+    return this.simulatedAnimation;
+  }
+
+  toggleElementPicker() {
+    this.inspector.toolbox.highlighterUtils.togglePicker();
   }
 
   async update() {
@@ -78,22 +217,12 @@ class AnimationInspector {
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
 
-    if (!this.animations || !isAllTimingEffectEqual(animations, this.animations)) {
+    if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
     }
 
     done();
-  }
-
-  isPanelVisible() {
-    return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
-           this.inspector.toolbox.currentToolId === "inspector" &&
-           this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
-  }
-
-  toggleElementPicker() {
-    this.inspector.toolbox.highlighterUtils.togglePicker();
   }
 
   onElementPickerStarted() {

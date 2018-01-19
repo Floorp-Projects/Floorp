@@ -1018,12 +1018,6 @@ nsCertTree::GetImageSrc(int32_t row, nsITreeColumn* col,
 }
 
 NS_IMETHODIMP
-nsCertTree::GetProgressMode(int32_t row, nsITreeColumn* col, int32_t* _retval)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCertTree::GetCellValue(int32_t row, nsITreeColumn* col,
                          nsAString& _retval)
 {

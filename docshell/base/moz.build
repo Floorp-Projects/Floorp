@@ -39,7 +39,6 @@ XPIDL_SOURCES += [
     'nsCDefaultURIFixup.idl',
     'nsIClipboardCommands.idl',
     'nsIContentViewer.idl',
-    'nsIContentViewerContainer.idl',
     'nsIContentViewerEdit.idl',
     'nsIDocCharset.idl',
     'nsIDocShell.idl',

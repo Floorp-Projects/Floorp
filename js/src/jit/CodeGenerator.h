@@ -232,6 +232,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitSetArgumentsObjectArg(LSetArgumentsObjectArg* lir) override;
     void visitReturnFromCtor(LReturnFromCtor* lir) override;
     void visitComputeThis(LComputeThis* lir) override;
+    void visitImplicitThis(LImplicitThis* lir) override;
     void visitArrayLength(LArrayLength* lir) override;
     void visitSetArrayLength(LSetArrayLength* lir) override;
     void visitGetNextEntryForIterator(LGetNextEntryForIterator* lir) override;
@@ -250,6 +251,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitBoundsCheck(LBoundsCheck* lir) override;
     void visitBoundsCheckRange(LBoundsCheckRange* lir) override;
     void visitBoundsCheckLower(LBoundsCheckLower* lir) override;
+    void visitSpectreMaskIndex(LSpectreMaskIndex* lir) override;
     void visitLoadFixedSlotV(LLoadFixedSlotV* ins) override;
     void visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* lir) override;
     void visitLoadFixedSlotT(LLoadFixedSlotT* ins) override;

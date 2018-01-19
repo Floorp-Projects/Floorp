@@ -197,10 +197,6 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
       return limitTopLevelMessageCount(newState, logLimit);
 
-    case constants.MESSAGE_ADD:
-      newState = addMessage(state, filtersState, prefsState, action.message);
-      return limitTopLevelMessageCount(newState, logLimit);
-
     case constants.MESSAGES_CLEAR:
       return MessageState({
         // Store all actors from removed messages. This array is used by
@@ -347,11 +343,11 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
   return state;
 }
 
-function getNewCurrentGroup(currentGoup, groupsById) {
+function getNewCurrentGroup(currentGroup, groupsById) {
   let newCurrentGroup = null;
-  if (currentGoup) {
+  if (currentGroup) {
     // Retrieve the parent groups of the current group.
-    let parents = groupsById.get(currentGoup);
+    let parents = groupsById.get(currentGroup);
     if (Array.isArray(parents) && parents.length > 0) {
       // If there's at least one parent, make the first one the new currentGroup.
       newCurrentGroup = parents[0];

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from selenium import webdriver
 import selenium.webdriver.common.desired_capabilities
 import os

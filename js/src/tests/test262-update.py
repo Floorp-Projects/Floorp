@@ -20,8 +20,6 @@ from itertools import chain, imap
 # Skip all tests which use features not supported in SpiderMonkey.
 UNSUPPORTED_FEATURES = set([
                             "tail-call-optimization",
-                            "Array.prototype.flatMap",
-                            "Array.prototype.flatten",
                             "BigInt",
                             "class-fields-public",
                             "class-fields-private",

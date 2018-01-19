@@ -105,6 +105,7 @@ class TsBase(Test):
         'xperf_stackwalk',
         'tpmozafterpaint',
         'fnbpaint',
+        'tphero',
         'profile',
         'firstpaint',
         'userready',
@@ -240,9 +241,9 @@ class PageloaderTest(Test):
     cycles = None
     timeout = None
     keys = ['tpmanifest', 'tpcycles', 'tppagecycles', 'tprender', 'tpchrome',
-            'tpmozafterpaint', 'fnbpaint', 'tploadnocache', 'firstpaint', 'userready',
-            'testeventmap', 'base_vs_ref', 'mainthread', 'resolution', 'cycles',
-            'gecko_profile', 'gecko_profile_interval', 'gecko_profile_entries',
+            'tpmozafterpaint', 'fnbpaint', 'tphero', 'tploadnocache', 'firstpaint',
+            'userready', 'testeventmap', 'base_vs_ref', 'mainthread', 'resolution',
+            'cycles', 'gecko_profile', 'gecko_profile_interval', 'gecko_profile_entries',
             'tptimeout', 'win_counters', 'w7_counters', 'linux_counters', 'mac_counters',
             'tpscrolltest', 'xperf_counters', 'timeout', 'responsiveness',
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
@@ -899,6 +900,7 @@ class tp6_google(QuantumPageloadTest):
     Quantum Pageload Test - Google
     """
     tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
+    tphero = True
 
 
 @register_test()

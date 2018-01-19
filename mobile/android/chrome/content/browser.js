@@ -2691,6 +2691,40 @@ var NativeWindow = {
       return this.defaultContext = Strings.browser.GetStringFromName("browser.menu.context.default");
     },
 
+    /* Gets menuitems for an arbitrary node
+     * Parameters:
+     *   element - The element to look at. If this element has a contextmenu attribute, the
+     *             corresponding contextmenu will be used.
+     */
+    _getHTMLContextMenuItemsForElement: function(element) {
+      let htmlMenu = element.contextMenu;
+      if (!htmlMenu) {
+        return [];
+      }
+
+      htmlMenu.sendShowEvent();
+
+      return this._getHTMLContextMenuItemsForMenu(htmlMenu, element);
+    },
+
+    /* Add a menuitem for an HTML <menu> node
+     * Parameters:
+     *   menu - The <menu> element to iterate through for menuitems
+     *   target - The target element these context menu items are attached to
+     */
+    _getHTMLContextMenuItemsForMenu: function(menu, target) {
+      let items = [];
+      for (let i = 0; i < menu.childNodes.length; i++) {
+        let elt = menu.childNodes[i];
+        if (!elt.label)
+          continue;
+
+        items.push(new HTMLContextMenuItem(elt, target));
+      }
+
+      return items;
+    },
+
     // Searches the current list of menuitems to show for any that match this id
     _findMenuItem: function(aId) {
       if (!this.menus) {
@@ -2854,8 +2888,14 @@ var NativeWindow = {
       while (element) {
         let context = this._getContextType(element);
 
-        // Check for any context menu items registered in the ui.
-        let items = this._getNativeContextMenuItems(element, x, y);
+        // First check for any html5 context menus that might exist...
+        var items = this._getHTMLContextMenuItemsForElement(element);
+        if (items.length > 0) {
+          this._addMenuItems(items, context);
+        }
+
+        // then check for any context menu items registered in the ui.
+        items = this._getNativeContextMenuItems(element, x, y);
         if (items.length > 0) {
           this._addMenuItems(items, context);
         }
@@ -6689,3 +6729,79 @@ ContextMenuItem.prototype = {
     };
   }
 }
+
+function HTMLContextMenuItem(elt, target) {
+  ContextMenuItem.call(this, { });
+
+  this.menuElementRef = Cu.getWeakReference(elt);
+  this.targetElementRef = Cu.getWeakReference(target);
+}
+
+HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
+  order: {
+    value: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER
+  },
+
+  matches: {
+    value: function(target) {
+      let t = this.targetElementRef.get();
+      return t === target;
+    },
+  },
+
+  callback: {
+    value: function(target) {
+      let elt = this.menuElementRef.get();
+      if (!elt) {
+        return;
+      }
+
+      // If this is a menu item, show a new context menu with the submenu in it
+      if (elt instanceof HTMLMenuElement) {
+        try {
+          NativeWindow.contextmenus.menus = {};
+
+          let elt = this.menuElementRef.get();
+          let target = this.targetElementRef.get();
+          if (!elt) {
+            return;
+          }
+
+          var items = NativeWindow.contextmenus._getHTMLContextMenuItemsForMenu(elt, target);
+          // This menu will always only have one context, but we still make sure its the "right" one.
+          var context = NativeWindow.contextmenus._getContextType(target);
+          if (items.length > 0) {
+            NativeWindow.contextmenus._addMenuItems(items, context);
+          }
+
+        } catch(ex) {
+          Cu.reportError(ex);
+        }
+      } else {
+        // otherwise just click the menu item
+        elt.click();
+      }
+    },
+  },
+
+  getValue: {
+    value: function(target) {
+      let elt = this.menuElementRef.get();
+      if (!elt) {
+        return null;
+      }
+
+      if (elt.hasAttribute("hidden")) {
+        return null;
+      }
+
+      return {
+        id: this.id,
+        icon: elt.icon,
+        label: elt.label,
+        disabled: elt.disabled,
+        menu: elt instanceof HTMLMenuElement
+      };
+    }
+  },
+});

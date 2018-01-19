@@ -20,7 +20,7 @@ describe("Testing UI", () => {
     it("sidebar is toggled on and off", () => {
       const packet = stubPackets.get("inspect({a: 1})");
       const message = stubPreparedMessages.get("inspect({a: 1})");
-      store.dispatch(actions.messageAdd(packet));
+      store.dispatch(actions.messagesAdd([packet]));
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
@@ -36,7 +36,7 @@ describe("Testing UI", () => {
     it("sidebar is hidden on clear", () => {
       const packet = stubPackets.get("inspect({a: 1})");
       const message = stubPreparedMessages.get("inspect({a: 1})");
-      store.dispatch(actions.messageAdd(packet));
+      store.dispatch(actions.messagesAdd([packet]));
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
@@ -54,7 +54,7 @@ describe("Testing UI", () => {
     it("sidebar is shown with correct object", () => {
       const packet = stubPackets.get("inspect({a: 1})");
       const message = stubPreparedMessages.get("inspect({a: 1})");
-      store.dispatch(actions.messageAdd(packet));
+      store.dispatch(actions.messagesAdd([packet]));
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
@@ -67,7 +67,7 @@ describe("Testing UI", () => {
     it("sidebar is not updated for the same object", () => {
       const packet = stubPackets.get("inspect({a: 1})");
       const message = stubPreparedMessages.get("inspect({a: 1})");
-      store.dispatch(actions.messageAdd(packet));
+      store.dispatch(actions.messagesAdd([packet]));
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
@@ -84,7 +84,7 @@ describe("Testing UI", () => {
     it("sidebar shown and updated for new object", () => {
       const packet = stubPackets.get("inspect({a: 1})");
       const message = stubPreparedMessages.get("inspect({a: 1})");
-      store.dispatch(actions.messageAdd(packet));
+      store.dispatch(actions.messagesAdd([packet]));
 
       const actorId = message.parameters[0].actor;
       const messageId = getFirstMessage(store.getState()).id;
@@ -95,7 +95,7 @@ describe("Testing UI", () => {
 
       const newPacket = stubPackets.get("new Date(0)");
       const newMessage = stubPreparedMessages.get("new Date(0)");
-      store.dispatch(actions.messageAdd(newPacket));
+      store.dispatch(actions.messagesAdd([newPacket]));
 
       const newActorId = newMessage.parameters[0].actor;
       const newMessageId = getLastMessage(store.getState()).id;

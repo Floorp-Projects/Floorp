@@ -746,13 +746,6 @@ public:
 
 protected:
   /**
-   * Returns true if the DOM has been modified since we started painting,
-   * in which case we should bail out and not paint anymore. This should
-   * never happen, but plugins can trigger it in some cases.
-   */
-  bool CheckDOMModified();
-
-  /**
    * The layer manager belonging to the widget that is being retained
    * across paints.
    */
@@ -784,15 +777,6 @@ protected:
    */
   const DisplayItemClip*              mInactiveLayerClip;
 
-  /**
-   * Saved generation counter so we can detect DOM changes.
-   */
-  uint32_t                            mInitialDOMGeneration;
-  /**
-   * Set to true if we have detected and reported DOM modification during
-   * the current paint.
-   */
-  bool                                mDetectedDOMModification;
   /**
    * Indicates that the entire layer tree should be rerendered
    * during this paint.

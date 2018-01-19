@@ -3549,6 +3549,12 @@ static const JSFunctionSpec array_methods[] = {
 
     /* ES7 additions */
     JS_SELF_HOSTED_FN("includes",    "ArrayIncludes",    2,0),
+
+#ifdef NIGHTLY_BUILD
+    JS_SELF_HOSTED_FN("flatMap",     "ArrayFlatMap",     1,0),
+    JS_SELF_HOSTED_FN("flatten",     "ArrayFlatten",     0,0),
+#endif
+
     JS_FS_END
 };
 

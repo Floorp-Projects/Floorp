@@ -55,6 +55,21 @@ struct FontTemplate {
 StaticMutex sFontDataTableLock;
 std::unordered_map<FontKey, FontTemplate> sFontDataTable;
 
+void
+ClearBlobImageResources(WrIdNamespace aNamespace) {
+  StaticMutexAutoLock lock(sFontDataTableLock);
+  for (auto i = sFontDataTable.begin(); i != sFontDataTable.end();) {
+    if (i->first.mNamespace == aNamespace) {
+      if (i->second.mVec) {
+        wr_dec_ref_arc(i->second.mVec);
+      }
+      i = sFontDataTable.erase(i);
+    } else {
+      i++;
+    }
+  }
+}
+
 extern "C" {
 void
 AddFontData(WrFontKey aKey, const uint8_t *aData, size_t aSize, uint32_t aIndex, const ArcVecU8 *aVec) {

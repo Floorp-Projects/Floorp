@@ -787,23 +787,11 @@ ArrayBufferObject::BufferContents::wasmBuffer() const
     return (WasmArrayRawBuffer*)(data_ - sizeof(WasmArrayRawBuffer));
 }
 
-void
-ArrayBufferObject::initializeRawBuffer(JSContext* cx, WasmArrayRawBuffer* wasmBuf, uint32_t initialSize)
-{
-    auto contents = BufferContents::create<WASM>(wasmBuf->dataPointer());
-    initialize(initialSize, contents, OwnsData);
-    cx->updateMallocCounter(wasmBuf->mappedSize());
-}
-
 template<typename ObjT, typename RawbufT>
 static bool
 CreateBuffer(JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize,
              MutableHandleArrayBufferObjectMaybeShared maybeSharedObject)
 {
-    Rooted<ObjT*> object(cx, ObjT::createEmpty(cx));
-    if (!object)
-        return false;
-
 #define ROUND_UP(v, a) ((v) % (a) == 0 ? (v) : v + a - ((v) % (a)))
 
     RawbufT* buffer = RawbufT::Allocate(initialSize, maxSize);
@@ -840,9 +828,13 @@ CreateBuffer(JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize
 
 #undef ROUND_UP
 
-    object->initializeRawBuffer(cx, buffer, initialSize);
+    // ObjT::createFromNewRawBuffer assumes ownership of |buffer| even in case
+    // of failure.
+    ObjT* object = ObjT::createFromNewRawBuffer(cx, buffer, initialSize);
+    if (!object)
+        return false;
 
-    maybeSharedObject.set(object.get());
+    maybeSharedObject.set(object);
     return true;
 }
 
@@ -1239,7 +1231,34 @@ ArrayBufferObject::createEmpty(JSContext* cx)
     if (!obj)
         return nullptr;
 
-    obj->initEmpty();
+    obj->setByteLength(0);
+    obj->setFlags(0);
+    obj->setFirstView(nullptr);
+    obj->setDataPointer(BufferContents::createPlain(nullptr), DoesntOwnData);
+
+    return obj;
+}
+
+ArrayBufferObject*
+ArrayBufferObject::createFromNewRawBuffer(JSContext* cx, WasmArrayRawBuffer* buffer,
+                                          uint32_t initialSize)
+{
+    AutoSetNewObjectMetadata metadata(cx);
+    ArrayBufferObject* obj = NewObjectWithClassProto<ArrayBufferObject>(cx, nullptr);
+    if (!obj) {
+        WasmArrayRawBuffer::Release(buffer->dataPointer());
+        return nullptr;
+    }
+
+    obj->setByteLength(initialSize);
+    obj->setFlags(0);
+    obj->setFirstView(nullptr);
+
+    auto contents = BufferContents::create<WASM>(buffer->dataPointer());
+    obj->setDataPointer(contents, OwnsData);
+
+    cx->updateMallocCounter(buffer->mappedSize());
+
     return obj;
 }
 

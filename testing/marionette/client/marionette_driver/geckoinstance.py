@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+from __future__ import absolute_import
+
 import os
 import sys
 import tempfile
@@ -15,6 +17,7 @@ import mozversion
 from mozdevice import DMError
 from mozprofile import Profile
 from mozrunner import Runner, FennecEmulatorRunner
+from six import reraise
 
 
 class GeckoInstance(object):
@@ -213,7 +216,7 @@ class GeckoInstance(object):
         except (IOError, KeyError):
             exc, val, tb = sys.exc_info()
             msg = 'Application "{0}" unknown (should be one of {1})'
-            raise NotImplementedError, msg.format(app, apps.keys()), tb
+            reraise(NotImplementedError, msg.format(app, apps.keys()), tb)
 
         return instance_class(*args, **kwargs)
 
@@ -356,7 +359,7 @@ class FennecInstance(GeckoInstance):
         except Exception as e:
             exc, val, tb = sys.exc_info()
             message = "Error possibly due to runner or device args: {}"
-            raise exc, message.format(e.message), tb
+            reraise(exc, message.format(e.message), tb)
         # gecko_log comes from logcat when running with device/emulator
         logcat_args = {
             "filterspec": "Gecko",

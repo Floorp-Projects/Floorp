@@ -4,22 +4,64 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const AnimationTarget = createFactory(require("./AnimationTarget"));
+const SummaryGraph = createFactory(require("./graph/SummaryGraph"));
 
 class AnimationItem extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
+      getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
   render() {
+    const {
+      animation,
+      emitEventForTest,
+      getAnimatedPropertyMap,
+      getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+      simulateAnimation,
+      timeScale,
+    } = this.props;
+
     return dom.li(
       {
-        className: "animation-item"
-      }
+        className: `animation-item ${ animation.state.type }`
+      },
+      AnimationTarget(
+        {
+          animation,
+          emitEventForTest,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
+        }
+      ),
+      SummaryGraph(
+        {
+          animation,
+          emitEventForTest,
+          getAnimatedPropertyMap,
+          simulateAnimation,
+          timeScale,
+        }
+      )
     );
   }
 }

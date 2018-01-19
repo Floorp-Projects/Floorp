@@ -11,8 +11,10 @@ geckoview:
         config:
             by-test-platform:
                 android-4.2-x86/opt:
+                    - android/android_common.py
                     - android/androidx86.py
                 android.*:
+                    - android/android_common.py
                     - android/androidarm_4_3.py
         extra-options:
             - --test-suite=geckoview
@@ -33,6 +35,7 @@ robocop:
         script: android_emulator_unittest.py
         no-read-buildbot-config: true
         config:
+            - android/android_common.py
             - android/androidarm_4_3.py
         extra-options:
             - --test-suite=robocop
@@ -80,6 +83,7 @@ test-verify:
         config:
             by-test-platform:
                 android.*:
+                    - android/android_common.py
                     - android/androidarm_4_3.py
                 linux.*:
                     - unittests/linux_unittest.py

@@ -985,13 +985,6 @@ nsAutoCompleteController::GetImageSrc(int32_t row, nsITreeColumn* col, nsAString
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::GetProgressMode(int32_t row, nsITreeColumn* col, int32_t* _retval)
-{
-  NS_NOTREACHED("tree has no progress cells");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsAutoCompleteController::GetCellValue(int32_t row, nsITreeColumn* col, nsAString& _retval)
 {
   NS_NOTREACHED("all of our cells are text");

@@ -354,12 +354,6 @@ inDOMView::GetImageSrc(int32_t row, nsITreeColumn* col, nsAString& _retval)
 }
 
 NS_IMETHODIMP
-inDOMView::GetProgressMode(int32_t row, nsITreeColumn* col, int32_t* _retval)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 inDOMView::GetCellValue(int32_t row, nsITreeColumn* col, nsAString& _retval)
 {
   return NS_OK;

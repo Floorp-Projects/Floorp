@@ -513,7 +513,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
   NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsILoadContext)
@@ -6856,11 +6855,7 @@ nsDocShell::RefreshURIFromQueue()
   return NS_OK;
 }
 
-//*****************************************************************************
-// nsDocShell::nsIContentViewerContainer
-//*****************************************************************************
-
-NS_IMETHODIMP
+nsresult
 nsDocShell::Embed(nsIContentViewer* aContentViewer,
                   const char* aCommand, nsISupports* aExtraInfo)
 {
@@ -6923,12 +6918,6 @@ nsDocShell::Embed(nsIContentViewer* aContentViewer,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::SetIsPrinting(bool aIsPrinting)
-{
-  mIsPrintingOrPP = aIsPrinting;
-  return NS_OK;
-}
 
 //*****************************************************************************
 // nsDocShell::nsIWebProgressListener
@@ -9010,6 +8999,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
   }
 
   nscolor bgcolor = NS_RGBA(0, 0, 0, 0);
+  bool isActive = false;
   // Ensure that the content viewer is destroyed *after* the GC - bug 71515
   nsCOMPtr<nsIContentViewer> contentViewer = mContentViewer;
   if (contentViewer) {
@@ -9024,6 +9014,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
     if (shell) {
       bgcolor = shell->GetCanvasBackground();
+      isActive = shell->IsActive();
     }
 
     contentViewer->Close(mSavingOldViewer ? mOSHE.get() : nullptr);
@@ -9082,6 +9073,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
   if (shell) {
     shell->SetCanvasBackground(bgcolor);
+    if (isActive) {
+      shell->SetIsActive(isActive);
+    }
   }
 
   // XXX: It looks like the LayoutState gets restored again in Embed()
@@ -13850,6 +13844,13 @@ nsDocShell::StopDocumentLoad(void)
   }
   // return failer if this request is not accepted due to mCharsetReloadState
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetIsPrinting(bool aIsPrinting)
+{
+  mIsPrintingOrPP = aIsPrinting;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

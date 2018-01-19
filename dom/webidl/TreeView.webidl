@@ -123,16 +123,6 @@ interface TreeView
   DOMString getImageSrc(long row, TreeColumn column);
 
   /**
-   * The progress mode for a given cell. This method is only called for
-   * columns of type |progressmeter|.
-   */
-  const short PROGRESS_NORMAL = 1;
-  const short PROGRESS_UNDETERMINED = 2;
-  const short PROGRESS_NONE = 3;
-  [Throws]
-  long getProgressMode(long row, TreeColumn column);
-
-  /**
    * The value for a given cell. This method is only called for columns
    * of type other than |text|.
    */

@@ -451,7 +451,8 @@ private:
   nsIFrame* GetAnimationFrame() const;
 
   bool CanThrottle() const;
-  bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
+  bool CanThrottleTransformChanges(const nsIFrame& aFrame) const;
+  bool CanThrottleTransformChangesForCompositor(nsIFrame& aFrame) const;
 
   // Returns true if the computedTiming has changed since the last
   // composition.

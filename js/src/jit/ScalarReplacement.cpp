@@ -861,6 +861,8 @@ IndexOf(MDefinition* ins, int32_t* res)
 {
     MOZ_ASSERT(ins->isLoadElement() || ins->isStoreElement());
     MDefinition* indexDef = ins->getOperand(1); // ins->index();
+    if (indexDef->isSpectreMaskIndex())
+        indexDef = indexDef->toSpectreMaskIndex()->index();
     if (indexDef->isBoundsCheck())
         indexDef = indexDef->toBoundsCheck()->index();
     if (indexDef->isToInt32())

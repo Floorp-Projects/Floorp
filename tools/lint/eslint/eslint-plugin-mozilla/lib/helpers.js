@@ -40,7 +40,7 @@ const callExpressionMultiDefinitions = [
 ];
 
 const imports = [
-  /^(?:Cu|Components\.utils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/
+  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/
 ];
 
 const workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
