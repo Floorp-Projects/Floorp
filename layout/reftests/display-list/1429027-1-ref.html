@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1429027 - No caret</title>
+  <meta charset="utf-8">
+</head>
+<body>
+<form autocomplete="off">
+  <input autofocus value="" onfocus="done()">
+</form>
+
+<script type="text/javascript">
+function done() {
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
