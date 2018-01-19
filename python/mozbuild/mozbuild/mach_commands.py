@@ -1228,7 +1228,6 @@ class PackageFrontend(MachCommandBase):
         import shutil
 
         from taskgraph.generator import load_graph_config, Kind
-        from taskgraph.parameters import Parameters
         from taskgraph.util.taskcluster import (
             get_artifact_url,
             list_artifacts,
@@ -1335,24 +1334,16 @@ class PackageFrontend(MachCommandBase):
                          'should be determined in the decision task.')
                 return 1
             from taskgraph.optimize import IndexSearch
-            params = {
-                'message': '',
-                'project': '',
-                'level': os.environ.get('MOZ_SCM_LEVEL', '3'),
-                'base_repository': '',
-                'head_repository': '',
-                'head_rev': '',
-                'moz_build_date': '',
-                'build_date': 0,
-                'pushlog_id': 0,
-                'owner': '',
-            }
+            from taskgraph.parameters import Parameters
+            params = Parameters(
+                level=os.environ.get('MOZ_SCM_LEVEL', '3'),
+                strict=False)
 
             # TODO: move to the taskcluster package
             def tasks(kind_name):
                 root_path = mozpath.join(self.topsrcdir, 'taskcluster', 'ci')
                 graph_config = load_graph_config(root_path)
-                tasks = Kind.load(root_path, graph_config, kind_name).load_tasks(Parameters(**params), {})
+                tasks = Kind.load(root_path, graph_config, kind_name).load_tasks(params, {})
                 return {
                     task.task['metadata']['name']: task
                     for task in tasks

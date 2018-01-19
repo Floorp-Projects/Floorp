@@ -14,12 +14,12 @@ const AnimationTimelineTickList = createFactory(require("./AnimationTimelineTick
 class AnimationListHeader extends PureComponent {
   static get propTypes() {
     return {
-      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { animations } = this.props;
+    const { timeScale } = this.props;
 
     return dom.div(
       {
@@ -27,7 +27,7 @@ class AnimationListHeader extends PureComponent {
       },
       AnimationTimelineTickList(
         {
-          animations
+          timeScale
         }
       )
     );

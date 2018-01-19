@@ -39,7 +39,6 @@ py2:
         - testing/firefox-ui
         - testing/geckodriver
         - testing/gtest
-        - testing/marionette
         - testing/mochitest
         - testing/mozharness
         - testing/remotecppunittests.py
