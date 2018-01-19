@@ -279,7 +279,7 @@ else:
     if platform.system() == 'Windows':
         CONFIGURE_ARGS += ' --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32'
 
-if platform.system() == 'Linux':
+if platform.system() == 'Linux' and AUTOMATION:
     CONFIGURE_ARGS = '--enable-stdcxx-compat ' + CONFIGURE_ARGS
 
 # Timeouts.
