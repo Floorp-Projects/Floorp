@@ -1,0 +1,34 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1516394893 21600
+#      Fri Jan 19 14:48:13 2018 -0600
+# Node ID bd0817bb5b0c5681c4c49817363e6ddd6efac82c
+# Parent  c64ea5b2e26b203eff2f0b9d85fef99ae3a094f9
+Bug 1431825 Map _Copy_s to copy for basic_string compatibility on MinGW r?bobowen
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_types.h b/security/sandbox/chromium/sandbox/win/src/sandbox_types.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_types.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_types.h
+@@ -5,16 +5,22 @@
+ #ifndef SANDBOX_WIN_SRC_SANDBOX_TYPES_H_
+ #define SANDBOX_WIN_SRC_SANDBOX_TYPES_H_
+ 
+ #include "base/process/kill.h"
+ #include "base/process/launch.h"
+ 
+ namespace sandbox {
+ 
++#ifdef __MINGW32__
++// Map Microsoft's proprietary more-safe version of copy() back to
++// the std::basic_string method
++#define _Copy_s copy
++#endif
++
+ // Operation result codes returned by the sandbox API.
+ //
+ // Note: These codes are listed in a histogram and any new codes should be added
+ // at the end. If the underlying type is changed then the forward declaration in
+ // sandbox_init.h must be updated.
+ //
+ enum ResultCode : int {
+   SBOX_ALL_OK = 0,
