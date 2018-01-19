@@ -8,9 +8,9 @@ import os
 import re
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.task import _run_task_suffix
 from .. import GECKO
 from taskgraph.util.docker import (
-    docker_image,
     generate_context_hash,
 )
 from taskgraph.util.cached_tasks import add_optimization
@@ -96,6 +96,7 @@ def fill_template(config, tasks):
         context_path = os.path.join('taskcluster', 'docker', definition)
         context_hash = generate_context_hash(
             GECKO, context_path, image_name, args)
+        digest_data = [context_hash]
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -124,22 +125,9 @@ def fill_template(config, tasks):
             'run-on-projects': [],
             'worker-type': 'aws-provisioner-v1/gecko-{}-images'.format(
                 config.params['level']),
-            # can't use {in-tree: ..} here, otherwise we might try to build
-            # this image..
             'worker': {
                 'implementation': 'docker-worker',
                 'os': 'linux',
-                'docker-image': docker_image('image_builder'),
-                'caches': [{
-                    'type': 'persistent',
-                    'name': 'level-{}-imagebuilder-v1'.format(config.params['level']),
-                    'mount-point': '/builds/worker/checkouts',
-                }],
-                'volumes': [
-                    # Keep in sync with Dockerfile and TASKCLUSTER_VOLUMES
-                    '/builds/worker/checkouts',
-                    '/builds/worker/workspace',
-                ],
                 'artifacts': [{
                     'type': 'file',
                     'path': '/builds/worker/workspace/artifacts/image.tar.zst',
@@ -154,7 +142,6 @@ def fill_template(config, tasks):
                     'GECKO_BASE_REPOSITORY': config.params['base_repository'],
                     'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
                     'GECKO_HEAD_REV': config.params['head_rev'],
-                    'TASKCLUSTER_VOLUMES': '/builds/worker/checkouts;/builds/worker/workspace',
                 },
                 'chain-of-trust': True,
                 'docker-in-docker': True,
@@ -163,21 +150,52 @@ def fill_template(config, tasks):
             },
         }
 
+        worker = taskdesc['worker']
+
+        # We use the in-tree image_builder image to build docker images, but
+        # that can't be used to build the image_builder image itself,
+        # obviously. So we fall back to the last snapshot of the image that
+        # was uploaded to docker hub.
+        if image_name == 'image_builder':
+            worker['docker-image'] = 'taskcluster/image_builder@sha256:' + \
+                '24ce54a1602453bc93515aecd9d4ad25a22115fbc4b209ddb5541377e9a37315'
+            # Keep in sync with the Dockerfile used to generate the
+            # docker image whose digest is referenced above.
+            worker['volumes'] = [
+                '/builds/worker/checkouts',
+                '/builds/worker/workspace',
+            ]
+            cache_name = 'imagebuilder-v1'
+        else:
+            worker['docker-image'] = {'in-tree': 'image_builder'}
+            cache_name = 'imagebuilder-sparse-{}'.format(_run_task_suffix())
+            # Force images built against the in-tree image builder to
+            # have a different digest by adding a fixed string to the
+            # hashed data.
+            digest_data.append('image_builder')
+
+        worker['caches'] = [{
+            'type': 'persistent',
+            'name': 'level-{}-{}'.format(config.params['level'], cache_name),
+            'mount-point': '/builds/worker/checkouts',
+        }]
+
         for k, v in args.items():
             if k == 'DOCKER_IMAGE_PACKAGES':
-                taskdesc['worker']['env'][k] = {'task-reference': v}
+                worker['env'][k] = {'task-reference': v}
             else:
-                taskdesc['worker']['env'][k] = v
+                worker['env'][k] = v
 
         if packages:
             deps = taskdesc.setdefault('dependencies', {})
-            digest_data = [context_hash]
             for p in sorted(packages):
                 deps[p] = 'packages-{}'.format(p)
                 digest_data.append(available_packages[p])
+
+        if len(digest_data) > 1:
             kwargs = {'digest_data': digest_data}
         else:
-            kwargs = {'digest': context_hash}
+            kwargs = {'digest': digest_data[0]}
         add_optimization(
             config, taskdesc,
             cache_type="docker-images.v1",

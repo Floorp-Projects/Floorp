@@ -17,7 +17,7 @@ job-defaults:
 web-platform-tests:
     description: "Web platform test run"
     suite: web-platform-tests
-    treeherder-symbol: tc-W(wpt)
+    treeherder-symbol: W(wpt)
     chunks:
         by-test-platform:
             macosx64/opt: 5
@@ -37,7 +37,7 @@ web-platform-tests:
 web-platform-tests-headless:
     description: "Web platform test headless run"
     suite: web-platform-tests
-    treeherder-symbol: tc-W(wptH)
+    treeherder-symbol: W(wptH)
     chunks:
         by-test-platform:
             macosx64/opt: 5
@@ -65,7 +65,7 @@ web-platform-tests-headless:
 web-platform-tests-reftests:
     description: "Web platform reftest run"
     suite: web-platform-tests-reftests
-    treeherder-symbol: tc-W(Wr)
+    treeherder-symbol: W(Wr)
     chunks:
         by-test-platform:
             macosx.*: 1
@@ -82,7 +82,7 @@ web-platform-tests-reftests:
 web-platform-tests-reftests-headless:
     description: "Web platform reftest headless run"
     suite: web-platform-tests-reftests
-    treeherder-symbol: tc-W(WrH)
+    treeherder-symbol: W(WrH)
     chunks:
         by-test-platform:
             macosx.*: 1
@@ -107,7 +107,7 @@ web-platform-tests-reftests-headless:
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
     suite: web-platform-tests-wdspec
-    treeherder-symbol: tc-W(Wd)
+    treeherder-symbol: W(Wd)
     mozharness:
         extra-options:
             - --test-type=wdspec
@@ -115,7 +115,7 @@ web-platform-tests-wdspec:
 web-platform-tests-wdspec-headless:
     description: "Web platform webdriver-spec headless run"
     suite: web-platform-tests-wdspec
-    treeherder-symbol: tc-W(WdH)
+    treeherder-symbol: W(WdH)
     run-on-projects: []  # disabled pending releng approval
     mozharness:
         extra-options:
@@ -132,7 +132,7 @@ web-platform-tests-wdspec-headless:
 test-verify-wpt:
     description: "Extra verification of web-platform tests modified on this push"
     suite: test-verify-wpt
-    treeherder-symbol: tc(TVw)
+    treeherder-symbol: TVw
     run-on-projects:
         by-test-platform:
             # do not run on ccov; see also the enable_code_coverage transform

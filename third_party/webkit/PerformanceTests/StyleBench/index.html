@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -14,6 +14,9 @@
         addEventListener('load', () => {
             if (!window.location.protocol.startsWith('http'))
                 showSection('local-message', false);
+
+            if (location.search("?gecko"))
+                startTest();
         });
     </script>
 </head>

@@ -5,7 +5,7 @@ linux64/opt:
         job-name: linux64-opt
     treeherder:
         platform: linux64/opt
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -33,7 +33,7 @@ linux64-dmd/opt:
         job-name: linux64-dmd-opt
     treeherder:
         platform: linux64-dmd/opt
-        symbol: tc(Bdmd)
+        symbol: Bdmd
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -64,7 +64,7 @@ linux64/pgo:
         job-name: linux64-pgo
     treeherder:
         platform: linux64/pgo
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -93,7 +93,7 @@ linux64-fuzzing/debug:
         job-name: linux64-fuzzing-debug
     treeherder:
         platform: linux64/debug
-        symbol: tc(Bf)
+        symbol: Bf
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -124,7 +124,7 @@ linux64/debug:
         job-name: linux64-debug
     treeherder:
         platform: linux64/debug
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -158,7 +158,7 @@ linux64-devedition-nightly/opt:
         type: nightly
     treeherder:
         platform: linux64-devedition/opt
-        symbol: tc(N)
+        symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -190,7 +190,7 @@ linux64-base-toolchains/opt:
         job-name: linux64-base-toolchains-opt
     treeherder:
         platform: linux64/opt
-        symbol: tc(Bb)
+        symbol: Bb
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -220,7 +220,7 @@ linux64-base-toolchains/debug:
         job-name: linux64-base-toolchains-debug
     treeherder:
         platform: linux64/debug
-        symbol: tc(Bb)
+        symbol: Bb
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -251,7 +251,7 @@ linux/opt:
         job-name: linux-opt
     treeherder:
         platform: linux32/opt
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -279,7 +279,7 @@ linux/debug:
         job-name: linux-debug
     treeherder:
         platform: linux32/debug
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -308,7 +308,7 @@ linux/pgo:
         job-name: linux-pgo
     treeherder:
         platform: linux32/pgo
-        symbol: tc(B)
+        symbol: B
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -337,7 +337,7 @@ linux-rusttests/opt:
         job-name: linux-rusttests-opt
     treeherder:
         platform: linux32/opt
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -371,7 +371,7 @@ linux-rusttests/debug:
         job-name: linux-rusttests-debug
     treeherder:
         platform: linux32/debug
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -410,7 +410,7 @@ linux-devedition-nightly/opt:
         type: nightly
     treeherder:
         platform: linux32-devedition/opt
-        symbol: tc(N)
+        symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -447,7 +447,7 @@ linux-nightly/opt:
         type: nightly
     treeherder:
         platform: linux32/opt
-        symbol: tc(N)
+        symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -477,7 +477,7 @@ linux64-asan/opt:
         job-name: linux64-asan-opt
     treeherder:
         platform: linux64/asan
-        symbol: tc(Bo)
+        symbol: Bo
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         env:
@@ -509,7 +509,7 @@ linux64-asan-fuzzing/opt:
         job-name: linux64-fuzzing-asan-opt
     treeherder:
         platform: linux64/asan
-        symbol: tc(Bof)
+        symbol: Bof
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         env:
@@ -540,7 +540,7 @@ linux64-asan-reporter/opt:
         job-name: linux64-asan-reporter-opt
     treeherder:
         platform: linux64/asan
-        symbol: tc(BoR)
+        symbol: BoR
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         env:
@@ -571,7 +571,7 @@ linux64-asan/debug:
         job-name: linux64-asan-debug
     treeherder:
         platform: linux64/asan
-        symbol: tc(Bd)
+        symbol: Bd
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         env:
@@ -607,7 +607,7 @@ linux64-nightly/opt:
         type: nightly
     treeherder:
         platform: linux64/opt
-        symbol: tc(N)
+        symbol: N
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -636,7 +636,7 @@ linux64-noopt/debug:
         job-name: linux64-noopt-debug
     treeherder:
         platform: linux64-noopt/debug
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -668,7 +668,7 @@ linux64-rusttests/opt:
         job-name: linux64-rusttests-opt
     treeherder:
         platform: linux64/opt
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -702,7 +702,7 @@ linux64-rusttests/debug:
         job-name: linux64-rusttests-debug
     treeherder:
         platform: linux64/debug
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -736,7 +736,7 @@ linux64-jsdcov/opt:
         job-name: linux64-jsdcov-opt
     treeherder:
         platform: linux64-jsdcov/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     run-on-projects: []
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -766,7 +766,7 @@ linux64-ccov/opt:
         job-name: linux64-ccov-opt
     treeherder:
         platform: linux64-ccov/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     run-on-projects: []
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
@@ -796,7 +796,7 @@ linux64-add-on-devel/opt:
         job-name: linux64-add-on-devel
     treeherder:
         platform: linux64-add-on-devel/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:

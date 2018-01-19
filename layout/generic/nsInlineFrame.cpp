@@ -986,6 +986,13 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
     }
 
     nsIFrame* nextInline = blockFrame->GetProperty(nsIFrame::IBSplitSibling());
+
+    // This check is here due to bug 1431232.  Please remove it once
+    // that bug is fixed.
+    if (MOZ_UNLIKELY(!nextInline)) {
+      break;
+    }
+
     MOZ_ASSERT(nextInline, "There is always a trailing inline in an IB split");
 
     for (nsIFrame* cont = nextInline; cont; cont = cont->GetNextContinuation()) {

@@ -754,6 +754,12 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             MarkUnsupported(GLFeature::depth_texture);
         }
 #endif
+
+        const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
+        if (strstr(versionStr, "Mesa")) {
+            // DrawElementsInstanced hangs the driver.
+            MarkUnsupported(GLFeature::robust_buffer_access_behavior);
+        }
     }
 
     if (IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) {

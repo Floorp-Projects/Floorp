@@ -312,7 +312,10 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
             # Make sure that the logging directory exists
             self.fatal("Could not create blobber upload directory")
 
-        cmd.append(manifest)
+        if os.environ.get('MOZHARNESS_TEST_PATHS'):
+            cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+        else:
+            cmd.append(manifest)
 
         try_options, try_tests = self.try_args("marionette")
         cmd.extend(self.query_tests_args(try_tests,

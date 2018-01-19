@@ -50,6 +50,9 @@ const ProfilerManager = (function () {
     // How many subscribers there
     _profilerStatusSubscribers: 0,
 
+    // Has the profiler ever been started by the actor?
+    started: false,
+
     /**
      * The nsIProfiler is target agnostic and interacts with the whole platform.
      * Therefore, special care needs to be given to make sure different profiler
@@ -124,6 +127,7 @@ const ProfilerManager = (function () {
         Cu.reportError(`Could not start the profiler module: ${e.message}`);
         return { started: false, reason: e, currentTime };
       }
+      this.started = true;
 
       this._updateProfilerStatusPolling();
 
@@ -139,8 +143,12 @@ const ProfilerManager = (function () {
       // Since this is used as a root actor, and the profiler module interacts
       // with the whole platform, we need to avoid a case in which the profiler
       // is stopped when there might be other clients still profiling.
-      if (this.length <= 1) {
+      // Also check for `started` to only stop the profiler when the actor
+      // actually started it. This is to prevent stopping the profiler initiated
+      // by some other code, like Talos.
+      if (this.length <= 1 && this.started) {
         nsIProfilerModule.StopProfiler();
+        this.started = false;
       }
       this._updateProfilerStatusPolling();
       return { started: false };

@@ -2015,7 +2015,7 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
         // of the drawTarget's transform, we need to undo
         // this before drawing the hexbox. (Bug 983985)
         gfxContextMatrixAutoSaveRestore matrixRestore;
-        if (aFontParams.needsOblique && !textDrawer) {
+        if (aFontParams.needsOblique && !aFontParams.isVerticalFont && !textDrawer) {
             matrixRestore.SetContext(aRunParams.context);
             gfx::Matrix mat =
                 aRunParams.context->CurrentMatrix().

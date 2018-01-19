@@ -7223,6 +7223,13 @@ nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   InvalidateRenderingObservers(displayRoot, this);
 
+  // Check if frame supports WebRender's async update
+  if ((aFlags & UPDATE_IS_ASYNC) &&
+      WebRenderUserData::SupportsAsyncUpdate(this)) {
+    // WebRender does not use layer, then return nullptr.
+    return nullptr;
+  }
+
   // If the layer is being updated asynchronously, and it's being forwarded
   // to a compositor, then we don't need to invalidate.
   if ((aFlags & UPDATE_IS_ASYNC) && layer && layer->SupportsAsyncUpdate()) {

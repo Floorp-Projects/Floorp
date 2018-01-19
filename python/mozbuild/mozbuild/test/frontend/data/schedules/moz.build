@@ -7,7 +7,7 @@ with Files('*.win'):
 with Files('*.osx'):
     SCHEDULES.exclusive = ['macosx']
 
-with Files('bad.osx'):
+with Files('win.and.osx'):
     # this conflicts with the previous clause and will cause an error
     # when read
     SCHEDULES.exclusive = ['macosx', 'windows']

@@ -5,7 +5,7 @@ macosx64/debug:
         job-name: macosx64-debug
     treeherder:
         platform: osx-cross/debug
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -38,7 +38,7 @@ macosx64/opt:
         job-name: macosx64-opt
     treeherder:
         platform: osx-cross/opt
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -70,7 +70,7 @@ macosx64-dmd/opt:
         job-name: macosx64-dmd-opt
     treeherder:
         platform: osx-10-10-dmd/opt
-        symbol: tc(Bdmd)
+        symbol: Bdmd
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -110,7 +110,7 @@ macosx64-devedition-nightly/opt:
         type: nightly
     treeherder:
         platform: osx-cross-devedition/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -146,7 +146,7 @@ macosx64-noopt/debug:
         job-name: macosx64-noopt-debug
     treeherder:
         platform: osx-cross-noopt/debug
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -182,7 +182,7 @@ macosx64-add-on-devel/opt:
         job-name: macosx64-add-on-devel
     treeherder:
         platform: osx-cross-add-on-devel/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -222,7 +222,7 @@ macosx64-nightly/opt:
         type: nightly
     treeherder:
         platform: osx-cross/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:

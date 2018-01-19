@@ -154,6 +154,12 @@ public:
                                   ErrorResult& aRv);
 
   static void ClearRecentJSDevError(GlobalObject& aGlobal);
+
+  static void Import(const GlobalObject& aGlobal,
+                     const nsAString& aResourceURI,
+                     const Optional<JS::Handle<JSObject*>>& aTargetObj,
+                     JS::MutableHandle<JSObject*> aRetval,
+                     ErrorResult& aRv);
 };
 
 } // namespace dom
