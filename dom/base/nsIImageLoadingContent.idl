@@ -59,11 +59,11 @@ interface nsIImageLoadingContent : imgINotificationObserver
   const long PENDING_REQUEST = 1;
 
   /**
-   * loadingEnabled is used to enable and disable loading in
+   * setLoadingEnabled is used to enable and disable loading in
    * situations where loading images is unwanted.  Note that enabling
    * loading will *not* automatically trigger an image load.
    */
-  [noscript] attribute boolean loadingEnabled;
+  [notxpcom, nostdcall] void setLoadingEnabled(in boolean aEnabled);
 
   /**
    * Returns the image blocking status (@see nsIContentPolicy).  This
