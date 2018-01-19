@@ -25,6 +25,10 @@
   height: 100%;
 }
 
+#animation-container .uncontrolled {
+  overflow: hidden;
+}
+
 /* Animation List Container */
 .animation-list-container {
   display: flex;
@@ -224,11 +228,23 @@
 
 /* Animation Detail */
 .animation-detail-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
   width: 100%;
 }
 
 .animation-detail-header {
   white-space: nowrap;
+}
+
+/* Animated Property List Container */
+.animated-property-list-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 /* Animated Property List Header */
@@ -241,7 +257,7 @@
 /* Keyframes Progress Tick List */
 .keyframes-progress-tick-list {
   margin-right: var(--graph-right-offset);
-  position: relative;
+  position: absolute;
   width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
@@ -260,8 +276,10 @@
 
 /* Animated Property List */
 .animated-property-list {
+  flex: 1;
   list-style-type: none;
   margin-top: 0;
+  overflow-y: auto;
   padding: 0;
 }
 
