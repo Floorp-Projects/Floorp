@@ -602,12 +602,21 @@ def _cxxTypeNeedsMove(ipdltype):
                                   ipdltype.isByteBuf() or
                                   ipdltype.isEndpoint())
 
+def _cxxTypeCanMove(ipdltype):
+    return not (ipdltype.isIPDL() and ipdltype.isActor())
+
 def _cxxMoveRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
     if _cxxTypeNeedsMove(ipdltype):
         t.ref = 2
         return t
     return _cxxConstRefType(ipdltype, side)
+
+def _cxxForceMoveRefType(ipdltype, side):
+    assert _cxxTypeCanMove(ipdltype)
+    t = _cxxBareType(ipdltype, side)
+    t.ref = 2
+    return t
 
 def _cxxPtrToType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
@@ -697,6 +706,11 @@ necessarily a C++ reference."""
         t.ptr = 1
         return t
 
+    def forceMoveType(self, side):
+        """Return this decl's C++ Type with forced move semantics."""
+        assert _cxxTypeCanMove(self.ipdltype)
+        return _cxxForceMoveRefType(self.ipdltype, side)
+
 ##--------------------------------------------------
 
 class HasFQName:
@@ -724,6 +738,8 @@ class _CompoundTypeComponent(_HybridDecl):
         return _HybridDecl.constPtrToType(self, self.side)
     def inType(self, side=None):
         return _HybridDecl.inType(self, self.side)
+    def forceMoveType(self, side=None):
+        return _HybridDecl.forceMoveType(self, self.side)
 
 
 class StructDecl(ipdl.ast.StructDecl, HasFQName):
@@ -2016,7 +2032,7 @@ def _generateCxxStruct(sd):
 def _generateCxxUnion(ud):
     # This Union class basically consists of a type (enum) and a
     # union for storage.  The union can contain POD and non-POD
-    # types.  Each type needs a copy ctor, assignment operator,
+    # types.  Each type needs a copy/move ctor, assignment operators,
     # and dtor.
     #
     # Rather than templating this class and only providing
@@ -2041,8 +2057,10 @@ def _generateCxxUnion(ud):
     # (public)
     #  - placement delete case for dtor
     #  - copy ctor
+    #  - move ctor
     #  - case in generic copy ctor
-    #  - operator= impl
+    #  - copy operator= impl
+    #  - move operator= impl
     #  - case in generic operator=
     #  - operator [type&]
     #  - operator [const type&] const
@@ -2053,6 +2071,7 @@ def _generateCxxUnion(ud):
     # const Union&, i.e., Union type with inparam semantics
     inClsType = Type(ud.name, const=1, ref=1)
     refClsType = Type(ud.name, ref=1)
+    rvalueRefClsType = Type(ud.name, ref=2)
     typetype = Type('Type')
     valuetype = Type('Value')
     mtypevar = ExprVar('mType')
@@ -2078,6 +2097,9 @@ def _generateCxxUnion(ud):
         ifdied = StmtIf(callMaybeDestroy(newTypeVar))
         ifdied.addifstmt(StmtExpr(memb.callCtor()))
         return ifdied
+
+    def voidCast(expr):
+        return ExprCast(expr, Type.VOID, static=1)
 
     # compute all the typedefs and forward decls we need to make
     gettypedeps = _ComputeTypeDeps(ud.decl.type)
@@ -2198,7 +2220,7 @@ def _generateCxxUnion(ud):
         Whitespace.NL
     ])
 
-    # Union(const T&) copy ctors
+    # Union(const T&) copy & Union(T&&) move ctors
     othervar = ExprVar('aOther')
     for c in ud.components:
         copyctor = ConstructorDefn(ConstructorDecl(
@@ -2207,6 +2229,15 @@ def _generateCxxUnion(ud):
             StmtExpr(c.callCtor(othervar)),
             StmtExpr(ExprAssn(mtypevar, c.enumvar())) ])
         cls.addstmts([ copyctor, Whitespace.NL ])
+
+        if not _cxxTypeCanMove(c.ipdltype):
+            continue
+        movector = ConstructorDefn(ConstructorDecl(
+            ud.name, params=[ Decl(c.forceMoveType(), othervar.name) ]))
+        movector.addstmts([
+            StmtExpr(c.callCtor(ExprMove(othervar))),
+            StmtExpr(ExprAssn(mtypevar, c.enumvar())) ])
+        cls.addstmts([ movector, Whitespace.NL ])
 
     # Union(const Union&) copy ctor
     copyctor = ConstructorDefn(ConstructorDecl(
@@ -2234,12 +2265,49 @@ def _generateCxxUnion(ud):
     ])
     cls.addstmts([ copyctor, Whitespace.NL ])
 
+    # Union(Union&&) move ctor
+    movector = ConstructorDefn(ConstructorDecl(
+        ud.name, params=[ Decl(rvalueRefClsType, othervar.name) ]))
+    othertypevar = ExprVar("t")
+    moveswitch = StmtSwitch(othertypevar)
+    for c in ud.components:
+        case = StmtBlock()
+        if c.recursive:
+            # This is sound as we set othervar.mTypeVar to T__None after the
+            # switch. The pointer in the union will be left dangling.
+            case.addstmts([
+                # ptr_C() = other.ptr_C()
+                StmtExpr(ExprAssn(c.callGetPtr(),
+                                  ExprCall(ExprSelect(othervar, '.', ExprVar(c.getPtrName())))))
+            ])
+        else:
+            case.addstmts([
+                # new ... (Move(other.get_C()))
+                StmtExpr(c.callCtor(ExprMove(ExprCall(ExprSelect(othervar, '.', c.getTypeName()))))),
+                # other.MaybeDestroy(T__None)
+                StmtExpr(voidCast(ExprCall(ExprSelect(othervar, '.', maybedtorvar), args=[ tnonevar ]))),
+            ])
+        case.addstmts([ StmtBreak() ])
+        moveswitch.addcase(CaseLabel(c.enum()), case)
+    moveswitch.addcase(CaseLabel(tnonevar.name),
+                       StmtBlock([ StmtBreak() ]))
+    moveswitch.addcase(
+        DefaultLabel(),
+        StmtBlock([ _logicError('unreached'), StmtReturn() ]))
+    movector.addstmts([
+        StmtExpr(callAssertSanity(uvar=othervar)),
+        StmtDecl(Decl(typetype, othertypevar.name), init=ud.callType(othervar)),
+        moveswitch,
+        StmtExpr(ExprAssn(ExprSelect(othervar, '.', mtypevar), tnonevar)),
+        StmtExpr(ExprAssn(mtypevar, othertypevar))
+    ])
+    cls.addstmts([ movector, Whitespace.NL ])
+
     # ~Union()
     dtor = DestructorDefn(DestructorDecl(ud.name))
     # The void cast prevents Coverity from complaining about missing return
     # value checks.
-    dtor.addstmt(StmtExpr(ExprCast(callMaybeDestroy(tnonevar), Type.VOID,
-                                   static=1)))
+    dtor.addstmt(StmtExpr(voidCast(callMaybeDestroy(tnonevar))))
     cls.addstmts([ dtor, Whitespace.NL ])
 
     # type()
@@ -2248,9 +2316,10 @@ def _generateCxxUnion(ud):
     typemeth.addstmt(StmtReturn(mtypevar))
     cls.addstmts([ typemeth, Whitespace.NL ])
 
-    # Union& operator=(const T&) methods
+    # Union& operator= methods
     rhsvar = ExprVar('aRhs')
     for c in ud.components:
+        # Union& operator=(const T&)
         opeq = MethodDefn(MethodDecl(
             'operator=',
             params=[ Decl(c.inType(), rhsvar.name) ],
@@ -2259,6 +2328,23 @@ def _generateCxxUnion(ud):
             # might need to placement-delete old value first
             maybeReconstruct(c, c.enumvar()),
             StmtExpr(c.callOperatorEq(rhsvar)),
+            StmtExpr(ExprAssn(mtypevar, c.enumvar())),
+            StmtReturn(ExprDeref(ExprVar.THIS))
+        ])
+        cls.addstmts([ opeq, Whitespace.NL ])
+
+        # Union& operator=(T&&)
+        if not _cxxTypeCanMove(c.ipdltype):
+            continue
+
+        opeq = MethodDefn(MethodDecl(
+            'operator=',
+            params=[ Decl(c.forceMoveType(), rhsvar.name) ],
+            ret=refClsType))
+        opeq.addstmts([
+            # might need to placement-delete old value first
+            maybeReconstruct(c, c.enumvar()),
+            StmtExpr(c.callOperatorEq(ExprMove(rhsvar))),
             StmtExpr(ExprAssn(mtypevar, c.enumvar())),
             StmtReturn(ExprDeref(ExprVar.THIS))
         ])
@@ -2295,6 +2381,51 @@ def _generateCxxUnion(ud):
         StmtExpr(callAssertSanity(uvar=rhsvar)),
         StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
         opeqswitch,
+        StmtExpr(ExprAssn(mtypevar, rhstypevar)),
+        StmtReturn(ExprDeref(ExprVar.THIS))
+    ])
+    cls.addstmts([ opeq, Whitespace.NL ])
+
+    # Union& operator=(Union&&)
+    opeq = MethodDefn(MethodDecl(
+        'operator=',
+        params=[ Decl(rvalueRefClsType, rhsvar.name) ],
+        ret=refClsType))
+    rhstypevar = ExprVar('t')
+    opeqswitch = StmtSwitch(rhstypevar)
+    for c in ud.components:
+        case = StmtBlock()
+        if c.recursive:
+            case.addstmts([
+                StmtExpr(voidCast(callMaybeDestroy(tnonevar))),
+                StmtExpr(ExprAssn(c.callGetPtr(),
+                                  ExprCall(ExprSelect(rhsvar, '.', ExprVar(c.getPtrName()))))),
+            ])
+        else:
+            case.addstmts([
+                maybeReconstruct(c, rhstypevar),
+                StmtExpr(c.callOperatorEq(
+                    ExprMove(ExprCall(ExprSelect(rhsvar, '.', c.getTypeName()))))),
+                # other.MaybeDestroy(T__None)
+                StmtExpr(voidCast(ExprCall(ExprSelect(rhsvar, '.', maybedtorvar), args=[ tnonevar ]))),
+            ])
+        case.addstmts([ StmtBreak() ])
+        opeqswitch.addcase(CaseLabel(c.enum()), case)
+    opeqswitch.addcase(
+        CaseLabel(tnonevar.name),
+        # The void cast prevents Coverity from complaining about missing return
+        # value checks.
+        StmtBlock([ StmtExpr(voidCast(callMaybeDestroy(rhstypevar))),
+                    StmtBreak() ])
+    )
+    opeqswitch.addcase(
+        DefaultLabel(),
+        StmtBlock([ _logicError('unreached'), StmtBreak() ]))
+    opeq.addstmts([
+        StmtExpr(callAssertSanity(uvar=rhsvar)),
+        StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
+        opeqswitch,
+        StmtExpr(ExprAssn(ExprSelect(rhsvar, '.', mtypevar), tnonevar)),
         StmtExpr(ExprAssn(mtypevar, rhstypevar)),
         StmtReturn(ExprDeref(ExprVar.THIS))
     ])
