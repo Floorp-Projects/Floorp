@@ -24,6 +24,8 @@
  * for more information.
  */
 
+/* eslint-disable mozilla/use-chromeutils-import */
+
 var _quit = false;
 var _tests_pending = 0;
 var _pendingTimers = [];

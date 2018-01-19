@@ -21,9 +21,6 @@ XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
   let { TargetFactory } = require("devtools/client/framework/target");
   return TargetFactory;
 });
-XPCOMUtils.defineLazyGetter(this, "ChromeUtils", function() {
-  return require("ChromeUtils");
-});
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 

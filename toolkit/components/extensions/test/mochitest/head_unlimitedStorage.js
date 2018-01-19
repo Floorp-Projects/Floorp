@@ -4,8 +4,8 @@
 
 /* exported checkSitePermissions */
 
-const {Services, Cu} = SpecialPowers;
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const {Services} = SpecialPowers;
+const {NetUtil} = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 function checkSitePermissions(uuid, expectedPermAction, assertMessage) {
   if (!uuid) {

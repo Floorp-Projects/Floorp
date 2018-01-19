@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
