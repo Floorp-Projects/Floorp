@@ -309,9 +309,20 @@ WebRenderAPI::~WebRenderAPI()
     task.Wait();
   }
 
+  // wr_api_get_namespace cannot be marked destructor-safe because it has a
+  // return value, and we can't call it if MOZ_BUILD_WEBRENDER is not defined
+  // because it's not destructor-safe. So let's just ifdef around it. This is
+  // basically a hack to get around compile-time warnings, this code never runs
+  // unless MOZ_BUILD_WEBRENDER is defined anyway.
+#ifdef MOZ_BUILD_WEBRENDER
+  wr::WrIdNamespace ns = GetNamespace();
+#else
+  wr::WrIdNamespace ns{0};
+#endif
+
   // Clean up any resources the blob image renderer is holding onto that
   // can no longer be used once this WR API instance goes away.
-  ClearBlobImageResources(GetNamespace());
+  ClearBlobImageResources(ns);
 
   wr_api_delete(mDocHandle);
 }
