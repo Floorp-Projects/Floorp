@@ -177,17 +177,18 @@ pub fn main_wrapper<E: Example>(
         pipeline_id,
         document_id,
     );
-    api.set_display_list(
-        document_id,
+    let mut txn = Transaction::new();
+    txn.set_display_list(
         epoch,
         None,
         layout_size,
         builder.finalize(),
         true,
-        resources,
     );
-    api.set_root_pipeline(document_id, pipeline_id);
-    api.generate_frame(document_id, None);
+    txn.update_resources(resources);
+    txn.set_root_pipeline(pipeline_id);
+    txn.generate_frame();
+    api.send_transaction(document_id, txn);
 
     println!("Entering event loop");
     'outer: for event in window.wait_events() {
@@ -195,6 +196,7 @@ pub fn main_wrapper<E: Example>(
         events.push(event);
         events.extend(window.poll_events());
 
+        let mut txn = Transaction::new();
         for event in events {
             match event {
                 glutin::Event::Closed |
@@ -248,8 +250,7 @@ pub fn main_wrapper<E: Example>(
                     _,
                     Some(glutin::VirtualKeyCode::Key1),
                 ) => {
-                    api.set_window_parameters(
-                        document_id,
+                    txn.set_window_parameters(
                         framebuffer_size,
                         DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
                         1.0
@@ -260,8 +261,7 @@ pub fn main_wrapper<E: Example>(
                     _,
                     Some(glutin::VirtualKeyCode::Key2),
                 ) => {
-                    api.set_window_parameters(
-                        document_id,
+                    txn.set_window_parameters(
                         framebuffer_size,
                         DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size),
                         2.0
@@ -280,12 +280,11 @@ pub fn main_wrapper<E: Example>(
                     _,
                     Some(glutin::VirtualKeyCode::C),
                 ) => {
-                    let path: PathBuf = "captures/example".into();
-                    if path.is_dir() {
-                        api.load_capture(path);
-                    } else {
-                        api.save_capture(path);
-                    }
+                    let path: PathBuf = "../captures/example".into();
+                    //TODO: switch between SCENE/FRAME capture types
+                    // based on "shift" modifier, when `glutin` is updated.
+                    let bits = CaptureBits::all();
+                    api.save_capture(path, bits);
                 }
                 _ => if example.on_event(event, &api, document_id) {
                     let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
@@ -299,19 +298,19 @@ pub fn main_wrapper<E: Example>(
                         pipeline_id,
                         document_id,
                     );
-                    api.set_display_list(
-                        document_id,
+                    txn.set_display_list(
                         epoch,
                         None,
                         layout_size,
                         builder.finalize(),
                         true,
-                        resources,
                     );
-                    api.generate_frame(document_id, None);
+                    txn.update_resources(resources);
+                    txn.generate_frame();
                 }
             }
         }
+        api.send_transaction(document_id, txn);
 
         renderer.update();
         renderer.render(framebuffer_size).unwrap();
