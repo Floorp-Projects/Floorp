@@ -26,15 +26,32 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._payButton = contents.querySelector("#pay");
     this._payButton.addEventListener("click", this.pay);
 
+    this._viewAllButton = contents.querySelector("#view-all");
+    this._viewAllButton.addEventListener("click", this);
+
+    this._orderDetailsOverlay = contents.querySelector("#order-details-overlay");
+
     this.appendChild(contents);
 
     super.connectedCallback();
   }
 
   disconnectedCallback() {
-    this._cancelButtonEl.removeEventListener("click", this.cancelRequest);
-    this._cancelButtonEl.removeEventListener("click", this.pay);
+    this._cancelButton.removeEventListener("click", this.cancelRequest);
+    this._payButton.removeEventListener("click", this.pay);
+    this._viewAllButton.removeEventListener("click", this);
     super.disconnectedCallback();
+  }
+
+  handleEvent(event) {
+    if (event.type == "click") {
+      switch (event.target) {
+        case this._viewAllButton:
+          let orderDetailsShowing = !this.requestStore.getState().orderDetailsShowing;
+          this.requestStore.setState({ orderDetailsShowing });
+          break;
+      }
+    }
   }
 
   cancelRequest() {
@@ -73,6 +90,8 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     let totalAmountEl = this.querySelector("#total > currency-amount");
     totalAmountEl.value = totalItem.amount.value;
     totalAmountEl.currency = totalItem.amount.currency;
+
+    this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
   }
 }
 

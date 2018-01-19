@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the payment-dialog custom element
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the payment-dialog element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="sinon-2.3.2.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="ObservedPropertiesMixin.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="payment-dialog.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <template id="payment-dialog-template">
+    <header>
+      <div id="total">
+        <h2 class="label"></h2>
+        <currency-amount></currency-amount>
+        <div id="host-name"></div>
+      </div>
+      <div id="top-buttons" >
+        <button id="view-all" class="closed">View All Items</button>
+      </div>
+    </header>
+
+    <div id="main-container">
+      <section id="payment-summary">
+        <h1>Your Payment</h1>
+
+        <footer id="controls-container">
+          <button id="cancel">Cancel</button>
+          <button id="pay">Pay</button>
+        </footer>
+      </section>
+      <section id="order-details-overlay" hidden="true">
+        <h1>Order Details</h1>
+      </section>
+    </div>
+  </template>
+</head>
+<body>
+  <p id="display">
+    <payment-dialog id="el1"></test-element>
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the payment-dialog element **/
+
+/* global sinon */
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+let el1 = document.getElementById("el1");
+
+sinon.spy(el1, "render");
+sinon.spy(el1, "stateChangeCallback");
+
+/* test that:
+  the view-all-items button exists
+  that clicking it changes the state on the store
+  that clicking it causes render to be called
+
+  that order details element's hidden state matches the state on the store
+*/
+
+function setup() {
+  el1.render.reset();
+  el1.stateChangeCallback.reset();
+  let elDetails = el1._orderDetailsOverlay;
+  if (elDetails) {
+    elDetails.setAttribute("hidden", "true");
+  }
+}
+
+add_task(async function test_initialState() {
+  setup();
+  let initialState = el1.requestStore.getState();
+  let elDetails = el1._orderDetailsOverlay;
+
+  is(initialState.orderDetailsShowing, false, "orderDetailsShowing is initially false");
+  ok(elDetails.hasAttribute("hidden"));
+});
+
+add_task(async function test_viewAllButton() {
+  setup();
+
+  let elDetails = el1._orderDetailsOverlay;
+  let button = el1._viewAllButton;
+
+  button.click();
+  await asyncElementRendered();
+
+  ok(el1.stateChangeCallback.calledOnce, "stateChangeCallback called once");
+  ok(el1.render.calledOnce, "render called once");
+
+  let state = el1.requestStore.getState();
+  is(state.orderDetailsShowing, true, "orderDetailsShowing becomes true");
+  ok(!elDetails.hasAttribute("hidden"));
+});
+
+add_task(async function test_disconnect() {
+  setup();
+
+  el1.remove();
+  await el1.requestStore.setState({orderDetailsShowing: true});
+  await asyncElementRendered();
+  ok(el1.stateChangeCallback.notCalled, "stateChangeCallback not called");
+  ok(el1.render.notCalled, "render not called");
+
+  let elDetails = el1._orderDetailsOverlay;
+  ok(elDetails.hasAttribute("hidden"), "details overlay remains hidden");
+});
+</script>
+
+</body>
+</html>

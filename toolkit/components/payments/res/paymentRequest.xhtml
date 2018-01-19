@@ -28,20 +28,35 @@
   <script src="paymentRequest.js"></script>
 
   <template id="payment-dialog-template">
-    <div id="host-name"></div>
+    <header>
+      <div id="total">
+        <h2 class="label"></h2>
+        <currency-amount></currency-amount>
+        <div id="host-name"></div>
+      </div>
+      <div id="top-buttons" >
+        <button id="view-all" class="closed">View All Items</button>
+      </div>
+    </header>
 
-    <div id="total">
-      <h2 class="label"></h2>
-      <currency-amount></currency-amount>
-    </div>
+    <div id="main-container">
+      <section id="payment-summary">
+        <h1>Your Payment</h1>
 
-    <div><label>Shipping Address</label></div>
-    <address-picker>
-    </address-picker>
+        <section>
+          <div><label>Shipping Address</label></div>
+          <address-picker>
+          </address-picker>
+        </section>
 
-    <div id="controls-container">
-      <button id="cancel">Cancel</button>
-      <button id="pay">Pay</button>
+        <footer id="controls-container">
+          <button id="cancel">Cancel</button>
+          <button id="pay">Pay</button>
+        </footer>
+      </section>
+      <section id="order-details-overlay" hidden="hidden">
+        <h1>Order Details</h1>
+      </section>
     </div>
   </template>
 </head>
