@@ -1057,13 +1057,12 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   return NS_OK;
 }
 
-nsresult
+void
 nsImageLoadingContent::ForceImageState(bool aForce,
                                        EventStates::InternalType aState)
 {
   mIsImageStateForced = aForce;
   mForcedImageState = EventStates(aState);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
