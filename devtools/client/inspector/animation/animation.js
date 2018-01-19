@@ -15,6 +15,7 @@ const App = createFactory(require("./components/App"));
 const {
   updateAnimations,
   updateElementPickerEnabled,
+  updateSelectedAnimation,
   updateSidebarSize
 } = require("./actions/animations");
 const { isAllAnimationEqual } = require("./utils/utils");
@@ -26,6 +27,7 @@ class AnimationInspector {
 
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
+    this.selectAnimation = this.selectAnimation.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
@@ -54,6 +56,7 @@ class AnimationInspector {
       emit: emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
+      selectAnimation,
       simulateAnimation,
       toggleElementPicker,
     } = this;
@@ -74,6 +77,7 @@ class AnimationInspector {
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          selectAnimation,
           setSelectedNode,
           simulateAnimation,
           toggleElementPicker,
@@ -225,6 +229,10 @@ class AnimationInspector {
     }
 
     done();
+  }
+
+  selectAnimation(animation) {
+    this.inspector.store.dispatch(updateSelectedAnimation(animation));
   }
 
   onElementPickerStarted() {

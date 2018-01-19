@@ -7,6 +7,7 @@
 const {
   UPDATE_ANIMATIONS,
   UPDATE_ELEMENT_PICKER_ENABLED,
+  UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE
 } = require("./index");
 
@@ -28,6 +29,16 @@ module.exports = {
     return {
       type: UPDATE_ELEMENT_PICKER_ENABLED,
       elementPickerEnabled,
+    };
+  },
+
+  /**
+   * Update selected animation.
+   */
+  updateSelectedAnimation(selectedAnimation) {
+    return {
+      type: UPDATE_SELECTED_ANIMATION,
+      selectedAnimation,
     };
   },
 

@@ -21,9 +21,20 @@ class SummaryGraph extends PureComponent {
       animation: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      selectAnimation: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.onClick = this.onClick.bind(this);
+  }
+
+  onClick() {
+    this.props.selectAnimation(this.props.animation);
   }
 
   getTitleText(state) {
@@ -135,6 +146,7 @@ class SummaryGraph extends PureComponent {
       {
         className: "animation-summary-graph" +
                    (animation.state.isRunningOnCompositor ? " compositor" : ""),
+        onClick: this.onClick,
         title: this.getTitleText(animation.state),
       },
       SummaryGraphPath(
