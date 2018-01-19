@@ -240,7 +240,16 @@
 }
 
 .animation-detail-header {
+  display: flex;
+}
+
+.animation-detail-title {
+  flex: 1;
   white-space: nowrap;
+}
+
+.animation-detail-close-button::before {
+  background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 /* Animated Property List Container */
