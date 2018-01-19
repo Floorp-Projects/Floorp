@@ -59,40 +59,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1414336
 </div>
 <script type="text/javascript">
 /** Test for Bug 1414336 **/
-SimpleTest.waitForExplicitFinish();
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
 
-waitUntilApzStable().then(() => {
-  let isWindows = (getPlatform() == "windows");
-  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
-                                     ["apz.test.fails_with_native_injection", isWindows]]}, () => {
+  waitUntilApzStable().then(() => {
+    let isWindows = (getPlatform() == "windows");
+    SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                       ["apz.test.fails_with_native_injection", isWindows]]}, () => {
 
-    let target0 = window.document.getElementById("target0");
-    let target0_events = ["pointerdown", "pointermove"];
+      let target0 = window.document.getElementById("target0");
+      let target0_events = ["pointerdown", "pointermove"];
 
-    target0_events.forEach((elem, index, arr) => {
-      target0.addEventListener(elem, (event) => {
-        is(event.type, target0_events[0], "receive " + event.type + " on target0");
-        target0_events.shift();
+      target0_events.forEach((elem, index, arr) => {
+        target0.addEventListener(elem, (event) => {
+          is(event.type, target0_events[0], "receive " + event.type + " on target0");
+          target0_events.shift();
+        }, { once: true });
+      });
+
+      target0.addEventListener("pointercancel", (event) => {
+        ok(false, "Shouldn't receive pointercancel when content prevents default on touchstart");
+        SimpleTest.finish();
       }, { once: true });
+
+      target0.addEventListener("touchstart", (event) => {
+        event.preventDefault();
+      }, { once: true });
+
+      target0.addEventListener("pointerup", (event) => {
+        ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
+        SimpleTest.finish();
+      }, { once: true });
+
+      synthesizeNativeTouchDrag(target0, 2, 2, 0, 80);
     });
-
-    target0.addEventListener("pointercancel", (event) => {
-      ok(false, "Shouldn't receive pointercancel when content prevents default on touchstart");
-      SimpleTest.finish();
-    }, { once: true });
-
-    target0.addEventListener("touchstart", (event) => {
-      event.preventDefault();
-    }, { once: true });
-
-    target0.addEventListener("pointerup", (event) => {
-      ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
-      SimpleTest.finish();
-    }, { once: true });
-
-    synthesizeNativeTouchDrag(target0, 2, 2, 0, 80);
   });
-});
+}
 
 </script>
 </body>
