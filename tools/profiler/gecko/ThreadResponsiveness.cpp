@@ -13,14 +13,16 @@
 
 using namespace mozilla;
 
-class CheckResponsivenessTask : public Runnable,
+class CheckResponsivenessTask : public CancelableRunnable,
                                 public nsITimerCallback {
 public:
-  CheckResponsivenessTask()
-    : Runnable("CheckResponsivenessTask")
+  explicit CheckResponsivenessTask(nsIEventTarget* aThread, bool aIsMainThread)
+    : CancelableRunnable("CheckResponsivenessTask")
     , mStartToPrevTracer_us(uint64_t(profiler_time() * 1000.0))
     , mStop(false)
     , mHasEverBeenSuccessfullyDispatched(false)
+    , mThread(aThread)
+    , mIsMainThread(aIsMainThread)
   {
   }
 
@@ -34,36 +36,61 @@ public:
   // Must be called from the same thread every time. Call that the update
   // thread, because it's the thread that ThreadResponsiveness::Update() is
   // called on. In reality it's the profiler's sampler thread.
-  void DoFirstDispatchIfNeeded()
+  bool DoFirstDispatchIfNeeded()
   {
     if (mHasEverBeenSuccessfullyDispatched) {
-      return;
+      return true;
     }
 
-    // We can hit this code very early during startup, at a time where the
-    // thread manager hasn't been initialized with the main thread yet.
-    // In that case, calling SystemGroup::Dispatch would assert, so we make
-    // sure that NS_GetMainThread succeeds before attempting to dispatch this
-    // runnable.
-    nsCOMPtr<nsIThread> mainThread;
-    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-    if (NS_SUCCEEDED(rv) && mainThread) {
-      rv = SystemGroup::Dispatch(TaskCategory::Other, do_AddRef(this));
+    // The profiler for the main thread is set up before the thread manager is,
+    // meaning we can't get the nsIThread when the CheckResponsivenessTask is
+    // constructed. We _do_ know whether it is the main thread at that time,
+    // however, so here's the workaround. We can still hit this code before the
+    // thread manager is initted, in which case we won't try to record
+    // responsiveness, which is fine because there's no event queue to check
+    // responsiveness on anyway.
+    if (mIsMainThread) {
+      if (!mThread) {
+        nsCOMPtr<nsIThread> temp;
+        NS_GetMainThread(getter_AddRefs(temp));
+        mThread = temp.forget();
+      }
+
+      if (mThread) {
+        nsresult rv = SystemGroup::Dispatch(TaskCategory::Other, do_AddRef(this));
+        if (NS_SUCCEEDED(rv)) {
+          mHasEverBeenSuccessfullyDispatched = true;
+        }
+      }
+    } else if (mThread) {
+      nsresult rv = mThread->Dispatch(this, nsIThread::NS_DISPATCH_NORMAL);
       if (NS_SUCCEEDED(rv)) {
         mHasEverBeenSuccessfullyDispatched = true;
       }
     }
+
+    return mHasEverBeenSuccessfullyDispatched;
   }
 
-  // Can only run on the main thread.
+  nsresult Cancel() override
+  {
+    // No special work needed.
+    return NS_OK;
+  }
+
+  // Only runs on the thread being profiled
   NS_IMETHOD Run() override
   {
     mStartToPrevTracer_us = uint64_t(profiler_time() * 1000.0);
 
     if (!mStop) {
       if (!mTimer) {
-        mTimer = NS_NewTimer(
-          SystemGroup::EventTargetFor(TaskCategory::Other));
+        if (mIsMainThread) {
+          mTimer = NS_NewTimer(
+            SystemGroup::EventTargetFor(TaskCategory::Other));
+        } else {
+          mTimer = NS_NewTimer();
+        }
       }
       mTimer->InitWithCallback(this, 16, nsITimer::TYPE_ONE_SHOT);
     }
@@ -71,11 +98,10 @@ public:
     return NS_OK;
   }
 
-  // Main thread only
+  // Should always fire on the thread being profiled
   NS_IMETHOD Notify(nsITimer* aTimer) final override
   {
-    SystemGroup::Dispatch(TaskCategory::Other,
-                          do_AddRef(this));
+    mThread->Dispatch(this, nsIThread::NS_DISPATCH_NORMAL);
     return NS_OK;
   }
 
@@ -92,31 +118,37 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  // The timer that's responsible for redispatching this event to the main
-  // thread. This field is only accessed on the main thread.
+  // The timer that's responsible for redispatching this event to the thread we
+  // are profiling (ie; mThread). Only touched on mThread.
   nsCOMPtr<nsITimer> mTimer;
 
   // The time (in integer microseconds since process startup) at which this
   // event was last processed (Run() was last called).
-  // This field is written on the main thread and read on the update thread.
+  // This field is written on mThread and read on the update thread.
   // This is stored as integer microseconds instead of double milliseconds
   // because Atomic<double> is not available.
   Atomic<uint64_t> mStartToPrevTracer_us;
 
   // Whether we should stop redispatching this event once the timer fires the
   // next time. Set to true by any thread when the profiler is stopped; read on
-  // the main thread.
+  // mThread.
   Atomic<bool> mStop;
 
   // Only accessed on the update thread.
   bool mHasEverBeenSuccessfullyDispatched;
+
+  // The thread that we're profiling. Use nsIEventTarget to allow for checking
+  // responsiveness on non-nsIThreads someday.
+  nsCOMPtr<nsIEventTarget> mThread;
+  bool mIsMainThread;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, mozilla::Runnable,
+NS_IMPL_ISUPPORTS_INHERITED(CheckResponsivenessTask, CancelableRunnable,
                             nsITimerCallback)
 
-ThreadResponsiveness::ThreadResponsiveness()
-  : mActiveTracerEvent(new CheckResponsivenessTask())
+ThreadResponsiveness::ThreadResponsiveness(nsIEventTarget* aThread,
+                                           bool aIsMainThread)
+  : mActiveTracerEvent(new CheckResponsivenessTask(aThread, aIsMainThread))
 {
   MOZ_COUNT_CTOR(ThreadResponsiveness);
 }
@@ -130,7 +162,9 @@ ThreadResponsiveness::~ThreadResponsiveness()
 void
 ThreadResponsiveness::Update()
 {
-  mActiveTracerEvent->DoFirstDispatchIfNeeded();
+  if (!mActiveTracerEvent->DoFirstDispatchIfNeeded()) {
+    return;
+  }
   mStartToPrevTracer_ms = Some(mActiveTracerEvent->GetStartToPrevTracer_ms());
 }
 
