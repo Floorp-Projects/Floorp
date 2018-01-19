@@ -2062,6 +2062,7 @@ NetworkEventActor.prototype =
 
     this._discardRequestBody = networkEvent.discardRequestBody;
     this._discardResponseBody = networkEvent.discardResponseBody;
+    this._truncated = false;
     this._private = networkEvent.private;
   },
 
@@ -2363,10 +2364,14 @@ NetworkEventActor.prototype =
    *
    * @param object content
    *        The response content.
-   * @param boolean discardedResponseBody
-   *        Tells if the response content was recorded or not.
+   * @param object
+   *        - boolean discardedResponseBody
+   *          Tells if the response content was recorded or not.
+   *        - boolean truncated
+   *          Tells if the some of the response content is missing.
    */
-  addResponseContent: function (content, discardedResponseBody) {
+  addResponseContent: function (content, {discardResponseBody, truncated}) {
+    this._truncated = truncated;
     this._response.content = content;
     content.text = this.parent._createStringGrip(content.text);
     if (typeof content.text == "object") {
@@ -2381,7 +2386,7 @@ NetworkEventActor.prototype =
       contentSize: content.size,
       encoding: content.encoding,
       transferredSize: content.transferredSize,
-      discardResponseBody: discardedResponseBody,
+      discardResponseBody,
     };
 
     this.conn.send(packet);
