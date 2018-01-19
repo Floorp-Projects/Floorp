@@ -10,7 +10,6 @@ ADJUST_MOUSE_AND_SCREEN = False
 config = {
     "buildbot_json_path": "buildprops.json",
     "exes": {
-        'virtualenv': '/tools/virtualenv/bin/virtualenv',
         'tooltool.py': "/tools/tooltool.py",
     },
     "find_links": [
