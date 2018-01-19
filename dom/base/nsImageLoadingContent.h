@@ -73,13 +73,7 @@ public:
     GetRequestType(imgIRequest* aRequest, mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentRequestFinalURI();
-  void ForceReload(const mozilla::dom::Optional<bool>& aNotify,
-                   mozilla::ErrorResult& aError);
-
-  // XPCOM [optional] syntax helper
-  nsresult ForceReload(bool aNotify = true) {
-    return ForceReload(aNotify, 1);
-  }
+  void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
 
 protected:
   enum ImageLoadType {
