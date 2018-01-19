@@ -29,6 +29,8 @@ import java.util.zip.GZIPOutputStream;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.mozglue.MinidumpAnalyzer;
 import org.mozilla.gecko.telemetry.pingbuilders.TelemetryCrashPingBuilder;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.util.INIParser;
@@ -153,7 +155,20 @@ public class CrashReporter extends AppCompatActivity
         mPendingExtrasFile = new File(pendingDir, extrasFile.getName());
         moveFile(extrasFile, mPendingExtrasFile);
 
+        // Compute the minidump hash and generate the stack traces
         computeMinidumpHash(mPendingExtrasFile, mPendingMinidumpFile);
+
+        try {
+            GeckoLoader.loadMozGlue(this);
+
+            if (!MinidumpAnalyzer.GenerateStacks(mPendingMinidumpFile.getPath(), /* fullStacks */ false)) {
+                Log.e(LOGTAG, "Could not generate stacks for this minidump: " + passedMinidumpPath);
+            }
+        } catch (UnsatisfiedLinkError e) {
+            Log.e(LOGTAG, "Could not load libmozglue.so, stacks for this crash won't be generated");
+        }
+
+        // Extract the annotations from the .extra file
         mExtrasStringMap = new HashMap<String, String>();
         readStringsFromFile(mPendingExtrasFile.getPath(), mExtrasStringMap);
 
