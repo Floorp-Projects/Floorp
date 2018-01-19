@@ -1341,10 +1341,6 @@ ifneq (,$(MDDEPEND_FILES))
 -include $(MDDEPEND_FILES)
 endif
 
-#############################################################################
-
--include $(topsrcdir)/$(MOZ_BUILD_APP)/app-rules.mk
-
 ################################################################################
 # Install/copy rules
 #
@@ -1572,15 +1568,6 @@ CHECK_FROZEN_VARIABLES = $(foreach var,$(FREEZE_VARIABLES), \
 
 libs export::
 	$(CHECK_FROZEN_VARIABLES)
-
-PURGECACHES_DIRS ?= $(DIST)/bin
-
-PURGECACHES_FILES = $(addsuffix /.purgecaches,$(PURGECACHES_DIRS))
-
-default all:: $(PURGECACHES_FILES)
-
-$(PURGECACHES_FILES):
-	if test -d $(@D) ; then touch $@ ; fi
 
 .DEFAULT_GOAL := $(or $(OVERRIDE_DEFAULT_GOAL),default)
 
