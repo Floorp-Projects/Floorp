@@ -777,15 +777,9 @@ PopupNotifications.prototype = {
       if (typeof n.message == "string") {
         popupnotification.setAttribute("label", n.message);
       } else {
-        if (n.message.start) {
-          popupnotification.setAttribute("label", n.message.start);
-        }
-        if (n.message.host) {
-          popupnotification.setAttribute("hostname", n.message.host);
-        }
-        if (n.message.end) {
-          popupnotification.setAttribute("endlabel", n.message.end);
-        }
+        popupnotification.setAttribute("label", n.message.start || "");
+        popupnotification.setAttribute("hostname", n.message.host || "");
+        popupnotification.setAttribute("endlabel", n.message.end || "");
       }
 
       popupnotification.setAttribute("id", popupnotificationID);
