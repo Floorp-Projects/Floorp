@@ -158,13 +158,39 @@ static const Float BOX_BORDER_OPACITY = 0.5;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
 static void
 DrawHexChar(uint32_t aDigit, const Point& aPt, DrawTarget& aDrawTarget,
-            const Pattern &aPattern)
+            const Pattern &aPattern, const Matrix* aMat)
 {
+    uint32_t glyphBits = glyphMicroFont[aDigit];
+
+    if (aMat) {
+        // If using an orientation matrix instead of a DT transform, step
+        // with the matrix basis vectors, filling individual rectangles of
+        // the size indicated by the matrix.
+        Point stepX(aMat->_11, aMat->_12);
+        Point stepY(aMat->_21, aMat->_22);
+        Point corner = stepX + stepY;
+        // Get the rectangle at the origin that will be stepped into place.
+        Rect startRect(std::min(corner.x, 0.0f), std::min(corner.y, 0.0f),
+                       fabs(corner.x), fabs(corner.y));
+        startRect.MoveBy(aMat->TransformPoint(aPt));
+        for (int y = 0; y < MINIFONT_HEIGHT; ++y) {
+            Rect curRect = startRect;
+            for (int x = 0; x < MINIFONT_WIDTH; ++x) {
+                if (glyphBits & 1) {
+                    aDrawTarget.FillRect(curRect, aPattern);
+                }
+                glyphBits >>= 1;
+                curRect.MoveBy(stepX);
+            }
+            startRect.MoveBy(stepY);
+        }
+        return;
+    }
+
     // To avoid the potential for seams showing between rects when we're under
     // a transform we concat all the rects into a PathBuilder and fill the
     // resulting Path (rather than using DrawTarget::FillRect).
     RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-    uint32_t glyphBits = glyphMicroFont[aDigit];
     for (int y = 0; y < MINIFONT_HEIGHT; ++y) {
         for (int x = 0; x < MINIFONT_WIDTH; ++x) {
             if (glyphBits & 1) {
@@ -189,8 +215,17 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
                                        const Rect& aRect,
                                        DrawTarget& aDrawTarget,
                                        const Pattern& aPattern,
-                                       uint32_t aAppUnitsPerDevPixel)
+                                       uint32_t aAppUnitsPerDevPixel,
+                                       const Matrix* aMat)
 {
+    Rect rect(aRect);
+    // If there is an orientation transform, reorient the bounding rect.
+    if (aMat) {
+        rect.MoveBy(-aRect.BottomLeft());
+        rect = aMat->TransformBounds(rect);
+        rect.MoveBy(aRect.BottomLeft());
+    }
+
     // If we're currently drawing with some kind of pattern, we just draw the
     // missing-glyph data in black.
     ColorPattern color = aPattern.GetType() == PatternType::COLOR ?
@@ -201,11 +236,11 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
     // from the left edge of the glyph box and the stroke's right edge
     // is inset one pixel from the right edge of the glyph box.
     Float halfBorderWidth = BOX_BORDER_WIDTH / 2.0;
-    Float borderLeft = aRect.X() + BOX_HORIZONTAL_INSET + halfBorderWidth;
-    Float borderRight = aRect.XMost() - BOX_HORIZONTAL_INSET - halfBorderWidth;
-    Rect borderStrokeRect(borderLeft, aRect.Y() + halfBorderWidth,
+    Float borderLeft = rect.X() + BOX_HORIZONTAL_INSET + halfBorderWidth;
+    Float borderRight = rect.XMost() - BOX_HORIZONTAL_INSET - halfBorderWidth;
+    Rect borderStrokeRect(borderLeft, rect.Y() + halfBorderWidth,
                           borderRight - borderLeft,
-                          aRect.Height() - 2.0 * halfBorderWidth);
+                          rect.Height() - 2.0 * halfBorderWidth);
     if (!borderStrokeRect.IsEmpty()) {
         ColorPattern adjustedColor = color;
         color.mColor.a *= BOX_BORDER_OPACITY;
@@ -218,7 +253,7 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
     }
 
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
-    Point center = aRect.Center();
+    Point center = rect.Center();
     Float halfGap = HEX_CHAR_GAP / 2.f;
     Float top = -(MINIFONT_HEIGHT + halfGap);
     // We always want integer scaling, otherwise the "bitmap" glyphs will look
@@ -226,45 +261,64 @@ gfxFontMissingGlyphs::DrawMissingGlyph(uint32_t aChar,
     int32_t devPixelsPerCSSPx =
         std::max<int32_t>(1, nsDeviceContext::AppUnitsPerCSSPixel() /
                              aAppUnitsPerDevPixel);
-    AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
-    aDrawTarget.SetTransform(
-      aDrawTarget.GetTransform().PreTranslate(center).
-                                 PreScale(devPixelsPerCSSPx,
-                                          devPixelsPerCSSPx));
+
+    Matrix tempMat;
+    if (aMat) {
+        // If there is an orientation transform, since draw target transforms may
+        // not be supported, scale and translate it so that it can be directly used
+        // for rendering the mini font without changing the draw target transform.
+        tempMat = Matrix(*aMat).PostScale(devPixelsPerCSSPx, devPixelsPerCSSPx)
+                               .PostTranslate(center);
+        aMat = &tempMat;
+    } else {
+        // Otherwise, scale and translate the draw target transform assuming it
+        // supports that.
+        tempMat = aDrawTarget.GetTransform();
+        aDrawTarget.SetTransform(
+            Matrix(tempMat).PreTranslate(center)
+                           .PreScale(devPixelsPerCSSPx, devPixelsPerCSSPx));
+    }
+
     if (aChar < 0x10000) {
-        if (aRect.Width() >= 2 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
-            aRect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
+        if (rect.Width() >= 2 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
+            rect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
             // Draw 4 digits for BMP
             Float left = -(MINIFONT_WIDTH + halfGap);
             DrawHexChar((aChar >> 12) & 0xF,
-                        Point(left, top), aDrawTarget, color);
+                        Point(left, top), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 8) & 0xF,
-                        Point(halfGap, top), aDrawTarget, color);
+                        Point(halfGap, top), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 4) & 0xF,
-                        Point(left, halfGap), aDrawTarget, color);
+                        Point(left, halfGap), aDrawTarget, color, aMat);
             DrawHexChar(aChar & 0xF,
-                        Point(halfGap, halfGap), aDrawTarget, color);
+                        Point(halfGap, halfGap), aDrawTarget, color, aMat);
         }
     } else {
-        if (aRect.Width() >= 3 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
-            aRect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
+        if (rect.Width() >= 3 * (MINIFONT_WIDTH + HEX_CHAR_GAP) &&
+            rect.Height() >= 2 * MINIFONT_HEIGHT + HEX_CHAR_GAP) {
             // Draw 6 digits for non-BMP
             Float first = -(MINIFONT_WIDTH * 1.5 + HEX_CHAR_GAP);
             Float second = -(MINIFONT_WIDTH / 2.0);
             Float third = (MINIFONT_WIDTH / 2.0 + HEX_CHAR_GAP);
             DrawHexChar((aChar >> 20) & 0xF,
-                        Point(first, top), aDrawTarget, color);
+                        Point(first, top), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 16) & 0xF,
-                        Point(second, top), aDrawTarget, color);
+                        Point(second, top), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 12) & 0xF,
-                        Point(third, top), aDrawTarget, color);
+                        Point(third, top), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 8) & 0xF,
-                        Point(first, halfGap), aDrawTarget, color);
+                        Point(first, halfGap), aDrawTarget, color, aMat);
             DrawHexChar((aChar >> 4) & 0xF,
-                        Point(second, halfGap), aDrawTarget, color);
+                        Point(second, halfGap), aDrawTarget, color, aMat);
             DrawHexChar(aChar & 0xF,
-                        Point(third, halfGap), aDrawTarget, color);
+                        Point(third, halfGap), aDrawTarget, color, aMat);
         }
+    }
+
+    if (!aMat) {
+        // The draw target transform was changed, so it must be restored to
+        // the original value.
+        aDrawTarget.SetTransform(tempMat);
     }
 #endif
 }

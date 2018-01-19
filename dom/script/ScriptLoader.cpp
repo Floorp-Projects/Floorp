@@ -65,6 +65,8 @@
 
 using JS::SourceBufferHolder;
 
+using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
+
 namespace mozilla {
 namespace dom {
 
@@ -180,6 +182,10 @@ ScriptLoader::~ScriptLoader()
   for (uint32_t j = 0; j < mPendingChildLoaders.Length(); ++j) {
     mPendingChildLoaders[j]->RemoveParserBlockingScriptExecutionBlocker();
   }
+
+  for (size_t i = 0; i < mPreloads.Length(); i++) {
+    AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::NotUsed);
+  }
 }
 
 // Collect telemtry data about the cache information, and the kind of source
@@ -193,6 +199,13 @@ CollectScriptTelemetry(nsIIncrementalStreamLoader* aLoader,
   // Skip this function if we are not running telemetry.
   if (!CanRecordExtended()) {
     return;
+  }
+
+  // Report the script kind.
+  if (aRequest->IsModuleRequest()) {
+    AccumulateCategorical(LABELS_DOM_SCRIPT_KIND::ModuleScript);
+  } else {
+    AccumulateCategorical(LABELS_DOM_SCRIPT_KIND::ClassicScript);
   }
 
   // Report the type of source, as well as the size of the source.
@@ -1316,6 +1329,7 @@ ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     // Probably plans have changed; even though the preload was allowed seems
     // like the actual load is not; let's cancel the preload request.
     request->Cancel();
+    AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::RejectedByPolicy);
     return false;
   }
 
@@ -1326,6 +1340,8 @@ ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     // update them here.
     request->SetScriptMode(aElement->GetScriptDeferred(),
                            aElement->GetScriptAsync());
+
+    AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::Used);
   } else {
     // No usable preload found.
 
@@ -1581,6 +1597,7 @@ ScriptLoader::LookupPreloadRequest(nsIScriptElement* aElement,
       mDocument->GetReferrerPolicy() != request->mReferrerPolicy ||
       aScriptKind != request->mKind) {
     // Drop the preload.
+    AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::RequestMismatch);
     return nullptr;
   }
 
@@ -2957,6 +2974,7 @@ ScriptLoader::HandleLoadError(ScriptLoadRequest *aRequest, nsresult aResult)
     mCurrentParserInsertedScript = oldParserInsertedScript;
   } else {
     mPreloads.RemoveElement(aRequest, PreloadRequestComparator());
+    AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::LoadError);
   }
 }
 
