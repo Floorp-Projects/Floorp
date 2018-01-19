@@ -92,8 +92,16 @@ interface MozImageLoadingContent {
   attribute boolean loadingEnabled;
   [ChromeOnly]
   readonly attribute short imageBlockingStatus;
+  /**
+   * Same as addNativeObserver but intended for scripted observers or observers
+   * from another or without a document.
+   */
   [ChromeOnly]
   void addObserver(imgINotificationObserver aObserver);
+  /**
+   * Same as removeNativeObserver but intended for scripted observers or
+   * observers from another or without a document.
+   */
   [ChromeOnly]
   void removeObserver(imgINotificationObserver aObserver);
   [ChromeOnly,Throws]

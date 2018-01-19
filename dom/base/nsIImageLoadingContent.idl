@@ -81,29 +81,15 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * current and pending, will be passed through.
    *
    * @param aObserver the observer to register
-   *
-   * @throws NS_ERROR_OUT_OF_MEMORY
    */
-  [notxpcom] nsresult addNativeObserver(in imgINotificationObserver aObserver);
+  [notxpcom, nostdcall] void addNativeObserver(in imgINotificationObserver aObserver);
 
   /**
    * Used to unregister an image decoder observer.
    *
    * @param aObserver the observer to unregister
    */
-  [notxpcom] nsresult removeNativeObserver(in imgINotificationObserver aObserver);
-
-  /**
-   * Same as addNativeObserver but intended for scripted observers or observers
-   * from another or without a document.
-   */
-  [noscript] void addObserver(in imgINotificationObserver aObserver);
-
-  /**
-   * Same as removeNativeObserver but intended for scripted observers or
-   * observers from another or without a document.
-   */
-  [noscript] void removeObserver(in imgINotificationObserver aObserver);
+  [notxpcom, nostdcall] void removeNativeObserver(in imgINotificationObserver aObserver);
 
   /**
    * Accessor to get the image requests
