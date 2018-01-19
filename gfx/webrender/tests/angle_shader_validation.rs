@@ -100,7 +100,7 @@ const SHADERS: &[Shader] = &[
         features: &[],
     },
     Shader {
-        name: "brush_image",
+        name: "brush_picture",
         features: &["COLOR_TARGET", "ALPHA_TARGET"],
     },
     Shader {

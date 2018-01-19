@@ -20,9 +20,9 @@ flat varying vec4 vParams;
 flat varying vec4 vColor;
 #endif
 
-#define BRUSH_IMAGE_SIMPLE      0
-#define BRUSH_IMAGE_NINEPATCH   1
-#define BRUSH_IMAGE_MIRROR      2
+#define BRUSH_PICTURE_SIMPLE      0
+#define BRUSH_PICTURE_NINEPATCH   1
+#define BRUSH_PICTURE_MIRROR      2
 
 #ifdef WR_VERTEX_SHADER
 
@@ -79,20 +79,20 @@ void brush_vs(
     //           to adjust the UVs.
 
     switch (vImageKind) {
-        case BRUSH_IMAGE_SIMPLE: {
+        case BRUSH_PICTURE_SIMPLE: {
             vec2 f = (local_pos - local_rect.p0) / local_rect.size;
             vUv.xy = mix(uv0, uv1, f);
             vUv.xy /= texture_size;
             break;
         }
-        case BRUSH_IMAGE_NINEPATCH: {
+        case BRUSH_PICTURE_NINEPATCH: {
             vec2 local_src_size = src_size / uDevicePixelRatio;
             vUv.xy = (local_pos - local_rect.p0) / local_src_size;
             vParams.xy = vec2(0.5);
             vParams.zw = (local_rect.size / local_src_size - 0.5);
             break;
         }
-        case BRUSH_IMAGE_MIRROR: {
+        case BRUSH_PICTURE_MIRROR: {
             vec2 local_src_size = src_size / uDevicePixelRatio;
             vUv.xy = (local_pos - local_rect.p0) / local_src_size;
             vParams.xy = 0.5 * local_rect.size / local_src_size;
@@ -114,18 +114,18 @@ vec4 brush_fs() {
     vec2 uv;
 
     switch (vImageKind) {
-        case BRUSH_IMAGE_SIMPLE: {
+        case BRUSH_PICTURE_SIMPLE: {
             uv = clamp(vUv.xy, vUvBounds.xy, vUvBounds.zw);
             break;
         }
-        case BRUSH_IMAGE_NINEPATCH: {
+        case BRUSH_PICTURE_NINEPATCH: {
             uv = clamp(vUv.xy, vec2(0.0), vParams.xy);
             uv += max(vec2(0.0), vUv.xy - vParams.zw);
             uv = mix(vUvBounds_NoClamp.xy, vUvBounds_NoClamp.zw, uv);
             uv = clamp(uv, vUvBounds.xy, vUvBounds.zw);
             break;
         }
-        case BRUSH_IMAGE_MIRROR: {
+        case BRUSH_PICTURE_MIRROR: {
             // Mirror and stretch the box shadow corner over the entire
             // primitives.
             uv = vParams.xy - abs(vUv.xy - vParams.xy);
