@@ -11,7 +11,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsHTMLParts.h"

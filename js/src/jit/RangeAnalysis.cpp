@@ -1861,6 +1861,13 @@ MBoundsCheck::computeRange(TempAllocator& alloc)
 }
 
 void
+MSpectreMaskIndex::computeRange(TempAllocator& alloc)
+{
+    // Just transfer the incoming index range to the output for now.
+    setRange(new(alloc) Range(index()));
+}
+
+void
 MArrayPush::computeRange(TempAllocator& alloc)
 {
     // MArrayPush returns the new array length.
