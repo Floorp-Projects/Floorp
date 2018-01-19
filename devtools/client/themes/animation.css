@@ -29,6 +29,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* Animation List Header */
@@ -55,7 +57,7 @@
 .animation-list {
   flex: 1;
   list-style-type: none;
-  margin-top: 0;
+  margin: 0;
   overflow: auto;
   padding: 0;
 }

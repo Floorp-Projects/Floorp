@@ -9,8 +9,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
+const AnimationDetailContainer = createFactory(require("./AnimationDetailContainer"));
 const AnimationListContainer = createFactory(require("./AnimationListContainer"));
 const NoAnimationPanel = createFactory(require("./NoAnimationPanel"));
+const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
 
 class App extends PureComponent {
   static get propTypes() {
@@ -49,18 +51,26 @@ class App extends PureComponent {
         id: "animation-container"
       },
       animations.length ?
-      AnimationListContainer(
-        {
-          animations,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          getNodeFromActor,
-          onHideBoxModelHighlighter,
-          onShowBoxModelHighlighterForNode,
-          setSelectedNode,
-          simulateAnimation,
-        }
-      )
+      SplitBox({
+        className: "animation-container-splitter",
+        endPanel: AnimationDetailContainer(),
+        endPanelControl: true,
+        initialHeight: "50%",
+        splitterSize: 1,
+        startPanel: AnimationListContainer(
+          {
+            animations,
+            emitEventForTest,
+            getAnimatedPropertyMap,
+            getNodeFromActor,
+            onHideBoxModelHighlighter,
+            onShowBoxModelHighlighterForNode,
+            setSelectedNode,
+            simulateAnimation,
+          }
+        ),
+        vert: false,
+      })
       :
       NoAnimationPanel(
         {
