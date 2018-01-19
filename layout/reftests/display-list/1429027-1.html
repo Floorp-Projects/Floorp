@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <title>Bug 1429027 - No caret</title>
+  <meta charset="utf-8">
+</head>
+<body>
+<form autocomplete="off">
+  <input autofocus value="test">
+</form>
+
+<script type="text/javascript">
+function done() {
+  document.documentElement.removeAttribute("class");
+}
+
+function focus() {
+  document.querySelector("input").focus();
+  setTimeout(done, 0);
+}
+
+function clearInput() {
+  document.querySelector("input").value = "";
+  setTimeout(focus, 0);
+}
+
+function doTest() {
+  document.querySelector("input").focus();
+  setTimeout(clearInput, 0);
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>
