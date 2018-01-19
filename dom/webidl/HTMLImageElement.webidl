@@ -114,8 +114,14 @@ interface MozImageLoadingContent {
   // Otherwise, returns null.
   [ChromeOnly]
   readonly attribute URI? currentRequestFinalURI;
+  /**
+   * forceReload forces reloading of the image pointed to by currentURI
+   *
+   * @param aNotify request should notify
+   * @throws NS_ERROR_NOT_AVAILABLE if there is no current URI to reload
+   */
   [ChromeOnly,Throws]
-  void forceReload(optional boolean aNotify);
+  void forceReload(optional boolean aNotify = true);
   [ChromeOnly]
   void forceImageState(boolean aForce, unsigned long long aState);
 };
