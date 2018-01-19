@@ -400,7 +400,7 @@ PowPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     // Power may be an int32 or a double. Integers receive a faster path.
     if (specialization == MIRType::Double)
         return DoublePolicy<1>::staticAdjustInputs(alloc, ins);
-    return IntPolicy<1>::staticAdjustInputs(alloc, ins);
+    return UnboxedInt32Policy<1>::staticAdjustInputs(alloc, ins);
 }
 
 template <unsigned Op>
@@ -463,7 +463,7 @@ template bool BooleanPolicy<3>::staticAdjustInputs(TempAllocator& alloc, MInstru
 
 template <unsigned Op>
 bool
-IntPolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
+UnboxedInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
 {
     MDefinition* in = def->getOperand(Op);
     if (in->type() == MIRType::Int32)
@@ -476,10 +476,10 @@ IntPolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def)
     return replace->typePolicy()->adjustInputs(alloc, replace);
 }
 
-template bool IntPolicy<0>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
-template bool IntPolicy<1>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
-template bool IntPolicy<2>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
-template bool IntPolicy<3>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+template bool UnboxedInt32Policy<0>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+template bool UnboxedInt32Policy<1>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+template bool UnboxedInt32Policy<2>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
+template bool UnboxedInt32Policy<3>::staticAdjustInputs(TempAllocator& alloc, MInstruction* def);
 
 template <unsigned Op>
 bool
@@ -1218,67 +1218,67 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(ToStringPolicy)                           \
     _(TypeBarrierPolicy)
 
-#define TEMPLATE_TYPE_POLICY_LIST(_)                                    \
-    _(BoxExceptPolicy<0, MIRType::Object>)                              \
-    _(BoxPolicy<0>)                                                     \
-    _(ConvertToInt32Policy<0>)                                          \
-    _(ConvertToStringPolicy<0>)                                         \
-    _(ConvertToStringPolicy<2>)                                         \
-    _(DoublePolicy<0>)                                                  \
-    _(FloatingPointPolicy<0>)                                           \
-    _(IntPolicy<0>)                                                     \
-    _(IntPolicy<1>)                                                     \
-    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, BoxPolicy<2> >) \
-    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >)         \
-    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2> >)      \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1>, BoxPolicy<2> >)         \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >)         \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2> >) \
-    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2> >)      \
-    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, IntPolicy<2> >)      \
-    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, ObjectPolicy<2> >)   \
-    _(MixPolicy<StringPolicy<0>, IntPolicy<1>, IntPolicy<2>>)          \
-    _(MixPolicy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >)   \
-    _(MixPolicy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >)   \
-    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, IntPolicy<2>>)       \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2>, IntPolicy<3>>) \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1>, TruncateToInt32Policy<2>, TruncateToInt32Policy<3> >) \
-    _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>, NoFloatPolicy<2>>)  \
-    _(MixPolicy<SimdScalarPolicy<0>, SimdScalarPolicy<1>, SimdScalarPolicy<2>, SimdScalarPolicy<3> >) \
-    _(MixPolicy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType::Object>, CacheIdPolicy<2>>) \
-    _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >)                        \
-    _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1> >)   \
-    _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1> >)            \
-    _(MixPolicy<DoublePolicy<0>, DoublePolicy<1> >)                     \
-    _(MixPolicy<IntPolicy<0>, IntPolicy<1> >)                           \
-    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >)                        \
-    _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, CacheIdPolicy<1>>) \
-    _(MixPolicy<CacheIdPolicy<0>, ObjectPolicy<1> >)                    \
-    _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >)            \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1> >)                        \
-    _(MixPolicy<ObjectPolicy<0>, IntPolicy<2> >)                        \
-    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1> >)                    \
-    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<2> >)                    \
-    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<3> >)                    \
-    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >)                     \
-    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1> >)                     \
-    _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<2> >)            \
-    _(MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >)            \
-    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >) \
-    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >) \
-    _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
-    _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
-    _(MixPolicy<BoxPolicy<0>, BoxPolicy<1> >)                           \
-    _(NoFloatPolicy<0>)                                                 \
-    _(NoFloatPolicyAfter<0>)                                            \
-    _(NoFloatPolicyAfter<1>)                                            \
-    _(NoFloatPolicyAfter<2>)                                            \
-    _(ObjectPolicy<0>)                                                  \
-    _(ObjectPolicy<1>)                                                  \
-    _(ObjectPolicy<3>)                                                  \
-    _(SimdPolicy<0>)                                                    \
-    _(SimdSameAsReturnedTypePolicy<0>)                                  \
-    _(SimdScalarPolicy<0>)                                              \
+#define TEMPLATE_TYPE_POLICY_LIST(_)                                                                          \
+    _(BoxExceptPolicy<0, MIRType::Object>)                                                                    \
+    _(BoxPolicy<0>)                                                                                           \
+    _(ConvertToInt32Policy<0>)                                                                                \
+    _(ConvertToStringPolicy<0>)                                                                               \
+    _(ConvertToStringPolicy<2>)                                                                               \
+    _(DoublePolicy<0>)                                                                                        \
+    _(FloatingPointPolicy<0>)                                                                                 \
+    _(UnboxedInt32Policy<0>)                                                                                  \
+    _(UnboxedInt32Policy<1>)                                                                                  \
+    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, BoxPolicy<2> >)                                             \
+    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >)                                                \
+    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2> >)                                             \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, BoxPolicy<2> >)                                       \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2> >)                              \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, TruncateToInt32Policy<2> >)                           \
+    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, BoxPolicy<2> >)                                             \
+    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, UnboxedInt32Policy<2> >)                                    \
+    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>, ObjectPolicy<2> >)                                          \
+    _(MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>>)                               \
+    _(MixPolicy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >)                                          \
+    _(MixPolicy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >)                                          \
+    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>, UnboxedInt32Policy<2>>)                                     \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, UnboxedInt32Policy<2>, UnboxedInt32Policy<3>>)        \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, TruncateToInt32Policy<2>, TruncateToInt32Policy<3> >) \
+    _(MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>, NoFloatPolicy<2>>)                                         \
+    _(MixPolicy<SimdScalarPolicy<0>, SimdScalarPolicy<1>, SimdScalarPolicy<2>, SimdScalarPolicy<3> >)         \
+    _(MixPolicy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType::Object>, CacheIdPolicy<2>>)                      \
+    _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >)                                                              \
+    _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1> >)                                         \
+    _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1> >)                                                  \
+    _(MixPolicy<DoublePolicy<0>, DoublePolicy<1> >)                                                           \
+    _(MixPolicy<UnboxedInt32Policy<0>, UnboxedInt32Policy<1> >)                                               \
+    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >)                                                              \
+    _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, CacheIdPolicy<1>>)                                       \
+    _(MixPolicy<CacheIdPolicy<0>, ObjectPolicy<1> >)                                                          \
+    _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >)                                                  \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1> >)                                                     \
+    _(MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<2> >)                                                     \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1> >)                                                          \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<2> >)                                                          \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<3> >)                                                          \
+    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >)                                                           \
+    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1> >)                                                           \
+    _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<2> >)                                                  \
+    _(MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >)                                                  \
+    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >)                           \
+    _(MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >)                                       \
+    _(MixPolicy<StringPolicy<0>, UnboxedInt32Policy<1> >)                                                     \
+    _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                                                           \
+    _(MixPolicy<BoxPolicy<0>, BoxPolicy<1> >)                                                                 \
+    _(NoFloatPolicy<0>)                                                                                       \
+    _(NoFloatPolicyAfter<0>)                                                                                  \
+    _(NoFloatPolicyAfter<1>)                                                                                  \
+    _(NoFloatPolicyAfter<2>)                                                                                  \
+    _(ObjectPolicy<0>)                                                                                        \
+    _(ObjectPolicy<1>)                                                                                        \
+    _(ObjectPolicy<3>)                                                                                        \
+    _(SimdPolicy<0>)                                                                                          \
+    _(SimdSameAsReturnedTypePolicy<0>)                                                                        \
+    _(SimdScalarPolicy<0>)                                                                                    \
     _(StringPolicy<0>)
 
 
