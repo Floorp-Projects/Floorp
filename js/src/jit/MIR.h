@@ -5671,9 +5671,12 @@ class MInt64ToFloatingPoint
     }
 };
 
-// Converts a primitive (either typed or untyped) to an int32. If the input is
-// not primitive at runtime, a bailout occurs. If the input cannot be converted
-// to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.
+// Applies ECMA's ToNumber on a primitive (either typed or untyped) and expects
+// the result to be precisely representable as an Int32, otherwise bails.
+//
+// If the input is not primitive at runtime, a bailout occurs. If the input
+// cannot be converted to an int32 without loss (i.e. 5.5 or undefined) then a
+// bailout occurs.
 class MToInt32
   : public MUnaryInstruction,
     public ToInt32Policy::Data
