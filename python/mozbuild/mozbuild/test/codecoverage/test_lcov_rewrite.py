@@ -176,7 +176,7 @@ class TestLineRemapping(unittest.TestCase):
 
     def test_map_multiple_included(self):
         with TempFile(multiple_included_files) as fname:
-            actual = chrome_map.generate_pp_info(fname)
+            actual = chrome_map.generate_pp_info(fname, '')
         expected = {
             "2,3": ('foo.js', 1),
             "4,5": ('bar.js', 2),
