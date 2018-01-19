@@ -237,12 +237,6 @@
     <implementation implements="nsIDOMXULSelectControlElement, nsIDOMXULRelatedElement">
       <constructor>
       <![CDATA[
-        // first and last tabs need to be able to have unique styles
-        // and also need to select first tab on startup.
-        if (this.firstChild)
-          this.firstChild.setAttribute("first-tab", "true");
-        if (this.lastChild)
-          this.lastChild.setAttribute("last-tab", "true");
 
         if (!this.hasAttribute("orient"))
           this.setAttribute("orient", "horizontal");
@@ -743,36 +737,9 @@
             this.removeAttribute("visuallyselected");
           }
 
-          this._setPositionAttributes(val);
-
           return val;
         ]]></setter>
       </property>
-
-      <method name="_setPositionAttributes">
-        <parameter name="aSelected"/>
-        <body><![CDATA[
-          if (this.previousSibling && this.previousSibling.localName == "tab") {
-            if (aSelected)
-              this.previousSibling.setAttribute("beforeselected", "true");
-            else
-              this.previousSibling.removeAttribute("beforeselected");
-            this.removeAttribute("first-tab");
-          } else {
-            this.setAttribute("first-tab", "true");
-          }
-
-          if (this.nextSibling && this.nextSibling.localName == "tab") {
-            if (aSelected)
-              this.nextSibling.setAttribute("afterselected", "true");
-            else
-              this.nextSibling.removeAttribute("afterselected");
-            this.removeAttribute("last-tab");
-          } else {
-            this.setAttribute("last-tab", "true");
-          }
-        ]]></body>
-      </method>
 
       <property name="linkedPanel" onget="return this.getAttribute('linkedpanel')"
                                    onset="this.setAttribute('linkedpanel', val); return val;"/>
