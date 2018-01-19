@@ -175,7 +175,7 @@ function not() {
 }
 test(setupNot, not);
 
-// MToInt32
+// MToNumberInt32
 var str = "can haz cheezburger? okthxbye;";
 function setupToInt32() {
     f32[0] = 0;

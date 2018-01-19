@@ -5677,15 +5677,15 @@ class MInt64ToFloatingPoint
 // If the input is not primitive at runtime, a bailout occurs. If the input
 // cannot be converted to an int32 without loss (i.e. 5.5 or undefined) then a
 // bailout occurs.
-class MToInt32
+class MToNumberInt32
   : public MUnaryInstruction,
     public ToInt32Policy::Data
 {
     bool canBeNegativeZero_;
     MacroAssembler::IntConversionInputKind conversion_;
 
-    explicit MToInt32(MDefinition* def, MacroAssembler::IntConversionInputKind conversion =
-                                            MacroAssembler::IntConversion_Any)
+    explicit MToNumberInt32(MDefinition* def, MacroAssembler::IntConversionInputKind conversion
+                                              = MacroAssembler::IntConversion_Any)
       : MUnaryInstruction(classOpcode, def),
         canBeNegativeZero_(true),
         conversion_(conversion)
@@ -5700,7 +5700,7 @@ class MToInt32
     }
 
   public:
-    INSTRUCTION_HEADER(ToInt32)
+    INSTRUCTION_HEADER(ToNumberInt32)
     TRIVIAL_NEW_WRAPPERS
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -5720,7 +5720,7 @@ class MToInt32
     }
 
     bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isToInt32() || ins->toToInt32()->conversion() != conversion())
+        if (!ins->isToNumberInt32() || ins->toToNumberInt32()->conversion() != conversion())
             return false;
         return congruentIfOperandsEqual(ins);
     }
@@ -5735,7 +5735,7 @@ class MToInt32
     bool isConsistentFloat32Use(MUse* use) const override { return true; }
 #endif
 
-    ALLOW_CLONE(MToInt32)
+    ALLOW_CLONE(MToNumberInt32)
 };
 
 // Converts a value or typed input to a truncated int32, for use with bitwise
