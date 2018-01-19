@@ -29,6 +29,10 @@
   overflow: hidden;
 }
 
+#animation-container:not(.animation-detail-visible) .controlled {
+  display: none;
+}
+
 /* Animation List Container */
 .animation-list-container {
   display: flex;

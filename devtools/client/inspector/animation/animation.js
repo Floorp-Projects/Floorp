@@ -226,6 +226,8 @@ class AnimationInspector {
     if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
+      // If number of displayed animations is one, we select the animation automatically.
+      this.selectAnimation(animations.length === 1 ? animations[0] : null);
     }
 
     done();
