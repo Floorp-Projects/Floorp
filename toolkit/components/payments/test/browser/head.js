@@ -16,8 +16,10 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService().wrappedJSObject;
-const {profileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
-const {PaymentTestUtils: PTU} = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+const {profileStorage} = ChromeUtils.import(
+  "resource://formautofill/ProfileStorage.jsm", {});
+const {PaymentTestUtils: PTU} = ChromeUtils.import(
+  "resource://testing-common/PaymentTestUtils.jsm", {});
 
 function getPaymentRequests() {
   let requestsEnum = paymentSrv.enumerate();

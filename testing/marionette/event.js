@@ -8,7 +8,7 @@ this.event = {};
 "use strict";
 /* global content, is */
 
-const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
+const {interfaces: Ci, classes: Cc} = Components;
 
 ChromeUtils.import("chrome://marionette/content/element.js");
 
