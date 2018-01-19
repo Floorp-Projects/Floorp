@@ -1344,19 +1344,6 @@ endif
 #############################################################################
 
 -include $(topsrcdir)/$(MOZ_BUILD_APP)/app-rules.mk
--include $(MY_RULES)
-
-#
-# Generate Emacs tags in a file named TAGS if ETAGS was set in $(MY_CONFIG)
-# or in $(MY_RULES)
-#
-ifdef ETAGS
-ifneq ($(CSRCS)$(CPPSRCS)$(HEADERS),)
-all:: TAGS
-TAGS:: $(CSRCS) $(CPPSRCS) $(HEADERS)
-	$(ETAGS) $(CSRCS) $(CPPSRCS) $(HEADERS)
-endif
-endif
 
 ################################################################################
 # Install/copy rules
