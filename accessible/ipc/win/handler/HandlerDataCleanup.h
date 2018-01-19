@@ -23,9 +23,6 @@ ReleaseStaticIA2DataInterfaces(StaticIA2Data& aData)
   if (aData.mIA2) {
     aData.mIA2->Release();
   }
-  if (aData.mIEnumVARIANT) {
-    aData.mIEnumVARIANT->Release();
-  }
   if (aData.mIAHypertext) {
     aData.mIAHypertext->Release();
   }
