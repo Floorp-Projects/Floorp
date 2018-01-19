@@ -111,7 +111,7 @@ interface nsIImageLoadingContent : imgINotificationObserver
    * @param aContentDecision the decision returned from nsIContentPolicy
    *                         (any of the types REJECT_*)
    */
-  [noscript] void setBlockedRequest(in int16_t aContentDecision);
+  [notxpcom, nostdcall] void setBlockedRequest(in int16_t aContentDecision);
 
   /**
    * @return true if the current request's size is available.
