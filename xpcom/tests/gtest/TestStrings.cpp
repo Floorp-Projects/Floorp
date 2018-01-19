@@ -68,6 +68,52 @@ TEST(Strings, IsChar)
 #endif
 }
 
+TEST(Strings, DependentStrings)
+{
+  // A few tests that make sure copying nsTDependentStrings behaves properly.
+  using DataFlags = mozilla::detail::StringDataFlags;
+
+  {
+    // Test copy ctor.
+    nsDependentCString tmp("foo");
+    auto data = tmp.Data();
+    nsDependentCString foo(tmp);
+    // Neither string should be using a shared buffer.
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::SHARED);
+    // Both strings should be pointing to the original buffer.
+    EXPECT_EQ(data, tmp.Data());
+    EXPECT_EQ(data, foo.Data());
+  }
+  {
+    // Test move ctor.
+    nsDependentCString tmp("foo");
+    auto data = tmp.Data();
+    nsDependentCString foo(mozilla::Move(tmp));
+    // Neither string should be using a shared buffer.
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::SHARED);
+    // First string should be reset, the second should be pointing to the
+    // original buffer.
+    EXPECT_NE(data, tmp.Data());
+    EXPECT_EQ(data, foo.Data());
+    EXPECT_TRUE(tmp.IsEmpty());
+  }
+  {
+    // Test copying to a nsCString.
+    nsDependentCString tmp("foo");
+    auto data = tmp.Data();
+    nsCString foo(tmp);
+    // Original string should not be shared, copy should be shared.
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_TRUE(foo.GetDataFlags() & DataFlags::SHARED);
+    // First string should remain the same, the second should be pointing to
+    // a new buffer.
+    EXPECT_EQ(data, tmp.Data());
+    EXPECT_NE(data, foo.Data());
+  }
+}
+
 TEST(Strings, assign)
 {
   nsCString result;
