@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_58__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_6__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_56__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_7__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -523,27 +523,27 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(19);
+__webpack_require__(20);
 
 // Load all existing rep templates
-const Undefined = __webpack_require__(20);
-const Null = __webpack_require__(21);
-const StringRep = __webpack_require__(7);
-const LongStringRep = __webpack_require__(22);
-const Number = __webpack_require__(23);
+const Undefined = __webpack_require__(21);
+const Null = __webpack_require__(22);
+const StringRep = __webpack_require__(6);
+const LongStringRep = __webpack_require__(23);
+const Number = __webpack_require__(24);
 const ArrayRep = __webpack_require__(10);
-const Obj = __webpack_require__(24);
-const SymbolRep = __webpack_require__(25);
-const InfinityRep = __webpack_require__(26);
-const NaNRep = __webpack_require__(27);
-const Accessor = __webpack_require__(28);
+const Obj = __webpack_require__(25);
+const SymbolRep = __webpack_require__(26);
+const InfinityRep = __webpack_require__(27);
+const NaNRep = __webpack_require__(28);
+const Accessor = __webpack_require__(29);
 
 // DOM types (grips)
-const Attribute = __webpack_require__(29);
-const DateTime = __webpack_require__(30);
-const Document = __webpack_require__(31);
-const Event = __webpack_require__(32);
-const Func = __webpack_require__(33);
+const Attribute = __webpack_require__(30);
+const DateTime = __webpack_require__(31);
+const Document = __webpack_require__(32);
+const Event = __webpack_require__(33);
+const Func = __webpack_require__(34);
 const PromiseRep = __webpack_require__(38);
 const RegExp = __webpack_require__(39);
 const StyleSheet = __webpack_require__(40);
@@ -554,9 +554,9 @@ const ErrorRep = __webpack_require__(44);
 const Window = __webpack_require__(45);
 const ObjectWithText = __webpack_require__(46);
 const ObjectWithURL = __webpack_require__(47);
-const GripArray = __webpack_require__(12);
-const GripMap = __webpack_require__(13);
-const GripMapEntry = __webpack_require__(14);
+const GripArray = __webpack_require__(13);
+const GripMap = __webpack_require__(14);
+const GripMapEntry = __webpack_require__(15);
 const Grip = __webpack_require__(8);
 
 // List of all registered template.
@@ -739,12 +739,6 @@ module.exports = wrapRender(PropRep);
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -942,6 +936,12 @@ module.exports = {
   rep: wrapRender(StringRep),
   supportsObject
 };
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_7__;
 
 /***/ }),
 /* 8 */
@@ -1268,7 +1268,7 @@ module.exports = Grip;
 "use strict";
 
 
-var _svgInlineReact = __webpack_require__(34);
+var _svgInlineReact = __webpack_require__(11);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
@@ -1278,7 +1278,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const React = __webpack_require__(6);
+const React = __webpack_require__(7);
 const PropTypes = __webpack_require__(2);
 
 
@@ -1461,6 +1461,104 @@ module.exports = {
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(7);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(2);
+
+var _util = __webpack_require__(35);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var process = process || { env: {} };
+
+var InlineSVG = function (_React$Component) {
+    _inherits(InlineSVG, _React$Component);
+
+    function InlineSVG() {
+        _classCallCheck(this, InlineSVG);
+
+        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
+    }
+
+    _createClass(InlineSVG, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(_ref) {
+            var children = _ref.children;
+
+            if ("production" !== process.env.NODE_ENV && children != null) {
+                console.info('<InlineSVG />: `children` prop will be ignored.');
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var Element = void 0,
+                __html = void 0,
+                svgProps = void 0;
+
+            var _props = this.props,
+                element = _props.element,
+                raw = _props.raw,
+                src = _props.src,
+                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+
+            if (raw === true) {
+                Element = 'svg';
+                svgProps = (0, _util.extractSVGProps)(src);
+                __html = (0, _util.getSVGFromSource)(src).innerHTML;
+            }
+            __html = __html || src;
+            Element = Element || element;
+            svgProps = svgProps || {};
+
+            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+                dangerouslySetInnerHTML: { __html: __html } }));
+        }
+    }]);
+
+    return InlineSVG;
+}(_react2.default.Component);
+
+exports.default = InlineSVG;
+
+
+InlineSVG.defaultProps = {
+    element: 'i',
+    raw: false,
+    src: ''
+};
+
+InlineSVG.propTypes = {
+    src: _propTypes.string.isRequired,
+    element: _propTypes.string,
+    raw: _propTypes.bool
+};
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1489,7 +1587,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1707,7 +1805,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1915,7 +2013,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1993,7 +2091,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2003,9 +2101,9 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const client = __webpack_require__(16);
-const loadProperties = __webpack_require__(57);
-const node = __webpack_require__(17);
+const client = __webpack_require__(17);
+const loadProperties = __webpack_require__(55);
+const node = __webpack_require__(18);
 
 module.exports = {
   client,
@@ -2014,7 +2112,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2089,7 +2187,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2099,12 +2197,12 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { get, has } = __webpack_require__(58);
+const { get, has } = __webpack_require__(56);
 const { maybeEscapePropertyName } = __webpack_require__(0);
 const ArrayRep = __webpack_require__(10);
-const GripArrayRep = __webpack_require__(12);
-const GripMap = __webpack_require__(13);
-const GripMapEntryRep = __webpack_require__(14);
+const GripArrayRep = __webpack_require__(13);
+const GripMap = __webpack_require__(14);
+const GripMapEntryRep = __webpack_require__(15);
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 
@@ -2724,7 +2822,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2737,7 +2835,7 @@ module.exports = {
 const { MODE } = __webpack_require__(3);
 const { REPS, getRep } = __webpack_require__(4);
 const ObjectInspector = __webpack_require__(48);
-const ObjectInspectorUtils = __webpack_require__(15);
+const ObjectInspectorUtils = __webpack_require__(16);
 
 const {
   parseURLEncodedText,
@@ -2759,13 +2857,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2807,7 +2905,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2849,7 +2947,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2926,7 +3024,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2978,7 +3076,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3156,7 +3254,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3208,7 +3306,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3256,7 +3354,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3293,7 +3391,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3363,7 +3461,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3384,7 +3482,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(7);
+const { rep: StringRep } = __webpack_require__(6);
 
 /**
  * Renders DOM attribute
@@ -3424,7 +3522,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3491,7 +3589,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3558,7 +3656,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3665,7 +3763,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3823,104 +3921,6 @@ module.exports = {
   supportsObject,
   // exported for testing purpose.
   getFunctionName
-};
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(2);
-
-var _util = __webpack_require__(35);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
 };
 
 /***/ }),
@@ -4247,7 +4247,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(11);
+const nodeConstants = __webpack_require__(12);
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -4312,9 +4312,9 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(7);
+const { rep: StringRep } = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(11);
+const nodeConstants = __webpack_require__(12);
 const Svg = __webpack_require__(9);
 
 const dom = __webpack_require__(1);
@@ -4716,7 +4716,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
-const String = __webpack_require__(7).rep;
+const String = __webpack_require__(6).rep;
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4844,14 +4844,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Component, createFactory } = __webpack_require__(6);
+const { Component, createFactory } = __webpack_require__(7);
 const PropTypes = __webpack_require__(2);
 const dom = __webpack_require__(1);
 
 const Tree = createFactory(_devtoolsComponents2.default.Tree);
-__webpack_require__(55);
+__webpack_require__(53);
 
-const classnames = __webpack_require__(56);
+const classnames = __webpack_require__(54);
 
 const {
   REPS: {
@@ -4863,7 +4863,7 @@ const {
   MODE
 } = __webpack_require__(3);
 
-const Utils = __webpack_require__(15);
+const Utils = __webpack_require__(16);
 
 const {
   getChildren,
@@ -4942,7 +4942,15 @@ class ObjectInspector extends Component {
       expandedPaths,
       loadedProperties
     } = this.state;
-    return this.props.roots !== nextProps.roots || expandedPaths.size !== nextState.expandedPaths.size || loadedProperties.size !== nextState.loadedProperties.size || [...expandedPaths].some(key => !nextState.expandedPaths.has(key));
+
+    if (this.props.roots !== nextProps.roots) {
+      // Since the roots changed, we assume the properties did as well. Thus we can clear
+      // the cachedNodes to avoid bugs and memory leaks.
+      this.cachedNodes.clear();
+      return true;
+    }
+
+    return expandedPaths.size !== nextState.expandedPaths.size || loadedProperties.size !== nextState.loadedProperties.size || [...expandedPaths].some(key => !nextState.expandedPaths.has(key));
   }
 
   componentWillUnmount() {
@@ -5239,7 +5247,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _react = __webpack_require__(6);
+var _react = __webpack_require__(7);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -5251,11 +5259,11 @@ var _propTypes = __webpack_require__(2);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _svgInlineReact = __webpack_require__(51);
+var _svgInlineReact = __webpack_require__(11);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
-var _arrow = __webpack_require__(53);
+var _arrow = __webpack_require__(51);
 
 var _arrow2 = _interopRequireDefault(_arrow);
 
@@ -5265,7 +5273,7 @@ const { Component, createFactory, createElement } = _react2.default; /* This Sou
                                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                       * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(54);
+__webpack_require__(52);
 
 const AUTO_EXPAND_DEPTH = 0; // depth
 
@@ -6024,177 +6032,24 @@ exports.default = Tree;
 
 /***/ }),
 /* 51 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(2);
-
-var _util = __webpack_require__(52);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-/* 52 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        }
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove(); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
-/* 53 */
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
 
 /***/ }),
+/* 52 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 53 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 54 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 55 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6249,7 +6104,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 
 /***/ }),
-/* 57 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6265,7 +6120,7 @@ const {
   enumNonIndexedProperties,
   getPrototype,
   enumSymbols
-} = __webpack_require__(16);
+} = __webpack_require__(17);
 
 const {
   getClosestGripNode,
@@ -6281,7 +6136,7 @@ const {
   nodeIsPrimitive,
   nodeIsProxy,
   nodeNeedsNumericalBuckets
-} = __webpack_require__(17);
+} = __webpack_require__(18);
 
 function loadItemProperties(item, createObjectClient, loadedProperties) {
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
@@ -6386,10 +6241,10 @@ module.exports = {
 };
 
 /***/ }),
-/* 58 */
+/* 56 */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_58__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_56__;
 
 /***/ })
 /******/ ]);
