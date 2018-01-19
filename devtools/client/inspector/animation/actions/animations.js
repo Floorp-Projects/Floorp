@@ -6,6 +6,7 @@
 
 const {
   UPDATE_ANIMATIONS,
+  UPDATE_DETAIL_VISIBILITY,
   UPDATE_ELEMENT_PICKER_ENABLED,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE
@@ -19,6 +20,16 @@ module.exports = {
     return {
       type: UPDATE_ANIMATIONS,
       animations,
+    };
+  },
+
+  /**
+   * Update visibility of detail pane.
+   */
+  updateDetailVisibility(detailVisibility) {
+    return {
+      type: UPDATE_DETAIL_VISIBILITY,
+      detailVisibility,
     };
   },
 

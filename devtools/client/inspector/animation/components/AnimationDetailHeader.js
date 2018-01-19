@@ -14,7 +14,13 @@ class AnimationDetailHeader extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      setDetailVisibility: PropTypes.func.isRequired,
     };
+  }
+
+  onClick() {
+    const { setDetailVisibility } = this.props;
+    setDetailVisibility(false);
   }
 
   render() {
@@ -24,7 +30,18 @@ class AnimationDetailHeader extends PureComponent {
       {
         className: "animation-detail-header devtools-toolbar",
       },
-      getFormattedTitle(animation.state)
+      dom.div(
+        {
+          className: "animation-detail-title",
+        },
+        getFormattedTitle(animation.state)
+      ),
+      dom.button(
+        {
+          className: "animation-detail-close-button devtools-button",
+          onClick: this.onClick.bind(this),
+        }
+      )
     );
   }
 }

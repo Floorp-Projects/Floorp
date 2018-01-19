@@ -6,6 +6,7 @@
 
 const {
   UPDATE_ANIMATIONS,
+  UPDATE_DETAIL_VISIBILITY,
   UPDATE_ELEMENT_PICKER_ENABLED,
   UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE,
@@ -26,6 +27,12 @@ const reducers = {
   [UPDATE_ANIMATIONS](state, { animations }) {
     return Object.assign({}, state, {
       animations,
+    });
+  },
+
+  [UPDATE_DETAIL_VISIBILITY](state, { detailVisibility }) {
+    return Object.assign({}, state, {
+      detailVisibility
     });
   },
 

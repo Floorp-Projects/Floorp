@@ -18,6 +18,7 @@ class AnimationDetailContainer extends PureComponent {
     return {
       animation: PropTypes.object.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
+      setDetailVisibility: PropTypes.func.isRequired,
     };
   }
 
@@ -25,6 +26,7 @@ class AnimationDetailContainer extends PureComponent {
     const {
       animation,
       getAnimatedPropertyMap,
+      setDetailVisibility,
     } = this.props;
 
     return dom.div(
@@ -35,6 +37,7 @@ class AnimationDetailContainer extends PureComponent {
         AnimationDetailHeader(
           {
             animation,
+            setDetailVisibility,
           }
         )
       :
