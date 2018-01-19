@@ -26,7 +26,7 @@ const Cu = SpecialPowers.Cu;
 function doTest() {
     msg = "Services should be imported on window";
     try {
-      ChromeUtils.import("resource://gre/modules/Services.jsm", window);
+      Cu.import("resource://gre/modules/Services.jsm", window);
       ok(Services, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);
@@ -35,7 +35,7 @@ function doTest() {
     msg = "Services should be imported on myObj";
     try {
       var myObj = {};
-      ChromeUtils.import("resource://gre/modules/Services.jsm", myObj);
+      Cu.import("resource://gre/modules/Services.jsm", myObj);
       ok(myObj.Services, msg);
     } catch (ex) {
       ok(false, msg + " : " + ex);

@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
+ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 var GMPScope = ChromeUtils.import("resource://gre/modules/addons/GMPProvider.jsm", {});
 

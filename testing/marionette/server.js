@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Constructor: CC, interfaces: Ci, utils: Cu} = Components;
+const {Constructor: CC, interfaces: Ci} = Components;
 
 const ServerSocket = CC(
     "@mozilla.org/network/server-socket;1",
