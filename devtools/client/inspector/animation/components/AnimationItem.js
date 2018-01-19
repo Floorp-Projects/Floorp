@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -20,10 +21,33 @@ class AnimationItem extends PureComponent {
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      selectAnimation: PropTypes.func.isRequired,
+      selectedAnimation: PropTypes.object.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isSelected: false,
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { animation } = this.props;
+    this.setState({
+      isSelected: animation.actorID === nextProps.selectedAnimation.actorID
+    });
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.state.isSelected !== nextState.isSelected ||
+           this.props.animation !== nextProps.animation ||
+           this.props.timeScale !== nextProps.timeScale;
   }
 
   render() {
@@ -34,14 +58,19 @@ class AnimationItem extends PureComponent {
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      selectAnimation,
       setSelectedNode,
       simulateAnimation,
       timeScale,
     } = this.props;
+    const {
+      isSelected,
+    } = this.state;
 
     return dom.li(
       {
-        className: `animation-item ${ animation.state.type }`
+        className: `animation-item ${ animation.state.type } ` +
+                   (isSelected ? "selected" : ""),
       },
       AnimationTarget(
         {
@@ -58,6 +87,7 @@ class AnimationItem extends PureComponent {
           animation,
           emitEventForTest,
           getAnimatedPropertyMap,
+          selectAnimation,
           simulateAnimation,
           timeScale,
         }
@@ -66,4 +96,10 @@ class AnimationItem extends PureComponent {
   }
 }
 
-module.exports = AnimationItem;
+const mapStateToProps = state => {
+  return {
+    selectedAnimation: state.animations.selectedAnimation,
+  };
+};
+
+module.exports = connect(mapStateToProps)(AnimationItem);

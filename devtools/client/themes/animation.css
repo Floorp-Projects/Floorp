@@ -87,6 +87,10 @@
   --effect-timing-graph-color: var(--theme-highlight-green);
 }
 
+.animation-item.selected {
+  background-color: var(--theme-selection-background-hover);
+}
+
 /* Animation Target */
 .animation-target {
   align-items: center;
