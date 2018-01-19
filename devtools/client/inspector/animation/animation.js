@@ -12,9 +12,11 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const App = createFactory(require("./components/App"));
 
-const { updateAnimations } = require("./actions/animations");
-const { updateElementPickerEnabled } = require("./actions/element-picker");
-const { updateSidebarSize } = require("./actions/sidebar");
+const {
+  updateAnimations,
+  updateElementPickerEnabled,
+  updateSidebarSize
+} = require("./actions/animations");
 const { isAllAnimationEqual } = require("./utils/utils");
 
 class AnimationInspector {
