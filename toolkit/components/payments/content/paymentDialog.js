@@ -19,7 +19,8 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
   let profileStorage;
   try {
-    profileStorage = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+    profileStorage = ChromeUtils.import(
+      "resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
     profileStorage.initialize();
   } catch (ex) {
     profileStorage = null;

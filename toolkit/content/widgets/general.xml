@@ -150,7 +150,7 @@
           this._draggableStarted = true;
           try {
             let tmp = {};
-            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
             let draghandle = new tmp.WindowDraggingElement(this);
             draghandle.mouseDownCheck = function() {
               return this._dragBindingAlive;

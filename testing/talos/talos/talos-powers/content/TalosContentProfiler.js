@@ -37,7 +37,8 @@ var TalosContentProfiler;
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   } catch (e) {}
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  /* eslint-disable mozilla/use-chromeutils-import */
+  Components.utils.import("resource://gre/modules/Services.jsm");
 
   /**
    * Emits a TalosContentProfiler prefixed event and then returns a Promise
