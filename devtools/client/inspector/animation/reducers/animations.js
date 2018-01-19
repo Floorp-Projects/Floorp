@@ -7,12 +7,14 @@
 const {
   UPDATE_ANIMATIONS,
   UPDATE_ELEMENT_PICKER_ENABLED,
+  UPDATE_SELECTED_ANIMATION,
   UPDATE_SIDEBAR_SIZE,
 } = require("../actions/index");
 
 const INITIAL_STATE = {
   animations: [],
   elementPickerEnabled: false,
+  selectedAnimation: null,
   sidebarSize: {
     height: 0,
     width: 0,
@@ -29,6 +31,12 @@ const reducers = {
   [UPDATE_ELEMENT_PICKER_ENABLED](state, { elementPickerEnabled }) {
     return Object.assign({}, state, {
       elementPickerEnabled
+    });
+  },
+
+  [UPDATE_SELECTED_ANIMATION](state, { selectedAnimation }) {
+    return Object.assign({}, state, {
+      selectedAnimation
     });
   },
 
