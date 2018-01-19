@@ -74,7 +74,7 @@ NS_NewNamedThread(const char (&aName)[LEN],
 }
 
 /**
- * Get a reference to the current thread.
+ * Get a reference to the current thread, creating it if it does not exist yet.
  *
  * @param aResult
  *   The resulting nsIThread object.
@@ -368,11 +368,18 @@ do_GetMainThread()
 //-----------------------------------------------------------------------------
 
 #ifdef MOZILLA_INTERNAL_API
-// Fast access to the current thread.  Do not release the returned pointer!  If
-// you want to use this pointer from some other thread, then you will need to
-// AddRef it.  Otherwise, you should only consider this pointer valid from code
-// running on the current thread.
+// Fast access to the current thread.  Will create an nsIThread if one does not
+// exist already!  Do not release the returned pointer!  If you want to use this
+// pointer from some other thread, then you will need to AddRef it.  Otherwise,
+// you should only consider this pointer valid from code running on the current
+// thread.
 extern nsIThread* NS_GetCurrentThread();
+
+// Exactly the same as NS_GetCurrentThread, except it will not create an
+// nsThread if one does not exist yet. This is useful in cases where you have
+// code that runs on threads that may or may not not be driven by an nsThread
+// event loop, and wish to avoid inadvertently creating a superfluous nsThread.
+extern nsIThread* NS_GetCurrentThreadNoCreate();
 
 /**
  * Set the name of the current thread. Prefer this function over
