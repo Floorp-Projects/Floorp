@@ -30,8 +30,6 @@ export LD_LIBRARY_PATH=$HOME_DIR/src/gcc/lib64
 
 ninja llvm-dsymutil
 
-strip bin/llvm-dsymutil
-
 tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/llvm-dsymutil
 
 mkdir -p $UPLOAD_DIR
