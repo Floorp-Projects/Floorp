@@ -107,7 +107,7 @@ function NetworkEventMessage({
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
   const requestUrl = dom.a({ className: "url", title: request.url, onClick: toggle },
-    request.url.replace(/\?.+/, ""));
+    request.url);
   const statusBody = statusInfo
     ? dom.a({ className: "status", onClick: toggle }, statusInfo)
     : null;
