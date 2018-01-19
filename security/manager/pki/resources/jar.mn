@@ -6,7 +6,6 @@ pippki.jar:
 % content pippki %content/pippki/
     content/pippki/CAOverlay.xul             (content/CAOverlay.xul)
     content/pippki/MineOverlay.xul           (content/MineOverlay.xul)
-    content/pippki/OrphanOverlay.xul         (content/OrphanOverlay.xul)
     content/pippki/OthersOverlay.xul         (content/OthersOverlay.xul)
     content/pippki/WebSitesOverlay.xul       (content/WebSitesOverlay.xul)
     content/pippki/certDump.xul              (content/certDump.xul)
