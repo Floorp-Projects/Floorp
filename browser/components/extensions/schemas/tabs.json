@@ -165,21 +165,6 @@
         "type": "object",
         "description": "The page settings including: orientation, scale, background, margins, headers, footers.",
         "properties": {
-          "paperSizeUnit": {
-            "type": "integer",
-            "optional": true,
-            "description": "The page size unit: 0 = inches, 1 = millimeters. Default: 0."
-          },
-          "paperWidth": {
-            "type": "number",
-            "optional": true,
-            "description": "The paper width in paper size units. Default: 8.5."
-          },
-          "paperHeight": {
-            "type": "number",
-            "optional": true,
-            "description": "The paper height in paper size units. Default: 11.0."
-          },
           "orientation": {
             "type": "integer",
             "optional": true,
@@ -205,45 +190,20 @@
             "optional": true,
             "description": "Whether the page background images should be shown. Default: false."
           },
-          "edgeLeft": {
-            "type": "number",
+          "paperSizeUnit": {
+            "type": "integer",
             "optional": true,
-            "description": "The spacing between the left header/footer and the left edge of the paper (inches). Default: 0."
+            "description": "The page size unit: 0 = inches, 1 = millimeters. Default: 0."
           },
-          "edgeRight": {
+          "paperWidth": {
             "type": "number",
             "optional": true,
-            "description": "The spacing between the right header/footer and the right edge of the paper (inches). Default: 0."
+            "description": "The paper width in paper size units. Default: 8.5."
           },
-          "edgeTop": {
+          "paperHeight": {
             "type": "number",
             "optional": true,
-            "description": "The spacing between the top of the headers and the top edge of the paper (inches). Default: 0"
-          },
-          "edgeBottom": {
-            "type": "number",
-            "optional": true,
-            "description": "The spacing between the bottom of the footers and the bottom edge of the paper (inches). Default: 0."
-          },
-          "marginLeft": {
-            "type": "number",
-            "optional": true,
-            "description": "The margin between the page content and the left edge of the paper (inches). Default: 0.5."
-          },
-          "marginRight": {
-            "type": "number",
-            "optional": true,
-            "description": "The margin between the page content and the right edge of the paper (inches). Default: 0.5."
-          },
-          "marginTop": {
-            "type": "number",
-            "optional": true,
-            "description": "The margin between the page content and the top edge of the paper (inches). Default: 0.5."
-          },
-          "marginBottom": {
-            "type": "number",
-            "optional": true,
-            "description": "The margin between the page content and the bottom edge of the paper (inches). Default: 0.5."
+            "description": "The paper height in paper size units. Default: 11.0."
           },
           "headerLeft": {
             "type": "string",
@@ -274,6 +234,26 @@
             "type": "string",
             "optional": true,
             "description": "The text for the page's right footer. Default: '&D'."
+          },
+          "marginLeft": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the left edge of the paper (inches). Default: 0.5."
+          },
+          "marginRight": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the right edge of the paper (inches). Default: 0.5."
+          },
+          "marginTop": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the top edge of the paper (inches). Default: 0.5."
+          },
+          "marginBottom": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the bottom edge of the paper (inches). Default: 0.5."
           }
         }
       },
