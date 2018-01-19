@@ -14,6 +14,7 @@ const App = createFactory(require("./components/App"));
 
 const {
   updateAnimations,
+  updateDetailVisibility,
   updateElementPickerEnabled,
   updateSelectedAnimation,
   updateSidebarSize
@@ -28,6 +29,7 @@ class AnimationInspector {
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
     this.selectAnimation = this.selectAnimation.bind(this);
+    this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
@@ -57,6 +59,7 @@ class AnimationInspector {
       getAnimatedPropertyMap,
       getNodeFromActor,
       selectAnimation,
+      setDetailVisibility,
       simulateAnimation,
       toggleElementPicker,
     } = this;
@@ -78,6 +81,7 @@ class AnimationInspector {
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
           selectAnimation,
+          setDetailVisibility,
           setSelectedNode,
           simulateAnimation,
           toggleElementPicker,
@@ -235,6 +239,10 @@ class AnimationInspector {
 
   selectAnimation(animation) {
     this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  setDetailVisibility(isVisible) {
+    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
   }
 
   onElementPickerStarted() {

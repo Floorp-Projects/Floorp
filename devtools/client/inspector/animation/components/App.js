@@ -25,6 +25,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
+      setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
@@ -45,6 +46,7 @@ class App extends PureComponent {
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
       selectAnimation,
+      setDetailVisibility,
       setSelectedNode,
       simulateAnimation,
       toggleElementPicker,
@@ -61,6 +63,7 @@ class App extends PureComponent {
         endPanel: AnimationDetailContainer(
           {
             getAnimatedPropertyMap,
+            setDetailVisibility,
           }
         ),
         endPanelControl: true,
