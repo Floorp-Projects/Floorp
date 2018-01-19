@@ -4,7 +4,6 @@
 
 DevToolsModules(
     'har-automation.js',
-    'har-builder-utils.js',
     'har-builder.js',
     'har-collector.js',
     'har-exporter.js',

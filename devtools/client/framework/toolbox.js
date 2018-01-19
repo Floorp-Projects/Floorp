@@ -69,8 +69,6 @@ loader.lazyRequireGetter(this, "viewSource",
   "devtools/client/shared/view-source");
 loader.lazyRequireGetter(this, "StyleSheetsFront",
   "devtools/shared/fronts/stylesheets", true);
-loader.lazyRequireGetter(this, "buildHarLog",
-  "devtools/client/netmonitor/src/har/har-builder-utils", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -3008,21 +3006,4 @@ Toolbox.prototype = {
   viewSource: function (sourceURL, sourceLine) {
     return viewSource.viewSource(this, sourceURL, sourceLine);
   },
-
-  /**
-   * Returns data (HAR) collected by the Network panel.
-   */
-  getHARFromNetMonitor: function () {
-    let netPanel = this.getPanel("netmonitor");
-
-    // The panel doesn't have to exist (it must be selected
-    // by the user at least once to be created).
-    // Return default empty HAR file in such case.
-    if (!netPanel) {
-      return Promise.resolve(buildHarLog(Services.appinfo));
-    }
-
-    // Use Netmonitor object to get the current HAR log.
-    return netPanel.panelWin.Netmonitor.getHar();
-  }
 };
