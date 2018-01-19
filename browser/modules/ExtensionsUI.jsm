@@ -249,47 +249,44 @@ this.ExtensionsUI = {
       strings.acceptKey = bundle.GetStringFromName("webext.defaultSearchYes.accessKey");
       strings.cancelText = bundle.GetStringFromName("webext.defaultSearchNo.label");
       strings.cancelKey = bundle.GetStringFromName("webext.defaultSearchNo.accessKey");
-      let addonName = `<span class="addon-webext-name">${this._sanitizeName(name)}</span>`;
+      strings.addonName = name;
       strings.text = bundle.formatStringFromName("webext.defaultSearch.description",
-                                               [addonName, currentEngine, newEngine], 3);
+                                                 ["<>", currentEngine, newEngine], 3);
       resolve(this.showDefaultSearchPrompt(browser, strings, icon));
     }
-  },
-
-  // Escape &, <, and > characters in a string so that it may be
-  // injected as part of raw markup.
-  _sanitizeName(name) {
-    return name.replace(/&/g, "&amp;")
-               .replace(/</g, "&lt;")
-               .replace(/>/g, "&gt;");
   },
 
   // Create a set of formatted strings for a permission prompt
   _buildStrings(info) {
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
-
     let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
     let appName = brandBundle.GetStringFromName("brandShortName");
-    let addonName = `<span class="addon-webext-name">${this._sanitizeName(info.addon.name)}</span>`;
+    let info2 = Object.assign({appName}, info);
 
-    let info2 = Object.assign({appName, addonName}, info);
-
-    return ExtensionData.formatPermissionStrings(info2, bundle);
+    let strings = ExtensionData.formatPermissionStrings(info2, bundle);
+    strings.addonName = info.addon.name;
+    return strings;
   },
 
   showPermissionsPrompt(browser, strings, icon, histkey) {
+    let message = {};
+    // Create the notification header element.
+    let header = strings.header;
+    header = header.split("<>");
+    message.start = header[0];
+    // Use the host element to display addon name in addon permission prompts.
+    message.host = strings.addonName;
+    message.end = header[1];
+
     function eventCallback(topic) {
       let doc = this.browser.ownerDocument;
       if (topic == "showing") {
-        // eslint-disable-next-line no-unsanitized/property
-        doc.getElementById("addon-webext-perm-header").innerHTML = strings.header;
         let textEl = doc.getElementById("addon-webext-perm-text");
-        // eslint-disable-next-line no-unsanitized/property
-        textEl.innerHTML = strings.text;
+        textEl.textContent = strings.text;
         textEl.hidden = !strings.text;
 
         let listIntroEl = doc.getElementById("addon-webext-perm-intro");
-        listIntroEl.value = strings.listIntro;
+        listIntroEl.textContent = strings.listIntro;
         listIntroEl.hidden = (strings.msgs.length == 0);
 
         let list = doc.getElementById("addon-webext-perm-list");
@@ -340,14 +337,22 @@ this.ExtensionsUI = {
         },
       ];
 
-      win.PopupNotifications.show(browser, "addon-webext-permissions", "",
+      win.PopupNotifications.show(browser, "addon-webext-permissions", message,
                                   "addons-notification-icon",
                                   action, secondaryActions, popupOptions);
     });
   },
 
   showDefaultSearchPrompt(browser, strings, icon) {
-//    const kDefaultSearchHistKey = "defaultSearch";
+    let message = {};
+    // Create the notification header element.
+    let header = strings.text;
+    header = header.split("<>");
+    message.start = header[0];
+    // Use the host element to display addon name in addon notification prompts.
+    message.host = strings.addonName;
+    message.end = header[1];
+
     return new Promise(resolve => {
       let popupOptions = {
         hideClose: true,
@@ -355,11 +360,7 @@ this.ExtensionsUI = {
         persistent: false,
         removeOnDismissal: true,
         eventCallback(topic) {
-          if (topic == "showing") {
-            let doc = this.browser.ownerDocument;
-            // eslint-disable-next-line no-unsanitized/property
-            doc.getElementById("addon-webext-defaultsearch-text").innerHTML = strings.text;
-          } else if (topic == "removed") {
+          if (topic == "removed") {
             resolve(false);
           }
         }
@@ -370,7 +371,6 @@ this.ExtensionsUI = {
         accessKey: strings.acceptKey,
         disableHighlight: true,
         callback: () => {
-//          this.histogram.add(kDefaultSearchHistKey + "Accepted");
           resolve(true);
         },
       };
@@ -379,14 +379,13 @@ this.ExtensionsUI = {
           label: strings.cancelText,
           accessKey: strings.cancelKey,
           callback: () => {
-//            this.histogram.add(kDefaultSearchHistKey + "Rejected");
             resolve(false);
           },
         },
       ];
 
       let win = browser.ownerGlobal;
-      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", "",
+      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", message,
                                   "addons-notification-icon",
                                   action, secondaryActions, popupOptions);
     });
@@ -396,8 +395,6 @@ this.ExtensionsUI = {
     let win = target.ownerGlobal;
     let popups = win.PopupNotifications;
 
-    let name = this._sanitizeName(addon.name);
-    let addonName = `<span class="addon-webext-name">${name}</span>`;
     let addonIcon = '<image class="addon-addon-icon"/>';
     let toolbarIcon = '<image class="addon-toolbar-icon"/>';
 
@@ -405,10 +402,18 @@ this.ExtensionsUI = {
     let appName = brandBundle.getString("brandShortName");
 
     let bundle = win.gNavigatorBundle;
-    let msg1 = bundle.getFormattedString("addonPostInstall.message1",
-                                         [addonName, appName]);
     let msg2 = bundle.getFormattedString("addonPostInstall.messageDetail",
                                          [addonIcon, toolbarIcon]);
+
+    // Create the notification header element.
+    let message = {};
+    let header = bundle.getFormattedString("addonPostInstall.message1",
+                                          ["<>", appName]);
+    header = header.split("<>");
+    message.start = header[0];
+    // Use the host element to display addon name in addon permission prompts.
+    message.host = addon.name;
+    message.end = header[1];
 
     return new Promise(resolve => {
       let action = {
@@ -427,9 +432,6 @@ this.ExtensionsUI = {
         eventCallback(topic) {
           if (topic == "showing") {
             let doc = this.browser.ownerDocument;
-        // eslint-disable-next-line no-unsanitized/property
-            doc.getElementById("addon-installed-notification-header")
-               .unsafeSetInnerHTML(msg1);
             // eslint-disable-next-line no-unsanitized/property
             doc.getElementById("addon-installed-notification-message")
                .unsafeSetInnerHTML(msg2);
@@ -439,7 +441,7 @@ this.ExtensionsUI = {
         }
       };
 
-      popups.show(target, "addon-installed", "", "addons-notification-icon",
+      popups.show(target, "addon-installed", message, "addons-notification-icon",
                   action, null, options);
     });
   },
