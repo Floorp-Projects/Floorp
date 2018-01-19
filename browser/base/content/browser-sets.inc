@@ -165,7 +165,7 @@
     <broadcaster id="sync-status"/>
     <!-- broadcasters of the "hidden" attribute to reflect setup state for
          menus -->
-    <broadcaster id="sync-setup-state"/>
+    <broadcaster id="sync-setup-state" hidden="true"/>
     <broadcaster id="sync-unverified-state" hidden="true"/>
     <broadcaster id="sync-syncnow-state" hidden="true"/>
     <broadcaster id="sync-reauth-state" hidden="true"/>

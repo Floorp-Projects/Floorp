@@ -20,7 +20,7 @@
  *          promiseContentDimensions alterContent
  *          promisePrefChangeObserved openContextMenuInFrame
  *          promiseAnimationFrame getCustomizableUIPanelID
- *          awaitEvent
+ *          awaitEvent BrowserWindowIterator
  */
 
 // There are shutdown issues for which multiple rejections are left uncaught.
@@ -483,4 +483,14 @@ function awaitEvent(eventName, id) {
 
     Management.on(eventName, listener);
   });
+}
+
+function* BrowserWindowIterator() {
+  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
+  while (windowsEnum.hasMoreElements()) {
+    let currentWindow = windowsEnum.getNext();
+    if (!currentWindow.closed) {
+      yield currentWindow;
+    }
+  }
 }

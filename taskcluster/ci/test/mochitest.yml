@@ -288,7 +288,15 @@ mochitest-media:
     suite: mochitest/mochitest-media
     treeherder-symbol: M(mda)
     max-run-time: 5400
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
+            default: built-projects
     loopback-video: true
+    virtualization:
+        by-test-platform:
+            windows10-64-qr/.*: virtual-with-gpu
+            default: virtual
     instance-size:
         by-test-platform:
             android.*: xlarge

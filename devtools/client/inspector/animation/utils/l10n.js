@@ -10,4 +10,6 @@ const L10N =
 
 module.exports = {
   getFormatStr: (...args) => L10N.getFormatStr(...args),
+  getStr: (...args) => L10N.getStr(...args),
+  numberWithDecimals: (...args) => L10N.numberWithDecimals(...args),
 };

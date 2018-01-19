@@ -31,7 +31,6 @@ py3:
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
         - testing/gtest
-        - testing/marionette
         - testing/mochitest
         - testing/mozharness
         - testing/tools/iceserver

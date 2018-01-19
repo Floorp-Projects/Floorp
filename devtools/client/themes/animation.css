@@ -7,6 +7,8 @@
 :root {
   --animation-even-background-color: rgba(0, 0, 0, 0.05);
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
+  --graph-right-offset: 10px;
+  --sidebar-width: 200px;
 }
 
 :root.theme-dark {
@@ -15,6 +17,18 @@
 
 :root.theme-firebug {
   --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
+}
+
+/* Root element of animation inspector */
+#animation-container {
+  height: 100%;
+}
+
+/* Animation List Container */
+.animation-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* Animation List Header */
@@ -26,9 +40,9 @@
 
 /* Animation Timeline Tick List */
 .animation-timeline-tick-list {
-  margin-right: 10px;
+  margin-right: var(--graph-right-offset);
   position: relative;
-  width: calc(100% - 210px);
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
 }
 
 .animation-timeline-tick-item {
@@ -39,18 +53,166 @@
 
 /* Animation List */
 .animation-list {
+  flex: 1;
   list-style-type: none;
   margin-top: 0;
+  overflow: auto;
   padding: 0;
 }
 
 /* Animation Item */
 .animation-item {
+  display: flex;
   height: 30px;
 }
 
 .animation-item:nth-child(2n+1) {
   background-color: var(--animation-even-background-color);
+}
+
+.animation-item.cssanimation {
+  --computed-timing-graph-color: var(--theme-contrast-background);
+  --effect-timing-graph-color: var(--theme-highlight-lightorange);
+}
+
+.animation-item.csstransition {
+  --computed-timing-graph-color: var(--theme-highlight-blue);
+  --effect-timing-graph-color: var(--theme-highlight-bluegrey);
+}
+
+.animation-item.scriptanimation {
+  --computed-timing-graph-color: var(--theme-graphs-green);
+  --effect-timing-graph-color: var(--theme-highlight-green);
+}
+
+/* Animation Target */
+.animation-target {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  padding-left: 4px;
+  width: var(--sidebar-width);
+}
+
+.animation-target .tag-name {
+  cursor: default;
+}
+
+/* Summary Graph */
+.animation-summary-graph {
+  height: 100%;
+  padding-top: 5px;
+  position: relative;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.animation-summary-graph.compositor::after {
+  background-image: url("images/animation-fast-track.svg");
+  background-repeat: no-repeat;
+  content: "";
+  display: block;
+  fill: var(--theme-content-color3);
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 5px;
+  width: 15px;
+  z-index: 1;
+  -moz-context-properties: fill;
+}
+
+.animation-summary-graph-path {
+  height: 100%;
+  width: 100%;
+}
+
+.animation-computed-timing-path path {
+  fill: var(--computed-timing-graph-color);
+  vector-effect: non-scaling-stroke;
+  transform: scale(1, -1);
+}
+
+.animation-computed-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
+}
+
+.animation-effect-timing-path path {
+  fill: none;
+  stroke: var(--effect-timing-graph-color);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
+.animation-effect-timing-path path.infinity:nth-child(n+2) {
+  opacity: 0.3;
+}
+
+.animation-negative-delay-path path,
+.animation-negative-end-delay-path path {
+  fill: none;
+  stroke: var(--theme-graphs-grey);
+  stroke-dasharray: 2px 2px;
+  transform: scale(1, -1);
+  vector-effect: non-scaling-stroke;
+}
+
+.animation-delay-sign,
+.animation-end-delay-sign {
+  background-color: var(--theme-graphs-grey);
+  height: 3px;
+  position: absolute;
+  top: calc(100% - 1.5px);
+}
+
+.animation-delay-sign::before,
+.animation-end-delay-sign::before {
+  background-color: inherit;
+  border-radius: 50%;
+  content: "";
+  height: 6px;
+  position: absolute;
+  top: -1.5px;
+  width: 6px;
+}
+
+.animation-delay-sign.fill,
+.animation-end-delay-sign.fill {
+  background-color: var(--effect-timing-graph-color);
+}
+
+.animation-delay-sign.negative::before {
+  left: unset;
+  right: -3px;
+}
+
+.animation-end-delay-sign::before {
+  right: -3px;
+}
+
+.animation-end-delay-sign.negative::before {
+  left: -3px;
+  right: unset;
+}
+
+.animation-name {
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: calc(100% - 20px);
+}
+
+.animation-name text {
+  dominant-baseline: middle;
+  fill: var(--theme-focus-outline-color);
+  paint-order: stroke;
+  stroke: var(--theme-body-background);
+  stroke-linejoin: round;
+  stroke-opacity: .5;
+  stroke-width: 4;
+  text-anchor: end;
 }
 
 /* No Animation Panel */

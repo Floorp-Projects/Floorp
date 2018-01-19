@@ -28,7 +28,7 @@ ENV HOME=/builds/worker \
 CMD ["/bin/bash", "--login"]
 
 # Set apt sources list to a snapshot.
-RUN for s in debian_wheezy debian_wheezy-updates debian_wheezy-backports debian-security_wheezy/updates; do \
+RUN for s in debian_wheezy debian_wheezy-updates debian-security_wheezy/updates; do \
       echo "deb http://snapshot.debian.org/archive/${s%_*}/20171210T214726Z/ ${s#*_} main"; \
     done > /etc/apt/sources.list
 
@@ -66,7 +66,6 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       ninja-build \
       p7zip-full \
       procps \
-      pxz/wheezy-backports \
       python-dev \
       python-pip \
       python-setuptools \
