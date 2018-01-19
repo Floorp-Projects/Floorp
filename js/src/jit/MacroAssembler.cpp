@@ -1551,7 +1551,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
     {
         // Prepare a register set for use in this case.
         AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
-        MOZ_ASSERT(!regs.has(getStackPointer()));
+        MOZ_ASSERT_IF(!IsHiddenSP(getStackPointer()), !regs.has(AsRegister(getStackPointer())));
         regs.take(bailoutInfo);
 
         // Reset SP to the point where clobbering starts.
@@ -3141,12 +3141,18 @@ MacroAssembler::wasmEmitOldTrapOutOfLineCode()
 }
 
 void
-MacroAssembler::wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow)
+MacroAssembler::wasmEmitStackCheck(RegisterOrSP sp, Register scratch, Label* onOverflow)
 {
-    branchPtr(Assembler::AboveOrEqual,
-              Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
-              sp,
-              onOverflow);
+    if (IsHiddenSP(sp)) {
+        branchStackPtrRhs(Assembler::AboveOrEqual,
+                          Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                          onOverflow);
+    } else {
+        branchPtr(Assembler::AboveOrEqual,
+                  Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                  AsRegister(sp),
+                  onOverflow);
+    }
 }
 
 void
