@@ -56,7 +56,16 @@ with Files('**/Makefile.in'):
     FINAL = True
 
 with Files("**/*.js"):
-    SCHEDULES.inclusive += ['test-verify']
+    SCHEDULES.inclusive += ['test-verify', 'docs']
+
+with Files("**/*.jsm"):
+    SCHEDULES.inclusive += ['docs']
+
+with Files("**/*.rst"):
+    SCHEDULES.inclusive += ['docs']
+
+with Files("**/*.md"):
+    SCHEDULES.inclusive += ['docs']
 
 with Files("**/*.html"):
     SCHEDULES.inclusive += ['test-verify']

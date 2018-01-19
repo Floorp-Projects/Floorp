@@ -20,7 +20,7 @@ job-defaults:
 crashtest:
     description: "Crashtest run"
     suite: reftest/crashtest
-    treeherder-symbol: tc-R(C)
+    treeherder-symbol: R(C)
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
@@ -51,7 +51,7 @@ crashtest:
 jsreftest:
     description: "JS Reftest run"
     suite: reftest/jsreftest
-    treeherder-symbol: tc-R(J)
+    treeherder-symbol: R(J)
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -85,7 +85,7 @@ jsreftest:
 reftest:
     description: "Reftest run"
     suite: reftest/reftest
-    treeherder-symbol: tc-R(R)
+    treeherder-symbol: R(R)
     worker-type:
         by-test-platform:
             windows10-64.*: buildbot-bridge/buildbot-bridge
@@ -128,7 +128,7 @@ reftest:
 reftest-gpu:
     description: "Reftest GPU run"
     suite: reftest/reftest-gpu
-    treeherder-symbol: tc-R(Rg)
+    treeherder-symbol: R(Rg)
     chunks: 8
     run-on-projects:
         by-test-platform:
@@ -145,7 +145,7 @@ reftest-gpu:
 reftest-no-accel:
     description: "Reftest not accelerated run"
     suite: reftest/reftest-no-accel
-    treeherder-symbol: tc-R(Ru)
+    treeherder-symbol: R(Ru)
     virtualization: virtual-with-gpu
     worker-type:
         by-test-platform:
@@ -176,6 +176,6 @@ reftest-no-accel:
 reftest-stylo:
     description: "Reftest run in Stylo vs. Gecko mode"
     suite: reftest/reftest-stylo
-    treeherder-symbol: tc-R(Rs)
+    treeherder-symbol: R(Rs)
     virtualization: virtual-with-gpu
     chunks: 8

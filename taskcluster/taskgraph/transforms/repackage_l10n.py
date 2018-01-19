@@ -19,7 +19,7 @@ def split_locales(config, jobs):
         for locale in dep_job.attributes.get('chunk_locales', []):
 
             treeherder = job.get('treeherder', {})
-            treeherder['symbol'] = 'tc-L10n-Rpk({})'.format(locale)
+            treeherder['symbol'] = 'L10n-Rpk({})'.format(locale)
 
             yield {
                 'locale': locale,

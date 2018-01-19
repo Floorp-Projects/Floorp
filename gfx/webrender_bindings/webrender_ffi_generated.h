@@ -1178,7 +1178,8 @@ void wr_dp_push_image(WrState *aState,
                       LayoutSize aStretchSize,
                       LayoutSize aTileSpacing,
                       ImageRendering aImageRendering,
-                      WrImageKey aKey)
+                      WrImageKey aKey,
+                      bool aPremultipliedAlpha)
 WR_FUNC;
 
 WR_INLINE

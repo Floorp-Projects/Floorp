@@ -502,8 +502,6 @@ extern "C" {
 } extern "C" {
  pub fn Gecko_RecordTraversalStatistics ( total : u32 , parallel : u32 , total_t : u32 , parallel_t : u32 , total_s : u32 , parallel_s : u32 , ) ; 
 } extern "C" {
- pub fn Gecko_IsInDocument ( node : RawGeckoNodeBorrowed , ) -> bool ; 
-} extern "C" {
  pub fn Gecko_IsSignificantChild ( node : RawGeckoNodeBorrowed , text_is_significant : bool , whitespace_is_significant : bool , ) -> bool ; 
 } extern "C" {
  pub fn Gecko_GetLastChild ( node : RawGeckoNodeBorrowed , ) -> RawGeckoNodeBorrowedOrNull ; 
@@ -754,8 +752,6 @@ extern "C" {
 } extern "C" {
  pub fn Gecko_GetElementSnapshot ( table : * const ServoElementSnapshotTable , element : RawGeckoElementBorrowed , ) -> * const ServoElementSnapshot ; 
 } extern "C" {
- pub fn Gecko_DropElementSnapshot ( snapshot : ServoElementSnapshotOwned , ) ; 
-} extern "C" {
  pub fn Gecko_HaveSeenPtr ( table : * mut SeenPtrs , ptr : * const :: std :: os :: raw :: c_void , ) -> bool ; 
 } extern "C" {
  pub fn Gecko_ResizeTArrayForStrings ( array : * mut nsTArray <nsStringRepr> , length : u32 , ) ; 
@@ -977,8 +973,6 @@ extern "C" {
  pub fn Gecko_IsDocumentBody ( element : RawGeckoElementBorrowed , ) -> bool ; 
 } extern "C" {
  pub fn Gecko_GetLookAndFeelSystemColor ( color_id : i32 , pres_context : RawGeckoPresContextBorrowed , ) -> nscolor ; 
-} extern "C" {
- pub fn Gecko_MatchStringArgPseudo ( element : RawGeckoElementBorrowed , type_ : CSSPseudoClassType , ident : * const u16 , ) -> bool ; 
 } extern "C" {
  pub fn Gecko_AddPropertyToSet ( arg1 : nsCSSPropertyIDSetBorrowedMut , arg2 : nsCSSPropertyID , ) ; 
 } extern "C" {

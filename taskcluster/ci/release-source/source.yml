@@ -5,7 +5,7 @@ linux64-source/opt:
         job-name: linux64-source-opt
     treeherder:
         platform: linux64/opt
-        symbol: tc(Src)
+        symbol: Src
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -26,7 +26,7 @@ linux64-fennec-source/opt:
         job-name: linux64-fennec-source-opt
     treeherder:
         platform: android-api-16/opt
-        symbol: tc(Src)
+        symbol: Src
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
@@ -47,7 +47,7 @@ linux64-devedition-source/opt:
         job-name: linux64-devedition-source-opt
     treeherder:
         platform: linux64-devedition-source/opt
-        symbol: tc(Src)
+        symbol: Src
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000

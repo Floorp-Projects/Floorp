@@ -2698,6 +2698,7 @@ struct GlobalProperties {
     bool caches : 1;
     bool fileReader: 1;
     bool messageChannel: 1;
+    bool ChromeUtils : 1;
     bool inspectorUtils : 1;
 private:
     bool Define(JSContext* cx, JS::HandleObject obj);

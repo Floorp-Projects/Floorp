@@ -38,6 +38,7 @@ const {
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 const {ContentEventObserverService} = Cu.import("chrome://marionette/content/dom.js", {});
+const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/navigate.js");
@@ -159,7 +160,7 @@ const loadListener = {
       // command can return immediately if the page load is already done.
       let readyState = content.document.readyState;
       let documentURI = content.document.documentURI;
-      logger.debug(`Check readyState "${readyState} for "${documentURI}"`);
+      logger.debug(truncate`Check readyState ${readyState} for ${documentURI}`);
       // If the page load has already finished, don't setup listeners and
       // timers but return immediatelly.
       if (this.handleReadyState(readyState, documentURI)) {
@@ -213,7 +214,7 @@ const loadListener = {
     }
 
     let location = event.target.documentURI || event.target.location.href;
-    logger.debug(`Received DOM event "${event.type}" for "${location}"`);
+    logger.debug(truncate`Received DOM event ${event.type} for ${location}`);
 
     switch (event.type) {
       case "beforeunload":
@@ -352,7 +353,7 @@ const loadListener = {
     const curWinID = win.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
 
-    logger.debug(`Received observer notification "${topic}" for "${winID}"`);
+    logger.debug(`Received observer notification ${topic} for ${winID}`);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,
@@ -1628,7 +1629,7 @@ async function reftestWait(url, remote) {
   let reftestWait = false;
 
   if (document.location.href !== url || document.readyState != "complete") {
-    logger.debug(`Waiting for page load of ${url}`);
+    logger.debug(truncate`Waiting for page load of ${url}`);
     await new Promise(resolve => {
       let maybeResolve = event => {
         if (event.target === curContainer.frame.document &&

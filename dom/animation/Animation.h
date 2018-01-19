@@ -352,7 +352,7 @@ public:
    * is canceled, it will be released by its owning element and may not still
    * exist when we would normally go to queue events on the next tick.
    */
-  virtual void MaybeQueueCancelEvent(StickyTimeDuration aActiveTime) {};
+  virtual void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime) {};
 
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);

@@ -12,3 +12,6 @@ with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
 
 SPHINX_TREES["geckodriver"] = "doc"
+
+with Files('doc/**'):
+    SCHEDULES.exclusive = ['docs']

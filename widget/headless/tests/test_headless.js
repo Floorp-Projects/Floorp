@@ -15,6 +15,10 @@ const HEADLESS_URL = `${BASE}/headless.html`;
 const HEADLESS_BUTTON_URL = `${BASE}/headless_button.html`;
 registerCleanupFunction(() => { server.stop(() => {})});
 
+// Refrences to the progress listeners to keep them from being gc'ed
+// before they are called.
+const progressListeners = new Map();
+
 function loadContentWindow(webNavigation, uri) {
   return new Promise((resolve, reject) => {
     webNavigation.loadURI(uri, Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
@@ -37,6 +41,7 @@ function loadContentWindow(webNavigation, uri) {
         let contentWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIDOMWindow);
         webProgress.removeProgressListener(progressListener);
+        progressListeners.delete(progressListener);
         contentWindow.addEventListener("load", (event) => {
           resolve(contentWindow);
         }, { once: true });
@@ -44,6 +49,7 @@ function loadContentWindow(webNavigation, uri) {
       QueryInterface: XPCOMUtils.generateQI(["nsIWebProgressListener",
                                             "nsISupportsWeakReference"])
     };
+    progressListeners.set(progressListener, progressListener);
     webProgress.addProgressListener(progressListener,
                                     Ci.nsIWebProgress.NOTIFY_LOCATION);
   });

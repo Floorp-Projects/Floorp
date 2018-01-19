@@ -463,23 +463,28 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 self.config.get('marionette_test_manifest', '')
             ),
         }
+
+        user_paths = os.environ.get('MOZHARNESS_TEST_PATHS')
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split('=')[0]
             # override configured chunk options with script args, if specified
-            if opt == '--this-chunk' and self.this_chunk is not None:
-                continue
-            if opt == '--total-chunks' and self.total_chunks is not None:
-                continue
+            if opt in ('--this-chunk', '--total-chunks'):
+                if user_paths or getattr(self, opt.replace('-', '_').strip('_'), None) is not None:
+                    continue
+
             if '%(app)' in option:
                 # only query package name if requested
                 cmd.extend([option % {'app': self._query_package_name()}])
             else:
                 cmd.extend([option % str_format_values])
 
-        if self.this_chunk is not None:
-            cmd.extend(['--this-chunk', self.this_chunk])
-        if self.total_chunks is not None:
-            cmd.extend(['--total-chunks', self.total_chunks])
+        if user_paths:
+            cmd.extend(user_paths.split(':'))
+        else:
+            if self.this_chunk is not None:
+                cmd.extend(['--this-chunk', self.this_chunk])
+            if self.total_chunks is not None:
+                cmd.extend(['--total-chunks', self.total_chunks])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)

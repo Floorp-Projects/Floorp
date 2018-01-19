@@ -30,7 +30,7 @@ jobs:
             job-name: shell-haz-debug
         treeherder:
             platform: linux64/debug
-            symbol: SM-tc(H)
+            symbol: SM(H)
         run:
             using: hazard
             command: >
@@ -53,7 +53,7 @@ jobs:
             job-name: browser-haz-debug
         treeherder:
             platform: linux64/debug
-            symbol: tc(H)
+            symbol: H
         run:
             using: hazard
             mozconfig: "browser/config/mozconfigs/linux64/hazards"

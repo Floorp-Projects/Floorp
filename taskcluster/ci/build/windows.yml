@@ -5,7 +5,7 @@ win32/debug:
         job-name: win32-debug
     treeherder:
         platform: windows2012-32/debug
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -33,7 +33,7 @@ win32/opt:
         job-name: win32-opt
     treeherder:
         platform: windows2012-32/opt
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -61,7 +61,7 @@ win32-dmd/opt:
         job-name: win32-dmd-opt
     treeherder:
         platform: windows2012-32-dmd/opt
-        symbol: tc(Bdmd)
+        symbol: Bdmd
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -92,7 +92,7 @@ win32/pgo:
         job-name: win32-pgo
     treeherder:
         platform: windows2012-32/pgo
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -120,7 +120,7 @@ win64/debug:
         job-name: win64-debug
     treeherder:
         platform: windows2012-64/debug
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -148,7 +148,7 @@ win64/opt:
         job-name: win64-opt
     treeherder:
         platform: windows2012-64/opt
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -176,7 +176,7 @@ win64-dmd/opt:
         job-name: win64-dmd-opt
     treeherder:
         platform: windows2012-64-dmd/opt
-        symbol: tc(Bdmd)
+        symbol: Bdmd
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -212,7 +212,7 @@ win32-nightly/opt:
     shipping-product: firefox
     treeherder:
         platform: windows2012-32/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -248,7 +248,7 @@ win64-nightly/opt:
     shipping-product: firefox
     treeherder:
         platform: windows2012-64/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -279,7 +279,7 @@ win64/pgo:
         job-name: win64-pgo
     treeherder:
         platform: windows2012-64/pgo
-        symbol: tc(B)
+        symbol: B
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -307,7 +307,7 @@ win32-add-on-devel/opt:
         job-name: win32-add-on-devel
     treeherder:
         platform: windows2012-32-add-on-devel/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -337,7 +337,7 @@ win64-add-on-devel/opt:
         job-name: win64-add-on-devel
     treeherder:
         platform: windows2012-64-add-on-devel/opt
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -367,7 +367,7 @@ win64-noopt/debug:
         job-name: win64-noopt-debug
     treeherder:
         platform: windows2012-64-noopt/debug
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -396,7 +396,7 @@ win32-noopt/debug:
         job-name: win32-noopt-debug
     treeherder:
         platform: windows2012-32-noopt/debug
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -425,7 +425,7 @@ win32-rusttests/opt:
         job-name: win32-rusttests-opt
     treeherder:
         platform: windows2012-32/opt
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -455,7 +455,7 @@ win64-rusttests/opt:
         job-name: win64-rusttests-opt
     treeherder:
         platform: windows2012-64/opt
-        symbol: tc(BR)
+        symbol: BR
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -485,7 +485,7 @@ win64-ccov/debug:
         job-name: win64-ccov-debug
     treeherder:
         platform: windows2012-64/ccov
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -514,7 +514,7 @@ win64-asan/debug:
         job-name: win64-asan-debug
     treeherder:
         platform: windows2012-64/asan
-        symbol: tc(Bd)
+        symbol: Bd
         tier: 3
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -544,7 +544,7 @@ win64-asan/opt:
         job-name: win64-asan-opt
     treeherder:
         platform: windows2012-64/asan
-        symbol: tc(Bo)
+        symbol: Bo
         tier: 3
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -579,7 +579,7 @@ win32-devedition-nightly/opt:
     shipping-product: devedition
     treeherder:
         platform: windows2012-32-devedition/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -616,7 +616,7 @@ win64-devedition-nightly/opt:
     shipping-product: devedition
     treeherder:
         platform: windows2012-64-devedition/opt
-        symbol: tc(N)
+        symbol: N
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
@@ -648,7 +648,7 @@ win32-mingw32/debug:
         job-name: win32-mingw32-debug
     treeherder:
         platform: windows-mingw32-32/debug
-        symbol: tc(B)
+        symbol: B
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:

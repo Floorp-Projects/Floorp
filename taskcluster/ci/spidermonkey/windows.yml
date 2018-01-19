@@ -15,7 +15,7 @@ sm-plain-win32/debug:
         job-name: sm-plain-win32-debug
     treeherder:
         platform: windows2012-32/debug
-        symbol: SM-tc(p)
+        symbol: SM(p)
     run:
         spidermonkey-variant: plaindebug
 
@@ -25,7 +25,7 @@ sm-plain-win32/opt:
         job-name: sm-plain-win32-opt
     treeherder:
         platform: windows2012-32/opt
-        symbol: SM-tc(p)
+        symbol: SM(p)
     run:
         spidermonkey-variant: plain
 
@@ -35,6 +35,6 @@ sm-compacting-win32/debug:
         job-name: sm-compacting-win32-debug
     treeherder:
         platform: windows2012-32/debug
-        symbol: SM-tc(cgc)
+        symbol: SM(cgc)
     run:
         spidermonkey-variant: compacting

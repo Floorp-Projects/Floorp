@@ -844,6 +844,21 @@ class speedometer(PageloaderTest):
 
 
 @register_test()
+class stylebench(PageloaderTest):
+    """
+    StyleBench benchmark used by many browser vendors (from webkit)
+    """
+    tpmanifest = '${talos}/tests/stylebench/stylebench.manifest'
+    tpcycles = 1
+    tppagecycles = 5
+    tpmozafterpaint = False
+    tpchrome = False
+    format_pagename = False
+    lower_is_better = False
+    unit = 'score'
+
+
+@register_test()
 class perf_reftest(PageloaderTest):
     """
     Style perf-reftest a set of tests where the result is the difference of base vs ref pages
