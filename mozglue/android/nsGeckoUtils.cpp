@@ -11,6 +11,10 @@
 #include "Zip.h"
 #include "mozilla/RefPtr.h"
 
+#ifdef MOZ_CRASHREPORTER
+# include "minidump-analyzer.h"
+#endif
+
 extern "C"
 __attribute__ ((visibility("default")))
 void MOZ_JNICALL
@@ -138,3 +142,21 @@ Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv, jobject 
     // other Native -> Java call doesn't happen before returning to Java.
     return jenv->CallObjectMethod(jzip, method, buf, (jint) stream.GetType());
 }
+
+#ifdef MOZ_CRASHREPORTER
+
+extern "C"
+__attribute__ ((visibility("default")))
+jboolean MOZ_JNICALL
+Java_org_mozilla_gecko_mozglue_MinidumpAnalyzer_GenerateStacks(JNIEnv *jenv, jclass, jstring minidumpPath, jboolean fullStacks)
+{
+    const char* str;
+    str = jenv->GetStringUTFChars(minidumpPath, nullptr);
+
+    bool res = CrashReporter::GenerateStacks(str, fullStacks);
+
+    jenv->ReleaseStringUTFChars(minidumpPath, str);
+    return res;
+}
+
+#endif // MOZ_CRASHREPORTER
