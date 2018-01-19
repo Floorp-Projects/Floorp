@@ -2,10 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import json
 import socket
 import sys
 import time
+
+from six import reraise
 
 
 class SocketTimeout(object):
@@ -204,7 +208,7 @@ class TcpTransport(object):
             msg = "Connection attempt failed because no data has been received over the socket: {}"
             exc, val, tb = sys.exc_info()
 
-            raise exc, msg.format(val), tb
+            reraise(exc, msg.format(val), tb)
 
         hello = json.loads(raw)
         application_type = hello.get("applicationType")

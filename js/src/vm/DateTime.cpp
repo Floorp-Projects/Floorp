@@ -20,24 +20,10 @@
 #include "threading/ExclusiveData.h"
 
 #if ENABLE_INTL_API
-
-// Suppress warnings from ICU header files.
-#if defined(__GNUC__) && !defined(__clang__)
-#  pragma GCC diagnostic push
-#  if MOZ_GCC_VERSION_AT_LEAST(5, 0, 0)
-#    pragma GCC diagnostic ignored "-Wsuggest-override"
-#  endif
-#endif
-
 #include "unicode/timezone.h"
 #if defined(XP_WIN)
 #include "unicode/unistr.h"
 #endif
-
-#if defined(__GNUC__) && !defined(__clang__)
-#  pragma GCC diagnostic pop // -Wsuggest-override
-#endif
-
 #endif /* ENABLE_INTL_API */
 
 #include "vm/MutexIDs.h"

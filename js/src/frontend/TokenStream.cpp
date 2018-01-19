@@ -441,13 +441,6 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
     tokenbuf(cx)
 {}
 
-template<class AnyCharsAccess>
-TokenStreamChars<char16_t, AnyCharsAccess>::TokenStreamChars(JSContext* cx,
-                                                             const char16_t* base, size_t length,
-                                                             size_t startOffset)
-  : TokenStreamCharsBase<char16_t>(cx, base, length, startOffset)
-{}
-
 template<typename CharT, class AnyCharsAccess>
 TokenStreamSpecific<CharT, AnyCharsAccess>::TokenStreamSpecific(JSContext* cx,
                                                                 const ReadOnlyCompileOptions& options,
@@ -1129,6 +1122,22 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirectives(bool isMultiline,
            getSourceMappingURL(isMultiline, shouldWarnDeprecated);
 }
 
+template<class AnyCharsAccess>
+MOZ_MUST_USE bool
+TokenStreamChars<char16_t, AnyCharsAccess>::copyTokenbufTo(JSContext* cx,
+                                                           UniquePtr<char16_t[], JS::FreePolicy>* destination)
+{
+    size_t length = tokenbuf.length();
+
+    *destination = cx->make_pod_array<char16_t>(length + 1);
+    if (!*destination)
+        return false;
+
+    PodCopy(destination->get(), tokenbuf.begin(), length);
+    (*destination)[length] = '\0';
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
@@ -1141,60 +1150,58 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
     MOZ_ASSERT(directiveLength <= 18);
     char16_t peeked[18];
 
-    if (peekChars(directiveLength, peeked) && CharsMatch(peeked, directive)) {
-        if (shouldWarnDeprecated) {
-            if (!warning(JSMSG_DEPRECATED_PRAGMA, errorMsgPragma))
-                return false;
-        }
+    // If there aren't enough characters left, it can't be the desired
+    // directive.
+    if (!peekChars(directiveLength, peeked))
+        return true;
 
-        skipChars(directiveLength);
-        tokenbuf.clear();
+    // It's also not the desired directive if the characters don't match.
+    if (!CharsMatch(peeked, directive))
+        return true;
 
-        do {
-            int32_t c;
-            if (!peekChar(&c))
-                return false;
-
-            if (c == EOF || unicode::IsSpaceOrBOM2(c))
-                break;
-
-            consumeKnownChar(c);
-
-            // Debugging directives can occur in both single- and multi-line
-            // comments. If we're currently inside a multi-line comment, we also
-            // need to recognize multi-line comment terminators.
-            if (isMultiline && c == '*') {
-                int32_t c2;
-                if (!peekChar(&c2))
-                    return false;
-
-                if (c2 == '/') {
-                    ungetChar('*');
-                    break;
-                }
-            }
-
-            if (!tokenbuf.append(c))
-                return false;
-        } while (true);
-
-        if (tokenbuf.empty()) {
-            // The directive's URL was missing, but this is not quite an
-            // exception that we should stop and drop everything for.
-            return true;
-        }
-
-        size_t length = tokenbuf.length();
-
-        *destination = anyCharsAccess().cx->template make_pod_array<char16_t>(length + 1);
-        if (!*destination)
+    if (shouldWarnDeprecated) {
+        if (!warning(JSMSG_DEPRECATED_PRAGMA, errorMsgPragma))
             return false;
-
-        PodCopy(destination->get(), tokenbuf.begin(), length);
-        (*destination)[length] = '\0';
     }
 
-    return true;
+    skipChars(directiveLength);
+    tokenbuf.clear();
+
+    do {
+        int32_t c;
+        if (!peekChar(&c))
+            return false;
+
+        if (c == EOF || unicode::IsSpaceOrBOM2(c))
+            break;
+
+        consumeKnownChar(c);
+
+        // Debugging directives can occur in both single- and multi-line
+        // comments. If we're currently inside a multi-line comment, we also
+        // need to recognize multi-line comment terminators.
+        if (isMultiline && c == '*') {
+            int32_t c2;
+            if (!peekChar(&c2))
+                return false;
+
+            if (c2 == '/') {
+                ungetChar('*');
+                break;
+            }
+        }
+
+        if (!tokenbuf.append(c))
+            return false;
+    } while (true);
+
+    if (tokenbuf.empty()) {
+        // The directive's URL was missing, but this is not quite an
+        // exception that we should stop and drop everything for.
+        return true;
+    }
+
+    return copyTokenbufTo(anyCharsAccess().cx, destination);
 }
 
 template<typename CharT, class AnyCharsAccess>
@@ -1269,10 +1276,7 @@ bool
 TokenStreamChars<char16_t, AnyCharsAccess>::matchTrailForLeadSurrogate(char16_t lead,
                                                                        uint32_t* codePoint)
 {
-    static_assert(mozilla::IsBaseOf<TokenStreamChars<char16_t, AnyCharsAccess>,
-                                    TokenStreamSpecific<char16_t, AnyCharsAccess>>::value,
-                  "static_cast below presumes an inheritance relationship");
-    auto* ts = static_cast<TokenStreamSpecific<char16_t, AnyCharsAccess>*>(this);
+    TokenStreamSpecific* ts = asSpecific();
 
     int32_t maybeTrail = ts->getCharIgnoreEOL();
     if (!unicode::IsTrailSurrogate(maybeTrail)) {

@@ -25,6 +25,7 @@ async function waitForScopeNode(dbg, index) {
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   requestLongerTimeout(2);
+  await pushPref("devtools.debugger.features.map-scopes", true);
 
   const dbg = await initDebugger("doc-sourcemaps3.html");
   const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;

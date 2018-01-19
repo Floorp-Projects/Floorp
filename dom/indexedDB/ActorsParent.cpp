@@ -3648,13 +3648,10 @@ UpgradeSchemaFrom18_0To19_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-class NormalJSContext;
-
 class UpgradeFileIdsFunction final
   : public mozIStorageFunction
 {
   RefPtr<FileManager> mFileManager;
-  nsAutoPtr<NormalJSContext> mContext;
 
 public:
   UpgradeFileIdsFunction()
@@ -8028,13 +8025,7 @@ class CreateIndexOp final
 {
   friend class VersionChangeTransaction;
 
-  class ThreadLocalJSContext;
   class UpdateIndexDataValuesFunction;
-
-  static const unsigned int kBadThreadLocalIndex =
-    static_cast<unsigned int>(-1);
-
-  static unsigned int sThreadLocalIndex;
 
   const IndexMetadata mMetadata;
   Maybe<UniqueIndexTable> mMaybeUniqueIndexTable;
@@ -8063,94 +8054,21 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
 
-class NormalJSContext
-{
-  friend class nsAutoPtr<NormalJSContext>;
-
-  static const JSClass sGlobalClass;
-  static const uint32_t kContextHeapSize = 768 * 1024;
-
-  JSContext* mContext;
-  JSObject* mGlobal;
-
-public:
-  static NormalJSContext*
-  Create();
-
-  JSContext*
-  Context() const
-  {
-    return mContext;
-  }
-
-  JSObject*
-  Global() const
-  {
-    return mGlobal;
-  }
-
-protected:
-  NormalJSContext()
-    : mContext(nullptr)
-    , mGlobal(nullptr)
-  {
-    MOZ_COUNT_CTOR(NormalJSContext);
-  }
-
-  ~NormalJSContext()
-  {
-    MOZ_COUNT_DTOR(NormalJSContext);
-
-    if (mContext) {
-      JS_DestroyContext(mContext);
-    }
-  }
-
-  bool
-  Init();
-};
-
-class CreateIndexOp::ThreadLocalJSContext final
-  : public NormalJSContext
-{
-  friend class CreateIndexOp;
-  friend class nsAutoPtr<ThreadLocalJSContext>;
-
-public:
-  static ThreadLocalJSContext*
-  GetOrCreate();
-
-private:
-  ThreadLocalJSContext()
-  {
-    MOZ_COUNT_CTOR(CreateIndexOp::ThreadLocalJSContext);
-  }
-
-  ~ThreadLocalJSContext()
-  {
-    MOZ_COUNT_DTOR(CreateIndexOp::ThreadLocalJSContext);
-  }
-};
-
 class CreateIndexOp::UpdateIndexDataValuesFunction final
   : public mozIStorageFunction
 {
   RefPtr<CreateIndexOp> mOp;
   RefPtr<DatabaseConnection> mConnection;
-  JSContext* mCx;
 
 public:
   UpdateIndexDataValuesFunction(CreateIndexOp* aOp,
-                                DatabaseConnection* aConnection,
-                                JSContext* aCx)
+                                DatabaseConnection* aConnection)
     : mOp(aOp)
     , mConnection(aConnection)
-    , mCx(aCx)
   {
     MOZ_ASSERT(aOp);
     MOZ_ASSERT(aConnection);
     aConnection->AssertIsOnConnectionThread();
-    MOZ_ASSERT(aCx);
   }
 
   NS_DECL_ISUPPORTS
@@ -10152,24 +10070,6 @@ SerializeStructuredCloneFiles(
   }
 
   return NS_OK;
-}
-
-already_AddRefed<nsIFile>
-GetFileForFileInfo(FileInfo* aFileInfo)
-{
-  FileManager* fileManager = aFileInfo->Manager();
-  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
-  if (NS_WARN_IF(!directory)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(directory,
-                                                     aFileInfo->Id());
-  if (NS_WARN_IF(!file)) {
-    return nullptr;
-  }
-
-  return file.forget();
 }
 
 /*******************************************************************************
@@ -19585,13 +19485,7 @@ UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
     return rv;
   }
 
-  nsAutoPtr<NormalJSContext> context(NormalJSContext::Create());
-  if (NS_WARN_IF(!context)) {
-    return NS_ERROR_FAILURE;
-  }
-
   mFileManager.swap(fileManager);
-  mContext = context;
   return NS_OK;
 }
 
@@ -19604,7 +19498,6 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   MOZ_ASSERT(aArguments);
   MOZ_ASSERT(aResult);
   MOZ_ASSERT(mFileManager);
-  MOZ_ASSERT(mContext);
 
   AUTO_PROFILER_LABEL("UpgradeFileIdsFunction::OnFunctionCall", STORAGE);
 
@@ -19626,30 +19519,10 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
                                                                   mFileManager,
                                                                   &cloneInfo);
 
-  JSContext* cx = mContext->Context();
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, mContext->Global());
-
-  JS::Rooted<JS::Value> clone(cx);
-  if (NS_WARN_IF(!IDBObjectStore::DeserializeUpgradeValue(cx, cloneInfo,
-                                                          &clone))) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
   nsAutoString fileIds;
-
-  for (uint32_t count = cloneInfo.mFiles.Length(), index = 0;
-       index < count;
-       index++) {
-    StructuredCloneFile& file = cloneInfo.mFiles[index];
-    MOZ_ASSERT(file.mFileInfo);
-
-    const int64_t id = file.mFileInfo->Id();
-
-    if (index) {
-      fileIds.Append(' ');
-    }
-    fileIds.AppendInt(file.mType == StructuredCloneFile::eBlob ? id : -id);
+  rv = IDBObjectStore::DeserializeUpgradeValueToFileIds(cloneInfo, fileIds);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
   nsCOMPtr<nsIVariant> result = new mozilla::storage::TextVariant(fileIds);
@@ -19880,7 +19753,7 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   MOZ_ASSERT(file.mFileInfo);
   MOZ_ASSERT(file.mType == StructuredCloneFile::eStructuredClone);
 
-  nsCOMPtr<nsIFile> nativeFile = GetFileForFileInfo(file.mFileInfo);
+  nsCOMPtr<nsIFile> nativeFile = FileInfo::GetFileForFileInfo(file.mFileInfo);
   if (NS_WARN_IF(!nativeFile)) {
     return NS_ERROR_FAILURE;
   }
@@ -24243,7 +24116,7 @@ CreateFileOp::CreateFileOp(Database* aDatabase,
 nsresult
 CreateFileOp::CreateMutableFile(MutableFile** aMutableFile)
 {
-  nsCOMPtr<nsIFile> file = GetFileForFileInfo(mFileInfo);
+  nsCOMPtr<nsIFile> file = FileInfo::GetFileForFileInfo(mFileInfo);
   if (NS_WARN_IF(!file)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -24830,8 +24703,6 @@ CreateIndexOp::CreateIndexOp(VersionChangeTransaction* aTransaction,
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
 }
 
-unsigned int CreateIndexOp::sThreadLocalIndex = kBadThreadLocalIndex;
-
 nsresult
 CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
 {
@@ -24846,18 +24717,8 @@ CreateIndexOp::InsertDataFromObjectStore(DatabaseConnection* aConnection)
     aConnection->GetStorageConnection();
   MOZ_ASSERT(storageConnection);
 
-  ThreadLocalJSContext* context = ThreadLocalJSContext::GetOrCreate();
-  if (NS_WARN_IF(!context)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  JSContext* cx = context->Context();
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, context->Global());
-
   RefPtr<UpdateIndexDataValuesFunction> updateFunction =
-    new UpdateIndexDataValuesFunction(this, aConnection, cx);
+    new UpdateIndexDataValuesFunction(this, aConnection);
 
   NS_NAMED_LITERAL_CSTRING(updateFunctionName, "update_index_data_values");
 
@@ -24922,25 +24783,6 @@ CreateIndexOp::Init(TransactionBase* aTransaction)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
-
-  struct MOZ_STACK_CLASS Helper final
-  {
-    static void
-    Destroy(void* aThreadLocal)
-    {
-      delete static_cast<ThreadLocalJSContext*>(aThreadLocal);
-    }
-  };
-
-  if (sThreadLocalIndex == kBadThreadLocalIndex) {
-    if (NS_WARN_IF(PR_SUCCESS !=
-                     PR_NewThreadPrivateIndex(&sThreadLocalIndex,
-                                              &Helper::Destroy))) {
-      return false;
-    }
-  }
-
-  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex);
 
   nsresult rv =
     GetUniqueIndexTableForObjectStore(aTransaction,
@@ -25086,102 +24928,6 @@ CreateIndexOp::DoDatabaseWork(DatabaseConnection* aConnection)
   return NS_OK;
 }
 
-static const JSClassOps sNormalJSContextGlobalClassOps = {
-  /* addProperty */ nullptr,
-  /* delProperty */ nullptr,
-  /* enumerate */ nullptr,
-  /* newEnumerate */ nullptr,
-  /* resolve */ nullptr,
-  /* mayResolve */ nullptr,
-  /* finalize */ nullptr,
-  /* call */ nullptr,
-  /* hasInstance */ nullptr,
-  /* construct */ nullptr,
-  /* trace */ JS_GlobalObjectTraceHook
-};
-
-const JSClass NormalJSContext::sGlobalClass = {
-  "IndexedDBTransactionThreadGlobal",
-  JSCLASS_GLOBAL_FLAGS,
-  &sNormalJSContextGlobalClassOps
-};
-
-bool
-NormalJSContext::Init()
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-
-  mContext = JS_NewContext(kContextHeapSize);
-  if (NS_WARN_IF(!mContext)) {
-    return false;
-  }
-
-  // Let everyone know that we might be able to call JS. This alerts the
-  // profiler about certain possible deadlocks.
-  NS_GetCurrentThread()->SetCanInvokeJS(true);
-
-  // Not setting this will cause JS_CHECK_RECURSION to report false positives.
-  JS_SetNativeStackQuota(mContext, 128 * sizeof(size_t) * 1024);
-
-  if (NS_WARN_IF(!JS::InitSelfHostedCode(mContext))) {
-    return false;
-  }
-
-  JSAutoRequest ar(mContext);
-
-  JS::CompartmentOptions options;
-  mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
-                               JS::FireOnNewGlobalHook, options);
-  if (NS_WARN_IF(!mGlobal)) {
-    return false;
-  }
-
-  return true;
-}
-
-// static
-NormalJSContext*
-NormalJSContext::Create()
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-
-  nsAutoPtr<NormalJSContext> newContext(new NormalJSContext());
-
-  if (NS_WARN_IF(!newContext->Init())) {
-    return nullptr;
-  }
-
-  return newContext.forget();
-}
-
-// static
-auto
-CreateIndexOp::
-ThreadLocalJSContext::GetOrCreate() -> ThreadLocalJSContext*
-{
-  MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(CreateIndexOp::kBadThreadLocalIndex !=
-             CreateIndexOp::sThreadLocalIndex);
-
-  auto* context = static_cast<ThreadLocalJSContext*>(
-    PR_GetThreadPrivate(CreateIndexOp::sThreadLocalIndex));
-  if (context) {
-    return context;
-  }
-
-  nsAutoPtr<ThreadLocalJSContext> newContext(new ThreadLocalJSContext());
-
-  if (NS_WARN_IF(!newContext->Init())) {
-    return nullptr;
-  }
-
-  DebugOnly<PRStatus> status =
-    PR_SetThreadPrivate(CreateIndexOp::sThreadLocalIndex, newContext);
-  MOZ_ASSERT(status == PR_SUCCESS);
-
-  return newContext.forget();
-}
-
 NS_IMPL_ISUPPORTS(CreateIndexOp::UpdateIndexDataValuesFunction,
                   mozIStorageFunction);
 
@@ -25195,7 +24941,6 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   MOZ_ASSERT(mConnection);
   mConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(mOp);
-  MOZ_ASSERT(mCx);
 
   AUTO_PROFILER_LABEL(
     "CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall", STORAGE);
@@ -25235,25 +24980,18 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     return rv;
   }
 
-  JS::Rooted<JS::Value> clone(mCx);
-  if (NS_WARN_IF(!IDBObjectStore::DeserializeIndexValue(mCx,
-                                                        cloneInfo,
-                                                        &clone))) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
   const IndexMetadata& metadata = mOp->mMetadata;
   const int64_t& objectStoreId = mOp->mObjectStoreId;
 
   AutoTArray<IndexUpdateInfo, 32> updateInfos;
-  rv = IDBObjectStore::AppendIndexUpdateInfo(metadata.id(),
-                                             metadata.keyPath(),
-                                             metadata.unique(),
-                                             metadata.multiEntry(),
-                                             metadata.locale(),
-                                             mCx,
-                                             clone,
-                                             updateInfos);
+  rv = IDBObjectStore::DeserializeIndexValueToUpdateInfos(
+         metadata.id(),
+         metadata.keyPath(),
+         metadata.unique(),
+         metadata.multiEntry(),
+         metadata.locale(),
+         cloneInfo,
+         updateInfos);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

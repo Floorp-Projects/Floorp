@@ -1289,14 +1289,10 @@ pref("dom.min_timeout_value", 4);
 pref("dom.min_background_timeout_value", 1000);
 // Timeout clamp in ms for tracking timeouts we clamp
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-#ifdef NIGHTLY_BUILD
-pref("dom.min_tracking_timeout_value", 10000);
-#else
 pref("dom.min_tracking_timeout_value", 4);
-#endif
 // And for background windows
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_background_timeout_value", 10000);
+pref("dom.min_tracking_background_timeout_value", 4);
 // Delay in ms from document load until we start throttling background timeouts.
 pref("dom.timeout.throttling_delay", 30000);
 
@@ -1535,6 +1531,9 @@ pref("javascript.options.shared_memory", false);
 
 pref("javascript.options.throw_on_debuggee_would_run", false);
 pref("javascript.options.dump_stack_on_debuggee_would_run", false);
+
+// Spectre security vulnerability mitigations.
+pref("javascript.options.spectre.index_masking", false);
 
 // Streams API
 pref("javascript.options.streams", false);
@@ -5022,6 +5021,9 @@ pref("extensions.webextensions.remote", false);
 // purposes only. Setting this to false will break moz-extension URI loading
 // unless other process sandboxing and extension remoting prefs are changed.
 pref("extensions.webextensions.protocol.remote", true);
+
+// Disable tab hiding API by default.
+pref("extensions.webextensions.tabhide.enabled", false);
 
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");

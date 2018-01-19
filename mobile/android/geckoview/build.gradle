@@ -198,8 +198,10 @@ android.libraryVariants.all { variant ->
 
         options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.header = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
-        options.addStringOption('noindex');
-        options.addStringOption('noqualifier', 'java.lang');
+        options.noTimestamp = true
+        options.noIndex = true
+        options.noQualifiers = ['java.lang']
+        options.tags = ['hide:a:']
     }
 
     task "javadocJar${name.capitalize()}"(type: Jar, dependsOn: javadoc) {

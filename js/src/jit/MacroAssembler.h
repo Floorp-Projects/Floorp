@@ -1894,6 +1894,19 @@ class MacroAssembler : public MacroAssemblerSpecific
             store32(Imm32(key.constant()), dest);
     }
 
+  private:
+    template <typename T>
+    void spectreMaskIndexImpl(Register index, const T& length, Register output);
+
+    template <typename T>
+    void spectreMaskIndexImpl(int32_t index, const T& length, Register output);
+
+  public:
+    void spectreMaskIndex(int32_t index, Register length, Register output);
+    void spectreMaskIndex(int32_t index, const Address& length, Register output);
+    void spectreMaskIndex(Register index, Register length, Register output);
+    void spectreMaskIndex(Register index, const Address& length, Register output);
+
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {
         Label done;
@@ -2325,16 +2338,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     //
     // Convenience functions for converting values to int32.
     //
-    void convertValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail,
-                             bool negativeZeroCheck)
-    {
-        convertValueToInt(value, temp, output, fail, negativeZeroCheck
-                          ? IntConversion_NegativeZeroCheck
-                          : IntConversion_Normal);
-    }
     void convertValueToInt32(ValueOperand value, MDefinition* input,
                              FloatRegister temp, Register output, Label* fail,
-                             bool negativeZeroCheck, IntConversionInputKind conversion = IntConversion_Any)
+                             bool negativeZeroCheck,
+                             IntConversionInputKind conversion = IntConversion_Any)
     {
         convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
                           negativeZeroCheck
@@ -2342,36 +2349,10 @@ class MacroAssembler : public MacroAssemblerSpecific
                           : IntConversion_Normal,
                           conversion);
     }
-    MOZ_MUST_USE bool convertValueToInt32(JSContext* cx, const Value& v, Register output,
-                                          Label* fail, bool negativeZeroCheck)
-    {
-        return convertValueToInt(cx, v, output, fail, negativeZeroCheck
-                                 ? IntConversion_NegativeZeroCheck
-                                 : IntConversion_Normal);
-    }
-    MOZ_MUST_USE bool convertConstantOrRegisterToInt32(JSContext* cx,
-                                                       const ConstantOrRegister& src,
-                                                       FloatRegister temp, Register output,
-                                                       Label* fail, bool negativeZeroCheck)
-    {
-        return convertConstantOrRegisterToInt(cx, src, temp, output, fail, negativeZeroCheck
-                                              ? IntConversion_NegativeZeroCheck
-                                              : IntConversion_Normal);
-    }
-    void convertTypedOrValueToInt32(TypedOrValueRegister src, FloatRegister temp, Register output,
-                                    Label* fail, bool negativeZeroCheck)
-    {
-        convertTypedOrValueToInt(src, temp, output, fail, negativeZeroCheck
-                                 ? IntConversion_NegativeZeroCheck
-                                 : IntConversion_Normal);
-    }
 
     //
     // Convenience functions for truncating values to int32.
     //
-    void truncateValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail) {
-        convertValueToInt(value, temp, output, fail, IntConversion_Truncate);
-    }
     void truncateValueToInt32(ValueOperand value, MDefinition* input,
                               Label* handleStringEntry, Label* handleStringRejoin,
                               Label* truncateDoubleSlow,
@@ -2380,16 +2361,13 @@ class MacroAssembler : public MacroAssemblerSpecific
         convertValueToInt(value, input, handleStringEntry, handleStringRejoin, truncateDoubleSlow,
                           stringReg, temp, output, fail, IntConversion_Truncate);
     }
-    void truncateValueToInt32(ValueOperand value, MDefinition* input,
-                              FloatRegister temp, Register output, Label* fail)
+
+    void truncateValueToInt32(ValueOperand value, FloatRegister temp, Register output, Label* fail)
     {
-        convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
-                          IntConversion_Truncate);
+        truncateValueToInt32(value, nullptr, nullptr, nullptr, nullptr, InvalidReg, temp, output,
+                             fail);
     }
-    MOZ_MUST_USE bool truncateValueToInt32(JSContext* cx, const Value& v, Register output,
-                                           Label* fail) {
-        return convertValueToInt(cx, v, output, fail, IntConversion_Truncate);
-    }
+
     MOZ_MUST_USE bool truncateConstantOrRegisterToInt32(JSContext* cx,
                                                         const ConstantOrRegister& src,
                                                         FloatRegister temp, Register output,
@@ -2397,16 +2375,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     {
         return convertConstantOrRegisterToInt(cx, src, temp, output, fail, IntConversion_Truncate);
     }
-    void truncateTypedOrValueToInt32(TypedOrValueRegister src, FloatRegister temp, Register output,
-                                     Label* fail)
-    {
-        convertTypedOrValueToInt(src, temp, output, fail, IntConversion_Truncate);
-    }
 
     // Convenience functions for clamping values to uint8.
-    void clampValueToUint8(ValueOperand value, FloatRegister temp, Register output, Label* fail) {
-        convertValueToInt(value, temp, output, fail, IntConversion_ClampToUint8);
-    }
     void clampValueToUint8(ValueOperand value, MDefinition* input,
                            Label* handleStringEntry, Label* handleStringRejoin,
                            Register stringReg, FloatRegister temp, Register output, Label* fail)
@@ -2414,16 +2384,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         convertValueToInt(value, input, handleStringEntry, handleStringRejoin, nullptr,
                           stringReg, temp, output, fail, IntConversion_ClampToUint8);
     }
-    void clampValueToUint8(ValueOperand value, MDefinition* input,
-                           FloatRegister temp, Register output, Label* fail)
-    {
-        convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
-                          IntConversion_ClampToUint8);
-    }
-    MOZ_MUST_USE bool clampValueToUint8(JSContext* cx, const Value& v, Register output,
-                                        Label* fail) {
-        return convertValueToInt(cx, v, output, fail, IntConversion_ClampToUint8);
-    }
+
     MOZ_MUST_USE bool clampConstantOrRegisterToUint8(JSContext* cx,
                                                      const ConstantOrRegister& src,
                                                      FloatRegister temp, Register output,
@@ -2431,11 +2392,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     {
         return convertConstantOrRegisterToInt(cx, src, temp, output, fail,
                                               IntConversion_ClampToUint8);
-    }
-    void clampTypedOrValueToUint8(TypedOrValueRegister src, FloatRegister temp, Register output,
-                                  Label* fail)
-    {
-        convertTypedOrValueToInt(src, temp, output, fail, IntConversion_ClampToUint8);
     }
 
   public:

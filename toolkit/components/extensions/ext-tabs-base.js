@@ -318,12 +318,32 @@ class TabBase {
   }
 
   /**
+   * @property {integer} discarded
+   *        Returns true if the tab is discarded.
+   *        @readonly
+   *        @abstract
+   */
+  get discarded() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * @property {integer} height
    *        Returns the pixel height of the visible area of the tab.
    *        @readonly
    *        @abstract
    */
   get height() {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * @property {integer} hidden
+   *        Returns true if the tab is hidden.
+   *        @readonly
+   *        @abstract
+   */
+  get hidden() {
     throw new Error("Not implemented");
   }
 
@@ -344,6 +364,16 @@ class TabBase {
    *        @abstract
    */
   get mutedInfo() {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * @property {SharingState} sharingState
+   *        Returns object with tab sharingState.
+   *        @readonly
+   *        @abstract
+   */
+  get sharingState() {
     throw new Error("Not implemented");
   }
 
@@ -453,6 +483,10 @@ class TabBase {
    *        Matches against the exact value of the tab's `audible` attribute.
    * @param {string} [queryInfo.cookieStoreId]
    *        Matches against the exact value of the tab's `cookieStoreId` attribute.
+   * @param {boolean} [queryInfo.discarded]
+   *        Matches against the exact value of the tab's `discarded` attribute.
+   * @param {boolean} [queryInfo.hidden]
+   *        Matches against the exact value of the tab's `hidden` attribute.
    * @param {boolean} [queryInfo.highlighted]
    *        Matches against the exact value of the tab's `highlighted` attribute.
    * @param {integer} [queryInfo.index]
@@ -465,6 +499,12 @@ class TabBase {
    *        Matches against the exact value of the tab's `status` attribute.
    * @param {string} [queryInfo.title]
    *        Matches against the exact value of the tab's `title` attribute.
+   * @param {string|boolean } [queryInfo.screen]
+   *        Matches against the exact value of the tab's `sharingState.screen` attribute, or use true to match any screen sharing tab.
+   * @param {boolean} [queryInfo.camera]
+   *        Matches against the exact value of the tab's `sharingState.camera` attribute.
+   * @param {boolean} [queryInfo.microphone]
+   *        Matches against the exact value of the tab's `sharingState.microphone` attribute.
    *
    *        Note: Per specification, this should perform a pattern match, rather
    *        than an exact value match, and will do so in the future.
@@ -475,14 +515,31 @@ class TabBase {
    *        True if the tab matches the query.
    */
   matches(queryInfo) {
-    const PROPS = ["active", "audible", "cookieStoreId", "highlighted", "index", "openerTabId", "pinned", "status"];
+    const PROPS = ["active", "audible", "cookieStoreId", "discarded", "hidden",
+                   "highlighted", "index", "openerTabId", "pinned", "status"];
 
-    if (PROPS.some(prop => queryInfo[prop] != null && queryInfo[prop] !== this[prop])) {
+    function checkProperty(prop, obj) {
+      return queryInfo[prop] != null && queryInfo[prop] !== obj[prop];
+    }
+
+    if (PROPS.some(prop => checkProperty(prop, this))) {
       return false;
     }
 
-    if (queryInfo.muted !== null) {
-      if (queryInfo.muted !== this.mutedInfo.muted) {
+    if (checkProperty("muted", this.mutedInfo)) {
+      return false;
+    }
+
+    let state = this.sharingState;
+    if (["camera", "microphone"].some(prop => checkProperty(prop, state))) {
+      return false;
+    }
+    // query for screen can be boolean (ie. any) or string (ie. specific).
+    if (queryInfo.screen !== null) {
+      let match = typeof queryInfo.screen == "boolean" ?
+                         queryInfo.screen === !!state.screen :
+                         queryInfo.screen === state.screen;
+      if (!match) {
         return false;
       }
     }
@@ -516,6 +573,7 @@ class TabBase {
       active: this.selected,
       pinned: this.pinned,
       status: this.status,
+      hidden: this.hidden,
       discarded: this.discarded,
       incognito: this.incognito,
       width: this.width,
@@ -525,6 +583,7 @@ class TabBase {
       mutedInfo: this.mutedInfo,
       isArticle: this.isArticle,
       isInReaderMode: this.isInReaderMode,
+      sharingState: this.sharingState,
     };
 
     // If the tab has not been fully layed-out yet, fallback to the geometry

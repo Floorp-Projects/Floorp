@@ -82,8 +82,6 @@ class nsTreeContentView final : public nsINativeTreeView,
     int32_t GetLevel(int32_t aRow, mozilla::ErrorResult& aError);
     void GetImageSrc(int32_t aRow, nsTreeColumn& aColumn, nsAString& aSrc,
                      mozilla::ErrorResult& aError);
-    int32_t GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
-                            mozilla::ErrorResult& aError);
     void GetCellValue(int32_t aRow, nsTreeColumn& aColumn, nsAString& aValue,
                       mozilla::ErrorResult& aError);
     void GetCellText(int32_t aRow, nsTreeColumn& aColumn, nsAString& aText,

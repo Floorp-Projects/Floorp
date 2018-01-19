@@ -12450,6 +12450,15 @@
     "n_values": 12,
     "description": "Plugin drawing model. 0 when windowed, otherwise NPDrawingModel + 1."
   },
+  "DOM_SCRIPT_KIND": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jcoppeard@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "categorical",
+    "bug_numbers": [1430145],
+    "labels": ["ClassicScript", "ModuleScript"],
+    "description": "Record the kind of every script loaded in a document."
+  },
   "DOM_SCRIPT_SRC_ENCODING": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dteller@mozilla.com"],
@@ -12601,6 +12610,15 @@
     "n_buckets": 50,
     "bug_numbers": [1362114],
     "description": "Number of script tags evaluated per document."
+  },
+  "DOM_SCRIPT_PRELOAD_RESULT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["jcoppeard@mozilla.com"],
+    "expires_in_version": "63",
+    "kind": "categorical",
+    "bug_numbers": [1430145],
+    "labels": ["Used", "RejectedByPolicy", "RequestMismatch", "LoadError", "NotUsed"],
+    "description": "Whether a preloaded script was used or the reason it was not used."
   },
   "VIDEO_FASTSEEK_USED": {
     "record_in_processes": ["main", "content"],

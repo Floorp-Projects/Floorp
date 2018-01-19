@@ -5,34 +5,12 @@ module.exports = {
     "react"
   ],
   "globals": {
-    "atob": true,
-    "btoa": true,
-    "Components": true,
-    "CSSRule": true,
-    "clearInterval": true,
-    "clearTimeout": true,
-    "console": true,
-    "CSS": true,
-    "DocumentFragment": true,
-    "DOMParser": true,
-    "dump": true,
-    "Element": true,
     "exports": true,
     "isWorker": true,
-    "indexedDB": true,
     "loader": true,
     "module": true,
-    "Node": true,
     "reportError": true,
     "require": true,
-    "setInterval": true,
-    "setTimeout": true,
-    "uneval": true,
-    "TextDecoder": true,
-    "TextEncoder": true,
-    "URL": true,
-    "WebSocket": true,
-    "XMLHttpRequest": true
   },
   "rules": {
     // These are the rules that have been configured so far to match the
@@ -101,14 +79,8 @@ module.exports = {
     // Allow trailing commas for easy list extension.  Having them does not
     // impair readability, but also not required either.
     "comma-dangle": "off",
-    // Enforce spacing before and after comma
-    "comma-spacing": ["error", {"before": false, "after": true}],
-    // Enforce one true comma style.
-    "comma-style": ["error", "last"],
     // Warn about cyclomatic complexity in functions.
     "complexity": ["error", 35],
-    // Require return statements to either always or never specify values.
-    "consistent-return": "error",
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": "off",
@@ -119,10 +91,6 @@ module.exports = {
     "default-case": "off",
     // Enforce dots on the next line with property name.
     "dot-location": ["error", "property"],
-    // Encourage the use of dot notation whenever possible.
-    "dot-notation": "error",
-    // Enforce newline at the end of file, with no multiple empty lines.
-    "eol-last": "error",
     // Allow using == instead of ===, in the interest of landing something since
     // the devtools codebase is split on convention here.
     "eqeqeq": "off",
@@ -134,23 +102,12 @@ module.exports = {
     "func-names": "off",
     // Allow use of function declarations and expressions.
     "func-style": "off",
-    // Deprecated, will be removed in 1.0.
-    "generator-star": "off",
-    // Enforce the spacing around the * in generator functions.
-    "generator-star-spacing": ["error", "after"],
-    // Deprecated, will be removed in 1.0.
-    "global-strict": "off",
     // Only useful in a node environment.
     "handle-callback-err": "off",
     // Tab width.
     "indent-legacy": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     // Enforces spacing between keys and values in object literal properties.
     "key-spacing": ["error", {"beforeColon": false, "afterColon": true}],
-    // Enforces unix style line breaks.
-    "linebreak-style": ["error", "unix"],
-    // Don't enforce the maximum depth that blocks can be nested. The complexity
-    // rule is a better rule to check this.
-    "max-depth": "off",
     // Maximum length of a line.
     "max-len": ["error", 90, 2, {
       "ignoreUrls": true,
@@ -170,81 +127,37 @@ module.exports = {
     // Disallow the omission of parentheses when invoking a constructor with no
     // arguments.
     "new-parens": "error",
-    // Disallow use of the Array constructor.
-    "no-array-constructor": "error",
     // Allow use of bitwise operators.
     "no-bitwise": "off",
-    // Disallow use of arguments.caller or arguments.callee.
-    "no-caller": "error",
     // Disallow the catch clause parameter name being the same as a variable in
     // the outer scope, to avoid confusion.
     "no-catch-shadow": "error",
-    // Deprecated, will be removed in 1.0.
-    "no-comma-dangle": "off",
-    // Disallow assignment in conditional expressions.
-    "no-cond-assign": "error",
     // Allow using the console API.
     "no-console": "off",
     // Allow using constant expressions in conditions like while (true)
     "no-constant-condition": "off",
     // Allow use of the continue statement.
     "no-continue": "off",
-    // Disallow control characters in regular expressions.
-    "no-control-regex": "error",
-    // Disallow use of debugger.
-    "no-debugger": "error",
-    // Disallow deletion of variables (deleting properties is fine).
-    "no-delete-var": "error",
     // Allow division operators explicitly at beginning of regular expression.
     "no-div-regex": "off",
-    // Disallow duplicate arguments in functions.
-    "no-dupe-args": "error",
-    // Disallow duplicate keys when creating object literals.
-    "no-dupe-keys": "error",
-    // Disallow a duplicate case label.
-    "no-duplicate-case": "error",
-    // Disallow else after a return in an if. The else around the second return
-    // here is useless:
-    // if (something) { return false; } else { return true; }
-    "no-else-return": "error",
     // Disallow empty statements. This will report an error for:
     // try { something(); } catch (e) {}
     // but will not report it for:
     // try { something(); } catch (e) { /* Silencing the error because ...*/ }
     // which is a valid use case.
     "no-empty": "error",
-    // Disallow the use of empty character classes in regular expressions.
-    "no-empty-character-class": "error",
-    // Disallow use of eval(). We have other APIs to evaluate code in content.
-    "no-eval": "error",
-    // Disallow assigning to the exception in a catch block.
-    "no-ex-assign": "error",
     // Disallow adding to native types
     "no-extend-native": "error",
-    // Disallow unnecessary function binding.
-    "no-extra-bind": "error",
-    // Disallow double-negation boolean casts in a boolean context.
-    "no-extra-boolean-cast": "error",
     // Allow unnecessary parentheses, as they may make the code more readable.
     "no-extra-parens": "off",
-    // Disallow unnecessary semicolons.
-    "no-extra-semi": "error",
-    // Deprecated, will be removed in 1.0.
-    "no-extra-strict": "off",
     // Disallow fallthrough of case statements, except if there is a comment.
     "no-fallthrough": "error",
     // Allow the use of leading or trailing decimal points in numeric literals.
     "no-floating-decimal": "off",
-    // disallow use of eval()-like methods
-    "no-implied-eval": "error",
     // Allow comments inline after code.
     "no-inline-comments": "off",
-    // Disallow if as the only statement in an else block.
-    "no-lonely-if": "error",
     // Allow mixing regular variable and require declarations (not a node env).
     "no-mixed-requires": "off",
-    // Disallow mixed spaces and tabs for indentation.
-    "no-mixed-spaces-and-tabs": "error",
     // Disallow use of multiple spaces (sometimes used to align const values,
     // array or object items, etc.). It's hard to maintain and doesn't add that
     // much benefit.
@@ -253,14 +166,8 @@ module.exports = {
     "no-multi-str": "error",
     // Disallow multiple empty lines.
     "no-multiple-empty-lines": ["error", {"max": 1}],
-    // Disallow reassignments of native objects.
-    "no-native-reassign": "error",
-    // Disallow nested ternary expressions, they make the code hard to read.
-    "no-nested-ternary": "error",
     // Allow use of new operator with the require function.
     "no-new-require": "off",
-    // Disallow use of octal literals.
-    "no-octal": "error",
     // Allow reassignment of function parameters.
     "no-param-reassign": "off",
     // Allow string concatenation with __dirname and __filename (not a node env).
@@ -273,8 +180,6 @@ module.exports = {
     "no-process-exit": "off",
     // Disallow usage of __proto__ property.
     "no-proto": "error",
-    // Disallow declaring the same variable more than once (we use let anyway).
-    "no-redeclare": "error",
     // Disallow multiple spaces in a regular expression literal.
     "no-regex-spaces": "off",
     // Allow reserved words being used as object literal keys.
@@ -286,10 +191,6 @@ module.exports = {
     "no-return-assign": "error",
     // Allow use of javascript: urls.
     "no-script-url": "off",
-    // Disallow assignments like foo = foo
-    "no-self-assign": "error",
-    // Disallow comparisons where both sides are exactly the same.
-    "no-self-compare": "error",
     // Disallow use of comma operator.
     "no-sequences": "error",
     // Warn about declaration of variables already declared in the outer scope.
@@ -298,16 +199,8 @@ module.exports = {
     // random name.
     // Still, making this a warning can help people avoid being confused.
     "no-shadow": "error",
-    // Disallow shadowing of names such as arguments.
-    "no-shadow-restricted-names": "error",
-    // Deprecated, will be removed in 1.0.
-    "no-space-before-semi": "off",
     // Disallow space between function identifier and application.
     "no-spaced-func": "error",
-    // Disallow sparse arrays, eg. let arr = [,,2].
-    // Array destructuring is fine though:
-    // for (let [, breakpointPromise] of aPromises)
-    "no-sparse-arrays": "error",
     // Allow use of synchronous methods (not a node environment).
     "no-sync": "off",
     // Allow the use of ternary operators.
@@ -315,39 +208,20 @@ module.exports = {
     // Disallow throwing literals (eg. throw "error" instead of
     // throw new Error("error")).
     "no-throw-literal": "error",
-    // Disallow trailing whitespace at the end of lines.
-    "no-trailing-spaces": "error",
-    // Disallow use of undeclared variables unless mentioned in a /*global */
-    // block. Note that globals from head.js are automatically imported in tests
-    // by the import-headjs-globals rule form the mozilla eslint plugin.
-    "no-undef": "error",
     // Allow dangling underscores in identifiers (for privates).
     "no-underscore-dangle": "off",
     // Allow use of undefined variable.
     "no-undefined": "off",
-    // Disallow the use of Boolean literals in conditional expressions.
-    "no-unneeded-ternary": "error",
-    // Disallow unreachable statements after a return, throw, continue, or break
-    // statement.
-    "no-unreachable": "error",
     // Disallow global and local variables that aren't used, but allow unused
     // function arguments.
     "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
-    // Disallow flow control that escapes from "finally".
-    "no-unsafe-finally": "error",
     // Allow using variables before they are defined.
     "no-use-before-define": "off",
-    // Disallow useless Function.prototype.{call/apply}
-    "no-useless-call": "error",
-    // Disallow useless return;
-    "no-useless-return": "error",
     // We use var-only-at-top-level instead of no-var as we allow top level
     // vars.
     "no-var": "off",
     // Allow using TODO/FIXME comments.
     "no-warning-comments": "off",
-    // Disallow use of the with statement.
-    "no-with": "error",
     // Don't require method and property shorthand syntax for object literals.
     // We use this in the code a lot, but not consistently, and this seems more
     // like something to check at code review time.
@@ -358,27 +232,13 @@ module.exports = {
     "padded-blocks": ["error", "never"],
     // Don't require quotes around object literal property names.
     "quote-props": "off",
-    // Double quotes should be used.  Other quote characters can be used around strings
-    // with embedded double quotes to avoid escaping them.  Template literals are allowed
-    // mainly for building multi-line messages where only some lines use substitution.
-    "quotes": ["error", "double", {"avoidEscape": true, "allowTemplateLiterals": true}],
     // Require use of the second argument for parseInt().
     "radix": "error",
-    // Always require use of semicolons wherever they are valid.
-    "semi": ["error", "always"],
     // Enforce spacing after semicolons.
     "semi-spacing": ["error", {"before": false, "after": true}],
     // Don't require to sort variables within the same declaration block.
     // Anyway, one-var is disabled.
     "sort-vars": "off",
-    // Deprecated, will be removed in 1.0.
-    "space-after-function-name": "off",
-    // Require a space around all keywords.
-    "keyword-spacing": "error",
-    // Require a space before the start brace of a block.
-    "space-before-blocks": ["error", "always"],
-    // Deprecated, will be removed in 1.0.
-    "space-before-function-parentheses": "off",
     // Require space after keyword for anonymous functions, but disallow space
     // after name of named functions.
     "space-before-function-paren": ["error", {"anonymous": "always", "named": "never"}],
@@ -388,26 +248,16 @@ module.exports = {
     "space-in-brackets": "off",
     // Disallow spaces inside parentheses.
     "space-in-parens": ["error", "never"],
-    // Require spaces around operators, except for a|"off".
-    "space-infix-ops": ["error", {"int32Hint": true}],
     // Require spaces before/after unary operators (words on by default,
     // nonwords off by default).
     "space-unary-ops": ["error", { "words": true, "nonwords": false }],
-    // Deprecated, will be removed in 1.0.
-    "space-unary-word-ops": "off",
-    // Require a space immediately following the // in a line comment.
-    "spaced-comment": ["error", "always"],
     // Require "use strict" to be defined globally in the script.
     "strict": ["error", "global"],
-    // Disallow comparisons with the value NaN.
-    "use-isnan": "error",
     // Warn about invalid JSDoc comments.
     // Disabled for now because of https://github.com/eslint/eslint/issues/2270
     // The rule fails on some jsdoc comments like in:
     // devtools/client/webconsole/console-output.js
     "valid-jsdoc": "off",
-    // Ensure that the results of typeof are compared against a valid string.
-    "valid-typeof": "error",
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": "off",
     // Don't require immediate function invocation to be wrapped in parentheses.
@@ -445,8 +295,6 @@ module.exports = {
     "no-iterator": "off",
     // disallow labels that share a name with a variable
     "no-label-var": "off",
-    // disallow use of labeled statements
-    "no-labels": "error",
     // disallow unnecessary nested blocks
     "no-lone-blocks": "off",
     // disallow creation of functions within loops

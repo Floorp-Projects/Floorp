@@ -251,12 +251,11 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     // WebAssembly support:
 
-    // Create a SharedArrayBufferObject without an attached SARB.  This is a
-    // valid object only if a SARB is then attached with initializeRawBuffer().
-    static SharedArrayBufferObject* createEmpty(JSContext* cx);
-
-    // Install the buffer if the object was created by createEmpty().
-    void initializeRawBuffer(JSContext* cx, SharedArrayRawBuffer* buffer, uint32_t length);
+    // Create a SharedArrayBufferObject using the provided buffer and size.
+    // Assumes ownership of a reference to |buffer| even in case of failure,
+    // i.e. on failure |buffer->dropReference()| is performed.
+    static SharedArrayBufferObject*
+    createFromNewRawBuffer(JSContext* cx, SharedArrayRawBuffer* buffer, uint32_t initialSize);
 
     mozilla::Maybe<uint32_t> wasmMaxSize() const {
         return mozilla::Some(rawBufferObject()->maxSize());

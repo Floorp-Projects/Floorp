@@ -4532,12 +4532,17 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
       auto pb = Some(aState.PercentageBasisFor(mAxis, item));
       nscoord spaceToFill = ContentContribution(item, aState, rc, wm, mAxis, pb,
                                                 nsLayoutUtils::PREF_ISIZE);
+      const LineRange& range =
+        mAxis == eLogicalAxisInline ? item.mArea.mCols : item.mArea.mRows;
+      MOZ_ASSERT(range.Extent() >= 1);
+      const auto spannedGaps = range.Extent() - 1;
+      if (spannedGaps > 0) {
+        spaceToFill -= mGridGap * spannedGaps;
+      }
       if (spaceToFill <= 0) {
         continue;
       }
       // ... and all its spanned tracks as input.
-      const LineRange& range =
-        mAxis == eLogicalAxisInline ? item.mArea.mCols : item.mArea.mRows;
       nsTArray<uint32_t> itemFlexTracks;
       for (uint32_t i = range.mStart, end = range.mEnd; i < end; ++i) {
         if (mSizes[i].mState & TrackSize::eFlexMaxSizing) {

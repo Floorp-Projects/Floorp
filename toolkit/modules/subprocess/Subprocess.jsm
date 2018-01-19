@@ -12,7 +12,7 @@
 
 "use strict";
 
-let EXPORTED_SYMBOLS = ["Subprocess"];
+var EXPORTED_SYMBOLS = ["Subprocess"];
 
 /* exported Subprocess */
 

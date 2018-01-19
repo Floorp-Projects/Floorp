@@ -16,6 +16,13 @@ class App extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
+      getNodeFromActor: PropTypes.func.isRequired,
+      onHideBoxModelHighlighter: PropTypes.func.isRequired,
+      onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      setSelectedNode: PropTypes.func.isRequired,
+      simulateAnimation: PropTypes.func.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
     };
   }
@@ -25,7 +32,17 @@ class App extends PureComponent {
   }
 
   render() {
-    const { animations, toggleElementPicker } = this.props;
+    const {
+      animations,
+      emitEventForTest,
+      getAnimatedPropertyMap,
+      getNodeFromActor,
+      onHideBoxModelHighlighter,
+      onShowBoxModelHighlighterForNode,
+      setSelectedNode,
+      simulateAnimation,
+      toggleElementPicker,
+    } = this.props;
 
     return dom.div(
       {
@@ -34,7 +51,14 @@ class App extends PureComponent {
       animations.length ?
       AnimationListContainer(
         {
-          animations
+          animations,
+          emitEventForTest,
+          getAnimatedPropertyMap,
+          getNodeFromActor,
+          onHideBoxModelHighlighter,
+          onShowBoxModelHighlighterForNode,
+          setSelectedNode,
+          simulateAnimation,
         }
       )
       :

@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import contextlib
 import os
 import urllib
@@ -705,16 +707,16 @@ class TestTLSNavigation(MarionetteTestCase):
     def test_deactivation(self):
         invalid_cert_url = self.test_page_insecure
 
-        print "with safe session"
+        print("with safe session")
         with self.safe_session() as session:
             with self.assertRaises(errors.InsecureCertificateException):
                 session.navigate(invalid_cert_url)
 
-        print "with unsafe session"
+        print("with unsafe session")
         with self.unsafe_session() as session:
             session.navigate(invalid_cert_url)
 
-        print "with safe session again"
+        print("with safe session again")
         with self.safe_session() as session:
             with self.assertRaises(errors.InsecureCertificateException):
                 session.navigate(invalid_cert_url)

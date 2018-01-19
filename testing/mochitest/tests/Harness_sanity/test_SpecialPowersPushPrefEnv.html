@@ -21,6 +21,7 @@ function starttest() {
     SpecialPowers.setIntPref("test.int", 1);
   }
   SpecialPowers.setCharPref("test.char", 'test');
+  SpecialPowers.setBoolPref("test.cleanup", false);
 
   setTimeout(test1, 0, 0);
 }
@@ -200,9 +201,29 @@ function test11(aCount) {
     SpecialPowers.getCharPref('test.char');
     setTimeout(test11, 0, ++aCount);
   } catch(e) {
-    SimpleTest.finish();
+    test12();
   }
 }
+
+function test12() {
+  // Set test.cleanup to true via pushPrefEnv, while its default value is false.
+  SpecialPowers.pushPrefEnv({"set": [["test.cleanup", true]]}, () => {
+    // Update the preference manually back to its original value.
+    SpecialPowers.setBoolPref("test.cleanup", false);
+    setTimeout(test13, 0);
+  });
+}
+
+function test13() {
+  // Try to flush preferences. Since test.cleanup has manually been set to false, there
+  // will not be any visible update. Check that the flush does not timeout.
+  SpecialPowers.flushPrefEnv(() => {
+    ok(true, 'flushPrefEnv did not time out');
+    is(SpecialPowers.getBoolPref('test.cleanup'), false, 'test.cleanup should be false');
+    SimpleTest.finish();
+  });
+}
+
 // todo - test non-changing values, test complex values, test mixing of pushprefEnv 'set' and 'clear'
 // When bug 776424 gets fixed, getPref doesn't throw anymore, so this test would have to be changed accordingly
 </script>

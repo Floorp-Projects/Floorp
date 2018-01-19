@@ -94,6 +94,8 @@ struct DefaultJitOptions
     mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
+    bool spectreIndexMasking;
+
     // The options below affect the rest of the VM, and not just the JIT.
     bool disableUnboxedObjects;
 

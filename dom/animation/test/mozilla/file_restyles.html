@@ -36,6 +36,10 @@ SimpleTest.finish = function finish() {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+@keyframes move-in {
+  from { transform: translate(120%, 120%); }
+  to { transform: translate(0%, 0%); }
+}
 div {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
@@ -485,6 +489,105 @@ waitForAllPaints(() => {
 
       is(markers.length, 1,
          'Transform animation running on the element which is scrolled out ' +
+         'should be unthrottled after around 200ms have elapsed. now: ' +
+         now + ' start time: ' + timeAtStart);
+
+      await ensureElementRemoval(parentElement);
+    }
+  );
+
+  add_task(
+    async function restyling_out_of_view_transform_animations_in_another_element() {
+      if (hasConformantPromiseHandling) {
+        return;
+      }
+
+      // Skip this test on Android since this test have been failing
+      // intermittently.
+      // Bug 1413817: We should audit this test still fails once we have the
+      // conformant Promise micro task.
+      if (isAndroid) {
+        return;
+      }
+
+      var parentElement = addDiv(null,
+        { style: 'overflow: hidden;' });
+      var div = addDiv(null,
+        { style: 'animation: move-in 100s;' });
+      parentElement.appendChild(div);
+      var animation = div.getAnimations()[0];
+      var timeAtStart = document.timeline.currentTime;
+
+      ok(!animation.isRunningOnCompositor,
+         'The transform animation on out of view element ' +
+         'is not running on the compositor');
+
+      var markers;
+      var now;
+      while (true) {
+        markers = await observeStyling(1);
+        // Check restyle markers until 200ms is elapsed.
+        now = document.timeline.currentTime;
+        if ((now - timeAtStart) >= 200) {
+          break;
+        }
+
+        is(markers.length, 0,
+           'Transform animation running on out of view element ' +
+           'should be throttled until 200ms is elapsed');
+      }
+
+      is(markers.length, 1,
+         'Transform animation running on out of view element ' +
+         'should be unthrottled after around 200ms have elapsed. now: ' +
+         now + ' start time: ' + timeAtStart);
+
+      await ensureElementRemoval(parentElement);
+    }
+  );
+
+  add_task(
+    async function restyling_out_of_view_transform_animations_in_another_element() {
+      if (!hasConformantPromiseHandling) {
+        return;
+      }
+
+      // Make sure we start from the state right after requestAnimationFrame.
+      await waitForFrame();
+
+      var parentElement = addDiv(null,
+        { style: 'overflow: hidden;' });
+      var div = addDiv(null,
+        { style: 'animation: move-in 100s;' });
+      parentElement.appendChild(div);
+      var animation = div.getAnimations()[0];
+      var timeAtStart = document.timeline.currentTime;
+
+      ok(!animation.isRunningOnCompositor,
+         'The transform animation on out of view element ' +
+         'is not running on the compositor');
+
+      var markers;
+      var now;
+      while (true) {
+        now = document.timeline.currentTime;
+        if ((now - timeAtStart) >= 200) {
+          // If the current time has elapsed over 200ms since the animation was
+          // created, it means that the animation should have already
+          // unthrottled in this tick, let's see what we observe in this tick's
+          // restyling process.
+          markers = await observeStyling(1);
+          break;
+        }
+
+        markers = await observeStyling(1);
+        is(markers.length, 0,
+           'Transform animation running on out of view element ' +
+           'should be throttled until 200ms is elapsed');
+      }
+
+      is(markers.length, 1,
+         'Transform animation running on out of view element ' +
          'should be unthrottled after around 200ms have elapsed. now: ' +
          now + ' start time: ' + timeAtStart);
 

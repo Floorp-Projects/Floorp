@@ -29,7 +29,7 @@ abstract class MediaPlaybackTest extends OldBaseTest {
     private JavascriptBridge mJs;
 
     private static final int UI_CHANGED_WAIT_MS = 6000;
-    private static final int MEDIA_PLAYBACK_CHANGED_WAIT_MS = 15000;
+    private static final int MEDIA_PLAYBACK_CHANGED_WAIT_MS = 30000;
 
     protected final void info(String msg) {
         mAsserter.dumpLog(msg);

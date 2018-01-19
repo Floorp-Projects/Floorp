@@ -157,7 +157,6 @@ let signonsTreeView = {
 
     return "";
   },
-  getProgressMode(row, column) {},
   getCellValue(row, column) {},
   getCellText(row, column) {
     let time;

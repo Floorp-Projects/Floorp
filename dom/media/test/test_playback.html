@@ -39,6 +39,10 @@ function startTest(test, token) {
     ok(false, test.name + " should not fire 'load' event");
   }}(test, v);
 
+  var noError = function(test, v) { return function() {
+    ok(false, test.name + " should not fire 'error' event " + v.error.message);
+  }}(test, v);
+
   var finish = function() {
     v.finished = true;
     v.removeEventListener("timeupdate", timeUpdate);
@@ -84,6 +88,7 @@ function startTest(test, token) {
   }}(test, v);
 
   v.addEventListener("load", noLoad);
+  v.addEventListener("error", noError);
   v.addEventListener("loadedmetadata", check);
   v.addEventListener("timeupdate", timeUpdate);
 

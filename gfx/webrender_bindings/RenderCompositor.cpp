@@ -7,9 +7,14 @@
 #include "RenderCompositor.h"
 
 #include "GLContext.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/webrender/RenderCompositorOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
+
+#ifdef XP_WIN
+#include "mozilla/webrender/RenderCompositorANGLE.h"
+#endif
 
 namespace mozilla {
 namespace wr {
@@ -17,6 +22,11 @@ namespace wr {
 /* static */ UniquePtr<RenderCompositor>
 RenderCompositor::Create(RefPtr<widget::CompositorWidget>&& aWidget)
 {
+#ifdef XP_WIN
+  if (gfx::gfxVars::UseWebRenderANGLE()) {
+    return RenderCompositorANGLE::Create(Move(aWidget));
+  }
+#endif
   return RenderCompositorOGL::Create(Move(aWidget));
 }
 

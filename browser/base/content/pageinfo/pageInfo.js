@@ -128,7 +128,6 @@ pageInfoTreeView.prototype = {
   hasNextSibling(index, after) { return false; },
   getLevel(index) { return 0; },
   getImageSrc(row, column) { },
-  getProgressMode(row, column) { },
   getCellValue(row, column) { },
   toggleOpenState(index) { },
   cycleHeader(col) { },

@@ -331,8 +331,8 @@ class SyntaxParseHandler
     }
     Node newDebuggerStatement(const TokenPos& pos) { return NodeGeneric; }
 
-    Node newPropertyAccess(Node pn, PropertyName* name, uint32_t end) {
-        lastAtom = name;
+    Node newPropertyAccess(Node expr, PropertyName* key, uint32_t end) {
+        lastAtom = key;
         return NodeDottedProperty;
     }
 

@@ -107,7 +107,6 @@ nsTreeView.prototype =
     return info.level;
   },
   getImageSrc: function getImageSrc(aRow, aCol) {},
-  getProgressMode: function getProgressMode(aRow, aCol) {},
   isContainer: function isContainer(aIndex) {
     var data = this.getDataForIndex(aIndex);
     return data.open != undefined;

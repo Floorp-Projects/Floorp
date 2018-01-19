@@ -62,7 +62,6 @@ public:
 
   nsCSSFrameConstructor(nsIDocument* aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor() {
-    MOZ_ASSERT(mUpdateCount == 0, "Dying in the middle of our own update?");
     MOZ_ASSERT(mFCItemsInUse == 0);
   }
 
@@ -334,8 +333,6 @@ public:
   // WillDestroyFrameTree hasn't been called yet.
   void NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  void BeginUpdate();
-  void EndUpdate();
   void RecalcQuotesAndCounters();
 
   // Called when any counter style is changed.
@@ -2254,9 +2251,6 @@ private:
   nsCounterManager    mCounterManager;
   // Current ProcessChildren depth.
   uint16_t            mCurrentDepth;
-#ifdef DEBUG
-  uint16_t            mUpdateCount;
-#endif
   bool                mQuotesDirty : 1;
   bool                mCountersDirty : 1;
   bool                mIsDestroyingFrameTree : 1;

@@ -40,6 +40,7 @@ DEFAULTS = dict(
         tpchrome=True,
         tpcycles=10,
         tpmozafterpaint=False,
+        tphero=False,
         fnbpaint=False,
         firstpaint=False,
         format_pagename=True,
@@ -216,6 +217,7 @@ GLOBAL_OVERRIDES = (
     'tpmanifest',
     'tptimeout',
     'tpmozafterpaint',
+    'tphero',
     'fnbpaint',
     'firstpaint',
     'userready',
@@ -349,6 +351,7 @@ def build_manifest(config, manifestName):
 
 def get_test(config, global_overrides, counters, test_instance):
     mozAfterPaint = getattr(test_instance, 'tpmozafterpaint', None)
+    hero = getattr(test_instance, 'tphero', None)
     firstPaint = getattr(test_instance, 'firstpaint', None)
     userReady = getattr(test_instance, 'userready', None)
     firstNonBlankPaint = getattr(test_instance, 'fnbpaint', None)
@@ -365,6 +368,8 @@ def get_test(config, global_overrides, counters, test_instance):
         test_instance.firstpaint = firstPaint
     if userReady is not None:
         test_instance.userready = userReady
+    if hero is not None:
+        test_instance.tphero = hero
 
     # fix up url
     url = getattr(test_instance, 'url', None)

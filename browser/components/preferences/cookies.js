@@ -401,7 +401,6 @@ var gCookiesWindow = {
       return 0;
     },
     getImageSrc(aIndex, aColumn) {},
-    getProgressMode(aIndex, aColumn) {},
     getCellValue(aIndex, aColumn) {},
     setTree(aTree) {},
     toggleOpenState(aIndex) {
