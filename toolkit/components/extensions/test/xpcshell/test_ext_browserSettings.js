@@ -48,6 +48,8 @@ add_task(async function test_browser_settings() {
     "network.proxy.no_proxies_on": "localhost, 127.0.0.1",
     "network.proxy.autoconfig_url": "",
     "signon.autologin.proxy": false,
+    "browser.tabs.insertRelatedAfterCurrent": true,
+    "browser.tabs.insertAfterCurrent": false,
   };
 
   async function background() {
@@ -173,6 +175,25 @@ add_task(async function test_browser_settings() {
       "closeTabsByDoubleClick", false,
       {"browser.tabs.closeTabByDblclick": false});
   }
+
+  await testSetting(
+    "newTabPosition", "afterCurrent",
+    {
+      "browser.tabs.insertRelatedAfterCurrent": false,
+      "browser.tabs.insertAfterCurrent": true,
+    });
+  await testSetting(
+    "newTabPosition", "atEnd",
+    {
+      "browser.tabs.insertRelatedAfterCurrent": false,
+      "browser.tabs.insertAfterCurrent": false,
+    });
+  await testSetting(
+    "newTabPosition", "relatedAfterCurrent",
+    {
+      "browser.tabs.insertRelatedAfterCurrent": true,
+      "browser.tabs.insertAfterCurrent": false,
+    });
 
   await testSetting(
     "openBookmarksInNewTabs", true,
