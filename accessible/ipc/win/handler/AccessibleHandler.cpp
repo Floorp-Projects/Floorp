@@ -358,9 +358,7 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     // and returns them on QI without a cross-process call.
     // However, it doesn't know about interfaces which don't exist.
     // We can determine this from the payload.
-    if ((aIid == IID_IEnumVARIANT &&
-         !mCachedData.mStaticData.mIEnumVARIANT) ||
-        ((aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
+    if (((aIid == IID_IAccessibleText || aIid == IID_IAccessibleHypertext ||
           aIid == IID_IAccessibleHypertext2) &&
          !mCachedData.mStaticData.mIAHypertext) ||
         ((aIid == IID_IAccessibleAction || aIid == IID_IAccessibleHyperlink) &&
@@ -408,6 +406,9 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
   }
 
   if (aIid == IID_IEnumVARIANT && mCachedData.mGeckoBackChannel) {
+    if (&mCachedData.mDynamicData.mChildCount == 0) {
+      return E_NOINTERFACE;
+    }
     RefPtr<IEnumVARIANT> childEnum(
       new HandlerChildEnumerator(this, mCachedData.mGeckoBackChannel));
     childEnum.forget(aOutInterface);
