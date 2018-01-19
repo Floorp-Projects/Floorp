@@ -2338,8 +2338,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister temp, Register output,
                                   Label* fail, IntConversionBehavior behavior);
 
-    // This carries over the MToInt32 operation on the ValueOperand input; see
-    // comment at the top of this class.
+    // This carries over the MToNumberInt32 operation on the ValueOperand
+    // input; see comment at the top of this class.
     void convertValueToInt32(ValueOperand value, MDefinition* input,
                              FloatRegister temp, Register output, Label* fail,
                              bool negativeZeroCheck,

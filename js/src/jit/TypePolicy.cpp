@@ -86,7 +86,7 @@ ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         else if (ins->type() == MIRType::Float32)
             replace = MToFloat32::New(alloc, in);
         else
-            replace = MToInt32::New(alloc, in);
+            replace = MToNumberInt32::New(alloc, in);
 
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(i, replace);
@@ -242,7 +242,7 @@ ComparePolicy::adjustInputs(TempAllocator& alloc, MInstruction* def)
             {
                 convert = MacroAssembler::IntConversion_NumbersOrBoolsOnly;
             }
-            replace = MToInt32::New(alloc, in, convert);
+            replace = MToNumberInt32::New(alloc, in, convert);
             break;
           }
           case MIRType::Object:
@@ -489,7 +489,7 @@ ConvertToInt32Policy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction*
     if (in->type() == MIRType::Int32)
         return true;
 
-    MToInt32* replace = MToInt32::New(alloc, in);
+    auto* replace = MToNumberInt32::New(alloc, in);
     def->block()->insertBefore(def, replace);
     def->replaceOperand(Op, replace);
 
@@ -726,11 +726,11 @@ ToDoublePolicy::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 bool
 ToInt32Policy::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    MOZ_ASSERT(ins->isToInt32() || ins->isTruncateToInt32());
+    MOZ_ASSERT(ins->isToNumberInt32() || ins->isTruncateToInt32());
 
     MacroAssembler::IntConversionInputKind conversion = MacroAssembler::IntConversion_Any;
-    if (ins->isToInt32())
-        conversion = ins->toToInt32()->conversion();
+    if (ins->isToNumberInt32())
+        conversion = ins->toToNumberInt32()->conversion();
 
     MDefinition* in = ins->getOperand(0);
     switch (in->type()) {
@@ -857,7 +857,7 @@ SimdShufflePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
         if (in->type() == MIRType::Int32)
             continue;
 
-        MInstruction* replace = MToInt32::New(alloc, in, MacroAssembler::IntConversion_NumbersOnly);
+        auto* replace = MToNumberInt32::New(alloc, in, MacroAssembler::IntConversion_NumbersOnly);
         ins->block()->insertBefore(ins, replace);
         ins->replaceOperand(s->numVectors() + i, replace);
         if (!replace->typePolicy()->adjustInputs(alloc, replace))
