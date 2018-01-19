@@ -390,6 +390,7 @@ PK11_ImportCert
 PK11_ImportCertForKey
 PK11_ImportCRL
 PK11_ImportDERPrivateKeyInfoAndReturnKey
+PK11_ImportEncryptedPrivateKeyInfoAndReturnKey
 PK11_ImportPublicKey
 PK11_ImportSymKey
 PK11_InitPin

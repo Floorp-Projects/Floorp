@@ -105,11 +105,21 @@ public:
   {
   }
 
-  // XXX are you sure??
-  // auto-generated copy-constructor OK
-  // auto-generated copy-assignment operator OK
   // auto-generated destructor OK
 
+  nsTDependentString(self_type&& aStr)
+    : string_type()
+  {
+    Rebind(aStr, /* aStartPos = */ 0);
+    aStr.SetToEmptyBuffer();
+  }
+
+  explicit
+  nsTDependentString(const self_type& aStr)
+    : string_type()
+  {
+    Rebind(aStr, /* aStartPos = */ 0);
+  }
 
   /**
    * allow this class to be bound to a different string...
@@ -128,6 +138,7 @@ private:
 
   // NOT USED
   nsTDependentString(const substring_tuple_type&) = delete;
+  self_type& operator=(const self_type& aStr) = delete;
 };
 
 extern template class nsTDependentString<char>;
