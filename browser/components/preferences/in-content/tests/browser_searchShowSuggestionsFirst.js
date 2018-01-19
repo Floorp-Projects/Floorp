@@ -27,6 +27,14 @@ add_task(async function openWithSearchSuggestionsShownFirst() {
                HISTORY_FIRST_PREF_VALUE,
                "Pref should now be set to show history first");
 
+  // Clear the pref.
+  Services.prefs.clearUserPref(PREF_NAME);
+
+  // The checkbox should have become checked again.
+  Assert.equal(checkbox.checked, true,
+               "Checkbox should become checked after clearing pref");
+
+  // Clean up.
   gBrowser.removeCurrentTab();
 });
 
@@ -49,5 +57,14 @@ add_task(async function openWithHistoryShownFirst() {
   Assert.equal(Services.prefs.getCharPref(PREF_NAME, ""), "",
                "Pref should now be cleared to show search suggestions first");
 
+  // Set the pref again.
+  Services.prefs.setCharPref(PREF_NAME, HISTORY_FIRST_PREF_VALUE);
+
+  // The checkbox should have become unchecked again.
+  Assert.equal(checkbox.checked, false,
+               "Checkbox should become unchecked after setting pref");
+
+  // Clean up.
   gBrowser.removeCurrentTab();
+  Services.prefs.clearUserPref(PREF_NAME);
 });

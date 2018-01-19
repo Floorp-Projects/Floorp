@@ -19,7 +19,7 @@ def make_beetmover_description(config, jobs):
         dep_job = job['dependent-task']
         for locale in dep_job.attributes.get('chunk_locales', []):
 
-            group = 'tc-BM-L10n'
+            group = 'BM-L10n'
 
             # add the locale code
             symbol = locale

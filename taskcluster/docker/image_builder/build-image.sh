@@ -24,6 +24,7 @@ CONTEXT_FILE=/builds/worker/workspace/context.tar
 # Run ./mach taskcluster-build-image with --context-only to build context
 run-task \
   --vcs-checkout "/builds/worker/checkouts/gecko" \
+  --sparse-profile build/sparse-profiles/docker-image \
   -- \
   /builds/worker/checkouts/gecko/mach taskcluster-build-image \
   --context-only "$CONTEXT_FILE" \

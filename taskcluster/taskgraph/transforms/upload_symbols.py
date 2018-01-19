@@ -44,9 +44,9 @@ def fill_template(config, tasks):
         treeherder.setdefault('tier', th['tier'])
         treeherder.setdefault('kind', th['jobKind'])
         if dep.attributes.get('nightly'):
-            treeherder.setdefault('symbol', 'tc(SymN)')
+            treeherder.setdefault('symbol', 'SymN')
         else:
-            treeherder.setdefault('symbol', 'tc(Sym)')
+            treeherder.setdefault('symbol', 'Sym')
         task['treeherder'] = treeherder
 
         # clear out the stuff that's not part of a task description

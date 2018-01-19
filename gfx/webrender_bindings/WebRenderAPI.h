@@ -324,7 +324,8 @@ public:
                  const wr::LayoutRect& aClip,
                  bool aIsBackfaceVisible,
                  wr::ImageRendering aFilter,
-                 wr::ImageKey aImage);
+                 wr::ImageKey aImage,
+                 bool aPremultipliedAlpha = true);
 
   void PushImage(const wr::LayoutRect& aBounds,
                  const wr::LayoutRect& aClip,
@@ -332,7 +333,8 @@ public:
                  const wr::LayoutSize& aStretchSize,
                  const wr::LayoutSize& aTileSpacing,
                  wr::ImageRendering aFilter,
-                 wr::ImageKey aImage);
+                 wr::ImageKey aImage,
+                 bool aPremultipliedAlpha = true);
 
   void PushYCbCrPlanarImage(const wr::LayoutRect& aBounds,
                             const wr::LayoutRect& aClip,

@@ -14,6 +14,7 @@
  * http://www.w3.org/TR/beacon/#sec-beacon-method
  * https://html.spec.whatwg.org/#navigatorconcurrenthardware
  * http://wicg.github.io/netinfo/#extensions-to-the-navigator-interface
+ * https://w3c.github.io/webappsec-credential-management/#framework-credential-management
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -311,7 +312,8 @@ interface NavigatorConcurrentHardware {
   readonly attribute unsigned long long hardwareConcurrency;
 };
 
+// https://w3c.github.io/webappsec-credential-management/#framework-credential-management
 partial interface Navigator {
-  [Pref="security.webauth.webauthn", SameObject]
+  [Pref="security.webauth.webauthn", SecureContext, SameObject]
   readonly attribute CredentialsContainer credentials;
 };

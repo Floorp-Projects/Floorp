@@ -16,7 +16,7 @@ job-defaults:
 
 awsy:
     description: "Are we slim yet"
-    treeherder-symbol: tc-SY(sy)
+    treeherder-symbol: SY(sy)
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
@@ -24,7 +24,7 @@ awsy:
 
 awsy-stylo-disabled:
     description: "Are we slim yet for Stylo disabled"
-    treeherder-symbol: tc-SYsd(sy)
+    treeherder-symbol: SYsd(sy)
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition
@@ -35,7 +35,7 @@ awsy-stylo-disabled:
 
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
-    treeherder-symbol: tc-SYss(sy)
+    treeherder-symbol: SYss(sy)
     run-on-projects:
         by-test-platform:
             .*-devedition/.*: []  # don't run on devedition

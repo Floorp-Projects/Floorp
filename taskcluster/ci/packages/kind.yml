@@ -17,6 +17,7 @@ job-defaults:
   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
   worker:
     max-run-time: 1800
+  run-on-projects: []
 
 jobs:
   deb7-python:

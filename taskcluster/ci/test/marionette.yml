@@ -21,7 +21,7 @@ job-defaults:
 
 marionette:
     description: "Marionette unittest run"
-    treeherder-symbol: tc(Mn)
+    treeherder-symbol: Mn
     max-run-time:
         by-test-platform:
             android.*: 3600
@@ -42,7 +42,7 @@ marionette:
 
 marionette-headless:
     description: "Marionette headless unittest run"
-    treeherder-symbol: tc(MnH)
+    treeherder-symbol: MnH
     max-run-time: 5400
     instance-size: default
     mozharness:

@@ -16,7 +16,7 @@ job-defaults:
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional local"
-    treeherder-symbol: tc-Fxfn-l(en-US)
+    treeherder-symbol: Fxfn-l(en-US)
     mozharness:
         extra-options:
             - "--tag"
@@ -29,7 +29,7 @@ firefox-ui-functional-local:
 firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional remote"
-    treeherder-symbol: tc-Fxfn-r(en-US)
+    treeherder-symbol: Fxfn-r(en-US)
     mozharness:
         extra-options:
             - "--tag"

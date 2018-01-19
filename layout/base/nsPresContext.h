@@ -223,6 +223,13 @@ public:
 
   mozilla::StyleSetHandle StyleSet() const { return GetPresShell()->StyleSet(); }
 
+#ifdef DEBUG
+  bool HasPendingMediaQueryUpdates() const
+  {
+    return mPendingMediaFeatureValuesChanged;
+  }
+#endif
+
   nsFrameManager* FrameManager()
     { return PresShell()->FrameManager(); }
 
@@ -1123,14 +1130,6 @@ public:
   }
 
   void NotifyNonBlankPaint();
-
-  bool IsGlyph() const {
-    return mIsGlyph;
-  }
-
-  void SetIsGlyph(bool aValue) {
-    mIsGlyph = aValue;
-  }
 
   bool UsesRootEMUnits() const {
     return mUsesRootEMUnits;

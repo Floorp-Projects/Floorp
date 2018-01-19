@@ -21,6 +21,7 @@ with Files("coverity/**"):
 
 with Files("docs/**"):
     BUG_COMPONENT = ("Core", "Build Config")
+    SCHEDULES.exclusive = ['docs']
 
 with Files("lint/**"):
     BUG_COMPONENT = ("Testing", "Lint")
@@ -47,9 +48,24 @@ with Files("update-packaging/**"):
     BUG_COMPONENT = ("Release Engineering", "Other")
 
 SPHINX_TREES['lint'] = 'lint/docs'
+
+with Files('lint/docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 SPHINX_TREES['compare-locales'] = 'compare-locales/docs'
+
+with Files('compare-locales/docs/**'):
+    SCHEDULES.exclusive = ['docs']
+
 SPHINX_TREES['try'] = 'tryselect/docs'
+
+with Files('tryselect/docs/**'):
+    SCHEDULES.exclusive = ['docs']
 
 CRAMTEST_MANIFESTS += [
     'tryselect/test/cram.ini',
+]
+
+PYTHON_UNITTEST_MANIFESTS += [
+    'tryselect/test/python.ini',
 ]

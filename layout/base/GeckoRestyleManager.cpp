@@ -562,6 +562,8 @@ GeckoRestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(PresContext()->Document(), "No document?  Pshaw!");
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
+  MOZ_ASSERT(!PresContext()->HasPendingMediaQueryUpdates(),
+             "Someone forgot to update media queries?");
 
   // First do any queued-up frame creation.  (We should really
   // merge this into the rest of the process, though; see bug 827239.)

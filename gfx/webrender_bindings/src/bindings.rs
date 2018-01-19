@@ -1598,19 +1598,25 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
                                    stretch_size: LayoutSize,
                                    tile_spacing: LayoutSize,
                                    image_rendering: ImageRendering,
-                                   key: WrImageKey) {
+                                   key: WrImageKey,
+                                   premultiplied_alpha: bool) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
     let mut prim_info = LayoutPrimitiveInfo::with_clip_rect(bounds, clip.into());
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
+    let alpha_type = if premultiplied_alpha {
+        AlphaType::PremultipliedAlpha
+    } else {
+        AlphaType::Alpha
+    };
     state.frame_builder
          .dl_builder
          .push_image(&prim_info,
                      stretch_size,
                      tile_spacing,
                      image_rendering,
-                     AlphaType::PremultipliedAlpha,
+                     alpha_type,
                      key);
 }
 

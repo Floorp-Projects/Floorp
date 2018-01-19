@@ -54,7 +54,7 @@ def make_checksums_signing_description(config, jobs):
         attributes = dep_job.attributes
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'tc-cs(N)')
+        treeherder.setdefault('symbol', 'cs(N)')
         dep_th_platform = dep_job.task.get('extra', {}).get(
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
@@ -76,7 +76,7 @@ def make_checksums_signing_description(config, jobs):
         attributes = copy_attributes_from_dependent_job(dep_job)
 
         if dep_job.attributes.get('locale'):
-            treeherder['symbol'] = 'tc-cs({})'.format(dep_job.attributes.get('locale'))
+            treeherder['symbol'] = 'cs({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')
 
         upstream_artifacts = [{

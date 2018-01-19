@@ -968,6 +968,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             messageChannel = true;
         } else if (!strcmp(name.ptr(), "InspectorUtils")) {
             inspectorUtils = true;
+        } else if (!strcmp(name.ptr(), "ChromeUtils")) {
+            ChromeUtils = true;
         } else {
             JS_ReportErrorUTF8(cx, "Unknown property name: %s", name.ptr());
             return false;
@@ -1055,6 +1057,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 
     if (inspectorUtils &&
         !dom::InspectorUtilsBinding::GetConstructorObject(cx))
+        return false;
+
+    if (ChromeUtils && !dom::ChromeUtilsBinding::GetConstructorObject(cx))
         return false;
 
     return true;

@@ -5,6 +5,9 @@
 job-defaults:
     worker:
         docker-image: {in-tree: toolchain-build}
+    run-on-projects:
+        - trunk
+        - try
 
 macosx64-clang:
     description: "Clang toolchain build"
