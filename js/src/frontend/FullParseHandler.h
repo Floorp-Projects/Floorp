@@ -640,8 +640,8 @@ class FullParseHandler
         return new_<DebuggerStatement>(pos);
     }
 
-    ParseNode* newPropertyAccess(ParseNode* pn, PropertyName* name, uint32_t end) {
-        return new_<PropertyAccess>(pn, name, pn->pn_pos.begin, end);
+    ParseNode* newPropertyAccess(ParseNode* expr, PropertyName* key, uint32_t end) {
+        return new_<PropertyAccess>(expr, key, expr->pn_pos.begin, end);
     }
 
     ParseNode* newPropertyByValue(ParseNode* lhs, ParseNode* index, uint32_t end) {

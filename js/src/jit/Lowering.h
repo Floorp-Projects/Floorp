@@ -104,6 +104,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitSetArgumentsObjectArg(MSetArgumentsObjectArg* ins) override;
     void visitReturnFromCtor(MReturnFromCtor* ins) override;
     void visitComputeThis(MComputeThis* ins) override;
+    void visitImplicitThis(MImplicitThis* ins) override;
     void visitCall(MCall* call) override;
     void visitApplyArgs(MApplyArgs* apply) override;
     void visitApplyArray(MApplyArray* apply) override;
@@ -228,6 +229,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitNot(MNot* ins) override;
     void visitBoundsCheck(MBoundsCheck* ins) override;
     void visitBoundsCheckLower(MBoundsCheckLower* ins) override;
+    void visitSpectreMaskIndex(MSpectreMaskIndex* ins) override;
     void visitLoadElement(MLoadElement* ins) override;
     void visitLoadElementHole(MLoadElementHole* ins) override;
     void visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull* ins) override;

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
@@ -81,8 +81,8 @@ class MachCommands(MachCommandBase):
              parser=create_parser_tests,
              )
     def run_marionette_test(self, tests, **kwargs):
-        print >>sys.stderr, ("warning: ./mach marionette-test is deprecated; "
-                             "please use ./mach marionette test")
+        print("warning: ./mach marionette-test is deprecated; "
+              "please use ./mach marionette test", file=sys.stderr)
 
         if "test_objects" in kwargs:
             tests = []
@@ -158,7 +158,7 @@ class Marionette(MachCommandBase):
             handler = SimpleHTTPServer.SimpleHTTPRequestHandler
             httpd = SocketServer.TCPServer((host, int(port)), handler)
 
-            print "serving at %s:%s" % (host, port)
+            print("serving at %s:%s" % (host, port))
             os.chdir(os.path.join(self.srcdir, "doc"))
             httpd.serve_forever()
 

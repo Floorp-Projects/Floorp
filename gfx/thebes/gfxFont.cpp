@@ -1995,9 +1995,18 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
     float advance = aDetails->mAdvance;
     if (aRunParams.drawMode != DrawMode::GLYPH_PATH && advance > 0) {
         auto* textDrawer = aRunParams.context->GetTextDrawer();
+        const Matrix* matPtr = nullptr;
+        Matrix mat;
         if (textDrawer) {
-            textDrawer->FoundUnsupportedFeature();
-            return false;
+            // Generate an orientation matrix for the current writing mode
+            wr::FontInstanceFlags flags = textDrawer->GetWRGlyphFlags();
+            if (flags.bits & wr::FontInstanceFlags::TRANSPOSE) {
+                std::swap(mat._11, mat._12);
+                std::swap(mat._21, mat._22);
+            }
+            mat.PostScale(flags.bits & wr::FontInstanceFlags::FLIP_X ? -1.0f : 1.0f,
+                          flags.bits & wr::FontInstanceFlags::FLIP_Y ? -1.0f : 1.0f);
+            matPtr = &mat;
         }
 
         Point pt(Float(ToDeviceUnits(aPt.x, aRunParams.devPerApp)),
@@ -2005,7 +2014,8 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
         Float advanceDevUnits =
             Float(ToDeviceUnits(advance, aRunParams.devPerApp));
         Float height = GetMetrics(eHorizontal).maxAscent;
-        Rect glyphRect = aFontParams.isVerticalFont ?
+        // Horizontally center if drawing vertically upright with no sideways transform.
+        Rect glyphRect = aFontParams.isVerticalFont && !mat.HasNonAxisAlignedTransform() ?
             Rect(pt.x - height / 2, pt.y,
                  height, advanceDevUnits) :
             Rect(pt.x, pt.y - height,
@@ -2028,7 +2038,7 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
         gfxFontMissingGlyphs::DrawMissingGlyph(
             aDetails->mGlyphID, glyphRect, *aRunParams.dt,
             PatternFromState(aRunParams.context),
-            1.0 / aRunParams.devPerApp);
+            1.0 / aRunParams.devPerApp, matPtr);
     }
     return true;
 }

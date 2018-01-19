@@ -49,6 +49,9 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/Arra
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/TypedArrays/internals/Get/indexed-value-sab.js
 
+# flatMap and flatten are Nightly-only
+skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
+skip-if(!Array.prototype.flatten) include test262/built-ins/Array/prototype/flatten/jstests.list
 
 #####################################
 # Test262 tests disabled on browser #

@@ -10,19 +10,7 @@
 #include "mozilla/webrender/RenderCompositor.h"
 
 namespace mozilla {
-/*
-namespace gl {
-class GLContext;
-}
 
-namespace layers {
-class SyncObjectHost;
-}
-
-namespace widget {
-class CompositorWidget;
-}
-*/
 namespace wr {
 
 class RenderCompositorOGL : public RenderCompositor
@@ -31,7 +19,7 @@ public:
   static UniquePtr<RenderCompositor> Create(RefPtr<widget::CompositorWidget>&& aWidget);
 
   RenderCompositorOGL(RefPtr<gl::GLContext>&& aGL,
-                        RefPtr<widget::CompositorWidget>&& aWidget);
+                      RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositorOGL();
 
   bool Destroy() override;
@@ -42,7 +30,7 @@ public:
 
   gl::GLContext* gl() const override { return mGL; }
 
-  bool UseANGLE() const override;
+  bool UseANGLE() const override { return false; }
 
   LayoutDeviceIntSize GetClientSize() override;
 

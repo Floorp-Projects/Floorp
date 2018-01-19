@@ -923,6 +923,9 @@ main {
   padding: 0 16px; }
   .confirmation-dialog .actions button {
     margin-inline-end: 16px;
+    padding-inline-end: 18px;
+    padding-inline-start: 18px;
+    white-space: normal;
     width: 50%; }
     .confirmation-dialog .actions button.done {
       margin-inline-end: 0;

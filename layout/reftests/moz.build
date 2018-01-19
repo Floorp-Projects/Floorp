@@ -275,11 +275,11 @@ with Files('view-source/**'):
     BUG_COMPONENT = ('Core', 'HTML: Parser')
 with Files('w3c-css/**'):
     BUG_COMPONENT = ('Core', 'Layout')
-with Files('w3c-css/received/css-conditional-3/**'):
+with Files('w3c-css/received/css-conditional/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
-with Files('w3c-css/received/css-namespaces-3/**'):
+with Files('w3c-css/received/css-namespaces/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
-with Files('w3c-css/received/css-values-3/**'):
+with Files('w3c-css/received/css-values/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
 with Files('w3c-css/submitted/conditional3/**'):
     BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')

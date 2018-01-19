@@ -273,8 +273,10 @@ CacheFileMetadata::WriteMetadata(uint32_t aOffset,
   p += mKey.Length();
   *p = 0;
   p++;
-  memcpy(p, mBuf, mElementsSize);
-  p += mElementsSize;
+  if (mElementsSize) {
+    memcpy(p, mBuf, mElementsSize);
+    p += mElementsSize;
+  }
 
   CacheHash::Hash32_t hash;
   hash = CacheHash::Hash(mWriteBuf + sizeof(uint32_t),

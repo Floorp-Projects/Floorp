@@ -19,7 +19,7 @@ var columns_hiertree =
 ];
 
 // XXXndeakin still to add some tests for:
-//   cycler columns, checkbox cells, progressmeter cells
+//   cycler columns, checkbox cells
 
 // this test function expects a tree to have 8 rows in it when it isn't
 // expanded. The tree should only display four rows at a time. If editable,
@@ -913,7 +913,6 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
     isEditable(row, cell) { return cell.editable; },
     isSelectable(row, cell) { return cell.selectable; },
     getImageSrc(row, cell) { return cell.image; },
-    getProgressMode(row, cell) { return cell.mode; }
   };
 
   var failedMethods = { };

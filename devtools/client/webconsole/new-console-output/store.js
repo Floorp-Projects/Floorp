@@ -16,7 +16,6 @@ const {
   BATCH_ACTIONS
 } = require("devtools/client/shared/redux/middleware/debounce");
 const {
-  MESSAGE_ADD,
   MESSAGE_OPEN,
   MESSAGES_ADD,
   MESSAGES_CLEAR,
@@ -133,7 +132,7 @@ function enableActorReleaser(hud) {
 
       let type = action.type;
       let proxy = hud ? hud.proxy : null;
-      if (proxy && ([MESSAGE_ADD, MESSAGES_ADD, MESSAGES_CLEAR].includes(type))) {
+      if (proxy && ([MESSAGES_ADD, MESSAGES_CLEAR].includes(type))) {
         releaseActors(state.messages.removedActors, proxy);
 
         // Reset `removedActors` in message reducer.

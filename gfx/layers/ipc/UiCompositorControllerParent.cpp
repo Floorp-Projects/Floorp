@@ -21,12 +21,12 @@ typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 /* static */ RefPtr<UiCompositorControllerParent>
 UiCompositorControllerParent::GetFromRootLayerTreeId(const uint64_t& aRootLayerTreeId)
 {
-  LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aRootLayerTreeId);
-  if (state) {
-    return state->mUiControllerParent;
-  }
-
-  return nullptr;
+  RefPtr<UiCompositorControllerParent> controller;
+  CompositorBridgeParent::CallWithIndirectShadowTree(aRootLayerTreeId,
+    [&](LayerTreeState& aState) -> void {
+      controller = aState.mUiControllerParent;
+    });
+  return Move(controller);
 }
 
 /* static */ RefPtr<UiCompositorControllerParent>

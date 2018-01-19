@@ -1574,6 +1574,17 @@
         ]]></body>
       </method>
 
+      <method name="getTabSharingState">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          // Normalize the state object for consumers (ie.extensions).
+          let state = Object.assign({}, aTab._sharingState);
+          // ensure bool if undefined
+          state.camera = !!state.camera;
+          state.microphone = !!state.microphone;
+          return state;
+        ]]></body>
+      </method>
 
       <!-- TODO: remove after 57, once we know add-ons can no longer use it. -->
       <method name="setTabTitleLoading">
@@ -3883,7 +3894,7 @@
         <body>
         <![CDATA[
           if (!aTab.hidden && !aTab.pinned && !aTab.selected &&
-              !aTab.closing) {
+              !aTab.closing && !aTab._sharingState) {
             aTab.setAttribute("hidden", "true");
             this._visibleTabs = null; // invalidate cache
 

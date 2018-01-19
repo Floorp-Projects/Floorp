@@ -1185,7 +1185,7 @@ public:
     static_assert(sizeof...(Storages) == sizeof...(Args), "Storages and Args should have equal sizes");
   }
 
-  NS_IMETHOD Run() override
+  NS_IMETHOD Run()
   {
     CancelTimer();
 
@@ -1195,20 +1195,6 @@ public:
 
     return NS_OK;
   }
-
-// Some RunnableMethodImpl types specify templatized base classes that declare
-// the following member functions as virtual and others don't declare them at
-// all (so we can't add `override` here). Suppressing override warnings here is
-// cleaner than adding unused no-op virtual member functions to all of
-// RunnableMethodImpl's base classes.
-#if defined(__GNUC__)
-#  pragma GCC diagnostic push
-#  if defined(__clang__)
-#    pragma GCC diagnostic ignored "-Winconsistent-missing-override"
-#  elif MOZ_GCC_VERSION_AT_LEAST(5, 0, 0)
-#    pragma GCC diagnostic ignored "-Wsuggest-override"
-#  endif
-#endif
 
   nsresult Cancel()
   {
@@ -1244,10 +1230,6 @@ public:
                                        "detail::RunnableMethodImpl::SetTimer");
     }
   }
-
-#if defined(__GNUC__)
-#  pragma GCC diagnostic pop // override warnings
-#endif
 };
 
 // Type aliases for NewRunnableMethod.

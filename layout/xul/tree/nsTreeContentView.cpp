@@ -493,52 +493,6 @@ nsTreeContentView::GetImageSrc(int32_t aRow, nsITreeColumn* aCol, nsAString& _re
   return rv.StealNSResult();
 }
 
-int32_t
-nsTreeContentView::GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
-                                   ErrorResult& aError)
-{
-  if (!IsValidRowIndex(aRow)) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return 0;
-  }
-
-  Row* row = mRows[aRow].get();
-
-  nsIContent* realRow =
-    nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
-  if (realRow) {
-    Element* cell = GetCell(realRow, aColumn);
-    if (cell) {
-      static Element::AttrValuesArray strings[] =
-        {&nsGkAtoms::normal, &nsGkAtoms::undetermined, nullptr};
-      switch (cell->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::mode,
-                                    strings, eCaseMatters)) {
-        case 0:
-        {
-          return nsITreeView::PROGRESS_NORMAL;
-        }
-        case 1:
-        {
-          return nsITreeView::PROGRESS_UNDETERMINED;
-        }
-      }
-    }
-  }
-
-  return nsITreeView::PROGRESS_NONE;
-}
-
-NS_IMETHODIMP
-nsTreeContentView::GetProgressMode(int32_t aRow, nsITreeColumn* aCol, int32_t* _retval)
-{
-  RefPtr<nsTreeColumn> col = nsTreeColumn::From(aCol);
-  NS_ENSURE_ARG(col);
-
-  ErrorResult rv;
-  *_retval = GetProgressMode(aRow, *col, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
                                 nsAString& aValue, ErrorResult& aError)

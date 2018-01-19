@@ -140,6 +140,7 @@ linux-qr-tests:
 windows-qr-tests:
     - crashtest
     - mochitest-gpu
+    - mochitest-media
 
 jsdcov-code-coverage-tests:
     - mochitest

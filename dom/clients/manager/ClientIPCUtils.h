@@ -8,9 +8,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-// Fix X11 header brain damage that conflicts with FrameType::None
-#undef None
-
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/DocumentBinding.h"

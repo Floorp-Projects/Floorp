@@ -133,6 +133,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <stdarg.h>
@@ -784,6 +785,9 @@ class TokenStreamCharsBase
 
     TokenStreamCharsBase(JSContext* cx, const CharT* chars, size_t length, size_t startOffset);
 
+    static MOZ_ALWAYS_INLINE JSAtom*
+    atomizeChars(JSContext* cx, const CharT* chars, size_t length);
+
     const CharBuffer& getTokenbuf() const { return tokenbuf; }
 
     // This is the low-level interface to the JS source code buffer.  It just
@@ -945,18 +949,35 @@ class TokenStreamCharsBase
     CharBuffer tokenbuf;
 };
 
+template<>
+/* static */ MOZ_ALWAYS_INLINE JSAtom*
+TokenStreamCharsBase<char16_t>::atomizeChars(JSContext* cx, const char16_t* chars, size_t length)
+{
+    return AtomizeChars(cx, chars, length);
+}
+
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
 
 template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public TokenStreamCharsBase<char16_t>
 {
+    using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
     using CharsBase = TokenStreamCharsBase<char16_t>;
+
+    using TokenStreamSpecific = frontend::TokenStreamSpecific<char16_t, AnyCharsAccess>;
+
+    TokenStreamSpecific* asSpecific() {
+        static_assert(mozilla::IsBaseOf<Self, TokenStreamSpecific>::value,
+                      "static_cast below presumes an inheritance relationship");
+
+        return static_cast<TokenStreamSpecific*>(this);
+    }
 
     bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
 
   public:
-    TokenStreamChars(JSContext* cx, const char16_t* chars, size_t length, size_t startOffset);
+    using CharsBase::CharsBase;
 
     TokenStreamAnyChars& anyChars() {
         return AnyCharsAccess::anyChars(this);
@@ -966,16 +987,14 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         return AnyCharsAccess::anyChars(this);
     }
 
+    MOZ_MUST_USE bool copyTokenbufTo(JSContext* cx,
+                                     UniquePtr<char16_t[], JS::FreePolicy>* destination);
+
     MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
         if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
             return false;
 
         return matchTrailForLeadSurrogate(c, codepoint);
-    }
-
-    static MOZ_ALWAYS_INLINE JSAtom*
-    atomizeChars(JSContext* cx, const char16_t* chars, size_t length) {
-        return AtomizeChars(cx, chars, length);
     }
 };
 
@@ -1040,21 +1059,23 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // class, using explicit qualification to address the dependent-name
     // problem.  |this| or other qualification is no longer necessary -- at
     // cost of this ever-changing laundry list of |using|s.  So it goes.
-    using CharsBase::isMultiUnitCodepoint;
-    using CharsBase::atomizeChars;
+  public:
+    using typename CharsSharedBase::Position;
 
-    using typename CharsSharedBase::CharBuffer;
-
+  public:
     using CharsSharedBase::getTokenbuf;
 
+  private:
+    using typename CharsSharedBase::CharBuffer;
     using typename CharsSharedBase::TokenBuf;
 
+  private:
     using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
-
-    using CharsSharedBase::userbuf;
+    using CharsSharedBase::atomizeChars;
+    using CharsBase::copyTokenbufTo;
+    using CharsBase::isMultiUnitCodepoint;
     using CharsSharedBase::tokenbuf;
-
-    using typename CharsSharedBase::Position;
+    using CharsSharedBase::userbuf;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -1140,7 +1161,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
                 return nullptr;
             cur++;
         }
-        return CharsBase::atomizeChars(anyChars.cx, charbuf.begin(), charbuf.length());
+        return atomizeChars(anyChars.cx, charbuf.begin(), charbuf.length());
     }
 
   private:

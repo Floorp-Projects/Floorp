@@ -131,7 +131,7 @@ dependencies = [
  "lazy_static 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozprofile 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozrunner 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozrunner 0.5.0",
  "mozversion 0.1.2",
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -280,7 +280,6 @@ dependencies = [
 [[package]]
 name = "mozrunner"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mozprofile 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -686,7 +685,6 @@ dependencies = [
 "checksum mime 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "ba626b8a6de5da682e1caa06bdb42a335aee5a84db8e5046a3e8ab17ba0a3ae0"
 "checksum miniz-sys 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "609ce024854aeb19a0ef7567d348aaa5a746b32fb72e336df7fcc16869d7e2b4"
 "checksum mozprofile 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1a17b8bbde1dc0fbf1c8b073192d7c6f89baa932173ece7c1447de5e9cc7cd7e"
-"checksum mozrunner 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8ff037ca681fa465d01c863f8b16d4a008997b35468059c06f1a4b828369600b"
 "checksum msdos_time 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "65ba9d75bcea84e07812618fedf284a64776c2f2ea0cad6bca7f69739695a958"
 "checksum num 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)" = "a311b77ebdc5dd4cf6449d81e4135d9f0e3b153839ac90e648a8ef538f923525"
 "checksum num-integer 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)" = "d1452e8b06e448a07f0e6ebb0bb1d92b8890eea63288c0b627331d53514d0fba"

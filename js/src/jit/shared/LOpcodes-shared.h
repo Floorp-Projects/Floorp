@@ -105,6 +105,7 @@
     _(SetArgumentsObjectArg)        \
     _(ReturnFromCtor)               \
     _(ComputeThis)                  \
+    _(ImplicitThis)                 \
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \
@@ -276,6 +277,7 @@
     _(BoundsCheck)                  \
     _(BoundsCheckRange)             \
     _(BoundsCheckLower)             \
+    _(SpectreMaskIndex)             \
     _(LoadElementV)                 \
     _(LoadElementT)                 \
     _(LoadElementHole)              \

@@ -1019,6 +1019,11 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
     return;
   }
 
+  if (Type() == LayoutFrameType::Placeholder) {
+    // Do not mark placeholder frames modified.
+    return;
+  }
+
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
   MOZ_ASSERT(displayRoot);
 

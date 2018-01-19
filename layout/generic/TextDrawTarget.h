@@ -399,14 +399,48 @@ public:
   void FillRect(const Rect &aRect,
                 const Pattern &aPattern,
                 const DrawOptions &aOptions = DrawOptions()) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR);
+
+    auto rect = mSc.ToRelativeLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
+    auto color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
+    mBuilder.PushRect(rect, mClipRect, mBackfaceVisible, color);
   }
 
   void StrokeRect(const Rect &aRect,
                   const Pattern &aPattern,
                   const StrokeOptions &aStrokeOptions,
                   const DrawOptions &aOptions) override {
-    MOZ_CRASH("TextDrawTarget: Method shouldn't be called");
+    MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR &&
+                       aStrokeOptions.mDashLength == 0);
+
+    wr::Line line;
+    line.wavyLineThickness = 0; // dummy value, unused
+    line.color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
+    line.style = wr::LineStyle::Solid;
+
+    // Top horizontal line
+    LayoutDevicePoint top(aRect.x, aRect.y - aStrokeOptions.mLineWidth / 2);
+    LayoutDeviceSize horiSize(aRect.width, aStrokeOptions.mLineWidth);
+    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(top, horiSize));
+    line.orientation = wr::LineOrientation::Horizontal;
+    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+
+    // Bottom horizontal line
+    LayoutDevicePoint bottom(aRect.x, aRect.YMost() - aStrokeOptions.mLineWidth / 2);
+    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(bottom, horiSize));
+    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+
+    // Left vertical line
+    LayoutDevicePoint left(aRect.x + aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
+    LayoutDeviceSize vertSize(aStrokeOptions.mLineWidth, aRect.height - aStrokeOptions.mLineWidth);
+    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(left, vertSize));
+    line.orientation = wr::LineOrientation::Vertical;
+    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
+
+    // Right vertical line
+    LayoutDevicePoint right(aRect.XMost() - aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
+    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(right, vertSize));
+    mBuilder.PushLine(mClipRect, mBackfaceVisible, line);
   }
 
   void StrokeLine(const Point &aStart,

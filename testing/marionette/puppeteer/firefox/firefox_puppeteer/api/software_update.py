@@ -2,12 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import
+
 import ConfigParser
 import os
 import re
 import sys
 
 import mozinfo
+
+from six import reraise
 
 from firefox_puppeteer.base import BaseLib
 from firefox_puppeteer.api.appinfo import AppInfo
@@ -366,8 +370,8 @@ class SoftwareUpdate(BaseLib):
             return response.read()
         except urllib2.URLError:
             exc, val, tb = sys.exc_info()
-            raise Exception, "Failed to retrieve update snippet '{}': {}".format(
-                update_url, val), tb
+            msg = "Failed to retrieve update snippet '{0}': {1}"
+            reraise(Exception, msg.format(update_url, val), tb)
 
     def get_formatted_update_url(self, force=False):
         """Retrieve the formatted AUS update URL the update snippet is retrieved from.

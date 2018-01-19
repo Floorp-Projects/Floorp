@@ -17,6 +17,16 @@ var {
   ExtensionError,
 } = ExtensionUtils;
 
+const proxySvc = Ci.nsIProtocolProxyService;
+
+const PROXY_TYPES_MAP = new Map([
+  ["none", proxySvc.PROXYCONFIG_DIRECT],
+  ["autoDetect", proxySvc.PROXYCONFIG_WPAD],
+  ["system", proxySvc.PROXYCONFIG_SYSTEM],
+  ["manual", proxySvc.PROXYCONFIG_MANUAL],
+  ["autoConfig", proxySvc.PROXYCONFIG_PAC],
+]);
+
 const HOMEPAGE_OVERRIDE_SETTING = "homepage_override";
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 const URL_STORE_TYPE = "url_overrides";
@@ -24,9 +34,17 @@ const NEW_TAB_OVERRIDE_SETTING = "newTabURL";
 
 const PERM_DENY_ACTION = Services.perms.DENY_ACTION;
 
-const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) => {
+const checkUnsupported = (name, unsupportedPlatforms) => {
+  if (unsupportedPlatforms.includes(AppConstants.platform)) {
+    throw new ExtensionError(
+      `${AppConstants.platform} is not a supported platform for the ${name} setting.`);
+  }
+};
+
+const getSettingsAPI = (extension, name, callback, storeType, readOnly = false, unsupportedPlatforms = []) => {
   return {
     async get(details) {
+      checkUnsupported(name, unsupportedPlatforms);
       let levelOfControl = details.incognito ?
         "not_controllable" :
         await ExtensionPreferencesManager.getLevelOfControl(
@@ -41,6 +59,7 @@ const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) 
       };
     },
     set(details) {
+      checkUnsupported(name, unsupportedPlatforms);
       if (!readOnly) {
         return ExtensionPreferencesManager.setSetting(
           extension.id, name, details.value);
@@ -48,6 +67,7 @@ const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) 
       return false;
     },
     clear(details) {
+      checkUnsupported(name, unsupportedPlatforms);
       if (!readOnly) {
         return ExtensionPreferencesManager.removeSetting(extension.id, name);
       }
@@ -122,6 +142,56 @@ ExtensionPreferencesManager.addSetting("openSearchResultsInNewTabs", {
 
   setCallback(value) {
     return {[this.prefNames[0]]: value};
+  },
+});
+
+ExtensionPreferencesManager.addSetting("proxyConfig", {
+  prefNames: [
+    "network.proxy.type",
+    "network.proxy.http",
+    "network.proxy.http_port",
+    "network.proxy.share_proxy_settings",
+    "network.proxy.ftp",
+    "network.proxy.ftp_port",
+    "network.proxy.ssl",
+    "network.proxy.ssl_port",
+    "network.proxy.socks",
+    "network.proxy.socks_port",
+    "network.proxy.socks_version",
+    "network.proxy.socks_remote_dns",
+    "network.proxy.no_proxies_on",
+    "network.proxy.autoconfig_url",
+    "signon.autologin.proxy",
+  ],
+
+  setCallback(value) {
+    let prefs = {
+      "network.proxy.type": PROXY_TYPES_MAP.get(value.proxyType),
+      "signon.autologin.proxy": value.autoLogin,
+      "network.proxy.socks_remote_dns": value.proxyDNS,
+      "network.proxy.autoconfig_url": value.autoConfigUrl,
+      "network.proxy.share_proxy_settings": value.httpProxyAll,
+      "network.proxy.socks_version": value.socksVersion,
+      "network.proxy.no_proxies_on": value.passthrough,
+    };
+
+    for (let prop of ["http", "ftp", "ssl", "socks"]) {
+      if (value[prop]) {
+        let url = new URL(prop === "socks" ?
+                          `http://${value[prop]}` :
+                          value[prop]);
+        prefs[`network.proxy.${prop}`] = prop === "socks" ?
+          url.hostname :
+          `${url.protocol}//${url.hostname}`;
+        let port = parseInt(url.port, 10);
+        prefs[`network.proxy.${prop}_port`] = isNaN(port) ? 0 : port;
+      } else {
+        prefs[`network.proxy.${prop}`] = undefined;
+        prefs[`network.proxy.${prop}_port`] = undefined;
+      }
+    }
+
+    return prefs;
   },
 });
 
@@ -205,6 +275,86 @@ this.browserSettings = class extends ExtensionAPI {
           () => {
             return Services.prefs.getBoolPref("browser.search.openintab");
           }),
+        proxyConfig: Object.assign(
+          getSettingsAPI(
+            extension, "proxyConfig",
+            () => {
+              let prefValue = Services.prefs.getIntPref("network.proxy.type");
+              let proxyConfig = {
+                proxyType:
+                  Array.from(
+                    PROXY_TYPES_MAP.entries()).find(entry => entry[1] === prefValue)[0],
+                autoConfigUrl: Services.prefs.getCharPref("network.proxy.autoconfig_url"),
+                autoLogin: Services.prefs.getBoolPref("signon.autologin.proxy"),
+                proxyDNS: Services.prefs.getBoolPref("network.proxy.socks_remote_dns"),
+                httpProxyAll: Services.prefs.getBoolPref("network.proxy.share_proxy_settings"),
+                socksVersion: Services.prefs.getIntPref("network.proxy.socks_version"),
+                passthrough: Services.prefs.getCharPref("network.proxy.no_proxies_on"),
+              };
+
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
+                let url = Services.prefs.getCharPref(`network.proxy.${prop}`);
+                let port = Services.prefs.getIntPref(`network.proxy.${prop}_port`);
+                proxyConfig[prop] = port ? `${url}:${port}` : url;
+              }
+
+              return proxyConfig;
+            },
+            // proxyConfig is unsupported on android.
+            undefined, false, ["android"]
+          ),
+          {
+            set: details => {
+              if (AppConstants.platform === "android") {
+                throw new ExtensionError(
+                  "proxyConfig is not supported on android.");
+              }
+
+              let value = details.value;
+
+              if (!PROXY_TYPES_MAP.has(value.proxyType)) {
+                throw new ExtensionError(
+                  `${value.proxyType} is not a valid value for proxyType.`);
+              }
+
+              for (let prop of ["http", "ftp", "ssl", "socks"]) {
+                let url = value[prop];
+                if (url) {
+                  if (prop === "socks") {
+                    url = `http://${url}`;
+                  }
+                  try {
+                    new URL(url);
+                  } catch (e) {
+                    throw new ExtensionError(
+                      `${value[prop]} is not a valid value for ${prop}.`);
+                  }
+                }
+              }
+
+              if (value.proxyType === "autoConfig" || value.autoConfigUrl) {
+                try {
+                  new URL(value.autoConfigUrl);
+                } catch (e) {
+                  throw new ExtensionError(
+                    `${value.autoConfigUrl} is not a valid value for autoConfigUrl.`);
+                }
+              }
+
+              if (value.socksVersion !== undefined) {
+                if (!Number.isInteger(value.socksVersion) ||
+                    value.socksVersion < 4 ||
+                    value.socksVersion > 5) {
+                  throw new ExtensionError(
+                    `${value.socksVersion} is not a valid value for socksVersion.`);
+                }
+              }
+
+              return ExtensionPreferencesManager.setSetting(
+                extension.id, "proxyConfig", value);
+            },
+          }
+        ),
         webNotificationsDisabled: getSettingsAPI(
           extension, "webNotificationsDisabled",
           () => {

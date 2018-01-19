@@ -9,6 +9,8 @@ Marionette.
 
 """
 
+from __future__ import absolute_import, print_function
+
 import argparse
 import os
 import select
@@ -175,6 +177,6 @@ e.g. \"https://0.0.0.0:0/base/\"""")
                           ssl_cert=args.ssl_cert,
                           ssl_key=args.ssl_key)
     httpd.start()
-    print >>sys.stderr, "%s: started fixture server on %s" % \
-        (sys.argv[0], httpd.get_url("/"))
+    print("{0}: started fixture server on {1}".format(sys.argv[0], httpd.get_url("/")),
+          file=sys.stderr)
     httpd.wait()

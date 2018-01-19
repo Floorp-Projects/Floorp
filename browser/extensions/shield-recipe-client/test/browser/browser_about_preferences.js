@@ -171,9 +171,11 @@ decorate_task(
     await BrowserTestUtils.waitForLocationChange(gBrowser);
 
     is(
-      browser.currentURI.spec,
+      gBrowser.currentURI.spec,
       "about:studies",
-      "Clicking the view studies link opens about:studies."
+      "Clicking the view studies link opens about:studies in a new tab."
     );
+
+    gBrowser.removeCurrentTab();
   }
 );

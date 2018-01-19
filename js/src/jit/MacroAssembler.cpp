@@ -3413,6 +3413,73 @@ MacroAssembler::debugAssertIsObject(const ValueOperand& val)
 #endif
 }
 
+template <typename T>
+void
+MacroAssembler::spectreMaskIndexImpl(Register index, const T& length, Register output)
+{
+    // mask := ((index - length) & ~index) >> 31
+    // output := index & mask
+    mov(index, output);
+    sub32(length, output);
+    not32(index);
+    and32(index, output);
+    not32(index); // Restore index register to its original value.
+    rshift32Arithmetic(Imm32(31), output);
+    and32(index, output);
+}
+
+template <typename T>
+void
+MacroAssembler::spectreMaskIndexImpl(int32_t index, const T& length, Register output)
+{
+    // mask := ((index - length) & ~index) >> 31
+    // output := index & mask
+    move32(Imm32(index), output);
+    if (index == 0)
+        return;
+    sub32(length, output);
+    and32(Imm32(~index), output);
+    rshift32Arithmetic(Imm32(31), output);
+    and32(Imm32(index), output);
+}
+
+void
+MacroAssembler::spectreMaskIndex(int32_t index, Register length, Register output)
+{
+    spectreMaskIndexImpl(index, length, output);
+}
+
+void
+MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register output)
+{
+    spectreMaskIndexImpl(index, length, output);
+}
+
+void
+MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
+{
+#if JS_BITS_PER_WORD == 64
+    // On 64-bit platforms, we can use a faster algorithm:
+    //
+    //   mask := (uint64_t(index) - uint64_t(length)) >> 32
+    //   output := index & mask
+    //
+    // mask is 0x11…11 if index < length, 0 otherwise.
+    move32(index, output);
+    subPtr(length, output);
+    rshiftPtr(Imm32(32), output);
+    and32(index, output);
+#else
+    spectreMaskIndexImpl(index, length, output);
+#endif
+}
+
+void
+MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
+{
+    spectreMaskIndexImpl(index, length, output);
+}
+
 namespace js {
 namespace jit {
 

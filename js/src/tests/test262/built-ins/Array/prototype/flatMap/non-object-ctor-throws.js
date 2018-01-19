@@ -1,4 +1,3 @@
-// |reftest| skip -- Array.prototype.flatMap is not supported
 // Copyright (C) 2018 Shilpi Jain and Michael Ficarra. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

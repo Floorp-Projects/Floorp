@@ -13,7 +13,6 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
 const AnimationTimelineTickItem = createFactory(require("./AnimationTimelineTickItem"));
 
-const TimeScale = require("../utils/timescale");
 const { findOptimalTimeInterval } = require("../utils/utils");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
@@ -22,8 +21,8 @@ const TIME_GRADUATION_MIN_SPACING = 40;
 class AnimationTimelineTickList extends PureComponent {
   static get propTypes() {
     return {
-      animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       sidebarWidth: PropTypes.number.isRequired,
+      timeScale: PropTypes.object.isRequired,
     };
   }
 
@@ -61,8 +60,7 @@ class AnimationTimelineTickList extends PureComponent {
   }
 
   updateTickList() {
-    const { animations } = this.props;
-    const timeScale = new TimeScale(animations);
+    const { timeScale } = this.props;
     const tickListEl = ReactDOM.findDOMNode(this);
     const width = tickListEl.offsetWidth;
     const animationDuration = timeScale.getDuration();

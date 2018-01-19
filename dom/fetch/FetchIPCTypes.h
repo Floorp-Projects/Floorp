@@ -9,9 +9,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 
-// Fix X11 header brain damage that conflicts with HeadersGuardEnum::None
-#undef None
-
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"

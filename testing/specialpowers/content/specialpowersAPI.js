@@ -1191,6 +1191,22 @@ SpecialPowersAPI.prototype = {
     });
   },
 
+  _isPrefActionNeeded(prefAction) {
+    if (prefAction.action === "clear") {
+      return Services.prefs.prefHasUserValue(prefAction.name);
+    } else if (prefAction.action === "set") {
+      try {
+        let currentValue  = this._getPref(prefAction.name, prefAction.type, {});
+        return currentValue != prefAction.value;
+      } catch (e) {
+        // If the preference is not defined yet, setting the value will have an effect.
+        return true;
+      }
+    }
+    // Only "clear" and "set" actions are supported.
+    return false;
+  },
+
   /*
     Iterate through one atomic set of pref actions and perform sets/clears as appropriate.
     All actions performed must modify the relevant pref.
@@ -1206,19 +1222,33 @@ SpecialPowersAPI.prototype = {
     var pendingActions = transaction[0];
     var callback = transaction[1];
 
-    var lastPref = pendingActions[pendingActions.length - 1];
+    // Filter out all the pending actions that will not have any effect.
+    pendingActions = pendingActions.filter(action => {
+      return this._isPrefActionNeeded(action);
+    });
 
-    var pb = Services.prefs;
     var self = this;
-    pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
-      pb.removeObserver(lastPref.name, prefObs);
-
+    let onPrefActionsApplied = function() {
       self._setTimeout(callback);
       self._setTimeout(function() {
         self._applyingPrefs = false;
         // Now apply any prefs that may have been queued while we were applying
         self._applyPrefs();
       });
+    };
+
+    // If no valid action remains, call onPrefActionsApplied directly and bail out.
+    if (pendingActions.length === 0) {
+      onPrefActionsApplied();
+      return;
+    }
+
+    var lastPref = pendingActions[pendingActions.length - 1];
+
+    var pb = Services.prefs;
+    pb.addObserver(lastPref.name, function prefObs(subject, topic, data) {
+      pb.removeObserver(lastPref.name, prefObs);
+      onPrefActionsApplied();
     });
 
     for (var idx in pendingActions) {

@@ -375,6 +375,14 @@ public:
   static LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
   /**
+   * Lookup the indirect shadow tree for |aId|, call the function object and
+   * return true if found. If not found, return false.
+   */
+  static bool CallWithIndirectShadowTree(
+        uint64_t aId,
+        const std::function<void(LayerTreeState&)>& aFunc);
+
+  /**
    * Given the layers id for a content process, get the APZCTreeManagerParent
    * for the corresponding *root* layers id. That is, the APZCTreeManagerParent,
    * if one is found, will always be connected to the parent process rather

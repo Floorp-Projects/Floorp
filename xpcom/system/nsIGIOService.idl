@@ -26,7 +26,6 @@ interface nsIGIOMimeApp : nsIHandlerApp
   readonly attribute long                expectsURIs;  // see constants above
   readonly attribute nsIUTF8StringEnumerator supportedURISchemes;
 
-  void launch(in AUTF8String uri);
   void setAsDefaultForMimeType(in AUTF8String mimeType);
   void setAsDefaultForFileExtensions(in AUTF8String extensions);
   void setAsDefaultForURIScheme(in AUTF8String uriScheme);
@@ -56,13 +55,13 @@ interface nsIGIOService : nsISupports
   AUTF8String        getMimeTypeFromExtension(in AUTF8String extension);
 
   /* Obtain the preferred application for opening a given URI scheme */
-  nsIGIOMimeApp      getAppForURIScheme(in AUTF8String aURIScheme);
+  nsIHandlerApp      getAppForURIScheme(in AUTF8String aURIScheme);
 
   /* Obtain list of application capable of opening given URI scheme */
   nsIMutableArray    getAppsForURIScheme(in AUTF8String aURIScheme);
 
   /* Obtain the preferred application for opening a given MIME type */
-  nsIGIOMimeApp      getAppForMimeType(in AUTF8String mimeType);
+  nsIHandlerApp      getAppForMimeType(in AUTF8String mimeType);
 
   /* Create application info for given command and name */
   nsIGIOMimeApp      createAppFromCommand(in AUTF8String cmd,

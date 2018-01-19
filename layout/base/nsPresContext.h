@@ -1610,18 +1610,6 @@ public:
   virtual bool IsRoot() override { return true; }
 
   /**
-   * Increment DOM-modification generation counter to indicate that
-   * the DOM has changed in a way that might lead to style changes/
-   * reflows/frame creation and destruction.
-   */
-  void IncrementDOMGeneration() { mDOMGeneration++; }
-
-  /**
-   * Get the current DOM generation counter.
-   */
-  uint32_t GetDOMGeneration() { return mDOMGeneration; }
-
-  /**
    * Add a runnable that will get called before the next paint. They will get
    * run eventually even if painting doesn't happen. They might run well before
    * painting happens.
@@ -1674,7 +1662,6 @@ protected:
   nsTHashtable<nsRefPtrHashKey<nsIContent> > mRegisteredPlugins;
   nsTArray<nsCOMPtr<nsIRunnable> > mWillPaintObservers;
   nsRevocableEventPtr<RunWillPaintObservers> mWillPaintFallbackEvent;
-  uint32_t mDOMGeneration;
 };
 
 #ifdef MOZ_REFLOW_PERF

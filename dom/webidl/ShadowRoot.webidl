@@ -20,8 +20,6 @@ enum ShadowRootMode {
 [Func="nsDocument::IsShadowDOMEnabled"]
 interface ShadowRoot : DocumentFragment
 {
-  readonly attribute Element? activeElement;
-
   // Shadow DOM v1
   readonly attribute ShadowRootMode mode;
   readonly attribute Element host;
@@ -34,6 +32,6 @@ interface ShadowRoot : DocumentFragment
   [CEReactions, SetterThrows, TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
   attribute boolean applyAuthorStyles;
-  readonly attribute StyleSheetList styleSheets;
 };
 
+ShadowRoot implements DocumentOrShadowRoot;

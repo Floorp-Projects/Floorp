@@ -1,0 +1,17 @@
+[package]
+name = "mozrunner"
+version = "0.5.0"
+authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
+description = "Library for starting Firefox binaries."
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozrunner"
+license = "MPL-2.0"
+
+[dependencies]
+log = "0.3"
+mozprofile = "0.3"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = "0.3.5"
+
+[[bin]]
+name = "firefox-default-path"

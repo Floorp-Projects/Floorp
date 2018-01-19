@@ -38,6 +38,7 @@ var forceCC = true;
 
 var useMozAfterPaint = false;
 var useFNBPaint = false;
+var useHero = false;
 var gPaintWindow = window;
 var gPaintListener = false;
 var loadNoCache = false;
@@ -136,6 +137,7 @@ function plInit() {
     numPageCycles = Services.prefs.getIntPref("talos.tppagecycles", 1);
     timeout = Services.prefs.getIntPref("talos.tptimeout", -1);
     useMozAfterPaint = Services.prefs.getBoolPref("talos.tpmozafterpaint", false);
+    useHero = Services.prefs.getBoolPref("talos.tphero", false);
     useFNBPaint = Services.prefs.getBoolPref("talos.fnbpaint", false);
     loadNoCache = Services.prefs.getBoolPref("talos.tploadnocache", false);
     scrollTest = Services.prefs.getBoolPref("talos.tpscrolltest", false);
@@ -238,6 +240,8 @@ function plInit() {
           content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_fnbpaint.js", false, true);
         } else if (useMozAfterPaint) {
           content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_moz.js", false, true);
+        } else if (useHero) {
+          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_hero.js", false, true);
         } else {
           content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/lh_dummy.js", false, true);
 
@@ -265,7 +269,7 @@ var ContentListener = {
   receiveMessage(message) {
     switch (message.name) {
       case "PageLoader:LoadEvent": return plLoadHandlerMessage(message);
-      case "PageLoader:FNBPaintError": return plFNBPaintErrorMessage(message);
+      case "PageLoader:Error": return plErrorMessage(message);
       case "PageLoader:RecordTime": return plRecordTimeMessage(message);
       case "PageLoader:IdleCallbackSet": return plIdleCallbackSet();
       case "PageLoader:IdleCallbackReceived": return plIdleCallbackReceived();
@@ -300,18 +304,14 @@ function plLoadPage() {
   mm.addMessageListener("PageLoader:RecordTime", ContentListener);
   mm.addMessageListener("PageLoader:IdleCallbackSet", ContentListener);
   mm.addMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
-  if (useFNBPaint) {
-    mm.addMessageListener("PageLoader:FNBPaintError", ContentListener);
-  }
+  mm.addMessageListener("PageLoader:Error", ContentListener);
 
   removeLastAddedMsgListener = function() {
     mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
     mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
     mm.removeMessageListener("PageLoader:IdleCallbackSet", ContentListener);
     mm.removeMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
-    if (useFNBPaint) {
-      mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
-    }
+    mm.removeMessageListener("PageLoader:Error", ContentListener);
   };
   failTimeout.register(loadFail, timeout);
   // record which page we are about to open
@@ -618,13 +618,13 @@ function plPainted() {
   _loadHandler();
 }
 
-function _loadHandler(fnbpaint = 0) {
+function _loadHandler(paint_time = 0) {
   failTimeout.clear();
   var end_time = 0;
 
-  if (fnbpaint !== 0) {
+  if (paint_time !== 0) {
     // window.performance.timing.timeToNonBlankPaint is a timestamp
-    end_time = fnbpaint;
+    end_time = paint_time;
   } else {
     end_time = Date.now();
   }
@@ -645,9 +645,12 @@ function _loadHandler(fnbpaint = 0) {
 
 // the core handler
 function plLoadHandlerMessage(message) {
-  let fnbpaint = 0;
-  if (message.json.fnbpaint !== undefined) {
-    fnbpaint = message.json.fnbpaint;
+  let paint_time = 0;
+  // XXX message.json.name contains the name
+  // of the load handler, so in future versions
+  // we can record several times per load.
+  if (message.json.time !== undefined) {
+      paint_time = message.json.time;
   }
   failTimeout.clear();
 
@@ -674,7 +677,7 @@ function plLoadHandlerMessage(message) {
       plNextPage();
     }
   } else {
-    _loadHandler(fnbpaint);
+    _loadHandler(paint_time);
   }
 }
 
@@ -690,11 +693,15 @@ function plRecordTimeMessage(message) {
   _loadHandlerCapturing();
 }
 
-// error retrieving fnbpaint
-function plFNBPaintErrorMessage(message) {
-  dumpLine("Abort: firstNonBlankPaint value is not available after loading the page");
+
+// error
+function plErrorMessage(message) {
+  if (message.json.msg) {
+    dumpLine(message.json.msg);
+  }
   plStop(true);
 }
+
 
 function plStop(force) {
   plStopAll(force);
@@ -732,16 +739,12 @@ function plStopAll(force) {
     let mm = content.selectedBrowser.messageManager;
     mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
     mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
-
-    if (useFNBPaint) {
-      mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
-    }
+    mm.removeMessageListener("PageLoader:Error", ContentListener);
 
     if (isIdleCallbackPending) {
       mm.removeMessageListener("PageLoader:IdleCallbackSet", ContentListener);
       mm.removeMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
     }
-
     mm.loadFrameScript("data:,removeEventListener('load', _contentLoadHandler, true);", false, true);
   }
 

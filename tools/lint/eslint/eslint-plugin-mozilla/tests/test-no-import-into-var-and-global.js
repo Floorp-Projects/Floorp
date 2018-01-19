@@ -32,5 +32,11 @@ ruleTester.run("no-import-into-var-and-global", rule, {
   }, {
     code: "var foo = Cu.import('fake');",
     errors: [ExpectedError]
+  }, {
+    code: "var foo = Components.utils.import('fake');",
+    errors: [ExpectedError]
+  }, {
+    code: "var foo = ChromeUtils.import('fake');",
+    errors: [ExpectedError]
   }]
 });

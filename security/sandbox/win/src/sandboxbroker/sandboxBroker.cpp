@@ -213,7 +213,11 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
 #endif
 
   // Enable the child process to write log files when setup
-  wchar_t const* logFileName = _wgetenv(L"MOZ_LOG_FILE");
+  wchar_t const* logFileName = nullptr;
+  auto it = aEnvironment.find(ENVIRONMENT_LITERAL("MOZ_LOG_FILE"));
+  if (it != aEnvironment.end()) {
+    logFileName = (it->second).c_str();
+  }
   char const* logFileModules = getenv("MOZ_LOG");
   if (logFileName && logFileModules) {
     bool rotate = false;
@@ -238,7 +242,11 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
     }
   }
 
-  logFileName = _wgetenv(L"NSPR_LOG_FILE");
+  logFileName = nullptr;
+  it = aEnvironment.find(ENVIRONMENT_LITERAL("NSPR_LOG_FILE"));
+  if (it != aEnvironment.end()) {
+    logFileName = (it->second).c_str();
+  }
   if (logFileName) {
     mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                      sandbox::TargetPolicy::FILES_ALLOW_ANY, logFileName);
