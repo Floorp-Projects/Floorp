@@ -1593,6 +1593,10 @@ public:
                                 uint32_t aLength,
                                 Script aRunScript);
 
+    // whether the specified feature will apply to the given character
+    bool FeatureWillHandleChar(Script aRunScript, uint32_t aFeature,
+                               uint32_t aUnicode);
+
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
     // table and use that.
