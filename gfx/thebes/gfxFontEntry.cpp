@@ -848,8 +848,7 @@ gfxFontEntry::InputsForOpenTypeFeature(Script aScript, uint32_t aFeatureTag)
     }
 
     NS_ASSERTION(aFeatureTag == HB_TAG('s','u','p','s') ||
-                 aFeatureTag == HB_TAG('s','u','b','s') ||
-                 aFeatureTag == HB_TAG('v','e','r','t'),
+                 aFeatureTag == HB_TAG('s','u','b','s'),
                  "use of unknown feature tag");
 
     uint32_t scriptFeature = SCRIPT_FEATURE(aScript, aFeatureTag);
