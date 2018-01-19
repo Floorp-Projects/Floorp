@@ -20,5 +20,7 @@ DevToolsModules(
     'AnimationTimelineTickItem.js',
     'AnimationTimelineTickList.js',
     'App.js',
+    'KeyframesProgressTickItem.js',
+    'KeyframesProgressTickList.js',
     'NoAnimationPanel.js',
 )
