@@ -24,7 +24,7 @@
  *     Called to clean up at the end of use
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 const {StreamUtils} =
     ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
 

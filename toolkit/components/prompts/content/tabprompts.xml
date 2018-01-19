@@ -331,7 +331,7 @@
             let defaultButton = this.ui["button" + bnum];
 
             let { AppConstants } =
-                Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+                ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
             if (AppConstants.platform == "macosx") {
               // On OS X, the default button always stays marked as such (until
               // the entire prompt blurs).
