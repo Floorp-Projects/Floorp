@@ -54,7 +54,7 @@ ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs)
   // ActorDestroy() which ensures nethier lambda is called if the
   // actor is destroyed before the source operation completes.
   promise->Then(target, __func__,
-    [this, aArgs] (const mozilla::dom::ClientOpResult& aResult) {
+    [this] (const mozilla::dom::ClientOpResult& aResult) {
       mPromiseRequestHolder.Complete();
       Unused << PClientSourceOpChild::Send__delete__(this, aResult);
     },
