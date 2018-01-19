@@ -95,7 +95,6 @@ enum class FontRenderMode : uint32_t {
 };
 
 enum class ImageFormat : uint32_t {
-  Invalid = 0,
   R8 = 1,
   BGRA8 = 3,
   RGBAF32 = 4,
