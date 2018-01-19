@@ -17,6 +17,13 @@ import mozunit
 
 here = os.path.dirname(__file__)
 
+BUILDCONFIG = {
+    'topobjdir': buildconfig.topobjdir,
+    'MOZ_APP_NAME': buildconfig.substs.get('MOZ_APP_NAME'),
+    'OMNIJAR_NAME': buildconfig.substs.get('OMNIJAR_NAME'),
+    'MOZ_MACBUNDLE_NAME': buildconfig.substs.get('MOZ_MACBUNDLE_NAME'),
+}
+
 basic_file = """TN:Compartment_5f7f5c30251800
 SF:resource://gre/modules/osfile.jsm
 FN:1,top-level
@@ -162,12 +169,12 @@ class TestLineRemapping(unittest.TestCase):
             shutil.move(chrome_map_file, backup_file)
 
         empty_chrome_info = [
-            {}, {}, {},
+            {}, {}, {}, BUILDCONFIG,
         ]
         with open(chrome_map_file, 'w') as fh:
             json.dump(empty_chrome_info, fh)
 
-        self.lcov_rewriter = lcov_rewriter.LcovFileRewriter('', '', [])
+        self.lcov_rewriter = lcov_rewriter.LcovFileRewriter(chrome_map_file, '', '', [])
         self.pp_rewriter = self.lcov_rewriter.pp_rewriter
 
     def tearDown(self):
@@ -286,6 +293,7 @@ class TestUrlFinder(unittest.TestCase):
                     False
                 ]
             },
+            BUILDCONFIG,
         ]
         with open(chrome_map_file, 'w') as fh:
             json.dump(empty_chrome_info, fh)
@@ -305,7 +313,7 @@ class TestUrlFinder(unittest.TestCase):
             ('jar:file:///tmp/tmpMdo5gV.mozrunner/extensions/workerbootstrap-test@mozilla.org.xpi!/bootstrap.js', 'path5'),
         ]
 
-        url_finder = lcov_rewriter.UrlFinder('', '', [])
+        url_finder = lcov_rewriter.UrlFinder(self._chrome_map_file, '', '', [])
         for path, expected in paths:
             self.assertEqual(url_finder.rewrite_url(path)[0], expected)
 
