@@ -6,8 +6,7 @@ var chrome_root = getRootDirectory(gTestPath);
 const CHROMEROOT = chrome_root;
 
 function getImageLoading(doc, id) {
-  var htmlImg = doc.getElementById(id);
-  return htmlImg.QueryInterface(Ci.nsIImageLoadingContent);
+  return doc.getElementById(id);
 }
 
 // Tries to get the Moz debug image, imgIContainerDebug. Only works
