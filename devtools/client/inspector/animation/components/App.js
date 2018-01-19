@@ -71,4 +71,10 @@ class App extends PureComponent {
   }
 }
 
-module.exports = connect(state => state)(App);
+const mapStateToProps = state => {
+  return {
+    animations: state.animations.animations
+  };
+};
+
+module.exports = connect(mapStateToProps)(App);
