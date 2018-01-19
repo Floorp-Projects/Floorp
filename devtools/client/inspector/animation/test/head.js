@@ -70,7 +70,8 @@ const enableAnimationFeatures = function () {
 /**
  * Add a new test tab in the browser and load the given url.
  *
- * @param {String} url The url to be loaded in the new tab
+ * @param {String} url
+ *        The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
 const _addTab = addTab;
@@ -83,6 +84,43 @@ addTab = async function (url) {
   info("Loading the helper frame script " + COMMON_FRAME_SCRIPT_URL);
   browser.messageManager.loadFrameScript(COMMON_FRAME_SCRIPT_URL, false);
   return tab;
+};
+
+/**
+ * Click on an animation in the timeline to select it.
+ *
+ * @param {AnimationInspector} animationInspector.
+ * @param {AnimationsPanel} panel
+ *        The panel instance.
+ * @param {Number} index
+ *        The index of the animation to click on.
+ */
+const clickOnAnimation = async function (animationInspector, panel, index) {
+  info("Click on animation " + index + " in the timeline");
+  const summaryGraphEl = panel.querySelectorAll(".animation-summary-graph")[index];
+  // Scroll to show the timeBlock since the element may be out of displayed area.
+  summaryGraphEl.scrollIntoView(false);
+  const bounds = summaryGraphEl.getBoundingClientRect();
+  const x = bounds.width / 2;
+  const y = bounds.height / 2;
+  EventUtils.synthesizeMouse(summaryGraphEl, x, y, {}, summaryGraphEl.ownerGlobal);
+
+  await waitForAnimationDetail(animationInspector);
+};
+
+/**
+ * Click on close button for animation detail pane.
+ *
+ * @param {AnimationsPanel} panel
+ *        The panel instance.
+ */
+const clickOnDetailCloseButton = function (panel) {
+  info("Click on close button for animation detail pane");
+  const buttonEl = panel.querySelector(".animation-detail-close-button");
+  const bounds = buttonEl.getBoundingClientRect();
+  const x = bounds.width / 2;
+  const y = bounds.height / 2;
+  EventUtils.synthesizeMouse(buttonEl, x, y, {}, buttonEl.ownerGlobal);
 };
 
 /**
@@ -132,7 +170,19 @@ const waitForRendering = async function (animationInspector) {
   await Promise.all([
     waitForAllAnimationTargets(animationInspector),
     waitForAllSummaryGraph(animationInspector),
+    waitForAnimationDetail(animationInspector),
   ]);
+};
+
+/**
+ * Wait for rendering of animation keyframes.
+ *
+ * @param {AnimationInspector} inspector
+ */
+const waitForAnimationDetail = async function (animationInspector) {
+  if (animationInspector.animations.length === 1) {
+    await animationInspector.once("animation-keyframes-rendered");
+  }
 };
 
 /**

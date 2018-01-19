@@ -17,6 +17,7 @@ class AnimationDetailContainer extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       setDetailVisibility: PropTypes.func.isRequired,
     };
@@ -25,6 +26,7 @@ class AnimationDetailContainer extends PureComponent {
   render() {
     const {
       animation,
+      emitEventForTest,
       getAnimatedPropertyMap,
       setDetailVisibility,
     } = this.props;
@@ -46,6 +48,7 @@ class AnimationDetailContainer extends PureComponent {
         AnimatedPropertyListContainer(
           {
             animation,
+            emitEventForTest,
             getAnimatedPropertyMap,
           }
         )

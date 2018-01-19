@@ -14,6 +14,7 @@ class AnimatedPropertyList extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
     };
   }
@@ -35,10 +36,15 @@ class AnimatedPropertyList extends PureComponent {
   }
 
   async updateKeyframesList(animation) {
-    const { getAnimatedPropertyMap } = this.props;
+    const {
+      getAnimatedPropertyMap,
+      emitEventForTest,
+    } = this.props;
     const animatedPropertyMap = await getAnimatedPropertyMap(animation);
 
     this.setState({ animatedPropertyMap });
+
+    emitEventForTest("animation-keyframes-rendered");
   }
 
   render() {
