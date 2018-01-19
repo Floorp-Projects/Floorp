@@ -9,6 +9,7 @@
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
   --graph-right-offset: 10px;
   --sidebar-width: 200px;
+  --tick-line-style: 0.5px solid rgba(128, 136, 144, 0.5);
 }
 
 :root.theme-dark {
@@ -48,7 +49,7 @@
 }
 
 .animation-timeline-tick-item {
-  border-left: 0.5px solid rgba(128, 136, 144, .5);
+  border-left: var(--tick-line-style);
   height: 100vh;
   position: absolute;
 }
@@ -228,6 +229,33 @@
 
 .animation-detail-header {
   white-space: nowrap;
+}
+
+/* Animated Property List Header */
+.animated-property-list-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+/* Keyframes Progress Tick List */
+.keyframes-progress-tick-list {
+  margin-right: var(--graph-right-offset);
+  position: relative;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.keyframes-progress-tick-item {
+  height: 100vh;
+  position: absolute;
+}
+
+.keyframes-progress-tick-item.left {
+  border-left: var(--tick-line-style);
+}
+
+.keyframes-progress-tick-item.right {
+  border-right: var(--tick-line-style);
 }
 
 /* No Animation Panel */

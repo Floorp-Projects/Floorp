@@ -4,15 +4,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+
+const KeyframesProgressTickList = createFactory(require("./KeyframesProgressTickList"));
 
 class AnimatedPropertyListHeader extends PureComponent {
   render() {
     return dom.div(
       {
-        className: "animated-property-list-header"
-      }
+        className: "animated-property-list-header devtools-toolbar"
+      },
+      KeyframesProgressTickList()
     );
   }
 }
