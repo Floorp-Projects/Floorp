@@ -10,7 +10,6 @@ config = {
 
     "vcs_share_base": HG_SHARE_BASE_DIR,
     "exes": {
-        'virtualenv': '/tools/virtualenv/bin/virtualenv',
         'tooltool.py': "/tools/tooltool.py",
     },
 
