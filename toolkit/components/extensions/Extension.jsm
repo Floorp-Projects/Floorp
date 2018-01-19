@@ -866,9 +866,6 @@ class ExtensionData {
    *                        Origin permissions requested.
    * @param {array<string>} info.permissions.permissions
    *                        Regular (non-origin) permissions requested.
-   * @param {AddonWrapper} info.addonName
-   *                       The name of the addon for which permissions are
-   *                       being requested.
    * @param {boolean} info.unsigned
    *                  True if the prompt is for installing an unsigned addon.
    * @param {string} info.type
@@ -882,7 +879,10 @@ class ExtensionData {
    *                          The string bundle to use for l10n.
    *
    * @returns {object} An object with properties containing localized strings
-   *                   for various elements of a permission dialog.
+   *                   for various elements of a permission dialog. The "header"
+   *                   property on this object is the notification header text
+   *                   and it has the string "<>" as a placeholder for the
+   *                   addon name.
    */
   static formatPermissionStrings(info, bundle) {
     let result = {};
@@ -971,7 +971,7 @@ class ExtensionData {
 
     const haveAccessKeys = (AppConstants.platform !== "android");
 
-    result.header = bundle.formatStringFromName("webextPerms.header", [info.addonName], 1);
+    result.header = bundle.formatStringFromName("webextPerms.header", ["<>"], 1);
     result.text = info.unsigned ?
                   bundle.GetStringFromName("webextPerms.unsignedWarning") : "";
     result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
@@ -984,7 +984,7 @@ class ExtensionData {
     }
 
     if (info.type == "sideload") {
-      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [info.addonName], 1);
+      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", ["<>"], 1);
       let key = result.msgs.length == 0 ?
                 "webextPerms.sideloadTextNoPerms" : "webextPerms.sideloadText2";
       result.text = bundle.GetStringFromName(key);
@@ -995,14 +995,14 @@ class ExtensionData {
         result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
       }
     } else if (info.type == "update") {
-      result.header = "";
-      result.text = bundle.formatStringFromName("webextPerms.updateText", [info.addonName], 1);
+      result.header = bundle.formatStringFromName("webextPerms.updateText", ["<>"], 1);
+      result.text = "";
       result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
       if (haveAccessKeys) {
         result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
       }
     } else if (info.type == "optional") {
-      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", [info.addonName], 1);
+      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", ["<>"], 1);
       result.text = "";
       result.listIntro = bundle.GetStringFromName("webextPerms.optionalPermsListIntro");
       result.acceptText = bundle.GetStringFromName("webextPerms.optionalPermsAllow.label");
