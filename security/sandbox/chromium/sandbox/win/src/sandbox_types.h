@@ -10,6 +10,12 @@
 
 namespace sandbox {
 
+#ifdef __MINGW32__
+// Map Microsoft's proprietary more-safe version of copy() back to
+// the std::basic_string method
+#define _Copy_s copy
+#endif
+
 // Operation result codes returned by the sandbox API.
 //
 // Note: These codes are listed in a histogram and any new codes should be added
