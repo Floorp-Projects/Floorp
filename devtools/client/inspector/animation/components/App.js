@@ -18,6 +18,7 @@ class App extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      detailVisibility: PropTypes.bool.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
@@ -37,6 +38,7 @@ class App extends PureComponent {
   render() {
     const {
       animations,
+      detailVisibility,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
@@ -50,7 +52,8 @@ class App extends PureComponent {
 
     return dom.div(
       {
-        id: "animation-container"
+        id: "animation-container",
+        className: detailVisibility ? "animation-detail-visible" : "",
       },
       animations.length ?
       SplitBox({
@@ -90,7 +93,8 @@ class App extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    animations: state.animations.animations
+    animations: state.animations.animations,
+    detailVisibility: state.animations.detailVisibility,
   };
 };
 

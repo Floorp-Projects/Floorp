@@ -13,6 +13,7 @@ const {
 
 const INITIAL_STATE = {
   animations: [],
+  detailVisibility: false,
   elementPickerEnabled: false,
   selectedAnimation: null,
   sidebarSize: {
@@ -24,7 +25,7 @@ const INITIAL_STATE = {
 const reducers = {
   [UPDATE_ANIMATIONS](state, { animations }) {
     return Object.assign({}, state, {
-      animations
+      animations,
     });
   },
 
@@ -35,7 +36,10 @@ const reducers = {
   },
 
   [UPDATE_SELECTED_ANIMATION](state, { selectedAnimation }) {
+    const detailVisibility = !!selectedAnimation;
+
     return Object.assign({}, state, {
+      detailVisibility,
       selectedAnimation
     });
   },
