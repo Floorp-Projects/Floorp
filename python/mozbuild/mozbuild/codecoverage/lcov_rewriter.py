@@ -515,7 +515,7 @@ class UrlFinder(object):
                 for dest in dests:
                     if not dest.endswith('/'):
                         dest += '/'
-                    objdir_path = url.replace(prefix, dest)
+                    objdir_path = term.replace(prefix, dest)
 
                     while objdir_path.startswith('//'):
                         # The mochitest harness produces some wonky file:// uris
