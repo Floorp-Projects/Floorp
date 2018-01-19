@@ -78,9 +78,16 @@ public:
     return NS_OK;
   }
 
-  // Only runs on the thread being profiled
+  // Only runs on the thread being profiled. Always called via a thread
+  // dispatch, so inherently functions as a responsiveness statistic.
   NS_IMETHOD Run() override
   {
+    // This approach means that the 16ms delay in the timer below, _plus_ any
+    // additional delays in the TimerThread itself, become part of the
+    // responsiveness statistic for this thread. What we should probably be
+    // doing is recording responsiveness only when we have dispatched (but not
+    // executed) a call to this function, either because of a call to
+    // DoFirstDispatchIfNeeded, or a call to Notify.
     mStartToPrevTracer_us = uint64_t(profiler_time() * 1000.0);
 
     if (!mStop) {
@@ -101,7 +108,7 @@ public:
   // Should always fire on the thread being profiled
   NS_IMETHOD Notify(nsITimer* aTimer) final override
   {
-    mThread->Dispatch(this, nsIThread::NS_DISPATCH_NORMAL);
+    Run();
     return NS_OK;
   }
 
