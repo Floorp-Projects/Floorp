@@ -13,7 +13,7 @@ const DelaySign = createFactory(require("./DelaySign"));
 const EndDelaySign = createFactory(require("./EndDelaySign"));
 const SummaryGraphPath = createFactory(require("./SummaryGraphPath"));
 
-const { getFormatStr, getStr, numberWithDecimals } = require("../../utils/l10n");
+const { getFormattedTitle, getFormatStr, getStr, numberWithDecimals } = require("../../utils/l10n");
 
 class SummaryGraph extends PureComponent {
   static get propTypes() {
@@ -186,31 +186,6 @@ class SummaryGraph extends PureComponent {
       null
     );
   }
-}
-
-/**
- * Get a formatted title for this animation. This will be either:
- * "%S", "%S : CSS Transition", "%S : CSS Animation",
- * "%S : Script Animation", or "Script Animation", depending
- * if the server provides the type, what type it is and if the animation
- * has a name.
- *
- * @param {Object} state
- */
-function getFormattedTitle(state) {
-  // Older servers don't send a type, and only know about
-  // CSSAnimations and CSSTransitions, so it's safe to use
-  // just the name.
-  if (!state.type) {
-    return state.name;
-  }
-
-  // Script-generated animations may not have a name.
-  if (state.type === "scriptanimation" && !state.name) {
-    return getStr("timeline.scriptanimation.unnamedLabel");
-  }
-
-  return getFormatStr(`timeline.${state.type}.nameLabel`, state.name);
 }
 
 module.exports = SummaryGraph;
