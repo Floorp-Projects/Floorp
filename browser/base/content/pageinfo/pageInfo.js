@@ -261,9 +261,6 @@ function getClipboardHelper() {
 }
 const gClipboardHelper = getClipboardHelper();
 
-// Interface for image loading content
-const nsIImageLoadingContent = Components.interfaces.nsIImageLoadingContent;
-
 // namespaces, don't need all of these yet...
 const XLinkNS  = "http://www.w3.org/1999/xlink";
 const XULNS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
