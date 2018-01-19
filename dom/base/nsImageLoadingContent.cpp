@@ -331,20 +331,12 @@ nsImageLoadingContent::OnImageIsAnimated(imgIRequest *aRequest)
  * nsIImageLoadingContent impl
  */
 
-NS_IMETHODIMP
-nsImageLoadingContent::GetLoadingEnabled(bool *aLoadingEnabled)
-{
-  *aLoadingEnabled = mLoadingEnabled;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
   if (nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = aLoadingEnabled;
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
