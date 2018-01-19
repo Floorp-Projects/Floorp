@@ -40,8 +40,8 @@
                     '#' + __LINE__ + ': ' + msg) \
     } while (false)
 #else
-#define assert(b, info) do {} while (false) // Elided assertion.
-#define dbg(msg) do {} while (false) // Elided debugging output.
+#define assert(b, info) ; // Elided assertion.
+#define dbg(msg) ; // Elided debugging output.
 #endif
 
 // All C++-implemented standard builtins library functions used in self-hosted

@@ -8535,6 +8535,31 @@ CodeGenerator::visitBoundsCheckLower(LBoundsCheckLower* lir)
                  lir->snapshot());
 }
 
+void
+CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir)
+{
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+
+    const LAllocation* index = lir->index();
+    const LAllocation* length = lir->length();
+    Register output = ToRegister(lir->output());
+
+    if (index->isConstant()) {
+        int32_t idx = ToInt32(index);
+        if (length->isRegister())
+            masm.spectreMaskIndex(idx, ToRegister(length), output);
+        else
+            masm.spectreMaskIndex(idx, ToAddress(length), output);
+        return;
+    }
+
+    Register indexReg = ToRegister(index);
+    if (length->isRegister())
+        masm.spectreMaskIndex(indexReg, ToRegister(length), output);
+    else
+        masm.spectreMaskIndex(indexReg, ToAddress(length), output);
+}
+
 class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
 {
     LInstruction* ins_;

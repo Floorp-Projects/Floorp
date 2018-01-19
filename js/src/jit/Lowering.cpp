@@ -3130,6 +3130,26 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck* ins)
 }
 
 void
+LIRGenerator::visitSpectreMaskIndex(MSpectreMaskIndex* ins)
+{
+    MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
+    MOZ_ASSERT(ins->length()->type() == MIRType::Int32);
+    MOZ_ASSERT(ins->type() == MIRType::Int32);
+
+    // On 64-bit platforms, the length must be in a register, so
+    // MacroAssembler::maskIndex can emit more efficient code.
+#if JS_BITS_PER_WORD == 64
+    LAllocation lengthUse = useRegister(ins->length());
+#else
+    LAllocation lengthUse = useAny(ins->length());
+#endif
+
+    LSpectreMaskIndex* lir =
+        new(alloc()) LSpectreMaskIndex(useRegisterOrConstant(ins->index()), lengthUse);
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitBoundsCheckLower(MBoundsCheckLower* ins)
 {
     MOZ_ASSERT(ins->index()->type() == MIRType::Int32);

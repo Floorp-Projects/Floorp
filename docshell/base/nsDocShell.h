@@ -20,7 +20,6 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsIBaseWindow.h"
 #include "nsIClipboardCommands.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIDocCharset.h"
 #include "nsIDocShell.h"
@@ -127,7 +126,6 @@ class nsDocShell final
   , public nsIScrollable
   , public nsITextScroll
   , public nsIDocCharset
-  , public nsIContentViewerContainer
   , public nsIRefreshURI
   , public nsIWebProgressListener
   , public nsIWebPageDescriptor
@@ -183,7 +181,6 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIREFRESHURI
-  NS_DECL_NSICONTENTVIEWERCONTAINER
   NS_DECL_NSIWEBPAGEDESCRIPTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSICLIPBOARDCOMMANDS
@@ -869,6 +866,8 @@ private: // member functions
   nsresult EnsureFind();
   nsresult EnsureCommandHandler();
   nsresult RefreshURIFromQueue();
+  nsresult Embed(nsIContentViewer* aContentViewer,
+                 const char* aCommand, nsISupports* aExtraInfo);
   nsresult GetEldestPresContext(nsPresContext** aPresContext);
   nsresult CheckLoadingPermissions();
   nsresult PersistLayoutHistoryState();
