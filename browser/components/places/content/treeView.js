@@ -7,7 +7,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PTV_interfaces = [Ci.nsITreeView,
                         Ci.nsINavHistoryResultObserver,
-                        Ci.nsINavHistoryResultTreeViewer,
                         Ci.nsISupportsWeakReference];
 
 /**
@@ -1193,20 +1192,36 @@ PlacesTreeView.prototype = {
     return val;
   },
 
-  nodeForTreeIndex: function PTV_nodeForTreeIndex(aIndex) {
+  /**
+   * This allows you to get at the real node for a given row index. This is
+   * only valid when a tree is attached.
+   *
+   * @param {Integer} aIndex The index for the node to get.
+   * @return {Ci.nsINavHistoryResultNode} The node.
+   * @throws Cr.NS_ERROR_INVALID_ARG if the index is greater than the number of
+   *                                 rows.
+   */
+  nodeForTreeIndex(aIndex) {
     if (aIndex > this._rows.length)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     return this._getNodeForRow(aIndex);
   },
 
-  treeIndexForNode: function PTV_treeNodeForIndex(aNode) {
+  /**
+   * Reverse of nodeForTreeIndex, returns the row index for a given result node.
+   * The node should be part of the tree.
+   *
+   * @param {Ci.nsINavHistoryResultNode} aNode The node to look for in the tree.
+   * @returns {Integer} The found index, or -1 if the item is not visible or not found.
+   */
+  treeIndexForNode(aNode) {
     // The API allows passing invisible nodes.
     try {
       return this._getRowForNode(aNode, true);
     } catch (ex) { }
 
-    return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
+    return -1;
   },
 
   // nsITreeView
