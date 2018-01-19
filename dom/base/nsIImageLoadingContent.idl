@@ -165,11 +165,11 @@ interface nsIImageLoadingContent : imgINotificationObserver
   [noscript] nsIStreamListener loadImageWithChannel(in nsIChannel aChannel);
 
   /**
-   * Enables/disables image state forcing. When |aForce| is PR_TRUE, we force
+   * Enables/disables image state forcing. When |aForce| is true, we force
    * nsImageLoadingContent::ImageState() to return |aState|. Call again with |aForce|
-   * as PR_FALSE to revert ImageState() to its original behaviour.
+   * as false to revert ImageState() to its original behaviour.
    */
-  [noscript] void forceImageState(in boolean aForce, in unsigned long long aState);
+  [notxpcom, nostdcall] void forceImageState(in boolean aForce, in unsigned long long aState);
 
   /**
    * The intrinsic size and width of this content. May differ from actual image
