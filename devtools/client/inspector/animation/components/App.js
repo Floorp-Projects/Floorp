@@ -62,6 +62,7 @@ class App extends PureComponent {
         className: "animation-container-splitter",
         endPanel: AnimationDetailContainer(
           {
+            emitEventForTest,
             getAnimatedPropertyMap,
             setDetailVisibility,
           }
