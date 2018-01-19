@@ -11,7 +11,7 @@
 // here we call the identity provider directly
 function getIdentityAssertion(fpArray) {
   var Cu = SpecialPowers.Cu;
-  var rtcid = ChromeUtils.import('resource://gre/modules/media/IdpSandbox.jsm');
+  var rtcid = Cu.import('resource://gre/modules/media/IdpSandbox.jsm');
   var sandbox = new rtcid.IdpSandbox('example.com', 'idp.js', window);
   return sandbox.start()
     .then(idp => SpecialPowers.wrap(idp)

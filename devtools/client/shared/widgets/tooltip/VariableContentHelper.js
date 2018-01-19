@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 
 ChromeUtils.defineModuleGetter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
