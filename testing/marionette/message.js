@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("chrome://marionette/content/assert.js");
 ChromeUtils.import("chrome://marionette/content/error.js");
 const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});

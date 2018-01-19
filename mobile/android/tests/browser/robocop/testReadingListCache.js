@@ -5,6 +5,8 @@
 
 /* globals ReaderMode */
 
+/* eslint-disable mozilla/use-chromeutils-import */
+
 var { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ReaderMode.jsm");

@@ -113,7 +113,8 @@ addEventListener("load", function() {
   } catch (e) {}
 
   try {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    /* eslint-disable mozilla/use-chromeutils-import */
+    Components.utils.import("resource://gre/modules/Services.jsm");
     Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
 
     TalosContentProfiler.resume("rasterflood_gradient.html loaded", true).then(() => {

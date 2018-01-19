@@ -4,8 +4,6 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
 ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
