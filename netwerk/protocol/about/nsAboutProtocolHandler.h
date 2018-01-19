@@ -93,11 +93,46 @@ public:
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
-        NS_DEFINE_NSIMUTATOR_COMMON
 
         explicit Mutator() { }
     private:
         virtual ~Mutator() { }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Deserialize(const mozilla::ipc::URIParams& aParams) override
+        {
+            return InitFromIPCParams(aParams);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Read(nsIObjectInputStream* aStream) override
+        {
+            return InitFromInputStream(aStream);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Finalize(nsIURI** aURI) override
+        {
+            mURI->mMutable = false;
+            mURI.forget(aURI);
+            return NS_OK;
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        SetSpec(const nsACString& aSpec, nsIURIMutator** aMutator) override
+        {
+            if (aMutator) {
+                NS_ADDREF(*aMutator = this);
+            }
+            return InitFromSpec(aSpec);
+        }
+
+        void ResetMutable()
+        {
+            if (mURI) {
+                mURI->mMutable = true;
+            }
+        }
 
         friend class nsNestedAboutURI;
     };

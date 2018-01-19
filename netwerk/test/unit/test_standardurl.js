@@ -303,7 +303,7 @@ add_test(function test_hugeStringThrows()
   let url = stringToURL("http://test:test@example.com");
 
   let hugeString = new Array(maxLen + 1).fill("a").join("");
-  let properties = ["spec", "scheme", "userPass", "username",
+  let properties = ["scheme", "userPass", "username",
                     "password", "hostPort", "host", "pathQueryRef", "ref",
                     "query", "fileName", "filePath", "fileBaseName", "fileExtension"];
   for (let prop of properties) {
@@ -311,6 +311,10 @@ add_test(function test_hugeStringThrows()
                   /NS_ERROR_MALFORMED_URI/,
                   `Passing a huge string to "${prop}" should throw`);
   }
+
+  Assert.throws(() => { url = url.mutate().setSpec(hugeString).finalize(); },
+                /NS_ERROR_MALFORMED_URI/,
+                "Passing a huge string to setSpec should throw");
 
   run_next_test();
 });

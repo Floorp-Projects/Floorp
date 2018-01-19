@@ -9,8 +9,7 @@
 #include "nsError.h"
 #include "DataChannelChild.h"
 #include "plstr.h"
-
-static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
+#include "nsSimpleURI.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +63,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
                       nsIURI *aBaseURI,
                       nsIURI **result) {
     nsresult rv;
-    RefPtr<nsIURI> uri;
+    nsCOMPtr<nsIURI> uri;
 
     nsCString spec(aSpec);
 
@@ -94,10 +93,9 @@ nsDataHandler::NewURI(const nsACString &aSpec,
             }
         }
 
-        uri = do_CreateInstance(kSimpleURICID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-        rv = uri->SetSpec(spec);
+        rv = NS_MutateURI(new nsSimpleURI::Mutator())
+               .SetSpec(spec)
+               .Finalize(uri);
     }
 
     if (NS_FAILED(rv))

@@ -278,6 +278,12 @@ public:
   explicit NS_MutateURI(nsIURI* aURI);
   explicit NS_MutateURI(const char * aContractID);
 
+  explicit NS_MutateURI(nsIURIMutator* m)
+  {
+    mStatus = m ? NS_OK : NS_ERROR_NULL_POINTER;
+    mMutator = m;
+  }
+
   NS_MutateURI& SetSpec(const nsACString& aSpec)
   {
     NS_ENSURE_SUCCESS(mStatus, *this);
