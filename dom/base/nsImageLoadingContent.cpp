@@ -380,10 +380,12 @@ ReplayImageStatus(imgIRequest* aRequest, imgINotificationObserver* aObserver)
   }
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (!mObserverList.mObserver) {
     // Don't touch the linking of the list!
@@ -392,7 +394,7 @@ nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
     ReplayImageStatus(mCurrentRequest, aObserver);
     ReplayImageStatus(mPendingRequest, aObserver);
 
-    return NS_OK;
+    return;
   }
 
   // otherwise we have to create a new entry
@@ -405,19 +407,19 @@ nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
   observer->mNext = new ImageObserver(aObserver);
   ReplayImageStatus(mCurrentRequest, aObserver);
   ReplayImageStatus(mPendingRequest, aObserver);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::RemoveNativeObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (mObserverList.mObserver == aObserver) {
     mObserverList.mObserver = nullptr;
     // Don't touch the linking of the list!
-    return NS_OK;
+    return;
   }
 
   // otherwise have to find it and splice it out
@@ -440,13 +442,14 @@ nsImageLoadingContent::RemoveNativeObserver(imgINotificationObserver* aObserver)
     NS_WARNING("Asked to remove nonexistent observer");
   }
 #endif
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   nsresult rv = NS_OK;
   RefPtr<imgRequestProxy> currentReq;
@@ -456,7 +459,7 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
     // to dispatch notifications from the correct scheduler group.
     rv = mCurrentRequest->Clone(aObserver, nullptr, getter_AddRefs(currentReq));
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
   }
 
@@ -466,22 +469,23 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
     rv = mPendingRequest->Clone(aObserver, nullptr, getter_AddRefs(pendingReq));
     if (NS_FAILED(rv)) {
       mCurrentRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
-      return rv;
+      return;
     }
   }
 
   mScriptedObservers.AppendElement(
     new ScriptedImageObserver(aObserver, Move(currentReq), Move(pendingReq)));
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (NS_WARN_IF(mScriptedObservers.IsEmpty())) {
-    return NS_OK;
+    return;
   }
 
   RefPtr<ScriptedImageObserver> observer;
@@ -496,13 +500,12 @@ nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
   } while(i > 0);
 
   if (NS_WARN_IF(!observer)) {
-    return NS_OK;
+    return;
   }
 
   // If the cancel causes a mutation, it will be harmless, because we have
   // already removed the observer from the list.
   observer->CancelRequests();
-  return NS_OK;
 }
 
 void
