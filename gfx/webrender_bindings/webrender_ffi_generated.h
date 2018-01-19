@@ -1022,7 +1022,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dec_ref_arc(const VecU8 *aArc)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 void wr_dp_clear_save(WrState *aState)
