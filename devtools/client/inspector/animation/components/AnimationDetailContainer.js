@@ -17,11 +17,15 @@ class AnimationDetailContainer extends PureComponent {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
+      getAnimatedPropertyMap: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { animation } = this.props;
+    const {
+      animation,
+      getAnimatedPropertyMap,
+    } = this.props;
 
     return dom.div(
       {
@@ -36,7 +40,12 @@ class AnimationDetailContainer extends PureComponent {
       :
         null,
       animation ?
-        AnimatedPropertyListContainer()
+        AnimatedPropertyListContainer(
+          {
+            animation,
+            getAnimatedPropertyMap,
+          }
+        )
       :
         null
     );
