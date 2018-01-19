@@ -39,8 +39,10 @@ class AnimationItem extends PureComponent {
 
   componentWillReceiveProps(nextProps) {
     const { animation } = this.props;
+
     this.setState({
-      isSelected: animation.actorID === nextProps.selectedAnimation.actorID
+      isSelected: nextProps.selectedAnimation &&
+                  animation.actorID === nextProps.selectedAnimation.actorID
     });
   }
 
