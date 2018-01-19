@@ -28,6 +28,7 @@
 #include "jsstr.h"
 #include "jsutil.h"
 
+#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
@@ -930,33 +931,6 @@ icuLocale(const char* locale)
         return ""; // ICU root locale
     return locale;
 }
-
-// Simple RAII for ICU objects.  Unfortunately, ICU's C++ API is uniformly
-// unstable, so we can't use its smart pointers for this.
-template <typename T, void (Delete)(T*)>
-class ScopedICUObject
-{
-    T* ptr_;
-
-  public:
-    explicit ScopedICUObject(T* ptr)
-      : ptr_(ptr)
-    {}
-
-    ~ScopedICUObject() {
-        if (ptr_)
-            Delete(ptr_);
-    }
-
-    // In cases where an object should be deleted on abnormal exits,
-    // but returned to the caller if everything goes well, call forget()
-    // to transfer the object just before returning.
-    T* forget() {
-        T* tmp = ptr_;
-        ptr_ = nullptr;
-        return tmp;
-    }
-};
 
 // Starting with ICU 59, UChar defaults to char16_t.
 static_assert(mozilla::IsSame<UChar, char16_t>::value,
