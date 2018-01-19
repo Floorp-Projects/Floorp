@@ -37,7 +37,7 @@ def main(output, *filenames):
         raise Exception('We don\'t support loading from more than one file.')
 
     try:
-        events = parse_events.load_events(filenames[0])
+        events = parse_events.load_events(filenames[0], True)
     except ParserError as ex:
         print("\nError processing events:\n" + str(ex) + "\n")
         sys.exit(1)
