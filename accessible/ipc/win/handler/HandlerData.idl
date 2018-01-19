@@ -7,7 +7,6 @@
 #include "mozilla-config.h"
 #include "AccessibleHandler.h"
 
-import "oaidl.idl";
 import "ocidl.idl";
 import "ServProv.idl";
 
@@ -21,7 +20,6 @@ import "AccessibleTableCell.idl";
 typedef struct _StaticIA2Data
 {
   NEWEST_IA2_INTERFACE* mIA2;
-  IEnumVARIANT* mIEnumVARIANT;
   IAccessibleHypertext2* mIAHypertext;
   IAccessibleHyperlink* mIAHyperlink;
   IAccessibleTable* mIATable;
