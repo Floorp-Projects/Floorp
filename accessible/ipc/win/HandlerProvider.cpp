@@ -219,12 +219,6 @@ HandlerProvider::BuildStaticIA2Data(
 
   // Some of these interfaces aren't present on all accessibles,
   // so it's not a failure if these interfaces can't be fetched.
-  hr = aInterceptor->GetInterceptorForIID(IID_IEnumVARIANT,
-                                          (void**)&aOutData->mIEnumVARIANT);
-  if (FAILED(hr)) {
-    aOutData->mIEnumVARIANT = nullptr;
-  }
-
   hr = aInterceptor->GetInterceptorForIID(IID_IAccessibleHypertext2,
                                           (void**)&aOutData->mIAHypertext);
   if (FAILED(hr)) {
