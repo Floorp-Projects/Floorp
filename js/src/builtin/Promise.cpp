@@ -1569,8 +1569,9 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
         newTarget = unwrappedNewTarget;
         {
             AutoCompartment ac(cx, newTarget);
-            RootedObject promiseCtor(cx);
-            if (!GetBuiltinConstructor(cx, JSProto_Promise, &promiseCtor))
+            Handle<GlobalObject*> global = cx->global();
+            RootedObject promiseCtor(cx, GlobalObject::getOrCreatePromiseConstructor(cx, global));
+            if (!promiseCtor)
                 return false;
 
             // Promise subclasses don't get the special Xray treatment, so
@@ -3169,8 +3170,9 @@ BlockOnPromise(JSContext* cx, HandleValue promiseVal, HandleObject blockedPromis
         // |promise| is an unwrapped Promise, and |then| is the original
         // |Promise.prototype.then|, inline it here.
         // 25.4.5.3., step 3.
-        RootedObject PromiseCtor(cx);
-        if (!GetBuiltinConstructor(cx, JSProto_Promise, &PromiseCtor))
+        RootedObject PromiseCtor(cx,
+                                 GlobalObject::getOrCreatePromiseConstructor(cx, cx->global()));
+        if (!PromiseCtor)
             return false;
 
         RootedObject C(cx, SpeciesConstructor(cx, promiseObj, JSProto_Promise, IsPromiseSpecies));

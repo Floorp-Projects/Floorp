@@ -1224,7 +1224,11 @@ JS_GetClassObject(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return GetBuiltinConstructor(cx, key, objp);
+    JSObject* obj = GlobalObject::getOrCreateConstructor(cx, key);
+    if (!obj)
+        return false;
+    objp.set(obj);
+    return true;
 }
 
 JS_PUBLIC_API(bool)
