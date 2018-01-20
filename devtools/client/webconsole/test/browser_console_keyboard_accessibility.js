@@ -63,6 +63,10 @@ add_task(async function () {
   });
   await hud.jsterm.once("messages-cleared");
 
+  // Wait for the next event tick to make sure keyup for the shortcut above
+  // finishes.  Otherwise the 2 shortcuts are mixed.
+  await new Promise(executeSoon);
+
   is(hud.outputNode.textContent.indexOf("foobarz1"), -1, "output cleared");
   is(hud.jsterm.inputNode.getAttribute("focused"), "true",
      "jsterm input is focused");
