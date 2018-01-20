@@ -791,11 +791,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         self.start_time = datetime.datetime.now()
         max_verify_time = datetime.timedelta(minutes=60)
-        aliases = {
-            'reftest-debug': 'reftest',
-            'jsreftest-debug': 'jsreftest',
-            'crashtest-debug': 'crashtest',
-        }
 
         verify_args = []
         suites = self._query_suites()
@@ -838,8 +833,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                           subprocess.list2cmdline(final_cmd)))
                 self.info("##### %s log begins" % self.test_suite)
 
-                # TinderBoxPrintRe does not know about the '-debug' categories
-                suite_category = aliases.get(self.test_suite, self.test_suite)
+                suite_category = self.test_suite
                 parser = self.get_test_output_parser(
                     suite_category,
                     config=self.config,
