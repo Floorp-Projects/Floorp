@@ -35,4 +35,8 @@ async function togglePane(button, message, pane, keycode) {
   button.focus();
   EventUtils.synthesizeKey(keycode, {});
   await onTransitionEnd;
+
+  // Wait for the next event tick to make sure all transitionend event
+  // handlers finish.
+  await waitForTick();
 }
