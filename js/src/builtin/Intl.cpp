@@ -28,6 +28,7 @@
 #include "jsstr.h"
 #include "jsutil.h"
 
+#include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/IntlTimeZoneData.h"
@@ -60,161 +61,12 @@ using mozilla::RangedPtr;
 using JS::ClippedTime;
 using JS::TimeClip;
 
-/******************** Common to Intl constructors ********************/
-
-static bool
-IntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initializer,
-               HandleValue locales, HandleValue options)
-{
-    FixedInvokeArgs<3> args(cx);
-
-    args[0].setObject(*obj);
-    args[1].set(locales);
-    args[2].set(options);
-
-    RootedValue ignored(cx);
-    if (!js::CallSelfHostedFunction(cx, initializer, NullHandleValue, args, &ignored))
-        return false;
-
-    MOZ_ASSERT(ignored.isUndefined(),
-               "Unexpected return value from non-legacy Intl object initializer");
-    return true;
-}
-
-enum class DateTimeFormatOptions
-{
-    Standard,
-    EnableMozExtensions,
-};
-
-static bool
-LegacyIntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initializer,
-                     HandleValue thisValue, HandleValue locales, HandleValue options,
-                     DateTimeFormatOptions dtfOptions, MutableHandleValue result)
-{
-    FixedInvokeArgs<5> args(cx);
-
-    args[0].setObject(*obj);
-    args[1].set(thisValue);
-    args[2].set(locales);
-    args[3].set(options);
-    args[4].setBoolean(dtfOptions == DateTimeFormatOptions::EnableMozExtensions);
-
-    if (!js::CallSelfHostedFunction(cx, initializer, NullHandleValue, args, result))
-        return false;
-
-    MOZ_ASSERT(result.isObject(), "Legacy Intl object initializer must return an object");
-    return true;
-}
-
-// CountAvailable and GetAvailable describe the signatures used for ICU API
-// to determine available locales for various functionality.
-using CountAvailable = int32_t (*)();
-using GetAvailable = const char* (*)(int32_t localeIndex);
-
-static bool
-intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
-                      GetAvailable getAvailable, MutableHandleValue result)
-{
-    RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-    if (!locales)
-        return false;
-
-#if ENABLE_INTL_API
-    RootedAtom a(cx);
-    uint32_t count = countAvailable();
-    for (uint32_t i = 0; i < count; i++) {
-        const char* locale = getAvailable(i);
-        auto lang = DuplicateString(cx, locale);
-        if (!lang)
-            return false;
-        char* p;
-        while ((p = strchr(lang.get(), '_')))
-            *p = '-';
-        a = Atomize(cx, lang.get(), strlen(lang.get()));
-        if (!a)
-            return false;
-        if (!DefineDataProperty(cx, locales, a->asPropertyName(), TrueHandleValue))
-            return false;
-    }
-#endif
-    result.setObject(*locales);
-    return true;
-}
-
-/**
- * Returns the object holding the internal properties for obj.
- */
-static JSObject*
-GetInternals(JSContext* cx, HandleObject obj)
-{
-    FixedInvokeArgs<1> args(cx);
-
-    args[0].setObject(*obj);
-
-    RootedValue v(cx);
-    if (!js::CallSelfHostedFunction(cx, cx->names().getInternals, NullHandleValue, args, &v))
-        return nullptr;
-
-    return &v.toObject();
-}
-
-static bool
-equal(const char* s1, const char* s2)
-{
-    return !strcmp(s1, s2);
-}
-
-static const char*
-icuLocale(const char* locale)
-{
-    if (equal(locale, "und"))
-        return ""; // ICU root locale
-    return locale;
-}
-
-// Starting with ICU 59, UChar defaults to char16_t.
-static_assert(mozilla::IsSame<UChar, char16_t>::value,
-              "SpiderMonkey doesn't support redefining UChar to a different type");
-
-// The inline capacity we use for the char16_t Vectors.
-static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
-
-template <typename ICUStringFunction, size_t InlineCapacity>
-static int32_t
-Call(JSContext* cx, const ICUStringFunction& strFn, Vector<char16_t, InlineCapacity>& chars)
-{
-    MOZ_ASSERT(chars.length() == 0);
-    MOZ_ALWAYS_TRUE(chars.resize(InlineCapacity));
-
-    UErrorCode status = U_ZERO_ERROR;
-    int32_t size = strFn(chars.begin(), InlineCapacity, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size_t(size)))
-            return -1;
-        status = U_ZERO_ERROR;
-        strFn(chars.begin(), size, &status);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
-        return -1;
-    }
-    MOZ_ASSERT(size >= 0);
-    return size;
-}
-
-template <typename ICUStringFunction>
-static JSString*
-Call(JSContext* cx, const ICUStringFunction& strFn)
-{
-    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    int32_t size = Call(cx, strFn, chars);
-    if (size < 0)
-        return nullptr;
-    return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
-}
-
+using js::intl::CallICU;
+using js::intl::DateTimeFormatOptions;
+using js::intl::GetAvailableLocales;
+using js::intl::IcuLocale;
+using js::intl::INITIAL_CHAR_BUFFER_SIZE;
+using js::intl::StringsAreEqual;
 
 /******************** Collator ********************/
 
@@ -296,7 +148,7 @@ Collator(JSContext* cx, const CallArgs& args)
     HandleValue options = args.get(1);
 
     // Step 6.
-    if (!IntlInitialize(cx, collator, cx->names().InitializeCollator, locales, options))
+    if (!intl::InitializeObject(cx, collator, cx->names().InitializeCollator, locales, options))
         return false;
 
     args.rval().setObject(*collator);
@@ -372,7 +224,7 @@ js::intl_Collator_availableLocales(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 0);
 
     RootedValue result(cx);
-    if (!intl_availableLocales(cx, ucol_countAvailable, ucol_getAvailable, &result))
+    if (!GetAvailableLocales(cx, ucol_countAvailable, ucol_getAvailable, &result))
         return false;
     args.rval().set(result);
     return true;
@@ -391,14 +243,14 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucol_getKeywordValuesForLocale("co", locale.ptr(), false, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
     uint32_t count = uenum_count(values, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -417,7 +269,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
     for (uint32_t i = 0; i < count; i++) {
         const char* collation = uenum_next(values, nullptr, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -425,7 +277,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
         // "The values 'standard' and 'search' must not be used as elements in
         // any [[sortLocaleData]][locale].co and [[searchLocaleData]][locale].co
         // array."
-        if (equal(collation, "standard") || equal(collation, "search"))
+        if (StringsAreEqual(collation, "standard") || StringsAreEqual(collation, "search"))
             continue;
 
         // ICU returns old-style keyword values; map them to BCP 47 equivalents.
@@ -450,7 +302,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx, GetInternals(cx, collator));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, collator));
     if (!internals)
         return nullptr;
 
@@ -565,9 +417,9 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    UCollator* coll = ucol_open(icuLocale(locale.ptr()), &status);
+    UCollator* coll = ucol_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return nullptr;
     }
 
@@ -579,7 +431,7 @@ NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
     ucol_setAttribute(coll, UCOL_CASE_FIRST, uCaseFirst, &status);
     if (U_FAILURE(status)) {
         ucol_close(coll);
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return nullptr;
     }
 
@@ -697,7 +549,7 @@ js::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx)
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* available = ucol_openAvailableLocales(&status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UEnumeration, uenum_close> toClose(available);
@@ -707,7 +559,7 @@ js::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx)
         int32_t size;
         const char* rawLocale = uenum_next(available, &size, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -716,14 +568,14 @@ js::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx)
 
         UCollator* collator = ucol_open(rawLocale, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
         ScopedICUObject<UCollator, ucol_close> toCloseCollator(collator);
 
         UColAttributeValue caseFirst = ucol_getAttribute(collator, UCOL_CASE_FIRST, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -871,8 +723,9 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
     HandleValue options = args.get(1);
 
     // Step 3.
-    return LegacyIntlInitialize(cx, numberFormat, cx->names().InitializeNumberFormat, thisValue,
-                                locales, options, DateTimeFormatOptions::Standard, args.rval());
+    return intl::LegacyInitializeObject(cx, numberFormat, cx->names().InitializeNumberFormat,
+                                        thisValue, locales, options,
+                                        DateTimeFormatOptions::Standard, args.rval());
 }
 
 static bool
@@ -949,7 +802,7 @@ js::intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 0);
 
     RootedValue result(cx);
-    if (!intl_availableLocales(cx, unum_countAvailable, unum_getAvailable, &result))
+    if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &result))
         return false;
     args.rval().set(result);
     return true;
@@ -967,9 +820,9 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UErrorCode status = U_ZERO_ERROR;
-    UNumberingSystem* numbers = unumsys_open(icuLocale(locale.ptr()), &status);
+    UNumberingSystem* numbers = unumsys_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -995,7 +848,7 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
 static UNumberFormat*
 NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
 {
-    RootedObject internals(cx, GetInternals(cx, pluralRules));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
     if (!internals)
        return nullptr;
 
@@ -1041,9 +894,9 @@ NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralR
 
     UErrorCode status = U_ZERO_ERROR;
     UNumberFormat* nf =
-        unum_open(UNUM_DECIMAL, nullptr, 0, icuLocale(locale.ptr()), nullptr, &status);
+        unum_open(UNUM_DECIMAL, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return nullptr;
     }
     ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
@@ -1071,7 +924,7 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx, GetInternals(cx, numberFormat));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, numberFormat));
     if (!internals)
        return nullptr;
 
@@ -1169,9 +1022,9 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     uUseGrouping = value.toBoolean();
 
     UErrorCode status = U_ZERO_ERROR;
-    UNumberFormat* nf = unum_open(uStyle, nullptr, 0, icuLocale(locale.ptr()), nullptr, &status);
+    UNumberFormat* nf = unum_open(uStyle, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return nullptr;
     }
     ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
@@ -1179,7 +1032,7 @@ NewUNumberFormat(JSContext* cx, Handle<NumberFormatObject*> numberFormat)
     if (uCurrency) {
         unum_setTextAttribute(nf, UNUM_CURRENCY_CODE, uCurrency, 3, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return nullptr;
         }
     }
@@ -1206,7 +1059,7 @@ PartitionNumberPattern(JSContext* cx, UNumberFormat* nf, double* x,
     if (IsNegativeZero(*x))
         *x = 0.0;
 
-    return Call(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
+    return CallICU(cx, [nf, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
         return unum_formatDoubleForFields(nf, *x, chars, size, fpositer, status);
     });
 }
@@ -1301,7 +1154,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
 
     UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -1732,8 +1585,8 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct, DateTimeForm
     HandleValue options = args.get(1);
 
     // Step 3.
-    return LegacyIntlInitialize(cx, dateTimeFormat, cx->names().InitializeDateTimeFormat,
-                                thisValue, locales, options, dtfOptions, args.rval());
+    return intl::LegacyInitializeObject(cx, dateTimeFormat, cx->names().InitializeDateTimeFormat,
+                                        thisValue, locales, options, dtfOptions, args.rval());
 }
 
 static bool
@@ -1837,7 +1690,7 @@ js::intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp
     MOZ_ASSERT(args.length() == 0);
 
     RootedValue result(cx);
-    if (!intl_availableLocales(cx, udat_countAvailable, udat_getAvailable, &result))
+    if (!GetAvailableLocales(cx, udat_countAvailable, udat_getAvailable, &result))
         return false;
     args.rval().set(result);
     return true;
@@ -1854,7 +1707,7 @@ DefaultCalendar(JSContext* cx, const JSAutoByteString& locale, MutableHandleValu
 
     const char* calendar = ucal_getType(cal, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -1906,21 +1759,21 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucal_getKeywordValuesForLocale("ca", locale.ptr(), false, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UEnumeration, uenum_close> toClose(values);
 
     uint32_t count = uenum_count(values, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
     for (; count > 0; count--) {
         const char* calendar = uenum_next(values, nullptr, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -1936,7 +1789,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
 
         // ICU doesn't return calendar aliases, append them here.
         for (const auto& calendarAlias : calendarAliases) {
-            if (equal(calendar, calendarAlias.calendar)) {
+            if (StringsAreEqual(calendar, calendarAlias.calendar)) {
                 JSString* jscalendar = JS_NewStringCopyZ(cx, calendarAlias.alias);
                 if (!jscalendar)
                     return false;
@@ -2035,7 +1888,7 @@ static bool
 IsLegacyICUTimeZone(const char* timeZone)
 {
     for (const auto& legacyTimeZone : js::timezone::legacyICUTimeZones) {
-        if (equal(timeZone, legacyTimeZone))
+        if (StringsAreEqual(timeZone, legacyTimeZone))
             return true;
     }
     return false;
@@ -2059,7 +1912,7 @@ js::SharedIntlData::ensureTimeZones(JSContext* cx)
     UErrorCode status = U_ZERO_ERROR;
     UEnumeration* values = ucal_openTimeZones(&status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UEnumeration, uenum_close> toClose(values);
@@ -2069,7 +1922,7 @@ js::SharedIntlData::ensureTimeZones(JSContext* cx)
         int32_t size;
         const char* rawTimeZone = uenum_next(values, &size, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -2291,7 +2144,7 @@ js::intl_canonicalizeTimeZone(JSContext* cx, unsigned argc, Value* vp)
 
     mozilla::Range<const char16_t> tzchars = stableChars.twoByteRange();
 
-    JSString* str = Call(cx, [&tzchars](UChar* chars, uint32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [&tzchars](UChar* chars, uint32_t size, UErrorCode* status) {
         return ucal_getCanonicalTimeZoneID(tzchars.begin().get(), tzchars.length(),
                                            chars, size, nullptr, status);
     });
@@ -2313,7 +2166,7 @@ js::intl_defaultTimeZone(JSContext* cx, unsigned argc, Value* vp)
     // needed.
     js::ResyncICUDefaultTimeZone();
 
-    JSString* str = Call(cx, ucal_getDefaultTimeZone);
+    JSString* str = CallICU(cx, ucal_getDefaultTimeZone);
     if (!str)
         return false;
 
@@ -2332,14 +2185,14 @@ js::intl_defaultTimeZoneOffset(JSContext* cx, unsigned argc, Value* vp) {
     const char* rootLocale = "";
     UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, rootLocale, UCAL_DEFAULT, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UCalendar, ucal_close> toClose(cal);
 
     int32_t offset = ucal_get(cal, UCAL_ZONE_OFFSET, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -2367,7 +2220,7 @@ js::intl_isDefaultTimeZone(JSContext* cx, unsigned argc, Value* vp)
     js::ResyncICUDefaultTimeZone();
 
     Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
-    int32_t size = Call(cx, ucal_getDefaultTimeZone, chars);
+    int32_t size = CallICU(cx, ucal_getDefaultTimeZone, chars);
     if (size < 0)
         return false;
 
@@ -2408,17 +2261,18 @@ js::intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> skelChars = skeleton.twoByteRange();
 
     UErrorCode status = U_ZERO_ERROR;
-    UDateTimePatternGenerator* gen = udatpg_open(icuLocale(locale.ptr()), &status);
+    UDateTimePatternGenerator* gen = udatpg_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> toClose(gen);
 
-    JSString* str = Call(cx, [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
-        return udatpg_getBestPattern(gen, skelChars.begin().get(), skelChars.length(),
-                                     chars, size, status);
-    });
+    JSString* str =
+        CallICU(cx, [gen, &skelChars](UChar* chars, uint32_t size, UErrorCode* status) {
+            return udatpg_getBestPattern(gen, skelChars.begin().get(), skelChars.length(),
+                                         chars, size, status);
+        });
     if (!str)
         return false;
 
@@ -2481,16 +2335,16 @@ js::intl_patternForStyle(JSContext* cx, unsigned argc, Value* vp)
     mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
 
     UErrorCode status = U_ZERO_ERROR;
-    UDateFormat* df = udat_open(timeStyle, dateStyle, icuLocale(locale.ptr()),
+    UDateFormat* df = udat_open(timeStyle, dateStyle, IcuLocale(locale.ptr()),
                                 timeZoneChars.begin().get(), timeZoneChars.length(),
                                 nullptr, -1, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UDateFormat, udat_close> toClose(df);
 
-    JSString* str = Call(cx, [df](UChar* chars, uint32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [df](UChar* chars, uint32_t size, UErrorCode* status) {
         return udat_toPattern(df, false, chars, size, status);
     });
     if (!str)
@@ -2508,7 +2362,7 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
 {
     RootedValue value(cx);
 
-    RootedObject internals(cx, GetInternals(cx, dateTimeFormat));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, dateTimeFormat));
     if (!internals)
        return nullptr;
 
@@ -2542,11 +2396,11 @@ NewUDateFormat(JSContext* cx, Handle<DateTimeFormatObject*> dateTimeFormat)
 
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat* df =
-        udat_open(UDAT_PATTERN, UDAT_PATTERN, icuLocale(locale.ptr()),
+        udat_open(UDAT_PATTERN, UDAT_PATTERN, IcuLocale(locale.ptr()),
                   timeZoneChars.begin().get(), timeZoneChars.length(),
                   patternChars.begin().get(), patternChars.length(), &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return nullptr;
     }
 
@@ -2565,7 +2419,7 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, ClippedTime x, MutableHandle
 {
     MOZ_ASSERT(x.isValid());
 
-    JSString* str = Call(cx, [df, x](UChar* chars, int32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [df, x](UChar* chars, int32_t size, UErrorCode* status) {
         return udat_format(df, x.toDouble(), chars, size, nullptr, status);
     });
     if (!str)
@@ -2670,13 +2524,13 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, ClippedTime x,
     UErrorCode status = U_ZERO_ERROR;
     UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UFieldPositionIterator, ufieldpositer_close> toClose(fpositer);
 
     RootedString overallResult(cx);
-    overallResult = Call(cx, [df, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
+    overallResult = CallICU(cx, [df, x, fpositer](UChar* chars, int32_t size, UErrorCode* status) {
         return udat_formatForFields(df, x.toDouble(), chars, size, fpositer, status);
     });
     if (!overallResult)
@@ -2879,8 +2733,11 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
     HandleValue options = args.get(1);
 
     // Step 3.
-    if (!IntlInitialize(cx, pluralRules, cx->names().InitializePluralRules, locales, options))
+    if (!intl::InitializeObject(cx, pluralRules, cx->names().InitializePluralRules, locales,
+                                options))
+    {
         return false;
+    }
 
     args.rval().setObject(*pluralRules);
     return true;
@@ -2934,7 +2791,7 @@ js::intl_PluralRules_availableLocales(JSContext* cx, unsigned argc, Value* vp)
     RootedValue result(cx);
     // We're going to use ULocale availableLocales as per ICU recommendation:
     // https://ssl.icu-project.org/trac/ticket/12756
-    if (!intl_availableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
+    if (!GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
         return false;
     args.rval().set(result);
     return true;
@@ -2956,7 +2813,7 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 
     ScopedICUObject<UNumberFormat, unum_close> closeNumberFormat(nf);
 
-    RootedObject internals(cx, GetInternals(cx, pluralRules));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
     if (!internals)
         return false;
 
@@ -2987,14 +2844,14 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
 
     // TODO: Cache UPluralRules in PluralRulesObject::UPluralRulesSlot.
     UErrorCode status = U_ZERO_ERROR;
-    UPluralRules* pr = uplrules_openForType(icuLocale(locale.ptr()), category, &status);
+    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
-    JSString* str = Call(cx, [pr, x, nf](UChar* chars, int32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [pr, x, nf](UChar* chars, int32_t size, UErrorCode* status) {
         return uplrules_selectWithFormat(pr, x, nf, chars, size, status);
     });
     if (!str)
@@ -3027,16 +2884,16 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
     }
 
     UErrorCode status = U_ZERO_ERROR;
-    UPluralRules* pr = uplrules_openForType(icuLocale(locale.ptr()), category, &status);
+    UPluralRules* pr = uplrules_openForType(IcuLocale(locale.ptr()), category, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UPluralRules, uplrules_close> closePluralRules(pr);
 
     UEnumeration* ue = uplrules_getKeywords(pr, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UEnumeration, uenum_close> closeEnum(ue);
@@ -3052,7 +2909,7 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
         int32_t catSize;
         const char* cat = uenum_next(ue, &catSize, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -3152,8 +3009,11 @@ RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp)
     HandleValue options = args.get(1);
 
     // Step 3.
-    if (!IntlInitialize(cx, relativeTimeFormat, cx->names().InitializeRelativeTimeFormat, locales, options))
+    if (!intl::InitializeObject(cx, relativeTimeFormat, cx->names().InitializeRelativeTimeFormat,
+                                locales, options))
+    {
         return false;
+    }
 
     args.rval().setObject(*relativeTimeFormat);
     return true;
@@ -3238,7 +3098,7 @@ js::intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value
     RootedValue result(cx);
     // We're going to use ULocale availableLocales as per ICU recommendation:
     // https://ssl.icu-project.org/trac/ticket/12756
-    if (!intl_availableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
+    if (!GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable, &result))
         return false;
     args.rval().set(result);
     return true;
@@ -3267,7 +3127,7 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 
     double t = args[1].toNumber();
 
-    RootedObject internals(cx, GetInternals(cx, relativeTimeFormat));
+    RootedObject internals(cx, intl::GetInternalsObject(cx, relativeTimeFormat));
     if (!internals)
         return false;
 
@@ -3348,21 +3208,24 @@ js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp)
 
     UErrorCode status = U_ZERO_ERROR;
     URelativeDateTimeFormatter* rtf =
-        ureldatefmt_open(icuLocale(locale.ptr()), nullptr, relDateTimeStyle,
+        ureldatefmt_open(IcuLocale(locale.ptr()), nullptr, relDateTimeStyle,
                          UDISPCTX_CAPITALIZATION_FOR_STANDALONE, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
     ScopedICUObject<URelativeDateTimeFormatter, ureldatefmt_close> closeRelativeTimeFormat(rtf);
 
-    JSString* str = Call(cx, [rtf, t, relDateTimeUnit, relDateTimeType](UChar* chars, int32_t size, UErrorCode* status) {
-        auto fmt = relDateTimeType == RelativeTimeType::Text
-                   ? ureldatefmt_format
-                   : ureldatefmt_formatNumeric;
-        return fmt(rtf, t, relDateTimeUnit, chars, size, status);
-    });
+    JSString* str =
+        CallICU(cx, [rtf, t, relDateTimeUnit, relDateTimeType](UChar* chars, int32_t size,
+                                                               UErrorCode* status)
+        {
+            auto fmt = relDateTimeType == RelativeTimeType::Text
+                       ? ureldatefmt_format
+                       : ureldatefmt_formatNumeric;
+            return fmt(rtf, t, relDateTimeUnit, chars, size, status);
+        });
     if (!str)
         return false;
 
@@ -3416,7 +3279,7 @@ js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Call String.prototype.toLowerCase() for language independent casing.
-    if (equal(locale, "")) {
+    if (StringsAreEqual(locale, "")) {
         JSString* str = js::StringToLowerCase(cx, string);
         if (!str)
             return false;
@@ -3434,7 +3297,7 @@ js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
     static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
                   "Case conversion doesn't overflow int32_t indices");
 
-    JSString* str = Call(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
         return u_strToLower(chars, size, input.begin().get(), input.length(), locale, status);
     });
     if (!str)
@@ -3459,7 +3322,7 @@ js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Call String.prototype.toUpperCase() for language independent casing.
-    if (equal(locale, "")) {
+    if (StringsAreEqual(locale, "")) {
         JSString* str = js::StringToUpperCase(cx, string);
         if (!str)
             return false;
@@ -3477,7 +3340,7 @@ js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
     static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
                   "Case conversion doesn't overflow int32_t indices");
 
-    JSString* str = Call(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
+    JSString* str = CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
         return u_strToUpper(chars, size, input.begin().get(), input.length(), locale, status);
     });
     if (!str)
@@ -3505,7 +3368,7 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     int32_t uTimeZoneLength = 0;
     UCalendar* cal = ucal_open(uTimeZone, uTimeZoneLength, locale.ptr(), UCAL_DEFAULT, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UCalendar, ucal_close> toClose(cal);
@@ -3528,7 +3391,7 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
 
     UCalendarWeekdayType prevDayType = ucal_getDayOfWeekType(cal, UCAL_SATURDAY, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
 
@@ -3538,7 +3401,7 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
         UCalendarDaysOfWeek dayOfWeek = static_cast<UCalendarDaysOfWeek>(i);
         UCalendarWeekdayType type = ucal_getDayOfWeekType(cal, dayOfWeek, &status);
         if (U_FAILURE(status)) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            intl::ReportInternalError(cx);
             return false;
         }
 
@@ -3558,7 +3421,7 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
                 // At the time this code was added, ICU apparently never behaves this way,
                 // so just throw, so that users will report a bug and we can decide what to
                 // do.
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+                intl::ReportInternalError(cx);
                 return false;
               default:
                 break;
@@ -3798,7 +3661,9 @@ ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt, UDateTimePatternGenera
             return nullptr;
         }
 
-        return Call(cx, [fmt, symbolType, index](UChar* chars, int32_t size, UErrorCode* status) {
+        return CallICU(cx, [fmt, symbolType, index](UChar* chars, int32_t size,
+                                                    UErrorCode* status)
+        {
             return udat_getSymbols(fmt, symbolType, index, chars, size, status);
         });
     }
@@ -3849,19 +3714,19 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     UErrorCode status = U_ZERO_ERROR;
 
     UDateFormat* fmt =
-        udat_open(UDAT_DEFAULT, UDAT_DEFAULT, icuLocale(locale.ptr()),
+        udat_open(UDAT_DEFAULT, UDAT_DEFAULT, IcuLocale(locale.ptr()),
         nullptr, 0, nullptr, 0, &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UDateFormat, udat_close> datToClose(fmt);
 
     // UDateTimePatternGenerator will be needed for translations of date and
     // time fields like "month", "week", "day" etc.
-    UDateTimePatternGenerator* dtpg = udatpg_open(icuLocale(locale.ptr()), &status);
+    UDateTimePatternGenerator* dtpg = udatpg_open(IcuLocale(locale.ptr()), &status);
     if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        intl::ReportInternalError(cx);
         return false;
     }
     ScopedICUObject<UDateTimePatternGenerator, udatpg_close> datPgToClose(dtpg);
@@ -3916,7 +3781,7 @@ js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
     if (!DefineDataProperty(cx, info, cx->names().locale, args[0]))
         return false;
 
-    bool rtl = uloc_isRightToLeft(icuLocale(locale.ptr()));
+    bool rtl = uloc_isRightToLeft(IcuLocale(locale.ptr()));
 
     RootedValue dir(cx, StringValue(rtl ? cx->names().rtl : cx->names().ltr));
 
