@@ -216,6 +216,47 @@ URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator)
   return true;
 }
 
+class MOZ_STACK_CLASS ExtractURLParam final
+  : public URLParams::ForEachIterator
+{
+public:
+  explicit ExtractURLParam(const nsAString& aName, nsAString& aValue)
+    : mName(aName), mValue(aValue)
+  {}
+
+  bool URLParamsIterator(const nsAString& aName,
+                         const nsAString& aValue) override
+  {
+    if (mName == aName) {
+      mValue = aValue;
+      return false;
+    }
+    return true;
+  }
+
+private:
+  const nsAString& mName;
+  nsAString& mValue;
+};
+
+
+/**
+ * Extracts the first form-urlencoded parameter named `aName` from `aInput`.
+ * @param aRange The input to parse.
+ * @param aName The name of the parameter to extract.
+ * @param aValue The value of the extracted parameter, void if not found.
+ * @return Whether the parameter was found in the form-urlencoded.
+ */
+/* static */ bool
+URLParams::Extract(const nsACString& aInput,
+                   const nsAString& aName,
+                   nsAString& aValue)
+{
+  aValue.SetIsVoid(true);
+  ExtractURLParam iterator(aName, aValue);
+  return !URLParams::Parse(aInput, iterator);
+}
+
 class MOZ_STACK_CLASS PopulateIterator final
   : public URLParams::ForEachIterator
 {
