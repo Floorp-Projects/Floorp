@@ -165,6 +165,7 @@ UNIFIED_SOURCES += [
     'builtin/intl/DateTimeFormat.cpp',
     'builtin/intl/NumberFormat.cpp',
     'builtin/intl/PluralRules.cpp',
+    'builtin/intl/RelativeTimeFormat.cpp',
     'builtin/intl/SharedIntlData.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
