@@ -161,6 +161,7 @@ UNIFIED_SOURCES += [
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
     'builtin/intl/CommonFunctions.cpp',
+    'builtin/intl/NumberFormat.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
     'builtin/Object.cpp',
