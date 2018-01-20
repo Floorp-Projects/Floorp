@@ -121,13 +121,6 @@ EXPORTS += [
     'public/GeckoProfiler.h',
 ]
 
-if CONFIG['MOZ_VTUNE']:
-    DEFINES['MOZ_VTUNE_INSTRUMENTATION'] = True
-    UNIFIED_SOURCES += [
-        'core/VTuneProfiler.cpp',
-    ]
-
-
 if CONFIG['MOZ_TASK_TRACER']:
     EXPORTS += [
         'tasktracer/GeckoTaskTracer.h',
