@@ -1546,16 +1546,16 @@ GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id)
             return false;
         }
         primitiveType = JSVAL_TYPE_STRING;
-        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_String));
+        proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_String));
     } else if (val_.isNumber()) {
         primitiveType = JSVAL_TYPE_DOUBLE;
-        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Number));
+        proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_Number));
     } else if (val_.isBoolean()) {
         primitiveType = JSVAL_TYPE_BOOLEAN;
-        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Boolean));
+        proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_Boolean));
     } else if (val_.isSymbol()) {
         primitiveType = JSVAL_TYPE_SYMBOL;
-        proto = MaybeNativeObject(GetBuiltinPrototypePure(cx_->global(), JSProto_Symbol));
+        proto = MaybeNativeObject(cx_->global()->maybeGetPrototype(JSProto_Symbol));
     } else {
         MOZ_ASSERT(val_.isNullOrUndefined() || val_.isMagic());
         return false;

@@ -3191,21 +3191,6 @@ js::IsDelegateOfObject(JSContext* cx, HandleObject protoObj, JSObject* obj, bool
 }
 
 JSObject*
-js::GetBuiltinPrototypePure(GlobalObject* global, JSProtoKey protoKey)
-{
-    MOZ_ASSERT(JSProto_Null <= protoKey);
-    MOZ_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        const Value& v = global->getPrototype(protoKey);
-        if (v.isObject())
-            return &v.toObject();
-    }
-
-    return nullptr;
-}
-
-JSObject*
 js::PrimitiveToObject(JSContext* cx, const Value& v)
 {
     if (v.isString()) {
