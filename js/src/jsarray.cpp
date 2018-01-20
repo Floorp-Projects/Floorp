@@ -3793,8 +3793,11 @@ NewArray(JSContext* cx, uint32_t length,
     allocKind = GetBackgroundAllocKind(allocKind);
 
     RootedObject proto(cx, protoArg);
-    if (!proto && !GetBuiltinPrototype(cx, JSProto_Array, &proto))
-        return nullptr;
+    if (!proto) {
+        proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
+        if (!proto)
+            return nullptr;
+    }
 
     Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
     bool isCachable = NewObjectWithTaggedProtoIsCachable(cx, taggedProto, newKind, &ArrayObject::class_);

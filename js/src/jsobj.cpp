@@ -842,11 +842,11 @@ js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp, HandleObjec
     if (protoKey == JSProto_Null)
         protoKey = JSProto_Object;
 
-    RootedObject proto(cx);
-    if (!GetBuiltinPrototype(cx, protoKey, &proto))
+    JSObject* proto = GlobalObject::getOrCreatePrototype(cx, protoKey);
+    if (!proto)
         return nullptr;
 
-    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, AsTaggedProto(proto)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, TaggedProto(proto)));
     if (!group)
         return nullptr;
 
@@ -858,8 +858,7 @@ js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp, HandleObjec
         NewObjectCache& cache = cx->caches().newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         cache.lookupGlobal(clasp, global, allocKind, &entry);
-        cache.fillGlobal(entry, clasp, global, allocKind,
-                         &obj->as<NativeObject>());
+        cache.fillGlobal(entry, clasp, global, allocKind, &obj->as<NativeObject>());
     }
 
     return obj;
@@ -1960,11 +1959,10 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
      * js::InitClass depend on this nicety.
      */
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    if (key != JSProto_Null &&
-        !protoProto &&
-        !GetBuiltinPrototype(cx, JSProto_Object, &protoProto))
-    {
-        return nullptr;
+    if (key != JSProto_Null && !protoProto) {
+        protoProto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
+        if (!protoProto)
+            return nullptr;
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
@@ -2100,18 +2098,6 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
         return false;
 
     obj->group_ = group;
-    return true;
-}
-
-bool
-js::GetBuiltinPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject protop)
-{
-    MOZ_ASSERT(key != JSProto_Null);
-    Handle<GlobalObject*> global = cx->global();
-    if (!GlobalObject::ensureConstructor(cx, global, key))
-        return false;
-
-    protop.set(&global->getPrototype(key).toObject());
     return true;
 }
 
