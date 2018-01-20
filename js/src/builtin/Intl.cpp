@@ -4,29 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * The Intl module specified by standard ECMA-402,
- * ECMAScript Internationalization API Specification.
- */
+/* Implementation of the Intl object and its non-constructor properties. */
 
 #include "builtin/Intl.h"
 
-#include "mozilla/Casting.h"
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/PodOperations.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Likely.h"
 #include "mozilla/Range.h"
-#include "mozilla/TypeTraits.h"
-
-#include <string.h>
 
 #include "jsapi.h"
-#include "jsatom.h"
 #include "jscntxt.h"
-#include "jsfriendapi.h"
 #include "jsobj.h"
-#include "jsstr.h"
-#include "jsutil.h"
 
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
@@ -35,21 +23,11 @@
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/ScopedICUObject.h"
-#include "ds/Sort.h"
-#include "gc/FreeOp.h"
-#include "js/Date.h"
-#include "vm/DateTime.h"
+#include "js/Class.h"
 #include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
-#include "vm/SelfHosting.h"
-#include "vm/Stack.h"
 #include "vm/String.h"
-#include "vm/StringBuffer.h"
-#include "vm/Unicode.h"
 
 #include "jsobjinlines.h"
-
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 
