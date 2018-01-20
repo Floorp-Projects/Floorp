@@ -447,7 +447,7 @@ private:
   class VideoStreamFactory : public webrtc::VideoEncoderConfig::VideoStreamFactoryInterface
   {
   public:
-    VideoStreamFactory(std::string aCodecName,
+    VideoStreamFactory(const std::string& aCodecName,
                        WebrtcVideoConduit *aConduit)
       : mCodecName(aCodecName),
         mConduit(aConduit) {}

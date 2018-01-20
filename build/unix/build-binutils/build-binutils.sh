@@ -14,7 +14,7 @@ if test -z $TMPDIR; then
 fi
 
 # Download the source of the specified version of binutils
-wget -c -P $TMPDIR ftp://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2 || exit 1
+wget -c --progress=dot:mega -P $TMPDIR ftp://ftp.gnu.org/gnu/binutils/binutils-${binutils_version}.tar.bz2 || exit 1
 tar xjf $TMPDIR/binutils-${binutils_version}.tar.bz2
 
 # Build binutils

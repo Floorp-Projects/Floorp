@@ -80,7 +80,6 @@ SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat) {
     case gfx::SurfaceFormat::R8G8:
       return Some(wr::ImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
-      return Some(wr::ImageFormat::Invalid);
     default:
       return Nothing();
   }
@@ -102,7 +101,7 @@ struct ImageDescriptor: public wr::WrImageDescriptor {
   // We need a default constructor for ipdl serialization.
   ImageDescriptor()
   {
-    format = wr::ImageFormat::Invalid;
+    format = (ImageFormat)0;
     width = 0;
     height = 0;
     stride = 0;

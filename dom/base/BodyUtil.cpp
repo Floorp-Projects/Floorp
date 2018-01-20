@@ -46,7 +46,7 @@ PushOverLine(nsACString::const_iterator& aStart,
 }
 
 class MOZ_STACK_CLASS FillFormIterator final
-  : public URLSearchParams::ForEachIterator
+  : public URLParams::ForEachIterator
 {
 public:
   explicit FillFormIterator(FormData* aFormData)
@@ -55,8 +55,8 @@ public:
     MOZ_ASSERT(aFormData);
   }
 
-  bool URLParamsIterator(const nsString& aName,
-                         const nsString& aValue) override
+  bool URLParamsIterator(const nsAString& aName,
+                         const nsAString& aValue) override
   {
     ErrorResult rv;
     mFormData->Append(aName, aValue, rv);
@@ -469,12 +469,9 @@ BodyUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
   }
 
   if (isValidUrlEncodedMimeType) {
-    URLParams params;
-    params.ParseInput(aStr);
-
     RefPtr<FormData> fd = new FormData(aParent);
     FillFormIterator iterator(fd);
-    DebugOnly<bool> status = params.ForEach(iterator);
+    DebugOnly<bool> status = URLParams::Parse(aStr, iterator);
     MOZ_ASSERT(status);
 
     return fd.forget();

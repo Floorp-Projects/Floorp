@@ -204,8 +204,8 @@ extractAttributeValue(const char* aSearchString,
   } // if we got non-null search string and attribute name values
 }
 
-NS_IMETHODIMP
-nsMozIconURI::SetSpec(const nsACString& aSpec)
+nsresult
+nsMozIconURI::SetSpecInternal(const nsACString& aSpec)
 {
   // Reset everything to default values.
   mIconURL = nullptr;

@@ -130,6 +130,22 @@ public:
   }
 
   /**
+   * Perform string to int conversion.
+   * @param   aErrorCode will contain error if one occurs
+   * @param   aRadix is the radix to use. Only 10 and 16 are supported.
+   * @return  int rep of string value, and possible (out) error code
+   */
+  int32_t ToInteger(nsresult* aErrorCode, uint32_t aRadix = 10) const;
+
+  /**
+   * Perform string to 64-bit int conversion.
+   * @param   aErrorCode will contain error if one occurs
+   * @param   aRadix is the radix to use. Only 10 and 16 are supported.
+   * @return  64-bit int rep of string value, and possible (out) error code
+   */
+  int64_t ToInteger64(nsresult* aErrorCode, uint32_t aRadix = 10) const;
+
+  /**
    * deprecated writing iterators
    */
 

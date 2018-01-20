@@ -1554,8 +1554,8 @@ IsSpecialProtocol(const nsACString &input)
            protocol.LowerCaseEqualsLiteral("gopher");
 }
 
-NS_IMETHODIMP
-nsStandardURL::SetSpec(const nsACString &input)
+nsresult
+nsStandardURL::SetSpecInternal(const nsACString &input)
 {
     return SetSpecWithEncoding(input, nullptr);
 }
@@ -2209,7 +2209,7 @@ nsStandardURL::SetPathQueryRef(const nsACString &input)
             spec.Append('/');
         spec.Append(path);
 
-        return SetSpec(spec);
+        return SetSpecInternal(spec);
     }
     else if (mPath.mLen >= 1) {
         mSpec.Cut(mPath.mPos + 1, mPath.mLen - 1);
@@ -2893,7 +2893,7 @@ nsStandardURL::SetFilePath(const nsACString &input)
                 spec.Append(mSpec.get() + end, mSpec.Length() - end);
         }
 
-        return SetSpec(spec);
+        return SetSpecInternal(spec);
     }
     else if (mPath.mLen > 1) {
         mSpec.Cut(mPath.mPos + 1, mFilepath.mLen - 1);

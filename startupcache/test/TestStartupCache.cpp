@@ -29,6 +29,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Printf.h"
 #include "mozilla/UniquePtr.h"
+#include "nsNetCID.h"
+#include "nsIURIMutator.h"
 
 using namespace JS;
 
@@ -127,12 +129,12 @@ TEST_F(TestStartupCache, WriteObject)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIURI> obj
-    = do_CreateInstance("@mozilla.org/network/simple-uri;1");
-  ASSERT_TRUE(obj);
+  nsCOMPtr<nsIURI> obj;
 
   NS_NAMED_LITERAL_CSTRING(spec, "http://www.mozilla.org");
-  rv = obj->SetSpec(spec);
+  rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
+         .SetSpec(spec)
+         .Finalize(obj);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   StartupCache* sc = StartupCache::GetSingleton();

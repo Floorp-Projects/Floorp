@@ -70,7 +70,7 @@ describe("PageError component:", () => {
   });
 
   it("displays a [Learn more] link", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
 
@@ -104,7 +104,7 @@ describe("PageError component:", () => {
   });
 
   it("toggle the stacktrace when the collapse button is clicked", () => {
-    const store = setupStore([]);
+    const store = setupStore();
     store.dispatch = sinon.spy();
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
 

@@ -1196,20 +1196,22 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     // CreateInstance.
 
     nsCOMPtr<nsIURI> url = new nsJSURI(aBaseURI);
-
-    if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset))
-      rv = url->SetSpec(aSpec);
-    else {
+    NS_MutateURI mutator(url);
+    if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset)) {
+      mutator.SetSpec(aSpec);
+    } else {
       nsAutoCString utf8Spec;
       rv = EnsureUTF8Spec(PromiseFlatCString(aSpec), aCharset, utf8Spec);
       if (NS_SUCCEEDED(rv)) {
-        if (utf8Spec.IsEmpty())
-          rv = url->SetSpec(aSpec);
-        else
-          rv = url->SetSpec(utf8Spec);
+        if (utf8Spec.IsEmpty()) {
+          mutator.SetSpec(aSpec);
+        } else {
+          mutator.SetSpec(utf8Spec);
+        }
       }
     }
 
+    rv = mutator.Finalize(url);
     if (NS_FAILED(rv)) {
         return rv;
     }

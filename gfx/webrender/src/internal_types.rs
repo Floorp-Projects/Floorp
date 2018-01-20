@@ -5,8 +5,6 @@
 use api::{ClipId, DevicePoint, DeviceUintRect, DocumentId, Epoch};
 use api::{ExternalImageData, ExternalImageId};
 use api::{ImageFormat, PipelineId};
-#[cfg(feature = "capture")]
-use api::ImageDescriptor;
 use api::DebugCommand;
 use device::TextureFilter;
 use fxhash::FxHasher;
@@ -17,6 +15,9 @@ use std::f32;
 use std::hash::BuildHasherDefault;
 use std::path::PathBuf;
 use std::sync::Arc;
+
+#[cfg(feature = "capture")]
+use capture::{CaptureConfig, ExternalCaptureImage};
 use tiling;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
@@ -32,9 +33,11 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 // map from cache texture ID to native texture.
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct CacheTextureId(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct RenderPassIndex(pub usize);
 
 // Represents the source for a texture.
@@ -44,6 +47,7 @@ pub struct RenderPassIndex(pub usize);
 // native texture ID.
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub enum SourceTexture {
     Invalid,
     TextureCache(CacheTextureId),
@@ -60,6 +64,7 @@ pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
 pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct RenderTargetInfo {
     pub has_depth: bool,
 }
@@ -99,12 +104,13 @@ pub struct TextureUpdate {
     pub op: TextureUpdateOp,
 }
 
+#[derive(Default)]
 pub struct TextureUpdateList {
     pub updates: Vec<TextureUpdate>,
 }
 
 impl TextureUpdateList {
-    pub fn new() -> TextureUpdateList {
+    pub fn new() -> Self {
         TextureUpdateList {
             updates: Vec::new(),
         }
@@ -142,20 +148,13 @@ impl RenderedDocument {
     }
 }
 
-#[cfg(feature = "capture")]
-pub struct ExternalCaptureImage {
-    pub short_path: String,
-    pub descriptor: ImageDescriptor,
-    pub external: ExternalImageData,
-}
-
 pub enum DebugOutput {
     FetchDocuments(String),
     FetchClipScrollTree(String),
     #[cfg(feature = "capture")]
-    SaveCapture(PathBuf, Vec<ExternalCaptureImage>),
+    SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
     #[cfg(feature = "capture")]
-    LoadCapture,
+    LoadCapture(PathBuf),
 }
 
 pub enum ResultMsg {

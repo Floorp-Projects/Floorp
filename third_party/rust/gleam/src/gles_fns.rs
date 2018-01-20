@@ -1579,5 +1579,48 @@ impl Gl for GlesFns {
             self.ffi_gl_.DeleteSync(sync as *const _);
         }
     }
+
+    fn texture_range_apple(&self, _target: GLenum, _data: &[u8]) {
+        panic!("not supported")
+    }
+
+    fn gen_fences_apple(&self, _n: GLsizei) -> Vec<GLuint> {
+        panic!("not supported")
+    }
+
+    fn delete_fences_apple(&self, _fences: &[GLuint]) {
+        panic!("not supported")
+    }
+
+    fn set_fence_apple(&self, _fence: GLuint) {
+        panic!("not supported")
+    }
+
+    fn finish_fence_apple(&self, _fence: GLuint) {
+        panic!("not supported")
+    }
+
+    fn test_fence_apple(&self, _fence: GLuint) {
+        panic!("not supported")
+    }
+
+    // GL_ARB_blend_func_extended
+    fn bind_frag_data_location_indexed(
+        &self,
+        _program: GLuint,
+        _color_number: GLuint,
+        _index: GLuint,
+        _name: &str,
+    ) {
+        panic!("not supported");
+    }
+
+    fn get_frag_data_index(
+        &self,
+        _program: GLuint,
+        _name: &str,
+    ) -> GLint {
+        panic!("not supported");
+    }
 }
 

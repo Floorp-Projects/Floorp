@@ -630,16 +630,20 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   }
 
   if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
-    RefPtr<nsStandardURL> baseURL;
+    nsCOMPtr<nsIURI> baseURL;
     if (aBase.WasPassed()) {
       baseURL = new nsStandardURL();
 
       // XXXcatalinb: SetSpec only writes a warning to the console on urls
       // without a valid scheme. I can't fix that because we've come to rely
       // on that behaviour in a bunch of different places.
-      nsresult rv = baseURL->SetSpec(NS_ConvertUTF16toUTF8(aBase.Value()));
+      nsresult rv = NS_MutateURI(new nsStandardURL::Mutator())
+        .SetSpec(NS_ConvertUTF16toUTF8(aBase.Value()))
+        .Finalize(baseURL);
       nsAutoCString baseScheme;
-      baseURL->GetScheme(baseScheme);
+      if (baseURL) {
+        baseURL->GetScheme(baseScheme);
+      }
       if (NS_WARN_IF(NS_FAILED(rv)) || baseScheme.IsEmpty()) {
         aRv.ThrowTypeError<MSG_INVALID_URL>(aBase.Value());
         return;
@@ -707,8 +711,11 @@ URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
   }
 
   if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
-    mStdURL = new nsStandardURL();
-    aRv = mStdURL->SetSpec(NS_ConvertUTF16toUTF8(aHref));
+    nsCOMPtr<nsIURI> uri;
+    aRv = NS_MutateURI(new nsStandardURL::Mutator())
+            .SetSpec(NS_ConvertUTF16toUTF8(aHref))
+            .Finalize(uri);
+    mStdURL = static_cast<net::nsStandardURL*>(uri.get());
     if (mURLProxy) {
       mWorkerPrivate->AssertIsOnWorkerThread();
 
