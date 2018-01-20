@@ -81,6 +81,11 @@ add_task(async function () {
     content.location = url2;
     await loaded;
 
+    // Wait for the next event tick to make sure the remaining part of the
+    // test is not executed in the microtask checkpoint for load event
+    // itself.  Otherwise the synthesizeMouseDown doesn't work.
+    await new Promise(r => setTimeout(r, 0));
+
     // Update to the new document we just loaded
     doc = content.document;
 
