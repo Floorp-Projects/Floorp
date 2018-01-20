@@ -375,13 +375,6 @@ nsDOMAttributeMap::Item(uint32_t aIndex)
   return IndexedGetter(aIndex, dummy);
 }
 
-NS_IMETHODIMP
-nsDOMAttributeMap::Item(uint32_t aIndex, nsIDOMAttr** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = Item(aIndex));
-  return NS_OK;
-}
-
 uint32_t
 nsDOMAttributeMap::Length() const
 {
