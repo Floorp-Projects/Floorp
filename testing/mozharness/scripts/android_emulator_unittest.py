@@ -23,7 +23,6 @@ from mozprocess import ProcessHandler
 
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
-from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.buildbot import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
@@ -31,20 +30,13 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 from mozharness.mozilla.testing.unittest import EmulatorMixin
 
 
-class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin, BaseScript,
+class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScript,
                           MozbaseMixin):
     config_options = [[
         ["--test-suite"],
         {"action": "store",
          "dest": "test_suite",
          "default": None
-         }
-    ], [
-        ["--adb-path"],
-        {"action": "store",
-         "dest": "adb_path",
-         "default": None,
-         "help": "Path to adb",
          }
     ], [
         ["--total-chunk"],
@@ -63,15 +55,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
     ]] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options)
 
-    error_list = [
-    ]
-
-    virtualenv_requirements = [
-    ]
-
-    virtualenv_modules = [
-    ]
-
     app_name = None
 
     def __init__(self, require_config_file=False):
@@ -87,18 +70,10 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                          'install',
                          'run-tests',
                          ],
-            default_actions=['clobber',
-                             'start-emulator',
-                             'download-and-extract',
-                             'create-virtualenv',
-                             'verify-emulator',
-                             'install',
-                             'run-tests',
-                             ],
             require_config_file=require_config_file,
             config={
-                'virtualenv_modules': self.virtualenv_modules,
-                'virtualenv_requirements': self.virtualenv_requirements,
+                'virtualenv_modules': [],
+                'virtualenv_requirements': [],
                 'require_test_zip': True,
                 # IP address of the host as seen from the emulator
                 'remote_webserver': '10.0.2.2',
@@ -836,7 +811,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                     suite_category,
                     config=self.config,
                     log_obj=self.log_obj,
-                    error_list=self.error_list)
+                    error_list=[])
                 self.run_command(final_cmd, cwd=cwd, env=env, output_parser=parser)
                 tbpl_status, log_level = parser.evaluate_parser(0)
                 parser.append_tinderboxprint_line(self.test_suite)
