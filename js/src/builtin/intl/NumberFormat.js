@@ -166,6 +166,45 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
 }
 
 /**
+ * Convert s to upper case, but limited to characters a-z.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.1.
+ */
+function toASCIIUpperCase(s) {
+    assert(typeof s === "string", "toASCIIUpperCase");
+
+    // String.prototype.toUpperCase may map non-ASCII characters into ASCII,
+    // so go character by character (actually code unit by code unit, but
+    // since we only care about ASCII characters here, that's OK).
+    var result = "";
+    for (var i = 0; i < s.length; i++) {
+        var c = callFunction(std_String_charCodeAt, s, i);
+        result += (0x61 <= c && c <= 0x7A)
+                  ? callFunction(std_String_fromCharCode, null, c & ~0x20)
+                  : s[i];
+    }
+    return result;
+}
+
+/**
+ * Verifies that the given string is a well-formed ISO 4217 currency code.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 6.3.1.
+ */
+function getIsWellFormedCurrencyCodeRE() {
+    return internalIntlRegExps.isWellFormedCurrencyCodeRE ||
+           (internalIntlRegExps.isWellFormedCurrencyCodeRE = RegExpCreate("[^A-Z]"));
+}
+
+function IsWellFormedCurrencyCode(currency) {
+    var c = ToString(currency);
+    var normalized = toASCIIUpperCase(c);
+    if (normalized.length !== 3)
+        return false;
+    return !regexp_test_no_statics(getIsWellFormedCurrencyCodeRE(), normalized);
+}
+
+/**
  * Initializes an object as a NumberFormat.
  *
  * This method is complicated a moderate bit by its implementing initialization
