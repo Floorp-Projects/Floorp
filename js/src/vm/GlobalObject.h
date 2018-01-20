@@ -147,6 +147,14 @@ class GlobalObject : public NativeObject
         return resolveConstructor(cx, global, key);
     }
 
+    static JSObject* getOrCreateConstructor(JSContext* cx, JSProtoKey key) {
+        MOZ_ASSERT(key != JSProto_Null);
+        Handle<GlobalObject*> global = cx->global();
+        if (!GlobalObject::ensureConstructor(cx, global, key))
+            return nullptr;
+        return &global->getConstructor(key).toObject();
+    }
+
     void setConstructor(JSProtoKey key, const Value& v) {
         MOZ_ASSERT(key <= JSProto_LIMIT);
         setSlot(APPLICATION_SLOTS + key, v);

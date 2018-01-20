@@ -2104,18 +2104,6 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
 }
 
 bool
-js::GetBuiltinConstructor(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
-{
-    MOZ_ASSERT(key != JSProto_Null);
-    Handle<GlobalObject*> global = cx->global();
-    if (!GlobalObject::ensureConstructor(cx, global, key))
-        return false;
-
-    objp.set(&global->getConstructor(key).toObject());
-    return true;
-}
-
-bool
 js::GetBuiltinPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject protop)
 {
     MOZ_ASSERT(key != JSProto_Null);
