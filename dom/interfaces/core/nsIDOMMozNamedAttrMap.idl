@@ -20,9 +20,6 @@ interface nsIDOMMozNamedAttrMap : nsISupports
   nsIDOMAttr                item(in unsigned long index);
   readonly attribute  unsigned long        length;
   // Introduced in DOM Level 2:
-  nsIDOMAttr                getNamedItemNS(in DOMString namespaceURI, 
-                                           in DOMString localName);
-  // Introduced in DOM Level 2:
   nsIDOMAttr                setNamedItemNS(in nsIDOMAttr arg)
                                   raises(DOMException);
   // Introduced in DOM Level 2:

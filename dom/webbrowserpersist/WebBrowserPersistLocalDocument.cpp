@@ -402,24 +402,20 @@ ExtractAttribute(nsIDOMNode* aNode,
                  const char* aNamespaceURI,
                  nsCString&  aValue)
 {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
     // Find the named URI attribute on the (element) node and store
     // a reference to the URI that maps onto a local file name
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attr));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItemNS(namespaceURI, attribute);
     if (attr) {
         nsAutoString value;
-        rv = attr->GetValue(value);
+        nsresult rv = attr->GetValue(value);
         NS_ENSURE_SUCCESS(rv, rv);
         aValue = NS_ConvertUTF16toUTF8(value);
     } else {
@@ -690,17 +686,15 @@ PersistNodeFixup::FixupAttribute(nsIDOMNode* aNode,
                                  const char* aAttribute,
                                  const char* aNamespaceURI)
 {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
     NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attr));
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItemNS(namespaceURI, attribute);
+    nsresult rv = NS_OK;
     if (attr) {
         nsString uri;
         attr->GetValue(uri);
