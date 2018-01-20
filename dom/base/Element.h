@@ -2228,19 +2228,5 @@ NS_IMETHOD HasAttribute(const nsAString& name,                                \
 {                                                                             \
   *_retval = HasAttribute(name);                                              \
   return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetAttributeNode(const nsAString& name,                            \
-                            nsIDOMAttr** _retval) final override              \
-{                                                                             \
-  NS_IF_ADDREF(*_retval = Element::GetAttributeNode(name));                   \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
-                              const nsAString& localName,                     \
-                              nsIDOMAttr** _retval) final override            \
-{                                                                             \
-  NS_IF_ADDREF(*_retval = Element::GetAttributeNodeNS(namespaceURI,           \
-                                                      localName));            \
-  return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__
