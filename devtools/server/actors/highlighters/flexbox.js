@@ -37,6 +37,8 @@ const FLEXBOX_LINES_PROPERTIES = {
 const FLEXBOX_CONTAINER_PATTERN_WIDTH = 14; // px
 const FLEXBOX_CONTAINER_PATTERN_HEIGHT = 14; // px
 const FLEXBOX_CONTAINER_PATTERN_LINE_DISH = [5, 3]; // px
+const BASIS_FILL_COLOR = "rgb(109, 184, 255, 0.4)";
+const BASIS_EDGE_COLOR = "#6aabed";
 
 /**
  * Cached used by `FlexboxHighlighter.getFlexContainerPattern`.
@@ -306,6 +308,27 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.restore();
   }
 
+  /**
+   * Renders the flex basis for a given flex item.
+   */
+  renderFlexItemBasis(flexItem, left, top, right, bottom, boundsWidth) {
+    let computedStyle = getComputedStyle(flexItem);
+    let basis = computedStyle.getPropertyValue("flex-basis");
+
+    if (basis.endsWith("px")) {
+      right = left + parseFloat(basis);
+    } else if (basis.endsWith("%")) {
+      basis = parseFloat(basis) / 100 * boundsWidth;
+      right = left + basis;
+    }
+
+    this.ctx.fillStyle = BASIS_FILL_COLOR;
+    this.ctx.strokeStyle = BASIS_EDGE_COLOR;
+    drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
+    this.ctx.stroke();
+    this.ctx.fill();
+  }
+
   renderFlexItems() {
     if (!this.currentQuads.content || !this.currentQuads.content[0]) {
       return;
@@ -344,6 +367,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
       clearRect(this.ctx, left, top, right, bottom, this.currentMatrix);
       drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
       this.ctx.stroke();
+
+      this.renderFlexItemBasis(flexItem, left, top, right, bottom, bounds.width);
     }
 
     this.ctx.restore();
@@ -374,20 +399,20 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
       if (computedStyle.getPropertyValue("flex-direction") === "column" ||
           computedStyle.getPropertyValue("flex-direction") === "column-reverse") {
-        clearRect(this.ctx, crossStart, 0, crossStart +  crossSize, bounds.height,
+        clearRect(this.ctx, crossStart, 0, crossStart + crossSize, bounds.height,
           this.currentMatrix);
         drawRect(this.ctx, crossStart, 0, crossStart, bounds.height, this.currentMatrix);
         this.ctx.stroke();
-        drawRect(this.ctx, crossStart +  crossSize, 0, crossStart +  crossSize,
+        drawRect(this.ctx, crossStart + crossSize, 0, crossStart + crossSize,
           bounds.height, this.currentMatrix);
         this.ctx.stroke();
       } else {
-        clearRect(this.ctx, 0,crossStart, bounds.width, crossStart +  crossSize,
+        clearRect(this.ctx, 0, crossStart, bounds.width, crossStart + crossSize,
           this.currentMatrix);
         drawRect(this.ctx, 0, crossStart, bounds.width, crossStart, this.currentMatrix);
         this.ctx.stroke();
-        drawRect(this.ctx, 0, crossStart +  crossSize, bounds.width,
-          crossStart +  crossSize, this.currentMatrix);
+        drawRect(this.ctx, 0, crossStart + crossSize, bounds.width,
+          crossStart + crossSize, this.currentMatrix);
         this.ctx.stroke();
       }
     }
