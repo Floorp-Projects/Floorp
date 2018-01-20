@@ -160,6 +160,7 @@ UNIFIED_SOURCES += [
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
+    'builtin/intl/Collator.cpp',
     'builtin/intl/CommonFunctions.cpp',
     'builtin/intl/NumberFormat.cpp',
     'builtin/MapObject.cpp',
