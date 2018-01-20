@@ -91,9 +91,12 @@ async function testKeyboardInteraction(tree, win) {
   info("clicking on first top level item");
   let node = tree.root.children.firstChild.firstChild;
   event = defer();
+  // The select event handler will be called before the click event hasn't
+  // fully finished, so wait for both of them.
+  let clicked = once(node, "click");
   tree.once("select", pass);
   click(node);
-  await event.promise;
+  await Promise.all([event.promise, clicked]);
   node = tree.root.children.firstChild.nextSibling.firstChild;
   // node should not have selected class
   ok(!node.classList.contains("theme-selected"), "Node should not have selected class");
