@@ -639,83 +639,6 @@ js::intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp)
 }
 
 
-/**
- * This creates new UNumberFormat with calculated digit formatting
- * properties for PluralRules.
- *
- * This is similar to NewUNumberFormat but doesn't allow for currency or
- * percent types.
- */
-static UNumberFormat*
-NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
-{
-    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
-    if (!internals)
-       return nullptr;
-
-    RootedValue value(cx);
-
-    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
-        return nullptr;
-    JSAutoByteString locale(cx, value.toString());
-    if (!locale)
-        return nullptr;
-
-    uint32_t uMinimumIntegerDigits = 1;
-    uint32_t uMinimumFractionDigits = 0;
-    uint32_t uMaximumFractionDigits = 3;
-    int32_t uMinimumSignificantDigits = -1;
-    int32_t uMaximumSignificantDigits = -1;
-
-    bool hasP;
-    if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits, &hasP))
-        return nullptr;
-
-    if (hasP) {
-        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits, &value))
-            return nullptr;
-        uMinimumSignificantDigits = value.toInt32();
-
-        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits, &value))
-            return nullptr;
-        uMaximumSignificantDigits = value.toInt32();
-    } else {
-        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits, &value))
-            return nullptr;
-        uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
-
-        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits, &value))
-            return nullptr;
-        uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
-
-        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits, &value))
-            return nullptr;
-        uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
-    }
-
-    UErrorCode status = U_ZERO_ERROR;
-    UNumberFormat* nf =
-        unum_open(UNUM_DECIMAL, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
-    if (U_FAILURE(status)) {
-        intl::ReportInternalError(cx);
-        return nullptr;
-    }
-    ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
-
-    if (uMinimumSignificantDigits != -1) {
-        unum_setAttribute(nf, UNUM_SIGNIFICANT_DIGITS_USED, true);
-        unum_setAttribute(nf, UNUM_MIN_SIGNIFICANT_DIGITS, uMinimumSignificantDigits);
-        unum_setAttribute(nf, UNUM_MAX_SIGNIFICANT_DIGITS, uMaximumSignificantDigits);
-    } else {
-        unum_setAttribute(nf, UNUM_MIN_INTEGER_DIGITS, uMinimumIntegerDigits);
-        unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, uMinimumFractionDigits);
-        unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, uMaximumFractionDigits);
-    }
-
-    return toClose.forget();
-}
-
-
 /******************** DateTimeFormat ********************/
 
 const ClassOps DateTimeFormatObject::classOps_ = {
@@ -2012,6 +1935,82 @@ js::intl_PluralRules_availableLocales(JSContext* cx, unsigned argc, Value* vp)
         return false;
     args.rval().set(result);
     return true;
+}
+
+/**
+ * This creates new UNumberFormat with calculated digit formatting
+ * properties for PluralRules.
+ *
+ * This is similar to NewUNumberFormat but doesn't allow for currency or
+ * percent types.
+ */
+static UNumberFormat*
+NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
+{
+    RootedObject internals(cx, intl::GetInternalsObject(cx, pluralRules));
+    if (!internals)
+       return nullptr;
+
+    RootedValue value(cx);
+
+    if (!GetProperty(cx, internals, internals, cx->names().locale, &value))
+        return nullptr;
+    JSAutoByteString locale(cx, value.toString());
+    if (!locale)
+        return nullptr;
+
+    uint32_t uMinimumIntegerDigits = 1;
+    uint32_t uMinimumFractionDigits = 0;
+    uint32_t uMaximumFractionDigits = 3;
+    int32_t uMinimumSignificantDigits = -1;
+    int32_t uMaximumSignificantDigits = -1;
+
+    bool hasP;
+    if (!HasProperty(cx, internals, cx->names().minimumSignificantDigits, &hasP))
+        return nullptr;
+
+    if (hasP) {
+        if (!GetProperty(cx, internals, internals, cx->names().minimumSignificantDigits, &value))
+            return nullptr;
+        uMinimumSignificantDigits = value.toInt32();
+
+        if (!GetProperty(cx, internals, internals, cx->names().maximumSignificantDigits, &value))
+            return nullptr;
+        uMaximumSignificantDigits = value.toInt32();
+    } else {
+        if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits, &value))
+            return nullptr;
+        uMinimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
+
+        if (!GetProperty(cx, internals, internals, cx->names().minimumFractionDigits, &value))
+            return nullptr;
+        uMinimumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+
+        if (!GetProperty(cx, internals, internals, cx->names().maximumFractionDigits, &value))
+            return nullptr;
+        uMaximumFractionDigits = AssertedCast<uint32_t>(value.toInt32());
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    UNumberFormat* nf =
+        unum_open(UNUM_DECIMAL, nullptr, 0, IcuLocale(locale.ptr()), nullptr, &status);
+    if (U_FAILURE(status)) {
+        intl::ReportInternalError(cx);
+        return nullptr;
+    }
+    ScopedICUObject<UNumberFormat, unum_close> toClose(nf);
+
+    if (uMinimumSignificantDigits != -1) {
+        unum_setAttribute(nf, UNUM_SIGNIFICANT_DIGITS_USED, true);
+        unum_setAttribute(nf, UNUM_MIN_SIGNIFICANT_DIGITS, uMinimumSignificantDigits);
+        unum_setAttribute(nf, UNUM_MAX_SIGNIFICANT_DIGITS, uMaximumSignificantDigits);
+    } else {
+        unum_setAttribute(nf, UNUM_MIN_INTEGER_DIGITS, uMinimumIntegerDigits);
+        unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, uMinimumFractionDigits);
+        unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, uMaximumFractionDigits);
+    }
+
+    return toClose.forget();
 }
 
 bool
