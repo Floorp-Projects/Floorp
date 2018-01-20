@@ -48,17 +48,11 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMProcessingInstruction   createProcessingInstruction(in DOMString target, 
                                                             in DOMString data)
                                   raises(DOMException);
-  nsIDOMAttr                    createAttribute(in DOMString name)
-                                  raises(DOMException);
   nsIDOMNodeList                getElementsByTagName(in DOMString tagname);
 
   // Introduced in DOM Level 2:
   nsIDOMElement                 createElementNS(in DOMString namespaceURI,
                                                 [Null(Stringify)] in DOMString qualifiedName)
-                                  raises(DOMException);
-  // Introduced in DOM Level 2:
-  nsIDOMAttr                    createAttributeNS(in DOMString namespaceURI,
-                                                  in DOMString qualifiedName)
                                   raises(DOMException);
   // Introduced in DOM Level 2:
   nsIDOMNodeList                getElementsByTagNameNS(in DOMString namespaceURI,
