@@ -12,6 +12,7 @@
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/Intl.h"
+#include "builtin/intl/NumberFormat.h"
 #include "builtin/MapObject.h"
 #include "builtin/SIMD.h"
 #include "builtin/TestingFunctions.h"
