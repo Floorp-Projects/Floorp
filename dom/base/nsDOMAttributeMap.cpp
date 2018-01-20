@@ -398,15 +398,6 @@ nsDOMAttributeMap::GetLength(uint32_t *aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
-                                  const nsAString& aLocalName,
-                                  nsIDOMAttr** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = GetNamedItemNS(aNamespaceURI, aLocalName));
-  return NS_OK;
-}
-
 Attr*
 nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                   const nsAString& aLocalName)
