@@ -81,7 +81,7 @@ import java.util.List;
 public class BrowserFragment extends WebFragment implements View.OnClickListener, DownloadDialogFragment.DownloadDialogListener {
     public static final String FRAGMENT_TAG = "browser";
 
-    private static int REQUEST_CODE_STORAGE_PERMISSION = 101;
+    private static final int REQUEST_CODE_STORAGE_PERMISSION = 101;
     private static final int ANIMATION_DURATION = 300;
 
     private static final String ARGUMENT_SESSION_UUID = "sessionUUID";

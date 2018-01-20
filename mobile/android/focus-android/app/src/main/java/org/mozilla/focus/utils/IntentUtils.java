@@ -21,8 +21,8 @@ import java.util.List;
 
 public class IntentUtils {
 
-    private static String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
-    private static String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
+    private static final String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
+    private static final String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
 
     /**
      * Find and open the appropriate app for a given Uri. If appropriate, let the user select between
