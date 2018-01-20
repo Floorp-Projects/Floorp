@@ -14,7 +14,7 @@
 :root.theme-dark {
   --rule-highlight-background-color: #521C76;
   --rule-overridden-item-border-color: var(--theme-content-color1);
-  --rule-header-background-color: #141416;
+  --rule-header-background-color: #222225;
   --rule-flex-toggle-color: var(--grey-10);
   --rule-shape-toggle-color: var(--grey-10);
 }

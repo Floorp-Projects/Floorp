@@ -1569,8 +1569,12 @@ nsDisplayListBuilder::AllocateDisplayItemClipChain(const DisplayItemClip& aClip,
                                                    const ActiveScrolledRoot* aASR,
                                                    const DisplayItemClipChain* aParent)
 {
+  MOZ_ASSERT(!(aParent && aParent->mOnStack));
   void* p = Allocate(sizeof(DisplayItemClipChain), DisplayItemType::TYPE_ZERO);
   DisplayItemClipChain* c = new (KnownNotNull, p) DisplayItemClipChain(aClip, aASR, aParent);
+#ifdef DEBUG
+  c->mOnStack = false;
+#endif
   auto result = mClipDeduplicator.insert(c);
   if (!result.second) {
     // An equivalent clip chain item was already created, so let's return that

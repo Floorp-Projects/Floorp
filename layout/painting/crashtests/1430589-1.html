@@ -1,0 +1,55 @@
+<html class="reftest-wait"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style>
+    :root {
+      flex-wrap: wrap-reverse;
+    }
+    menuitem {
+      -webkit-mask-image: url(data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7);
+    }
+
+    * {
+      margin-right: -1px;
+      display: -webkit-box;
+      overflow: scroll;
+    }
+
+
+    .css1 {
+      -webkit-border-bottom-left-radius: 10px;
+    }
+
+
+  </style>
+<script>
+function BOOM(){
+  setTimeout(() => {
+    var elem = document.getElementById("vuln");
+    elem.style.width = 600;
+    elem.style.height = 600;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document.documentElement.removeAttribute("class");
+      });
+    });
+  }, 0);
+}
+
+document.addEventListener("MozReftestInvalidate", BOOM);
+//window.addEventListener("load", BOOM);
+</script></head>
+
+<body>
+  <footer>
+      <textarea id="vuln" style="width: 500px; height: 500px;">Ashitaka</textarea>
+  </footer>
+  <menu>
+    <menuitem>
+      <iframe></iframe>
+  </menuitem></menu>
+  <menuitem>
+  <hr>
+  <dialog class="css1"></dialog>
+
+
+</menuitem></body></html>
