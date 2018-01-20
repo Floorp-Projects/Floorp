@@ -64,7 +64,10 @@
             "type": "object",
             "properties": {
               "title": {
-                "type": "string",
+                "choices": [
+                  {"type": "string"},
+                  {"type": "null"}
+                ],
                 "description": "The string the sidebar action should display when moused over."
               },
               "tabId": {
@@ -156,7 +159,10 @@
                 "description": "Sets the sidebar url for the tab specified by tabId. Automatically resets when the tab is closed."
               },
               "panel": {
-                "type": "string",
+                "choices": [
+                  {"type": "string"},
+                  {"type": "null"}
+                ],
                 "description": "The url to the html file to show in a sidebar.  If set to the empty string (''), no sidebar is shown."
               }
             }

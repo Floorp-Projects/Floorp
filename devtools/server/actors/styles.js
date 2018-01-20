@@ -1002,10 +1002,10 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
   get canSetRuleText() {
     return this.type === ELEMENT_STYLE ||
            (this._parentSheet &&
-            // If a rule does not have source, then it has been modified via
-            // CSSOM; and we should fall back to non-authored editing.
+            // If a rule has been modified via CSSOM, then we should fall
+            // back to non-authored editing.
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
-            this.sheetActor.allRulesHaveSource() &&
+            !this.sheetActor.hasRulesModifiedByCSSOM() &&
             // Special case about:PreferenceStyleSheet, as it is generated on
             // the fly and the URI is not registered with the about:handler
             // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
@@ -1692,7 +1692,7 @@ function getSelectorOffsets(initialText, line, column) {
 function getTextAtLineColumn(text, line, column) {
   let offset;
   if (line > 1) {
-    let rx = new RegExp("(?:.*(?:\\r\\n|\\n|\\r|\\f)){" + (line - 1) + "}");
+    let rx = new RegExp("(?:[^\\r\\n\\f]*(?:\\r\\n|\\n|\\r|\\f)){" + (line - 1) + "}");
     offset = rx.exec(text)[0].length;
   } else {
     offset = 0;

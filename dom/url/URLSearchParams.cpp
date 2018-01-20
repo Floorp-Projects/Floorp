@@ -98,7 +98,7 @@ URLParams::Delete(const nsAString& aName)
   }
 }
 
-void
+/* static */ void
 URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
 {
   if (NS_FAILED(UTF_8_ENCODING->DecodeWithoutBOMHandling(aInput, aOutput))) {
@@ -106,7 +106,7 @@ URLParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
   }
 }
 
-void
+/* static */ void
 URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
 {
   nsACString::const_iterator start, end;
@@ -163,12 +163,9 @@ URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput)
   ConvertString(unescaped, aOutput);
 }
 
-void
-URLParams::ParseInput(const nsACString& aInput)
+/* static */ bool
+URLParams::Parse(const nsACString& aInput, ForEachIterator& aIterator)
 {
-  // Remove all the existing data before parsing a new input.
-  DeleteAll();
-
   nsACString::const_iterator start, end;
   aInput.BeginReading(start);
   aInput.EndReading(end);
@@ -212,8 +209,42 @@ URLParams::ParseInput(const nsACString& aInput)
     nsAutoString decodedValue;
     DecodeString(value, decodedValue);
 
-    Append(decodedName, decodedValue);
+    if (!aIterator.URLParamsIterator(decodedName, decodedValue)) {
+      return false;
+    }
   }
+  return true;
+}
+
+class MOZ_STACK_CLASS PopulateIterator final
+  : public URLParams::ForEachIterator
+{
+public:
+  explicit PopulateIterator(URLParams* aParams)
+    : mParams(aParams)
+  {
+    MOZ_ASSERT(aParams);
+  }
+
+  bool URLParamsIterator(const nsAString& aName,
+                         const nsAString& aValue) override
+  {
+    mParams->Append(aName, aValue);
+    return true;
+  }
+
+private:
+  URLParams* mParams;
+};
+
+void
+URLParams::ParseInput(const nsACString& aInput)
+{
+  // Remove all the existing data before parsing a new input.
+  DeleteAll();
+
+  PopulateIterator iter(this);
+  URLParams::Parse(aInput, iter);
 }
 
 namespace {

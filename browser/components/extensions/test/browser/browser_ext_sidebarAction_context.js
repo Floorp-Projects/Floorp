@@ -298,7 +298,7 @@ add_task(async function testTabSwitchContext() {
         async expect => {
           browser.test.log("Revert tab panel.");
           let tabId = tabs[0];
-          await browser.sidebarAction.setPanel({tabId, panel: ""});
+          await browser.sidebarAction.setPanel({tabId, panel: null});
           expect(details[4]);
         },
       ];
@@ -324,7 +324,7 @@ add_task(async function testDefaultTitle() {
       "icon.png": imageBuffer,
     },
 
-    getTests: function(tabs, expectDefaults) {
+    getTests: function(tabs, expectGlobals) {
       let details = [
         {"title": "Foo Extension",
          "panel": browser.runtime.getURL("sidebar.html"),
@@ -335,45 +335,42 @@ add_task(async function testDefaultTitle() {
         {"title": "Bar Title",
          "panel": browser.runtime.getURL("sidebar.html"),
          "icon": browser.runtime.getURL("icon.png")},
-        {"title": "",
-         "panel": browser.runtime.getURL("sidebar.html"),
-         "icon": browser.runtime.getURL("icon.png")},
       ];
 
       return [
         async expect => {
-          browser.test.log("Initial state. Expect extension title as default title.");
+          browser.test.log("Initial state. Expect default extension title.");
 
-          await expectDefaults(details[0]);
+          await expectGlobals(details[0]);
           expect(details[0]);
         },
         async expect => {
-          browser.test.log("Change the title. Expect new title.");
+          browser.test.log("Change the tab title. Expect new title.");
           browser.sidebarAction.setTitle({tabId: tabs[0], title: "Foo Title"});
 
-          await expectDefaults(details[0]);
+          await expectGlobals(details[0]);
           expect(details[1]);
         },
         async expect => {
-          browser.test.log("Change the default. Expect same properties.");
+          browser.test.log("Change the global title. Expect same properties.");
           browser.sidebarAction.setTitle({title: "Bar Title"});
 
-          await expectDefaults(details[2]);
+          await expectGlobals(details[2]);
           expect(details[1]);
         },
         async expect => {
-          browser.test.log("Clear the title. Expect new default title.");
-          browser.sidebarAction.setTitle({tabId: tabs[0], title: ""});
+          browser.test.log("Clear the tab title. Expect new global title.");
+          browser.sidebarAction.setTitle({tabId: tabs[0], title: null});
 
-          await expectDefaults(details[2]);
+          await expectGlobals(details[2]);
           expect(details[2]);
         },
         async expect => {
-          browser.test.log("Set default title to null string. Expect null string from API, extension title in UI.");
-          browser.sidebarAction.setTitle({title: ""});
+          browser.test.log("Clear the global title. Expect default title.");
+          browser.sidebarAction.setTitle({title: null});
 
-          await expectDefaults(details[3]);
-          expect(details[3]);
+          await expectGlobals(details[0]);
+          expect(details[0]);
         },
         async expect => {
           browser.test.assertRejects(
@@ -381,8 +378,115 @@ add_task(async function testDefaultTitle() {
             /Access denied for URL about:addons/,
             "unable to set panel to about:addons");
 
-          await expectDefaults(details[3]);
+          await expectGlobals(details[0]);
+          expect(details[0]);
+        },
+      ];
+    },
+  });
+});
+
+add_task(async function testPropertyRemoval() {
+  await runTests({
+    manifest: {
+      "name": "Foo Extension",
+
+      "sidebar_action": {
+        "default_icon": "default.png",
+        "default_panel": "default.html",
+        "default_title": "Default Title",
+      },
+
+      "permissions": ["tabs"],
+    },
+
+    files: {
+      "default.html": sidebar,
+      "p1.html": sidebar,
+      "p2.html": sidebar,
+      "p3.html": sidebar,
+      "default.png": imageBuffer,
+      "i1.png": imageBuffer,
+      "i2.png": imageBuffer,
+      "i3.png": imageBuffer,
+    },
+
+    getTests: function(tabs, expectGlobals) {
+      let defaultIcon = "chrome://browser/content/extension.svg";
+      let details = [
+        {"icon": browser.runtime.getURL("default.png"),
+         "panel": browser.runtime.getURL("default.html"),
+         "title": "Default Title"},
+        {"icon": browser.runtime.getURL("i1.png"),
+         "panel": browser.runtime.getURL("p1.html"),
+         "title": "t1"},
+        {"icon": browser.runtime.getURL("i2.png"),
+         "panel": browser.runtime.getURL("p2.html"),
+         "title": "t2"},
+        {"icon": defaultIcon,
+         "panel": browser.runtime.getURL("p1.html"),
+         "title": ""},
+        {"icon": browser.runtime.getURL("i3.png"),
+         "panel": browser.runtime.getURL("p3.html"),
+         "title": "t3"},
+      ];
+
+      return [
+        async expect => {
+          browser.test.log("Initial state, expect default properties.");
+          await expectGlobals(details[0]);
+          expect(details[0]);
+        },
+        async expect => {
+          browser.test.log("Set global values, expect the new values.");
+          browser.sidebarAction.setIcon({path: "i1.png"});
+          browser.sidebarAction.setPanel({panel: "p1.html"});
+          browser.sidebarAction.setTitle({title: "t1"});
+          await expectGlobals(details[1]);
+          expect(details[1]);
+        },
+        async expect => {
+          browser.test.log("Set tab values, expect the new values.");
+          let tabId = tabs[0];
+          browser.sidebarAction.setIcon({tabId, path: "i2.png"});
+          browser.sidebarAction.setPanel({tabId, panel: "p2.html"});
+          browser.sidebarAction.setTitle({tabId, title: "t2"});
+          await expectGlobals(details[1]);
+          expect(details[2]);
+        },
+        async expect => {
+          browser.test.log("Set empty tab values.");
+          let tabId = tabs[0];
+          browser.sidebarAction.setIcon({tabId, path: ""});
+          browser.sidebarAction.setPanel({tabId, panel: ""});
+          browser.sidebarAction.setTitle({tabId, title: ""});
+          await expectGlobals(details[1]);
           expect(details[3]);
+        },
+        async expect => {
+          browser.test.log("Remove tab values, expect global values.");
+          let tabId = tabs[0];
+          browser.sidebarAction.setIcon({tabId, path: null});
+          browser.sidebarAction.setPanel({tabId, panel: null});
+          browser.sidebarAction.setTitle({tabId, title: null});
+          await expectGlobals(details[1]);
+          expect(details[1]);
+        },
+        async expect => {
+          browser.test.log("Change global values, expect the new values.");
+          browser.sidebarAction.setIcon({path: "i3.png"});
+          browser.sidebarAction.setPanel({panel: "p3.html"});
+          browser.sidebarAction.setTitle({title: "t3"});
+          await expectGlobals(details[4]);
+          expect(details[4]);
+        },
+        async expect => {
+          browser.test.log("Remove global values, expect defaults.");
+          browser.sidebarAction.setIcon({path: null});
+          browser.sidebarAction.setPanel({panel: null});
+          browser.sidebarAction.setTitle({title: null});
+          await expectGlobals(details[0]);
+          expect(details[0]);
         },
       ];
     },

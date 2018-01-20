@@ -69,8 +69,12 @@ public:
       return NS_OK;
     }
 
-    NS_IMETHOD SetSpec(const nsACString & aSpec, nsIURIMutator** aMutator) override {
-      NS_ADDREF(*aMutator = this);
+    NS_IMETHOD SetSpec(const nsACString & aSpec, nsIURIMutator** aMutator) override
+    {
+      if (aMutator) {
+        nsCOMPtr<nsIURIMutator> mutator = this;
+        mutator.forget(aMutator);
+      }
       return InitFromSpec(aSpec);
     }
 

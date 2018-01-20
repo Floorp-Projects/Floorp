@@ -241,19 +241,23 @@ impl Example for App {
     }
 
     fn on_event(&mut self, event: glutin::Event, api: &RenderApi, document_id: DocumentId) -> bool {
+        let mut txn = Transaction::new();
         match event {
             glutin::Event::Touch(touch) => match self.touch_state.handle_event(touch) {
                 TouchResult::Pan(pan) => {
-                    api.set_pan(document_id, pan);
-                    api.generate_frame(document_id, None);
+                    txn.set_pan(pan);
                 }
                 TouchResult::Zoom(zoom) => {
-                    api.set_pinch_zoom(document_id, ZoomFactor::new(zoom));
-                    api.generate_frame(document_id, None);
+                    txn.set_pinch_zoom(ZoomFactor::new(zoom));
                 }
                 TouchResult::None => {}
             },
             _ => (),
+        }
+
+        if !txn.is_empty() {
+            txn.generate_frame();
+            api.send_transaction(document_id, txn);
         }
 
         false

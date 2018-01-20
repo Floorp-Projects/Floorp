@@ -304,6 +304,7 @@ CssComputedView.prototype = {
    * @param {DOMNode} node
    *        The node which we want information about
    * @return {Object} The type information object contains the following props:
+   * - view {String} Always "computed" to indicate the computed view.
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
    *   client/inspector/shared/node-types
    * - value {Object} Depends on the type of the node
@@ -387,7 +388,11 @@ CssComputedView.prototype = {
       return null;
     }
 
-    return {type, value};
+    return {
+      view: "computed",
+      type,
+      value,
+    };
   },
 
   _createPropertyViews: function () {

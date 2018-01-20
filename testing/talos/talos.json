@@ -1,11 +1,11 @@
 {
     "suites": {
         "chromez-e10s": {
-            "tests": ["tresize", "tcanvasmark"]
+            "tests": ["tresize"]
         },
         "chromez-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
-            "tests": ["tresize", "tcanvasmark"]
+            "tests": ["tresize"]
         },
         "dromaeojs-e10s": {
             "tests": ["dromaeo_css", "kraken"]

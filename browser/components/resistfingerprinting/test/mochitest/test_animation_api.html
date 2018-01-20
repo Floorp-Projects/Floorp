@@ -13,126 +13,62 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1382545
   /** Test for Bug 1382545 **/
   SimpleTest.waitForExplicitFinish();
 
-  var currentPref = "";
+  // Used by file_animation_api.html
+  var prefName = "";
   var expectedPrecision = 0;
-  window.onload = () => {
-    currentPref = "privacy.resistFingerprinting";
-    expectedPrecision = 100000;
-    SpecialPowers.pushPrefEnv({"set":
-      [
-        ["privacy.resistFingerprinting", true],
-        ["dom.animations-api.core.enabled", true],
-        ["privacy.reduceTimerPrecision", false],
-        ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-      ]
-    }, runTest);
-  };
+  var resistFingerprinting = false;
+  var reduceTimerPrecision = false;
 
   function runTest() {
+    // No matter what we set the precision to, if we're in ResistFingerprinting mode
+    // we use the larger of the precision pref and the constant 100ms
+    if (resistFingerprinting) {
+      expectedPrecision = expectedPrecision < 100000 ? 100000 : expectedPrecision;
+    }
     window.open("file_animation_api.html");
   }
 
-  let completed = 0;
-  const numTests = 8;
-  function done() {
-    completed++;
-    if (completed == numTests) {
-      SimpleTest.finish();
-    } else {
-      nextTest();
-    }
+  function setupTest(rfp, rtp, ep) {
+    // Set globals
+    expectedPrecision = ep;
+    resistFingerprinting = rfp;
+    reduceTimerPrecision = rtp;
+    prefName = "";
+    prefName += resistFingerprinting ? "privacy.resistFingerprinting " : "";
+    prefName += reduceTimerPrecision ? "privacy.reduceTimerPrecision " : "";
+    SpecialPowers.pushPrefEnv({"set":
+      [
+        ["dom.animations-api.core.enabled", true],
+        ["privacy.resistFingerprinting", resistFingerprinting],
+        ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+        ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
+      ]
+    }, runTest);
+
   }
 
-  function nextTest() {
-    // ----------------------------------------------
-    if (completed == 1) {
-      currentPref = "privacy.reduceTimerPrecision";
-      expectedPrecision = 100000;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", false],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", true],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 2) {
-      currentPref = "privacy.resistFingerprinting";
-      expectedPrecision = 50000;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", true],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", false],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 3) {
-      currentPref = "privacy.reduceTimerPrecision";
-      expectedPrecision = 50000;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", false],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", true],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 4) {
-      currentPref = "privacy.resistFingerprinting";
-      expectedPrecision = 100;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", true],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", false],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 5) {
-      currentPref = "privacy.reduceTimerPrecision";
-      expectedPrecision = 100;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", false],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", true],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 6) {
-      currentPref = "privacy.resistFingerprinting";
-      expectedPrecision = 13;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", true],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", false],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else if (completed == 7) {
-      currentPref = "privacy.reduceTimerPrecision";
-      expectedPrecision = 13;
-      SpecialPowers.pushPrefEnv({"set":
-        [
-          ["privacy.resistFingerprinting", false],
-          ["dom.animations-api.core.enabled", true],
-          ["privacy.reduceTimerPrecision", true],
-          ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision]
-        ]
-      }, runTest);
-    // ----------------------------------------------
-    } else {
-      ok(false, "I seem to have asked for " + numTests +
-         " tests, but don't know how to run them all.");
+  var testIndx = 0;
+  var testSequence = [
+    [true, false, 100000],
+    [false, true, 100000],
+    [true, false, 50000],
+    [false, true, 50000],
+    [true, false, 100],
+    [false, true, 100],
+    [true, true, 13],
+    [false, true, 13],
+  ];
+
+  window.onload = () => {
+    setupTest(testSequence[testIndx][0], testSequence[testIndx][1], testSequence[testIndx][2]);
+  };
+
+  function done() {
+    testIndx++;
+    if (testIndx == testSequence.length) {
       SimpleTest.finish();
+    } else {
+      setupTest(testSequence[testIndx][0], testSequence[testIndx][1], testSequence[testIndx][2]);
     }
   }
   </script>

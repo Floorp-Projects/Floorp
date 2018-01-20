@@ -1,0 +1,75 @@
+#!/bin/sh
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+"$REAL_DSYMUTIL" "$@"
+ret=$?
+if [ $ret -ne 139 ]; then
+  exit $ret
+fi
+
+echo "$REAL_DSYMUTIL crashed. Trying to get a reduced testcase." >&2
+tmpdir=$(mktemp -d)
+trap "rm -rf $tmpdir" EXIT
+
+# Get the library file name from the command line arguments. We assume
+# it's the last argument that doesn't start with a dash.
+for arg in "$@"; do
+  case "$arg" in
+  -*)
+    ;;
+  *)
+    lib="$arg"
+    ;;
+  esac
+done
+
+last_obj=$("$REAL_DSYMUTIL" --verbose "$@" 2> /dev/null | sed -n "/trying to open/s/trying to open '\(.*\)'/\1/p" | tail -1)
+
+case "$last_obj" in
+"")
+  echo "Could not produce a reduced testcase. Aborting." >&2
+  # Ideally, we'd produce an archive with every .o and .a involved, but so
+  # far, this case has never happened, so, meh.
+  exit 139
+  ;;
+*.a\(*.o\))
+  # The crash likely happened while reading one particular object in a library.
+  # Create a new library with just that one object.
+  archive=$(readlink -f "${last_obj%(*}")
+  obj="${last_obj#*.a(}"
+  obj="${obj%)}"
+  (cd "$tmpdir"; ar x "$archive" "$obj")
+  mkdir -p $tmpdir/crasher/$(dirname "$archive")
+  (cd "$tmpdir"; ar cr "$tmpdir/crasher/$archive" "$obj")
+  rm "$tmpdir/$obj"
+  ;;
+*)
+  # The crash likely happened while reading one particular object.
+  obj=$(readlink -f "$last_obj")
+  mkdir -p "$tmpdir/crasher/$(dirname "$obj")"
+  cp "$obj" "$tmpdir/crasher/$obj"
+  ;;
+esac
+cp "$lib" "$tmpdir/crasher"
+cat > "$tmpdir/crasher/run-me.sh" <<EOF
+#!/bin/sh
+DSYMUTIL="\${DSYMUTIL:-llvm-dsymutil}"
+dir="\$(dirname \$0)"
+\$DSYMUTIL -oso-prepend-path="\$dir" "\$dir/$(basename "$lib")"
+exit \$?
+EOF
+chmod +x "$tmpdir/crasher/run-me.sh"
+(cd "$tmpdir"/crasher; DSYMUTIL=/builds/worker/workspace/build/src/llvm-dsymutil/bin/llvm-dsymutil ./run-me.sh > /dev/null 2>&1)
+if [ $? -eq 139 ]; then
+  echo "Could reproduce with a reduced testcase. Creating an artifact." >&2
+  mkdir -p "$HOME/artifacts"
+  artifact=dsymutil-crasher.tar.xz
+  tar -Jcf "$HOME/artifacts/$artifact" -C "$tmpdir" crasher/
+  echo "Check the $artifact artifact." >&2
+else
+  echo "Could not reproduce with a reduced testcase. Sorry." >&2
+fi
+
+exit 139

@@ -77,7 +77,7 @@ impl App {
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(0),
                 channel_index: 0,
-                image_type: ExternalImageType::Texture2DHandle
+                image_type: ExternalImageType::Texture2DHandle,
             }),
             None,
         );
@@ -87,8 +87,6 @@ impl App {
         let color = ColorF::new(1., 1., 0., 1.);
         let bounds = DeviceUintRect::new(DeviceUintPoint::zero(), framebuffer_size);
         let document_id = api.add_document(framebuffer_size, layer);
-
-        api.set_root_pipeline(document_id, pipeline_id);
 
         let document = Document {
             id: document_id,
@@ -116,18 +114,19 @@ impl App {
         builder.push_rect(&info, ColorF::new(1.0, 1.0, 0.0, 1.0));
         builder.pop_stacking_context();
 
-        api.enable_frame_output(document.id, document.pipeline_id, true);
-        api.set_display_list(
-            document.id,
+        let mut txn = Transaction::new();
+        txn.set_root_pipeline(pipeline_id);
+        txn.enable_frame_output(document.pipeline_id, true);
+        txn.update_resources(resources);
+        txn.set_display_list(
             Epoch(0),
             Some(document.color),
             document.content_rect.size,
             builder.finalize(),
             true,
-            resources,
         );
-        
-        api.generate_frame(document.id, None);
+        txn.generate_frame();
+        api.send_transaction(document.id, txn);
         self.output_document = Some(document);
     }
 }
@@ -174,7 +173,7 @@ impl Example for App {
     fn get_image_handlers(
         &mut self,
         gl: &gl::Gl,
-    ) -> (Option<Box<webrender::ExternalImageHandler>>, 
+    ) -> (Option<Box<webrender::ExternalImageHandler>>,
           Option<Box<webrender::OutputImageHandler>>) {
         let texture_id = gl.gen_textures(1)[0];
 
@@ -212,8 +211,8 @@ impl Example for App {
         );
         gl.bind_texture(gl::TEXTURE_2D, 0);
 
-        (   
-            Some(Box::new(ExternalHandler { texture_id })), 
+        (
+            Some(Box::new(ExternalHandler { texture_id })),
             Some(Box::new(OutputHandler { texture_id }))
         )
     }

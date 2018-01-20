@@ -266,6 +266,7 @@ macosx64-nightly/opt:
     build-platform: macosx64-nightly/opt
     test-sets:
         - macosx64-tests
+        - macosx64-talos-profiling
         - awsy
 
 macosx64-devedition/opt:

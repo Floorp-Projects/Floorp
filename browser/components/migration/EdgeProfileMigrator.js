@@ -395,7 +395,8 @@ EdgeProfileMigrator.prototype.getLastUsedDate = function() {
       typedURLs = MSMigrationUtils.getTypedURLs(kEdgeRegistryRoot);
     } catch (ex) {}
     let times = [0, ...typedURLs.values()];
-    resolve(Math.max.apply(Math, times));
+    // dates is an array of PRTimes, which are in microseconds - convert to milliseconds
+    resolve(Math.max.apply(Math, times) / 1000);
   }));
   return Promise.all(datePromises).then(dates => {
     return new Date(Math.max.apply(Math, dates));

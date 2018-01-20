@@ -7,6 +7,12 @@ DIRS += [
 ]
 
 DevToolsModules(
+    'AnimatedPropertyItem.js',
+    'AnimatedPropertyList.js',
+    'AnimatedPropertyListContainer.js',
+    'AnimatedPropertyListHeader.js',
+    'AnimationDetailContainer.js',
+    'AnimationDetailHeader.js',
     'AnimationItem.js',
     'AnimationList.js',
     'AnimationListContainer.js',
@@ -15,5 +21,7 @@ DevToolsModules(
     'AnimationTimelineTickItem.js',
     'AnimationTimelineTickList.js',
     'App.js',
+    'KeyframesProgressTickItem.js',
+    'KeyframesProgressTickList.js',
     'NoAnimationPanel.js',
 )
