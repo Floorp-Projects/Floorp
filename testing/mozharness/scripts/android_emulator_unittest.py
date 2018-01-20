@@ -451,8 +451,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             'remote_webserver': c['remote_webserver'],
             'xre_path': self.xre_path,
             'utility_path': self.xre_path,
-            'http_port': self.emulator['http_port'],
-            'ssl_port': self.emulator['ssl_port'],
             'certs_path': os.path.join(dirs['abs_work_dir'], 'tests/certs'),
             # TestingMixin._download_and_extract_symbols() will set
             # self.symbols_path when downloading/extracting.
