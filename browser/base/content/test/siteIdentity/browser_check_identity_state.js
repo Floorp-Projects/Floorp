@@ -6,6 +6,7 @@
 
 const DUMMY = "browser/browser/base/content/test/siteIdentity/dummy_page.html";
 const INSECURE_ICON_PREF = "security.insecure_connection_icon.enabled";
+const INSECURE_TEXT_PREF = "security.insecure_connection_text.enabled";
 const INSECURE_PBMODE_ICON_PREF = "security.insecure_connection_icon.pbmode.enabled";
 
 function loadNewTab(url) {
@@ -54,6 +55,69 @@ async function webpageTest(secureCheck) {
 add_task(async function test_webpage() {
   await webpageTest(false);
   await webpageTest(true);
+});
+
+async function webpageTestTextWarning(secureCheck) {
+  await SpecialPowers.pushPrefEnv({set: [[INSECURE_TEXT_PREF, secureCheck]]});
+  let oldTab = gBrowser.selectedTab;
+
+  let newTab = await loadNewTab("http://example.com/" + DUMMY);
+  if (secureCheck) {
+    is(getIdentityMode(), "unknownIdentity notSecureText", "Identity should have not secure text");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
+
+  gBrowser.selectedTab = oldTab;
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+  gBrowser.selectedTab = newTab;
+  if (secureCheck) {
+    is(getIdentityMode(), "unknownIdentity notSecureText", "Identity should have not secure text");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
+
+  gBrowser.removeTab(newTab);
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_webpage_text_warning() {
+  await webpageTestTextWarning(false);
+  await webpageTestTextWarning(true);
+});
+
+async function webpageTestTextWarningCombined(secureCheck) {
+  await SpecialPowers.pushPrefEnv({set: [
+    [INSECURE_TEXT_PREF, secureCheck],
+    [INSECURE_ICON_PREF, secureCheck]
+  ]});
+  let oldTab = gBrowser.selectedTab;
+
+  let newTab = await loadNewTab("http://example.com/" + DUMMY);
+  if (secureCheck) {
+    is(getIdentityMode(), "notSecure notSecureText", "Identity should be not secure");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
+
+  gBrowser.selectedTab = oldTab;
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+
+  gBrowser.selectedTab = newTab;
+  if (secureCheck) {
+    is(getIdentityMode(), "notSecure notSecureText", "Identity should be not secure");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
+
+  gBrowser.removeTab(newTab);
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_webpage_text_warning_combined() {
+  await webpageTestTextWarning(false);
+  await webpageTestTextWarning(true);
 });
 
 async function blankPageTest(secureCheck) {

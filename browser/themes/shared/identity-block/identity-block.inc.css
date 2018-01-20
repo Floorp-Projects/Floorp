@@ -44,13 +44,14 @@
 #identity-icon-labels:-moz-locale-dir(rtl) {
   padding-right: 4px;
 }
-#identity-box:not(.chromeUI):not(.extensionPage) {
+#identity-box:not(.chromeUI):not(.extensionPage):not(.notSecureText) {
   --urlbar-separator-color: transparent;
 }
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity {
   --urlbar-separator-color: rgba(18, 188, 0, .5);
 }
 
+#urlbar[pageproxystate=valid] > #identity-box.notSecureText,
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
 #urlbar[pageproxystate=valid] > #identity-box.chromeUI,
 #urlbar[pageproxystate=valid] > #identity-box.extensionPage,
@@ -61,6 +62,7 @@
   border-image-slice: 1;
 }
 
+#urlbar[pageproxystate=valid] > #identity-box.notSecureText,
 #urlbar[pageproxystate=valid] > #identity-box.verifiedIdentity,
 #urlbar[pageproxystate=valid] > #identity-box.chromeUI,
 #urlbar[pageproxystate=valid] > #identity-box.extensionPage {
