@@ -31,7 +31,7 @@ CHECK_COUNT(NotNull<XPTCursor*> cursor, uint32_t space)
     if (cursor->pool == XPT_DATA &&
         (CURS_POOL_OFFSET(cursor) + space > (cursor)->state->pool_allocated)) {
         XPT_ASSERT(0);
-        fprintf(stderr, "FATAL: no room for %d in cursor\n", space);
+        fprintf(stderr, "FATAL: no room for %u in cursor\n", space);
         return false;
     }
 
