@@ -4,29 +4,6 @@
 
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
-/********** Locales, Time Zones, and Currencies **********/
-
-/**
- * Convert s to upper case, but limited to characters a-z.
- *
- * Spec: ECMAScript Internationalization API Specification, 6.1.
- */
-function toASCIIUpperCase(s) {
-    assert(typeof s === "string", "toASCIIUpperCase");
-
-    // String.prototype.toUpperCase may map non-ASCII characters into ASCII,
-    // so go character by character (actually code unit by code unit, but
-    // since we only care about ASCII characters here, that's OK).
-    var result = "";
-    for (var i = 0; i < s.length; i++) {
-        var c = callFunction(std_String_charCodeAt, s, i);
-        result += (0x61 <= c && c <= 0x7A)
-                  ? callFunction(std_String_fromCharCode, null, c & ~0x20)
-                  : s[i];
-    }
-    return result;
-}
-
 /**
  * Holder object for encapsulating regexp instances.
  *
@@ -309,6 +286,25 @@ function IsStructurallyValidLanguageTag(locale) {
 }
 
 /**
+ * Joins the array elements in the given range with the supplied separator.
+ */
+function ArrayJoinRange(array, separator, from, to = array.length) {
+    assert(typeof separator === "string", "|separator| is a string value");
+    assert(typeof from === "number", "|from| is a number value");
+    assert(typeof to === "number", "|to| is a number value");
+    assert(0 <= from && from <= to && to <= array.length, "|from| and |to| form a valid range");
+
+    if (from === to)
+        return "";
+
+    var result = array[from];
+    for (var i = from + 1; i < to; i++) {
+        result += separator + array[i];
+    }
+    return result;
+}
+
+/**
  * Canonicalizes the given structurally valid BCP 47 language tag, including
  * regularized case of subtags. For example, the language tag
  * Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
@@ -442,25 +438,6 @@ function CanonicalizeLanguageTag(locale) {
     }
 
     return canonical;
-}
-
-/**
- * Joins the array elements in the given range with the supplied separator.
- */
-function ArrayJoinRange(array, separator, from, to = array.length) {
-    assert(typeof separator === "string", "|separator| is a string value");
-    assert(typeof from === "number", "|from| is a number value");
-    assert(typeof to === "number", "|to| is a number value");
-    assert(0 <= from && from <= to && to <= array.length, "|from| and |to| form a valid range");
-
-    if (from === to)
-        return "";
-
-    var result = array[from];
-    for (var i = from + 1; i < to; i++) {
-        result += separator + array[i];
-    }
-    return result;
 }
 
 /**
@@ -648,109 +625,6 @@ function DefaultLocale() {
 
     return locale;
 }
-
-/**
- * Verifies that the given string is a well-formed ISO 4217 currency code.
- *
- * Spec: ECMAScript Internationalization API Specification, 6.3.1.
- */
-function getIsWellFormedCurrencyCodeRE() {
-    return internalIntlRegExps.isWellFormedCurrencyCodeRE ||
-           (internalIntlRegExps.isWellFormedCurrencyCodeRE = RegExpCreate("[^A-Z]"));
-}
-function IsWellFormedCurrencyCode(currency) {
-    var c = ToString(currency);
-    var normalized = toASCIIUpperCase(c);
-    if (normalized.length !== 3)
-        return false;
-    return !regexp_test_no_statics(getIsWellFormedCurrencyCodeRE(), normalized);
-}
-
-var timeZoneCache = {
-    icuDefaultTimeZone: undefined,
-    defaultTimeZone: undefined,
-};
-
-/**
- * 6.4.2 CanonicalizeTimeZoneName ( timeZone )
- *
- * Canonicalizes the given IANA time zone name.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function CanonicalizeTimeZoneName(timeZone) {
-    assert(typeof timeZone === "string", "CanonicalizeTimeZoneName");
-
-    // Step 1. (Not applicable, the input is already a valid IANA time zone.)
-    assert(timeZone !== "Etc/Unknown", "Invalid time zone");
-    assert(timeZone === intl_IsValidTimeZoneName(timeZone), "Time zone name not normalized");
-
-    // Step 2.
-    var ianaTimeZone = intl_canonicalizeTimeZone(timeZone);
-    assert(ianaTimeZone !== "Etc/Unknown", "Invalid canonical time zone");
-    assert(ianaTimeZone === intl_IsValidTimeZoneName(ianaTimeZone), "Unsupported canonical time zone");
-
-    // Step 3.
-    if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
-        // ICU/CLDR canonicalizes Etc/UCT to Etc/GMT, but following IANA and
-        // ECMA-402 to the letter means Etc/UCT is a separate time zone.
-        if (timeZone === "Etc/UCT" || timeZone === "UCT")
-            ianaTimeZone = "Etc/UCT";
-        else
-            ianaTimeZone = "UTC";
-    }
-
-    // Step 4.
-    return ianaTimeZone;
-}
-
-/**
- * 6.4.3 DefaultTimeZone ()
- *
- * Returns the IANA time zone name for the host environment's current time zone.
- *
- * ES2017 Intl draft rev 4a23f407336d382ed5e3471200c690c9b020b5f3
- */
-function DefaultTimeZone() {
-    if (intl_isDefaultTimeZone(timeZoneCache.icuDefaultTimeZone))
-        return timeZoneCache.defaultTimeZone;
-
-    // Verify that the current ICU time zone is a valid ECMA-402 time zone.
-    var icuDefaultTimeZone = intl_defaultTimeZone();
-    var timeZone = intl_IsValidTimeZoneName(icuDefaultTimeZone);
-    if (timeZone === null) {
-        // Before defaulting to "UTC", try to represent the default time zone
-        // using the Etc/GMT + offset format. This format only accepts full
-        // hour offsets.
-        const msPerHour = 60 * 60 * 1000;
-        var offset = intl_defaultTimeZoneOffset();
-        assert(offset === (offset | 0),
-               "milliseconds offset shouldn't be able to exceed int32_t range");
-        var offsetHours = offset / msPerHour, offsetHoursFraction = offset % msPerHour;
-        if (offsetHoursFraction === 0) {
-            // Etc/GMT + offset uses POSIX-style signs, i.e. a positive offset
-            // means a location west of GMT.
-            timeZone = "Etc/GMT" + (offsetHours < 0 ? "+" : "-") + std_Math_abs(offsetHours);
-
-            // Check if the fallback is valid.
-            timeZone = intl_IsValidTimeZoneName(timeZone);
-        }
-
-        // Fallback to "UTC" if everything else fails.
-        if (timeZone === null)
-            timeZone = "UTC";
-    }
-
-    // Canonicalize the ICU time zone, e.g. change Etc/UTC to UTC.
-    var defaultTimeZone = CanonicalizeTimeZoneName(timeZone);
-
-    timeZoneCache.defaultTimeZone = defaultTimeZone;
-    timeZoneCache.icuDefaultTimeZone = icuDefaultTimeZone;
-
-    return defaultTimeZone;
-}
-
-/********** Locale and Parameter Negotiation **********/
 
 /**
  * Add old-style language tags without script code for locales that in current
@@ -1301,8 +1175,6 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
     // Steps 1-3.
     return DefaultNumberOption(options[property], minimum, maximum, fallback);
 }
-
-/********** Property access for Intl objects **********/
 
 // Symbols in the self-hosting compartment can't be cloned, use a separate
 // object to hold the actual symbol value.
