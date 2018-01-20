@@ -40,8 +40,6 @@ with Files('builtin/Intl*'):
     BUG_COMPONENT = component_intl
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
-with Files('builtin/make_intl_data.py'):
-    BUG_COMPONENT = component_intl
 
 
 if CONFIG['JS_BUNDLED_EDITLINE']:
@@ -748,8 +746,8 @@ selfhosted.inputs = [
     'builtin/Function.js',
     'builtin/Generator.js',
     'builtin/Intl.js',
-    'builtin/IntlCurrency.js',
-    'builtin/IntlData.js',
+    'builtin/intl/CurrencyDataGenerated.js',
+    'builtin/intl/LangTagMappingsGenerated.js',
     'builtin/Iterator.js',
     'builtin/Map.js',
     'builtin/Module.js',
