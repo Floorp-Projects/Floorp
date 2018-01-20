@@ -7093,8 +7093,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition* obj, jsid id)
         return nullptr;
     }
 
-    JSObject* proto = GetBuiltinPrototypePure(&script()->global(), key);
-    if (proto)
+    if (JSObject* proto = script()->global().maybeGetPrototype(key))
         return testSingletonProperty(proto, id);
 
     return nullptr;
