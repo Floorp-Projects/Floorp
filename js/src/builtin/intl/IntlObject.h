@@ -4,44 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef builtin_Intl_h
-#define builtin_Intl_h
+#ifndef builtin_intl_IntlObject_h
+#define builtin_intl_IntlObject_h
 
-#include "mozilla/HashFunctions.h"
-#include "mozilla/MemoryReporting.h"
+#include "mozilla/Attributes.h"
 
-#include "jsalloc.h"
-#include "NamespaceImports.h"
+#include "js/RootingAPI.h"
 
-#include "builtin/SelfHostingDefines.h"
-#include "js/Class.h"
-#include "js/GCHashTable.h"
-#include "vm/NativeObject.h"
+struct JSContext;
+class JSObject;
 
-class JSLinearString;
-
-/*
- * The Intl module specified by standard ECMA-402,
- * ECMAScript Internationalization API Specification.
- */
+namespace JS { class Value; }
 
 namespace js {
-
-class FreeOp;
 
 /**
  * Initializes the Intl Object and its standard built-in properties.
  * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
  */
 extern JSObject*
-InitIntlClass(JSContext* cx, HandleObject obj);
-
-/*
- * The following functions are for use by self-hosted code.
- */
-
-
-/******************** Intl ********************/
+InitIntlClass(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /**
  * Returns a plain object with calendar information for a single valid locale
@@ -67,7 +49,7 @@ InitIntlClass(JSContext* cx, HandleObject obj);
  * NOTE: "calendar" and "locale" properties are *not* added to the object.
  */
 extern MOZ_MUST_USE bool
-intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp);
+intl_GetCalendarInfo(JSContext* cx, unsigned argc, JS::Value* vp);
 
 /**
  * Returns a plain object with locale information for a single valid locale
@@ -81,7 +63,7 @@ intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp);
  *     a BCP47 compilant locale string for the resolved locale.
  */
 extern MOZ_MUST_USE bool
-intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp);
+intl_GetLocaleInfo(JSContext* cx, unsigned argc, JS::Value* vp);
 
 /**
  * Returns an Array with CLDR-based fields display names.
@@ -123,8 +105,8 @@ intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp);
  * ]
  */
 extern MOZ_MUST_USE bool
-intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp);
+intl_ComputeDisplayNames(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace js
 
-#endif /* builtin_Intl_h */
+#endif /* builtin_intl_IntlObject_h */
