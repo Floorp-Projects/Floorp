@@ -198,28 +198,6 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName)
   return NamedGetter(aAttrName, dummy);
 }
 
-NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
-{
-  Attr* attribute = static_cast<Attr*>(aAttr);
-  NS_ENSURE_ARG(attribute);
-
-  ErrorResult rv;
-  *aReturn = SetNamedItemNS(*attribute, rv).take();
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
-{
-  Attr* attribute = static_cast<Attr*>(aAttr);
-  NS_ENSURE_ARG(attribute);
-
-  ErrorResult rv;
-  *aReturn = SetNamedItemNS(*attribute, rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<Attr>
 nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
 {
@@ -319,17 +297,6 @@ nsDOMAttributeMap::RemoveNamedItem(NodeInfo* aNodeInfo, ErrorResult& aError)
   // This removes the attribute node from the attribute map.
   aError = mContent->UnsetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), true);
   return attribute.forget();
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
-                                   nsIDOMAttr** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  ErrorResult rv;
-  *aReturn = RemoveNamedItem(aName, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Attr>
@@ -434,17 +401,6 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
   }
 
   return nullptr;
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
-                                     const nsAString& aLocalName,
-                                     nsIDOMAttr** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  *aReturn = RemoveNamedItemNS(aNamespaceURI, aLocalName, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Attr>
