@@ -4,36 +4,7 @@
 
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
-/*global JSMSG_INTL_OBJECT_NOT_INITED: false, JSMSG_INVALID_LOCALES_ELEMENT: false,
-         JSMSG_INVALID_LANGUAGE_TAG: false, JSMSG_INVALID_LOCALE_MATCHER: false,
-         JSMSG_INVALID_OPTION_VALUE: false, JSMSG_INVALID_DIGITS_VALUE: false,
-         JSMSG_INVALID_CURRENCY_CODE: false,
-         JSMSG_UNDEFINED_CURRENCY: false, JSMSG_INVALID_TIME_ZONE: false,
-         JSMSG_DATE_NOT_FINITE: false, JSMSG_INVALID_KEYS_TYPE: false,
-         JSMSG_INVALID_KEY: false,
-         intl_Collator_availableLocales: false,
-         intl_availableCollations: false,
-         intl_CompareStrings: false,
-         intl_NumberFormat_availableLocales: false,
-         intl_numberingSystem: false,
-         intl_FormatNumber: false,
-         intl_DateTimeFormat_availableLocales: false,
-         intl_availableCalendars: false,
-         intl_patternForSkeleton: false,
-         intl_FormatDateTime: false,
-         intl_SelectPluralRule: false,
-         intl_GetPluralCategories: false,
-         intl_GetCalendarInfo: false,
-*/
-
-/*
- * The Intl module specified by standard ECMA-402,
- * ECMAScript Internationalization API Specification.
- */
-
-
 /********** Locales, Time Zones, and Currencies **********/
-
 
 /**
  * Convert s to upper case, but limited to characters a-z.
@@ -88,7 +59,6 @@ function getUnicodeLocaleExtensionSequenceRE() {
             RegExpCreate("-u(?:-[a-z0-9]{2,8})+"));
 }
 
-
 /**
  * Removes Unicode locale extension sequences from the given language tag.
  */
@@ -126,7 +96,6 @@ function removeUnicodeExtensions(locale) {
 
     return combined;
 }
-
 
 /**
  * Regular expression defining BCP 47 language tags.
@@ -222,7 +191,6 @@ function getLanguageTagRE() {
     return (internalIntlRegExps.languageTagRE = RegExpCreate(languageTag, "i"));
 }
 
-
 function getDuplicateVariantRE() {
     if (internalIntlRegExps.duplicateVariantRE)
         return internalIntlRegExps.duplicateVariantRE;
@@ -268,7 +236,6 @@ function getDuplicateVariantRE() {
     return (internalIntlRegExps.duplicateVariantRE = RegExpCreate(duplicateVariant, "i"));
 }
 
-
 function getDuplicateSingletonRE() {
     if (internalIntlRegExps.duplicateSingletonRE)
         return internalIntlRegExps.duplicateSingletonRE;
@@ -313,7 +280,6 @@ function getDuplicateSingletonRE() {
     return (internalIntlRegExps.duplicateSingletonRE = RegExpCreate(duplicateSingleton, "i"));
 }
 
-
 /**
  * Verifies that the given string is a well-formed BCP 47 language tag
  * with no duplicate variant or singleton subtags.
@@ -341,7 +307,6 @@ function IsStructurallyValidLanguageTag(locale) {
     return !regexp_test_no_statics(duplicateVariantRE, locale) &&
            !regexp_test_no_statics(duplicateSingletonRE, locale);
 }
-
 
 /**
  * Canonicalizes the given structurally valid BCP 47 language tag, including
@@ -479,7 +444,6 @@ function CanonicalizeLanguageTag(locale) {
     return canonical;
 }
 
-
 /**
  * Joins the array elements in the given range with the supplied separator.
  */
@@ -499,7 +463,6 @@ function ArrayJoinRange(array, separator, from, to = array.length) {
     return result;
 }
 
-
 /**
  * Returns true if the input contains only ASCII alphabetical characters.
  */
@@ -513,7 +476,6 @@ function IsASCIIAlphaString(s) {
     }
     return true;
 }
-
 
 /**
  * Validates and canonicalizes the given language tag.
@@ -555,7 +517,6 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
     return CanonicalizeLanguageTag(locale);
 }
 
-
 function localeContainsNoUnicodeExtensions(locale) {
     // No "-u-", no possible Unicode extension.
     if (callFunction(std_String_indexOf, locale, "-u-") === -1)
@@ -573,7 +534,6 @@ function localeContainsNoUnicodeExtensions(locale) {
     return false;
 }
 
-
 // The last-ditch locale is used if none of the available locales satisfies a
 // request. "en-GB" is used based on the assumptions that English is the most
 // common second language, that both en-GB and en-US are normally available in
@@ -584,7 +544,6 @@ function lastDitchLocale() {
     // breaking IonBuilder::constant.  Put this in a function for now.
     return "en-GB";
 }
-
 
 // Certain old, commonly-used language tags that lack a script, are expected to
 // nonetheless imply one.  This object maps these old-style tags to modern
@@ -597,18 +556,15 @@ var oldStyleLanguageTagMappings = {
     "zh-TW": "zh-Hant-TW",
 };
 
-
 var localeCandidateCache = {
     runtimeDefaultLocale: undefined,
     candidateDefaultLocale: undefined,
 };
 
-
 var localeCache = {
     runtimeDefaultLocale: undefined,
     defaultLocale: undefined,
 };
-
 
 /**
  * Compute the candidate default locale: the locale *requested* to be used as
@@ -649,7 +605,6 @@ function DefaultLocaleIgnoringAvailableLocales() {
 
     return candidate;
 }
-
 
 /**
  * Returns the BCP 47 language tag for the host environment's current locale.
@@ -694,7 +649,6 @@ function DefaultLocale() {
     return locale;
 }
 
-
 /**
  * Verifies that the given string is a well-formed ISO 4217 currency code.
  *
@@ -712,12 +666,10 @@ function IsWellFormedCurrencyCode(currency) {
     return !regexp_test_no_statics(getIsWellFormedCurrencyCodeRE(), normalized);
 }
 
-
 var timeZoneCache = {
     icuDefaultTimeZone: undefined,
     defaultTimeZone: undefined,
 };
-
 
 /**
  * 6.4.2 CanonicalizeTimeZoneName ( timeZone )
@@ -751,7 +703,6 @@ function CanonicalizeTimeZoneName(timeZone) {
     // Step 4.
     return ianaTimeZone;
 }
-
 
 /**
  * 6.4.3 DefaultTimeZone ()
@@ -799,7 +750,6 @@ function DefaultTimeZone() {
     return defaultTimeZone;
 }
 
-
 /********** Locale and Parameter Negotiation **********/
 
 /**
@@ -825,7 +775,6 @@ function addSpecialMissingLanguageTags(availableLocales) {
            "ditch locale, merely just the last-ditch locale");
     availableLocales[lastDitch] = true;
 }
-
 
 /**
  * Canonicalizes a locale list.
@@ -862,7 +811,6 @@ function CanonicalizeLocaleList(locales) {
     }
     return seen;
 }
-
 
 function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLocale) {
     assert(IsStructurallyValidLanguageTag(locale), "invalid BestAvailableLocale locale structure");
@@ -907,7 +855,6 @@ function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLoca
     }
 }
 
-
 /**
  * Compares a BCP 47 language tag against the locales in availableLocales
  * and returns the best available match. Uses the fallback
@@ -920,7 +867,6 @@ function BestAvailableLocale(availableLocales, locale) {
     return BestAvailableLocaleHelper(availableLocales, locale, true);
 }
 
-
 /**
  * Identical to BestAvailableLocale, but does not consider the default locale
  * during computation.
@@ -928,7 +874,6 @@ function BestAvailableLocale(availableLocales, locale) {
 function BestAvailableLocaleIgnoringDefault(availableLocales, locale) {
     return BestAvailableLocaleHelper(availableLocales, locale, false);
 }
-
 
 /**
  * Compares a BCP 47 language priority list against the set of locales in
@@ -968,7 +913,6 @@ function LookupMatcher(availableLocales, requestedLocales) {
     return result;
 }
 
-
 /**
  * Compares a BCP 47 language priority list against the set of locales in
  * availableLocales and determines the best available language to meet the
@@ -982,7 +926,6 @@ function BestFitMatcher(availableLocales, requestedLocales) {
     // this implementation doesn't have anything better
     return LookupMatcher(availableLocales, requestedLocales);
 }
-
 
 /**
  * Returns the Unicode extension value subtags for the requested key subtag.
@@ -1055,7 +998,6 @@ function UnicodeExtensionValue(extension, key) {
 
     // Step 8 (implicit).
 }
-
 
 /**
  * Compares a BCP 47 language priority list against availableLocales and
@@ -1201,7 +1143,6 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     return result;
 }
 
-
 /**
  * Returns the subset of requestedLocales for which availableLocales has a
  * matching (possibly fallback) locale. Locales appear in the same order in the
@@ -1234,7 +1175,6 @@ function LookupSupportedLocales(availableLocales, requestedLocales) {
     return subset;
 }
 
-
 /**
  * Returns the subset of requestedLocales for which availableLocales has a
  * matching (possibly fallback) locale. Locales appear in the same order in the
@@ -1246,7 +1186,6 @@ function BestFitSupportedLocales(availableLocales, requestedLocales) {
     // don't have anything better
     return LookupSupportedLocales(availableLocales, requestedLocales);
 }
-
 
 /**
  * Returns the subset of requestedLocales for which availableLocales has a
@@ -1289,7 +1228,6 @@ function SupportedLocales(availableLocales, requestedLocales, options) {
     // Step 5.
     return subset;
 }
-
 
 /**
  * Extracts a property value from the provided options object, converts it to
@@ -1364,9 +1302,7 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
     return DefaultNumberOption(options[property], minimum, maximum, fallback);
 }
 
-
 /********** Property access for Intl objects **********/
-
 
 // Symbols in the self-hosting compartment can't be cloned, use a separate
 // object to hold the actual symbol value.
@@ -1387,7 +1323,6 @@ function intlFallbackSymbol() {
     }
     return fallbackSymbol;
 }
-
 
 /**
  * Initializes the INTL_INTERNALS_OBJECT_SLOT of the given object.
@@ -1426,7 +1361,6 @@ function initializeIntlObject(obj, type, lazyData) {
     UnsafeSetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT, internals);
 }
 
-
 /**
  * Set the internal properties object for an |internals| object previously
  * associated with lazy data.
@@ -1440,7 +1374,6 @@ function setInternalProperties(internals, internalProps) {
     internals.lazyData = null;
 }
 
-
 /**
  * Get the existing internal properties out of a non-newborn |internals|, or
  * null if none have been computed.
@@ -1453,7 +1386,6 @@ function maybeInternalProperties(internals) {
     assert(IsObject(internals.internalProps), "missing lazy data and computed internals");
     return internals.internalProps;
 }
-
 
 /**
  * Return |obj|'s internals object (*not* the object holding its internal
@@ -1485,7 +1417,6 @@ function getIntlObjectInternals(obj) {
 
     return internals;
 }
-
 
 /**
  * Get the internal properties of known-Intl object |obj|.  For use only by
