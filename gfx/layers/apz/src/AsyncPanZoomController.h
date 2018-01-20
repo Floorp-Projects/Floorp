@@ -73,20 +73,44 @@ public:
 /*
  * Represents a transform from the ParentLayer coordinate space of an APZC
  * to the ParentLayer coordinate space of its parent APZC.
- * Each layer along the way contributes to the transform. We track whether
- * one of these contributions is a perspective transform, as those require
- * some special handling.
+ * Each layer along the way contributes to the transform. We track 
+ * contributions that are perspective transforms separately, as sometimes 
+ * these require special handling.
  */
 struct AncestorTransform {
   gfx::Matrix4x4 mTransform;
-  bool mContainsPerspectiveTransform;
+  gfx::Matrix4x4 mPerspectiveTransform;
+
+  AncestorTransform() = default;
+
+  AncestorTransform(const gfx::Matrix4x4& aTransform, bool aTransformIsPerspective) {
+    (aTransformIsPerspective ? mPerspectiveTransform : mTransform) = aTransform;
+  }
+
+  AncestorTransform(const gfx::Matrix4x4& aTransform,
+                    const gfx::Matrix4x4& aPerspectiveTransform)
+    : mTransform(aTransform)
+    , mPerspectiveTransform(aPerspectiveTransform)
+  {}
+
+  gfx::Matrix4x4 CombinedTransform() const {
+    return mTransform * mPerspectiveTransform;
+  }
+
+  bool ContainsPerspectiveTransform() const {
+    return !mPerspectiveTransform.IsIdentity();
+  }
+
+  gfx::Matrix4x4 GetPerspectiveTransform() const {
+    return mPerspectiveTransform;
+  }
 
   friend AncestorTransform operator*(const AncestorTransform& aA,
                                      const AncestorTransform& aB)
   {
     return AncestorTransform{
       aA.mTransform * aB.mTransform,
-      aA.mContainsPerspectiveTransform || aB.mContainsPerspectiveTransform
+      aA.mPerspectiveTransform * aB.mPerspectiveTransform
     };
   }
 };
@@ -1241,11 +1265,16 @@ public:
   }
 
   Matrix4x4 GetAncestorTransform() const {
-    return mAncestorTransform.mTransform;
+    return mAncestorTransform.CombinedTransform();
   }
 
   bool AncestorTransformContainsPerspective() const {
-    return mAncestorTransform.mContainsPerspectiveTransform;
+    return mAncestorTransform.ContainsPerspectiveTransform();
+  }
+
+  // Return the perspective transform component of the ancestor transform.
+  Matrix4x4 GetAncestorTransformPerspective() const {
+    return mAncestorTransform.GetPerspectiveTransform();
   }
 
   // Returns whether or not this apzc contains the given screen point within
