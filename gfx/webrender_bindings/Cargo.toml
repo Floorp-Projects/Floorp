@@ -9,7 +9,7 @@ rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.16"
 app_units = "0.6"
-gleam = "0.4.15"
+gleam = "0.4.19"
 log = "0.3"
 
 [dependencies.webrender]

@@ -68,14 +68,9 @@ nsIconProtocolHandler::NewURI(const nsACString& aSpec,
                               nsIURI* aBaseURI,
                               nsIURI** result)
 {
-  nsCOMPtr<nsIMozIconURI> uri = new nsMozIconURI();
-  if (!uri) return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult rv = uri->SetSpec(aSpec);
-  if (NS_FAILED(rv)) return rv;
-
-  NS_ADDREF(*result = uri);
-  return NS_OK;
+  return NS_MutateURI(new nsMozIconURI::Mutator())
+    .SetSpec(aSpec)
+    .Finalize(result);
 }
 
 NS_IMETHODIMP

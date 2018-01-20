@@ -50,15 +50,15 @@ impl Example for App {
         sub_builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
         sub_builder.pop_stacking_context();
 
-        api.set_display_list(
-            document_id,
+        let mut txn = Transaction::new();
+        txn.set_display_list(
             Epoch(0),
             None,
             sub_bounds.size,
             sub_builder.finalize(),
             true,
-            ResourceUpdates::new(),
         );
+        api.send_transaction(document_id, txn);
 
         // And this is for the root pipeline
         builder.push_stacking_context(

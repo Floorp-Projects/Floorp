@@ -114,7 +114,7 @@ template<>
 struct ParamTraits<mozilla::wr::ImageFormat>
   : public ContiguousEnumSerializer<
         mozilla::wr::ImageFormat,
-        mozilla::wr::ImageFormat::Invalid,
+        mozilla::wr::ImageFormat::R8,
         mozilla::wr::ImageFormat::Sentinel>
 {
 };

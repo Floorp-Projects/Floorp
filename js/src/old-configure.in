@@ -547,23 +547,12 @@ esac
 MOZ_DOING_LTO(lto_is_enabled)
 
 dnl ========================================================
-dnl Add optional and non-optional hardening flags
+dnl Add optional and non-optional hardening flags from toolchain.configure
 dnl ========================================================
 
-dnl In at least glibc-2.25, _FORTIFY_SOURCE requires compiling
-dnl with optimization (Bug 1417452)
-
-dnl Note that in the top-level old-configure.in, we don't enable
-dnl FORTIFY_SOURCE on Android. But in js/ we *can* enable it on
-dnl Android, so we do.
-
-if test -n "$MOZ_OPTIMIZE"; then
-   if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
-      CFLAGS="$CFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-      CPPFLAGS="$CPPFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-      CXXFLAGS="$CXXFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-   fi
-fi
+CFLAGS="$CFLAGS $MOZ_HARDENING_CFLAGS_JS"
+CPPFLAGS="$CPPFLAGS $MOZ_HARDENING_CFLAGS_JS"
+CXXFLAGS="$CXXFLAGS $MOZ_HARDENING_CFLAGS_JS"
 
 dnl ========================================================
 dnl System overrides of the defaults for target

@@ -15,7 +15,8 @@ pub type GLXPixmap = XID;
 pub type GLXDrawable = XID;
 pub type GLXWindow = XID;
 pub type GLXPbuffer = XID;
-pub type __GLXextFuncPtr = extern "system" fn();
+pub enum __GLXextFuncPtr_fn {}
+pub type __GLXextFuncPtr = *mut __GLXextFuncPtr_fn;
 pub type GLXVideoCaptureDeviceNV = XID;
 pub type GLXVideoDeviceNV = super::__gl_imports::raw::c_int;
 pub type GLXVideoSourceSGIX = XID;

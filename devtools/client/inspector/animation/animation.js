@@ -12,9 +12,13 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const App = createFactory(require("./components/App"));
 
-const { updateAnimations } = require("./actions/animations");
-const { updateElementPickerEnabled } = require("./actions/element-picker");
-const { updateSidebarSize } = require("./actions/sidebar");
+const {
+  updateAnimations,
+  updateDetailVisibility,
+  updateElementPickerEnabled,
+  updateSelectedAnimation,
+  updateSidebarSize
+} = require("./actions/animations");
 const { isAllAnimationEqual } = require("./utils/utils");
 
 class AnimationInspector {
@@ -24,6 +28,8 @@ class AnimationInspector {
 
     this.getAnimatedPropertyMap = this.getAnimatedPropertyMap.bind(this);
     this.getNodeFromActor = this.getNodeFromActor.bind(this);
+    this.selectAnimation = this.selectAnimation.bind(this);
+    this.setDetailVisibility = this.setDetailVisibility.bind(this);
     this.simulateAnimation = this.simulateAnimation.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
@@ -52,6 +58,8 @@ class AnimationInspector {
       emit: emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
+      selectAnimation,
+      setDetailVisibility,
       simulateAnimation,
       toggleElementPicker,
     } = this;
@@ -72,6 +80,8 @@ class AnimationInspector {
           getNodeFromActor,
           onHideBoxModelHighlighter,
           onShowBoxModelHighlighterForNode,
+          selectAnimation,
+          setDetailVisibility,
           setSelectedNode,
           simulateAnimation,
           toggleElementPicker,
@@ -220,9 +230,19 @@ class AnimationInspector {
     if (!this.animations || !isAllAnimationEqual(animations, this.animations)) {
       this.inspector.store.dispatch(updateAnimations(animations));
       this.animations = animations;
+      // If number of displayed animations is one, we select the animation automatically.
+      this.selectAnimation(animations.length === 1 ? animations[0] : null);
     }
 
     done();
+  }
+
+  selectAnimation(animation) {
+    this.inspector.store.dispatch(updateSelectedAnimation(animation));
+  }
+
+  setDetailVisibility(isVisible) {
+    this.inspector.store.dispatch(updateDetailVisibility(isVisible));
   }
 
   onElementPickerStarted() {

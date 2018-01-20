@@ -868,6 +868,13 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
     // the old list, so we can trivially merge without needing other items.
     nsRect overflow = f->GetVisualOverflowRectRelativeToSelf();
 
+    // If the modified frame is also a caret frame, include the caret area.
+    // This is needed because some frames (for example text frames without text)
+    // might have an empty overflow rect.
+    if (f == mBuilder.GetCaretFrame()) {
+      overflow.UnionRect(overflow, mBuilder.GetCaretRect());
+    }
+
     ProcessFrame(f, mBuilder, &agr, overflow, mBuilder.RootReferenceFrame(),
                  aOutFramesWithProps, true);
 

@@ -1997,7 +1997,6 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         &self,
         pseudo_class: &NonTSPseudoClass,
         context: &mut MatchingContext<Self::Impl>,
-        visited_handling: VisitedHandlingMode,
         flags_setter: &mut F,
     ) -> bool
     where
@@ -2057,10 +2056,10 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             },
             NonTSPseudoClass::AnyLink => self.is_link(),
             NonTSPseudoClass::Link => {
-                self.is_link() && visited_handling.matches_unvisited()
+                self.is_link() && context.visited_handling().matches_unvisited()
             }
             NonTSPseudoClass::Visited => {
-                self.is_link() && visited_handling.matches_visited()
+                self.is_link() && context.visited_handling().matches_visited()
             }
             NonTSPseudoClass::MozFirstNode => {
                 flags_setter(self, ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR);
@@ -2112,19 +2111,18 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozWindowInactive => {
                 let state_bit = DocumentState::NS_DOCUMENT_STATE_WINDOW_INACTIVE;
                 if context.extra_data.document_state.intersects(state_bit) {
-                    return true;
+                    return !context.in_negation();
                 }
 
                 self.document_state().contains(state_bit)
             }
             NonTSPseudoClass::MozPlaceholder => false,
             NonTSPseudoClass::MozAny(ref sels) => {
-                context.nesting_level += 1;
-                let result = sels.iter().any(|s| {
-                    matches_complex_selector(s.iter(), self, context, flags_setter)
-                });
-                context.nesting_level -= 1;
-                result
+                context.nest(|context| {
+                    sels.iter().any(|s| {
+                        matches_complex_selector(s.iter(), self, context, flags_setter)
+                    })
+                })
             }
             NonTSPseudoClass::Lang(ref lang_arg) => {
                 self.match_element_lang(None, lang_arg)
@@ -2134,7 +2132,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 if context.extra_data.document_state.intersects(state_bit) {
                     // NOTE(emilio): We could still return false for
                     // Direction::Other(..), but we don't bother.
-                    return true;
+                    return !context.in_negation();
                 }
 
                 let doc_is_rtl = self.document_state().contains(state_bit);
