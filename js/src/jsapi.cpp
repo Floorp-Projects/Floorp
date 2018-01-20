@@ -1236,7 +1236,11 @@ JS_GetClassPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    return GetBuiltinPrototype(cx, key, objp);
+    JSObject* proto = GlobalObject::getOrCreatePrototype(cx, key);
+    if (!proto)
+        return false;
+    objp.set(proto);
+    return true;
 }
 
 namespace JS {

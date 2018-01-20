@@ -1579,7 +1579,8 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
             // described above for instances of Promise itself.
             if (newTarget == promiseCtor) {
                 needsWrapping = true;
-                if (!GetBuiltinPrototype(cx, JSProto_Promise, &proto))
+                proto = GlobalObject::getOrCreatePromisePrototype(cx, cx->global());
+                if (!proto)
                     return false;
             }
         }
