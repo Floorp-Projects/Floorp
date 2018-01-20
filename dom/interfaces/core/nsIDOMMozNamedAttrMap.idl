@@ -13,7 +13,6 @@
 [uuid(cb5564cd-26ec-418f-a6d6-1d57cd2c971c)]
 interface nsIDOMMozNamedAttrMap : nsISupports
 {
-  nsIDOMAttr                getNamedItem(in DOMString name);
   nsIDOMAttr                setNamedItem(in nsIDOMAttr arg)
                                   raises(DOMException);
   nsIDOMAttr                removeNamedItem(in DOMString name)
