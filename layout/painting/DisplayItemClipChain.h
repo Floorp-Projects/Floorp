@@ -66,14 +66,24 @@ struct DisplayItemClipChain {
     : mClip(aClip)
     , mASR(aASR)
     , mParent(aParent)
+#ifdef DEBUG
+    , mOnStack(true)
+#endif
   {}
 
-  DisplayItemClipChain() {}
+  DisplayItemClipChain()
+#ifdef DEBUG
+    : mOnStack(true)
+#endif
+  {}
 
   DisplayItemClip mClip;
   const ActiveScrolledRoot* mASR;
   RefPtr<const DisplayItemClipChain> mParent;
   mutable uint32_t mRefCount = 0;
+#ifdef DEBUG
+  bool mOnStack;
+#endif
 };
 
 struct DisplayItemClipChainHasher
