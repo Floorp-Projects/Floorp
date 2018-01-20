@@ -2103,22 +2103,12 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
     return true;
 }
 
-static bool
-MaybeResolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
-{
-    if (global->isStandardClassResolved(key))
-        return true;
-    MOZ_ASSERT(!cx->helperThread());
-
-    return GlobalObject::resolveConstructor(cx, global, key);
-}
-
 bool
 js::GetBuiltinConstructor(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
 {
     MOZ_ASSERT(key != JSProto_Null);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    if (!MaybeResolveConstructor(cx, global, key))
+    Handle<GlobalObject*> global = cx->global();
+    if (!GlobalObject::ensureConstructor(cx, global, key))
         return false;
 
     objp.set(&global->getConstructor(key).toObject());
@@ -2129,8 +2119,8 @@ bool
 js::GetBuiltinPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject protop)
 {
     MOZ_ASSERT(key != JSProto_Null);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    if (!MaybeResolveConstructor(cx, global, key))
+    Handle<GlobalObject*> global = cx->global();
+    if (!GlobalObject::ensureConstructor(cx, global, key))
         return false;
 
     protop.set(&global->getPrototype(key).toObject());
