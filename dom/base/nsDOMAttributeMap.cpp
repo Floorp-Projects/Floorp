@@ -383,14 +383,6 @@ nsDOMAttributeMap::Length() const
   return mContent->GetAttrCount();
 }
 
-nsresult
-nsDOMAttributeMap::GetLength(uint32_t *aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = Length();
-  return NS_OK;
-}
-
 Attr*
 nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                   const nsAString& aLocalName)
