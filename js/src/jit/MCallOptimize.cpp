@@ -11,7 +11,6 @@
 #include "jsstr.h"
 
 #include "builtin/AtomicsObject.h"
-#include "builtin/Intl.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/NumberFormat.h"
