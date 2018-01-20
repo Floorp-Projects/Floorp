@@ -126,6 +126,7 @@ const SUPPORTED_HTTP_CODES = [
     "415",
     "416",
     "417",
+    "418",
     "426",
     "428",
     "429",
@@ -141,6 +142,7 @@ const SUPPORTED_HTTP_CODES = [
 ];
 
 const MDN_URL = "https://developer.mozilla.org/docs/";
+const MDN_STATUS_CODES_LIST_URL = `${MDN_URL}Web/HTTP/Status`;
 const getGAParams = (panelId = "netmonitor") => {
   return `?utm_source=mozilla&utm_medium=devtools-${panelId}&utm_campaign=default`;
 };
@@ -168,10 +170,11 @@ function getHeadersURL(header) {
  * @return {string} The MDN URL for the HTTP status code, or null if not available.
  */
 function getHTTPStatusCodeURL(statusCode, panelId) {
-  let idx = SUPPORTED_HTTP_CODES.indexOf(statusCode);
-  return idx > -1 ?
-    `${MDN_URL}Web/HTTP/Status/${SUPPORTED_HTTP_CODES[idx] + getGAParams(panelId)}`
-      : null;
+  return (
+    SUPPORTED_HTTP_CODES.includes(statusCode)
+      ? `${MDN_URL}Web/HTTP/Status/${statusCode}`
+      : MDN_STATUS_CODES_LIST_URL
+    ) + getGAParams(panelId);
 }
 
 /**
