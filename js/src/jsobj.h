@@ -1032,9 +1032,6 @@ GetThisValueOfWith(JSObject* env);
 typedef JSObject* (*ClassInitializerOp)(JSContext* cx, JS::HandleObject obj);
 
 /* Fast access to builtin constructors and prototypes. */
-bool
-GetBuiltinPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject objp);
-
 JSObject*
 GetBuiltinPrototypePure(GlobalObject* global, JSProtoKey protoKey);
 
