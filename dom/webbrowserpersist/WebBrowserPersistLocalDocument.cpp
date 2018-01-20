@@ -6,6 +6,8 @@
 #include "WebBrowserPersistLocalDocument.h"
 #include "WebBrowserPersistDocumentParent.h"
 
+#include "mozilla/dom/Attr.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -19,6 +21,7 @@
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMAttributeMap.h"
 #include "nsFrameLoader.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
@@ -717,17 +720,14 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     // Make all anchor links absolute so they point off onto the Internet
     nsString attribute(NS_LITERAL_STRING("href"));
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attr));
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItem(attribute);
     if (attr) {
         nsString oldValue;
         attr->GetValue(oldValue);
@@ -751,8 +751,8 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
                       ? mTargetBaseURI : mCurrentBaseURI;
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
-        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
-                       mParent->GetCharacterSet(), relativeURI);
+        nsresult rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
+                                mParent->GetCharacterSet(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI) {
             newURI->SetUserPass(EmptyCString());
             nsAutoCString uriSpec;

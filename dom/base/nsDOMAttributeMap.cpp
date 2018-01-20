@@ -199,17 +199,6 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName)
 }
 
 NS_IMETHODIMP
-nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
-                                nsIDOMAttr** aAttribute)
-{
-  NS_ENSURE_ARG_POINTER(aAttribute);
-
-  NS_IF_ADDREF(*aAttribute = GetNamedItem(aAttrName));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
 {
   Attr* attribute = static_cast<Attr*>(aAttr);
