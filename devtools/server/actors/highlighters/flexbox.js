@@ -38,7 +38,6 @@ const FLEXBOX_CONTAINER_PATTERN_WIDTH = 14; // px
 const FLEXBOX_CONTAINER_PATTERN_HEIGHT = 14; // px
 const FLEXBOX_CONTAINER_PATTERN_LINE_DISH = [5, 3]; // px
 const BASIS_FILL_COLOR = "rgb(109, 184, 255, 0.4)";
-const BASIS_EDGE_COLOR = "#6aabed";
 
 /**
  * Cached used by `FlexboxHighlighter.getFlexContainerPattern`.
@@ -323,9 +322,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
 
     this.ctx.fillStyle = BASIS_FILL_COLOR;
-    this.ctx.strokeStyle = BASIS_EDGE_COLOR;
     drawRect(this.ctx, left, top, right, bottom, this.currentMatrix);
-    this.ctx.stroke();
     this.ctx.fill();
   }
 
