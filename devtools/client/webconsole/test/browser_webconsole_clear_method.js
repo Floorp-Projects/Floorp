@@ -51,6 +51,10 @@ add_task(async function () {
   info("Wait for variables view sidebar to be closed after console.clear()");
   await sidebarClosed;
 
+  // Wait for the next event tick to make sure the remaining part of the
+  // test is not executed before the message is actually flushed.
+  await new Promise(executeSoon);
+
   ok(!hud.outputNode.textContent.includes("log3"), "log3 not displayed");
   ok(!hud.outputNode.textContent.includes("log4"), "log4 not displayed");
   ok(hud.outputNode.textContent.includes("Console was cleared"),
