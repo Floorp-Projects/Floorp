@@ -17,6 +17,7 @@ const {
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
+  getComputedStyle,
 } = require("./utils/markup");
 const {
   getAdjustedQuads,
@@ -26,13 +27,11 @@ const {
 
 const FLEXBOX_LINES_PROPERTIES = {
   "edge": {
-    lineDash: [0, 0],
-    alpha: 1,
+    lineDash: [2, 2]
   },
   "item": {
-    lineDash: [2, 2],
-    alpha: 1,
-  },
+    lineDash: [0, 0]
+  }
 };
 
 const FLEXBOX_CONTAINER_PATTERN_WIDTH = 14; // px
@@ -257,7 +256,31 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     }
   }
 
-  renderFlexContainer() {
+  renderFlexContainerBorder() {
+    if (!this.currentQuads.content || !this.currentQuads.content[0]) {
+      return;
+    }
+
+    let { devicePixelRatio } = this.win;
+    let lineWidth = getDisplayPixelRatio(this.win) * 2;
+    let offset = (lineWidth / 2) % 1;
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+
+    this.ctx.save();
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+    this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.edge.lineDash);
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.strokeStyle = DEFAULT_COLOR;
+
+    let { bounds } = this.currentQuads.content[0];
+    drawRect(this.ctx, 0, 0, bounds.width, bounds.height, this.currentMatrix);
+
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  renderFlexContainerFill() {
     if (!this.currentQuads.content || !this.currentQuads.content[0]) {
       return;
     }
@@ -265,15 +288,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     let { devicePixelRatio } = this.win;
     let lineWidth = getDisplayPixelRatio(this.win);
     let offset = (lineWidth / 2) % 1;
-
     let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
     let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.edge.lineDash);
-    this.ctx.globalAlpha = FLEXBOX_LINES_PROPERTIES.edge.alpha;
-    this.ctx.lineWidth = lineWidth;
+    this.ctx.lineWidth = 0;
     this.ctx.strokeStyle = DEFAULT_COLOR;
     this.ctx.fillStyle = this.getFlexContainerPattern(devicePixelRatio);
 
@@ -293,14 +314,12 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     let { devicePixelRatio } = this.win;
     let lineWidth = getDisplayPixelRatio(this.win);
     let offset = (lineWidth / 2) % 1;
-
     let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
     let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.setLineDash(FLEXBOX_LINES_PROPERTIES.item.lineDash);
-    this.ctx.globalAlpha = FLEXBOX_LINES_PROPERTIES.item.alpha;
     this.ctx.lineWidth = lineWidth;
     this.ctx.strokeStyle = DEFAULT_COLOR;
 
@@ -330,6 +349,52 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.ctx.restore();
   }
 
+  renderFlexLines() {
+    if (!this.currentQuads.content || !this.currentQuads.content[0]) {
+      return;
+    }
+
+    let { devicePixelRatio } = this.win;
+    let lineWidth = getDisplayPixelRatio(this.win);
+    let offset = (lineWidth / 2) % 1;
+    let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
+    let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
+
+    this.ctx.save();
+    this.ctx.translate(offset - canvasX, offset - canvasY);
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.strokeStyle = DEFAULT_COLOR;
+
+    let { bounds } = this.currentQuads.content[0];
+    let computedStyle = getComputedStyle(this.currentNode);
+    let flexLines = this.currentNode.getAsFlexContainer().getLines();
+
+    for (let flexLine of flexLines) {
+      let { crossStart, crossSize } = flexLine;
+
+      if (computedStyle.getPropertyValue("flex-direction") === "column" ||
+          computedStyle.getPropertyValue("flex-direction") === "column-reverse") {
+        clearRect(this.ctx, crossStart, 0, crossStart +  crossSize, bounds.height,
+          this.currentMatrix);
+        drawRect(this.ctx, crossStart, 0, crossStart, bounds.height, this.currentMatrix);
+        this.ctx.stroke();
+        drawRect(this.ctx, crossStart +  crossSize, 0, crossStart +  crossSize,
+          bounds.height, this.currentMatrix);
+        this.ctx.stroke();
+      } else {
+        clearRect(this.ctx, 0,crossStart, bounds.width, crossStart +  crossSize,
+          this.currentMatrix);
+        drawRect(this.ctx, 0, crossStart, bounds.width, crossStart, this.currentMatrix);
+        this.ctx.stroke();
+        drawRect(this.ctx, 0, crossStart +  crossSize, bounds.width,
+          crossStart +  crossSize, this.currentMatrix);
+        this.ctx.stroke();
+      }
+    }
+
+    this.ctx.restore();
+  }
+
   _update() {
     setIgnoreLayoutChanges(true);
 
@@ -352,8 +417,10 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     this.currentMatrix = currentMatrix;
     this.hasNodeTransformations = hasNodeTransformations;
 
-    this.renderFlexContainer();
+    this.renderFlexContainerFill();
+    this.renderFlexLines();
     this.renderFlexItems();
+    this.renderFlexContainerBorder();
 
     this._showFlexbox();
 
