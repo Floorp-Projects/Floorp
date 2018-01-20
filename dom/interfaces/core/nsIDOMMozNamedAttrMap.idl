@@ -17,7 +17,6 @@ interface nsIDOMMozNamedAttrMap : nsISupports
                                   raises(DOMException);
   nsIDOMAttr                removeNamedItem(in DOMString name)
                                   raises(DOMException);
-  nsIDOMAttr                item(in unsigned long index);
   readonly attribute  unsigned long        length;
   // Introduced in DOM Level 2:
   nsIDOMAttr                setNamedItemNS(in nsIDOMAttr arg)

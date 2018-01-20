@@ -42,13 +42,14 @@
 #include "HTMLURIRefObject.h"
 
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/Attr.h"
+#include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsDebug.h"
+#include "nsDOMAttributeMap.h"
 #include "nsError.h"
 #include "nsID.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -91,23 +92,17 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
 
   // Loop over attribute list:
   if (!mAttributes) {
-    nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mNode));
+    nsCOMPtr<dom::Element> element(do_QueryInterface(mNode));
     NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
 
-    mCurAttrIndex = 0;
-    element->GetAttributes(getter_AddRefs(mAttributes));
-    NS_ENSURE_TRUE(mAttributes, NS_ERROR_NOT_INITIALIZED);
-
-    rv = mAttributes->GetLength(&mAttributeCnt);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mAttributes = element->Attributes();
+    mAttributeCnt = mAttributes->Length();
     NS_ENSURE_TRUE(mAttributeCnt, NS_ERROR_FAILURE);
     mCurAttrIndex = 0;
   }
 
   while (mCurAttrIndex < mAttributeCnt) {
-    nsCOMPtr<nsIDOMAttr> attrNode;
-    rv = mAttributes->Item(mCurAttrIndex++, getter_AddRefs(attrNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<dom::Attr> attrNode = mAttributes->Item(mCurAttrIndex++);
     NS_ENSURE_ARG_POINTER(attrNode);
     nsString curAttr;
     rv = attrNode->GetName(curAttr);
