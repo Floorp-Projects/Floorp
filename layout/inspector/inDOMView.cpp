@@ -1171,13 +1171,9 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   NS_ENSURE_ARG(aNode);
   // attribute nodes
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE) {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     if (element) {
-      nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
-      element->GetAttributes(getter_AddRefs(attrs));
-      if (attrs) {
-        AppendAttrsToArray(attrs, aResult);
-      }
+      AppendAttrsToArray(element->Attributes(), aResult);
     }
   }
 
@@ -1212,7 +1208,7 @@ inDOMView::GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, ns
   return NS_OK;
 }
 
-nsresult
+void
 inDOMView::AppendKidsToArray(nsINodeList* aKids,
                              nsCOMArray<nsIDOMNode>& aArray)
 {
@@ -1246,20 +1242,15 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
       aArray.AppendElement(node.forget());
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
-inDOMView::AppendAttrsToArray(nsIDOMMozNamedAttrMap* aAttributes,
+inDOMView::AppendAttrsToArray(nsDOMAttributeMap* aAttributes,
                               nsCOMArray<nsIDOMNode>& aArray)
 {
-  uint32_t l = 0;
-  aAttributes->GetLength(&l);
-  nsCOMPtr<nsIDOMAttr> attribute;
+  uint32_t l = aAttributes->Length();
   for (uint32_t i = 0; i < l; ++i) {
-    aAttributes->Item(i, getter_AddRefs(attribute));
-    aArray.AppendElement(attribute.forget());
+    aArray.AppendElement(aAttributes->Item(i));
   }
   return NS_OK;
 }
