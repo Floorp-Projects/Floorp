@@ -19,7 +19,7 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
 #include "builtin/intl/ScopedICUObject.h"
-#include "builtin/IntlTimeZoneData.h"
+#include "builtin/intl/TimeZoneDataGenerated.h"
 #include "js/Utility.h"
 
 using js::HashNumber;
