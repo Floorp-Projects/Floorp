@@ -10,6 +10,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIAttribute.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
@@ -23,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/InspectorUtils.h"
@@ -641,7 +643,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
 
   // get the dom attribute node, if there is any
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aElement));
-  nsCOMPtr<nsIDOMAttr> domAttr;
+  RefPtr<dom::Attr> domAttr;
   nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {
     nsNameSpaceManager* nsm = nsNameSpaceManager::GetInstance();
@@ -654,9 +656,9 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     if (NS_FAILED(rv)) {
       return;
     }
-    (void)el->GetAttributeNodeNS(attrNS, attrStr, getter_AddRefs(domAttr));
+    domAttr = aElement->GetAttributeNodeNS(attrNS, attrStr);
   } else {
-    (void)el->GetAttributeNode(attrStr, getter_AddRefs(domAttr));
+    domAttr = aElement->GetAttributeNode(attrStr);
   }
 
   if (aModType == nsIDOMMutationEvent::MODIFICATION) {
@@ -735,7 +737,8 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     for (row = contentRow+1; row < GetRowCount(); ++row) {
       checkNode = GetNodeAt(row);
       if (checkNode->level == baseLevel+1) {
-        domAttr = do_QueryInterface(checkNode->node);
+        nsCOMPtr<nsIAttribute> attr = do_QueryInterface(checkNode->node);
+        domAttr = static_cast<dom::Attr*>(attr.get());
         if (domAttr) {
           nsAutoString attrName;
           domAttr->GetNodeName(attrName);
