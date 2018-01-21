@@ -291,11 +291,15 @@ var BrowserPageActions = {
    *
    * @param  action (PageActions.Action, optional)
    *         The action you want to anchor.
+   * @param  event (DOM event, optional)
+   *         This is used to display the feedback panel on the right node when
+   *         the command can be invoked from both the main panel and another
+   *         location, such as an activated action panel or a button.
    * @return (DOM node, nonnull) The node to which the action should be
    *         anchored.
    */
   panelAnchorNodeForAction(action, event) {
-    if (event && event.target.closest("panel")) {
+    if (event && event.target.closest("panel") == this.panelNode) {
       return this.mainButtonNode;
     }
 
