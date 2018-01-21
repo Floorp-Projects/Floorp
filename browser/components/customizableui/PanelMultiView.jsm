@@ -393,17 +393,13 @@ this.PanelMultiView = class {
       let playTransition = (!!previousViewNode && !showingSameView && this._panel.state == "open");
       let isMainView = viewNode.id == this._mainViewId;
 
-      let dwu = this._dwu;
       let previousRect = previousViewNode.__lastKnownBoundingRect =
-          dwu.getBoundsWithoutFlushing(previousViewNode);
+          this._dwu.getBoundsWithoutFlushing(previousViewNode);
       // Cache the measures that have the same caching lifetime as the width
       // or height of the main view, i.e. whilst the panel is shown and/ or
       // visible.
       if (!this._mainViewWidth) {
         this._mainViewWidth = previousRect.width;
-        let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild || previousViewNode).top;
-        let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild || previousViewNode).bottom;
-        this._viewVerticalPadding = previousRect.height - (bottom - top);
       }
       if (!this._mainViewHeight) {
         this._mainViewHeight = previousRect.height;
