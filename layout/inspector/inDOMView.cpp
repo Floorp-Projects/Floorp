@@ -15,7 +15,6 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsBindingManager.h"
 #include "nsNameSpaceManager.h"
