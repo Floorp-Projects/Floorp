@@ -561,6 +561,10 @@ button:focus {
   overflow: hidden;
 }
 
+.theme-dark .editor-pane {
+  background-color: var(--theme-toolbar-background);
+}
+
 .editor-container {
   width: 100%;
 }
@@ -3209,7 +3213,7 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 :root.theme-dark {
-  --accordion-header-background: #141416;
+  --accordion-header-background: #222225;
 }
 
 .accordion {
@@ -3298,7 +3302,7 @@ html[dir="rtl"] .command-bar {
 }
 
 .theme-dark .command-bar {
-  background-color: var(--theme-tab-toolbar-background);
+  background-color: var(--theme-toolbar-background);
 }
 
 img.pause,

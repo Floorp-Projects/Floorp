@@ -237,27 +237,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   },
 
   /**
-   * Test whether all the rules in this sheet have associated source.
-   * @return {Boolean} true if all the rules have source; false if
-   *         some rule was created via CSSOM.
+   * Test whether this sheet has been modified by CSSOM.
+   * @return {Boolean} true if changed by CSSOM.
    */
-  allRulesHaveSource: function () {
-    let rules;
-    try {
-      rules = this.rawSheet.cssRules;
-    } catch (e) {
-      // sheet isn't loaded yet
-      return true;
-    }
-
-    for (let i = 0; i < rules.length; i++) {
-      let rule = rules[i];
-      if (InspectorUtils.getRelativeRuleLine(rule) === 0) {
-        return false;
-      }
-    }
-
-    return true;
+  hasRulesModifiedByCSSOM: function () {
+    return InspectorUtils.hasRulesModifiedByCSSOM(this.rawSheet);
   },
 
   /**

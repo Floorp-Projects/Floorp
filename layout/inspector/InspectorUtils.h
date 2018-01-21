@@ -69,6 +69,8 @@ public:
    */
   static uint32_t GetRelativeRuleLine(GlobalObject& aGlobal, css::Rule& aRule);
 
+  static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal, StyleSheet& aSheet);
+
   static CSSLexer* GetCSSLexer(GlobalObject& aGlobal, const nsAString& aText);
 
   // Utilities for working with selectors.  We don't have a JS OM representation

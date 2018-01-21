@@ -20,17 +20,18 @@ use api::DebugCommand;
 use api::channel::MsgSender;
 use batch::{BatchKey, BatchKind, BatchTextures, BrushBatchKind};
 use batch::{BrushImageSourceKind, TransformBatchKind};
+#[cfg(feature = "capture")]
+use capture::{CaptureConfig, ExternalCaptureImage};
 use debug_colors;
 use debug_render::DebugRenderer;
 #[cfg(feature = "debugger")]
 use debug_server::{self, DebugServer};
 use device::{DepthFunction, Device, FrameId, Program, UploadMethod, Texture,
              VertexDescriptor, PBO};
-use device::{get_gl_format_bgra, ExternalTexture, FBOId, TextureSlot, VertexAttribute,
-             VertexAttributeKind};
+use device::{ExternalTexture, FBOId, TextureSlot, VertexAttribute, VertexAttributeKind};
 use device::{FileWatcherHandler, ShaderError, TextureFilter, TextureTarget,
              VertexUsageHint, VAO, VBO, CustomVAO};
-use device::ProgramCache;
+use device::{ProgramCache, ReadPixelsFormat};
 use euclid::{rect, Transform3D};
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
@@ -41,6 +42,7 @@ use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
 use internal_types::{CacheTextureId, FastHashMap, RenderedDocument, ResultMsg, TextureUpdateOp};
 use internal_types::{DebugOutput, RenderPassIndex, RenderTargetInfo, TextureUpdateList, TextureUpdateSource};
 use picture::ContentOrigin;
+use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, Profiler};
 use profiler::{GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
 use query::{GpuProfiler, GpuTimer};
@@ -87,8 +89,8 @@ const GPU_TAG_BRUSH_MASK: GpuProfileTag = GpuProfileTag {
     label: "B_Mask",
     color: debug_colors::BLACK,
 };
-const GPU_TAG_BRUSH_IMAGE: GpuProfileTag = GpuProfileTag {
-    label: "B_Image",
+const GPU_TAG_BRUSH_PICTURE: GpuProfileTag = GpuProfileTag {
+    label: "B_Picture",
     color: debug_colors::SILVER,
 };
 const GPU_TAG_BRUSH_LINE: GpuProfileTag = GpuProfileTag {
@@ -221,7 +223,7 @@ impl BatchKind {
             BatchKind::Blend => "Blend",
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Image(..) => "Brush (Image)",
+                    BrushBatchKind::Picture(..) => "Brush (Picture)",
                     BrushBatchKind::Solid => "Brush (Solid)",
                     BrushBatchKind::Line => "Brush (Line)",
                 }
@@ -238,7 +240,7 @@ impl BatchKind {
             BatchKind::Blend => GPU_TAG_PRIM_BLEND,
             BatchKind::Brush(kind) => {
                 match kind {
-                    BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
+                    BrushBatchKind::Picture(..) => GPU_TAG_BRUSH_PICTURE,
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
                     BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
                 }
@@ -480,6 +482,7 @@ pub struct GraphicsApiInfo {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub enum ImageBufferKind {
     Texture2D = 0,
     TextureRect = 1,
@@ -604,12 +607,12 @@ struct SourceTextureResolver {
 
 impl SourceTextureResolver {
     fn new(device: &mut Device) -> SourceTextureResolver {
-        let mut dummy_cache_texture = device.create_texture(TextureTarget::Array);
+        let mut dummy_cache_texture = device
+            .create_texture(TextureTarget::Array, ImageFormat::BGRA8);
         device.init_texture(
             &mut dummy_cache_texture,
             1,
             1,
-            ImageFormat::BGRA8,
             TextureFilter::Linear,
             None,
             1,
@@ -698,7 +701,7 @@ impl SourceTextureResolver {
             SourceTexture::External(external_image) => {
                 let texture = self.external_images
                     .get(&(external_image.id, external_image.channel_index))
-                    .expect("BUG: External image should be resolved by now!");
+                    .expect(&format!("BUG: External image should be resolved by now: {:?}", external_image));
                 device.bind_external_texture(sampler, texture);
             }
             SourceTexture::TextureCache(index) => {
@@ -757,6 +760,7 @@ impl SourceTextureResolver {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 #[allow(dead_code)] // SubpixelVariableTextColor is not used at the moment.
 pub enum BlendMode {
     None,
@@ -775,7 +779,7 @@ struct CacheRow {
 }
 
 impl CacheRow {
-    fn new() -> CacheRow {
+    fn new() -> Self {
         CacheRow { is_dirty: false }
     }
 }
@@ -817,7 +821,7 @@ struct CacheTexture {
 
 impl CacheTexture {
     fn new(device: &mut Device, use_scatter: bool) -> Result<Self, RendererError> {
-        let texture = device.create_texture(TextureTarget::Default);
+        let texture = device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32);
 
         let bus = if use_scatter {
             let program = device
@@ -890,7 +894,6 @@ impl CacheTexture {
                         &mut self.texture,
                         new_size.width,
                         new_size.height,
-                        ImageFormat::RGBAF32,
                         TextureFilter::Nearest,
                         None,
                         1,
@@ -925,7 +928,6 @@ impl CacheTexture {
                             &mut self.texture,
                             new_size.width,
                             new_size.height,
-                            ImageFormat::RGBAF32,
                             TextureFilter::Nearest,
                             Some(RenderTargetInfo {
                                 has_depth: false,
@@ -1070,7 +1072,7 @@ struct VertexDataTexture {
 
 impl VertexDataTexture {
     fn new(device: &mut Device) -> VertexDataTexture {
-        let texture = device.create_texture(TextureTarget::Default);
+        let texture = device.create_texture(TextureTarget::Default, ImageFormat::RGBAF32);
         let pbo = device.create_pbo();
 
         VertexDataTexture { texture, pbo }
@@ -1108,7 +1110,6 @@ impl VertexDataTexture {
                 &mut self.texture,
                 width,
                 new_height,
-                ImageFormat::RGBAF32,
                 TextureFilter::Nearest,
                 None,
                 1,
@@ -1256,7 +1257,7 @@ impl BrushShader {
         device: &mut Device,
         features: &[&'static str],
         precache: bool,
-    ) -> Result<BrushShader, ShaderError> {
+    ) -> Result<Self, ShaderError> {
         let opaque = try!{
             LazilyCompiledShader::new(ShaderKind::Brush,
                                       name,
@@ -1320,7 +1321,7 @@ impl PrimitiveShader {
         device: &mut Device,
         features: &[&'static str],
         precache: bool,
-    ) -> Result<PrimitiveShader, ShaderError> {
+    ) -> Result<Self, ShaderError> {
         let simple = try!{
             LazilyCompiledShader::new(ShaderKind::Primitive,
                                       name,
@@ -1379,7 +1380,7 @@ impl TextShader {
         device: &mut Device,
         features: &[&'static str],
         precache: bool,
-    ) -> Result<TextShader, ShaderError> {
+    ) -> Result<Self, ShaderError> {
         let simple = try!{
             LazilyCompiledShader::new(ShaderKind::Text,
                                       name,
@@ -1525,6 +1526,16 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
     program
 }
 
+fn get_external_image_target(ext_type: ExternalImageType) -> Option<TextureTarget> {
+    Some(match ext_type {
+        ExternalImageType::Texture2DHandle => TextureTarget::Default,
+        ExternalImageType::Texture2DArrayHandle => TextureTarget::Array,
+        ExternalImageType::TextureRectHandle => TextureTarget::Rect,
+        ExternalImageType::TextureExternalHandle => TextureTarget::External,
+        ExternalImageType::ExternalBuffer => return None,
+    })
+}
+
 struct FileWatcher {
     notifier: Box<RenderNotifier>,
     result_tx: Sender<ResultMsg>,
@@ -1535,12 +1546,6 @@ impl FileWatcherHandler for FileWatcher {
         self.result_tx.send(ResultMsg::RefreshShader(path)).ok();
         self.notifier.wake_up();
     }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum ReadPixelsFormat {
-    Rgba8,
-    Bgra8,
 }
 
 struct FrameOutput {
@@ -1554,6 +1559,17 @@ struct TargetSelector {
     num_layers: usize,
     format: ImageFormat,
 }
+
+#[cfg(feature = "capture")]
+struct RendererCapture {
+    read_fbo: FBOId,
+    owned_external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
+}
+
+// Note: we can't just feature-gate the fields because `cbindgen` fails on those.
+// see https://github.com/eqrion/cbindgen/issues/116
+#[cfg(not(feature = "capture"))]
+struct RendererCapture;
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
@@ -1576,9 +1592,9 @@ pub struct Renderer {
     // Brush shaders
     brush_mask_corner: LazilyCompiledShader,
     brush_mask_rounded_rect: LazilyCompiledShader,
-    brush_image_rgba8: BrushShader,
-    brush_image_rgba8_alpha_mask: BrushShader,
-    brush_image_a8: BrushShader,
+    brush_picture_rgba8: BrushShader,
+    brush_picture_rgba8_alpha_mask: BrushShader,
+    brush_picture_a8: BrushShader,
     brush_solid: BrushShader,
     brush_line: BrushShader,
 
@@ -1661,6 +1677,9 @@ pub struct Renderer {
     /// via get_frame_profiles().
     cpu_profiles: VecDeque<CpuProfile>,
     gpu_profiles: VecDeque<GpuProfile>,
+
+    #[cfg_attr(not(feature = "capture"), allow(dead_code))]
+    capture: RendererCapture,
 }
 
 #[derive(Debug)]
@@ -1790,22 +1809,22 @@ impl Renderer {
                              options.precache_shaders)
         };
 
-        let brush_image_a8 = try!{
-            BrushShader::new("brush_image",
+        let brush_picture_a8 = try!{
+            BrushShader::new("brush_picture",
                              &mut device,
                              &["ALPHA_TARGET"],
                              options.precache_shaders)
         };
 
-        let brush_image_rgba8 = try!{
-            BrushShader::new("brush_image",
+        let brush_picture_rgba8 = try!{
+            BrushShader::new("brush_picture",
                              &mut device,
                              &["COLOR_TARGET"],
                              options.precache_shaders)
         };
 
-        let brush_image_rgba8_alpha_mask = try!{
-            BrushShader::new("brush_image",
+        let brush_picture_rgba8_alpha_mask = try!{
+            BrushShader::new("brush_picture",
                              &mut device,
                              &["COLOR_TARGET_ALPHA_MASK"],
                              options.precache_shaders)
@@ -2087,12 +2106,12 @@ impl Renderer {
                 21,
             ];
 
-            let mut texture = device.create_texture(TextureTarget::Default);
+            let mut texture = device
+                .create_texture(TextureTarget::Default, ImageFormat::R8);
             device.init_texture(
                 &mut texture,
                 8,
                 8,
-                ImageFormat::R8,
                 TextureFilter::Nearest,
                 None,
                 1,
@@ -2218,6 +2237,14 @@ impl Renderer {
             })
         };
 
+        #[cfg(feature = "capture")]
+        let capture = RendererCapture {
+            read_fbo: device.create_fbo_for_external_texture(0),
+            owned_external_images: FastHashMap::default(),
+        };
+        #[cfg(not(feature = "capture"))]
+        let capture = RendererCapture;
+
         let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()));
 
         let mut renderer = Renderer {
@@ -2233,9 +2260,9 @@ impl Renderer {
             cs_blur_rgba8,
             brush_mask_corner,
             brush_mask_rounded_rect,
-            brush_image_rgba8,
-            brush_image_rgba8_alpha_mask,
-            brush_image_a8,
+            brush_picture_rgba8,
+            brush_picture_rgba8_alpha_mask,
+            brush_picture_a8,
             brush_solid,
             brush_line,
             cs_clip_rectangle,
@@ -2282,6 +2309,7 @@ impl Renderer {
             texture_cache_upload_pbo,
             texture_resolver,
             renderer_errors: Vec::new(),
+            capture,
         };
 
         renderer.set_debug_flags(options.debug_flags);
@@ -2357,7 +2385,15 @@ impl Renderer {
                     // Add a new document to the active set, expressed as a `Vec` in order
                     // to re-order based on `DocumentLayer` during rendering.
                     match self.active_documents.iter().position(|&(id, _)| id == document_id) {
-                        Some(pos) => self.active_documents[pos].1 = doc,
+                        Some(pos) => {
+                            // If the document we are replacing must be drawn
+                            // (in order to update the texture cache), issue
+                            // a render just to off-screen targets.
+                            if self.active_documents[pos].1.frame.must_be_drawn() {
+                                self.render_impl(None).ok();
+                            }
+                            self.active_documents[pos].1 = doc;
+                        }
                         None => self.active_documents.push((document_id, doc)),
                     }
                 }
@@ -2384,47 +2420,14 @@ impl Renderer {
                         self.debug_server.send(string);
                     }
                     #[cfg(feature = "capture")]
-                    DebugOutput::SaveCapture(path, deferred)=> {
-                        use std::fs::File;
-                        use std::io::Write;
-                        use api::ExternalImageData;
-
-                        if deferred.is_empty() {
-                            continue
-                        }
-
-                        info!("saving external images");
-                        let handler = self.external_image_handler
-                            .as_mut()
-                            .expect("Unable to lock the external image handler!");
-                        for def in deferred {
-                            let ExternalImageData { id, channel_index, .. } = def.external;
-                            let data = match handler.lock(id, channel_index).source {
-                                ExternalImageSource::RawData(data) => data.to_vec(),
-                                ExternalImageSource::NativeTexture(_gl_id) => {
-                                    //TODO: make a read FBO with this GL texture
-                                    //self.device.read_pixels(&def.descriptor);
-                                    unimplemented!()
-                                }
-                                ExternalImageSource::Invalid => {
-                                    // Create a dummy buffer...
-                                    let stride = def.descriptor.compute_stride();
-                                    let total_size = def.descriptor.height * stride;
-                                    vec![0xFF; total_size as usize]
-                                }
-                            };
-                            handler.unlock(id, channel_index);
-
-                            let full_path = format!("{}/{}",
-                                path.to_string_lossy(), def.short_path);
-                            File::create(full_path)
-                                .expect(&format!("Unable to create {}", def.short_path))
-                                .write_all(&data)
-                                .unwrap();
-                        }
+                    DebugOutput::SaveCapture(config, deferred) => {
+                        self.save_capture(config, deferred);
                     }
                     #[cfg(feature = "capture")]
-                    DebugOutput::LoadCapture => {}
+                    DebugOutput::LoadCapture(root) => {
+                        self.active_documents.clear();
+                        self.load_capture(root);
+                    }
                 },
                 ResultMsg::DebugCommand(command) => {
                     self.handle_debug_command(command);
@@ -2670,9 +2673,9 @@ impl Renderer {
                 let json = self.get_screenshot_for_debugger();
                 self.debug_server.send(json);
             }
-            DebugCommand::SaveCapture(_) |
-            DebugCommand::LoadCapture(_) => {
-                panic!("Capture commands are not welcome here!")
+            DebugCommand::SaveCapture(..) |
+            DebugCommand::LoadCapture(..) => {
+                panic!("Capture commands are not welcome here! Did you build with 'capture' feature?")
             }
             DebugCommand::EnableDualSourceBlending(_) => {
                 panic!("Should be handled by render backend");
@@ -2729,7 +2732,18 @@ impl Renderer {
     /// [genframe]: ../../webrender_api/struct.DocumentApi.html#method.generate_frame
     pub fn render(
         &mut self,
-        framebuffer_size: DeviceUintSize
+        framebuffer_size: DeviceUintSize,
+    ) -> Result<RendererStats, Vec<RendererError>> {
+        self.render_impl(Some(framebuffer_size))
+    }
+
+    // If framebuffer_size is None, don't render
+    // to the main frame buffer. This is useful
+    // to update texture cache render tasks but
+    // avoid doing a full frame render.
+    fn render_impl(
+        &mut self,
+        framebuffer_size: Option<DeviceUintSize>
     ) -> Result<RendererStats, Vec<RendererError>> {
         profile_scope!("render");
 
@@ -2788,24 +2802,26 @@ impl Renderer {
             active_documents.sort_by_key(|&(_, ref render_doc)| render_doc.frame.layer);
 
             // don't clear the framebuffer if one of the rendered documents will overwrite it
-            let needs_color_clear = !active_documents
-                .iter()
-                .any(|&(_, RenderedDocument { ref frame, .. })| {
-                    frame.background_color.is_some() &&
-                    frame.inner_rect.origin == DeviceUintPoint::zero() &&
-                    frame.inner_rect.size == framebuffer_size
-                });
+            if let Some(framebuffer_size) = framebuffer_size {
+                let needs_color_clear = !active_documents
+                    .iter()
+                    .any(|&(_, RenderedDocument { ref frame, .. })| {
+                        frame.background_color.is_some() &&
+                        frame.inner_rect.origin == DeviceUintPoint::zero() &&
+                        frame.inner_rect.size == framebuffer_size
+                    });
 
-            if needs_color_clear || clear_depth_value.is_some() {
-                let clear_color = if needs_color_clear {
-                    self.clear_color.map(|color| color.to_array())
-                } else {
-                    None
-                };
-                self.device.bind_draw_target(None, None);
-                self.device.enable_depth_write();
-                self.device.clear_target(clear_color, clear_depth_value, None);
-                self.device.disable_depth_write();
+                if needs_color_clear || clear_depth_value.is_some() {
+                    let clear_color = if needs_color_clear {
+                        self.clear_color.map(|color| color.to_array())
+                    } else {
+                        None
+                    };
+                    self.device.bind_draw_target(None, None);
+                    self.device.enable_depth_write();
+                    self.device.clear_target(clear_color, clear_depth_value, None);
+                    self.device.disable_depth_write();
+                }
             }
 
             // Re-use whatever targets possible from the pool, before
@@ -2813,6 +2829,11 @@ impl Renderer {
             for doc_with_id in &mut active_documents {
                 self.prepare_tile_frame(&mut doc_with_id.1.frame);
             }
+
+            #[cfg(feature = "capture")]
+            self.texture_resolver.external_images.extend(
+                self.capture.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
+            );
 
             for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
                 self.prepare_gpu_cache(frame);
@@ -2852,27 +2873,29 @@ impl Renderer {
         }
 
         if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
-            //TODO: take device/pixel ratio into equation?
-            let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
-            self.profiler.draw_profile(
-                &frame_profiles,
-                &self.backend_profile_counters,
-                &self.profile_counters,
-                &mut profile_timers,
-                &profile_samplers,
-                screen_fraction,
-                &mut self.debug,
-                self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
-            );
+            if let Some(framebuffer_size) = framebuffer_size {
+                //TODO: take device/pixel ratio into equation?
+                let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
+                self.profiler.draw_profile(
+                    &frame_profiles,
+                    &self.backend_profile_counters,
+                    &self.profile_counters,
+                    &mut profile_timers,
+                    &profile_samplers,
+                    screen_fraction,
+                    &mut self.debug,
+                    self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
+                );
+            }
         }
 
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
 
-        self.debug.render(&mut self.device, &framebuffer_size);
         profile_timers.cpu_time.profile(|| {
             let _gm = self.gpu_profile.start_marker("end frame");
             self.gpu_profile.end_frame();
+            self.debug.render(&mut self.device, framebuffer_size);
             self.device.end_frame();
         });
         self.last_time = current_time;
@@ -2893,7 +2916,7 @@ impl Renderer {
     fn prepare_gpu_cache(&mut self, frame: &Frame) {
         let _gm = self.gpu_profile.start_marker("gpu cache update");
 
-        let deferred_update_list = self.update_deferred_resolves(frame);
+        let deferred_update_list = self.update_deferred_resolves(&frame.deferred_resolves);
         self.pending_gpu_cache_updates.extend(deferred_update_list);
 
         // For an artificial stress test of GPU cache resizing,
@@ -2961,11 +2984,12 @@ impl Renderer {
                         let CacheTextureId(cache_texture_index) = update.id;
                         if self.texture_resolver.cache_texture_map.len() == cache_texture_index {
                             // Create a new native texture, as requested by the texture cache.
-                            let texture = self.device.create_texture(TextureTarget::Array);
+                            let texture = self.device.create_texture(TextureTarget::Array, format);
                             self.texture_resolver.cache_texture_map.push(texture);
                         }
                         let texture =
                             &mut self.texture_resolver.cache_texture_map[cache_texture_index];
+                        assert_eq!(texture.get_format(), format);
 
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
@@ -2973,7 +2997,6 @@ impl Renderer {
                             texture,
                             width,
                             height,
-                            format,
                             filter,
                             render_target,
                             layer_count,
@@ -3014,7 +3037,7 @@ impl Renderer {
                                     }
                                     ExternalImageSource::Invalid => {
                                         // Create a local buffer to fill the pbo.
-                                        let bpp = texture.get_bpp();
+                                        let bpp = texture.get_format().bytes_per_pixel();
                                         let width = stride.unwrap_or(rect.size.width * bpp);
                                         let total_size = width * rect.size.height;
                                         // WR haven't support RGBAF32 format in texture_cache, so
@@ -3127,11 +3150,11 @@ impl Renderer {
                             &mut self.renderer_errors,
                         );
                     }
-                    BrushBatchKind::Image(target_kind) => {
+                    BrushBatchKind::Picture(target_kind) => {
                         let shader = match target_kind {
-                            BrushImageSourceKind::Alpha => &mut self.brush_image_a8,
-                            BrushImageSourceKind::Color => &mut self.brush_image_rgba8,
-                            BrushImageSourceKind::ColorAlphaMask => &mut self.brush_image_rgba8_alpha_mask,
+                            BrushImageSourceKind::Alpha => &mut self.brush_picture_a8,
+                            BrushImageSourceKind::Color => &mut self.brush_picture_rgba8,
+                            BrushImageSourceKind::ColorAlphaMask => &mut self.brush_picture_rgba8_alpha_mask,
                         };
                         shader.bind(
                             &mut self.device,
@@ -3736,10 +3759,9 @@ impl Renderer {
                 .as_mut()
                 .expect("Found output image, but no handler set!");
             if let Some((texture_id, output_size)) = handler.lock(output.pipeline_id) {
-                let device = &mut self.device;
                 let fbo_id = match self.output_targets.entry(texture_id) {
                     Entry::Vacant(entry) => {
-                        let fbo_id = device.create_fbo_for_external_texture(texture_id);
+                        let fbo_id = self.device.create_fbo_for_external_texture(texture_id);
                         entry.insert(FrameOutput {
                             fbo_id,
                             last_access: frame_id,
@@ -3754,9 +3776,9 @@ impl Renderer {
                 };
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
                 let dest_rect = DeviceIntRect::new(DeviceIntPoint::zero(), output_size);
-                device.bind_read_target(render_target);
-                device.bind_external_draw_target(fbo_id);
-                device.blit_render_target(src_rect, dest_rect);
+                self.device.bind_read_target(render_target);
+                self.device.bind_external_draw_target(fbo_id);
+                self.device.blit_render_target(src_rect, dest_rect);
                 handler.unlock(output.pipeline_id);
             }
         }
@@ -3995,12 +4017,12 @@ impl Renderer {
         }
     }
 
-    fn update_deferred_resolves(&mut self, frame: &Frame) -> Option<GpuCacheUpdateList> {
+    fn update_deferred_resolves(&mut self, deferred_resolves: &[DeferredResolve]) -> Option<GpuCacheUpdateList> {
         // The first thing we do is run through any pending deferred
         // resolves, and use a callback to get the UV rect for this
         // custom item. Then we patch the resource_rects structure
         // here before it's uploaded to the GPU.
-        if frame.deferred_resolves.is_empty() {
+        if deferred_resolves.is_empty() {
             return None;
         }
 
@@ -4014,25 +4036,15 @@ impl Renderer {
             updates: Vec::new(),
         };
 
-        for deferred_resolve in &frame.deferred_resolves {
+        for deferred_resolve in deferred_resolves {
             self.gpu_profile.place_marker("deferred resolve");
             let props = &deferred_resolve.image_properties;
             let ext_image = props
                 .external_image
                 .expect("BUG: Deferred resolves must be external images!");
             let image = handler.lock(ext_image.id, ext_image.channel_index);
-            let texture_target = match ext_image.image_type {
-                ExternalImageType::Texture2DHandle => TextureTarget::Default,
-                ExternalImageType::Texture2DArrayHandle => TextureTarget::Array,
-                ExternalImageType::TextureRectHandle => TextureTarget::Rect,
-                ExternalImageType::TextureExternalHandle => TextureTarget::External,
-                ExternalImageType::ExternalBuffer => {
-                    panic!(
-                        "{:?} is not a suitable image type in update_deferred_resolves().",
-                        ext_image.image_type
-                    );
-                }
-            };
+            let texture_target = get_external_image_target(ext_image.image_type)
+                .expect(&format!("{:?} is not a suitable image type in update_deferred_resolves()", ext_image.image_type));
 
             // In order to produce the handle, the external image handler may call into
             // the GL context and change some states.
@@ -4117,9 +4129,12 @@ impl Renderer {
                 list.check_ready();
                 return
             }
-            match self.texture_resolver.render_target_pool.pop() {
-                Some(texture) => texture,
-                None => self.device.create_texture(TextureTarget::Array),
+            let index = self.texture_resolver.render_target_pool
+                .iter()
+                .position(|texture| texture.get_format() == list.format);
+            match index {
+                Some(pos) => self.texture_resolver.render_target_pool.swap_remove(pos),
+                None => self.device.create_texture(TextureTarget::Array, list.format),
             }
         };
 
@@ -4127,7 +4142,6 @@ impl Renderer {
             &mut texture,
             list.max_size.width,
             list.max_size.height,
-            list.format,
             TextureFilter::Linear,
             Some(RenderTargetInfo {
                 has_depth: list.needs_depth(),
@@ -4189,12 +4203,13 @@ impl Renderer {
     fn draw_tile_frame(
         &mut self,
         frame: &mut Frame,
-        framebuffer_size: DeviceUintSize,
+        framebuffer_size: Option<DeviceUintSize>,
         framebuffer_depth_is_ready: bool,
         frame_id: FrameId,
         stats: &mut RendererStats,
     ) {
         let _gm = self.gpu_profile.start_marker("tile frame draw");
+        frame.has_been_rendered = true;
 
         if frame.passes.is_empty() {
             return;
@@ -4223,30 +4238,32 @@ impl Renderer {
 
             let (cur_alpha, cur_color) = match pass.kind {
                 RenderPassKind::MainFramebuffer(ref target) => {
-                    stats.color_target_count += 1;
+                    if let Some(framebuffer_size) = framebuffer_size {
+                        stats.color_target_count += 1;
 
-                    let clear_color = frame.background_color.map(|color| color.to_array());
-                    let projection = Transform3D::ortho(
-                        0.0,
-                        framebuffer_size.width as f32,
-                        framebuffer_size.height as f32,
-                        0.0,
-                        ORTHO_NEAR_PLANE,
-                        ORTHO_FAR_PLANE,
-                    );
+                        let clear_color = frame.background_color.map(|color| color.to_array());
+                        let projection = Transform3D::ortho(
+                            0.0,
+                            framebuffer_size.width as f32,
+                            framebuffer_size.height as f32,
+                            0.0,
+                            ORTHO_NEAR_PLANE,
+                            ORTHO_FAR_PLANE,
+                        );
 
-                    self.draw_color_target(
-                        None,
-                        target,
-                        frame.inner_rect,
-                        framebuffer_size,
-                        framebuffer_depth_is_ready,
-                        clear_color,
-                        &frame.render_tasks,
-                        &projection,
-                        frame_id,
-                        stats,
-                    );
+                        self.draw_color_target(
+                            None,
+                            target,
+                            frame.inner_rect,
+                            framebuffer_size,
+                            framebuffer_depth_is_ready,
+                            clear_color,
+                            &frame.render_tasks,
+                            &projection,
+                            frame_id,
+                            stats,
+                        );
+                    }
 
                     (None, None)
                 }
@@ -4333,8 +4350,10 @@ impl Renderer {
         }
 
         self.texture_resolver.end_frame(RenderPassIndex(frame.passes.len()));
-        self.draw_render_target_debug(framebuffer_size);
-        self.draw_texture_cache_debug(framebuffer_size);
+        if let Some(framebuffer_size) = framebuffer_size {
+            self.draw_render_target_debug(framebuffer_size);
+            self.draw_texture_cache_debug(framebuffer_size);
+        }
         self.draw_epoch_debug();
 
         // Garbage collect any frame outputs that weren't used this frame.
@@ -4511,51 +4530,30 @@ impl Renderer {
         );
     }
 
-    pub fn read_pixels_rgba8(&self, rect: DeviceUintRect) -> Vec<u8> {
-        let mut pixels = vec![0u8; (4 * rect.size.width * rect.size.height) as usize];
-        self.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut pixels);
+    /// Pass-through to `Device::read_pixels_into`, used by Gecko's WR bindings.
+    pub fn read_pixels_into(&mut self, rect: DeviceUintRect, format: ReadPixelsFormat, output: &mut [u8]) {
+        self.device.read_pixels_into(rect, format, output);
+    }
+
+    pub fn read_pixels_rgba8(&mut self, rect: DeviceUintRect) -> Vec<u8> {
+        let mut pixels = vec![0; (rect.size.width * rect.size.height * 4) as usize];
+        self.device.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut pixels);
         pixels
     }
 
     pub fn read_gpu_cache(&mut self) -> (DeviceUintSize, Vec<u8>) {
         let size = self.gpu_cache_texture.texture.get_dimensions();
-        let mut texels = vec![0u8; 4 * (size.width * size.height) as usize];
+        let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
         self.device.bind_read_target(Some((&self.gpu_cache_texture.texture, 0)));
-        self.read_pixels_into(
+        self.device.read_pixels_into(
             DeviceUintRect::new(DeviceUintPoint::zero(), size),
-            ReadPixelsFormat::Rgba8,
+            ReadPixelsFormat::Standard(ImageFormat::RGBAF32),
             &mut texels,
         );
         self.device.bind_read_target(None);
         self.device.end_frame();
         (size, texels)
-    }
-
-    pub fn read_pixels_into(
-        &self,
-        rect: DeviceUintRect,
-        format: ReadPixelsFormat,
-        output: &mut [u8],
-    ) {
-        let (gl_format, gl_type, size) = match format {
-            ReadPixelsFormat::Rgba8 => (gl::RGBA, gl::UNSIGNED_BYTE, 4),
-            ReadPixelsFormat::Bgra8 => (get_gl_format_bgra(self.device.gl()), gl::UNSIGNED_BYTE, 4),
-        };
-        assert_eq!(
-            output.len(),
-            (size * rect.size.width * rect.size.height) as usize
-        );
-        self.device.gl().flush();
-        self.device.gl().read_pixels_into_buffer(
-            rect.origin.x as gl::GLint,
-            rect.origin.y as gl::GLint,
-            rect.size.width as gl::GLsizei,
-            rect.size.height as gl::GLsizei,
-            gl_format,
-            gl_type,
-            output,
-        );
     }
 
     // De-initialize the Renderer safely, assuming the GL is still alive and active.
@@ -4580,9 +4578,9 @@ impl Renderer {
         self.cs_blur_rgba8.deinit(&mut self.device);
         self.brush_mask_rounded_rect.deinit(&mut self.device);
         self.brush_mask_corner.deinit(&mut self.device);
-        self.brush_image_rgba8.deinit(&mut self.device);
-        self.brush_image_rgba8_alpha_mask.deinit(&mut self.device);
-        self.brush_image_a8.deinit(&mut self.device);
+        self.brush_picture_rgba8.deinit(&mut self.device);
+        self.brush_picture_rgba8_alpha_mask.deinit(&mut self.device);
+        self.brush_picture_a8.deinit(&mut self.device);
         self.brush_solid.deinit(&mut self.device);
         self.brush_line.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);
@@ -4612,6 +4610,12 @@ impl Renderer {
         self.ps_hw_composite.deinit(&mut self.device);
         self.ps_split_composite.deinit(&mut self.device);
         self.ps_composite.deinit(&mut self.device);
+        #[cfg(feature = "capture")]
+        self.device.delete_fbo(self.capture.read_fbo);
+        #[cfg(feature = "capture")]
+        for (_, ext) in self.capture.owned_external_images {
+            self.device.delete_external_texture(ext);
+        }
         self.device.end_frame();
     }
 }
@@ -4698,7 +4702,7 @@ pub struct RendererOptions {
 }
 
 impl Default for RendererOptions {
-    fn default() -> RendererOptions {
+    fn default() -> Self {
         RendererOptions {
             device_pixel_ratio: 1.0,
             resource_override_path: None,
@@ -4736,7 +4740,7 @@ pub struct DebugServer;
 
 #[cfg(not(feature = "debugger"))]
 impl DebugServer {
-    pub fn new(_: MsgSender<ApiMsg>) -> DebugServer {
+    pub fn new(_: MsgSender<ApiMsg>) -> Self {
         DebugServer
     }
 
@@ -4754,11 +4758,257 @@ pub struct RendererStats {
 }
 
 impl RendererStats {
-    pub fn empty() -> RendererStats {
+    pub fn empty() -> Self {
         RendererStats {
             total_draw_calls: 0,
             alpha_target_count: 0,
             color_target_count: 0,
         }
+    }
+}
+
+
+#[cfg(feature = "capture")]
+#[derive(Deserialize, Serialize)]
+struct PlainTexture {
+    data: String,
+    size: (u32, u32, i32),
+    format: ImageFormat,
+    filter: TextureFilter,
+    render_target: Option<RenderTargetInfo>,
+}
+
+#[cfg(feature = "capture")]
+#[derive(Deserialize, Serialize)]
+struct PlainRenderer {
+    gpu_cache: PlainTexture,
+    textures: Vec<PlainTexture>,
+    external_images: Vec<ExternalCaptureImage>
+}
+
+#[cfg(feature = "capture")]
+struct DummyExternalImageHandler {
+    data: FastHashMap<(ExternalImageId, u8), Vec<u8>>,
+}
+
+#[cfg(feature = "capture")]
+impl ExternalImageHandler for DummyExternalImageHandler {
+    fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage {
+        let slice = &self.data[&(key, channel_index)];
+        ExternalImage {
+            u0: 0.0,
+            v0: 0.0,
+            u1: 1.0,
+            v1: 1.0,
+            source: ExternalImageSource::RawData(slice),
+        }
+    }
+    fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {}
+}
+
+#[cfg(feature = "capture")]
+impl OutputImageHandler for () {
+    fn lock(&mut self, _: PipelineId) -> Option<(u32, DeviceIntSize)> {
+        None
+    }
+    fn unlock(&mut self, _: PipelineId) {
+        unreachable!()
+    }
+}
+
+#[cfg(feature = "capture")]
+impl Renderer {
+    fn save_texture(
+        texture: &Texture, name: &str, root: &PathBuf, device: &mut Device
+    ) -> PlainTexture {
+        use std::fs;
+        use std::io::Write;
+
+        let short_path = format!("textures/{}.raw", name);
+
+        let bytes_per_pixel = texture.get_format().bytes_per_pixel();
+        let read_format = ReadPixelsFormat::Standard(texture.get_format());
+        let rect = DeviceUintRect::new(
+            DeviceUintPoint::zero(),
+            texture.get_dimensions(),
+        );
+
+        let mut file = fs::File::create(root.join(&short_path))
+            .expect(&format!("Unable to create {}", short_path));
+        let bytes_per_layer = (rect.size.width * rect.size.height * bytes_per_pixel) as usize;
+        let mut data = vec![0; bytes_per_layer];
+
+        for layer_id in 0 .. texture.get_layer_count() {
+            device.attach_read_texture(texture, layer_id);
+            device.read_pixels_into(rect, read_format, &mut data);
+            file.write_all(&data)
+                .unwrap();
+        }
+
+        PlainTexture {
+            data: short_path,
+            size: (rect.size.width, rect.size.height, texture.get_layer_count()),
+            format: texture.get_format(),
+            filter: texture.get_filter(),
+            render_target: texture.get_render_target(),
+        }
+    }
+
+    fn load_texture(texture: &mut Texture, plain: &PlainTexture, root: &PathBuf, device: &mut Device) -> Vec<u8> {
+        use std::fs::File;
+        use std::io::Read;
+
+        let mut texels = Vec::new();
+        assert_eq!(plain.format, texture.get_format());
+        File::open(root.join(&plain.data))
+            .unwrap()
+            .read_to_end(&mut texels)
+            .unwrap();
+
+        device.init_texture(
+            texture, plain.size.0, plain.size.1,
+            plain.filter, plain.render_target,
+            plain.size.2, Some(texels.as_slice()),
+        );
+
+        texels
+    }
+
+    fn save_capture(&mut self, config: CaptureConfig, deferred_images: Vec<ExternalCaptureImage>) {
+        use std::fs;
+        use std::io::Write;
+        use api::{CaptureBits, ExternalImageData};
+
+        self.device.begin_frame();
+        self.device.bind_read_target_impl(self.capture.read_fbo);
+
+        if !deferred_images.is_empty() {
+            info!("saving external images");
+            let handler = self.external_image_handler
+                .as_mut()
+                .expect("Unable to lock the external image handler!");
+            for def in &deferred_images {
+                let ExternalImageData { id, channel_index, image_type } = def.external;
+                let data = match handler.lock(id, channel_index).source {
+                    ExternalImageSource::RawData(data) => data.to_vec(),
+                    ExternalImageSource::NativeTexture(gl_id) => {
+                        let target = get_external_image_target(image_type).unwrap();
+                        self.device.attach_read_texture_external(gl_id, target, 0);
+                        self.device.read_pixels(&def.descriptor)
+                    }
+                    ExternalImageSource::Invalid => {
+                        // Create a dummy buffer...
+                        let stride = def.descriptor.compute_stride();
+                        let total_size = def.descriptor.height * stride;
+                        vec![0xFF; total_size as usize]
+                    }
+                };
+                handler.unlock(id, channel_index);
+
+                fs::File::create(config.root.join(&def.short_path))
+                    .expect(&format!("Unable to create {}", def.short_path))
+                    .write_all(&data)
+                    .unwrap();
+            }
+        }
+
+        if config.bits.contains(CaptureBits::FRAME) {
+            let path_textures = config.root.join("textures");
+            if !path_textures.is_dir() {
+                fs::create_dir(&path_textures).unwrap();
+            }
+
+            info!("saving GPU cache");
+            let mut plain_self = PlainRenderer {
+                gpu_cache: Self::save_texture(
+                    &self.gpu_cache_texture.texture,
+                    "gpu", &config.root, &mut self.device,
+                ),
+                textures: Vec::new(),
+                external_images: deferred_images,
+            };
+
+            info!("saving cached textures");
+            for texture in &self.texture_resolver.cache_texture_map {
+                let file_name = format!("cache-{}", plain_self.textures.len() + 1);
+                info!("\t{}", file_name);
+                let plain = Self::save_texture(texture, &file_name, &config.root, &mut self.device);
+                plain_self.textures.push(plain);
+            }
+
+            config.serialize(&plain_self, "renderer");
+        }
+
+        self.device.bind_read_target(None);
+        self.device.end_frame();
+        info!("done.");
+    }
+
+    fn load_capture(&mut self, root: PathBuf) {
+        let renderer = match CaptureConfig::deserialize::<PlainRenderer, _>(&root, "renderer") {
+            Some(r) => r,
+            None => return,
+        };
+
+        self.device.begin_frame();
+        info!("loading cached textures");
+
+        for texture in self.texture_resolver.cache_texture_map.drain(..) {
+            self.device.delete_texture(texture);
+        }
+        for texture in renderer.textures {
+            info!("\t{}", texture.data);
+            let mut t = self.device.create_texture(TextureTarget::Array, texture.format);
+            Self::load_texture(&mut t, &texture, &root, &mut self.device);
+            self.texture_resolver.cache_texture_map.push(t);
+        }
+
+        info!("loading gpu cache");
+        Self::load_texture(
+            &mut self.gpu_cache_texture.texture,
+            &renderer.gpu_cache,
+            &root,
+            &mut self.device,
+        );
+        match self.gpu_cache_texture.bus {
+            CacheBus::PixelBuffer { ref mut rows, ref mut cpu_blocks, .. } => {
+                rows.clear();
+                cpu_blocks.clear();
+            }
+            CacheBus::Scatter { .. } => {}
+        }
+
+        info!("loading external images");
+        assert!(self.texture_resolver.external_images.is_empty());
+        let mut image_handler = DummyExternalImageHandler {
+            data: FastHashMap::default(),
+        };
+
+        for ExternalCaptureImage { short_path, external, descriptor } in renderer.external_images {
+            let target = match get_external_image_target(external.image_type) {
+                Some(target) => target,
+                None => continue,
+            };
+            //TODO: provide a way to query both the layer count and the filter from external images
+            let (layer_count, filter) = (1, TextureFilter::Linear);
+            let plain = PlainTexture {
+                data: short_path,
+                size: (descriptor.width, descriptor.height, layer_count),
+                format: descriptor.format,
+                filter,
+                render_target: None,
+            };
+
+            let mut t = self.device.create_texture(target, plain.format);
+            let data = Self::load_texture(&mut t, &plain, &root, &mut self.device);
+            let key = (external.id, external.channel_index);
+            self.capture.owned_external_images.insert(key, t.into_external());
+            image_handler.data.insert(key, data);
+        }
+
+        self.device.end_frame();
+        self.external_image_handler = Some(Box::new(image_handler) as Box<_>);
+        self.output_image_handler = Some(Box::new(()) as Box<_>);
+        info!("done.");
     }
 }

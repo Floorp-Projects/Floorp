@@ -29,6 +29,7 @@ pub const MAX_BLUR_RADIUS : f32 = 300.;
 pub const MASK_CORNER_PADDING: f32 = 4.0;
 
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct BoxShadowCacheKey {
     pub width: Au,
     pub height: Au,
@@ -214,12 +215,14 @@ impl FrameBuilder {
                         // as a simple blit.
                         if width > prim_info.rect.size.width || height > prim_info.rect.size.height {
                             image_kind = BrushImageKind::Simple;
-                            width = prim_info.rect.size.width;
-                            height = prim_info.rect.size.height;
+                            width = prim_info.rect.size.width + spread_amount * 2.0;
+                            height = prim_info.rect.size.height + spread_amount * 2.0;
                         }
 
-                        let clip_rect = LayerRect::new(LayerPoint::zero(),
-                                                       LayerSize::new(width, height));
+                        let clip_rect = LayerRect::new(
+                            LayerPoint::zero(),
+                            LayerSize::new(width, height)
+                        );
 
                         brush_prim = BrushPrimitive::new(
                             BrushKind::Mask {
@@ -255,12 +258,6 @@ impl FrameBuilder {
                         clip_and_scroll
                     );
 
-                    // TODO(gw): Right now, we always use a clip out
-                    //           mask for outset shadows. We can make this
-                    //           much more efficient when we have proper
-                    //           segment logic, by avoiding drawing
-                    //           most of the pixels inside and just
-                    //           clipping out along the edges.
                     extra_clips.push(ClipSource::new_rounded_rect(
                         prim_info.rect,
                         border_radius,

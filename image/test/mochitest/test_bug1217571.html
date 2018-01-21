@@ -27,8 +27,7 @@ window.onload = function() {
       return SpecialPowers.wrap(f.contentDocument.getElementsByTagName("img")[0]);
   });
   var containers = imgs.map(function (img) {
-      return img.QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
-                .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST)
+      return img.getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST)
                 .image;
   });
 

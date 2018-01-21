@@ -8,6 +8,19 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "gfxDWriteCommon.h"
+#include "dwrite_3.h"
+
+ // Currently, we build with WINVER=0x601 (Win7), which means newer
+ // declarations in dwrite_3.h will not be visible. Also, we don't
+ // yet have the Fall Creators Update SDK available on build machines,
+ // so even with updated WINVER, some of the interfaces we need would
+ // not be present.
+ // To work around this, until the build environment is updated,
+ // we #include an extra header that contains copies of the relevant
+ // classes/interfaces we need.
+#if WINVER < 0x0A00
+#include "dw-extra.h"
+#endif
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
@@ -93,7 +106,8 @@ public:
                        IDWriteFont *aFont,
                        bool aIsSystemFont = false)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
-        mIsSystemFont(aIsSystemFont), mForceGDIClassic(false)
+        mIsSystemFont(aIsSystemFont), mForceGDIClassic(false),
+        mHasVariations(false), mHasVariationsInitialized(false)
     {
         DWRITE_FONT_STYLE dwriteStyle = aFont->GetStyle();
         mStyle = (dwriteStyle == DWRITE_FONT_STYLE_ITALIC ?
@@ -127,7 +141,8 @@ public:
                               int16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
-        mIsSystemFont(false), mForceGDIClassic(false)
+        mIsSystemFont(false), mForceGDIClassic(false),
+        mHasVariations(false), mHasVariationsInitialized(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -154,7 +169,8 @@ public:
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(nullptr),
         mFontFile(aFontFile), mFontFileStream(aFontFileStream),
-        mIsSystemFont(false), mForceGDIClassic(false)
+        mIsSystemFont(false), mForceGDIClassic(false),
+        mHasVariations(false), mHasVariationsInitialized(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -172,6 +188,8 @@ public:
     nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
 
     bool IsCJKFont();
+
+    bool HasVariations();
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
     bool GetForceGDIClassic() { return mForceGDIClassic; }
@@ -193,6 +211,7 @@ protected:
     
     nsresult CreateFontFace(
         IDWriteFontFace **aFontFace,
+        const nsTArray<gfxFontVariation>* aVariations = nullptr,
         DWRITE_FONT_SIMULATIONS aSimulations = DWRITE_FONT_SIMULATIONS_NONE);
 
     static bool InitLogFont(IDWriteFont *aFont, LOGFONTW *aLogFont);
@@ -211,12 +230,16 @@ protected:
     // font face corresponding to the mFont/mFontFile *without* any DWrite
     // style simulations applied
     RefPtr<IDWriteFontFace> mFontFace;
+    // Extended fontface interface if supported, else null
+    RefPtr<IDWriteFontFace5> mFontFace5;
 
     DWRITE_FONT_FACE_TYPE mFaceType;
 
     int8_t mIsCJK;
     bool mIsSystemFont;
     bool mForceGDIClassic;
+    bool mHasVariations;
+    bool mHasVariationsInitialized;
 
     mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontDWrite> mUnscaledFont;
     mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontDWrite> mUnscaledFontBold;

@@ -9,18 +9,23 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
+const AnimationDetailContainer = createFactory(require("./AnimationDetailContainer"));
 const AnimationListContainer = createFactory(require("./AnimationListContainer"));
 const NoAnimationPanel = createFactory(require("./NoAnimationPanel"));
+const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
 
 class App extends PureComponent {
   static get propTypes() {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
+      detailVisibility: PropTypes.bool.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
+      selectAnimation: PropTypes.func.isRequired,
+      setDetailVisibility: PropTypes.func.isRequired,
       setSelectedNode: PropTypes.func.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       toggleElementPicker: PropTypes.func.isRequired,
@@ -34,11 +39,14 @@ class App extends PureComponent {
   render() {
     const {
       animations,
+      detailVisibility,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
+      selectAnimation,
+      setDetailVisibility,
       setSelectedNode,
       simulateAnimation,
       toggleElementPicker,
@@ -46,21 +54,37 @@ class App extends PureComponent {
 
     return dom.div(
       {
-        id: "animation-container"
+        id: "animation-container",
+        className: detailVisibility ? "animation-detail-visible" : "",
       },
       animations.length ?
-      AnimationListContainer(
-        {
-          animations,
-          emitEventForTest,
-          getAnimatedPropertyMap,
-          getNodeFromActor,
-          onHideBoxModelHighlighter,
-          onShowBoxModelHighlighterForNode,
-          setSelectedNode,
-          simulateAnimation,
-        }
-      )
+      SplitBox({
+        className: "animation-container-splitter",
+        endPanel: AnimationDetailContainer(
+          {
+            emitEventForTest,
+            getAnimatedPropertyMap,
+            setDetailVisibility,
+          }
+        ),
+        endPanelControl: true,
+        initialHeight: "50%",
+        splitterSize: 1,
+        startPanel: AnimationListContainer(
+          {
+            animations,
+            emitEventForTest,
+            getAnimatedPropertyMap,
+            getNodeFromActor,
+            onHideBoxModelHighlighter,
+            onShowBoxModelHighlighterForNode,
+            selectAnimation,
+            setSelectedNode,
+            simulateAnimation,
+          }
+        ),
+        vert: false,
+      })
       :
       NoAnimationPanel(
         {
@@ -71,4 +95,11 @@ class App extends PureComponent {
   }
 }
 
-module.exports = connect(state => state)(App);
+const mapStateToProps = state => {
+  return {
+    animations: state.animations.animations,
+    detailVisibility: state.animations.detailVisibility,
+  };
+};
+
+module.exports = connect(mapStateToProps)(App);

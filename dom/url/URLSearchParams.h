@@ -47,23 +47,14 @@ public:
   {
   public:
     virtual bool
-    URLParamsIterator(const nsString& aName, const nsString& aValue) = 0;
+    URLParamsIterator(const nsAString& aName, const nsAString& aValue) = 0;
   };
+
+  static bool
+  Parse(const nsACString& aInput, ForEachIterator& aIterator);
 
   void
   ParseInput(const nsACString& aInput);
-
-  bool
-  ForEach(ForEachIterator& aIterator) const
-  {
-    for (uint32_t i = 0; i < mParams.Length(); ++i) {
-      if (!aIterator.URLParamsIterator(mParams[i].mKey, mParams[i].mValue)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   void Serialize(nsAString& aValue) const;
 
@@ -110,8 +101,8 @@ public:
   WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
 
 private:
-  void DecodeString(const nsACString& aInput, nsAString& aOutput);
-  void ConvertString(const nsACString& aInput, nsAString& aOutput);
+  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
+  static void ConvertString(const nsACString& aInput, nsAString& aOutput);
 
   struct Param
   {
@@ -175,16 +166,6 @@ public:
   void Stringify(nsString& aRetval) const
   {
     Serialize(aRetval);
-  }
-
-  typedef URLParams::ForEachIterator ForEachIterator;
-
-  bool
-  ForEach(ForEachIterator& aIterator) const
-  {
-    return mParams->ForEach(aIterator);
-
-    return true;
   }
 
   bool

@@ -719,10 +719,13 @@ GetClassForProtoKey(JSProtoKey key)
 /* static */ ObjectGroup*
 ObjectGroup::defaultNewGroup(JSContext* cx, JSProtoKey key)
 {
-    RootedObject proto(cx);
-    if (key != JSProto_Null && !GetBuiltinPrototype(cx, key, &proto))
-        return nullptr;
-    return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto.get()));
+    JSObject* proto = nullptr;
+    if (key != JSProto_Null) {
+        proto = GlobalObject::getOrCreatePrototype(cx, key);
+        if (!proto)
+            return nullptr;
+    }
+    return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -844,8 +847,8 @@ ObjectGroup::newArrayObject(JSContext* cx,
     if (p) {
         group = p->value();
     } else {
-        RootedObject proto(cx);
-        if (!GetBuiltinPrototype(cx, JSProto_Array, &proto))
+        JSObject* proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
+        if (!proto)
             return nullptr;
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
         group = ObjectGroupCompartment::makeGroup(cx, &ArrayObject::class_, taggedProto);
@@ -1167,8 +1170,8 @@ ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties, size_t nprop
         if (!CanShareObjectGroup(properties, nproperties))
             return NewPlainObjectWithProperties(cx, properties, nproperties, newKind);
 
-        RootedObject proto(cx);
-        if (!GetBuiltinPrototype(cx, JSProto_Object, &proto))
+        JSObject* proto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
+        if (!proto)
             return nullptr;
 
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
@@ -1416,9 +1419,12 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* scriptArg, jsbytecode*
     }
 
     RootedScript script(cx, scriptArg);
-    RootedObject proto(cx, protoArg);
-    if (!proto && kind != JSProto_Null && !GetBuiltinPrototype(cx, kind, &proto))
-        return nullptr;
+    JSObject* proto = protoArg;
+    if (!proto && kind != JSProto_Null) {
+        proto = GlobalObject::getOrCreatePrototype(cx, kind);
+        if (!proto)
+            return nullptr;
+    }
 
     Rooted<ObjectGroupCompartment::AllocationSiteKey> key(cx,
         ObjectGroupCompartment::AllocationSiteKey(script, offset, kind, proto));
@@ -1665,8 +1671,8 @@ ObjectGroupCompartment::getStringSplitStringGroup(JSContext* cx)
 
     const Class* clasp = GetClassForProtoKey(JSProto_Array);
 
-    RootedObject proto(cx);
-    if (!GetBuiltinPrototype(cx, JSProto_Array, &proto))
+    JSObject* proto = GlobalObject::getOrCreateArrayPrototype(cx, cx->global());
+    if (!proto)
         return nullptr;
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
 

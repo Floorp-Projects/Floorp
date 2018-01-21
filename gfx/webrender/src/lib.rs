@@ -55,6 +55,8 @@ extern crate serde;
 mod batch;
 mod border;
 mod box_shadow;
+#[cfg(feature = "capture")]
+mod capture;
 mod clip;
 mod clip_scroll_node;
 mod clip_scroll_tree;
@@ -160,10 +162,10 @@ extern crate base64;
 pub extern crate webrender_api;
 
 #[doc(hidden)]
-pub use device::{build_shader_strings, ProgramCache, UploadMethod, VertexUsageHint};
+pub use device::{build_shader_strings, ProgramCache, ReadPixelsFormat, UploadMethod, VertexUsageHint};
 pub use renderer::{CpuProfile, DebugFlags, GpuProfile, OutputImageHandler, RendererKind};
 pub use renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
-pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};
+pub use renderer::{GraphicsApi, GraphicsApiInfo, Renderer, RendererOptions};
 pub use renderer::{RendererStats, ThreadListener};
 pub use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 pub use webrender_api as api;

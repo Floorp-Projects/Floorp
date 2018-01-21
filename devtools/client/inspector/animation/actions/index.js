@@ -11,8 +11,14 @@ createEnum([
   // Update the list of animation.
   "UPDATE_ANIMATIONS",
 
+  // Update visibility of detail pane.
+  "UPDATE_DETAIL_VISIBILITY",
+
   // Update state of the picker enabled.
   "UPDATE_ELEMENT_PICKER_ENABLED",
+
+  // Update selected animation.
+  "UPDATE_SELECTED_ANIMATION",
 
   // Update sidebar size.
   "UPDATE_SIDEBAR_SIZE",

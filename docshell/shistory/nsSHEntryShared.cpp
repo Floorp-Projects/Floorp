@@ -155,16 +155,13 @@ nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer)
     // mSHistory is only set for root entries, but in general bfcache only
     // applies to root entries as well. BFCache for subframe navigation has been
     // disabled since 2005 in bug 304860.
-    nsCOMPtr<nsISHistoryInternal> shistory = do_QueryReferent(mSHistory);
-    if (shistory) {
+    if (nsCOMPtr<nsISHistoryInternal> shistory = do_QueryReferent(mSHistory)) {
       shistory->AddToExpirationTracker(this);
     }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
     // Store observed document in strong pointer in case it is removed from
     // the contentviewer
-    mDocument = do_QueryInterface(domDoc);
+    mDocument = mContentViewer->GetDocument();
     if (mDocument) {
       mDocument->SetBFCacheEntry(this);
       mDocument->AddMutationObserver(this);

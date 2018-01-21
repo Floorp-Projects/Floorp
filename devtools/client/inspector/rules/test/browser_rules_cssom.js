@@ -15,8 +15,15 @@ add_task(function* () {
   yield selectNode("#target", inspector);
 
   let elementStyle = view._elementStyle;
-  let rule = elementStyle.rules[1];
+  let rule;
 
-  is(rule.textProps.length, 1, "rule should have one property");
+  rule = elementStyle.rules[1];
+  is(rule.textProps.length, 1, "rule 1 should have one property");
   is(rule.textProps[0].name, "color", "the property should be 'color'");
+  is(rule.ruleLine, -1, "the property has no source line");
+
+  rule = elementStyle.rules[2];
+  is(rule.textProps.length, 1, "rule 2 should have one property");
+  is(rule.textProps[0].name, "font-weight", "the property should be 'font-weight'");
+  is(rule.ruleLine, -1, "the property has no source line");
 });

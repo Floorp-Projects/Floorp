@@ -678,16 +678,21 @@ function check_startup_changes(aType, aIds) {
  * @return  An nsIFile for the directory in which the add-on is installed.
  */
 function writeInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFile = null) {
+  return awaitPromise(promiseWriteInstallRDFToDir(aData, aDir, aId, aExtraFile));
+}
+async function promiseWriteInstallRDFToDir(aData, aDir, aId = aData.id, aExtraFile = null) {
   let files = {
     "install.rdf": AddonTestUtils.createInstallRDF(aData),
   };
-  if (aExtraFile)
+  if (typeof aExtraFile === "object")
+    Object.assign(files, aExtraFile);
+  else
     files[aExtraFile] = "";
 
   let dir = aDir.clone();
   dir.append(aId);
 
-  awaitPromise(AddonTestUtils.promiseWriteFilesToDir(dir.path, files));
+  await AddonTestUtils.promiseWriteFilesToDir(dir.path, files);
   return dir;
 }
 
@@ -712,6 +717,9 @@ function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
   let files = {
     "install.rdf": AddonTestUtils.createInstallRDF(aData),
   };
+  if (typeof aExtraFile === "object")
+    Object.assign(files, aExtraFile);
+  else
   if (aExtraFile)
     files[aExtraFile] = "";
 
@@ -724,6 +732,9 @@ function writeInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
   AddonTestUtils.writeFilesToZip(file.path, files);
 
   return file;
+}
+async function promiseWriteInstallRDFToXPI(aData, aDir, aId = aData.id, aExtraFile = null) {
+  return writeInstallRDFToXPI(aData, aDir, aId, aExtraFile);
 }
 
 /**

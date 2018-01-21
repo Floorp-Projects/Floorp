@@ -75,7 +75,7 @@ protected:
       uri = new T();
     }
 
-    rv = uri->SetSpec(aSpec);
+    rv = uri->SetSpecInternal(aSpec);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -277,6 +277,12 @@ class MOZ_STACK_CLASS NS_MutateURI
 public:
   explicit NS_MutateURI(nsIURI* aURI);
   explicit NS_MutateURI(const char * aContractID);
+
+  explicit NS_MutateURI(nsIURIMutator* m)
+  {
+    mStatus = m ? NS_OK : NS_ERROR_NULL_POINTER;
+    mMutator = m;
+  }
 
   NS_MutateURI& SetSpec(const nsACString& aSpec)
   {

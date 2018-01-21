@@ -331,20 +331,12 @@ nsImageLoadingContent::OnImageIsAnimated(imgIRequest *aRequest)
  * nsIImageLoadingContent impl
  */
 
-NS_IMETHODIMP
-nsImageLoadingContent::GetLoadingEnabled(bool *aLoadingEnabled)
-{
-  *aLoadingEnabled = mLoadingEnabled;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled)
 {
   if (nsContentUtils::GetImgLoaderForChannel(nullptr, nullptr)) {
     mLoadingEnabled = aLoadingEnabled;
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -388,10 +380,12 @@ ReplayImageStatus(imgIRequest* aRequest, imgINotificationObserver* aObserver)
   }
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (!mObserverList.mObserver) {
     // Don't touch the linking of the list!
@@ -400,7 +394,7 @@ nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
     ReplayImageStatus(mCurrentRequest, aObserver);
     ReplayImageStatus(mPendingRequest, aObserver);
 
-    return NS_OK;
+    return;
   }
 
   // otherwise we have to create a new entry
@@ -413,19 +407,19 @@ nsImageLoadingContent::AddNativeObserver(imgINotificationObserver* aObserver)
   observer->mNext = new ImageObserver(aObserver);
   ReplayImageStatus(mCurrentRequest, aObserver);
   ReplayImageStatus(mPendingRequest, aObserver);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::RemoveNativeObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (mObserverList.mObserver == aObserver) {
     mObserverList.mObserver = nullptr;
     // Don't touch the linking of the list!
-    return NS_OK;
+    return;
   }
 
   // otherwise have to find it and splice it out
@@ -448,13 +442,14 @@ nsImageLoadingContent::RemoveNativeObserver(imgINotificationObserver* aObserver)
     NS_WARNING("Asked to remove nonexistent observer");
   }
 #endif
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   nsresult rv = NS_OK;
   RefPtr<imgRequestProxy> currentReq;
@@ -464,7 +459,7 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
     // to dispatch notifications from the correct scheduler group.
     rv = mCurrentRequest->Clone(aObserver, nullptr, getter_AddRefs(currentReq));
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
   }
 
@@ -474,22 +469,23 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
     rv = mPendingRequest->Clone(aObserver, nullptr, getter_AddRefs(pendingReq));
     if (NS_FAILED(rv)) {
       mCurrentRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
-      return rv;
+      return;
     }
   }
 
   mScriptedObservers.AppendElement(
     new ScriptedImageObserver(aObserver, Move(currentReq), Move(pendingReq)));
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver)) {
+    return;
+  }
 
   if (NS_WARN_IF(mScriptedObservers.IsEmpty())) {
-    return NS_OK;
+    return;
   }
 
   RefPtr<ScriptedImageObserver> observer;
@@ -504,13 +500,12 @@ nsImageLoadingContent::RemoveObserver(imgINotificationObserver* aObserver)
   } while(i > 0);
 
   if (NS_WARN_IF(!observer)) {
-    return NS_OK;
+    return;
   }
 
   // If the cancel causes a mutation, it will be harmless, because we have
   // already removed the observer from the list.
   observer->CancelRequests();
-  return NS_OK;
 }
 
 void
@@ -815,8 +810,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 }
 
 void
-nsImageLoadingContent::ForceReload(const mozilla::dom::Optional<bool>& aNotify,
-                                   mozilla::ErrorResult& aError)
+nsImageLoadingContent::ForceReload(bool aNotify, ErrorResult& aError)
 {
   nsCOMPtr<nsIURI> currentURI;
   GetCurrentURI(getter_AddRefs(currentURI));
@@ -825,33 +819,16 @@ nsImageLoadingContent::ForceReload(const mozilla::dom::Optional<bool>& aNotify,
     return;
   }
 
-  // defaults to true
-  bool notify = !aNotify.WasPassed() || aNotify.Value();
-
   // We keep this flag around along with the old URI even for failed requests
   // without a live request object
   ImageLoadType loadType = \
     (mCurrentRequestFlags & REQUEST_IS_IMAGESET) ? eImageLoadType_Imageset
                                                  : eImageLoadType_Normal;
-  nsresult rv = LoadImage(currentURI, true, notify, loadType, true, nullptr,
+  nsresult rv = LoadImage(currentURI, true, aNotify, loadType, true, nullptr,
                           nsIRequest::VALIDATE_ALWAYS);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
   }
-}
-
-NS_IMETHODIMP
-nsImageLoadingContent::ForceReload(bool aNotify /* = true */,
-                                   uint8_t aArgc)
-{
-  mozilla::dom::Optional<bool> notify;
-  if (aArgc >= 1) {
-    notify.Construct() = aNotify;
-  }
-
-  ErrorResult result;
-  ForceReload(notify, result);
-  return result.StealNSResult();
 }
 
 /*
@@ -1080,13 +1057,12 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   return NS_OK;
 }
 
-nsresult
+void
 nsImageLoadingContent::ForceImageState(bool aForce,
                                        EventStates::InternalType aState)
 {
   mIsImageStateForced = aForce;
   mForcedImageState = EventStates(aState);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1356,13 +1332,13 @@ nsImageLoadingContent::PrepareNextRequest(ImageLoadType aImageLoadType)
            PrepareCurrentRequest(aImageLoadType);
 }
 
-nsresult
+void
 nsImageLoadingContent::SetBlockedRequest(int16_t aContentDecision)
 {
   // If this is not calling from LoadImage, for example, from ServiceWorker,
   // bail out.
   if (!mIsStartingImageLoad) {
-    return NS_OK;
+    return;
   }
 
   // Sanity
@@ -1378,8 +1354,6 @@ nsImageLoadingContent::SetBlockedRequest(int16_t aContentDecision)
   } else {
     mImageBlockingStatus = aContentDecision;
   }
-
-  return NS_OK;
 }
 
 RefPtr<imgRequestProxy>&

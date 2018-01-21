@@ -73,7 +73,8 @@ def make_repackage_signing_description(config, jobs):
         signing_dependencies = dep_job.dependencies
         # This is so we get the build task etc in our dependencies to
         # have better beetmover support.
-        dependencies.update(signing_dependencies)
+        dependencies.update({k: v for k, v in signing_dependencies.items()
+                             if k != 'docker-image'})
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage-signing'
 

@@ -56,28 +56,24 @@ public:
   NS_DECL_NSIIMAGELOADINGCONTENT
 
   // Web IDL binding methods.
-  // Note that the XPCOM SetLoadingEnabled, AddObserver, RemoveObserver,
-  // ForceImageState methods are OK for Web IDL bindings to use as well,
-  // since none of them throw when called via the Web IDL bindings.
+  // Note that the XPCOM SetLoadingEnabled, ForceImageState methods are OK for
+  // Web IDL bindings to use as well, since none of them throw when called via
+  // the Web IDL bindings.
 
   bool LoadingEnabled() const { return mLoadingEnabled; }
   int16_t ImageBlockingStatus() const
   {
     return mImageBlockingStatus;
   }
+  void AddObserver(imgINotificationObserver* aObserver);
+  void RemoveObserver(imgINotificationObserver* aObserver);
   already_AddRefed<imgIRequest>
     GetRequest(int32_t aRequestType, mozilla::ErrorResult& aError);
   int32_t
     GetRequestType(imgIRequest* aRequest, mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentURI(mozilla::ErrorResult& aError);
   already_AddRefed<nsIURI> GetCurrentRequestFinalURI();
-  void ForceReload(const mozilla::dom::Optional<bool>& aNotify,
-                   mozilla::ErrorResult& aError);
-
-  // XPCOM [optional] syntax helper
-  nsresult ForceReload(bool aNotify = true) {
-    return ForceReload(aNotify, 1);
-  }
+  void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
 
 protected:
   enum ImageLoadType {

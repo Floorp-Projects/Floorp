@@ -24,7 +24,7 @@ echo "${md5sum} *${TMPDIR}/${filename}" > $TMPDIR/hfsplus.MD5
 # Most-upstream is https://opensource.apple.com/source/diskdev_cmds/
 
 # Download the source of the specified version of hfsplus
-wget -c -P $TMPDIR http://pkgs.fedoraproject.org/repo/pkgs/hfsplus-tools/${filename}/${md5sum}/${filename} || exit 1
+wget -c --progress=dot:mega -P $TMPDIR http://pkgs.fedoraproject.org/repo/pkgs/hfsplus-tools/${filename}/${md5sum}/${filename} || exit 1
 md5sum -c $TMPDIR/hfsplus.MD5 || exit 1
 mkdir hfsplus-source
 tar xzf $TMPDIR/${filename} -C hfsplus-source --strip-components=1

@@ -22,6 +22,7 @@ ENV HOME=/builds/worker \
     USER=worker \
     LOGNAME=worker \
     HOSTNAME=taskcluster-worker \
+    XZ_OPT=-T0 \
     DEBIAN_FRONTEND=noninteractive
 
 # Set a default command useful for debugging

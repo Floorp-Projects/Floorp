@@ -7,6 +7,17 @@ namespace mozilla {
 
 using EntryType = dom::RTCRtpSourceEntryType;
 
+double
+RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const
+{
+  // Spec indicates that a value of 127 should be set to 0
+  if (audioLevel == 127) {
+    return 0;
+  }
+  // All other values are calculated as 10^(-rfc_level/20)
+  return std::pow(10, -static_cast<double>(audioLevel) / 20);
+}
+
 RtpSourceObserver::RtpSourceObserver() :
   mLevelGuard("RtpSourceObserver::mLevelGuard") {}
 
@@ -51,11 +62,11 @@ RtpSourceObserver::GetRtpSources(const int64_t aTimeNow,
     const RtpSourceEntry* entry = it.second.FindClosestNotAfter(aTimeNow);
     if (entry) {
       dom::RTCRtpSourceEntry domEntry;
-      domEntry.mSource.Construct(GetSourceFromKey(it.first));
-      domEntry.mSourceType.Construct(GetTypeFromKey(it.first));
-      domEntry.mTimestamp.Construct(entry->jitterAdjustedTimestamp);
+      domEntry.mSource = GetSourceFromKey(it.first);
+      domEntry.mSourceType = GetTypeFromKey(it.first);
+      domEntry.mTimestamp = entry->jitterAdjustedTimestamp;
       if (entry->hasAudioLevel) {
-        domEntry.mAudioLevel.Construct(entry->audioLevel);
+        domEntry.mAudioLevel.Construct(entry->ToLinearAudioLevel());
       }
       outSources.AppendElement(std::move(domEntry));
     }

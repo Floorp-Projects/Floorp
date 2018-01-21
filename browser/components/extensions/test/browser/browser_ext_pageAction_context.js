@@ -52,6 +52,7 @@ add_task(async function testTabSwitchContext() {
     },
 
     getTests: function(tabs) {
+      let defaultIcon = "chrome://browser/content/extension.svg";
       let details = [
         {"icon": browser.runtime.getURL("default.png"),
          "popup": browser.runtime.getURL("default.html"),
@@ -62,9 +63,9 @@ add_task(async function testTabSwitchContext() {
         {"icon": browser.runtime.getURL("2.png"),
          "popup": browser.runtime.getURL("2.html"),
          "title": "Title 2"},
-        {"icon": browser.runtime.getURL("2.png"),
-         "popup": browser.runtime.getURL("2.html"),
-         "title": "Default T\u00edtulo \u263a"},
+        {"icon": defaultIcon,
+         "popup": "",
+         "title": ""},
       ];
 
       let promiseTabLoad = details => {
@@ -124,10 +125,20 @@ add_task(async function testTabSwitchContext() {
           expect(details[2]);
         },
         expect => {
-          browser.test.log("Clear the title. Expect default title.");
+          browser.test.log("Set empty string values. Expect empty strings but default icon.");
+          browser.pageAction.setIcon({tabId: tabs[1], path: ""});
+          browser.pageAction.setPopup({tabId: tabs[1], popup: ""});
           browser.pageAction.setTitle({tabId: tabs[1], title: ""});
 
           expect(details[3]);
+        },
+        expect => {
+          browser.test.log("Clear the values. Expect default ones.");
+          browser.pageAction.setIcon({tabId: tabs[1], path: null});
+          browser.pageAction.setPopup({tabId: tabs[1], popup: null});
+          browser.pageAction.setTitle({tabId: tabs[1], title: null});
+
+          expect(details[0]);
         },
         async expect => {
           browser.test.log("Navigate to a new page. Expect icon hidden.");

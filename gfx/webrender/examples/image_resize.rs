@@ -100,8 +100,10 @@ impl Example for App {
                             ImageData::new(image_data),
                             None,
                         );
-                        api.update_resources(updates);
-                        api.generate_frame(document_id, None);
+                        let mut txn = Transaction::new();
+                        txn.update_resources(updates);
+                        txn.generate_frame();
+                        api.send_transaction(document_id, txn);
                     }
                     _ => {}
                 }

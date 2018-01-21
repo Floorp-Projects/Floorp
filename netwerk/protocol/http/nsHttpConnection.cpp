@@ -132,11 +132,12 @@ nsHttpConnection::~nsHttpConnection()
 
     if ((mFastOpenStatus != TFO_FAILED) &&
         (mFastOpenStatus != TFO_HTTP) &&
-        ((mFastOpenStatus != TFO_DISABLED) ||
+        (((mFastOpenStatus > TFO_DISABLED_CONNECT) && (mFastOpenStatus < TFO_BACKUP_CONN)) ||
          gHttpHandler->UseFastOpen())) {
         // TFO_FAILED will be reported in the replacement connection with more
         // details.
         // Otherwise report only if TFO is enabled and supported.
+        // If TFO is disabled, report only connections ha cause it to be disabled, e.g. TFO_FAILED_NET_TIMEOUT, etc.
         Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_3, mFastOpenStatus);
     }
 }

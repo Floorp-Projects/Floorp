@@ -36,7 +36,7 @@ var gEMEHandler = {
   },
   getEMEDisabledFragment(msgId) {
     let mainMessage = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.message");
-    let [prefix, suffix] = mainMessage.split(/%(?:\$\d)?S/).map(s => document.createTextNode(s));
+    let [prefix, suffix] = mainMessage.split(/%(?:1\$)?S/).map(s => document.createTextNode(s));
     let text = gNavigatorBundle.getString("emeNotifications.drmContentDisabled.learnMoreLabel");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     let link = document.createElement("label");

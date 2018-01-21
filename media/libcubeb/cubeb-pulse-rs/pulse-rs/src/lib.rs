@@ -181,9 +181,9 @@ impl Into<ffi::pa_operation_state_t> for OperationState {
 }
 
 bitflags! {
-    pub flags ContextFlags: u32 {
-        const CONTEXT_FLAGS_NOAUTOSPAWN = ffi::PA_CONTEXT_NOAUTOSPAWN,
-        const CONTEXT_FLAGS_NOFAIL = ffi::PA_CONTEXT_NOFAIL,
+    pub struct ContextFlags: u32 {
+        const NOAUTOSPAWN = ffi::PA_CONTEXT_NOAUTOSPAWN;
+        const NOFAIL = ffi::PA_CONTEXT_NOFAIL;
     }
 }
 
@@ -243,27 +243,27 @@ impl Into<ffi::pa_stream_direction_t> for StreamDirection {
 }
 
 bitflags! {
-    pub flags StreamFlags : u32 {
-        const STREAM_START_CORKED = ffi::PA_STREAM_START_CORKED,
-        const STREAM_INTERPOLATE_TIMING = ffi::PA_STREAM_INTERPOLATE_TIMING,
-        const STREAM_NOT_MONOTONIC = ffi::PA_STREAM_NOT_MONOTONIC,
-        const STREAM_AUTO_TIMING_UPDATE = ffi::PA_STREAM_AUTO_TIMING_UPDATE,
-        const STREAM_NO_REMAP_CHANNELS = ffi::PA_STREAM_NO_REMAP_CHANNELS,
-        const STREAM_NO_REMIX_CHANNELS = ffi::PA_STREAM_NO_REMIX_CHANNELS,
-        const STREAM_FIX_FORMAT = ffi::PA_STREAM_FIX_FORMAT,
-        const STREAM_FIX_RATE = ffi::PA_STREAM_FIX_RATE,
-        const STREAM_FIX_CHANNELS = ffi::PA_STREAM_FIX_CHANNELS,
-        const STREAM_DONT_MOVE = ffi::PA_STREAM_DONT_MOVE,
-        const STREAM_VARIABLE_RATE = ffi::PA_STREAM_VARIABLE_RATE,
-        const STREAM_PEAK_DETECT = ffi::PA_STREAM_PEAK_DETECT,
-        const STREAM_START_MUTED = ffi::PA_STREAM_START_MUTED,
-        const STREAM_ADJUST_LATENCY = ffi::PA_STREAM_ADJUST_LATENCY,
-        const STREAM_EARLY_REQUESTS = ffi::PA_STREAM_EARLY_REQUESTS,
-        const STREAM_DONT_INHIBIT_AUTO_SUSPEND = ffi::PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND,
-        const STREAM_START_UNMUTED = ffi::PA_STREAM_START_UNMUTED,
-        const STREAM_FAIL_ON_SUSPEND = ffi::PA_STREAM_FAIL_ON_SUSPEND,
-        const STREAM_RELATIVE_VOLUME = ffi::PA_STREAM_RELATIVE_VOLUME,
-        const STREAM_PASSTHROUGH = ffi::PA_STREAM_PASSTHROUGH,
+    pub struct StreamFlags : u32 {
+        const START_CORKED = ffi::PA_STREAM_START_CORKED;
+        const INTERPOLATE_TIMING = ffi::PA_STREAM_INTERPOLATE_TIMING;
+        const NOT_MONOTONIC = ffi::PA_STREAM_NOT_MONOTONIC;
+        const AUTO_TIMING_UPDATE = ffi::PA_STREAM_AUTO_TIMING_UPDATE;
+        const NO_REMAP_CHANNELS = ffi::PA_STREAM_NO_REMAP_CHANNELS;
+        const NO_REMIX_CHANNELS = ffi::PA_STREAM_NO_REMIX_CHANNELS;
+        const FIX_FORMAT = ffi::PA_STREAM_FIX_FORMAT;
+        const FIX_RATE = ffi::PA_STREAM_FIX_RATE;
+        const FIX_CHANNELS = ffi::PA_STREAM_FIX_CHANNELS;
+        const DONT_MOVE = ffi::PA_STREAM_DONT_MOVE;
+        const VARIABLE_RATE = ffi::PA_STREAM_VARIABLE_RATE;
+        const PEAK_DETECT = ffi::PA_STREAM_PEAK_DETECT;
+        const START_MUTED = ffi::PA_STREAM_START_MUTED;
+        const ADJUST_LATENCY = ffi::PA_STREAM_ADJUST_LATENCY;
+        const EARLY_REQUESTS = ffi::PA_STREAM_EARLY_REQUESTS;
+        const DONT_INHIBIT_AUTO_SUSPEND = ffi::PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND;
+        const START_UNMUTED = ffi::PA_STREAM_START_UNMUTED;
+        const FAIL_ON_SUSPEND = ffi::PA_STREAM_FAIL_ON_SUSPEND;
+        const RELATIVE_VOLUME = ffi::PA_STREAM_RELATIVE_VOLUME;
+        const PASSTHROUGH = ffi::PA_STREAM_PASSTHROUGH;
     }
 }
 
@@ -300,17 +300,17 @@ pub enum StreamLatency {
 }
 
 bitflags!{
-    pub flags SubscriptionMask : u32 {
-        const SUBSCRIPTION_MASK_SINK = ffi::PA_SUBSCRIPTION_MASK_SINK,
-        const SUBSCRIPTION_MASK_SOURCE = ffi::PA_SUBSCRIPTION_MASK_SOURCE,
-        const SUBSCRIPTION_MASK_SINK_INPUT = ffi::PA_SUBSCRIPTION_MASK_SINK_INPUT,
-        const SUBSCRIPTION_MASK_SOURCE_OUTPUT = ffi::PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT,
-        const SUBSCRIPTION_MASK_MODULE = ffi::PA_SUBSCRIPTION_MASK_MODULE,
-        const SUBSCRIPTION_MASK_CLIENT = ffi::PA_SUBSCRIPTION_MASK_CLIENT,
-        const SUBSCRIPTION_MASK_SAMPLE_CACHE = ffi::PA_SUBSCRIPTION_MASK_SAMPLE_CACHE,
-        const SUBSCRIPTION_MASK_SERVER = ffi::PA_SUBSCRIPTION_MASK_SERVER,
-        const SUBSCRIPTION_MASK_AUTOLOAD = ffi::PA_SUBSCRIPTION_MASK_AUTOLOAD,
-        const SUBSCRIPTION_MASK_CARD = ffi::PA_SUBSCRIPTION_MASK_CARD,
+    pub struct SubscriptionMask : u32 {
+        const SINK = ffi::PA_SUBSCRIPTION_MASK_SINK;
+        const SOURCE = ffi::PA_SUBSCRIPTION_MASK_SOURCE;
+        const SINK_INPUT = ffi::PA_SUBSCRIPTION_MASK_SINK_INPUT;
+        const SOURCE_OUTPUT = ffi::PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT;
+        const MODULE = ffi::PA_SUBSCRIPTION_MASK_MODULE;
+        const CLIENT = ffi::PA_SUBSCRIPTION_MASK_CLIENT;
+        const SAMPLE_CACHE = ffi::PA_SUBSCRIPTION_MASK_SAMPLE_CACHE;
+        const SERVER = ffi::PA_SUBSCRIPTION_MASK_SERVER;
+        const AUTOLOAD = ffi::PA_SUBSCRIPTION_MASK_AUTOLOAD;
+        const CARD = ffi::PA_SUBSCRIPTION_MASK_CARD;
     }
 }
 
@@ -400,16 +400,16 @@ impl Into<ffi::pa_seek_mode_t> for SeekMode {
 }
 
 bitflags! {
-    pub flags SinkFlags: u32 {
-        const SINK_HW_VOLUME_CTRL = ffi::PA_SINK_HW_VOLUME_CTRL,
-        const SINK_LATENCY = ffi::PA_SINK_LATENCY,
-        const SINK_HARDWARE = ffi::PA_SINK_HARDWARE,
-        const SINK_NETWORK = ffi::PA_SINK_NETWORK,
-        const SINK_HW_MUTE_CTRL = ffi::PA_SINK_HW_MUTE_CTRL,
-        const SINK_DECIBEL_VOLUME = ffi::PA_SINK_DECIBEL_VOLUME,
-        const SINK_FLAT_VOLUME = ffi::PA_SINK_FLAT_VOLUME,
-        const SINK_DYNAMIC_LATENCY = ffi::PA_SINK_DYNAMIC_LATENCY,
-        const SINK_SET_FORMATS = ffi::PA_SINK_SET_FORMATS,
+    pub struct SinkFlags: u32 {
+        const HW_VOLUME_CTRL = ffi::PA_SINK_HW_VOLUME_CTRL;
+        const LATENCY = ffi::PA_SINK_LATENCY;
+        const HARDWARE = ffi::PA_SINK_HARDWARE;
+        const NETWORK = ffi::PA_SINK_NETWORK;
+        const HW_MUTE_CTRL = ffi::PA_SINK_HW_MUTE_CTRL;
+        const DECIBEL_VOLUME = ffi::PA_SINK_DECIBEL_VOLUME;
+        const FLAT_VOLUME = ffi::PA_SINK_FLAT_VOLUME;
+        const DYNAMIC_LATENCY = ffi::PA_SINK_DYNAMIC_LATENCY;
+        const SET_FORMATS = ffi::PA_SINK_SET_FORMATS;
     }
 }
 
@@ -439,15 +439,15 @@ pub enum SinkState {
 }
 
 bitflags!{
-    pub flags SourceFlags: u32 {
-        const SOURCE_FLAGS_HW_VOLUME_CTRL = ffi::PA_SOURCE_HW_VOLUME_CTRL,
-        const SOURCE_FLAGS_LATENCY = ffi::PA_SOURCE_LATENCY,
-        const SOURCE_FLAGS_HARDWARE = ffi::PA_SOURCE_HARDWARE,
-        const SOURCE_FLAGS_NETWORK = ffi::PA_SOURCE_NETWORK,
-        const SOURCE_FLAGS_HW_MUTE_CTRL = ffi::PA_SOURCE_HW_MUTE_CTRL,
-        const SOURCE_FLAGS_DECIBEL_VOLUME = ffi::PA_SOURCE_DECIBEL_VOLUME,
-        const SOURCE_FLAGS_DYNAMIC_LATENCY = ffi::PA_SOURCE_DYNAMIC_LATENCY,
-        const SOURCE_FLAGS_FLAT_VOLUME = ffi::PA_SOURCE_FLAT_VOLUME,
+    pub struct SourceFlags: u32 {
+        const HW_VOLUME_CTRL = ffi::PA_SOURCE_HW_VOLUME_CTRL;
+        const LATENCY = ffi::PA_SOURCE_LATENCY;
+        const HARDWARE = ffi::PA_SOURCE_HARDWARE;
+        const NETWORK = ffi::PA_SOURCE_NETWORK;
+        const HW_MUTE_CTRL = ffi::PA_SOURCE_HW_MUTE_CTRL;
+        const DECIBEL_VOLUME = ffi::PA_SOURCE_DECIBEL_VOLUME;
+        const DYNAMIC_LATENCY = ffi::PA_SOURCE_DYNAMIC_LATENCY;
+        const FLAT_VOLUME = ffi::PA_SOURCE_FLAT_VOLUME;
     }
 }
 

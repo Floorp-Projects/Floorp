@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { createElement } = React;
 const TestUtils = ReactDOM.TestUtils;
 
-const actions = require("devtools/client/webconsole/new-console-output/actions/index");
+const reduxActions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { configureStore } = require("devtools/client/webconsole/new-console-output/store");
 const { IdGenerator } = require("devtools/client/webconsole/new-console-output/utils/id-generator");
 const { stubPackets } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
@@ -23,23 +23,27 @@ const {
 function setupActions() {
   // Some actions use dependency injection. This helps them avoid using state in
   // a hard-to-test way. We need to inject stubbed versions of these dependencies.
-  const wrappedActions = Object.assign({}, actions);
+  const wrappedActions = Object.assign({}, reduxActions);
 
   const idGenerator = new IdGenerator();
   wrappedActions.messagesAdd = (packets) => {
-    return actions.messagesAdd(packets, idGenerator);
+    return reduxActions.messagesAdd(packets, idGenerator);
   };
 
   return {
-    ...actions,
-    messagesAdd: packets => actions.messagesAdd(packets, idGenerator)
+    ...reduxActions,
+    messagesAdd: packets => reduxActions.messagesAdd(packets, idGenerator)
   };
 }
 
 /**
  * Prepare the store for use in testing.
  */
-function setupStore(input = [], hud, options, wrappedActions) {
+function setupStore(input = [], {
+  storeOptions,
+  actions,
+  hud,
+} = {}) {
   if (!hud) {
     hud = {
       proxy: {
@@ -47,12 +51,12 @@ function setupStore(input = [], hud, options, wrappedActions) {
       }
     };
   }
-  const store = configureStore(hud, options);
+  const store = configureStore(hud, storeOptions);
 
   // Add the messages from the input commands to the store.
-  const messagesAdd = wrappedActions
-    ? wrappedActions.messagesAdd
-    : actions.messagesAdd;
+  const messagesAdd = actions
+    ? actions.messagesAdd
+    : reduxActions.messagesAdd;
   store.dispatch(messagesAdd(input.map(cmd => stubPackets.get(cmd))));
 
   return store;

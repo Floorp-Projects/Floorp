@@ -1,6 +1,6 @@
 [package]
 name = "cubeb-pulse"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = "Cubeb backed for PulseAudio written in Rust"
 
