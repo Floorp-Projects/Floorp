@@ -502,6 +502,7 @@ pref("media.peerconnection.ice.trickle_grace_period", 5000);
 pref("media.peerconnection.ice.no_host", false);
 pref("media.peerconnection.ice.default_address_only", false);
 pref("media.peerconnection.ice.proxy_only", false);
+pref("media.peerconnection.rtpsourcesapi.enabled", true);
 
 // These values (aec, agc, and noise) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each
@@ -1698,10 +1699,14 @@ pref("network.http.accept.default", "text/html,application/xhtml+xml,application
 // Prefs allowing granular control of referers
 // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.http.sendRefererHeader",      2);
-// Set the default Referrer Policy to be used unless overriden by the site
+// Set the default Referrer Policy; to be used unless overriden by the site
 // 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
 // 3=no-referrer-when-downgrade
-pref("network.http.referer.userControlPolicy", 3);
+pref("network.http.referer.defaultPolicy", 3);
+// Set the Private Browsing Default Referrer Policy;
+// to be used unless overriden by the site;
+// values are identical to defaultPolicy above
+pref("network.http.referer.defaultPolicy.pbmode", 2);
 // false=real referer, true=spoof referer (use target URI as referer)
 pref("network.http.referer.spoofSource", false);
 // false=allow onion referer, true=hide onion referer (use empty referer)

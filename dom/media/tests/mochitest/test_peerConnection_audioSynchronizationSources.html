@@ -23,7 +23,7 @@
       }
       await wait(250);
     }
-  }
+  };
 
   var testGetSynchronizationSources = async (test) => {
     await waitForSyncSources(test);
@@ -39,14 +39,14 @@
          `Synchronization source has audio level. (${source.audioLevel})`);
       ok(source.audioLevel < 128,
          `Synchronization source audio level < 128. (${source.audioLevel})`);
-         ok(Number.isInteger(source.audioLevel),
-         `Synchronization source audio level is int. (${source.audioLevel})`);
       ok(source.timestamp,
          `Synchronization source has timestamp (${source.timestamp})`);
       ok(Number.isInteger(source.timestamp),
         `Synchronization source timestamp is int (${source.timestamp})`);
+      is(source.voiceActivityFlag, undefined,
+        "Synchronization source unsupported voiceActivity is undefined");
     }
-  }
+  };
 
   var testSynchronizationSourceCached = async (test) => {
     await waitForSyncSources(test);
@@ -58,7 +58,7 @@
          JSON.stringify(recv.getSynchronizationSources()),
          "Subsequent getSynchronizationSources calls are cached.");
     }
-  }
+  };
 
   var test;
   runNetworkTest(function(options) {
