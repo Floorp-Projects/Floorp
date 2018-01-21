@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Implementation of DOM Core's nsIDOMAttr node.
+ * Implementation of DOM Core's Attr node.
  */
 
 #include "mozilla/dom/Attr.h"
@@ -99,7 +99,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 // QueryInterface implementation for Attr
 NS_INTERFACE_TABLE_HEAD(Attr)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
-  NS_INTERFACE_TABLE(Attr, nsINode, nsIDOMAttr, nsIAttribute, nsIDOMNode,
+  NS_INTERFACE_TABLE(Attr, nsINode, nsIAttribute, nsIDOMNode,
                      nsIDOMEventTarget, EventTarget)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Attr)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
@@ -152,14 +152,13 @@ Attr::SetOwnerDocument(nsIDocument* aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Attr::GetName(nsAString& aName)
 {
   aName = NodeName();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 Attr::GetValue(nsAString& aValue)
 {
   Element* element = GetElement();
@@ -170,8 +169,6 @@ Attr::GetValue(nsAString& aValue)
   else {
     aValue = mValue;
   }
-
-  return NS_OK;
 }
 
 void
@@ -192,12 +189,10 @@ Attr::SetValue(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, Erro
                          true);
 }
 
-NS_IMETHODIMP
-Attr::SetValue(const nsAString& aValue)
+void
+Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
 {
-  ErrorResult rv;
-  SetValue(aValue, nullptr, rv);
-  return rv.StealNSResult();
+  SetValue(aValue, nullptr, aRv);
 }
 
 bool
@@ -206,33 +201,10 @@ Attr::Specified() const
   return true;
 }
 
-NS_IMETHODIMP
-Attr::GetSpecified(bool* aSpecified)
-{
-  NS_ENSURE_ARG_POINTER(aSpecified);
-  *aSpecified = Specified();
-  return NS_OK;
-}
-
 Element*
 Attr::GetOwnerElement(ErrorResult& aRv)
 {
   return GetElement();
-}
-
-NS_IMETHODIMP
-Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
-{
-  NS_ENSURE_ARG_POINTER(aOwnerElement);
-
-  Element* element = GetElement();
-  if (element) {
-    return CallQueryInterface(element, aOwnerElement);
-  }
-
-  *aOwnerElement = nullptr;
-
-  return NS_OK;
 }
 
 void
@@ -244,7 +216,7 @@ Attr::GetNodeValueInternal(nsAString& aNodeValue)
 void
 Attr::SetNodeValueInternal(const nsAString& aNodeValue, ErrorResult& aError)
 {
-  aError = SetValue(aNodeValue);
+  SetValue(aNodeValue, nullptr, aError);
 }
 
 nsresult
@@ -286,13 +258,6 @@ Attr::SetTextContentInternal(const nsAString& aTextContent,
                              ErrorResult& aError)
 {
   SetNodeValueInternal(aTextContent, aError);
-}
-
-NS_IMETHODIMP
-Attr::GetIsId(bool* aReturn)
-{
-  *aReturn = mNodeInfo->Equals(nsGkAtoms::id, kNameSpaceID_None);
-  return NS_OK;
 }
 
 bool
