@@ -23,7 +23,6 @@
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"

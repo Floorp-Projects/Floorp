@@ -61,7 +61,6 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMAttr.h"                 // for nsIDOMAttr
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement

@@ -25,7 +25,6 @@
 #include "nsFrameLoader.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -395,7 +394,7 @@ ResourceReader::OnWalkURI(const nsACString& aURISpec)
     return OnWalkURI(uri);
 }
 
-static nsresult
+static void
 ExtractAttribute(nsIDOMNode* aNode,
                  const char* aAttribute,
                  const char* aNamespaceURI,
@@ -414,13 +413,11 @@ ExtractAttribute(nsIDOMNode* aNode,
     RefPtr<dom::Attr> attr = attrMap->GetNamedItemNS(namespaceURI, attribute);
     if (attr) {
         nsAutoString value;
-        nsresult rv = attr->GetValue(value);
-        NS_ENSURE_SUCCESS(rv, rv);
-        aValue = NS_ConvertUTF16toUTF8(value);
+        attr->GetValue(value);
+        CopyUTF16toUTF8(value, aValue);
     } else {
         aValue.Truncate();
     }
-    return NS_OK;
 }
 
 nsresult
@@ -429,8 +426,7 @@ ResourceReader::OnWalkAttribute(nsIDOMNode* aNode,
                                 const char* aNamespaceURI)
 {
     nsAutoCString uriSpec;
-    nsresult rv = ExtractAttribute(aNode, aAttribute, aNamespaceURI, uriSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ExtractAttribute(aNode, aAttribute, aNamespaceURI, uriSpec);
     if (uriSpec.IsEmpty()) {
         return NS_OK;
     }
@@ -699,7 +695,8 @@ PersistNodeFixup::FixupAttribute(nsIDOMNode* aNode,
         attr->GetValue(uri);
         rv = FixupURI(uri);
         if (NS_SUCCEEDED(rv)) {
-            attr->SetValue(uri);
+            IgnoredErrorResult err;
+            attr->SetValue(uri, err);
         }
     }
 
@@ -751,7 +748,8 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
             nsAutoCString uriSpec;
             rv = newURI->GetSpec(uriSpec);
             NS_ENSURE_SUCCESS(rv, rv);
-            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec));
+            IgnoredErrorResult err;
+            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), err);
         }
     }
 
