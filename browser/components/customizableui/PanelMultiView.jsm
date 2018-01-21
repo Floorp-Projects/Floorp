@@ -171,12 +171,8 @@ this.PanelMultiView = class {
   get _mainViewId() {
     return this.node.getAttribute("mainViewId");
   }
-  set _mainViewId(val) {
-    this.node.setAttribute("mainViewId", val);
-    return val;
-  }
   get _mainView() {
-    return this._mainViewId ? this.document.getElementById(this._mainViewId) : null;
+    return this.document.getElementById(this._mainViewId);
   }
 
   get _transitioning() {
@@ -285,7 +281,6 @@ this.PanelMultiView = class {
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
-    this.setMainView(this.panelViews.currentView);
     this.showMainView();
 
     this._showingSubView = false;
@@ -300,7 +295,7 @@ this.PanelMultiView = class {
         set: (val) => this[property] = val
       });
     });
-    ["goBack", "descriptionHeightWorkaround", "setMainView", "showMainView",
+    ["goBack", "descriptionHeightWorkaround", "showMainView",
      "showSubView"].forEach(method => {
       Object.defineProperty(this.node, method, {
         enumerable: true,
@@ -422,23 +417,6 @@ this.PanelMultiView = class {
    */
   _canGoBack(view = this._currentSubView) {
     return view.id != this._mainViewId;
-  }
-
-  setMainView(aNewMainView) {
-    if (!aNewMainView)
-      return;
-
-    if (this._mainView) {
-      this._mainView.removeAttribute("mainview");
-    }
-    this._mainViewId = aNewMainView.id;
-    aNewMainView.setAttribute("mainview", "true");
-    // If the new main view is not yet in the zeroth position, make sure it's
-    // inserted there.
-    if (aNewMainView.parentNode != this._viewStack &&
-        this._viewStack.firstChild != aNewMainView) {
-      this._viewStack.insertBefore(aNewMainView, this._viewStack.firstChild);
-    }
   }
 
   showMainView() {
