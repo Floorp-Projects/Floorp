@@ -9,7 +9,6 @@
 
 #include "nsIContainerBoxObject.h"
 #include "nsIDOMAnimationEvent.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsIDOMCDATASection.h"
@@ -89,7 +88,6 @@
 #include "nsIXMLHttpRequest.h"
 
 #include "mozilla/dom/AnimationEventBinding.h"
-#include "mozilla/dom/AttrBinding.h"
 #include "mozilla/dom/BeforeUnloadEventBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CDATASectionBinding.h"
@@ -241,7 +239,6 @@ struct ComponentsInterfaceShimEntry {
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
   DEFINE_SHIM(AnimationEvent),
-  DEFINE_SHIM(Attr),
   DEFINE_SHIM(BeforeUnloadEvent),
   DEFINE_SHIM(CanvasRenderingContext2D),
   DEFINE_SHIM(CDATASection),

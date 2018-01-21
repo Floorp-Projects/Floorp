@@ -1863,7 +1863,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       for (let attr of rawObj.attributes) {
         preview.attributes[attr.nodeName] = hooks.createValueGrip(attr.value);
       }
-    } else if (rawObj instanceof Ci.nsIDOMAttr) {
+    } else if (obj.class == "Attr") {
       preview.value = hooks.createValueGrip(rawObj.value);
     } else if (rawObj instanceof Ci.nsIDOMText ||
                rawObj instanceof Ci.nsIDOMComment) {
