@@ -179,15 +179,12 @@ function addCallbacks(anImage, arrayIndex) {
                            .getService(SpecialPowers.Ci.imgITools)
                            .createScriptedObserver(observer);
 
-  var imgLoadingContent =
-    SpecialPowers.wrap(anImage)
-                 .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent);
+  var imgLoadingContent = SpecialPowers.wrap(anImage);
   imgLoadingContent.addObserver(scriptedObserver);
 }
 
 function requestDiscard(anImage) {
   var request = SpecialPowers.wrap(anImage)
-      .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
       .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
   setTimeout(() => request.requestDiscard(), 0);
 }

@@ -63,7 +63,6 @@ function runTest() {
 
   if (triggerDiscardingManually) {
     var request = SpecialPowers.wrap(image)
-        .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
         .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
     setTimeout(() => request.requestDiscard(), 1000);
   }
@@ -82,9 +81,7 @@ function addCallbacks(anImage, loadCompleteCallback, discardCallback) {
                            .getService(SpecialPowers.Ci.imgITools)
                            .createScriptedObserver(observer);
 
-  var imgLoadingContent =
-    SpecialPowers.wrap(anImage)
-                 .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent);
+  var imgLoadingContent = SpecialPowers.wrap(anImage);
   imgLoadingContent.addObserver(scriptedObserver);
 }
 

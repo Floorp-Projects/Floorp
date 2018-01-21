@@ -5009,10 +5009,10 @@ bool
 BaselineCompiler::emit_JSOP_BUILTINPROTO()
 {
     // The builtin prototype is a constant for a given global.
-    RootedObject builtin(cx);
     JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
     MOZ_ASSERT(key < JSProto_LIMIT);
-    if (!GetBuiltinPrototype(cx, key, &builtin))
+    JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+    if (!builtin)
         return false;
     frame.push(ObjectValue(*builtin));
     return true;

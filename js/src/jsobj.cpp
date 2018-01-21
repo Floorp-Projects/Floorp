@@ -842,11 +842,11 @@ js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp, HandleObjec
     if (protoKey == JSProto_Null)
         protoKey = JSProto_Object;
 
-    RootedObject proto(cx);
-    if (!GetBuiltinPrototype(cx, protoKey, &proto))
+    JSObject* proto = GlobalObject::getOrCreatePrototype(cx, protoKey);
+    if (!proto)
         return nullptr;
 
-    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, AsTaggedProto(proto)));
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, clasp, TaggedProto(proto)));
     if (!group)
         return nullptr;
 
@@ -858,8 +858,7 @@ js::NewObjectWithClassProtoCommon(JSContext* cx, const Class* clasp, HandleObjec
         NewObjectCache& cache = cx->caches().newObjectCache;
         NewObjectCache::EntryIndex entry = -1;
         cache.lookupGlobal(clasp, global, allocKind, &entry);
-        cache.fillGlobal(entry, clasp, global, allocKind,
-                         &obj->as<NativeObject>());
+        cache.fillGlobal(entry, clasp, global, allocKind, &obj->as<NativeObject>());
     }
 
     return obj;
@@ -1960,11 +1959,10 @@ js::InitClass(JSContext* cx, HandleObject obj, HandleObject protoProto_,
      * js::InitClass depend on this nicety.
      */
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-    if (key != JSProto_Null &&
-        !protoProto &&
-        !GetBuiltinPrototype(cx, JSProto_Object, &protoProto))
-    {
-        return nullptr;
+    if (key != JSProto_Null && !protoProto) {
+        protoProto = GlobalObject::getOrCreatePrototype(cx, JSProto_Object);
+        if (!protoProto)
+            return nullptr;
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
@@ -2103,49 +2101,6 @@ JSObject::changeToSingleton(JSContext* cx, HandleObject obj)
     return true;
 }
 
-static bool
-MaybeResolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
-{
-    if (global->isStandardClassResolved(key))
-        return true;
-    MOZ_ASSERT(!cx->helperThread());
-
-    return GlobalObject::resolveConstructor(cx, global, key);
-}
-
-bool
-js::GetBuiltinConstructor(JSContext* cx, JSProtoKey key, MutableHandleObject objp)
-{
-    MOZ_ASSERT(key != JSProto_Null);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    if (!MaybeResolveConstructor(cx, global, key))
-        return false;
-
-    objp.set(&global->getConstructor(key).toObject());
-    return true;
-}
-
-bool
-js::GetBuiltinPrototype(JSContext* cx, JSProtoKey key, MutableHandleObject protop)
-{
-    MOZ_ASSERT(key != JSProto_Null);
-    Rooted<GlobalObject*> global(cx, cx->global());
-    if (!MaybeResolveConstructor(cx, global, key))
-        return false;
-
-    protop.set(&global->getPrototype(key).toObject());
-    return true;
-}
-
-bool
-js::IsStandardPrototype(JSObject* obj, JSProtoKey key)
-{
-    GlobalObject& global = obj->global();
-    Value v = global.getPrototype(key);
-    return v.isObject() && obj == &v.toObject();
-}
-
-
 /**
  * Returns the original Object.prototype from the embedding-provided incumbent
  * global.
@@ -2185,6 +2140,13 @@ js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
         return false;
 
     return true;
+}
+
+static bool
+IsStandardPrototype(JSObject* obj, JSProtoKey key)
+{
+    Value v = obj->global().getPrototype(key);
+    return v.isObject() && obj == &v.toObject();
 }
 
 JSProtoKey
@@ -3224,21 +3186,6 @@ js::IsDelegateOfObject(JSContext* cx, HandleObject protoObj, JSObject* obj, bool
             return true;
         }
     }
-}
-
-JSObject*
-js::GetBuiltinPrototypePure(GlobalObject* global, JSProtoKey protoKey)
-{
-    MOZ_ASSERT(JSProto_Null <= protoKey);
-    MOZ_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        const Value& v = global->getPrototype(protoKey);
-        if (v.isObject())
-            return &v.toObject();
-    }
-
-    return nullptr;
 }
 
 JSObject*
