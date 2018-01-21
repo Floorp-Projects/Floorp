@@ -15,11 +15,11 @@
 
   var SpRtpSourceNowTimestamp = (pc) => {
     return SpecialPowers.wrap(pc._pc).mozGetNowInRtpSourceReferenceTime();
-  }
+  };
   var SpInsertLevelForContributingSource = (pc, ...args) => {
     return SpecialPowers.wrap(pc._pc).mozInsertLevelForContributingSource(
         ...args);
-  }
+  };
   // test_peerConnection_audioSynchronizationSources.html tests
   // much of the functionality of getContributingSources as the implementation
   // is shared.
@@ -39,7 +39,10 @@
     let timestamp0 = SpWrap(test.pcRemote).mozGetNowInRtpSourceReferenceTime();
     let timestampOffset = new Date().getTime() - timestamp0;
     let hasAudioLevel0 = true;
+    // Audio level as expected to be received in RTP
     let audioLevel0 = 34;
+    // Audio level as expected to be returned
+    let expectedAudioLevel0 = 10 ** (-audioLevel0 / 20);
 
     SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
         remoteReceiver,
@@ -60,8 +63,20 @@
         hasAudioLevel1,
         audioLevel1);
 
+    let csrc2 = 93487;
+    let timestamp2 = timestamp0 - 200;
+    let hasAudioLevel2 = true;
+    let audioLevel2 = 127;
+
+    SpWrap(test.pcRemote).mozInsertAudioLevelForContributingSource(
+        remoteReceiver,
+        csrc2,
+        timestamp2,
+        hasAudioLevel2,
+        audioLevel2);
+
     let contributingSources = remoteReceiver.getContributingSources();
-    is(contributingSources.length, 2,
+    is(contributingSources.length, 3,
        "Expected number of contributing sources");
 
     // Check that both inserted were returned
@@ -75,7 +90,9 @@
     let compareTimestamps = (ts1, ts2) => Math.abs(ts1 - ts2) < 100;
 
     // Check the CSRC with audioLevel
-    is(source0.audioLevel, audioLevel0,
+    let isWithinErr = Math.abs(source0.audioLevel - expectedAudioLevel0)
+        < expectedAudioLevel0 / 50;
+    ok(isWithinErr,
        `Contributing source has correct audio level. (${source0.audioLevel})`);
     ok(compareTimestamps(source0.timestamp, timestamp0 + timestampOffset),
        `Contributing source has correct timestamp (${source0.timestamp})`);
@@ -85,12 +102,16 @@
        `Contributing source has no audio level. (${source1.audioLevel})`);
     ok(compareTimestamps(source1.timestamp, timestamp1 + timestampOffset),
        `Contributing source has correct timestamp (${source1.timestamp})`);
-
+    // Check that a received RTP audio level 127 is exactly 0
+    let source2 = contributingSources.find(c => c.source == csrc2);
+    ok(source2, "third csrc was found");
+    is(source2.audioLevel, 0,
+      `Contributing source has audio level of 0 when RTP audio level is 127`);
     // Check caching
     is(JSON.stringify(contributingSources),
        JSON.stringify(remoteReceiver.getContributingSources()),
        "getContributingSources is cached");
-  }
+  };
 
   var test;
   runNetworkTest(function(options) {

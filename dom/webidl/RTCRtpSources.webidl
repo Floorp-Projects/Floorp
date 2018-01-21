@@ -4,36 +4,25 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/2017/CR-webrtc-20171102/
+ * https://w3c.github.io/webrtc-pc/ Editor's Draft 18 January 2018
  */
 
-// WebIDL note: RTCRtpContrinbutingSource and RTCRtpSynchronizationSource
-// are specified currently as interfaces in the spec, however there is an
-// open issue which has yet to land changing them to dictionaries.
-// See: https://github.com/w3c/webrtc-pc/issues/1533
-// and https://bugzilla.mozilla.org/show_bug.cgi?id=1419093
-
 dictionary RTCRtpContributingSource {
-    DOMHighResTimeStamp  timestamp;
-    unsigned long        source;
-    byte?                audioLevel;
+    required DOMHighResTimeStamp timestamp;
+    required unsigned long       source;
+             double              audioLevel;
 };
 
-dictionary RTCRtpSynchronizationSource {
-    DOMHighResTimeStamp  timestamp;
-    unsigned long        source;
-    byte                 audioLevel;
+dictionary RTCRtpSynchronizationSource : RTCRtpContributingSource {
+    boolean? voiceActivityFlag;
 };
 
-/* Hidden shared representation of Contributing and Synchronization sources */
+/* Internal enum of types used by RTCRtpSourceEntry */
 enum RTCRtpSourceEntryType {
     "contributing",
     "synchronization",
 };
-
-dictionary RTCRtpSourceEntry {
-    DOMHighResTimeStamp    timestamp;
-    unsigned long          source;
-    byte?                  audioLevel;
-    RTCRtpSourceEntryType  sourceType;
+/* Internal shared representation of Contributing and Synchronization sources */
+dictionary RTCRtpSourceEntry : RTCRtpSynchronizationSource {
+    required RTCRtpSourceEntryType sourceType;
 };

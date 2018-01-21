@@ -89,7 +89,7 @@ let testsToRun = [
         name: "userControlPolicy=0 (no-referrer)",
         prefs: [
             ["network.http.sendRefererHeader", 2],
-            ["network.http.referer.userControlPolicy", 0],
+            ["network.http.referer.defaultPolicy", 0],
         ],
         results: {
             framePost: "Origin: http://mochi.test:8888",

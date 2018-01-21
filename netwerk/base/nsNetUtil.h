@@ -935,9 +935,11 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel);
 
 /**
  * Return default referrer policy which is controlled by user
- * pref network.http.referer.userControlPolicy
+ * prefs:
+ * network.http.referer.defaultPolicy for regular mode
+ * network.http.referer.defaultPolicy.pbmode for private mode
  */
-uint32_t NS_GetDefaultReferrerPolicy();
+uint32_t NS_GetDefaultReferrerPolicy(bool privateBrowsing = false);
 
 namespace mozilla {
 namespace net {
