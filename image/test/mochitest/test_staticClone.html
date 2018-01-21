@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
   var img = document.getElementById("animated");
-  var content =  SpecialPowers.wrap(img).QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent);
+  var content =  SpecialPowers.wrap(img);
 
   var request = content.getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST);
 
