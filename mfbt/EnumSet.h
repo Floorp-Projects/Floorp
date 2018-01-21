@@ -27,6 +27,8 @@ template<typename T>
 class EnumSet
 {
 public:
+  typedef uint32_t serializedType;
+
   EnumSet()
     : mBitField(0)
   {
@@ -209,12 +211,12 @@ public:
     return mBitField == 0;
   }
 
-  uint32_t serialize() const
+  serializedType serialize() const
   {
     return mBitField;
   }
 
-  void deserialize(uint32_t aValue)
+  void deserialize(serializedType aValue)
   {
     incVersion();
     mBitField = aValue;
@@ -320,7 +322,7 @@ private:
   }
 
   static const size_t kMaxBits = 32;
-  uint32_t mBitField;
+  serializedType mBitField;
 
 #ifdef DEBUG
   uint64_t mVersion = 0;
