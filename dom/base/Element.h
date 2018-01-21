@@ -47,7 +47,6 @@
 
 class mozAutoDocUpdate;
 class nsIFrame;
-class nsIDOMMozNamedAttrMap;
 class nsIMozBrowserFrame;
 class nsIURI;
 class nsIScrollableFrame;
@@ -2199,11 +2198,6 @@ typedef mozilla::dom::Element Element;                                        \
 NS_IMETHOD GetTagName(nsAString& aTagName) final override                     \
 {                                                                             \
   Element::GetTagName(aTagName);                                              \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetAttributes(nsIDOMMozNamedAttrMap** aAttributes) final override  \
-{                                                                             \
-  NS_ADDREF(*aAttributes = Attributes());                                     \
   return NS_OK;                                                               \
 }                                                                             \
 using Element::GetAttribute;                                                  \

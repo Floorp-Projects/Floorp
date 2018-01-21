@@ -29,7 +29,6 @@ interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
 
-  readonly attribute nsIDOMMozNamedAttrMap attributes;
   DOMString          getAttribute(in DOMString name);
   void               setAttribute(in DOMString name, 
                                   in DOMString value);
