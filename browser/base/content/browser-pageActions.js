@@ -236,6 +236,7 @@ var BrowserPageActions = {
     if (action.subview) {
       let multiViewNode = document.createElement("panelmultiview");
       panelViewNode = this._makePanelViewNodeForAction(action, true);
+      multiViewNode.setAttribute("mainViewId", panelViewNode.id);
       multiViewNode.appendChild(panelViewNode);
       panelNode.appendChild(multiViewNode);
     } else if (action.wantsIframe) {
