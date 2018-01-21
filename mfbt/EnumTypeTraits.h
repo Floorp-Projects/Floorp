@@ -65,6 +65,29 @@ struct EnumTypeFitsWithin
   static_assert(std::is_integral<Storage>::value, "must provide an integral type");
 };
 
+/*
+ * Provides information about highest enum member value.
+ * Each specialization of struct MaxEnumValue should define
+ * "static constexpr unsigned int value".
+ *
+ * example:
+ *
+ *   enum ExampleEnum
+ *   {
+ *     CAT = 0,
+ *     DOG,
+ *     HAMSTER
+ *   };
+ *
+ *   template <>
+ *   struct MaxEnumValue<ExampleEnum>
+ *   {
+ *     static constexpr unsigned int value = static_cast<unsigned int>(HAMSTER);
+ *   };
+ */
+template <typename T>
+struct MaxEnumValue;  // no need to define the primary template
+
 } // namespace mozilla
 
 #endif /* mozilla_EnumTypeTraits_h */
