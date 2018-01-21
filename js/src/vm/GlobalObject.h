@@ -134,10 +134,41 @@ class GlobalObject : public NativeObject
         return getSlot(APPLICATION_SLOTS + key);
     }
     static bool skipDeselectedConstructor(JSContext* cx, JSProtoKey key);
-    static bool ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
-    static bool resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
     static bool initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global,
                                        JSProtoKey key, HandleObject ctor, HandleObject proto);
+
+  private:
+    static bool resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
+
+  public:
+    static bool ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key) {
+        if (global->isStandardClassResolved(key))
+            return true;
+        return resolveConstructor(cx, global, key);
+    }
+
+    static JSObject* getOrCreateConstructor(JSContext* cx, JSProtoKey key) {
+        MOZ_ASSERT(key != JSProto_Null);
+        Handle<GlobalObject*> global = cx->global();
+        if (!GlobalObject::ensureConstructor(cx, global, key))
+            return nullptr;
+        return &global->getConstructor(key).toObject();
+    }
+
+    static JSObject* getOrCreatePrototype(JSContext* cx, JSProtoKey key) {
+        MOZ_ASSERT(key != JSProto_Null);
+        Handle<GlobalObject*> global = cx->global();
+        if (!GlobalObject::ensureConstructor(cx, global, key))
+            return nullptr;
+        return &global->getPrototype(key).toObject();
+    }
+
+    JSObject* maybeGetPrototype(JSProtoKey protoKey) const {
+        MOZ_ASSERT(JSProto_Null < protoKey);
+        MOZ_ASSERT(protoKey < JSProto_LIMIT);
+        const Value& v = getPrototype(protoKey);
+        return v.isObject() ? &v.toObject() : nullptr;
+    }
 
     void setConstructor(JSProtoKey key, const Value& v) {
         MOZ_ASSERT(key <= JSProto_LIMIT);

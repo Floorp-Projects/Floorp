@@ -8,16 +8,16 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function () {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-console-clear.html";
 
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+  await loadTab(TEST_URI);
+  let hud = await openConsole();
   ok(hud, "Web Console opened");
 
   info("Check the console.clear() done on page load has been processed.");
-  yield waitForLog("Console was cleared", hud);
+  await waitForLog("Console was cleared", hud);
   ok(hud.outputNode.textContent.includes("Console was cleared"),
     "console.clear() message is displayed");
   ok(!hud.outputNode.textContent.includes("log1"), "log1 not displayed");
@@ -29,8 +29,8 @@ add_task(function* () {
     content.wrappedJSObject.console.log("log4");
   });
 
-  yield waitForLog("log3", hud);
-  yield waitForLog("log4", hud);
+  await waitForLog("log3", hud);
+  await waitForLog("log4", hud);
 
   ok(hud.outputNode.textContent.includes("Console was cleared"),
     "console.clear() message is still displayed");
@@ -38,7 +38,7 @@ add_task(function* () {
   ok(hud.outputNode.textContent.includes("log4"), "log4 is displayed");
 
   info("Open the variables view sidebar for 'objFromPage'");
-  yield openSidebar("objFromPage", { a: 1 }, hud);
+  await openSidebar("objFromPage", { a: 1 }, hud);
   let sidebarClosed = hud.jsterm.once("sidebar-closed");
 
   info("Call console.clear from the page");
@@ -47,9 +47,13 @@ add_task(function* () {
   });
 
   // Cannot wait for "Console was cleared" here because such a message is
-  // already present and would yield immediately.
+  // already present and would resolve immediately.
   info("Wait for variables view sidebar to be closed after console.clear()");
-  yield sidebarClosed;
+  await sidebarClosed;
+
+  // Wait for the next event tick to make sure the remaining part of the
+  // test is not executed before the message is actually flushed.
+  await new Promise(executeSoon);
 
   ok(!hud.outputNode.textContent.includes("log3"), "log3 not displayed");
   ok(!hud.outputNode.textContent.includes("log4"), "log4 not displayed");
@@ -62,12 +66,12 @@ add_task(function* () {
   ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     content.wrappedJSObject.console.log("log5");
   });
-  yield waitForLog("log5", hud);
+  await waitForLog("log5", hud);
 
   info("Close and reopen the webconsole.");
-  yield closeConsole(gBrowser.selectedTab);
-  hud = yield openConsole();
-  yield waitForLog("Console was cleared", hud);
+  await closeConsole(gBrowser.selectedTab);
+  hud = await openConsole();
+  await waitForLog("Console was cleared", hud);
 
   ok(hud.outputNode.textContent.includes("Console was cleared"),
     "console.clear() message is still displayed");
@@ -87,8 +91,8 @@ add_task(function* () {
  * @param {WebConsole} webconsole
  *        WebConsole instance in which the message should be logged.
  */
-function* waitForLog(message, webconsole, options) {
-  yield waitForMessages({
+function waitForLog(message, webconsole, options) {
+  return waitForMessages({
     webconsole: webconsole,
     messages: [{
       text: message,
@@ -110,8 +114,8 @@ function* waitForLog(message, webconsole, options) {
  *        WebConsole instance in which the message should be logged.
  *
  */
-function* openSidebar(objName, expectedObj, webconsole) {
-  let msg = yield webconsole.jsterm.execute(objName);
+async function openSidebar(objName, expectedObj, webconsole) {
+  let msg = await webconsole.jsterm.execute(objName);
   ok(msg, "output message found");
 
   let anchor = msg.querySelector("a");
@@ -119,13 +123,13 @@ function* openSidebar(objName, expectedObj, webconsole) {
   ok(anchor, "object anchor");
   ok(body, "message body");
 
-  yield EventUtils.synthesizeMouse(anchor, 2, 2, {}, webconsole.iframeWindow);
+  await EventUtils.synthesizeMouse(anchor, 2, 2, {}, webconsole.iframeWindow);
 
-  let vviewVar = yield webconsole.jsterm.once("variablesview-fetched");
+  let vviewVar = await webconsole.jsterm.once("variablesview-fetched");
   let vview = vviewVar._variablesView;
   ok(vview, "variables view object exists");
 
-  yield findVariableViewProperties(vviewVar, [
+  await findVariableViewProperties(vviewVar, [
     expectedObj,
   ], { webconsole: webconsole });
 }

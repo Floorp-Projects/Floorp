@@ -4146,10 +4146,10 @@ END_CASE(JSOP_CHECKCLASSHERITAGE)
 
 CASE(JSOP_BUILTINPROTO)
 {
-    ReservedRooted<JSObject*> builtin(&rootObject0);
     MOZ_ASSERT(GET_UINT8(REGS.pc) < JSProto_LIMIT);
     JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(REGS.pc));
-    if (!GetBuiltinPrototype(cx, key, &builtin))
+    JSObject* builtin = GlobalObject::getOrCreatePrototype(cx, key);
+    if (!builtin)
         goto error;
     PUSH_OBJECT(*builtin);
 }

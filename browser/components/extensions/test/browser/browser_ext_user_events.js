@@ -18,7 +18,6 @@ add_task(async function testSources() {
 
       let tabs = await browser.tabs.query({active: true, currentWindow: true});
       await browser.pageAction.show(tabs[0].id);
-      browser.test.sendMessage("page-action-shown");
 
       browser.pageAction.onClicked.addListener(request);
       browser.browserAction.onClicked.addListener(request);
@@ -29,6 +28,8 @@ add_task(async function testSources() {
         contexts: ["page"],
       });
       browser.contextMenus.onClicked.addListener(request);
+
+      browser.test.sendMessage("actions-ready");
     },
 
     manifest: {
@@ -49,8 +50,8 @@ add_task(async function testSources() {
   CustomizableUI.removeWidgetFromArea("sidebar-button");
 
   await extension.startup();
+  await extension.awaitMessage("actions-ready");
 
-  await extension.awaitMessage("page-action-shown");
   clickPageAction(extension);
   await check("page action click");
 

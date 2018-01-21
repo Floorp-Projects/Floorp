@@ -7,13 +7,13 @@
 
 "use strict";
 
-add_task(function* () {
+add_task(async function () {
   const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-console.html";
 
-  yield loadTab(TEST_URI);
+  await loadTab(TEST_URI);
 
-  let hud = yield openConsole();
+  let hud = await openConsole();
   ok(hud, "Web Console opened");
 
   info("dump some spew into the console for scrolling");
@@ -21,7 +21,7 @@ add_task(function* () {
                      "console.log('foobarz' + i);" +
                      "}})();");
 
-  yield waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "foobarz99",
@@ -61,7 +61,11 @@ add_task(function* () {
     }
     synthesizeKeyShortcut(clearShortcut);
   });
-  yield hud.jsterm.once("messages-cleared");
+  await hud.jsterm.once("messages-cleared");
+
+  // Wait for the next event tick to make sure keyup for the shortcut above
+  // finishes.  Otherwise the 2 shortcuts are mixed.
+  await new Promise(executeSoon);
 
   is(hud.outputNode.textContent.indexOf("foobarz1"), -1, "output cleared");
   is(hud.jsterm.inputNode.getAttribute("focused"), "true",
