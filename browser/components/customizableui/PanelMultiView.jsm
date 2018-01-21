@@ -2,6 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Allows a popup panel to host multiple subviews. The main view shown when the
+ * panel is opened may slide out to display a subview, which in turn may lead to
+ * other subviews in a cascade menu pattern.
+ *
+ * The <panel> element should contain a <panelmultiview> element. Views are
+ * declared using <panelview> elements that are usually children of the main
+ * <panelmultiview> element, although they don't need to be, as views can also
+ * be imported into the panel from other panels or popup sets.
+ *
+ * The main view can be declared using the mainViewId attribute, and specific
+ * subviews can slide in using the showSubView method. Backwards navigation can
+ * be done using the goBack method or through a button in the subview headers.
+ *
+ * This diagram shows how <panelview> nodes move during navigation:
+ *
+ *   In this <panelmultiview>     In other panels    Action
+ *             ┌───┬───┬───┐        ┌───┬───┐
+ *             │(A)│ B │ C │        │ D │ E │          Open panel
+ *             └───┴───┴───┘        └───┴───┘
+ *         ┌───┬───┬───┐            ┌───┬───┐
+ *         │ A │(C)│ B │            │ D │ E │          Show subview C
+ *         └───┴───┴───┘            └───┴───┘
+ *     ┌───┬───┬───┬───┐            ┌───┐
+ *     │ A │ C │(D)│ B │            │ E │              Show subview D
+ *     └───┴───┴───┴───┘            └───┘
+ *         ┌───┬───┬───┬───┐        ┌───┐
+ *         │ A │(C)│ D │ B │        │ E │              Go back
+ *         └───┴───┴───┴───┘        └───┘
+ *               │
+ *               └── Currently visible view
+ *
+ * If the <panelmultiview> element is "ephemeral", imported subviews will be
+ * moved out again to the element specified by the viewCacheId attribute, so
+ * that the panel element can be removed safely.
+ */
+
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["PanelMultiView"];
@@ -22,125 +59,6 @@ const TRANSITION_PHASES = Object.freeze({
   TRANSITION: 3,
   END: 4
 });
-
-/**
- * Simple implementation of the sliding window pattern; panels are added to a
- * linked list, in-order, and the currently shown panel is remembered using a
- * marker. The marker shifts as navigation between panels is continued, where
- * the panel at index 0 is always the starting point:
- *           ┌────┬────┬────┬────┐
- *           │▓▓▓▓│    │    │    │ Start
- *           └────┴────┴────┴────┘
- *      ┌────┬────┬────┬────┐
- *      │    │▓▓▓▓│    │    │      Forward
- *      └────┴────┴────┴────┘
- * ┌────┬────┬────┬────┐
- * │    │    │▓▓▓▓│    │           Forward
- * └────┴────┴────┴────┘
- *      ┌────┬────┬────┬────┐
- *      │    │▓▓▓▓│    │    │      Back
- *      └────┴────┴────┴────┘
- */
-class SlidingPanelViews extends Array {
-  constructor() {
-    super();
-    this._marker = 0;
-  }
-
-  /**
-   * Get the index that points to the currently selected view.
-   *
-   * @return {Number}
-   */
-  get current() {
-    return this._marker;
-  }
-
-  /**
-   * Setter for the current index, which changes the order of elements and
-   * updates the internal marker for the currently selected view.
-   * We're manipulating the array directly to have it reflect the order of
-   * navigation, instead of continuously growing the array with the next selected
-   * view to keep memory usage within reasonable proportions. With this method,
-   * the data structure grows no larger than the number of panels inside the
-   * panelMultiView.
-   *
-   * @param  {Number} index Index of the item to move to the current position.
-   * @return {Number} The new marker index.
-   */
-  set current(index) {
-    if (index == this._marker) {
-      // Never change a winning team.
-      return index;
-    }
-    if (index == -1 || index > (this.length - 1)) {
-      throw new Error(`SlidingPanelViews :: index ${index} out of bounds`);
-    }
-
-    let view = this.splice(index, 1)[0];
-    if (this._marker > index) {
-      // Correct the current marker if the view-to-select was removed somewhere
-      // before it.
-      --this._marker;
-    }
-    // Then add the view-to-select right after the currently selected view.
-    this.splice(++this._marker, 0, view);
-    return this._marker;
-  }
-
-  /**
-   * Getter for the currently selected view node.
-   *
-   * @return {panelview}
-   */
-  get currentView() {
-    return this[this._marker];
-  }
-
-  /**
-   * Setter for the currently selected view node.
-   *
-   * @param  {panelview} view
-   * @return {Number} Index of the currently selected view.
-   */
-  set currentView(view) {
-    if (!view)
-      return this.current;
-    // This will throw an error if the view could not be found.
-    return this.current = this.indexOf(view);
-  }
-
-  /**
-   * Getter for the previous view, which is always positioned one position after
-   * the current view.
-   *
-   * @return {panelview}
-   */
-  get previousView() {
-    return this[this._marker + 1];
-  }
-
-  /**
-   * Going back is an explicit action on the data structure, moving the marker
-   * one step back.
-   *
-   * @return {Array} A list of two items: the newly selected view and the previous one.
-   */
-  back() {
-    if (this._marker > 0)
-      --this._marker;
-    return [this.currentView, this.previousView];
-  }
-
-  /**
-   * Reset the data structure to its original construct, removing all references
-   * to view nodes.
-   */
-  clear() {
-    this._marker = 0;
-    this.splice(0, this.length);
-  }
-}
 
 /**
  * This is the implementation of the panelUI.xml XBL binding, moved to this
@@ -196,14 +114,6 @@ this.PanelMultiView = class {
     return this.node.hasAttribute("ephemeral");
   }
 
-  get panelViews() {
-    if (this._panelViews)
-      return this._panelViews;
-
-    this._panelViews = new SlidingPanelViews();
-    this._panelViews.push(...this.node.getElementsByTagName("panelview"));
-    return this._panelViews;
-  }
   get _dwu() {
     if (this.__dwu)
       return this.__dwu;
@@ -222,13 +132,12 @@ this.PanelMultiView = class {
    *                     dispatched.
    */
   get current() {
-    return this._viewShowing || this._currentSubView;
+    return this.node && (this._viewShowing || this._currentSubView);
   }
   get _currentSubView() {
-    return this.panelViews.currentView;
-  }
-  set _currentSubView(panel) {
-    this.panelViews.currentView = panel;
+    // Peek the top of the stack, but fall back to the main view if the list of
+    // opened views is currently empty.
+    return this.openViews[this.openViews.length - 1] || this._mainView;
   }
   /**
    * @return {Promise} showSubView() returns a promise, which is kept here for
@@ -255,7 +164,8 @@ this.PanelMultiView = class {
     if (testMode)
       return;
 
-    this._currentSubView = this._subViewObserver = null;
+    this.knownViews = new Set(this.node.getElementsByTagName("panelview"));
+    this.openViews = [];
     this._mainViewHeight = 0;
     this.__transitioning = this._ignoreMutations = this._showingSubView = false;
 
@@ -325,7 +235,6 @@ this.PanelMultiView = class {
     }
 
     this._moveOutKids(this._viewStack);
-    this.panelViews.clear();
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popuppositioned", this);
@@ -397,7 +306,8 @@ this.PanelMultiView = class {
   }
 
   goBack() {
-    let [current, previous] = this.panelViews.back();
+    let previous = this.openViews.pop();
+    let current = this._currentSubView;
     return this.showSubView(current, null, previous);
   }
 
@@ -413,7 +323,7 @@ this.PanelMultiView = class {
   }
 
   showMainView() {
-    if (!this._mainViewId)
+    if (!this.node || !this._mainViewId)
       return Promise.resolve();
 
     return this.showSubView(this._mainView);
@@ -427,7 +337,7 @@ this.PanelMultiView = class {
    *                             Optional.
    */
   hideAllViewsExcept(theOne = null) {
-    for (let panelview of this.panelViews) {
+    for (let panelview of this.knownViews) {
       // When the panelview was already reparented, don't interfere any more.
       if (panelview == theOne || !this.node || panelview.panelMultiView != this.node)
         continue;
@@ -441,7 +351,8 @@ this.PanelMultiView = class {
     if (!this.node || !theOne)
       return;
 
-    this._currentSubView = theOne;
+    if (!this.openViews.includes(theOne))
+      this.openViews.push(theOne);
     if (!theOne.hasAttribute("current")) {
       theOne.setAttribute("current", true);
       this.descriptionHeightWorkaround(theOne);
@@ -465,8 +376,7 @@ this.PanelMultiView = class {
         this._viewStack.appendChild(viewNode);
       }
 
-      if (!this.panelViews.includes(viewNode))
-        this.panelViews.push(viewNode);
+      this.knownViews.add(viewNode);
 
       viewNode.panelMultiView = this.node;
 
@@ -908,6 +818,7 @@ this.PanelMultiView = class {
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this._resetKeyNavigation();
+        this.openViews = [];
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
