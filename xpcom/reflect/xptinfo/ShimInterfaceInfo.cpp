@@ -9,7 +9,6 @@
 
 #include "nsIContainerBoxObject.h"
 #include "nsIDOMAnimationEvent.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsIDOMCDATASection.h"
@@ -49,7 +48,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeIterator.h"
 #include "nsIDOMNodeList.h"
@@ -90,7 +88,6 @@
 #include "nsIXMLHttpRequest.h"
 
 #include "mozilla/dom/AnimationEventBinding.h"
-#include "mozilla/dom/AttrBinding.h"
 #include "mozilla/dom/BeforeUnloadEventBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CDATASectionBinding.h"
@@ -146,7 +143,6 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/NamedNodeMapBinding.h"
 #include "mozilla/dom/NodeIteratorBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/NodeBinding.h"
@@ -243,7 +239,6 @@ struct ComponentsInterfaceShimEntry {
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
   DEFINE_SHIM(AnimationEvent),
-  DEFINE_SHIM(Attr),
   DEFINE_SHIM(BeforeUnloadEvent),
   DEFINE_SHIM(CanvasRenderingContext2D),
   DEFINE_SHIM(CDATASection),
@@ -287,7 +282,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(MutationEvent),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMMozNamedAttrMap, NamedNodeMap),
   DEFINE_SHIM(NodeIterator),
   DEFINE_SHIM(NodeList),
   DEFINE_SHIM(Node),

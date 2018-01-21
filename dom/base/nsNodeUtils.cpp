@@ -16,7 +16,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "nsIXPConnect.h"
 #include "PLDHashTable.h"
-#include "nsIDOMAttr.h"
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsDocument.h"
