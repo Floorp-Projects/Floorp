@@ -322,7 +322,7 @@ interface nsIPermissionManager : nsISupports
    *
    * `SetPermissionsWithKey` may only be called in the Child process, and
    * initializes the permission manager with the permissions for a given
-   * Permission key. marking permissions with that key as avaliable.
+   * Permission key. marking permissions with that key as available.
    *
    * @param permissionKey  The key for the permissions which have been sent over.
    * @param perms  An array with the permissions which match the given key.

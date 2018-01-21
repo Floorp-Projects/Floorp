@@ -487,14 +487,12 @@ PeerConnectionMedia::UpdateMediaPipelines()
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     nsresult rv = transceiver->UpdateConduit();
     if (NS_FAILED(rv)) {
-      MOZ_CRASH();
       return rv;
     }
 
     if (!transceiver->IsVideo()) {
       rv = transceiver->SyncWithMatchingVideoConduits(mTransceivers);
       if (NS_FAILED(rv)) {
-        MOZ_CRASH();
         return rv;
       }
       // TODO: If there is no audio, we should probably de-sync. However, this

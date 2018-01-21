@@ -362,8 +362,16 @@ abstract class OldBaseTest extends BaseRobocopTest {
             MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mSolo,
                                                           mDriver.getGeckoLeft(), mDriver.getGeckoTop());
             meh.dragSync(mScreenMidWidth, mScreenMidHeight+100, mScreenMidWidth, mScreenMidHeight-100);
+            mAsserter.dumpLog("waitForPreferencesText scrolled down");
 
             foundText = mSolo.waitForText(txt);
+
+            if (!foundText) {
+                meh.dragSync(mScreenMidWidth, mScreenMidHeight-150, mScreenMidWidth, mScreenMidHeight+150);
+                mAsserter.dumpLog("waitForPreferencesText scrolled up");
+
+                foundText = mSolo.waitForText(txt);
+            }
         }
         return foundText;
     }

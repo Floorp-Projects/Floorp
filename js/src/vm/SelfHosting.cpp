@@ -231,8 +231,8 @@ intrinsic_GetBuiltinConstructor(JSContext* cx, unsigned argc, Value* vp)
     RootedId id(cx, AtomToId(atom));
     JSProtoKey key = JS_IdToProtoKey(cx, id);
     MOZ_ASSERT(key != JSProto_Null);
-    RootedObject ctor(cx);
-    if (!GetBuiltinConstructor(cx, key, &ctor))
+    JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, key);
+    if (!ctor)
         return false;
     args.rval().setObject(*ctor);
     return true;
@@ -1992,8 +1992,8 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     // compartment, and never call the constructor in the ArrayBuffer's
     // compartment from script, we are not guaranteed to have initialized
     // the constructor.
-    RootedObject ctor(cx);
-    if (!GetBuiltinConstructor(cx, protoKey, &ctor))
+    JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, protoKey);
+    if (!ctor)
         return false;
 
     args.rval().setObject(*ctor);

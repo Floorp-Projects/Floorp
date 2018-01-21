@@ -61,6 +61,7 @@ static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
 Atomic<bool, ReleaseAcquire> nsRFPService::sPrivacyResistFingerprinting;
 Atomic<bool, ReleaseAcquire> nsRFPService::sPrivacyTimerPrecisionReduction;
+// Note: anytime you want to use this variable, you should probably use TimerResolution() instead
 Atomic<uint32_t, ReleaseAcquire> sResolutionUSec;
 static uint32_t sVideoFramesPerSec;
 static uint32_t sVideoDroppedRatio;
@@ -88,6 +89,15 @@ nsRFPService::GetOrCreate()
   return sRFPService;
 }
 
+inline double
+TimerResolution()
+{
+  if(nsRFPService::IsResistFingerprintingEnabled()) {
+    return max(100000.0, (double)sResolutionUSec);
+  }
+  return sResolutionUSec;
+}
+
 /* static */
 bool
 nsRFPService::IsResistFingerprintingEnabled()
@@ -100,7 +110,7 @@ bool
 nsRFPService::IsTimerPrecisionReductionEnabled()
 {
   return (sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled()) &&
-         sResolutionUSec != 0;
+         TimerResolution() != 0;
 }
 
 /* static */
@@ -110,7 +120,7 @@ nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
   if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
-  const double resolutionMSec = sResolutionUSec / 1000.0;
+  const double resolutionMSec = TimerResolution() / 1000.0;
   double ret = floor(aTime / resolutionMSec) * resolutionMSec;
 #if defined(DEBUG)
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
@@ -127,9 +137,10 @@ nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
   if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
-  double ret = floor(aTime / sResolutionUSec) * sResolutionUSec;
+  double resolutionUSec = TimerResolution();
+  double ret = floor(aTime / resolutionUSec) * resolutionUSec;
 #if defined(DEBUG)
-  double tmp_sResolutionUSec = sResolutionUSec;
+  double tmp_sResolutionUSec = resolutionUSec;
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
     ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
       DBL_DIG-1, aTime, DBL_DIG-1, tmp_sResolutionUSec, DBL_DIG-1, floor(aTime / tmp_sResolutionUSec), DBL_DIG-1, ret));
@@ -151,10 +162,11 @@ nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
   if (!IsTimerPrecisionReductionEnabled()) {
     return aTime;
   }
-  if (sResolutionUSec < 1000000) {
+  double resolutionUSec = TimerResolution();
+  if (TimerResolution() < 1000000) {
     // The resolution is smaller than one sec.  Use the reciprocal to avoid
     // floating point error.
-    const double resolutionSecReciprocal = 1000000.0 / sResolutionUSec;
+    const double resolutionSecReciprocal = 1000000.0 / resolutionUSec;
     double ret = floor(aTime * resolutionSecReciprocal) / resolutionSecReciprocal;
 #if defined(DEBUG)
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
@@ -163,7 +175,7 @@ nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
 #endif
     return ret;
   }
-  const double resolutionSec = sResolutionUSec / 1000000.0;
+  const double resolutionSec = resolutionUSec / 1000000.0;
   double ret = floor(aTime / resolutionSec) * resolutionSec;
 #if defined(DEBUG)
   MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
@@ -338,7 +350,7 @@ nsRFPService::UpdateTimers() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sPrivacyResistFingerprinting || sPrivacyTimerPrecisionReduction) {
-    JS::SetTimeResolutionUsec(sResolutionUSec);
+    JS::SetTimeResolutionUsec(TimerResolution());
   } else if (sInitialized) {
     JS::SetTimeResolutionUsec(0);
   }

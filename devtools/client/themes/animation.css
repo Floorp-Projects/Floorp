@@ -9,6 +9,7 @@
   --command-pick-image: url(chrome://devtools/skin/images/command-pick.svg);
   --graph-right-offset: 10px;
   --sidebar-width: 200px;
+  --tick-line-style: 0.5px solid rgba(128, 136, 144, 0.5);
 }
 
 :root.theme-dark {
@@ -24,11 +25,21 @@
   height: 100%;
 }
 
+#animation-container .uncontrolled {
+  overflow: hidden;
+}
+
+#animation-container:not(.animation-detail-visible) .controlled {
+  display: none;
+}
+
 /* Animation List Container */
 .animation-list-container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
+  width: 100%;
 }
 
 /* Animation List Header */
@@ -46,7 +57,7 @@
 }
 
 .animation-timeline-tick-item {
-  border-left: 0.5px solid rgba(128, 136, 144, .5);
+  border-left: var(--tick-line-style);
   height: 100vh;
   position: absolute;
 }
@@ -55,7 +66,7 @@
 .animation-list {
   flex: 1;
   list-style-type: none;
-  margin-top: 0;
+  margin: 0;
   overflow: auto;
   padding: 0;
 }
@@ -83,6 +94,10 @@
 .animation-item.scriptanimation {
   --computed-timing-graph-color: var(--theme-graphs-green);
   --effect-timing-graph-color: var(--theme-highlight-green);
+}
+
+.animation-item.selected {
+  background-color: var(--theme-selection-background-hover);
 }
 
 /* Animation Target */
@@ -213,6 +228,81 @@
   stroke-opacity: .5;
   stroke-width: 4;
   text-anchor: end;
+}
+
+/* Animation Detail */
+.animation-detail-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
+.animation-detail-header {
+  display: flex;
+}
+
+.animation-detail-title {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.animation-detail-close-button::before {
+  background-image: url(chrome://devtools/skin/images/close.svg);
+}
+
+/* Animated Property List Container */
+.animated-property-list-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Animated Property List Header */
+.animated-property-list-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+/* Keyframes Progress Tick List */
+.keyframes-progress-tick-list {
+  margin-right: var(--graph-right-offset);
+  position: absolute;
+  width: calc(100% - var(--sidebar-width) - var(--graph-right-offset));
+}
+
+.keyframes-progress-tick-item {
+  height: 100vh;
+  position: absolute;
+}
+
+.keyframes-progress-tick-item.left {
+  border-left: var(--tick-line-style);
+}
+
+.keyframes-progress-tick-item.right {
+  border-right: var(--tick-line-style);
+}
+
+/* Animated Property List */
+.animated-property-list {
+  flex: 1;
+  list-style-type: none;
+  margin-top: 0;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Animated Property Item */
+.animated-property-item {
+  height: 30px;
+}
+
+.animated-property-item:nth-child(2n+1) {
+  background-color: var(--animation-even-background-color);
 }
 
 /* No Animation Panel */

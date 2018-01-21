@@ -32,7 +32,9 @@ pub type EGLDeviceEXT = *const super::__gl_imports::raw::c_void;
 pub type EGLDisplay = *const super::__gl_imports::raw::c_void;
 pub type EGLSurface = *const super::__gl_imports::raw::c_void;
 pub type EGLClientBuffer = *const super::__gl_imports::raw::c_void;
-pub type __eglMustCastToProperFunctionPointerType = extern "system" fn() -> ();
+pub enum __eglMustCastToProperFunctionPointerType_fn {}
+pub type __eglMustCastToProperFunctionPointerType =
+    *mut __eglMustCastToProperFunctionPointerType_fn;
 pub type EGLImageKHR = *const super::__gl_imports::raw::c_void;
 pub type EGLImage = *const super::__gl_imports::raw::c_void;
 pub type EGLOutputLayerEXT = *const super::__gl_imports::raw::c_void;

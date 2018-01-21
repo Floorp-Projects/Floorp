@@ -72,8 +72,14 @@ class HighlightersOverlay {
     EventEmitter.decorate(this);
   }
 
-  get isRuleView() {
-    return this.inspector.sidebar.getCurrentTabID() == "ruleview";
+  /**
+   * Returns whether `node` is somewhere inside the DOM of the rule view.
+   *
+   * @param {DOMNode} node
+   * @return {Boolean}
+   */
+  isRuleView(node) {
+    return !!node.closest("#ruleview-panel");
   }
 
   /**
@@ -680,9 +686,11 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isComputedViewTransform(nodeInfo) {
-    let isTransform = nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
-                      nodeInfo.value.property === "transform";
-    return !this.isRuleView && isTransform;
+    if (nodeInfo.view != "computed") {
+      return false;
+    }
+    return nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
+           nodeInfo.value.property === "transform";
   }
 
   /**
@@ -693,7 +701,7 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isRuleViewDisplayFlex(node) {
-    return this.isRuleView && node.classList.contains("ruleview-flex");
+    return this.isRuleView(node) && node.classList.contains("ruleview-flex");
   }
 
   /**
@@ -704,7 +712,7 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isRuleViewDisplayGrid(node) {
-    return this.isRuleView && node.classList.contains("ruleview-grid");
+    return this.isRuleView(node) && node.classList.contains("ruleview-grid");
   }
 
   /**
@@ -715,7 +723,7 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isRuleViewShape(node) {
-    return this.isRuleView && node.classList.contains("ruleview-shape");
+    return this.isRuleView(node) && node.classList.contains("ruleview-shape");
   }
 
   /**
@@ -725,12 +733,15 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   _isRuleViewTransform(nodeInfo) {
+    if (nodeInfo.view != "rule") {
+      return false;
+    }
     let isTransform = nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
                       nodeInfo.value.property === "transform";
     let isEnabled = nodeInfo.value.enabled &&
                     !nodeInfo.value.overridden &&
                     !nodeInfo.value.pseudoElement;
-    return this.isRuleView && isTransform && isEnabled;
+    return isTransform && isEnabled;
   }
 
   /**
@@ -740,13 +751,16 @@ class HighlightersOverlay {
    * @return {Boolean}
    */
   isRuleViewShapePoint(nodeInfo) {
+    if (nodeInfo.view != "rule") {
+      return false;
+    }
     let isShape = nodeInfo.type === VIEW_NODE_SHAPE_POINT_TYPE &&
                   (nodeInfo.value.property === "clip-path" ||
                   nodeInfo.value.property === "shape-outside");
     let isEnabled = nodeInfo.value.enabled &&
                     !nodeInfo.value.overridden &&
                     !nodeInfo.value.pseudoElement;
-    return this.isRuleView && isShape && isEnabled && nodeInfo.value.toggleActive &&
+    return isShape && isEnabled && nodeInfo.value.toggleActive &&
            !this.state.shapes.options.transformMode;
   }
 
@@ -788,7 +802,7 @@ class HighlightersOverlay {
 
     this._lastHovered = event.target;
 
-    let view = this.isRuleView ?
+    let view = this.isRuleView(this._lastHovered) ?
       this.inspector.getPanel("ruleview").view :
       this.inspector.getPanel("computedview").computedView;
     let nodeInfo = view.getNodeInfo(event.target);
@@ -831,7 +845,7 @@ class HighlightersOverlay {
     }
 
     // Otherwise, hide the highlighter.
-    let view = this.isRuleView ?
+    let view = this.isRuleView(this._lastHovered) ?
       this.inspector.getPanel("ruleview").view :
       this.inspector.getPanel("computedview").computedView;
     let nodeInfo = view.getNodeInfo(this._lastHovered);

@@ -10,23 +10,25 @@ use api::{DocumentId, DocumentLayer, DocumentMsg};
 use api::{IdNamespace, PipelineId, RenderNotifier};
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
+#[cfg(feature = "capture")]
+use api::CapturedDocument;
+#[cfg(feature = "capture")]
+use capture::{CaptureConfig, ExternalCaptureImage};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame::FrameContext;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
-#[cfg(feature = "capture")]
-use internal_types::ExternalCaptureImage;
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
 #[cfg(feature = "capture")]
-use resource_cache::PlainResources;
+use resource_cache::{PlainCacheOwn, PlainResources};
 use scene::Scene;
 #[cfg(feature = "serialize")]
-use serde::{Serialize, Serializer};
+use serde::{Serialize, Deserialize};
 #[cfg(feature = "debugger")]
 use serde_json;
 #[cfg(feature = "capture")]
@@ -296,14 +298,7 @@ impl RenderBackend {
                 content_size,
                 list_descriptor,
                 preserve_frame_state,
-                resources,
             } => {
-                // TODO: this will be removed from the SetDisplayList message soon.
-                self.resource_cache.update_resources(
-                    resources,
-                    &mut profile_counters.resources
-                );
-
                 profile_scope!("SetDisplayList");
 
                 let mut data;
@@ -375,17 +370,6 @@ impl RenderBackend {
             DocumentMsg::UpdateEpoch(pipeline_id, epoch) => {
                 doc.scene.update_epoch(pipeline_id, epoch);
                 doc.frame_ctx.update_epoch(pipeline_id, epoch);
-                DocumentOps::nop()
-            }
-            DocumentMsg::UpdatePipelineResources { resources, pipeline_id, epoch } => {
-                profile_scope!("UpdateResources");
-
-                self.resource_cache
-                    .update_resources(resources, &mut profile_counters.resources);
-
-                doc.scene.update_epoch(pipeline_id, epoch);
-                doc.frame_ctx.update_epoch(pipeline_id, epoch);
-
                 DocumentOps::nop()
             }
             DocumentMsg::SetRootPipeline(pipeline_id) => {
@@ -587,16 +571,31 @@ impl RenderBackend {
                             ResultMsg::DebugOutput(DebugOutput::FetchClipScrollTree(json))
                         }
                         #[cfg(feature = "capture")]
-                        DebugCommand::SaveCapture(root) => {
-                            let deferred = self.save_capture(&root);
-                            ResultMsg::DebugOutput(DebugOutput::SaveCapture(root, deferred))
+                        DebugCommand::SaveCapture(root, bits) => {
+                            let config = CaptureConfig::new(root, bits);
+                            let deferred = self.save_capture(&config, &mut profile_counters);
+                            ResultMsg::DebugOutput(DebugOutput::SaveCapture(config, deferred))
                         },
                         #[cfg(feature = "capture")]
-                        DebugCommand::LoadCapture(root) => {
+                        DebugCommand::LoadCapture(root, tx) => {
                             NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
                             frame_counter += 1;
+                            let msg = ResultMsg::DebugOutput(
+                                DebugOutput::LoadCapture(root.clone())
+                            );
+                            self.result_tx.send(msg).unwrap();
                             self.load_capture(&root, &mut profile_counters);
-                            ResultMsg::DebugOutput(DebugOutput::LoadCapture)
+
+                            for (id, doc) in &self.documents {
+                                let captured = CapturedDocument {
+                                    document_id: *id,
+                                    root_pipeline_id: doc.scene.root_pipeline_id,
+                                };
+                                tx.send(captured).unwrap();
+                            }
+                            // Note: we can't pass `LoadCapture` here since it needs to arrive
+                            // before the `PublishDocument` messages sent by `load_capture`.
+                            continue
                         },
                         DebugCommand::EnableDualSourceBlending(enable) => {
                             // Set in the config used for any future documents
@@ -670,6 +669,9 @@ impl RenderBackend {
                 &mut self.gpu_cache,
                 &mut profile_counters.resources,
             );
+
+            info!("generated frame for document {:?} with {} passes",
+                document_id, rendered_document.frame.passes.len());
 
             // Publish the frame
             let pending_update = self.resource_cache.pending_updates();
@@ -812,30 +814,41 @@ impl ToDebugString for SpecificDisplayItem {
     }
 }
 
-
 #[cfg(feature = "capture")]
 impl RenderBackend {
     // Note: the mutable `self` is only needed here for resolving blob images
-    fn save_capture(&mut self, root: &PathBuf) -> Vec<ExternalCaptureImage> {
-        use ron::ser::{to_string_pretty, PrettyConfig};
-        use std::fs;
-        use std::io::Write;
+    fn save_capture(
+        &mut self,
+        config: &CaptureConfig,
+        profile_counters: &mut BackendProfileCounters,
+    ) -> Vec<ExternalCaptureImage> {
+        use api::CaptureBits;
 
-        info!("capture: saving {}", root.to_string_lossy());
-        let ron_config = PrettyConfig::default();
-        let (resources, deferred) = self.resource_cache.save_capture(root);
+        info!("capture: saving {:?}", config.root);
+        let (resources, deferred) = self.resource_cache.save_capture(&config.root);
 
-        for (&id, doc) in &self.documents {
+        for (&id, doc) in &mut self.documents {
             info!("\tdocument {:?}", id);
-            let ron = to_string_pretty(&doc.scene, ron_config.clone()).unwrap();
-            let file_name = format!("scene-{}-{}.ron", (id.0).0, id.1);
-            let ron_path = root.clone().join(file_name);
-            let mut file = fs::File::create(ron_path).unwrap();
-            write!(file, "{}\n", ron).unwrap();
+            if config.bits.contains(CaptureBits::SCENE) {
+                let file_name = format!("scene-{}-{}", (id.0).0, id.1);
+                config.serialize(&doc.scene, file_name);
+            }
+            if config.bits.contains(CaptureBits::FRAME) {
+                let rendered_document = doc.render(
+                    &mut self.resource_cache,
+                    &mut self.gpu_cache,
+                    &mut profile_counters.resources,
+                );
+                //TODO: write down full `RenderedDocument`?
+                // it has `pipeline_epoch_map` and `layers_bouncing_back`,
+                // which may capture necessary details for some cases.
+                let file_name = format!("frame-{}-{}", (id.0).0, id.1);
+                config.serialize(&rendered_document.frame, file_name);
+            }
         }
 
         info!("\tbackend");
-        let serial = PlainRenderBackend {
+        let backend = PlainRenderBackend {
             default_device_pixel_ratio: self.default_device_pixel_ratio,
             enable_render_on_scroll: self.enable_render_on_scroll,
             frame_config: self.frame_config.clone(),
@@ -846,10 +859,15 @@ impl RenderBackend {
             resources,
         };
 
-        let ron = to_string_pretty(&serial, ron_config).unwrap();
-        let ron_path = root.clone().join("backend.ron");
-        let mut file = fs::File::create(ron_path).unwrap();
-        write!(file, "{}\n", ron).unwrap();
+        config.serialize(&backend, "backend");
+
+        if config.bits.contains(CaptureBits::FRAME) {
+            info!("\tresource cache");
+            let caches = self.resource_cache.save_caches(&config.root);
+            config.serialize(&caches, "resource_cache");
+            info!("\tgpu cache");
+            config.serialize(&self.gpu_cache, "gpu_cache");
+        }
 
         deferred
     }
@@ -859,26 +877,24 @@ impl RenderBackend {
         root: &PathBuf,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        use ron::de;
-        use std::fs::File;
-        use std::io::Read;
+        use tiling::Frame;
 
-        let mut string = String::new();
-        info!("capture: loading {}", root.to_string_lossy());
-
-        File::open(root.join("backend.ron"))
-            .unwrap()
-            .read_to_string(&mut string)
-            .unwrap();
-        let backend: PlainRenderBackend = de::from_str(&string)
-            .unwrap();
+        info!("capture: loading {:?}", root);
+        let backend = CaptureConfig::deserialize::<PlainRenderBackend, _>(root, "backend")
+            .expect("Unable to open backend.ron");
+        let caches_maybe = CaptureConfig::deserialize::<PlainCacheOwn, _>(root, "resource_cache");
 
         // Note: it would be great to have RenderBackend to be split
         // rather explicitly on what's used before and after scene building
         // so that, for example, we never miss anything in the code below:
 
-        self.resource_cache.load_capture(backend.resources, root);
-        self.gpu_cache = GpuCache::new();
+        self.resource_cache.load_capture(backend.resources, caches_maybe,root);
+
+        self.gpu_cache = match CaptureConfig::deserialize::<GpuCache, _>(root, "gpu_cache") {
+            Some(gpu_cache) => gpu_cache,
+            None => GpuCache::new(),
+        };
+
         self.documents.clear();
         self.default_device_pixel_ratio = backend.default_device_pixel_ratio;
         self.frame_config = backend.frame_config;
@@ -886,14 +902,9 @@ impl RenderBackend {
 
         for (id, view) in backend.documents {
             info!("\tdocument {:?}", id);
-            string.clear();
-            let file_name = format!("scene-{}-{}.ron", (id.0).0, id.1);
-            File::open(root.join(file_name))
-                .expect(&format!("Unable to open scene {:?}", id))
-                .read_to_string(&mut string)
-                .unwrap();
-            let scene: Scene = de::from_str(&string)
-                .unwrap();
+            let scene_name = format!("scene-{}-{}", (id.0).0, id.1);
+            let scene = CaptureConfig::deserialize::<Scene, _>(root, &scene_name)
+                .expect(&format!("Unable to open {}.ron", scene_name));
 
             let mut doc = Document {
                 scene,
@@ -904,25 +915,32 @@ impl RenderBackend {
                 render_on_scroll: None,
             };
 
-            doc.build_scene(&mut self.resource_cache);
-            let render_doc = doc.render(
-                &mut self.resource_cache,
-                &mut self.gpu_cache,
-                &mut profile_counters.resources,
-            );
+            let frame_name = format!("frame-{}-{}", (id.0).0, id.1);
+            let render_doc = match CaptureConfig::deserialize::<Frame, _>(root, frame_name) {
+                Some(frame) => {
+                    info!("\tloaded a built frame with {} passes", frame.passes.len());
+                    doc.frame_ctx.make_rendered_document(frame)
+                }
+                None => {
+                    doc.build_scene(&mut self.resource_cache);
+                    doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                    )
+                }
+            };
 
-            let pending_update = self.resource_cache.pending_updates();
             let msg = ResultMsg::PublishDocument(
                 id,
                 render_doc,
-                pending_update,
-                profile_counters.clone()
+                self.resource_cache.pending_updates(),
+                profile_counters.clone(),
             );
             self.result_tx.send(msg).unwrap();
             profile_counters.reset();
 
             self.notifier.new_document_ready(id, false, true);
-
             self.documents.insert(id, doc);
         }
     }

@@ -17,12 +17,12 @@ GPG="gpg --homedir $root_dir/gpg"
 > $root_dir/downloads
 
 download() {
-  wget -c -P $TMPDIR $1/$2
+  wget -c --progress=dot:mega -P $TMPDIR $1/$2
   (cd $TMPDIR; sha256sum $2) >> $root_dir/downloads
 }
 
 download_and_check() {
   download $1 ${2%.*}
-  wget -c -P $TMPDIR $1/$2
+  wget -c --progress=dot:mega -P $TMPDIR $1/$2
   $GPG --verify $TMPDIR/$2 $TMPDIR/${2%.*}
 }

@@ -265,14 +265,14 @@ public:
     bool ssrcFound = false;
     bool csrcFound = true;
     for (auto& entry : outLevels) {
-      if (entry.mSource.Value() == ssrc) {
+      if (entry.mSource == ssrc) {
         ssrcFound = true;
-        EXPECT_EQ(entry.mSourceType.Value(),
+        EXPECT_EQ(entry.mSourceType,
                   dom::RTCRtpSourceEntryType::Synchronization);
       }
-      if (entry.mSource.Value() == csrc) {
+      if (entry.mSource == csrc) {
         csrcFound = true;
-        EXPECT_EQ(entry.mSourceType.Value(),
+        EXPECT_EQ(entry.mSourceType,
                   dom::RTCRtpSourceEntryType::Contributing);
       }
     }
@@ -305,19 +305,19 @@ public:
     bool csrc0Found = true;
     bool csrc1Found = true;
     for (auto& entry : outLevels) {
-      if (entry.mSource.Value() == ssrc) {
+      if (entry.mSource == ssrc) {
         ssrcFound = true;
-        EXPECT_EQ(entry.mSourceType.Value(),
+        EXPECT_EQ(entry.mSourceType,
                   dom::RTCRtpSourceEntryType::Synchronization);
       }
-      if (entry.mSource.Value() == csrc0) {
+      if (entry.mSource == csrc0) {
         csrc0Found = true;
-        EXPECT_EQ(entry.mSourceType.Value(),
+        EXPECT_EQ(entry.mSourceType,
                   dom::RTCRtpSourceEntryType::Contributing);
       }
-      if (entry.mSource.Value() == csrc1) {
+      if (entry.mSource == csrc1) {
         csrc1Found = true;
-        EXPECT_EQ(entry.mSourceType.Value(),
+        EXPECT_EQ(entry.mSourceType,
                   dom::RTCRtpSourceEntryType::Contributing);
       }
     }

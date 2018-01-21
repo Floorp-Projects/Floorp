@@ -17,9 +17,9 @@
 
     try {
       sessionStorage.setItem("blocked", "blocked");
-      ok(false, "Shouldn't be avaliable yet");
+      ok(false, "Shouldn't be available yet");
     } catch (ex) {
-      ok(true, "Shouldn't be avaliable yet");
+      ok(true, "Shouldn't be available yet");
     }
 
     await new Promise(resolve => SpecialPowers.pushPermissions([{
@@ -33,9 +33,9 @@
     // runner parent document).
     try {
       sessionStorage.setItem("blocked", "blocked");
-      ok(true, "Should be avaliable");
+      ok(true, "Should be available");
     } catch (ex) {
-      ok(false, "Should be avaliable");
+      ok(false, "Should be available");
     }
 
     // A third party iframe should not have access however.

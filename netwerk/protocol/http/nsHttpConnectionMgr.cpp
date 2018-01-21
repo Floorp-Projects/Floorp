@@ -4426,7 +4426,19 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
                               (out == mBackupStreamOut));
     }
 
-    nsresult rv =  SetupConn(out, false);
+    if (mFastOpenStatus == TFO_UNKNOWN) {
+        MOZ_ASSERT(out == mStreamOut);
+        if (mPrimaryStreamStatus == NS_NET_STATUS_RESOLVING_HOST) {
+            mFastOpenStatus = TFO_UNKNOWN_RESOLVING;
+        } else if (mPrimaryStreamStatus == NS_NET_STATUS_RESOLVED_HOST) {
+            mFastOpenStatus = TFO_UNKNOWN_RESOLVED;
+        } else if (mPrimaryStreamStatus == NS_NET_STATUS_CONNECTING_TO) {
+            mFastOpenStatus = TFO_UNKNOWN_CONNECTING;
+        } else if (mPrimaryStreamStatus == NS_NET_STATUS_CONNECTED_TO) {
+            mFastOpenStatus = TFO_UNKNOWN_CONNECTED;
+        }
+    }
+    nsresult rv = SetupConn(out, false);
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
     }
@@ -4481,6 +4493,7 @@ nsHalfOpenSocket::StartFastOpen()
     MOZ_ASSERT(mStreamOut);
     MOZ_ASSERT(!mBackupTransport);
     MOZ_ASSERT(mEnt);
+    MOZ_ASSERT(mFastOpenStatus == TFO_UNKNOWN);
 
     LOG(("nsHalfOpenSocket::StartFastOpen [this=%p]\n",
          this));
@@ -4497,6 +4510,7 @@ nsHalfOpenSocket::StartFastOpen()
         CancelBackupTimer();
         mFastOpenInProgress = false;
         Abandon();
+        mFastOpenStatus = TFO_INIT_FAILED;
         return NS_ERROR_ABORT;
     }
 
@@ -4530,6 +4544,7 @@ nsHalfOpenSocket::StartFastOpen()
         // The connection is responsible to take care of the halfOpen so we
         // need to clean it up.
         Abandon();
+        mFastOpenStatus = TFO_INIT_FAILED;
     } else {
         LOG(("nsHalfOpenSocket::StartFastOpen [this=%p conn=%p]\n",
              this, mConnectionNegotiatingFastOpen.get()));
@@ -4575,6 +4590,10 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
     if (!mConnectionNegotiatingFastOpen) {
         return;
     }
+
+    MOZ_ASSERT((mFastOpenStatus == TFO_NOT_TRIED) || 
+               (mFastOpenStatus == TFO_DATA_SENT) ||
+               (mFastOpenStatus == TFO_TRIED));
 
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
 
@@ -4635,7 +4654,8 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         mSocketTransport->SetSecurityCallbacks(this);
         mStreamIn->AsyncWait(nullptr, 0, 0, nullptr);
 
-        if (aError == NS_ERROR_CONNECTION_REFUSED) {
+        if ((aError == NS_ERROR_CONNECTION_REFUSED) ||
+            (aError == NS_ERROR_PROXY_CONNECTION_REFUSED)) {
             mFastOpenStatus = TFO_FAILED_CONNECTION_REFUSED;
         } else if (aError == NS_ERROR_NET_TIMEOUT) {
             mFastOpenStatus = TFO_FAILED_NET_TIMEOUT;
@@ -4817,8 +4837,10 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
              conn.get(), static_cast<uint32_t>(rv)));
 
         // Set TFO status.
-        if (mFastOpenStatus == TFO_HTTP) {
-            conn->SetFastOpenStatus(TFO_HTTP);
+        if ((mFastOpenStatus == TFO_HTTP) ||
+            (mFastOpenStatus == TFO_DISABLED) ||
+            (mFastOpenStatus == TFO_DISABLED_CONNECT)) {
+            conn->SetFastOpenStatus(mFastOpenStatus);
         } else {
             conn->SetFastOpenStatus(TFO_INIT_FAILED);
         }
@@ -4929,7 +4951,8 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         }
     } else {
         conn->SetFastOpenStatus(mFastOpenStatus);
-        if (mFastOpenStatus != TFO_HTTP) {
+        if ((mFastOpenStatus != TFO_HTTP) && (mFastOpenStatus != TFO_DISABLED) &&
+            (mFastOpenStatus != TFO_DISABLED_CONNECT)) {
             mFastOpenStatus = TFO_BACKUP_CONN; // Set this to TFO_BACKUP_CONN
                                                // so that if a backup
                                                // connection is established we

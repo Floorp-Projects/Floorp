@@ -66,7 +66,7 @@ impl Example for App {
         );
 
         // Fill it with a white rect
-        builder.push_rect(&info, ColorF::new(1.0, 1.0, 1.0, 1.0));
+        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
 
         builder.pop_stacking_context();
     }
@@ -92,9 +92,9 @@ impl Example for App {
                 let new_transform = self.transform
                     .pre_rotate(0.0, 0.0, 1.0, Angle::radians(angle))
                     .post_translate(LayoutVector3D::new(offset_x, offset_y, 0.0));
-                api.generate_frame(
-                    document_id,
-                    Some(DynamicProperties {
+                let mut txn = Transaction::new();
+                txn.update_dynamic_properties(
+                    DynamicProperties {
                         transforms: vec![
                             PropertyValue {
                                 key: self.property_key,
@@ -107,8 +107,10 @@ impl Example for App {
                                 value: self.opacity,
                             }
                         ],
-                    }),
+                    },
                 );
+                txn.generate_frame();
+                api.send_transaction(document_id, txn);
                 self.transform = new_transform;
             }
             _ => (),

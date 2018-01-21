@@ -1236,7 +1236,6 @@ impl Stylist {
                 rule_hash_target,
                 applicable_declarations,
                 context,
-                self.quirks_mode,
                 flags_setter,
                 CascadeLevel::UANormal
             );
@@ -1246,7 +1245,7 @@ impl Stylist {
             // Step 2: Presentational hints.
             let length_before_preshints = applicable_declarations.len();
             element.synthesize_presentational_hints_for_legacy_attributes(
-                context.visited_handling,
+                context.visited_handling(),
                 applicable_declarations
             );
             if applicable_declarations.len() != length_before_preshints {
@@ -1274,7 +1273,6 @@ impl Stylist {
                     rule_hash_target,
                     applicable_declarations,
                     context,
-                    self.quirks_mode,
                     flags_setter,
                     CascadeLevel::UserNormal,
                 );
@@ -1305,7 +1303,6 @@ impl Stylist {
                             rule_hash_target,
                             applicable_declarations,
                             context,
-                            self.quirks_mode,
                             flags_setter,
                             CascadeLevel::AuthorNormal
                         );
@@ -1327,7 +1324,7 @@ impl Stylist {
                 // as `context`, write a test-case of :visited not working on
                 // Shadow DOM and fix it!
                 let mut matching_context = MatchingContext::new(
-                    context.matching_mode,
+                    context.matching_mode(),
                     context.bloom_filter,
                     context.nth_index_cache.as_mut().map(|s| &mut **s),
                     stylist.quirks_mode,
@@ -1339,7 +1336,6 @@ impl Stylist {
                     rule_hash_target,
                     applicable_declarations,
                     &mut matching_context,
-                    stylist.quirks_mode,
                     flags_setter,
                     CascadeLevel::AuthorNormal,
                 );
@@ -1356,7 +1352,6 @@ impl Stylist {
                     rule_hash_target,
                     applicable_declarations,
                     context,
-                    self.quirks_mode,
                     flags_setter,
                     CascadeLevel::AuthorNormal
                 );

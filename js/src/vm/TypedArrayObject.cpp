@@ -451,8 +451,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         // the time, though, that [[Prototype]] will not be interesting. If
         // it isn't, we can do some more TI optimizations.
         RootedObject checkProto(cx);
-        if (proto && !GetBuiltinPrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()), &checkProto))
-            return nullptr;
+        if (proto) {
+            checkProto =
+                GlobalObject::getOrCreatePrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()));
+            if (!checkProto)
+                return nullptr;
+        }
 
         AutoSetNewObjectMetadata metadata(cx);
         Rooted<TypedArrayObject*> obj(cx);
@@ -876,7 +880,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         // this compartment.
         RootedObject protoRoot(cx, proto);
         if (!protoRoot) {
-            if (!GetBuiltinPrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()), &protoRoot))
+            protoRoot =
+                GlobalObject::getOrCreatePrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()));
+            if (!protoRoot)
                 return nullptr;
         }
 

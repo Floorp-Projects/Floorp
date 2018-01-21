@@ -244,7 +244,7 @@ async function test_disabledInstall() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Enable", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "Software installation is currently disabled. Click Enable and try again.");
 
   let closePromise = waitForNotificationClose();
@@ -275,7 +275,7 @@ async function test_blockedInstall() {
   is(notification.button.label, "Allow", "Should have seen the right button");
   is(notification.getAttribute("origin"), "example.com",
      "Should have seen the right origin host");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      gApp + " prevented this site from asking you to install software on your computer.",
      "Should have seen the right message");
 
@@ -294,7 +294,7 @@ async function test_blockedInstall() {
 
   notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 
@@ -331,7 +331,7 @@ async function test_whitelistedInstall() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 
@@ -357,7 +357,7 @@ async function test_failedDownload() {
   let panel = await failPromise;
 
   let notification = panel.childNodes[0];
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "The add-on could not be downloaded because of a connection failure.",
      "Should have seen the right message");
 
@@ -379,7 +379,7 @@ async function test_corruptFile() {
   let panel = await failPromise;
 
   let notification = panel.childNodes[0];
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "The add-on downloaded from this site could not be installed " +
      "because it appears to be corrupt.",
      "Should have seen the right message");
@@ -402,7 +402,7 @@ async function test_incompatible() {
   let panel = await failPromise;
 
   let notification = panel.childNodes[0];
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test could not be installed because it is not compatible with " +
      gApp + " " + gVersion + ".",
      "Should have seen the right message");
@@ -541,7 +541,7 @@ async function test_allUnverified() {
   let installDialog = await dialogPromise;
 
   let notification = document.getElementById("addon-install-confirmation-notification");
-  let message = notification.getAttribute("startlabel");
+  let message = notification.getAttribute("label");
   is(message, "Caution: This site would like to install an unverified add-on in " + gApp + ". Proceed at your own risk.");
 
   let container = document.getElementById("addon-install-confirmation-content");
@@ -579,7 +579,7 @@ async function test_url() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 
@@ -616,7 +616,7 @@ async function test_localFile() {
 
   let notification = PopupNotifications.panel.childNodes[0];
   is(notification.id, "addon-install-failed-notification", "Should have seen the install fail");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "This add-on could not be installed because it appears to be corrupt.",
      "Should have seen the right message");
 
@@ -705,7 +705,7 @@ async function test_urlBar() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 
@@ -731,7 +731,7 @@ async function test_wrongHost() {
   let panel = await notificationPromise;
 
   let notification = panel.childNodes[0];
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "The add-on downloaded from this site could not be installed " +
      "because it appears to be corrupt.",
      "Should have seen the right message");
@@ -758,7 +758,7 @@ async function test_reload() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "XPI Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 
@@ -799,7 +799,7 @@ async function test_theme() {
 
   let notification = panel.childNodes[0];
   is(notification.button.label, "Restart Now", "Should have seen the right button");
-  is(notification.getAttribute("startlabel"),
+  is(notification.getAttribute("label"),
      "Theme Test will be installed after you restart " + gApp + ".",
      "Should have seen the right message");
 

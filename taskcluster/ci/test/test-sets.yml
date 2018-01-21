@@ -288,6 +288,21 @@ macosx64-talos-stylo-disabled:
     - talos-tp6-stylo-disabled
     - talos-speedometer-stylo-disabled
 
+macosx64-talos-profiling:
+    - talos-chrome-profiling
+    - talos-dromaeojs-profiling
+    - talos-g1-profiling
+    - talos-g2-profiling
+    - talos-g3-profiling
+    - talos-g4-profiling
+    - talos-g5-profiling
+    - talos-other-profiling
+    - talos-perf-reftest-profiling
+    - talos-perf-reftest-singletons-profiling
+    - talos-speedometer-profiling
+    - talos-svgr-profiling
+    - talos-tp6-profiling
+
 linux32-tests:
     - cppunit
     - crashtest

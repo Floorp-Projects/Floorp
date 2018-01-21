@@ -270,7 +270,7 @@ describe("ConsoleAPICall component:", () => {
     });
 
     it("toggle the group when the collapse button is clicked", () => {
-      const store = setupStore([]);
+      const store = setupStore();
       store.dispatch = sinon.spy();
       const message = stubPreparedMessages.get("console.group('bar')");
 

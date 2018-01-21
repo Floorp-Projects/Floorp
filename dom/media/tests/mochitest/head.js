@@ -389,6 +389,7 @@ function setupEnvironment() {
       ['media.peerconnection.ice.stun_client_maximum_transmits', 14],
       ['media.peerconnection.ice.trickle_grace_period', 30000],
       ['media.peerconnection.remoteTrackId.enabled', true],
+      ['media.peerconnection.rtpsourcesapi.enabled', true],
       ['media.navigator.permission.disabled', true],
       ['media.navigator.streams.fake', FAKE_ENABLED],
       ['media.getusermedia.screensharing.enabled', true],

@@ -24,12 +24,15 @@ describe("Release actor enhancer:", () => {
       const logLimit = 100;
       let releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        proxy: {
-          releaseActor: (actor) => {
-            releasedActors.push(actor);
+        storeOptions: {logLimit},
+        hud: {
+          proxy: {
+            releaseActor: (actor) => {
+              releasedActors.push(actor);
+            }
           }
         }
-      }, { logLimit });
+      });
 
       // Add a log message.
       dispatch(actions.messagesAdd([
@@ -63,12 +66,15 @@ describe("Release actor enhancer:", () => {
       const logLimit = 100;
       let releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        proxy: {
-          releaseActor: (actor) => {
-            releasedActors.push(actor);
+        storeOptions: {logLimit},
+        hud: {
+          proxy: {
+            releaseActor: (actor) => {
+              releasedActors.push(actor);
+            }
           }
         }
-      }, { logLimit });
+      });
 
       // Add a log message.
       dispatch(actions.messagesAdd([
@@ -109,9 +115,11 @@ describe("Release actor enhancer:", () => {
     it("properly releases backend actors after clear", () => {
       let releasedActors = [];
       const { dispatch, getState } = setupStore([], {
-        proxy: {
-          releaseActor: (actor) => {
-            releasedActors.push(actor);
+        hud: {
+          proxy: {
+            releaseActor: (actor) => {
+              releasedActors.push(actor);
+            }
           }
         }
       });

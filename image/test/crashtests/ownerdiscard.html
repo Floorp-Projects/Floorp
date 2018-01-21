@@ -27,8 +27,7 @@
     observer = SpecialPowers.wrapCallbackObject(observer);
     var gObserver = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                     .createScriptedObserver(observer);
-    var imgLoadingContent =
-      SpecialPowers.wrap(img).QueryInterface(Ci.nsIImageLoadingContent);
+    var imgLoadingContent = SpecialPowers.wrap(img);
     imgLoadingContent.addObserver(gObserver);
     function initCF() {
       setTimeout(function() { document.adoptNode(tCF0); }, 0);

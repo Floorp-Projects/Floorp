@@ -132,7 +132,11 @@ public:
                                              nsIDocument* aCloneDocument,
                                              nsINode* aCloneOwningNode) const = 0;
 
-  bool IsModified() const { return mDirty; }
+  bool HasForcedUniqueInner() const { return mDirtyFlags &
+                                             FORCED_UNIQUE_INNER; }
+  bool HasModifiedRules() const { return mDirtyFlags &
+                                         MODIFIED_RULES; }
+  void ClearModifiedRules() { mDirtyFlags &= ~MODIFIED_RULES; }
 
   inline bool HasUniqueInner() const;
   void EnsureUniqueInner();
@@ -338,7 +342,11 @@ protected:
   const StyleBackendType mType;
   bool                  mDisabled;
 
-  bool mDirty; // has been modified
+  enum dirtyFlagAttributes {
+    FORCED_UNIQUE_INNER = 0x1,
+    MODIFIED_RULES = 0x2,
+  };
+  uint8_t mDirtyFlags; // has been modified
 
   // mDocumentAssociationMode determines whether mDocument directly owns us (in
   // the sense that if it's known-live then we're known-live).  Always

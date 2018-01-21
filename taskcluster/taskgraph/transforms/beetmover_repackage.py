@@ -195,15 +195,6 @@ def make_task_description(config, jobs):
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
 
-        if 'docker-image' in dep_job.dependencies:
-            # macosx nightly builds depend on repackage which use in tree
-            # docker images and thus have two dependencies
-            # change the signing_dependencies to be use the ones in
-            docker_dependencies = {"docker-image":
-                                   dep_job.dependencies['docker-image']
-                                   }
-            dependencies.update(docker_dependencies)
-
         signing_name = "build-signing"
         if job.get('locale'):
             signing_name = "nightly-l10n-signing"
@@ -342,11 +333,9 @@ def is_valid_beetmover_job(job):
     # windows builds w/o partials don't have docker-image, so fewer
     # dependencies
     if 'partials-signing' in job['dependencies'].keys():
-        expected_dep_count = 6
-    elif any(b in job['attributes']['build_platform'] for b in _WINDOWS_BUILD_PLATFORMS):
-        expected_dep_count = 4
-    else:
         expected_dep_count = 5
+    else:
+        expected_dep_count = 4
 
     return (len(job["dependencies"]) == expected_dep_count and
             any(['repackage' in j for j in job['dependencies']]))

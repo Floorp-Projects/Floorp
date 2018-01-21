@@ -290,6 +290,7 @@ CssRuleView.prototype = {
    * @param {DOMNode} node
    *        The node which we want information about
    * @return {Object} The type information object contains the following props:
+   * - view {String} Always "rule" to indicate the rule view.
    * - type {String} One of the VIEW_NODE_XXX_TYPE const in
    *   client/inspector/shared/node-types
    * - value {Object} Depends on the type of the node
@@ -383,7 +384,11 @@ CssRuleView.prototype = {
       return null;
     }
 
-    return {type, value};
+    return {
+      view: "rule",
+      type,
+      value,
+    };
   },
 
   /**

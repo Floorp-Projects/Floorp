@@ -3500,7 +3500,7 @@ PreliminaryObjectArray::sweep()
             JSObject* obj = *ptr;
             GlobalObject* global = obj->compartment()->unsafeUnbarrieredMaybeGlobal();
             if (global && !obj->isSingleton()) {
-                JSObject* objectProto = GetBuiltinPrototypePure(global, JSProto_Object);
+                JSObject* objectProto = global->maybeGetPrototype(JSProto_Object);
                 obj->setGroup(objectProto->groupRaw());
                 MOZ_ASSERT(obj->is<NativeObject>());
                 MOZ_ASSERT(obj->getClass() == objectProto->getClass());

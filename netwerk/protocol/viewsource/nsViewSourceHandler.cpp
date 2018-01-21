@@ -75,18 +75,19 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     // We can't swap() from an RefPtr<nsSimpleNestedURI> to an nsIURI**,
     // sadly.
-    nsSimpleNestedURI* ourURI = new nsSimpleNestedURI(innerURI);
-    nsCOMPtr<nsIURI> uri = ourURI;
-    if (!uri)
-        return NS_ERROR_OUT_OF_MEMORY;
+    RefPtr<nsSimpleNestedURI> ourURI = new nsSimpleNestedURI(innerURI);
 
-    rv = ourURI->SetSpec(asciiSpec);
-    if (NS_FAILED(rv))
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_MutateURI(ourURI)
+           .SetSpec(asciiSpec)
+           .Finalize(uri);
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
     // Make the URI immutable so it's impossible to get it out of sync
     // with its inner URI.
-    ourURI->SetMutable(false);
+    NS_TryToSetImmutable(uri);
 
     uri.swap(*aResult);
     return rv;

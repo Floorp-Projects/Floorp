@@ -659,25 +659,6 @@ class basic_compositor_video(PageloaderTest):
     lower_is_better = True
 
 
-@register_test()
-class tcanvasmark(PageloaderTest):
-    """
-    CanvasMark benchmark v0.6
-    """
-    tpmanifest = '${talos}/tests/canvasmark/canvasmark.manifest'
-    win_counters = w7_counters = linux_counters = mac_counters = None
-    tpcycles = 5
-    tppagecycles = 1
-    timeout = 900
-    gecko_profile_interval = 10
-    gecko_profile_entries = 2500000
-    tpmozafterpaint = False
-    preferences = {'dom.send_after_paint_to_content': False}
-    filters = filter.ignore_first.prepare(1) + filter.median.prepare()
-    unit = 'score'
-    lower_is_better = False
-
-
 class dromaeo(PageloaderTest):
     """abstract base class for dramaeo tests"""
     filters = filter.dromaeo.prepare()

@@ -10,9 +10,11 @@ use util::recycle_vec;
 //           retain() style functionality.
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 struct Epoch(u32);
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct FreeListHandle<T> {
     index: u32,
     epoch: Epoch,
@@ -30,7 +32,7 @@ impl<T> FreeListHandle<T> {
 }
 
 impl<T> Clone for WeakFreeListHandle<T> {
-    fn clone(&self) -> WeakFreeListHandle<T> {
+    fn clone(&self) -> Self {
         WeakFreeListHandle {
             index: self.index,
             epoch: self.epoch,
@@ -40,18 +42,21 @@ impl<T> Clone for WeakFreeListHandle<T> {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct WeakFreeListHandle<T> {
     index: u32,
     epoch: Epoch,
     _marker: PhantomData<T>,
 }
 
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 struct Slot<T> {
     next: Option<u32>,
     epoch: Epoch,
     value: Option<T>,
 }
 
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct FreeList<T> {
     slots: Vec<Slot<T>>,
     free_list_head: Option<u32>,
@@ -63,7 +68,7 @@ pub enum UpsertResult<T> {
 }
 
 impl<T> FreeList<T> {
-    pub fn new() -> FreeList<T> {
+    pub fn new() -> Self {
         FreeList {
             slots: Vec::new(),
             free_list_head: None,

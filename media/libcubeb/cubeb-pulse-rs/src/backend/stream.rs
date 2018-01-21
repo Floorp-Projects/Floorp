@@ -123,7 +123,7 @@ impl<'ctx> Stream<'ctx> {
             }
 
             logv!("Input callback buffer size {}", nbytes);
-            let mut stm = unsafe { &mut *(u as *mut Stream) };
+            let stm = unsafe { &mut *(u as *mut Stream) };
             if stm.shutdown {
                 return;
             }
@@ -172,7 +172,7 @@ impl<'ctx> Stream<'ctx> {
 
         fn write_data(_: &pulse::Stream, nbytes: usize, u: *mut c_void) {
             logv!("Output callback to be written buffer size {}", nbytes);
-            let mut stm = unsafe { &mut *(u as *mut Stream) };
+            let stm = unsafe { &mut *(u as *mut Stream) };
             if stm.shutdown || stm.state != cubeb::STATE_STARTED {
                 return;
             }
@@ -216,9 +216,9 @@ impl<'ctx> Stream<'ctx> {
                         let device_name = super::try_cstr_from(output_device as *const _);
                         let _ = s.connect_playback(device_name,
                                                    &battr,
-                                                   pulse::STREAM_AUTO_TIMING_UPDATE | pulse::STREAM_INTERPOLATE_TIMING |
-                                                   pulse::STREAM_START_CORKED |
-                                                   pulse::STREAM_ADJUST_LATENCY,
+                                                   pulse::StreamFlags::AUTO_TIMING_UPDATE | pulse::StreamFlags::INTERPOLATE_TIMING |
+                                                   pulse::StreamFlags::START_CORKED |
+                                                   pulse::StreamFlags::ADJUST_LATENCY,
                                                    None,
                                                    None);
 
@@ -246,9 +246,9 @@ impl<'ctx> Stream<'ctx> {
                         let device_name = super::try_cstr_from(input_device as *const _);
                         let _ = s.connect_record(device_name,
                                                  &battr,
-                                                 pulse::STREAM_AUTO_TIMING_UPDATE | pulse::STREAM_INTERPOLATE_TIMING |
-                                                 pulse::STREAM_START_CORKED |
-                                                 pulse::STREAM_ADJUST_LATENCY);
+                                                 pulse::StreamFlags::AUTO_TIMING_UPDATE | pulse::StreamFlags::INTERPOLATE_TIMING |
+                                                 pulse::StreamFlags::START_CORKED |
+                                                 pulse::StreamFlags::ADJUST_LATENCY);
 
                         stm.input_stream = Some(s);
                     },
@@ -341,7 +341,7 @@ impl<'ctx> Stream<'ctx> {
 
     pub fn start(&mut self) -> i32 {
         fn output_preroll(_: &pulse::MainloopApi, u: *mut c_void) {
-            let mut stm = unsafe { &mut *(u as *mut Stream) };
+            let stm = unsafe { &mut *(u as *mut Stream) };
             if !stm.shutdown {
                 let size = stm.output_stream
                     .as_ref()
@@ -447,7 +447,7 @@ impl<'ctx> Stream<'ctx> {
                         }
                     };
 
-                    if flags.contains(pulse::SINK_FLAT_VOLUME) {
+                    if flags.contains(pulse::SinkFlags::FLAT_VOLUME) {
                         self.volume = volume;
                     } else {
                         let channels = stm.get_sample_spec().channels;
@@ -479,7 +479,7 @@ impl<'ctx> Stream<'ctx> {
         }
 
         fn get_input_volume(_: &pulse::Context, info: *const pulse::SinkInputInfo, eol: i32, u: *mut c_void) {
-            let mut r = unsafe { &mut *(u as *mut SinkInputInfoResult) };
+            let r = unsafe { &mut *(u as *mut SinkInputInfoResult) };
             if eol == 0 {
                 let info = unsafe { *info };
                 r.cvol = info.volume;
@@ -691,7 +691,7 @@ impl<'ctx> Stream<'ctx> {
 
     fn trigger_user_callback(&mut self, input_data: *const c_void, nbytes: usize) {
         fn drained_cb(a: &pulse::MainloopApi, e: *mut pa_time_event, _tv: &pulse::TimeVal, u: *mut c_void) {
-            let mut stm = unsafe { &mut *(u as *mut Stream) };
+            let stm = unsafe { &mut *(u as *mut Stream) };
             debug_assert_eq!(stm.drain_timer, e);
             stm.state_change_callback(cubeb::STATE_DRAINED);
             /* there's no pa_rttime_free, so use this instead. */

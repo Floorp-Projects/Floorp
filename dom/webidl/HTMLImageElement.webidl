@@ -92,8 +92,16 @@ interface MozImageLoadingContent {
   attribute boolean loadingEnabled;
   [ChromeOnly]
   readonly attribute short imageBlockingStatus;
+  /**
+   * Same as addNativeObserver but intended for scripted observers or observers
+   * from another or without a document.
+   */
   [ChromeOnly]
   void addObserver(imgINotificationObserver aObserver);
+  /**
+   * Same as removeNativeObserver but intended for scripted observers or
+   * observers from another or without a document.
+   */
   [ChromeOnly]
   void removeObserver(imgINotificationObserver aObserver);
   [ChromeOnly,Throws]
@@ -106,8 +114,14 @@ interface MozImageLoadingContent {
   // Otherwise, returns null.
   [ChromeOnly]
   readonly attribute URI? currentRequestFinalURI;
+  /**
+   * forceReload forces reloading of the image pointed to by currentURI
+   *
+   * @param aNotify request should notify
+   * @throws NS_ERROR_NOT_AVAILABLE if there is no current URI to reload
+   */
   [ChromeOnly,Throws]
-  void forceReload(optional boolean aNotify);
+  void forceReload(optional boolean aNotify = true);
   [ChromeOnly]
   void forceImageState(boolean aForce, unsigned long long aState);
 };

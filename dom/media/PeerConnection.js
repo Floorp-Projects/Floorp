@@ -2141,11 +2141,17 @@ class RTCRtpReceiver {
       (entry) => {
         return entry.sourceType == type &&
             (entry.timestamp + entry.sourceClockOffset) >= cutoffTime;
-      }).map(e => ({
-        source: e.source,
-        timestamp: e.timestamp + e.sourceClockOffset,
-        audioLevel: e.audioLevel,
-      }));
+      }).map(e => {
+        let newEntry = {
+          source: e.source,
+          timestamp: e.timestamp + e.sourceClockOffset,
+          audioLevel: e.audioLevel,
+        };
+        if (e.voiceActivityFlag !== undefined) {
+          Object.assign(newEntry, {voiceActivityFlag: e.voiceActivityFlag});
+        }
+        return newEntry;
+      });
       return sources;
   }
 

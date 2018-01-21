@@ -93,11 +93,11 @@ pub const ERROR_DEVICE_UNAVAILABLE: i32 = -5;
 // These need to match cubeb_device_type
 bitflags! {
     #[repr(C)]
-    pub flags DeviceType : u32 {
-        const DEVICE_TYPE_UNKNOWN = 0b00,
-        const DEVICE_TYPE_INPUT = 0b01,
-        const DEVICE_TYPE_OUTPUT = 0b10,
-        const DEVICE_TYPE_ALL = 0b11,
+    pub struct DeviceType : u32 {
+        const UNKNOWN = 0b00;
+        const INPUT = 0b01;
+        const OUTPUT = 0b10;
+        const ALL = 0b11;
     }
 }
 
@@ -112,36 +112,33 @@ pub enum DeviceState {
 // These need to match cubeb_device_fmt
 bitflags! {
     #[repr(C)]
-    pub flags DeviceFmt: u32 {
-        const DEVICE_FMT_S16LE = 0x0010,
-        const DEVICE_FMT_S16BE = 0x0020,
-        const DEVICE_FMT_F32LE = 0x1000,
-        const DEVICE_FMT_F32BE = 0x2000,
-        const DEVICE_FMT_S16_MASK = DEVICE_FMT_S16LE.bits | DEVICE_FMT_S16BE.bits,
-        const DEVICE_FMT_F32_MASK = DEVICE_FMT_F32LE.bits | DEVICE_FMT_F32BE.bits,
-        const DEVICE_FMT_ALL = DEVICE_FMT_S16_MASK.bits | DEVICE_FMT_F32_MASK.bits,
+    pub struct DeviceFmt: u32 {
+        const S16LE = 0x0010;
+        const S16BE = 0x0020;
+        const S16NE = {
+            #[cfg(target_endian = "little")] { DeviceFmt::S16LE }
+            #[cfg(target_endian = "big")] { DeviceFmt::S16BE }
+        }.bits;
+        const F32LE = 0x1000;
+        const F32BE = 0x2000;
+        const F32NE = {
+            #[cfg(target_endian = "little")] { DeviceFmt::F32LE }
+            #[cfg(target_endian = "big")] { DeviceFmt::F32BE }
+        }.bits;
+        const S16_MASK = DeviceFmt::S16LE.bits | DeviceFmt::S16BE.bits;
+        const F32_MASK = DeviceFmt::F32LE.bits | DeviceFmt::F32BE.bits;
+        const ALL = DeviceFmt::S16_MASK.bits | DeviceFmt::F32_MASK.bits;
     }
 }
-
-// Ideally these would be defined as part of `flags DeviceFmt` but
-// that doesn't work with current bitflags crate.
-#[cfg(target_endian = "little")]
-pub const CUBEB_FMT_S16NE: DeviceFmt = DEVICE_FMT_S16LE;
-#[cfg(target_endian = "little")]
-pub const CUBEB_FMT_F32NE: DeviceFmt = DEVICE_FMT_F32LE;
-#[cfg(target_endian = "big")]
-pub const CUBEB_FMT_S16NE: DeviceFmt = DEVICE_FMT_S16BE;
-#[cfg(target_endian = "big")]
-pub const CUBEB_FMT_F32NE: DeviceFmt = DEVICE_FMT_F32BE;
 
 // These need to match cubeb_device_pref
 bitflags! {
     #[repr(C)]
-    pub flags DevicePref : u32 {
-        const DEVICE_PREF_MULTIMEDIA = 0x1,
-        const DEVICE_PREF_VOICE = 0x2,
-        const DEVICE_PREF_NOTIFICATION = 0x4,
-        const DEVICE_PREF_ALL = 0xF
+    pub struct DevicePref : u32 {
+        const MULTIMEDIA = 0x1;
+        const VOICE = 0x2;
+        const NOTIFICATION = 0x4;
+        const ALL = 0xF;
     }
 }
 

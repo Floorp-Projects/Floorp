@@ -116,12 +116,11 @@ impl DebugRenderer {
         let line_vao = device.create_vao(&DESC_COLOR);
         let tri_vao = device.create_vao(&DESC_COLOR);
 
-        let mut font_texture = device.create_texture(TextureTarget::Array);
+        let mut font_texture = device.create_texture(TextureTarget::Array, ImageFormat::R8);
         device.init_texture(
             &mut font_texture,
             debug_font_data::BMP_WIDTH,
             debug_font_data::BMP_HEIGHT,
-            ImageFormat::R8,
             TextureFilter::Linear,
             None,
             1,
@@ -261,60 +260,66 @@ impl DebugRenderer {
         self.add_line(p0.x, p1.y, color, p0.x, p0.y, color);
     }
 
-    pub fn render(&mut self, device: &mut Device, viewport_size: &DeviceUintSize) {
-        device.disable_depth();
-        device.set_blend(true);
-        device.set_blend_mode_premultiplied_alpha();
+    pub fn render(
+        &mut self,
+        device: &mut Device,
+        viewport_size: Option<DeviceUintSize>,
+    ) {
+        if let Some(viewport_size) = viewport_size {
+            device.disable_depth();
+            device.set_blend(true);
+            device.set_blend_mode_premultiplied_alpha();
 
-        let projection = Transform3D::ortho(
-            0.0,
-            viewport_size.width as f32,
-            viewport_size.height as f32,
-            0.0,
-            ORTHO_NEAR_PLANE,
-            ORTHO_FAR_PLANE,
-        );
-
-        // Triangles
-        if !self.tri_vertices.is_empty() {
-            device.bind_program(&self.color_program);
-            device.set_uniforms(&self.color_program, &projection, 0);
-            device.bind_vao(&self.tri_vao);
-            device.update_vao_indices(&self.tri_vao, &self.tri_indices, VertexUsageHint::Dynamic);
-            device.update_vao_main_vertices(
-                &self.tri_vao,
-                &self.tri_vertices,
-                VertexUsageHint::Dynamic,
+            let projection = Transform3D::ortho(
+                0.0,
+                viewport_size.width as f32,
+                viewport_size.height as f32,
+                0.0,
+                ORTHO_NEAR_PLANE,
+                ORTHO_FAR_PLANE,
             );
-            device.draw_triangles_u32(0, self.tri_indices.len() as i32);
-        }
 
-        // Lines
-        if !self.line_vertices.is_empty() {
-            device.bind_program(&self.color_program);
-            device.set_uniforms(&self.color_program, &projection, 0);
-            device.bind_vao(&self.line_vao);
-            device.update_vao_main_vertices(
-                &self.line_vao,
-                &self.line_vertices,
-                VertexUsageHint::Dynamic,
-            );
-            device.draw_nonindexed_lines(0, self.line_vertices.len() as i32);
-        }
+            // Triangles
+            if !self.tri_vertices.is_empty() {
+                device.bind_program(&self.color_program);
+                device.set_uniforms(&self.color_program, &projection, 0);
+                device.bind_vao(&self.tri_vao);
+                device.update_vao_indices(&self.tri_vao, &self.tri_indices, VertexUsageHint::Dynamic);
+                device.update_vao_main_vertices(
+                    &self.tri_vao,
+                    &self.tri_vertices,
+                    VertexUsageHint::Dynamic,
+                );
+                device.draw_triangles_u32(0, self.tri_indices.len() as i32);
+            }
 
-        // Glyph
-        if !self.font_indices.is_empty() {
-            device.bind_program(&self.font_program);
-            device.set_uniforms(&self.font_program, &projection, 0);
-            device.bind_texture(DebugSampler::Font, &self.font_texture);
-            device.bind_vao(&self.font_vao);
-            device.update_vao_indices(&self.font_vao, &self.font_indices, VertexUsageHint::Dynamic);
-            device.update_vao_main_vertices(
-                &self.font_vao,
-                &self.font_vertices,
-                VertexUsageHint::Dynamic,
-            );
-            device.draw_triangles_u32(0, self.font_indices.len() as i32);
+            // Lines
+            if !self.line_vertices.is_empty() {
+                device.bind_program(&self.color_program);
+                device.set_uniforms(&self.color_program, &projection, 0);
+                device.bind_vao(&self.line_vao);
+                device.update_vao_main_vertices(
+                    &self.line_vao,
+                    &self.line_vertices,
+                    VertexUsageHint::Dynamic,
+                );
+                device.draw_nonindexed_lines(0, self.line_vertices.len() as i32);
+            }
+
+            // Glyph
+            if !self.font_indices.is_empty() {
+                device.bind_program(&self.font_program);
+                device.set_uniforms(&self.font_program, &projection, 0);
+                device.bind_texture(DebugSampler::Font, &self.font_texture);
+                device.bind_vao(&self.font_vao);
+                device.update_vao_indices(&self.font_vao, &self.font_indices, VertexUsageHint::Dynamic);
+                device.update_vao_main_vertices(
+                    &self.font_vao,
+                    &self.font_vertices,
+                    VertexUsageHint::Dynamic,
+                );
+                device.draw_triangles_u32(0, self.font_indices.len() as i32);
+            }
         }
 
         self.font_indices.clear();
