@@ -276,7 +276,7 @@ public:
    * produce at least one key.
    *
    * Unlike GetKeyForPrincipal, this method also gets the keys for base domains
-   * of the given principal. All keys returned by this method must be avaliable
+   * of the given principal. All keys returned by this method must be available
    * in the content process for a given URL to successfully have its permissions
    * checked in the `aExactHostMatch = false` situation.
    *
@@ -363,12 +363,12 @@ private:
 
   /**
    * Returns false if this permission manager wouldn't have the permission
-   * requested avaliable.
+   * requested available.
    *
    * If aType is nullptr, checks that the permission manager would have all
-   * permissions avaliable for the given principal.
+   * permissions available for the given principal.
    */
-  bool PermissionAvaliable(nsIPrincipal* aPrincipal, const char* aType);
+  bool PermissionAvailable(nsIPrincipal* aPrincipal, const char* aType);
 
   nsRefPtrHashtable<nsCStringHashKey, mozilla::GenericPromise::Private> mPermissionKeyPromiseMap;
 

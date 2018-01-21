@@ -52,6 +52,7 @@ crashtest:
 jsreftest:
     description: "JS Reftest run"
     suite: reftest/jsreftest
+    schedules-component: jsreftest  # scheduling for this reftest is different from the others..
     treeherder-symbol: R(J)
     instance-size:
         by-test-platform:

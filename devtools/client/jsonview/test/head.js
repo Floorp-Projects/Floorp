@@ -69,9 +69,21 @@ async function addJsonViewTab(url, {
   getFrameScript();
   let rootDir = getRootDirectory(gTestPath);
 
+  // Catch RequireJS errors (usually timeouts)
+  let error = tabLoaded.then(() => new Promise((resolve, reject) => {
+    let {requirejs} = content.wrappedJSObject;
+    if (requirejs) {
+      requirejs.onError = err => {
+        info(err);
+        ok(false, "RequireJS error");
+        reject(err);
+      };
+    }
+  }));
+
   let data = {rootDir, appReadyState, docReadyState};
   // eslint-disable-next-line no-shadow
-  await ContentTask.spawn(browser, data, async function (data) {
+  await Promise.race([error, ContentTask.spawn(browser, data, async function (data) {
     // Check if there is a JSONView object.
     let {JSONView} = content.window.wrappedJSObject;
     if (!JSONView) {
@@ -106,7 +118,7 @@ async function addJsonViewTab(url, {
         content.addEventListener("AppReadyStateChange", resolve, {once: true});
       });
     }
-  });
+  })]);
 
   return tab;
 }

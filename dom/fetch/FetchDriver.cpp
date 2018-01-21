@@ -566,24 +566,23 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
     // Set the same headers.
     SetRequestHeaders(httpChan);
 
-    net::ReferrerPolicy net_referrerPolicy = mRequest->GetEnvironmentReferrerPolicy();
-    // Step 6 of
-    // https://fetch.spec.whatwg.org/#main-fetch
+    // Step 5 of https://fetch.spec.whatwg.org/#main-fetch
     // If request's referrer policy is the empty string and request's client is
     // non-null, then set request's referrer policy to request's client's
     // associated referrer policy.
     // Basically, "client" is not in our implementation, we use
     // EnvironmentReferrerPolicy of the worker or document context
+    net::ReferrerPolicy net_referrerPolicy = mRequest->GetEnvironmentReferrerPolicy();
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
       mRequest->SetReferrerPolicy(net_referrerPolicy);
     }
-    // Step 7 of
-    // https://fetch.spec.whatwg.org/#main-fetch
+    // Step 6 of https://fetch.spec.whatwg.org/#main-fetch
     // If request’s referrer policy is the empty string,
-    // then set request’s referrer policy to "no-referrer-when-downgrade".
+    // then set request’s referrer policy to the user-set default policy.
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
-      net::ReferrerPolicy referrerPolicy =
-        static_cast<net::ReferrerPolicy>(NS_GetDefaultReferrerPolicy());
+      nsCOMPtr<nsILoadInfo> loadInfo = httpChan->GetLoadInfo();
+      bool isPrivate = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+      net::ReferrerPolicy referrerPolicy = static_cast<net::ReferrerPolicy>(NS_GetDefaultReferrerPolicy(isPrivate));
       mRequest->SetReferrerPolicy(referrerPolicy);
     }
 

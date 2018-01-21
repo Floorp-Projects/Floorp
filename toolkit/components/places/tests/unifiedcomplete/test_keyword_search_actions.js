@@ -145,5 +145,13 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
+  info("Bug 1228111 - Keyword with a space in front");
+  await check_autocomplete({
+    search: " key test",
+    searchParam: "enable-actions",
+    matches: [ { uri:  makeActionURI("keyword", {url: "http://abc/?search=test", input: " key test" }),
+    title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
+  });
+
   await cleanup();
 });

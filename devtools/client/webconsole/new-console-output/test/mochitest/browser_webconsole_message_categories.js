@@ -5,208 +5,139 @@
 
 "use strict";
 
-// See Bug 595934.
+// Check that messages are logged and observed with the correct category. See Bug 595934.
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 595934 - message categories coverage.";
 const TESTS_PATH = "http://example.com/browser/devtools/client/webconsole/" +
-                   "test/";
+                   "new-console-output/test/mochitest/";
 const TESTS = [
   {
     // #0
-    file: "test-bug-595934-css-loader.html",
+    file: "test-message-categories-css-loader.html",
     category: "CSS Loader",
     matchString: "text/css",
   },
   {
     // #1
-    file: "test-bug-595934-imagemap.html",
+    file: "test-message-categories-imagemap.html",
     category: "Layout: ImageMap",
     matchString: "shape=\"rect\"",
   },
   {
     // #2
-    file: "test-bug-595934-html.html",
+    file: "test-message-categories-html.html",
     category: "HTML",
     matchString: "multipart/form-data",
     onload: function () {
-      let form = content.document.querySelector("form");
-      form.submit();
+      ContentTask.spawn(gBrowser.selectedBrowser, null, function* () {
+        let form = content.document.querySelector("form");
+        form.submit();
+      });
     },
   },
   {
     // #3
-    file: "test-bug-595934-workers.html",
+    file: "test-message-categories-workers.html",
     category: "Web Worker",
     matchString: "fooBarWorker",
   },
   {
     // #4
-    file: "test-bug-595934-malformedxml.xhtml",
+    file: "test-message-categories-malformedxml.xhtml",
     category: "malformed-xml",
     matchString: "no root element found",
   },
   {
     // #5
-    file: "test-bug-595934-svg.xhtml",
+    file: "test-message-categories-svg.xhtml",
     category: "SVG",
     matchString: "fooBarSVG",
   },
   {
     // #6
-    file: "test-bug-595934-css-parser.html",
+    file: "test-message-categories-css-parser.html",
     category: "CSS Parser",
     matchString: "foobarCssParser",
   },
   {
     // #7
-    file: "test-bug-595934-malformedxml-external.html",
+    file: "test-message-categories-malformedxml-external.html",
     category: "malformed-xml",
     matchString: "</html>",
   },
   {
     // #8
-    file: "test-bug-595934-empty-getelementbyid.html",
+    file: "test-message-categories-empty-getelementbyid.html",
     category: "DOM",
     matchString: "getElementById",
   },
   {
     // #9
-    file: "test-bug-595934-canvas-css.html",
+    file: "test-message-categories-canvas-css.html",
     category: "CSS Parser",
     matchString: "foobarCanvasCssParser",
   },
   {
     // #10
-    file: "test-bug-595934-image.html",
+    file: "test-message-categories-image.html",
     category: "Image",
     matchString: "corrupt",
+    // This message is not displayed in the main console in e10s. Bug 1431731
+    skipInE10s: true,
   },
 ];
 
-var pos = -1;
-
-var foundCategory = false;
-var foundText = false;
-var pageLoaded = false;
-var pageError = false;
-var output = null;
-var jsterm = null;
-var hud = null;
-var testEnded = false;
-
-var TestObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
-  observe: function testObserve(subject) {
-    if (testEnded || !(subject instanceof Ci.nsIScriptError)) {
-      return;
-    }
-
-    let expectedCategory = TESTS[pos].category;
-
-    info("test #" + pos + " console observer got " + subject.category +
-         ", is expecting " + expectedCategory);
-
-    if (subject.category == expectedCategory) {
-      foundCategory = true;
-      startNextTest();
-    } else {
-      info("unexpected message was: " + subject.sourceName + ":" +
-           subject.lineNumber + "; " + subject.errorMessage);
-    }
-  }
-};
-
-function consoleOpened(hudConsole) {
-  hud = hudConsole;
-  output = hud.outputNode;
-  jsterm = hud.jsterm;
-
-  Services.console.registerListener(TestObserver);
-
-  registerCleanupFunction(testEnd);
-
-  testNext();
-}
-
-function testNext() {
-  jsterm.clearOutput();
-  foundCategory = false;
-  foundText = false;
-  pageLoaded = false;
-  pageError = false;
-
-  pos++;
-  info("testNext: #" + pos);
-  if (pos < TESTS.length) {
-    test = TESTS[pos];
-
-    waitForMessages({
-      webconsole: hud,
-      messages: [{
-        name: "message for test #" + pos + ": '" + test.matchString + "'",
-        text: test.matchString,
-      }],
-    }).then(() => {
-      foundText = true;
-      startNextTest();
-    });
-
-    let testLocation = TESTS_PATH + test.file;
-    gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-      if (content.location.href != testLocation) {
-        return;
-      }
-      gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-
-      pageLoaded = true;
-      test.onload && test.onload(evt);
-
-      if (test.expectError) {
-        content.addEventListener("error", function () {
-          pageError = true;
-          startNextTest();
-        }, {once: true});
-        // On e10s, the exception is triggered in child process
-        // and is ignored by test harness
-        if (!Services.appinfo.browserTabsRemoteAutostart) {
-          expectUncaughtException();
-        }
-      } else {
-        pageError = true;
-      }
-
-      startNextTest();
-    }, true);
-
-    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testLocation);
-  } else {
-    testEnded = true;
-    finishTest();
-  }
-}
-
-function testEnd() {
-  if (!testEnded) {
-    info("foundCategory " + foundCategory + " foundText " + foundText +
-         " pageLoaded " + pageLoaded + " pageError " + pageError);
-  }
-
-  Services.console.unregisterListener(TestObserver);
-  hud = TestObserver = output = jsterm = null;
-}
-
-function startNextTest() {
-  if (!testEnded && foundCategory && foundText && pageLoaded && pageError) {
-    testNext();
-  }
-}
-
-function test() {
+add_task(async function () {
   requestLongerTimeout(2);
 
-  loadTab(TEST_URI).then(() => {
-    openConsole().then(consoleOpened);
+  await pushPref("devtools.webconsole.filter.css", true);
+  await pushPref("devtools.webconsole.filter.net", true);
+
+  let hud = await openNewTabAndConsole(TEST_URI);
+  for (let i = 0; i < TESTS.length; i++) {
+    let test = TESTS[i];
+    info("Running test #" + i);
+    await runTest(test, hud);
+  }
+});
+
+async function runTest(test, hud) {
+  let {file, category, matchString, onload, skipInE10s} = test;
+
+  if (skipInE10s && Services.appinfo.browserTabsRemoteAutostart) {
+    return;
+  }
+
+  let onMessageLogged = waitForMessage(hud, matchString);
+
+  let onMessageObserved = new Promise(resolve => {
+    Services.console.registerListener(function listener(subject) {
+      if (!(subject instanceof Ci.nsIScriptError)) {
+        return;
+      }
+
+      if (subject.category != category) {
+        return;
+      }
+
+      ok(true, "Expected category [" + category + "] received in observer");
+      Services.console.unregisterListener(listener);
+      resolve();
+    });
   });
+
+  info("Load test file " + file);
+  await loadDocument(TESTS_PATH + file);
+
+  // Call test specific callback if defined
+  if (onload) {
+    onload();
+  }
+
+  info("Wait for log message to be observed with the correct category");
+  await onMessageObserved;
+
+  info("Wait for log message to be displayed in the hud");
+  await onMessageLogged;
 }

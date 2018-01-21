@@ -45,9 +45,6 @@ function getImageStatus(id)
   // Get the image
   var img = SpecialPowers.wrap(document.getElementById(id));
 
-  // QI the image to nsImageLoadingContent
-  img.QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent);
-
   // Get the request
   var request = img.getRequest(SpecialPowers.Ci
                                          .nsIImageLoadingContent

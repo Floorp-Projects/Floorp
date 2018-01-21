@@ -3931,7 +3931,8 @@ ReadableByteStreamControllerConvertPullIntoDescriptor(JSContext* cx,
     //                            bytesFilled / elementSize).
     RootedObject ctor(cx, pullIntoDescriptor->ctor());
     if (!ctor) {
-        if (!GetBuiltinConstructor(cx, JSProto_Uint8Array, &ctor))
+        ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_Uint8Array);
+        if (!ctor)
             return nullptr;
     }
     RootedObject buffer(cx, pullIntoDescriptor->buffer());
@@ -4430,12 +4431,14 @@ ReadableByteStreamControllerPullInto(JSContext* cx,
         JSProtoKey protoKey = StandardProtoKeyOrNull(view);
         MOZ_ASSERT(protoKey);
 
-        if (!GetBuiltinConstructor(cx, protoKey, &ctor))
+        ctor = GlobalObject::getOrCreateConstructor(cx, protoKey);
+        if (!ctor)
             return nullptr;
         elementSize = 1 << TypedArrayShift(view->as<TypedArrayObject>().type());
     } else {
         // Step 3: Let ctor be %DataView% (reordered).
-        if (!GetBuiltinConstructor(cx, JSProto_DataView, &ctor))
+        ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_DataView);
+        if (!ctor)
             return nullptr;
     }
 

@@ -103,18 +103,18 @@
 
 :root.theme-dark {
   --theme-body-background: var(--grey-80);
-  --theme-sidebar-background: var(--grey-90);
+  --theme-sidebar-background: #1B1B1D;
   --theme-contrast-background: #ffb35b;
 
   /* Toolbar */
   --theme-tab-toolbar-background: var(--grey-90);
-  --theme-toolbar-background: var(--grey-90);
+  --theme-toolbar-background: #1B1B1D;
   --theme-toolbar-color: var(--grey-40);
   --theme-toolbar-selected-color: white;
   --theme-toolbar-checked-color: #75BFFF;
   --theme-toolbar-highlighted-color: var(--green-50);
   --theme-toolbar-background-hover: #20232B;
-  --theme-toolbar-background-alt: #2F343E;
+  --theme-toolbar-background-alt: #1B1B1D;
   --theme-toolbar-hover: #252526;
   --theme-toolbar-hover-active: #252526;
 
@@ -130,12 +130,12 @@
   --theme-comment: #939393;
   --theme-comment-alt: #939393;
 
-  --theme-body-color: var(--grey-40);
+  --theme-body-color: #909090;
   --theme-body-color-alt: var(--grey-50);
   --theme-body-color-inactive: var(--grey-40);
   --theme-content-color1: var(--grey-30);
   --theme-content-color2: var(--grey-40);
-  --theme-content-color3: #939393;
+  --theme-content-color3: #58575c;
 
   --theme-highlight-green: #86DE74;
   --theme-highlight-blue: #75BFFF;

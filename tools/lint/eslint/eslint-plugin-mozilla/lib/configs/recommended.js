@@ -263,8 +263,8 @@ module.exports = {
     // No single if block inside an else block
     "no-lonely-if": "error",
 
-    // No mixing spaces and tabs in indent
-    "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
+    // no-tabs disallows tabs completely.
+    // "no-mixed-spaces-and-tabs": "error",
 
     // No unnecessary spacing
     "no-multi-spaces": ["error", { exceptions: {

@@ -255,13 +255,6 @@ class Output(object):
         score = 60 * 1000 / filter.geometric_mean(results) / correctionFactor
         return score
 
-    @classmethod
-    def CanvasMark_Metric(cls, val_list):
-        """CanvasMark benchmark score (NOTE: this is identical to JS_Metric)"""
-        results = [i for i, j in val_list]
-        LOG.info("CanvasMark benchmark")
-        return sum(results)
-
     def construct_results(self, vals, testname):
         if 'responsiveness' in testname:
             return filter.responsiveness_Metric([val for (val, page) in vals])
@@ -269,8 +262,6 @@ class Output(object):
             return self.v8_Metric(vals)
         elif testname.startswith('kraken'):
             return self.JS_Metric(vals)
-        elif testname.startswith('tcanvasmark'):
-            return self.CanvasMark_Metric(vals)
         elif testname.startswith('speedometer'):
             return self.speedometer_score(vals)
         elif len(vals) > 1:

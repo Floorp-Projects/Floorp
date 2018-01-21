@@ -257,8 +257,8 @@ NullPrincipalURI::GetHasRef(bool* _result)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-NullPrincipalURI::SetSpec(const nsACString& aSpec)
+nsresult
+NullPrincipalURI::SetSpecInternal(const nsACString& aSpec)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

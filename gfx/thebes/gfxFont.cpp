@@ -1522,6 +1522,40 @@ gfxFont::SupportsSubSuperscript(uint32_t aSubSuperscript,
 }
 
 bool
+gfxFont::FeatureWillHandleChar(Script aRunScript, uint32_t aFeature,
+                               uint32_t aUnicode)
+{
+    if (!SupportsFeature(aRunScript, aFeature)) {
+        return false;
+    }
+
+    // xxx - for graphite, don't really know how to sniff lookups so bail
+    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+        return true;
+    }
+
+    if (!mHarfBuzzShaper) {
+        mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
+    }
+    gfxHarfBuzzShaper* shaper =
+        static_cast<gfxHarfBuzzShaper*>(mHarfBuzzShaper.get());
+    if (!shaper->Initialize()) {
+        return false;
+    }
+
+    // get the hbset containing input glyphs for the feature
+    const hb_set_t *inputGlyphs =
+        mFontEntry->InputsForOpenTypeFeature(aRunScript, aFeature);
+
+    if (aUnicode == 0xa0) {
+        aUnicode = ' ';
+    }
+
+    hb_codepoint_t gid = shaper->GetNominalGlyph(aUnicode);
+    return hb_set_has(inputGlyphs, gid);
+}
+
+bool
 gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn)
 {
     aFeatureOn = false;

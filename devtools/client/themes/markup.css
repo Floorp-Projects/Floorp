@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --markup-hidden-attr-name-color: #CA60AC;
+  --markup-hidden-attr-name-color: #BA89B8;
   --markup-hidden-attr-value-color: #5C6D87;
   --markup-hidden-punctuation-color: #909090;
   --markup-hidden-tag-color: #97A4B3;
@@ -11,7 +11,7 @@
 }
 
 .theme-dark:root {
-  --markup-hidden-attr-name-color: #CC8EC8;
+  --markup-hidden-attr-name-color: #B07EB3;
   --markup-hidden-attr-value-color: #9893A3;
   --markup-hidden-punctuation-color: #909090;
   --markup-hidden-tag-color: #AFB5BF;

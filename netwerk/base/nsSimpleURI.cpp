@@ -287,8 +287,8 @@ nsSimpleURI::GetHasRef(bool *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSimpleURI::SetSpec(const nsACString &aSpec)
+nsresult
+nsSimpleURI::SetSpecInternal(const nsACString &aSpec)
 {
     NS_ENSURE_STATE(mMutable);
 

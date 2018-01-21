@@ -42,10 +42,10 @@ function cleanUpAndFinish() {
   if (gFinished) {
     return;
   }
-  var imgLoadingContent = SpecialPowers.wrap(gImg1).QueryInterface(Ci.nsIImageLoadingContent);
+  var imgLoadingContent = SpecialPowers.wrap(gImg1);
   imgLoadingContent.removeObserver(gOuter);
 
-  imgLoadingContent = SpecialPowers.wrap(gImg2).QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent = SpecialPowers.wrap(gImg2);
   imgLoadingContent.removeObserver(gOuter);
 
   SimpleTest.finish();
@@ -79,7 +79,7 @@ function waitForLoadAndTest(image) {
     context.drawImage(image, 0, 0);
 
     // Attach the observer.
-    var imgLoadingContent = SpecialPowers.wrap(image).QueryInterface(Ci.nsIImageLoadingContent);
+    var imgLoadingContent = SpecialPowers.wrap(image);
     imgLoadingContent.addObserver(gOuter);
 
     // If the other image already loaded, add both images to the document, which

@@ -16,3 +16,4 @@ fuzzy(1,235200) == 1413073.html 1413073-ref.html
 == 1418945-1.html 1418945-1-ref.html
 skip-if(Android) == 1428993-1.html 1428993-1-ref.html
 == 1428993-2.html 1428993-2-ref.html
+needs-focus == 1429027-1.html 1429027-1-ref.html

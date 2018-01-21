@@ -140,6 +140,7 @@ pub struct DeferredResolve {
 pub struct SpecificPrimitiveIndex(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct PrimitiveIndex(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -216,13 +217,15 @@ pub enum BrushKind {
         wavy_line_thickness: f32,
         style: LineStyle,
         orientation: LineOrientation,
-    }
+    },
+    Picture,
 }
 
 impl BrushKind {
-    fn is_solid(&self) -> bool {
+    fn supports_segments(&self) -> bool {
         match *self {
-            BrushKind::Solid { .. } => true,
+            BrushKind::Solid { .. } |
+            BrushKind::Picture => true,
             _ => false,
         }
     }
@@ -300,6 +303,8 @@ impl BrushPrimitive {
     fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
         // has to match VECS_PER_SPECIFIC_BRUSH
         match self.kind {
+            BrushKind::Picture => {
+            }
             BrushKind::Solid { color } => {
                 request.push(color.premultiplied());
             }
@@ -1020,6 +1025,11 @@ impl PrimitiveStore {
                     BrushKind::Solid { ref color } => PrimitiveOpacity::from_alpha(color.a),
                     BrushKind::Mask { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Line { .. } => PrimitiveOpacity::translucent(),
+                    BrushKind::Picture => {
+                        // TODO(gw): This is not currently used. In the future
+                        //           we should detect opaque pictures.
+                        unreachable!();
+                    }
                 };
 
                 let metadata = PrimitiveMetadata {
@@ -1263,17 +1273,22 @@ impl PrimitiveStore {
                     text.write_gpu_blocks(&mut request);
                 }
                 PrimitiveKind::Picture => {
-                    self.cpu_pictures[metadata.cpu_prim_index.0]
-                        .write_gpu_blocks(&mut request);
+                    let pic = &self.cpu_pictures[metadata.cpu_prim_index.0];
+                    pic.write_gpu_blocks(&mut request);
 
-                    // TODO(gw): This is a bit of a hack. The Picture type
-                    //           is drawn by the brush_image shader, so the
-                    //           layout here needs to conform to the same
-                    //           BrushPrimitive layout. We should tidy this
-                    //           up in the future so it's enforced that these
-                    //           types use a shared function to write out the
-                    //           GPU blocks...
-                    request.write_segment(metadata.local_rect);
+                    let brush = &pic.brush;
+                    brush.write_gpu_blocks(&mut request);
+                    match brush.segment_desc {
+                        Some(ref segment_desc) => {
+                            for segment in &segment_desc.segments {
+                                // has to match VECS_PER_SEGMENT
+                                request.write_segment(segment.local_rect);
+                            }
+                        }
+                        None => {
+                            request.write_segment(metadata.local_rect);
+                        }
+                    }
                 }
                 PrimitiveKind::Brush => {
                     let brush = &self.cpu_brushes[metadata.cpu_prim_index.0];
@@ -1295,18 +1310,14 @@ impl PrimitiveStore {
     }
 
     fn write_brush_segment_description(
-        &mut self,
-        prim_index: PrimitiveIndex,
+        brush: &mut BrushPrimitive,
+        metadata: &PrimitiveMetadata,
         prim_context: &PrimitiveContext,
         clip_store: &mut ClipStore,
         node_data: &[ClipScrollNodeData],
         clips: &Vec<ClipWorkItem>,
+        has_clips_from_other_coordinate_systems: bool,
     ) {
-        debug_assert!(self.cpu_metadata[prim_index.0].prim_kind == PrimitiveKind::Brush);
-
-        let metadata = &self.cpu_metadata[prim_index.0];
-        let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
-
         match brush.segment_desc {
             Some(ref segment_desc) => {
                 // If we already have a segment descriptor, only run through the
@@ -1318,7 +1329,7 @@ impl PrimitiveStore {
             None => {
                 // If no segment descriptor built yet, see if it is a brush
                 // type that wants to be segmented.
-                if !brush.kind.is_solid() {
+                if !brush.kind.supports_segments() {
                     return;
                 }
                 if metadata.local_rect.size.area() <= MIN_BRUSH_SPLIT_AREA {
@@ -1329,24 +1340,24 @@ impl PrimitiveStore {
 
         let mut segment_builder = SegmentBuilder::new(
             metadata.local_rect,
+            None,
             metadata.local_clip_rect
         );
 
-        // If true, we need a clip mask for the entire primitive. This
-        // is either because we don't handle segmenting this clip source,
-        // or we have a clip source from a different coordinate system.
-        let mut clip_mask_kind = BrushClipMaskKind::Individual;
+        // If this primitive is clipped by clips from a different coordinate system, then we
+        // need to apply a clip mask for the entire primitive.
+        let mut clip_mask_kind = match has_clips_from_other_coordinate_systems {
+            true => BrushClipMaskKind::Global,
+            false => BrushClipMaskKind::Individual,
+        };
 
-        // Segment the primitive on all the local-space clip sources
-        // that we can.
+        // Segment the primitive on all the local-space clip sources that we can.
         for clip_item in clips {
             if clip_item.coordinate_system_id != prim_context.scroll_node.coordinate_system_id {
-                clip_mask_kind = BrushClipMaskKind::Global;
                 continue;
             }
 
             let local_clips = clip_store.get_opt(&clip_item.clip_sources).expect("bug");
-
             for &(ref clip, _) in &local_clips.clips {
                 let (local_clip_rect, radius, mode) = match *clip {
                     ClipSource::RoundedRectangle(rect, radii, clip_mode) => {
@@ -1383,11 +1394,7 @@ impl PrimitiveStore {
                     relative_transform.transform_rect(&local_clip_rect)
                 };
 
-                segment_builder.push_rect(
-                    local_clip_rect,
-                    radius,
-                    mode
-                );
+                segment_builder.push_rect(local_clip_rect, radius, mode);
             }
         }
 
@@ -1431,21 +1438,31 @@ impl PrimitiveStore {
         node_data: &[ClipScrollNodeData],
         clips: &Vec<ClipWorkItem>,
         combined_outer_rect: &DeviceIntRect,
+        has_clips_from_other_coordinate_systems: bool,
     ) -> bool {
-        if self.cpu_metadata[prim_index.0].prim_kind != PrimitiveKind::Brush {
-            return false;
-        }
+        let metadata = &self.cpu_metadata[prim_index.0];
+        let brush = match metadata.prim_kind {
+            PrimitiveKind::Brush => {
+                &mut self.cpu_brushes[metadata.cpu_prim_index.0]
+            }
+            PrimitiveKind::Picture => {
+                &mut self.cpu_pictures[metadata.cpu_prim_index.0].brush
+            }
+            _ => {
+                return false;
+            }
+        };
 
-        self.write_brush_segment_description(
-            prim_index,
+        PrimitiveStore::write_brush_segment_description(
+            brush,
+            metadata,
             prim_context,
             clip_store,
             node_data,
-            clips
+            clips,
+            has_clips_from_other_coordinate_systems,
         );
 
-        let metadata = &self.cpu_metadata[prim_index.0];
-        let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
         let segment_desc = match brush.segment_desc {
             Some(ref mut description) => description,
             None => return false,
@@ -1453,28 +1470,30 @@ impl PrimitiveStore {
         let clip_mask_kind = segment_desc.clip_mask_kind;
 
         for segment in &mut segment_desc.segments {
-            segment.clip_task_id = if segment.may_need_clip_mask || clip_mask_kind == BrushClipMaskKind::Global {
-                let segment_screen_rect = calculate_screen_bounding_rect(
-                    &prim_context.scroll_node.world_content_transform,
-                    &segment.local_rect,
-                    prim_context.device_pixel_scale,
+            if !segment.may_need_clip_mask && clip_mask_kind != BrushClipMaskKind::Global {
+                segment.clip_task_id = None;
+                continue;
+            }
+
+            let segment_screen_rect = calculate_screen_bounding_rect(
+                &prim_context.scroll_node.world_content_transform,
+                &segment.local_rect,
+                prim_context.device_pixel_scale,
+            );
+
+            let intersected_rect = combined_outer_rect.intersection(&segment_screen_rect);
+            segment.clip_task_id = intersected_rect.map(|bounds| {
+                let clip_task = RenderTask::new_mask(
+                    bounds,
+                    clips.clone(),
+                    prim_context.scroll_node.coordinate_system_id,
                 );
 
-                combined_outer_rect.intersection(&segment_screen_rect).map(|bounds| {
-                    let clip_task = RenderTask::new_mask(
-                        bounds,
-                        clips.clone(),
-                        prim_context.scroll_node.coordinate_system_id,
-                    );
+                let clip_task_id = render_tasks.add(clip_task);
+                tasks.push(clip_task_id);
 
-                    let clip_task_id = render_tasks.add(clip_task);
-                    tasks.push(clip_task_id);
-
-                    clip_task_id
-                })
-            } else {
-                None
-            };
+                clip_task_id
+            })
         }
 
         true
@@ -1553,20 +1572,24 @@ impl PrimitiveStore {
             }
         };
 
+        let mut has_clips_from_other_coordinate_systems = false;
         let mut combined_inner_rect = *screen_rect;
         let clips = convert_clip_chain_to_clip_vector(
             clip_chain,
             extra_clip,
             &combined_outer_rect,
-            &mut combined_inner_rect
+            &mut combined_inner_rect,
+            prim_context.scroll_node.coordinate_system_id,
+            &mut has_clips_from_other_coordinate_systems
         );
 
+        // This can happen if we had no clips or if all the clips were optimized away. In
+        // some cases we still need to create a clip mask in order to create a rectangular
+        // clip in screen space coordinates.
         if clips.is_empty() {
-            // If this item is in the root coordinate system, then
-            // we know that the local_clip_rect in the clip node
-            // will take care of applying this clip, so no need
-            // for a mask.
-            if prim_coordinate_system_id == CoordinateSystemId::root() {
+            // If we don't have any clips from other coordinate systems, the local clip
+            // calculated from the clip chain should be sufficient to ensure proper clipping.
+            if !has_clips_from_other_coordinate_systems {
                 return true;
             }
 
@@ -1594,6 +1617,7 @@ impl PrimitiveStore {
             node_data,
             &clips,
             &combined_outer_rect,
+            has_clips_from_other_coordinate_systems,
         ) {
             return true;
         }
@@ -1954,11 +1978,16 @@ fn convert_clip_chain_to_clip_vector(
     extra_clip: ClipChainNodeRef,
     combined_outer_rect: &DeviceIntRect,
     combined_inner_rect: &mut DeviceIntRect,
+    prim_coordinate_system: CoordinateSystemId,
+    has_clips_from_other_coordinate_systems: &mut bool,
 ) -> Vec<ClipWorkItem> {
     // Filter out all the clip instances that don't contribute to the result.
     ClipChainNodeIter { current: extra_clip }
         .chain(ClipChainNodeIter { current: clip_chain_nodes })
         .filter_map(|node| {
+            *has_clips_from_other_coordinate_systems |=
+                prim_coordinate_system != node.work_item.coordinate_system_id;
+
             *combined_inner_rect = if !node.screen_inner_rect.is_empty() {
                 // If this clip's inner area contains the area of the primitive clipped
                 // by previous clips, then it's not going to affect rendering in any way.

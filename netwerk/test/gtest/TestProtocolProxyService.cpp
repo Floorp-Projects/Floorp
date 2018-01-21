@@ -2,12 +2,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
-#include "nsIURL.h"
 #include "nsString.h"
 #include "nsComponentManagerUtils.h"
 #include "../../base/nsProtocolProxyService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
@@ -17,68 +17,66 @@ TEST(TestProtocolProxyService, LoadHostFilters) {
   ASSERT_TRUE(ps);
   mozilla::net::nsProtocolProxyService* pps = static_cast<mozilla::net::nsProtocolProxyService*>(ps.get());
 
-  nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
-  ASSERT_TRUE(url) << "couldn't create URL";
-
+  nsCOMPtr<nsIURI> url;
   nsAutoCString spec;
 
   auto CheckLoopbackURLs = [&](bool expected)
   {
     // loopback IPs are always filtered
     spec = "http://127.0.0.1";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
     spec = "http://[::1]";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
   };
 
   auto CheckURLs = [&](bool expected)
   {
     spec = "http://example.com";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "https://10.2.3.4";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 443), expected);
 
     spec = "http://1.2.3.4";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "http://1.2.3.4:8080";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "http://[2001::1]";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "http://2.3.4.5:7777";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "http://[abcd::2]:123";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
 
     spec = "http://bla.test.com";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
   };
 
   auto CheckPortDomain = [&](bool expected)
   {
     spec = "http://blabla.com:10";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
   };
 
   auto CheckLocalDomain = [&](bool expected)
   {
     spec = "http://test";
-    ASSERT_EQ(url->SetSpec(spec), NS_OK);
+    ASSERT_EQ(NS_NewURI(getter_AddRefs(url), spec), NS_OK);
     ASSERT_EQ(pps->CanUseProxy(url, 80), expected);
   };
 

@@ -258,8 +258,8 @@ nsJARURI::GetHasRef(bool *result)
     return mJAREntry->GetHasRef(result);
 }
 
-NS_IMETHODIMP
-nsJARURI::SetSpec(const nsACString& aSpec)
+nsresult
+nsJARURI::SetSpecInternal(const nsACString& aSpec)
 {
     return SetSpecWithBase(aSpec, nullptr);
 }

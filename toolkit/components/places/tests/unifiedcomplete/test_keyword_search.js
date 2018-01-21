@@ -69,5 +69,11 @@ add_task(async function test_keyword_searc() {
     matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
+  info("Bug 1228111 - Keyword with a space in front");
+  await check_autocomplete({
+    search: " key test",
+    matches: [ { uri: NetUtil.newURI("http://abc/?search=test"), title: "abc", style: ["keyword", "heuristic"] } ]
+  });
+
   await cleanup();
 });

@@ -1769,7 +1769,8 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
             if (key != JSProto_Null) {
                 MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
                            key == JSProto_Function || key == JSProto_RegExp);
-                newProto = GetBuiltinPrototypePure(global, key);
+                newProto = global->maybeGetPrototype(key);
+                MOZ_ASSERT(newProto);
             } else if (protoObj == parseTaskGenFunctionProto) {
                 newProto = global->getGeneratorFunctionPrototype();
             } else if (protoObj == moduleProto) {

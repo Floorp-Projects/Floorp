@@ -124,7 +124,13 @@
             "type": "object",
             "properties": {
               "tabId": {"type": "integer", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
-              "title": {"type": "string", "description": "The tooltip string."}
+              "title": {
+                "choices": [
+                  {"type": "string"},
+                  {"type": "null"}
+                ],
+                "description": "The tooltip string."
+              }
             }
           }
         ]
@@ -216,7 +222,10 @@
             "properties": {
               "tabId": {"type": "integer", "minimum": 0, "description": "The id of the tab for which you want to modify the page action."},
               "popup": {
-                "type": "string",
+                "choices": [
+                  {"type": "string"},
+                  {"type": "null"}
+                ],
                 "description": "The html file to show in a popup.  If set to the empty string (''), no popup is shown."
               }
             }

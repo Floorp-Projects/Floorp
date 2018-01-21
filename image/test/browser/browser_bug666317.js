@@ -35,7 +35,6 @@ function ImageObserver(decodeCallback, discardCallback) {
 function currentRequest() {
   let img = gBrowser.getBrowserForTab(newTab).contentWindow
             .document.getElementById('testImg');
-  img.QueryInterface(Ci.nsIImageLoadingContent);
   return img.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
 }
 

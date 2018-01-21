@@ -83,9 +83,11 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
-#define DEFAULT_USER_CONTROL_RP 3
+#define DEFAULT_RP 3
+#define DEFAULT_PRIVATE_RP 2
 
-static uint32_t sUserControlRp = DEFAULT_USER_CONTROL_RP;
+static uint32_t sDefaultRp = DEFAULT_RP;
+static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 
 already_AddRefed<nsIIOService>
 do_GetIOService(nsresult *error /* = 0 */)
@@ -2973,18 +2975,28 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
 }
 
 uint32_t
-NS_GetDefaultReferrerPolicy()
+NS_GetDefaultReferrerPolicy(bool privateBrowsing)
 {
   static bool preferencesInitialized = false;
 
   if (!preferencesInitialized) {
-    mozilla::Preferences::AddUintVarCache(&sUserControlRp,
-                                          "network.http.referer.userControlPolicy",
-                                          DEFAULT_USER_CONTROL_RP);
+    mozilla::Preferences::AddUintVarCache(&sDefaultRp,
+                                          "network.http.referer.defaultPolicy",
+                                          DEFAULT_RP);
+    mozilla::Preferences::AddUintVarCache(&defaultPrivateRp,
+                                          "network.http.referer.defaultPolicy.pbmode",
+                                          DEFAULT_PRIVATE_RP);
     preferencesInitialized = true;
   }
 
-  switch (sUserControlRp) {
+  uint32_t defaultToUse;
+  if (privateBrowsing) {
+      defaultToUse = defaultPrivateRp;
+  } else {
+      defaultToUse = sDefaultRp;
+  }
+
+  switch (defaultToUse) {
     case 0:
       return nsIHttpChannel::REFERRER_POLICY_NO_REFERRER;
     case 1:

@@ -119,18 +119,11 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
     }
 }
 
-/* static */ bool
-GlobalObject::ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
-{
-    if (global->isStandardClassResolved(key))
-        return true;
-    return resolveConstructor(cx, global, key);
-}
-
 /* static*/ bool
 GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
+    MOZ_ASSERT(!cx->helperThread());
 
     // Prohibit collection of allocation metadata. Metadata builders shouldn't
     // need to observe lazily-constructed prototype objects coming into

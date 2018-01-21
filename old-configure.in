@@ -508,28 +508,10 @@ fi
 dnl ========================================================
 dnl Add optional and non-optional hardening flags
 dnl ========================================================
-CFLAGS="$CFLAGS $HARDENING_CFLAGS"
-CPPFLAGS="$CPPFLAGS $HARDENING_CFLAGS"
-CXXFLAGS="$CXXFLAGS $HARDENING_CFLAGS"
 
-dnl In at least glibc-2.25, _FORTIFY_SOURCE requires compiling
-dnl with optimization (Bug 1417452)
-if test -n "$MOZ_OPTIMIZE"; then
-   if test "$GNU_CC" -o -n "${CLANG_CC}${CLANG_CL}"; then
-      case $OS_TARGET in
-         Android)
-            dnl FORTIFY_SOURCE is not supported on Android on the
-            dnl top-level old-configure.in at this time.
-            dnl See Bug 1415595
-            ;;
-         *)
-            CFLAGS="$CFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-            CPPFLAGS="$CPPFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-            CXXFLAGS="$CXXFLAGS -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2"
-            ;;
-      esac
-   fi
-fi
+CFLAGS="$CFLAGS $MOZ_HARDENING_CFLAGS"
+CPPFLAGS="$CPPFLAGS $MOZ_HARDENING_CFLAGS"
+CXXFLAGS="$CXXFLAGS $MOZ_HARDENING_CFLAGS"
 
 dnl ========================================================
 dnl GNU specific defaults

@@ -230,7 +230,6 @@ class Test_get_config(object):
         cls.argv_kraken = '--activeTests kraken -e /some/random/path'.split()
         cls.argv_basic_compositor_video = \
             '--activeTests basic_compositor_video -e /some/random/path'.split()
-        cls.argv_tcanvasmark = '--activeTests tcanvasmark -e /some/random/path'.split()
         cls.argv_dromaeo_css = '--activeTests dromaeo_css -e /some/random/path'.split()
         cls.argv_dromaeo_dom = '--activeTests dromaeo_dom -e /some/random/path'.split()
         cls.argv_tsvgm = '--activeTests tsvgm -e /some/random/path'.split()
@@ -768,27 +767,6 @@ class Test_get_config(object):
         assert test_config['filters'] is not None
         assert test_config['unit'] == 'ms/frame'
         assert test_config['lower_is_better'] is True
-
-    def test_tcanvasmark_has_expected_attributes(self):
-        config = get_config(self.argv_tcanvasmark)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'tcanvasmark'
-        assert test_config['tpmanifest'] != '${talos}/tests/canvasmark/canvasmark.manifest'
-        assert 'win_counters' not in test_config
-        assert 'w7_counters' not in test_config
-        assert 'linux_counters' not in test_config
-        assert 'mac_counters' not in test_config
-        assert test_config['tpcycles'] == 5
-        assert test_config['tppagecycles'] == 1
-        assert test_config['timeout'] == 900
-        assert test_config['gecko_profile_interval'] == 10
-        assert test_config['gecko_profile_entries'] == 2500000
-        assert test_config['tpmozafterpaint'] is False
-        assert test_config['preferences'] == {'dom.send_after_paint_to_content': False}
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'score'
-        assert test_config['lower_is_better'] is False
 
     def test_dromaeo_css_has_expected_attributes(self):
         config = get_config(self.argv_dromaeo_css)

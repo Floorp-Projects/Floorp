@@ -12,7 +12,7 @@
 
 [package]
 name = "gl_generator"
-version = "0.6.1"
+version = "0.8.0"
 authors = ["Brendan Zabarauskas <bjzaba@yahoo.com.au>", "Corey Richardson", "Arseny Kapoulkine"]
 description = "Code generators for creating bindings to the Khronos OpenGL APIs."
 homepage = "https://github.com/brendanzab/gl-rs/gl_generator/"

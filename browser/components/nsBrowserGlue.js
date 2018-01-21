@@ -440,7 +440,7 @@ BrowserGlue.prototype = {
             Services.obs.notifyObservers(null, "places-browser-init-complete");
           }
         } else if (data == "migrateMatchBucketsPrefForUIVersion60") {
-          this._migrateMatchBucketsPrefForUIVersion60();
+          this._migrateMatchBucketsPrefForUIVersion60(true);
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -2351,7 +2351,13 @@ BrowserGlue.prototype = {
     }
   },
 
-  _migrateMatchBucketsPrefForUIVersion60() {
+  _migrateMatchBucketsPrefForUIVersion60(forceCheck = false) {
+    function check() {
+      if (CustomizableUI.getPlacementOfWidget("search-container")) {
+        Services.prefs.setCharPref(prefName,
+                                   "general:5,suggestion:Infinity");
+      }
+    }
     let prefName = "browser.urlbar.matchBuckets";
     let pref = Services.prefs.getCharPref(prefName, "");
     if (!pref) {
@@ -2361,8 +2367,22 @@ BrowserGlue.prototype = {
       // not placed (the urlbar and search bar are unified), then leave the pref
       // cleared so that UnifiedComplete.js uses the default value (so that
       // search suggestions will come before history results).
-      if (CustomizableUI.getPlacementOfWidget("search-container")) {
-        Services.prefs.setCharPref(prefName, "general:5,suggestion:Infinity");
+      if (forceCheck) {
+        // This is the case when this is called by the test.
+        check();
+      } else {
+        // This is the normal, non-test case.  At this point the first window
+        // has not been set up yet, so use a CUI listener to get the placement
+        // when the nav-bar is first registered.
+        let listener = {
+          onAreaNodeRegistered(area, container) {
+            if (CustomizableUI.AREA_NAVBAR == area) {
+              check();
+              CustomizableUI.removeListener(listener);
+            }
+          },
+        };
+        CustomizableUI.addListener(listener);
       }
     }
     // Else, the pref has already been set.  Normally this pref does not exist.

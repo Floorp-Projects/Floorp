@@ -23,7 +23,6 @@ SimpleTest.waitForExplicitFinish();
 window.onload = function() {
   var img = SpecialPowers.wrap(document.getElementsByTagName("img")[0]);
   var container = img
-      .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
       .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST)
       .image;
 

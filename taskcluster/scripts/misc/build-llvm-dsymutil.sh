@@ -28,11 +28,9 @@ cmake \
 
 export LD_LIBRARY_PATH=$HOME_DIR/src/gcc/lib64
 
-ninja llvm-dsymutil
+ninja llvm-dsymutil llvm-symbolizer
 
-strip bin/llvm-dsymutil
-
-tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/llvm-dsymutil
+tar --xform='s,^,llvm-dsymutil/,' -Jcf llvm-dsymutil.tar.xz bin/llvm-dsymutil bin/llvm-symbolizer
 
 mkdir -p $UPLOAD_DIR
 cp llvm-dsymutil.tar.xz $UPLOAD_DIR

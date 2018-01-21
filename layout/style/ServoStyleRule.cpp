@@ -77,7 +77,9 @@ nsresult
 ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   ServoStyleRule* rule = Rule();
-  if (RefPtr<ServoStyleSheet> sheet = rule->GetStyleSheet()->AsServo()) {
+  if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
+    MOZ_ASSERT(sheet->IsServo(), "Servo style rules should have "
+                                 "servo stylesheets.");
     nsCOMPtr<nsIDocument> doc = sheet->GetAssociatedDocument();
     mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
     if (aDecl != mDecls) {

@@ -80,7 +80,16 @@ interface nsIURI : nsISupports
      */
 
     /**
-     * Returns a string representation of the URI. Setting the spec causes
+     * Returns a string representation of the URI.
+     *
+     * Some characters may be escaped.
+     */
+    readonly attribute AUTF8String spec;
+
+    /*
+     * This method should only be called by nsIURIMutator or C++ unit tests.
+     *
+     * Setting the spec causes
      * the new spec to be parsed per the rules for the scheme the URI
      * currently has.  In particular, setting the spec to a URI string with a
      * different scheme will generally produce incorrect results; no one
@@ -88,10 +97,9 @@ interface nsIURI : nsISupports
      * the URI stores information from the nsIIOService.newURI call used to
      * create it other than just the parsed string, then behavior of this
      * information on setting the spec attribute is undefined.
-     *
-     * Some characters may be escaped.
      */
-    attribute AUTF8String spec;
+    [noscript,notxpcom,nostdcall]
+    nsresult setSpecInternal(in ACString aSpec);
 
 %{ C++
     // An infallible wrapper for GetSpec() that returns a failure indication

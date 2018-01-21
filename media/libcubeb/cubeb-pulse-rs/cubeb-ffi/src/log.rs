@@ -18,8 +18,8 @@ macro_rules! log_internal {
         unsafe {
             if $level <= $crate::g_cubeb_log_level {
                 if let Some(log_callback) = $crate::g_cubeb_log_callback {
-                    let cstr = ::std::ffi::CString::new(concat!("%s:%d: ", $fmt, "\n")).unwrap();
-                    log_callback(cstr.as_ptr(), file!(), line!(), $($arg)+);
+                    let cstr = ::std::ffi::CString::new(format!(concat!("%s:%d: ", $fmt, "\n"), $($arg)+)).unwrap();
+                    log_callback(cstr.as_ptr(), file!(), line!());
                 }
             }
         }

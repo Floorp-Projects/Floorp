@@ -78,7 +78,10 @@ public:
 
     NS_IMETHOD SetSpec(const nsACString & aSpec, nsIURIMutator** aMutator) override
     {
-      NS_ADDREF(*aMutator = this);
+      if (aMutator) {
+        nsCOMPtr<nsIURIMutator> mutator = this;
+        mutator.forget(aMutator);
+      }
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 

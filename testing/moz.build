@@ -33,9 +33,6 @@ with Files("talos/talos/tests/kraken/**"):
 with Files("talos/talos/tests/a11y/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
-with Files("talos/talos/tests/canvasmark/**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
-
 with Files("talos/talos/tests/webgl/**"):
     BUG_COMPONENT = ("Core", "Canvas: WebGL")
 

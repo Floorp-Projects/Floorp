@@ -10,7 +10,7 @@ use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::PrimitiveContext;
 use gpu_cache::{GpuCache, GpuDataRequest};
 use gpu_types::{BrushImageKind, PictureType};
-use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
+use prim_store::{BrushKind, BrushPrimitive, PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
 use render_task::{ClearMode, RenderTask, RenderTaskCacheKey};
 use render_task::{RenderTaskCacheKeyKind, RenderTaskId, RenderTaskTree};
 use resource_cache::{CacheItem, ResourceCache};
@@ -43,6 +43,7 @@ pub enum PictureCompositeMode {
 /// Configure whether the content to be drawn by a picture
 /// in local space rasterization or the screen space.
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub enum ContentOrigin {
     Local(LayerPoint),
     Screen(DeviceIntPoint),
@@ -118,6 +119,15 @@ pub struct PicturePrimitive {
     // picture. For text shadows and box shadows, we want to
     // unconditionally draw them.
     pub cull_children: bool,
+
+    // The brush primitive that will be used to draw this
+    // picture.
+    // TODO(gw): Having a brush primitive embedded here
+    //           makes the code complex in a few places.
+    //           Consider a better way to structure this.
+    //           Maybe embed the PicturePrimitive inside
+    //           the BrushKind enum instead?
+    pub brush: BrushPrimitive,
 }
 
 impl PicturePrimitive {
@@ -133,6 +143,10 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
+            brush: BrushPrimitive::new(
+                BrushKind::Picture,
+                None,
+            ),
         }
     }
 
@@ -178,6 +192,10 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
+            brush: BrushPrimitive::new(
+                BrushKind::Picture,
+                None,
+            ),
         }
     }
 
@@ -201,6 +219,10 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: true,
+            brush: BrushPrimitive::new(
+                BrushKind::Picture,
+                None,
+            ),
         }
     }
 
@@ -560,7 +582,7 @@ impl PicturePrimitive {
                         // TODO(gw): Remove the nastiness with having to pass
                         //           the scale factor through the texture cache
                         //           item user data. This will disappear once
-                        //           the brush_image shader is updated to draw
+                        //           the brush_picture shader is updated to draw
                         //           segments, since the scale factor will not
                         //           be used at all then during drawing.
                         (root_task_id, [scale_factor, 0.0, 0.0])

@@ -22,6 +22,7 @@ const MINIMUM_LARGE_RECT_SIZE: u32 = 32;
 ///
 /// This approach was chosen because of its simplicity, good performance, and easy support for
 /// dynamic texture deallocation.
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct GuillotineAllocator {
     texture_size: DeviceUintSize,
     free_list: FreeRectList,
@@ -170,6 +171,7 @@ impl GuillotineAllocator {
 
 /// A binning free list. Binning is important to avoid sifting through lots of small strips when
 /// allocating many texture items.
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 struct FreeRectList {
     small: Vec<DeviceUintRect>,
     medium: Vec<DeviceUintRect>,
@@ -177,7 +179,7 @@ struct FreeRectList {
 }
 
 impl FreeRectList {
-    fn new() -> FreeRectList {
+    fn new() -> Self {
         FreeRectList {
             small: vec![],
             medium: vec![],

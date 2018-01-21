@@ -204,7 +204,7 @@ describe("Filtering", () => {
 
 describe("Clear filters", () => {
   it("clears all filters", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     // Setup test case
     store.dispatch(actions.filterToggle(FILTERS.ERROR));
@@ -266,7 +266,7 @@ describe("Clear filters", () => {
 
 describe("Resets filters", () => {
   it("resets default filters value to their original one.", () => {
-    const store = setupStore([]);
+    const store = setupStore();
 
     // Setup test case
     store.dispatch(actions.filterToggle(FILTERS.ERROR));

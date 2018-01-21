@@ -16,7 +16,7 @@ extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
 TEST(TestStandardURL, Simple) {
     nsCOMPtr<nsIURL> url( do_CreateInstance(NS_STANDARDURL_CONTRACTID) );
     ASSERT_TRUE(url);
-    ASSERT_EQ(url->SetSpec(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
+    ASSERT_EQ(url->SetSpecInternal(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
 
     nsAutoCString out;
 
@@ -183,7 +183,7 @@ MOZ_GTEST_BENCH(TestStandardURL, Perf, [] {
     nsAutoCString out;
 
     for (int i = COUNT; i; --i) {
-        ASSERT_EQ(url->SetSpec(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
+        ASSERT_EQ(url->SetSpecInternal(NS_LITERAL_CSTRING("http://example.com")), NS_OK);
         ASSERT_EQ(url->GetSpec(out), NS_OK);
         url->Resolve(NS_LITERAL_CSTRING("foo.html?q=45"), out);
         url->SetScheme(NS_LITERAL_CSTRING("foo"));

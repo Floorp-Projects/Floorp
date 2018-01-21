@@ -58,6 +58,7 @@ ApplyClip(nsDisplayListBuilder* aBuilder,
     while (ancestorSC && ActiveScrolledRoot::IsAncestor(aASR, ancestorSC->mASR)) {
       ancestorSC = ancestorSC->mParent;
     }
+    ancestorSC = aBuilder->CopyWholeChain(ancestorSC);
     aClipChainOnStack.mParent = nullptr;
     aClipToModify =
       aBuilder->CreateClipChainIntersection(ancestorSC, aClipToModify, &aClipChainOnStack);

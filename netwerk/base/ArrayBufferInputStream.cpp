@@ -25,6 +25,8 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
                                 uint32_t aLength,
                                 JSContext* aCx)
 {
+  NS_ASSERT_OWNINGTHREAD(ArrayBufferInputStream);
+
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }

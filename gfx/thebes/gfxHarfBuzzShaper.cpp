@@ -209,8 +209,8 @@ VertFormsGlyphCompare(const void* aKey, const void* aElem)
 
 // Return a vertical presentation-form codepoint corresponding to the
 // given Unicode value, or 0 if no such form is available.
-static hb_codepoint_t
-GetVerticalPresentationForm(hb_codepoint_t unicode)
+hb_codepoint_t
+gfxHarfBuzzShaper::GetVerticalPresentationForm(hb_codepoint_t aUnicode)
 {
     static const uint16_t sVerticalForms[][2] = {
         { 0x2013, 0xfe32 }, // EN DASH
@@ -248,7 +248,7 @@ GetVerticalPresentationForm(hb_codepoint_t unicode)
         { 0xff5d, 0xfe38 }  // FULLWIDTH RIGHT CURLY BRACKET
     };
     const uint16_t* charPair =
-        static_cast<const uint16_t*>(bsearch(&unicode,
+        static_cast<const uint16_t*>(bsearch(&aUnicode,
                                              sVerticalForms,
                                              ArrayLength(sVerticalForms),
                                              sizeof(sVerticalForms[0]),
@@ -266,7 +266,8 @@ HBGetNominalGlyph(hb_font_t *font, void *font_data,
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
 
     if (fcd->mShaper->UseVerticalPresentationForms()) {
-        hb_codepoint_t verticalForm = GetVerticalPresentationForm(unicode);
+        hb_codepoint_t verticalForm =
+            gfxHarfBuzzShaper::GetVerticalPresentationForm(unicode);
         if (verticalForm) {
             *glyph = fcd->mShaper->GetNominalGlyph(verticalForm);
             if (*glyph != 0) {
@@ -290,7 +291,8 @@ HBGetVariationGlyph(hb_font_t *font, void *font_data,
         static_cast<const gfxHarfBuzzShaper::FontCallbackData*>(font_data);
 
     if (fcd->mShaper->UseVerticalPresentationForms()) {
-        hb_codepoint_t verticalForm = GetVerticalPresentationForm(unicode);
+        hb_codepoint_t verticalForm =
+            gfxHarfBuzzShaper::GetVerticalPresentationForm(unicode);
         if (verticalForm) {
             *glyph = fcd->mShaper->GetVariationGlyph(verticalForm,
                                                      variation_selector);

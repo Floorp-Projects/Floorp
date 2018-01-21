@@ -564,7 +564,9 @@ bool
 gfxDWriteFont::ProvidesGlyphWidths() const
 {
     return !mUseSubpixelPositions ||
-           (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD);
+           (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) ||
+           (((gfxDWriteFontEntry*)(GetFontEntry()))->HasVariations() &&
+            !mStyle.variationSettings.IsEmpty());
 }
 
 int32_t

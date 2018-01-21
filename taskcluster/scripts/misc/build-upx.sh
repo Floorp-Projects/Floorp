@@ -12,7 +12,7 @@ cd $WORKSPACE
 
 # --------------
 
-wget http://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
+wget --progress=dot:mega http://www.oberhumer.com/opensource/ucl/download/ucl-1.03.tar.gz
 echo "5847003d136fbbca1334dd5de10554c76c755f7c  ucl-1.03.tar.gz" | sha1sum -c -
 tar xf ucl-1.03.tar.gz
 cd ucl-1.03
