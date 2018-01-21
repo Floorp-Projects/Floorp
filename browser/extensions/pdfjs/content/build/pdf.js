@@ -1809,7 +1809,7 @@ module.exports = typeof window !== 'undefined' && window.Math === Math ? window 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.build = exports.version = exports.setPDFNetworkStreamClass = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFWorker = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.getDocument = undefined;
+exports.build = exports.version = exports.setPDFNetworkStreamFactory = exports.PDFPageProxy = exports.PDFDocumentProxy = exports.PDFWorker = exports.PDFDataRangeTransport = exports.LoopbackPort = exports.getDocument = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1839,9 +1839,9 @@ var pdfjsFilePath = null;
 var fakeWorkerFilesLoader = null;
 var useRequireEnsure = false;
 ;
-var PDFNetworkStream;
-function setPDFNetworkStreamClass(cls) {
-  PDFNetworkStream = cls;
+var createPDFNetworkStream;
+function setPDFNetworkStreamFactory(pdfNetworkStreamFactory) {
+  createPDFNetworkStream = pdfNetworkStreamFactory;
 }
 function getDocument(src) {
   var task = new PDFDocumentLoadingTask();
@@ -1917,7 +1917,7 @@ function getDocument(src) {
       if (rangeTransport) {
         networkStream = new _transport_stream.PDFDataTransportStream(params, rangeTransport);
       } else if (!params.data) {
-        networkStream = new PDFNetworkStream(params);
+        networkStream = createPDFNetworkStream(params);
       }
       var messageHandler = new _util.MessageHandler(docId, workerId, worker.port);
       messageHandler.postMessageTransfers = worker.postMessageTransfers;
@@ -1932,7 +1932,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '2.0.274';
+  let apiVersion = '2.0.288';
   source.disableRange = (0, _dom_utils.getDefaultSetting)('disableRange');
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
@@ -3010,10 +3010,11 @@ var WorkerTransport = function WorkerTransportClosure() {
       return this.messageHandler.sendWithPromise('GetOutline', null);
     },
     getMetadata: function WorkerTransport_getMetadata() {
-      return this.messageHandler.sendWithPromise('GetMetadata', null).then(function transportMetadata(results) {
+      return this.messageHandler.sendWithPromise('GetMetadata', null).then(results => {
         return {
           info: results[0],
-          metadata: results[1] ? new _metadata.Metadata(results[1]) : null
+          metadata: results[1] ? new _metadata.Metadata(results[1]) : null,
+          contentDispositionFilename: this._fullReader ? this._fullReader.filename : null
         };
       });
     },
@@ -3226,8 +3227,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.274';
-  exports.build = build = 'f774abc8';
+  exports.version = version = '2.0.288';
+  exports.build = build = 'f0216484';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3235,7 +3236,7 @@ exports.PDFDataRangeTransport = PDFDataRangeTransport;
 exports.PDFWorker = PDFWorker;
 exports.PDFDocumentProxy = PDFDocumentProxy;
 exports.PDFPageProxy = PDFPageProxy;
-exports.setPDFNetworkStreamClass = setPDFNetworkStreamClass;
+exports.setPDFNetworkStreamFactory = setPDFNetworkStreamFactory;
 exports.version = version;
 exports.build = build;
 
@@ -4620,8 +4621,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '2.0.274';
-var pdfjsBuild = 'f774abc8';
+var pdfjsVersion = '2.0.288';
+var pdfjsBuild = 'f0216484';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(12);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -7743,8 +7744,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '2.0.274';
-  PDFJS.build = 'f774abc8';
+  PDFJS.version = '2.0.288';
+  PDFJS.build = 'f0216484';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -10170,6 +10171,7 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
   function PDFDataTransportStreamReader(stream, queuedChunks) {
     this._stream = stream;
     this._done = false;
+    this._filename = null;
     this._queuedChunks = queuedChunks || [];
     this._requests = [];
     this._headersReady = Promise.resolve();
@@ -10193,6 +10195,9 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
     },
     get headersReady() {
       return this._headersReady;
+    },
+    get filename() {
+      return this._filename;
     },
     get isRangeSupported() {
       return this._stream._isRangeSupported;

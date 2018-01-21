@@ -29,14 +29,8 @@ interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
 
-  readonly attribute nsIDOMMozNamedAttrMap attributes;
   DOMString          getAttribute(in DOMString name);
   void               setAttribute(in DOMString name, 
                                   in DOMString value);
   boolean            hasAttribute(in DOMString name);
-
-  // Obsolete methods.
-  nsIDOMAttr         getAttributeNode(in DOMString name);
-  nsIDOMAttr         getAttributeNodeNS(in DOMString namespaceURI, 
-                                        in DOMString localName);
 };

@@ -20784,8 +20784,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.274';
-var pdfjsBuild = 'f774abc8';
+var pdfjsVersion = '2.0.288';
+var pdfjsBuild = 'f0216484';
 var pdfjsCoreWorker = __w_pdfjs_require__(19);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -20986,7 +20986,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.274';
+    let workerVersion = '2.0.288';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -26871,22 +26871,6 @@ var Jbig2Image = function Jbig2ImageClosure() {
     for (var i = 0, ii = segments.length; i < ii; i++) {
       processSegment(segments[i], visitor);
     }
-  }
-  function parseJbig2(data, start, end) {
-    var position = start;
-    if (data[position] !== 0x97 || data[position + 1] !== 0x4A || data[position + 2] !== 0x42 || data[position + 3] !== 0x32 || data[position + 4] !== 0x0D || data[position + 5] !== 0x0A || data[position + 6] !== 0x1A || data[position + 7] !== 0x0A) {
-      throw new Jbig2Error('invalid header');
-    }
-    var header = {};
-    position += 8;
-    var flags = data[position++];
-    header.randomAccess = !(flags & 1);
-    if (!(flags & 2)) {
-      header.numberOfPages = (0, _util.readUint32)(data, position);
-      position += 4;
-    }
-    readSegments(header, data, position, end);
-    throw new Error('Not implemented');
   }
   function parseJbig2Chunks(chunks) {
     var visitor = new SimpleSegmentVisitor();
