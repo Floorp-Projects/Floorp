@@ -206,6 +206,10 @@ class ManageRecords {
         this.handleKeyPress(event);
         break;
       }
+      case "contextmenu": {
+        event.preventDefault();
+        break;
+      }
     }
   }
 
@@ -250,6 +254,7 @@ class ManageRecords {
   attachEventListeners() {
     window.addEventListener("unload", this, {once: true});
     window.addEventListener("keypress", this);
+    window.addEventListener("contextmenu", this);
     this._elements.records.addEventListener("change", this);
     this._elements.records.addEventListener("click", this);
     this._elements.controlsContainer.addEventListener("click", this);
@@ -261,6 +266,7 @@ class ManageRecords {
    */
   detachEventListeners() {
     window.removeEventListener("keypress", this);
+    window.removeEventListener("contextmenu", this);
     this._elements.records.removeEventListener("change", this);
     this._elements.records.removeEventListener("click", this);
     this._elements.controlsContainer.removeEventListener("click", this);
