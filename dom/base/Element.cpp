@@ -3015,7 +3015,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     attrNode = GetAttributeNodeNSInternal(ns, nsDependentAtomString(aName));
   }
 
-  // Clear binding to nsIDOMMozNamedAttrMap
+  // Clear the attribute out from attribute map.
   nsDOMSlots *slots = GetExistingDOMSlots();
   if (slots && slots->mAttributeMap) {
     slots->mAttributeMap->DropAttribute(aNameSpaceID, aName);

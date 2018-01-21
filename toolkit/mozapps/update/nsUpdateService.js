@@ -1119,7 +1119,6 @@ function UpdatePatch(patch) {
   this._properties = {};
   for (var i = 0; i < patch.attributes.length; ++i) {
     var attr = patch.attributes.item(i);
-    attr.QueryInterface(Ci.nsIDOMAttr);
     switch (attr.name) {
       case "selected":
         this.selected = attr.value == "true";
@@ -1292,7 +1291,6 @@ function Update(update) {
 
   for (let i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
-    attr.QueryInterface(Ci.nsIDOMAttr);
     if (attr.value == "undefined") {
       continue;
     } else if (attr.name == "detailsURL") {

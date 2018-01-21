@@ -15,7 +15,6 @@ typedef unsigned long long DOMTimeStamp;
 typedef double DOMHighResTimeStamp;
 
 // Core
-interface nsIDOMAttr;
 interface nsIDOMCDATASection;
 interface nsIDOMCharacterData;
 interface nsIDOMComment;
