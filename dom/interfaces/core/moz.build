@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDOMDOMException.idl',
     'nsIDOMDOMImplementation.idl',
     'nsIDOMElement.idl',
-    'nsIDOMMozNamedAttrMap.idl',
     'nsIDOMNode.idl',
     'nsIDOMNodeList.idl',
     'nsIDOMNSEditableElement.idl',

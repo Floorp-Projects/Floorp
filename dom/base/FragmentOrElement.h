@@ -315,8 +315,7 @@ public:
     nsDOMStringMap* mDataset; // [Weak]
 
     /**
-     * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
-     * @see FragmentOrElement::GetAttributes
+     * @see Element::Attributes
      */
     RefPtr<nsDOMAttributeMap> mAttributeMap;
 
