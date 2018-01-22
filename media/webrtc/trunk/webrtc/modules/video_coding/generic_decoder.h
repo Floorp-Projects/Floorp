@@ -25,7 +25,7 @@ namespace webrtc {
 
 class VCMReceiveCallback;
 
-enum { kDecoderFrameMemoryLength = 10 };
+enum { kDecoderFrameMemoryLength = 30 };
 
 struct VCMFrameInformation {
   int64_t renderTimeMs;

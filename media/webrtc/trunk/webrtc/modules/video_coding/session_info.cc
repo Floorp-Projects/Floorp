@@ -200,7 +200,7 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
         nalu_ptr += kLengthFieldLength + length;
       } else {
         // Something is very wrong!
-        LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
+        RTC_LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
         return 0;
       }
     }

@@ -160,6 +160,10 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     RTC_CHECK(AddReceiveCodec(red_codec));
   }
 
+  rtp_rtcp_->SetTMMBRStatus(config_.rtp.tmmbr);
+
+  rtp_rtcp_->SetKeyFrameRequestMethod(config_.rtp.keyframe_method);
+
   if (config_.rtp.rtcp_xr.receiver_reference_time_report)
     rtp_rtcp_->SetRtcpXrRrtrStatus(true);
 
@@ -214,6 +218,10 @@ uint32_t RtpVideoStreamReceiver::GetRemoteSsrc() const {
 
 int RtpVideoStreamReceiver::GetCsrcs(uint32_t* csrcs) const {
   return rtp_receiver_->CSRCs(csrcs);
+}
+
+void RtpVideoStreamReceiver::GetRID(char rid[256]) const {
+  rtp_receiver_->GetRID(rid);
 }
 
 RtpReceiver* RtpVideoStreamReceiver::GetRtpReceiver() const {
@@ -320,6 +328,28 @@ void RtpVideoStreamReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
       uint32_t send_time;
       if (packet.GetExtension<AbsoluteSendTime>(&send_time)) {
         ss << ", abs send time: " << send_time;
+      }
+      StringRtpHeaderExtension rtp_stream_id;
+      if (packet.GetExtension<RtpStreamId>(&rtp_stream_id)) {
+        ss << ", rid: " << rtp_stream_id.data();
+      }
+      StringRtpHeaderExtension repaired_rtp_stream_id;
+      if (packet.GetExtension<RepairedRtpStreamId>(&repaired_rtp_stream_id)) {
+        ss << ", repaired rid: " << repaired_rtp_stream_id.data();
+      }
+      StringRtpHeaderExtension mid;
+      if (packet.GetExtension<RtpMid>(&mid)) {
+        ss << ", mid: " << mid.data();
+      }
+      CsrcAudioLevelList csrc_audio_levels;
+      if (packet.GetExtension<CsrcAudioLevel>(&csrc_audio_levels)) {
+        if (csrc_audio_levels.numAudioLevels) {
+          ss << ", csrc audio levels : {" << csrc_audio_levels.arrOfAudioLevels[0];
+          for (uint8_t i = 1; i < csrc_audio_levels.numAudioLevels; i++) {
+            ss << ", " << csrc_audio_levels.arrOfAudioLevels[i];
+          }
+          ss << "}";
+        }
       }
       RTC_LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;

@@ -62,6 +62,10 @@ class VideoAdapter {
       int max_pixel_count,
       int max_framerate_fps);
 
+  // Requests the output frame size from |AdaptFrameResolution| be scaled
+  // down from the input by a factor of scale_resolution_by (min 1.0)
+  virtual void OnScaleResolutionBy(rtc::Optional<float> scale_resolution_by);
+
  private:
   // Determine if frame should be dropped based on input fps and requested fps.
   bool KeepFrame(int64_t in_timestamp_ns);
@@ -86,6 +90,8 @@ class VideoAdapter {
   int resolution_request_target_pixel_count_ RTC_GUARDED_BY(critical_section_);
   int resolution_request_max_pixel_count_ RTC_GUARDED_BY(critical_section_);
   int max_framerate_request_ RTC_GUARDED_BY(critical_section_);
+  float scale_resolution_by_ RTC_GUARDED_BY(critical_section_);
+  bool scale_ RTC_GUARDED_BY(critical_section_);
 
   // The critical section to protect the above variables.
   rtc::CriticalSection critical_section_;

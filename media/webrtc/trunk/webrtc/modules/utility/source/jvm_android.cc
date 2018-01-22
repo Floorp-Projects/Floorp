@@ -16,6 +16,12 @@
 
 #include "rtc_base/checks.h"
 
+namespace mozilla {
+namespace jni {
+jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
+}
+}
+
 #define TAG "JVM"
 #define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
@@ -216,7 +222,9 @@ std::string JNIEnvironment::JavaToStdString(const jstring& j_string) {
 // static
 void JVM::Initialize(JavaVM* jvm) {
   ALOGD("JVM::Initialize%s", GetThreadInfo().c_str());
-  RTC_CHECK(!g_jvm);
+  if (g_jvm) {
+    return;
+  }
   g_jvm = new JVM(jvm);
 }
 

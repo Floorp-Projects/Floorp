@@ -159,6 +159,13 @@ void DesktopAndCursorComposer::Start(DesktopCapturer::Callback* callback) {
   desktop_capturer_->Start(this);
 }
 
+void DesktopAndCursorComposer::Stop() {
+  desktop_capturer_->Stop();
+  if (mouse_monitor_.get())
+    mouse_monitor_->Stop();
+  callback_ = NULL;
+}
+
 void DesktopAndCursorComposer::SetSharedMemoryFactory(
     std::unique_ptr<SharedMemoryFactory> shared_memory_factory) {
   desktop_capturer_->SetSharedMemoryFactory(std::move(shared_memory_factory));
@@ -215,6 +222,10 @@ void DesktopAndCursorComposer::OnMouseCursorPosition(
   if (use_desktop_relative_cursor_position_) {
     cursor_position_ = position;
   }
+}
+
+bool DesktopAndCursorComposer::FocusOnSelectedSource() {
+  return desktop_capturer_->FocusOnSelectedSource();
 }
 
 }  // namespace webrtc

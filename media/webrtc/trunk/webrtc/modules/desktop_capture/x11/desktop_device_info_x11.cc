@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "webrtc/modules/desktop_capture/x11/desktop_device_info_x11.h"
-#include "webrtc/system_wrappers/include/logging.h"
+#include "modules/desktop_capture/x11/desktop_device_info_x11.h"
 #include <inttypes.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
-#include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
-#include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/x11/shared_x_util.h"
+#include "modules/desktop_capture/x11/x_error_trap.h"
+#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
 
 namespace webrtc {
 
@@ -61,7 +60,7 @@ void DesktopDeviceInfoX11::InitializeApplicationList() {
     int status = XQueryTree(SharedDisplay->display(), root_window, &root_window, &parent,
         &children, &num_children);
     if (status == 0) {
-      LOG(LS_ERROR) << "Failed to query for child windows for screen " << screen;
+      RTC_LOG(LS_ERROR) << "Failed to query for child windows for screen " << screen;
       continue;
     }
 
