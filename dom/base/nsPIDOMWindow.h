@@ -613,8 +613,6 @@ public:
   virtual nsresult Focus() = 0;
   virtual nsresult Close() = 0;
 
-  virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
-
   mozilla::dom::DocGroup* GetDocGroup() const;
   virtual nsISerialEventTarget*
   EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
@@ -1138,7 +1136,7 @@ public:
 
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;
 
-  virtual nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
+  virtual void UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) = 0;
 
   mozilla::dom::DocGroup* GetDocGroup() const;
   virtual nsISerialEventTarget*

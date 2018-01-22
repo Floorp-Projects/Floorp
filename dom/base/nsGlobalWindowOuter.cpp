@@ -6364,7 +6364,7 @@ public:
 };
 } // anonymous namespace
 
-nsresult
+void
 nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
                                     nsISelection* aSel,
                                     int16_t aReason)
@@ -6377,13 +6377,14 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
         nsContentUtils::AddScriptRunner(
           new ChildCommandDispatcher(root, child, anAction));
       }
-      return NS_OK;
+      return;
     }
   }
 
   nsPIDOMWindowOuter *rootWindow = GetPrivateRoot();
-  if (!rootWindow)
-    return NS_OK;
+  if (!rootWindow) {
+    return;
+  }
 
   nsCOMPtr<nsIDOMXULDocument> xulDoc =
     do_QueryInterface(rootWindow->GetExtantDoc());
@@ -6399,8 +6400,6 @@ nsGlobalWindowOuter::UpdateCommands(const nsAString& anAction,
                                                             anAction));
     }
   }
-
-  return NS_OK;
 }
 
 Selection*

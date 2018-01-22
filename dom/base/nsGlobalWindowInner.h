@@ -896,7 +896,7 @@ public:
              const nsAString& aOptions,
              const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
              mozilla::ErrorResult& aError);
-  nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
+  void UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason);
 
   void GetContent(JSContext* aCx,
                   JS::MutableHandle<JSObject*> aRetval,
