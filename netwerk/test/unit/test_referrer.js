@@ -8,7 +8,8 @@ function getTestReferrer(server_uri, referer_uri, isPrivate=false) {
   var chan = NetUtil.newChannel({
     uri: uri,
     loadingPrincipal: principal,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   });
 
   chan.QueryInterface(Components.interfaces.nsIHttpChannel);

@@ -57,14 +57,6 @@ typedef unsigned long nsSecurityFlags;
 interface nsILoadInfo : nsISupports
 {
   /**
-   * *** DEPRECATED ***
-   * No LoadInfo created within Gecko should contain this security flag.
-   * Please use any of the five security flags defined underneath.
-   * We only keep this security flag to provide backwards compatibilty.
-   */
-  const unsigned long SEC_NORMAL = 0;
-
-  /**
    * The following five flags determine the security mode and hence what kind of
    * security checks should be performed throughout the lifetime of the channel.
    *
