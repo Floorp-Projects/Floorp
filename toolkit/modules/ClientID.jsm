@@ -45,7 +45,8 @@ function isValidClientID(id) {
 this.ClientID = Object.freeze({
   /**
    * This returns a promise resolving to the the stable client ID we use for
-   * data reporting (FHR & Telemetry).
+   * data reporting (FHR & Telemetry). Previously exising FHR client IDs are
+   * migrated to this.
    *
    * WARNING: This functionality is duplicated for Android (see GeckoProfile.getClientId
    * for more). There are Java tests (TestGeckoProfile) to ensure the functionality is
@@ -95,12 +96,13 @@ var ClientIDImpl = {
     return this._loadClientIdTask;
   },
 
-  /**
-   * Load the Client ID from the DataReporting Service state file.
-   * If no Client ID is found, we generate a new one.
-   */
   async _doLoadClientID() {
-    // Try to load the client id from the DRS state file.
+    // As we want to correlate FHR and telemetry data (and move towards unifying the two),
+    // we first moved the ID management from the FHR implementation to the datareporting
+    // service, then to a common shared module.
+    // Consequently, we try to import an existing FHR ID, so we can keep using it.
+
+    // Try to load the client id from the DRS state file first.
     try {
       let state = await CommonUtils.readJSON(gStateFilePath);
       if (state && this.updateClientID(state.clientID)) {
@@ -110,7 +112,19 @@ var ClientIDImpl = {
       // fall through to next option
     }
 
-    // We dont have an id from the DRS state file yet, generate a new ID.
+    // If we dont have DRS state yet, try to import from the FHR state.
+    try {
+      let fhrStatePath = OS.Path.join(OS.Constants.Path.profileDir, "healthreport", "state.json");
+      let state = await CommonUtils.readJSON(fhrStatePath);
+      if (state && this.updateClientID(state.clientID)) {
+        this._saveClientID();
+        return this._clientID;
+      }
+    } catch (e) {
+      // fall through to next option
+    }
+
+    // We dont have an id from FHR yet, generate a new ID.
     this.updateClientID(CommonUtils.generateUUID());
     this._saveClientIdTask = this._saveClientID();
 
@@ -137,7 +151,8 @@ var ClientIDImpl = {
 
   /**
    * This returns a promise resolving to the the stable client ID we use for
-   * data reporting (FHR & Telemetry).
+   * data reporting (FHR & Telemetry). Previously exising FHR client IDs are
+   * migrated to this.
    *
    * @return {Promise<string>} The stable client ID.
    */
