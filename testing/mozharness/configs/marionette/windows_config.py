@@ -6,7 +6,6 @@ config = {
     "marionette_address": "localhost:2828",
     "test_manifest": "unit-tests.ini",
 
-    "virtualenv_python_dll": 'c:/mozilla-build/python27/python27.dll',
     "virtualenv_path": 'venv',
     "exes": {
         'python': 'c:/mozilla-build/python27/python',
