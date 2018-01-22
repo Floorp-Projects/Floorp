@@ -94,11 +94,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 // QueryInterface implementation for nsDOMAttributeMap
-NS_INTERFACE_TABLE_HEAD(nsDOMAttributeMap)
-  NS_INTERFACE_TABLE(nsDOMAttributeMap, nsIDOMMozNamedAttrMap)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
+
+NS_INTERFACE_MAP_BEGIN(nsDOMAttributeMap)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttributeMap)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
@@ -196,39 +196,6 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName)
 {
   bool dummy;
   return NamedGetter(aAttrName, dummy);
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
-                                nsIDOMAttr** aAttribute)
-{
-  NS_ENSURE_ARG_POINTER(aAttribute);
-
-  NS_IF_ADDREF(*aAttribute = GetNamedItem(aAttrName));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
-{
-  Attr* attribute = static_cast<Attr*>(aAttr);
-  NS_ENSURE_ARG(attribute);
-
-  ErrorResult rv;
-  *aReturn = SetNamedItemNS(*attribute, rv).take();
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
-{
-  Attr* attribute = static_cast<Attr*>(aAttr);
-  NS_ENSURE_ARG(attribute);
-
-  ErrorResult rv;
-  *aReturn = SetNamedItemNS(*attribute, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Attr>
@@ -332,17 +299,6 @@ nsDOMAttributeMap::RemoveNamedItem(NodeInfo* aNodeInfo, ErrorResult& aError)
   return attribute.forget();
 }
 
-NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
-                                   nsIDOMAttr** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-
-  ErrorResult rv;
-  *aReturn = RemoveNamedItem(aName, rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<Attr>
 nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName, ErrorResult& aError)
 {
@@ -386,36 +342,12 @@ nsDOMAttributeMap::Item(uint32_t aIndex)
   return IndexedGetter(aIndex, dummy);
 }
 
-NS_IMETHODIMP
-nsDOMAttributeMap::Item(uint32_t aIndex, nsIDOMAttr** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = Item(aIndex));
-  return NS_OK;
-}
-
 uint32_t
 nsDOMAttributeMap::Length() const
 {
   NS_ENSURE_TRUE(mContent, 0);
 
   return mContent->GetAttrCount();
-}
-
-nsresult
-nsDOMAttributeMap::GetLength(uint32_t *aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
-                                  const nsAString& aLocalName,
-                                  nsIDOMAttr** aReturn)
-{
-  NS_IF_ADDREF(*aReturn = GetNamedItemNS(aNamespaceURI, aLocalName));
-  return NS_OK;
 }
 
 Attr*
@@ -469,17 +401,6 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
   }
 
   return nullptr;
-}
-
-NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
-                                     const nsAString& aLocalName,
-                                     nsIDOMAttr** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  ErrorResult rv;
-  *aReturn = RemoveNamedItemNS(aNamespaceURI, aLocalName, rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<Attr>

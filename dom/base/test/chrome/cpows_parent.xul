@@ -224,7 +224,6 @@
         }
       }
 
-      testNoInterface(savedElement, Components.interfaces.nsIDOMAttr);
       testNoInterface(savedElement, Components.interfaces.nsIClassInfo);
 
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.

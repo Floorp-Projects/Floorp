@@ -18,7 +18,6 @@ const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMElement        = I.nsIDOMElement;
 const nsIDOMNode           = I.nsIDOMNode;
 const nsIDOMCharacterData  = I.nsIDOMCharacterData;
-const nsIDOMAttr           = I.nsIDOMAttr;
 const nsIDOMNodeList       = I.nsIDOMNodeList;
 const nsIDOMXULElement     = I.nsIDOMXULElement;
 const nsIDOMProcessingInstruction = I.nsIDOMProcessingInstruction;
@@ -94,8 +93,7 @@ function do_compare_attrs(e1, e2) {
         do_throw("Missing attribute with namespaceURI '" + att.namespaceURI +
                  "' and localName '" + att.localName + "'");
       }
-      Assert.equal(att.QueryInterface(nsIDOMAttr).value, 
-                   att2.QueryInterface(nsIDOMAttr).value);
+      Assert.equal(att.value, att2.value);
     }
   }
 }

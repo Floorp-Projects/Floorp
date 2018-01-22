@@ -47,7 +47,6 @@
 
 class mozAutoDocUpdate;
 class nsIFrame;
-class nsIDOMMozNamedAttrMap;
 class nsIMozBrowserFrame;
 class nsIURI;
 class nsIScrollableFrame;
@@ -2201,11 +2200,6 @@ NS_IMETHOD GetTagName(nsAString& aTagName) final override                     \
   Element::GetTagName(aTagName);                                              \
   return NS_OK;                                                               \
 }                                                                             \
-NS_IMETHOD GetAttributes(nsIDOMMozNamedAttrMap** aAttributes) final override  \
-{                                                                             \
-  NS_ADDREF(*aAttributes = Attributes());                                     \
-  return NS_OK;                                                               \
-}                                                                             \
 using Element::GetAttribute;                                                  \
 NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) final      \
   override                                                                    \
@@ -2227,20 +2221,6 @@ NS_IMETHOD HasAttribute(const nsAString& name,                                \
                            bool* _retval) final override                      \
 {                                                                             \
   *_retval = HasAttribute(name);                                              \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetAttributeNode(const nsAString& name,                            \
-                            nsIDOMAttr** _retval) final override              \
-{                                                                             \
-  NS_IF_ADDREF(*_retval = Element::GetAttributeNode(name));                   \
-  return NS_OK;                                                               \
-}                                                                             \
-NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
-                              const nsAString& localName,                     \
-                              nsIDOMAttr** _retval) final override            \
-{                                                                             \
-  NS_IF_ADDREF(*_retval = Element::GetAttributeNodeNS(namespaceURI,           \
-                                                      localName));            \
   return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__

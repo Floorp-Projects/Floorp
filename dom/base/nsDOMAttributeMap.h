@@ -15,7 +15,6 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
@@ -86,8 +85,7 @@ private:
   nsAttrKey mKey;
 };
 
-// Helper class that implements the nsIDOMMozNamedAttrMap interface.
-class nsDOMAttributeMap final : public nsIDOMMozNamedAttrMap
+class nsDOMAttributeMap final : public nsISupports
                               , public nsWrapperCache
 {
 public:
@@ -100,9 +98,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)
-
-  // nsIDOMMozNamedAttrMap interface
-  NS_DECL_NSIDOMMOZNAMEDATTRMAP
 
   void DropReference();
 
