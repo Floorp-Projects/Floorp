@@ -41,7 +41,10 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PanelMultiView"];
+this.EXPORTED_SYMBOLS = [
+  "PanelMultiView",
+  "PanelView",
+];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -60,17 +63,36 @@ const TRANSITION_PHASES = Object.freeze({
   END: 4
 });
 
+let gNodeToObjectMap = new WeakMap();
+
 /**
- * This is the implementation of the panelUI.xml XBL binding, moved to this
- * module, to make it easier to fork the logic for the newer photon structure.
- * Goals are:
- * 1. to make it easier to programmatically extend the list of panels,
- * 2. allow for navigation between panels multiple levels deep and
- * 3. maintain the pre-photon structure with as little effort possible.
+ * Allows associating an object to a node lazily using a weak map.
  *
- * @type {PanelMultiView}
+ * Classes deriving from this one may be easily converted to Custom Elements,
+ * although they would lose the ability of being associated lazily.
  */
-this.PanelMultiView = class {
+this.AssociatedToNode = class {
+  constructor(node) {
+    /**
+     * Node associated to this object.
+     */
+    this.node = node;
+  }
+
+  /**
+   * Retrieves the instance associated with the given node, constructing a new
+   * one if necessary. When the last reference to the node is released, the
+   * object instance will be garbage collected as well.
+   */
+  static forNode(node) {
+    let associatedToNode = gNodeToObjectMap.get(node);
+    if (!associatedToNode) {
+      associatedToNode = new this(node);
+      gNodeToObjectMap.set(node, associatedToNode);
+    }
+    return associatedToNode;
+  }
+
   get document() {
     return this.node.ownerDocument;
   }
@@ -79,6 +101,21 @@ this.PanelMultiView = class {
     return this.node.ownerGlobal;
   }
 
+  /**
+   * nsIDOMWindowUtils for the window of this node.
+   */
+  get _dwu() {
+    if (this.__dwu)
+      return this.__dwu;
+    return this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDOMWindowUtils);
+  }
+};
+
+/**
+ * This is associated to <panelmultiview> elements by the panelUI.xml binding.
+ */
+this.PanelMultiView = class extends this.AssociatedToNode {
   get _panel() {
     return this.node.parentNode;
   }
@@ -114,12 +151,6 @@ this.PanelMultiView = class {
     return this.node.hasAttribute("ephemeral");
   }
 
-  get _dwu() {
-    if (this.__dwu)
-      return this.__dwu;
-    return this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDOMWindowUtils);
-  }
   get _screenManager() {
     if (this.__screenManager)
       return this.__screenManager;
@@ -157,13 +188,7 @@ this.PanelMultiView = class {
     return this.__multiLineElementsMap;
   }
 
-  constructor(xulNode, testMode = false) {
-    this.node = xulNode;
-    // If `testMode` is `true`, the consumer is only interested in accessing the
-    // methods of this instance. (E.g. in unit tests.)
-    if (testMode)
-      return;
-
+  connect() {
     this.knownViews = new Set(this.node.getElementsByTagName("panelview"));
     this.openViews = [];
     this._mainViewHeight = 0;
@@ -914,7 +939,7 @@ this.PanelMultiView = class {
 
     let buttons = navMap.buttons;
     if (!buttons || !buttons.length) {
-      buttons = navMap.buttons = this._getNavigableElements(view);
+      buttons = navMap.buttons = PanelView.forNode(view).getNavigableElements();
       // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
       for (let button of buttons) {
         if (!button.classList.contains("subviewbutton-back") &&
@@ -1008,22 +1033,6 @@ this.PanelMultiView = class {
   }
 
   /**
-   * Retrieve the button elements from a view node that can be used for navigation
-   * using the keyboard; enabled buttons and the back button, if visible.
-   *
-   * @param  {nsIDOMNode} view
-   * @return {Array}
-   */
-  _getNavigableElements(view) {
-    let buttons = Array.from(view.querySelectorAll(".subviewbutton:not([disabled])"));
-    let dwu = this._dwu;
-    return buttons.filter(button => {
-      let bounds = dwu.getBoundsWithoutFlushing(button);
-      return bounds.width > 0 && bounds.height > 0;
-    });
-  }
-
-  /**
    * Focus the last selected element in the view, if any.
    *
    * @param {panelview} view the view in which to update keyboard focus.
@@ -1106,5 +1115,25 @@ this.PanelMultiView = class {
       this._multiLineElementsMap.set(element, { bounds, textContent: element.textContent });
       element.style.height = bounds.height + "px";
     }
+  }
+};
+
+/**
+ * This is associated to <panelview> elements.
+ */
+this.PanelView = class extends this.AssociatedToNode {
+  /**
+   * Retrieves the button elements that can be used for navigation using the
+   * keyboard, that is all enabled buttons including the back button if visible.
+   *
+   * @return {Array}
+   */
+  getNavigableElements() {
+    let buttons = Array.from(this.node.querySelectorAll(".subviewbutton:not([disabled])"));
+    let dwu = this._dwu;
+    return buttons.filter(button => {
+      let bounds = dwu.getBoundsWithoutFlushing(button);
+      return bounds.width > 0 && bounds.height > 0;
+    });
   }
 };

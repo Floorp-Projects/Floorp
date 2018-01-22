@@ -4,20 +4,15 @@
  * Test keyboard navigation in the app menu panel.
  */
 
-const {PanelMultiView} = Cu.import("resource:///modules/PanelMultiView.jsm", {});
+const {PanelView} = Cu.import("resource:///modules/PanelMultiView.jsm", {});
 const kHelpButtonId = "appMenu-help-button";
-let gHelperInstance;
-
-add_task(async function setup() {
-  gHelperInstance = new PanelMultiView(PanelUI.panel, true);
-});
 
 add_task(async function testUpDownKeys() {
   let promise = promisePanelShown(window);
   PanelUI.show();
   await promise;
 
-  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
   for (let button of buttons) {
     if (button.disabled)
@@ -50,7 +45,7 @@ add_task(async function testEnterKeyBehaviors() {
   PanelUI.show();
   await promise;
 
-  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
   // Navigate to the 'Help' button, which points to a subview.
   EventUtils.synthesizeKey("KEY_ArrowUp", { code: "ArrowUp" });
@@ -67,7 +62,7 @@ add_task(async function testEnterKeyBehaviors() {
   EventUtils.synthesizeKey("VK_RETURN", { code: "Enter" });
   await promise;
 
-  let helpButtons = gHelperInstance._getNavigableElements(PanelUI.helpView);
+  let helpButtons = PanelView.forNode(PanelUI.helpView).getNavigableElements();
   Assert.ok(helpButtons[0].classList.contains("subviewbutton-back"),
     "First button in help view should be a back button");
 
@@ -147,7 +142,7 @@ add_task(async function testTabKey() {
   PanelUI.show();
   await promise;
 
-  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
 
   for (let button of buttons) {
     if (button.disabled)
@@ -184,7 +179,7 @@ add_task(async function testInterleavedTabAndArrowKeys() {
   PanelUI.show();
   await promise;
 
-  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
   let tab = false;
 
   for (let button of buttons) {
@@ -211,7 +206,7 @@ add_task(async function testSpaceDownAfterTabNavigation() {
   PanelUI.show();
   await promise;
 
-  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let buttons = PanelView.forNode(PanelUI.mainView).getNavigableElements();
   let button;
 
   for (button of buttons) {
