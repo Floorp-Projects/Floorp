@@ -1,0 +1,7 @@
+{
+  "policies": {
+    "bool_policy": true,
+    "int_policy": 42,
+    "string_policy": "policies test 2"
+  }
+}
