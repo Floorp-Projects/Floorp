@@ -70,6 +70,10 @@ function run_test() {
   if ("nsIAndroidBridge" in Ci) {
     checkService("androidBridge", Ci.nsIAndroidBridge);
   }
+  if ("@mozilla.org/browser/enterprisepolicies;1" in Cc) {
+    checkService("policies", Ci.nsIEnterprisePolicies);
+  }
+
 
   // In xpcshell tests, the "@mozilla.org/xre/app-info;1" component implements
   // only the nsIXULRuntime interface, but not nsIXULAppInfo.  To test the

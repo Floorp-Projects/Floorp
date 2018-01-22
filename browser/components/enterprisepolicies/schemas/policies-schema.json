@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+     "block_about_config": {
+      "description": "Blocks access to the about:config page.",
+      "first_available": "60.0",
+
+      "type": "boolean",
+      "enum": [true]
+    }
+  }
+}
