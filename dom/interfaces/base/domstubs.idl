@@ -42,7 +42,6 @@ class DOMException;
 // Base
 interface nsIDOMWindow;
 interface nsIDOMWindowCollection;
-interface nsIDOMNavigator;
 interface nsIDOMScreen;
 
 // Events
