@@ -281,13 +281,7 @@ function satchelCommonSetup() {
 
   SimpleTest.registerCleanupFunction(() => {
     gChromeScript.sendAsyncMessage("cleanup");
-    return new Promise(resolve => {
-      gChromeScript.addMessageListener("cleanup-done", function done() {
-        gChromeScript.removeMessageListener("cleanup-done", done);
-        gChromeScript.destroy();
-        resolve();
-      });
-    });
+    gChromeScript.destroy();
   });
 }
 
