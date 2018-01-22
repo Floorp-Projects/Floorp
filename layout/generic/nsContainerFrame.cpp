@@ -1160,6 +1160,13 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
     if (frame->GetPrevInFlow()->GetParent() != GetPrevInFlow()) {
       // frame's prevInFlow has moved, skip reflowing this frame;
       // it will get reflowed once it's been placed
+      if (GetNextInFlow()) {
+        // We report OverflowIncomplete status in this case to avoid our parent
+        // deleting our next-in-flows which might destroy non-empty frames.
+        nsReflowStatus status;
+        status.SetOverflowIncomplete();
+        aStatus.MergeCompletionStatusFrom(status);
+      }
       continue;
     }
     // If the available vertical height has changed, we need to reflow
