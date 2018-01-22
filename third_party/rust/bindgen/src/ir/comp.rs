@@ -37,13 +37,40 @@ pub enum MethodKind {
     /// A destructor.
     Destructor,
     /// A virtual destructor.
-    VirtualDestructor,
+    VirtualDestructor {
+        /// Whether it's pure virtual.
+        pure_virtual: bool,
+    },
     /// A static method.
     Static,
     /// A normal method.
     Normal,
     /// A virtual method.
-    Virtual,
+    Virtual {
+        /// Whether it's pure virtual.
+        pure_virtual: bool,
+    },
+}
+
+
+impl MethodKind {
+    /// Is this a destructor method?
+    pub fn is_destructor(&self) -> bool {
+        match *self {
+            MethodKind::Destructor |
+            MethodKind::VirtualDestructor { .. } => true,
+            _ => false,
+        }
+    }
+
+    /// Is this a pure virtual method?
+    pub fn is_pure_virtual(&self) -> bool {
+        match *self {
+            MethodKind::Virtual { pure_virtual } |
+            MethodKind::VirtualDestructor { pure_virtual } => pure_virtual,
+            _ => false,
+        }
+    }
 }
 
 /// A struct representing a C++ method, either static, normal, or virtual.
@@ -73,12 +100,6 @@ impl Method {
         self.kind
     }
 
-    /// Is this a destructor method?
-    pub fn is_destructor(&self) -> bool {
-        self.kind == MethodKind::Destructor ||
-            self.kind == MethodKind::VirtualDestructor
-    }
-
     /// Is this a constructor?
     pub fn is_constructor(&self) -> bool {
         self.kind == MethodKind::Constructor
@@ -86,8 +107,11 @@ impl Method {
 
     /// Is this a virtual method?
     pub fn is_virtual(&self) -> bool {
-        self.kind == MethodKind::Virtual ||
-            self.kind == MethodKind::VirtualDestructor
+        match self.kind {
+            MethodKind::Virtual { .. } |
+            MethodKind::VirtualDestructor { .. } => true,
+            _ => false,
+        }
     }
 
     /// Is this a static method?
@@ -463,10 +487,13 @@ impl FieldMethods for RawField {
 
 /// Convert the given ordered set of raw fields into a list of either plain data
 /// members, and/or bitfield units containing multiple bitfields.
+///
+/// If we do not have the layout for a bitfield's type, then we can't reliably
+/// compute its allocation unit. In such cases, we return an error.
 fn raw_fields_to_fields_and_bitfield_units<I>(
     ctx: &BindgenContext,
     raw_fields: I,
-) -> Vec<Field>
+) -> Result<Vec<Field>, ()>
 where
     I: IntoIterator<Item = RawField>,
 {
@@ -503,7 +530,7 @@ where
             &mut bitfield_unit_count,
             &mut fields,
             bitfields,
-        );
+        )?;
     }
 
     assert!(
@@ -511,7 +538,7 @@ where
         "The above loop should consume all items in `raw_fields`"
     );
 
-    fields
+    Ok(fields)
 }
 
 /// Given a set of contiguous raw bitfields, group and allocate them into
@@ -521,7 +548,8 @@ fn bitfields_to_allocation_units<E, I>(
     bitfield_unit_count: &mut usize,
     fields: &mut E,
     raw_bitfields: I,
-) where
+) -> Result<(), ()>
+where
     E: Extend<Field>,
     I: IntoIterator<Item = RawField>,
 {
@@ -572,7 +600,7 @@ fn bitfields_to_allocation_units<E, I>(
         let bitfield_width = bitfield.bitfield_width().unwrap() as usize;
         let bitfield_layout = ctx.resolve_type(bitfield.ty())
             .layout(ctx)
-            .expect("Bitfield without layout? Gah!");
+            .ok_or(())?;
         let bitfield_size = bitfield_layout.size;
         let bitfield_align = bitfield_layout.align;
 
@@ -595,12 +623,8 @@ fn bitfields_to_allocation_units<E, I>(
 
                 // Now we're working on a fresh bitfield allocation unit, so reset
                 // the current unit size and alignment.
-                #[allow(unused_assignments)]
-                {
-                    unit_size_in_bits = 0;
-                    offset = 0;
-                    unit_align = 0;
-                }
+                offset = 0;
+                unit_align = 0;
             }
         } else {
             if offset != 0 &&
@@ -612,19 +636,27 @@ fn bitfields_to_allocation_units<E, I>(
             }
         }
 
+        // According to the x86[-64] ABI spec: "Unnamed bit-fields’ types do not
+        // affect the alignment of a structure or union". This makes sense: such
+        // bit-fields are only used for padding, and we can't perform an
+        // un-aligned read of something we can't read because we can't even name
+        // it.
+        if bitfield.name().is_some() {
+            max_align = cmp::max(max_align, bitfield_align);
+
+            // NB: The `bitfield_width` here is completely, absolutely
+            // intentional.  Alignment of the allocation unit is based on the
+            // maximum bitfield width, not (directly) on the bitfields' types'
+            // alignment.
+            unit_align = cmp::max(unit_align, bitfield_width);
+        }
+
         // Always keep all bitfields around. While unnamed bitifields are used
         // for padding (and usually not needed hereafter), large unnamed
         // bitfields over their types size cause weird allocation size behavior from clang.
         // Therefore, all bitfields needed to be kept around in order to check for this
         // and make the struct opaque in this case
         bitfields_in_unit.push(Bitfield::new(offset, bitfield));
-
-        max_align = cmp::max(max_align, bitfield_align);
-
-        // NB: The `bitfield_width` here is completely, absolutely intentional.
-        // Alignment of the allocation unit is based on the maximum bitfield
-        // width, not (directly) on the bitfields' types' alignment.
-        unit_align = cmp::max(unit_align, bitfield_width);
 
         unit_size_in_bits = offset + bitfield_width;
 
@@ -645,6 +677,8 @@ fn bitfields_to_allocation_units<E, I>(
             bitfields_in_unit,
         );
     }
+
+    Ok(())
 }
 
 /// A compound structure's fields are initially raw, and have bitfields that
@@ -658,6 +692,7 @@ fn bitfields_to_allocation_units<E, I>(
 enum CompFields {
     BeforeComputingBitfieldUnits(Vec<RawField>),
     AfterComputingBitfieldUnits(Vec<Field>),
+    ErrorComputingBitfieldUnits,
 }
 
 impl Default for CompFields {
@@ -672,7 +707,7 @@ impl CompFields {
             CompFields::BeforeComputingBitfieldUnits(ref mut raws) => {
                 raws.push(raw);
             }
-            CompFields::AfterComputingBitfieldUnits(_) => {
+            _ => {
                 panic!(
                     "Must not append new fields after computing bitfield allocation units"
                 );
@@ -685,22 +720,36 @@ impl CompFields {
             CompFields::BeforeComputingBitfieldUnits(ref mut raws) => {
                 mem::replace(raws, vec![])
             }
-            CompFields::AfterComputingBitfieldUnits(_) => {
+            _ => {
                 panic!("Already computed bitfield units");
             }
         };
 
-        let fields_and_units =
+        let result =
             raw_fields_to_fields_and_bitfield_units(ctx, raws);
-        mem::replace(
-            self,
-            CompFields::AfterComputingBitfieldUnits(fields_and_units),
-        );
+
+        match result {
+            Ok(fields_and_units) => {
+                mem::replace(
+                    self,
+                    CompFields::AfterComputingBitfieldUnits(fields_and_units));
+            }
+            Err(()) => {
+                mem::replace(
+                    self,
+                    CompFields::ErrorComputingBitfieldUnits
+                );
+            }
+        }
     }
 
     fn deanonymize_fields(&mut self, ctx: &BindgenContext, methods: &[Method]) {
         let fields = match *self {
             CompFields::AfterComputingBitfieldUnits(ref mut fields) => fields,
+            CompFields::ErrorComputingBitfieldUnits => {
+                // Nothing to do here.
+                return;
+            }
             CompFields::BeforeComputingBitfieldUnits(_) => {
                 panic!("Not yet computed bitfield units.");
             }
@@ -783,6 +832,7 @@ impl Trace for CompFields {
         T: Tracer,
     {
         match *self {
+            CompFields::ErrorComputingBitfieldUnits => {}
             CompFields::BeforeComputingBitfieldUnits(ref fields) => {
                 for f in fields {
                     tracer.visit_kind(f.ty().into(), EdgeKind::Field);
@@ -934,7 +984,7 @@ pub struct CompInfo {
 
     /// The destructor of this type. The bool represents whether this destructor
     /// is virtual.
-    destructor: Option<(bool, FunctionId)>,
+    destructor: Option<(MethodKind, FunctionId)>,
 
     /// Vector of classes this one inherits from.
     base_members: Vec<Base>,
@@ -970,8 +1020,8 @@ pub struct CompInfo {
     /// size_t)
     has_non_type_template_params: bool,
 
-    /// Whether this struct layout is packed.
-    packed: bool,
+    /// Whether we saw `__attribute__((packed))` on or within this type.
+    packed_attr: bool,
 
     /// Used to know if we've found an opaque attribute that could cause us to
     /// generate a type with invalid layout. This is explicitly used to avoid us
@@ -1003,7 +1053,7 @@ impl CompInfo {
             has_destructor: false,
             has_nonempty_base: false,
             has_non_type_template_params: false,
-            packed: false,
+            packed_attr: false,
             found_unknown_attr: false,
             is_forward_declaration: false,
         }
@@ -1042,6 +1092,7 @@ impl CompInfo {
     /// Get this type's set of fields.
     pub fn fields(&self) -> &[Field] {
         match self.fields {
+            CompFields::ErrorComputingBitfieldUnits => &[],
             CompFields::AfterComputingBitfieldUnits(ref fields) => fields,
             CompFields::BeforeComputingBitfieldUnits(_) => {
                 panic!("Should always have computed bitfield units first");
@@ -1077,7 +1128,7 @@ impl CompInfo {
     }
 
     /// Get this type's destructor.
-    pub fn destructor(&self) -> Option<(bool, FunctionId)> {
+    pub fn destructor(&self) -> Option<(MethodKind, FunctionId)> {
         self.destructor
     }
 
@@ -1257,7 +1308,7 @@ impl CompInfo {
                     }
                 }
                 CXCursor_PackedAttr => {
-                    ci.packed = true;
+                    ci.packed_attr = true;
                 }
                 CXCursor_TemplateTypeParameter => {
                     let param = Item::type_param(None, cur, ctx)
@@ -1328,14 +1379,23 @@ impl CompInfo {
                             ci.constructors.push(signature);
                         }
                         CXCursor_Destructor => {
-                            ci.destructor = Some((is_virtual, signature));
+                            let kind = if is_virtual {
+                                MethodKind::VirtualDestructor {
+                                    pure_virtual: cur.method_is_pure_virtual(),
+                                }
+                            } else {
+                                MethodKind::Destructor
+                            };
+                            ci.destructor = Some((kind, signature));
                         }
                         CXCursor_CXXMethod => {
                             let is_const = cur.method_is_const();
                             let method_kind = if is_static {
                                 MethodKind::Static
                             } else if is_virtual {
-                                MethodKind::Virtual
+                                MethodKind::Virtual {
+                                    pure_virtual: cur.method_is_pure_virtual(),
+                                }
                             } else {
                                 MethodKind::Normal
                             };
@@ -1435,8 +1495,31 @@ impl CompInfo {
     }
 
     /// Is this compound type packed?
-    pub fn packed(&self) -> bool {
-        self.packed
+    pub fn is_packed(&self, ctx: &BindgenContext, layout: &Option<Layout>) -> bool {
+        if self.packed_attr {
+            return true
+        }
+
+        // Even though `libclang` doesn't expose `#pragma packed(...)`, we can
+        // detect it through its effects.
+        if let Some(ref parent_layout) = *layout {
+            if self.fields().iter().any(|f| match *f {
+                Field::Bitfields(ref unit) => {
+                    unit.layout().align > parent_layout.align
+                }
+                Field::DataMember(ref data) => {
+                    let field_ty = ctx.resolve_type(data.ty());
+                    field_ty.layout(ctx).map_or(false, |field_ty_layout| {
+                        field_ty_layout.align > parent_layout.align
+                    })
+                }
+            }) {
+                info!("Found a struct that was defined within `#pragma packed(...)`");
+                return true;
+            }
+        }
+
+        false
     }
 
     /// Returns true if compound type has been forward declared
@@ -1500,8 +1583,8 @@ impl DotAttributes for CompInfo {
             )?;
         }
 
-        if self.packed {
-            writeln!(out, "<tr><td>packed</td><td>true</td></tr>")?;
+        if self.packed_attr {
+            writeln!(out, "<tr><td>packed_attr</td><td>true</td></tr>")?;
         }
 
         if self.is_forward_declaration {
@@ -1524,15 +1607,25 @@ impl DotAttributes for CompInfo {
 }
 
 impl IsOpaque for CompInfo {
-    type Extra = ();
+    type Extra = Option<Layout>;
 
-    fn is_opaque(&self, ctx: &BindgenContext, _: &()) -> bool {
-        // Early return to avoid extra computation
+    fn is_opaque(&self, ctx: &BindgenContext, layout: &Option<Layout>) -> bool {
         if self.has_non_type_template_params {
             return true
         }
 
-        self.fields().iter().any(|f| match *f {
+        // When we do not have the layout for a bitfield's type (for example, it
+        // is a type parameter), then we can't compute bitfield units. We are
+        // left with no choice but to make the whole struct opaque, or else we
+        // might generate structs with incorrect sizes and alignments.
+        if let CompFields::ErrorComputingBitfieldUnits = self.fields {
+            return true;
+        }
+
+        // Bitfields with a width that is larger than their unit's width have
+        // some strange things going on, and the best we can do is make the
+        // whole struct opaque.
+        if self.fields().iter().any(|f| match *f {
             Field::DataMember(_) => {
                 false
             },
@@ -1544,7 +1637,23 @@ impl IsOpaque for CompInfo {
                     bf.width() / 8 > bitfield_layout.size as u32
                 })
             }
-        })
+        }) {
+            return true;
+        }
+
+        // We don't have `#[repr(packed = "N")]` in Rust yet, so the best we can
+        // do is make this struct opaque.
+        //
+        // See https://github.com/rust-lang-nursery/rust-bindgen/issues/537 and
+        // https://github.com/rust-lang/rust/issues/33158
+        if self.is_packed(ctx, layout) && layout.map_or(false, |l| l.align > 1) {
+            warn!("Found a type that is both packed and aligned to greater than \
+                   1; Rust doesn't have `#[repr(packed = \"N\")]` yet, so we \
+                   are treating it as opaque");
+            return true;
+        }
+
+        false
     }
 }
 
@@ -1582,11 +1691,11 @@ impl Trace for CompInfo {
         }
 
         for method in self.methods() {
-            if method.is_destructor() {
-                tracer.visit_kind(method.signature.into(), EdgeKind::Destructor);
-            } else {
-                tracer.visit_kind(method.signature.into(), EdgeKind::Method);
-            }
+            tracer.visit_kind(method.signature.into(), EdgeKind::Method);
+        }
+
+        if let Some((_kind, signature)) = self.destructor() {
+            tracer.visit_kind(signature.into(), EdgeKind::Destructor);
         }
 
         for ctor in self.constructors() {
