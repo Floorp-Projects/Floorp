@@ -279,8 +279,6 @@ function NetworkResponseListener(owner, httpActivity) {
   this.receivedData = "";
   this.httpActivity = httpActivity;
   this.bodySize = 0;
-  // Indicates if the response had a size greater than RESPONSE_BODY_LIMIT.
-  this.truncated = false;
   // Note that this is really only needed for the non-e10s case.
   // See bug 1309523.
   let channel = this.httpActivity.channel;
@@ -414,13 +412,10 @@ NetworkResponseListener.prototype = {
 
     this.bodySize += count;
 
-    if (!this.httpActivity.discardResponseBody) {
-      if (this.receivedData.length < RESPONSE_BODY_LIMIT) {
-        this.receivedData +=
-          NetworkHelper.convertToUnicode(data, request.contentCharset);
-      } else {
-        this.truncated = true;
-      }
+    if (!this.httpActivity.discardResponseBody &&
+        this.receivedData.length < RESPONSE_BODY_LIMIT) {
+      this.receivedData +=
+        NetworkHelper.convertToUnicode(data, request.contentCharset);
     }
   },
 
@@ -650,10 +645,7 @@ NetworkResponseListener.prototype = {
 
     this.httpActivity.owner.addResponseContent(
       response,
-      {
-        discardResponseBody: this.httpActivity.discardResponseBody,
-        truncated: this.truncated
-      }
+      this.httpActivity.discardResponseBody
     );
 
     this._wrappedNotificationCallbacks = null;
