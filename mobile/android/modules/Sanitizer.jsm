@@ -55,16 +55,10 @@ Sanitizer.prototype = {
     let item = this.items[aItemName];
     let canClear = item.canClear;
     if (typeof canClear == "function") {
-      let maybeDoClear = async () => {
-        let canClearResult = await new Promise(resolve => {
-          canClear(resolve);
-        });
-
-        if (canClearResult) {
+      canClear(function clearCallback(aCanClear) {
+        if (aCanClear)
           return item.clear(options);
-        }
-      };
-      return maybeDoClear();
+      });
     } else if (canClear) {
       return item.clear(options);
     }
@@ -243,12 +237,10 @@ Sanitizer.prototype = {
           FormHistory.update({
             op: "remove",
             firstUsedStart: time
-          }, {
-            handleCompletion() {
-              TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
-              resolve();
-            }
           });
+
+          TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
+          resolve();
         });
       },
 
