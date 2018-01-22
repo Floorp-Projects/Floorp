@@ -272,6 +272,7 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
     codec_ = *inst;
   }
 
+  num_cores_ = number_of_cores;
   num_spatial_layers_ = inst->VP9().numberOfSpatialLayers;
   num_temporal_layers_ = inst->VP9().numberOfTemporalLayers;
   if (num_temporal_layers_ == 0)
@@ -498,6 +499,13 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
   // We only support one stream at the moment.
   if (frame_types && frame_types->size() > 0) {
     frame_type = (*frame_types)[0];
+  }
+  if (input_image.width() != codec_.width ||
+      input_image.height() != codec_.height) {
+    int ret = UpdateCodecFrameSize(input_image);
+    if (ret < 0) {
+      return ret;
+    }
   }
   RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
   RTC_DCHECK_EQ(input_image.height(), raw_->d_h);

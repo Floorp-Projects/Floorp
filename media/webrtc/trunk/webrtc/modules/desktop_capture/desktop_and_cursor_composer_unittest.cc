@@ -74,6 +74,7 @@ class FakeScreenCapturer : public DesktopCapturer {
   FakeScreenCapturer() {}
 
   void Start(Callback* callback) override { callback_ = callback; }
+  void Stop() override {};
 
   void CaptureFrame() override {
     callback_->OnCaptureResult(
@@ -111,7 +112,8 @@ class FakeMouseMonitor : public MouseCursorMonitor {
     hotspot_ = hotspot;
   }
 
-  void Init(Callback* callback, Mode mode) override { callback_ = callback; }
+  void Start(Callback* callback, Mode mode) { callback_ = callback; }
+  void Stop() override {};
 
   void Capture() override {
     if (changed_) {

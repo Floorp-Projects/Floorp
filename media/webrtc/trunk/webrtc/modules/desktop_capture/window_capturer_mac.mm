@@ -154,6 +154,10 @@ void WindowCapturerMac::Start(Callback* callback) {
   callback_ = callback;
 }
 
+void WindowCapturerMac::Stop() {
+  callback_ = NULL;
+}
+
 void WindowCapturerMac::CaptureFrame() {
   if (!IsWindowValid(window_id_)) {
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);

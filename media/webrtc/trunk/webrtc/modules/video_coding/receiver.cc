@@ -213,6 +213,7 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   frame->SetRenderTime(render_time_ms);
   TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", frame->TimeStamp(), "SetRenderTS",
                           "render_time", frame->RenderTimeMs());
+  UpdateReceiveState(*frame);
   if (!frame->Complete()) {
     // Update stats for incomplete frames.
     bool retransmitted = false;
@@ -263,6 +264,11 @@ std::vector<uint16_t> VCMReceiver::NackList(bool* request_key_frame) {
   return jitter_buffer_.GetNackList(request_key_frame);
 }
 
+VideoReceiveState VCMReceiver::ReceiveState() const {
+  CriticalSectionScoped cs(crit_sect_);
+  return receiveState_;
+}
+
 void VCMReceiver::SetDecodeErrorMode(VCMDecodeErrorMode decode_error_mode) {
   jitter_buffer_.SetDecodeErrorMode(decode_error_mode);
 }
@@ -280,6 +286,18 @@ int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
   // Initializing timing to the desired delay.
   timing_->set_min_playout_delay(desired_delay_ms);
   return 0;
+}
+
+void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {
+  if (frame.Complete() && frame.FrameType() == kVideoFrameKey) {
+    receiveState_ = kReceiveStateNormal;
+    return;
+  }
+  if (frame.MissingFrame() || !frame.Complete()) {
+    // State is corrupted
+    receiveState_ = kReceiveStateWaitingKey;
+  }
+  // state continues
 }
 
 void VCMReceiver::RegisterStatsCallback(

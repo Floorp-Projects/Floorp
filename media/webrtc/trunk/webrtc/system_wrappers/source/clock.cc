@@ -181,7 +181,7 @@ class WindowsRealTimeClock : public RealTimeClock {
   const ReferencePoint ref_point_;
 };
 
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC)) || (defined WEBRTC_BSD)
 class UnixRealTimeClock : public RealTimeClock {
  public:
   UnixRealTimeClock() {}
@@ -219,7 +219,7 @@ Clock* Clock::GetRealTimeClock() {
     delete clock;
   }
   return g_shared_clock;
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
   static UnixRealTimeClock clock;
   return &clock;
 #else

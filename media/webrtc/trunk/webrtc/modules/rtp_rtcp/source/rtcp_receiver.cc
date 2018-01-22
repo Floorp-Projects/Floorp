@@ -87,6 +87,11 @@ struct RTCPReceiver::TmmbrInformation {
 struct RTCPReceiver::ReportBlockWithRtt {
   RTCPReportBlock report_block;
 
+  uint32_t remotePacketsReceived = 0;
+  uint64_t remoteOctetsReceived = 0;
+  uint32_t lastReceivedRRNTPsecs = 0;
+  uint32_t lastReceivedRRNTPfrac = 0;
+
   int64_t last_rtt_ms = 0;
   int64_t min_rtt_ms = 0;
   int64_t max_rtt_ms = 0;

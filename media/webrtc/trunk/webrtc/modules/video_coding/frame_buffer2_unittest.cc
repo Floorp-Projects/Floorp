@@ -470,6 +470,25 @@ TEST_F(TestFrameBuffer2, LastContinuousFrameTwoLayers) {
   EXPECT_EQ(pid + 3, InsertFrame(pid + 3, 1, ts, true, pid + 2));
 }
 
+TEST_F(TestFrameBuffer2, ForwardJumps) {
+  EXPECT_EQ(5453, InsertFrame(5453, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(5454, InsertFrame(5454, 0, 1, false, 5453));
+  ExtractFrame();
+  EXPECT_EQ(15670, InsertFrame(15670, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(29804, InsertFrame(29804, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(29805, InsertFrame(29805, 0, 1, false, 29804));
+  ExtractFrame();
+  EXPECT_EQ(29806, InsertFrame(29806, 0, 1, false, 29805));
+  ExtractFrame();
+  EXPECT_EQ(33819, InsertFrame(33819, 0, 1, false));
+  ExtractFrame();
+  EXPECT_EQ(41248, InsertFrame(41248, 0, 1, false));
+  ExtractFrame();
+}
+
 TEST_F(TestFrameBuffer2, PictureIdJumpBack) {
   uint16_t pid = Rand();
   uint32_t ts = Rand();

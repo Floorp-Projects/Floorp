@@ -31,7 +31,8 @@ public:
         char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8=0,
-        uint32_t productUniqueIdUTF8Length=0);
+        uint32_t productUniqueIdUTF8Length=0,
+        pid_t* pid=0);
     /*
     * Fills the membervariable _captureCapabilities with capabilites for the given device name.
     */
@@ -47,6 +48,18 @@ public:
 private:
 
     bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
+
+#ifdef WEBRTC_LINUX
+    void HandleEvent(inotify_event* event, int fd);
+    int EventCheck(int fd);
+    int HandleEvents(int fd);
+    int ProcessInotifyEvents();
+    std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
+    static bool InotifyEventThread(void*);
+    bool InotifyProcess();
+    int _fd_v4l, _fd_snd, _fd_dev, _wd_v4l, _wd_snd, _wd_dev; /* accessed on InotifyEventThread thread */
+    Atomic32 _isShutdown;
+#endif
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
