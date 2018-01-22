@@ -18,6 +18,7 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/media-conduit',
     '/media/webrtc/signaling/src/mediapipeline',
     '/media/webrtc/trunk',
+    '/media/webrtc/trunk/webrtc',
     '/netwerk/srtp/src/include',
 ]
 
