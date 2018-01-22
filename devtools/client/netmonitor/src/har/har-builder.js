@@ -13,9 +13,8 @@ const {
   getUrlQuery,
   parseQueryString,
 } = require("../utils/request-utils");
-
+const { buildHarLog } = require("./har-builder-utils");
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
-const HAR_VERSION = "1.1";
 
 /**
  * This object is responsible for building HAR file. See HAR spec:
@@ -55,37 +54,21 @@ HarBuilder.prototype = {
     this.promises = [];
 
     // Build basic structure for data.
-    let log = this.buildLog();
+    let log = buildHarLog(appInfo);
 
     // Build entries.
     for (let file of this._options.items) {
-      log.entries.push(await this.buildEntry(log, file));
+      log.log.entries.push(await this.buildEntry(log.log, file));
     }
 
     // Some data needs to be fetched from the backend during the
     // build process, so wait till all is done.
     await Promise.all(this.promises);
 
-    return { log };
+    return log;
   },
 
   // Helpers
-
-  buildLog: function () {
-    return {
-      version: HAR_VERSION,
-      creator: {
-        name: appInfo.name,
-        version: appInfo.version
-      },
-      browser: {
-        name: appInfo.name,
-        version: appInfo.version
-      },
-      pages: [],
-      entries: [],
-    };
-  },
 
   buildPage: function (file) {
     let page = {};
