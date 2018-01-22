@@ -1294,68 +1294,6 @@ add_task(async function test_async_onItemMoved_reorder() {
   }
 });
 
-add_task(async function test_onItemMoved_setItemIndex() {
-  _("Items with updated indices should be tracked");
-
-  try {
-    await stopTracking();
-
-    let folder_id = PlacesUtils.bookmarks.createFolder(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      "Test folder",
-      PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let folder_guid = await engine._store.GUIDForId(folder_id);
-    _(`Folder GUID: ${folder_guid}`);
-
-    let tb_id = PlacesUtils.bookmarks.insertBookmark(
-      folder_id,
-      CommonUtils.makeURI("http://getthunderbird.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Thunderbird");
-    let tb_guid = await engine._store.GUIDForId(tb_id);
-    _(`Thunderbird GUID: ${tb_guid}`);
-
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      folder_id,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Firefox");
-    let fx_guid = await engine._store.GUIDForId(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
-
-    let moz_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("https://mozilla.org"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Mozilla"
-    );
-    let moz_guid = await engine._store.GUIDForId(moz_id);
-    _(`Mozilla GUID: ${moz_guid}`);
-
-    await startTracking();
-
-    // PlacesSortFolderByNameTransaction exercises
-    // PlacesUtils.bookmarks.setItemIndex.
-    let txn = new PlacesSortFolderByNameTransaction(folder_id);
-
-    // We're reordering items within the same folder, so only the folder
-    // should be tracked.
-    _("Execute the sort folder transaction");
-    txn.doTransaction();
-    await verifyTrackedItems([folder_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-    await resetTracker();
-
-    _("Undo the sort folder transaction");
-    txn.undoTransaction();
-    await verifyTrackedItems([folder_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
-  } finally {
-    _("Clean up.");
-    await cleanup();
-  }
-});
-
 add_task(async function test_onItemDeleted_removeFolderTransaction() {
   _("Folders removed in a transaction should be tracked");
 
