@@ -10,11 +10,4 @@ interface nsIIdleObserver;
 [uuid(f1101fbb-d119-4cb8-845b-6bbae8a151c7)]
 interface nsIDOMNavigator : nsISupports
 {
-  readonly attribute DOMString             appCodeName;
-  readonly attribute DOMString             language;
-  readonly attribute DOMString             vendor;
-  readonly attribute DOMString             vendorSub;
-  readonly attribute DOMString             product;
-  readonly attribute DOMString             productSub;
-  readonly attribute DOMString             doNotTrack;
 };
