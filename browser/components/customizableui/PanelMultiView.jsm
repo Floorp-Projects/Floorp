@@ -185,7 +185,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   get _currentSubView() {
     // Peek the top of the stack, but fall back to the main view if the list of
     // opened views is currently empty.
-    return this.openViews[this.openViews.length - 1] || this._mainView;
+    let panelView = this.openViews[this.openViews.length - 1];
+    return (panelView && panelView.node) || this._mainView;
   }
   /**
    * @return {Promise} showSubView() returns a promise, which is kept here for
@@ -201,7 +202,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   }
 
   connect() {
-    this.knownViews = new Set(this.node.getElementsByTagName("panelview"));
+    this.knownViews = new Set(Array.from(
+      this.node.getElementsByTagName("panelview"),
+      node => PanelView.forNode(node)));
     this.openViews = [];
     this._mainViewHeight = 0;
     this.__transitioning = false;
@@ -294,7 +297,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   }
 
   goBack() {
-    let previous = this.openViews.pop();
+    let previous = this.openViews.pop().node;
     let current = this._currentSubView;
     return this.showSubView(current, null, previous);
   }
@@ -321,27 +324,27 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    * Ensures that all the panelviews, that are currently part of this instance,
    * are hidden, except one specifically.
    *
-   * @param {panelview} [theOne] The panelview DOM node to ensure is visible.
-   *                             Optional.
+   * @param {panelview} [nextPanelView]
+   *        The PanelView object to ensure is visible. Optional.
    */
-  hideAllViewsExcept(theOne = null) {
-    for (let panelview of this.knownViews) {
+  hideAllViewsExcept(nextPanelView = null) {
+    for (let panelView of this.knownViews) {
       // When the panelview was already reparented, don't interfere any more.
-      if (panelview == theOne || !this.node || panelview.panelMultiView != this.node)
+      if (panelView == nextPanelView || !this.node || panelView.node.panelMultiView != this.node)
         continue;
-      PanelView.forNode(panelview).current = false;
+      panelView.current = false;
     }
 
     this._viewShowing = null;
 
-    if (!this.node || !theOne)
+    if (!this.node || !nextPanelView)
       return;
 
-    if (!this.openViews.includes(theOne))
-      this.openViews.push(theOne);
+    if (!this.openViews.includes(nextPanelView))
+      this.openViews.push(nextPanelView);
 
-    PanelView.forNode(theOne).current = true;
-    this.showingSubView = theOne.id != this._mainViewId;
+    nextPanelView.current = true;
+    this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
   showSubView(aViewId, aAnchor, aPreviousView) {
@@ -360,7 +363,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       }
 
       let nextPanelView = PanelView.forNode(viewNode);
-      this.knownViews.add(viewNode);
+      this.knownViews.add(nextPanelView);
 
       viewNode.panelMultiView = this.node;
 
@@ -436,7 +439,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
         this._updateKeyboardFocus(viewNode);
       } else {
-        this.hideAllViewsExcept(viewNode);
+        this.hideAllViewsExcept(nextPanelView);
       }
     })().catch(e => Cu.reportError(e));
     return this._currentShowPromise;
@@ -618,9 +621,11 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     if (details == this._transitionDetails)
       this._transitionDetails = null;
 
+    let nextPanelView = PanelView.forNode(viewNode);
+
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
-    this.hideAllViewsExcept(viewNode);
+    this.hideAllViewsExcept(nextPanelView);
     previousViewNode.removeAttribute("in-transition");
     viewNode.removeAttribute("in-transition");
     if (reverse)
