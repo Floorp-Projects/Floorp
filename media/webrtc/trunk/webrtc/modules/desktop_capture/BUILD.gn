@@ -28,8 +28,11 @@ rtc_static_library("primitives") {
 
   deps = [
     "../..:webrtc_common",
-    "../../rtc_base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../../rtc_base:rtc_base" ]  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
+  }
 }
 
 if (rtc_include_tests) {
@@ -287,6 +290,16 @@ rtc_static_library("desktop_capture_generic") {
     "window_finder_win.h",
   ]
 
+  if (build_with_mozilla) {
+    sources += [
+      "app_capturer_win.cc",
+      "desktop_device_info.cc",
+      "desktop_device_info.h",
+      "win/desktop_device_info_win.cc",
+      "win/win_shared.cc",
+    ]
+  }
+
   if (use_x11) {
     sources += [
       "mouse_cursor_monitor_x11.cc",
@@ -306,6 +319,17 @@ rtc_static_library("desktop_capture_generic") {
       "x11/x_server_pixel_buffer.h",
     ]
     configs += [ "//build/config/linux:x11" ]
+
+    if (build_with_mozilla) {
+      sources += [
+        "app_capturer_x11.cc",
+        "app_capturer_x11.h",
+        "x11/desktop_device_info_x11.cc",
+        "x11/desktop_device_info_x11.h",
+        "x11/shared_x_util.cc",
+        "x11/shared_x_util.h",
+      ]
+    }
   }
 
   if (!is_win && !is_mac && !use_x11) {
@@ -329,8 +353,13 @@ rtc_static_library("desktop_capture_generic") {
     "../../api:refcountedbase",
     "../../rtc_base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
     "../../system_wrappers",
-    "//third_party/libyuv",
   ]
+
+  if (build_with_mozilla) {
+    deps += [ "../../rtc_base:rtc_base_approved" ]
+  } else {
+    deps += [ "//third_party/libyuv" ]
+  }
 
   if (use_desktop_capture_differ_sse2) {
     deps += [ ":desktop_capture_differ_sse2" ]

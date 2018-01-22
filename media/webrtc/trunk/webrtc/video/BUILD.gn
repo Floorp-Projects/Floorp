@@ -68,7 +68,6 @@ rtc_static_library("video") {
     "../call:rtp_receiver",
     "../common_video",
     "../logging:rtc_event_log_api",
-    "../media:rtc_media_base",
     "../modules:module_api",
     "../modules/bitrate_controller",
     "../modules/congestion_controller",
@@ -88,6 +87,10 @@ rtc_static_library("video") {
     "../system_wrappers",
     "../voice_engine",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../media:rtc_media_base" ]
+  }
 }
 
 if (rtc_include_tests) {
@@ -306,6 +309,9 @@ if (rtc_include_tests) {
     }
     if (rtc_use_h264) {
       defines += [ "WEBRTC_USE_H264" ]
+    }
+    if (!build_with_mozilla) {
+      deps += [ "../media:rtc_media_base" ]
     }
   }
 }
