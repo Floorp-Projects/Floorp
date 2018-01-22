@@ -555,6 +555,14 @@ CreateHeaderBar(WidgetNodeType aWidgetType)
   // Emulate what create_titlebar() at gtkwindow.c does.
   GtkStyleContext* style = gtk_widget_get_style_context(headerbar);
   gtk_style_context_add_class(style, "titlebar");
+
+  // TODO: Define default-decoration titlebar style as workaround
+  // to ensure the titlebar buttons does not overflow outside.
+  // Recently the titlebar size is calculated as
+  // tab size + titlebar border/padding (default-decoration has 6px padding
+  // at default Adwaita theme).
+  // We need to fix titlebar size calculation to also include
+  // titlebar button sizes. (Bug 1419442)
   gtk_style_context_add_class(style, "default-decoration");
 
   return headerbar;
