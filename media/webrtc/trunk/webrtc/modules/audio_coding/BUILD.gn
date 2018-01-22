@@ -75,6 +75,10 @@ rtc_static_library("rent_a_codec") {
          ] + audio_codec_deps
 
   defines = audio_codec_defines
+
+  if (build_with_mozilla) {
+    include_dirs = [ "/media/libopus/include" ]
+  }
 }
 
 config("audio_coding_config") {
@@ -829,7 +833,7 @@ rtc_source_set("webrtc_opus_c") {
       rtc_opus_dir,
     ]
   } else if (build_with_mozilla) {
-    include_dirs = [ getenv("DIST") + "/include/opus" ]
+    include_dirs = [ "/media/libopus/include" ]
   }
 
   deps = [
@@ -1547,7 +1551,6 @@ if (rtc_include_tests) {
       ":isac_fix",
       ":webrtc_opus",
       "../..:webrtc_common",
-      "../../api:libjingle_peerconnection_api",
       "../../rtc_base:rtc_base_approved",
       "../../system_wrappers:metrics_default",
       "../../system_wrappers:system_wrappers_default",
@@ -1556,6 +1559,10 @@ if (rtc_include_tests) {
       "../audio_processing",
       "//testing/gtest",
     ]
+
+    if (!build_with_mozilla) {
+      deps += [ "../../api:libjingle_peerconnection_api" ]
+    }
   }
 
   rtc_source_set("neteq_test_support") {

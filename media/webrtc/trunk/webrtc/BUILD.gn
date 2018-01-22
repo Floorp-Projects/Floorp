@@ -17,7 +17,7 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
-if (!build_with_chromium) {
+if (!build_with_chromium && !build_with_mozilla) {
   group("default") {
     testonly = true
     deps = [
@@ -81,6 +81,9 @@ config("common_inherited_config") {
   }
   if (is_linux) {
     defines += [ "WEBRTC_LINUX" ]
+  }
+  if (is_bsd) {
+    defines += [ "WEBRTC_BSD" ]
   }
   if (is_mac) {
     defines += [ "WEBRTC_MAC" ]
@@ -282,9 +285,7 @@ if (!build_with_chromium) {
       "media",
       "modules",
       "modules/video_capture:video_capture_internal_impl",
-      "ortc",
       "rtc_base",
-      "sdk",
       "system_wrappers:system_wrappers_default",
       "video",
       "voice_engine",
@@ -292,16 +293,22 @@ if (!build_with_chromium) {
 
     if (build_with_mozilla) {
       deps += [
+        "api:base_peerconnection_api",
         "api:video_frame_api",
         "system_wrappers:field_trial_default",
         "system_wrappers:metrics_default",
       ]
+      if (!is_android) {
+        deps += [ "video_engine" ]
+      }
     } else {
       deps += [
         "api",
         "logging",
+        "ortc",
         "p2p",
         "pc",
+        "sdk",
         "stats",
       ]
     }

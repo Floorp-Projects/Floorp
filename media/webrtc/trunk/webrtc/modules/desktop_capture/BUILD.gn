@@ -221,8 +221,6 @@ rtc_static_library("desktop_capture_generic") {
     "desktop_frame_win.h",
     "differ_block.cc",
     "differ_block.h",
-    "fake_desktop_capturer.cc",
-    "fake_desktop_capturer.h",
     "fallback_desktop_capturer_wrapper.cc",
     "fallback_desktop_capturer_wrapper.h",
     "mac/desktop_configuration.h",
@@ -291,12 +289,28 @@ rtc_static_library("desktop_capture_generic") {
   ]
 
   if (build_with_mozilla) {
+    defines = [ "MULTI_MONITOR_SCREENSHARE" ]
+
     sources += [
       "app_capturer_win.cc",
       "desktop_device_info.cc",
       "desktop_device_info.h",
       "win/desktop_device_info_win.cc",
       "win/win_shared.cc",
+    ]
+
+    if (is_mac) {
+      sources += [
+        "app_capturer_mac.mm",
+        "mac/desktop_device_info_mac.mm",
+      ]
+    }
+
+    include_dirs = [ "/media/libyuv/libyuv/include" ]
+  } else {
+    sources += [
+      "fake_desktop_capturer.cc",
+      "fake_desktop_capturer.h",
     ]
   }
 

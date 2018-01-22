@@ -86,7 +86,7 @@ rtc_static_library("system_wrappers") {
     libs += [ "rt" ]
   }
 
-  if (is_ios || is_mac) {
+  if (is_ios || is_mac || is_bsd) {
     defines += [ "WEBRTC_THREAD_RR" ]
   }
 

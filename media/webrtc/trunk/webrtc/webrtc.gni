@@ -64,13 +64,10 @@ declare_args() {
 
   # Selects whether debug dumps for the audio processing module
   # should be generated.
-  apm_debug_dump = false
+  apm_debug_dump = true
 
   # Set this to true to enable BWE test logging.
   rtc_enable_bwe_test_logging = false
-
-  # Enable to use the Mozilla internal settings.
-  build_with_mozilla = false
 
   rtc_enable_android_opensl = false
 
@@ -149,7 +146,8 @@ declare_args() {
   rtc_build_json = !build_with_mozilla
   rtc_build_libsrtp = !build_with_mozilla
   rtc_build_libvpx = !build_with_mozilla
-  rtc_libvpx_build_vp9 = !build_with_mozilla
+  rtc_build_libyuv = !build_with_mozilla
+  rtc_libvpx_build_vp9 = true
   rtc_build_openmax_dl = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
@@ -184,7 +182,7 @@ declare_args() {
 
   # Chromium uses its own IO handling, so the internal ADM is only built for
   # standalone WebRTC.
-  rtc_include_internal_audio_device = !build_with_chromium
+  rtc_include_internal_audio_device = !build_with_chromium && !build_with_mozilla
 
   # Include tests in standalone checkout.
   rtc_include_tests = !build_with_chromium && !build_with_mozilla
@@ -193,11 +191,11 @@ declare_args() {
 # Make it possible to provide custom locations for some libraries (move these
 # up into declare_args should we need to actually use them for the GN build).
 rtc_libvpx_dir = "//third_party/libvpx"
-rtc_libyuv_dir = "//third_party/libyuv"
+rtc_libyuv_dir = "/media/libyuv/libyuv"
 rtc_opus_dir = "//third_party/opus"
 
 # Desktop capturer is supported only on Windows, OSX and Linux.
-rtc_desktop_capture_supported = is_win || is_mac || (is_linux && use_x11)
+rtc_desktop_capture_supported = is_win || is_mac || (is_linux && use_x11) || is_bsd
 
 ###############################################################################
 # Templates
@@ -404,7 +402,7 @@ if (is_ios) {
   }
 }
 
-if (is_android) {
+if (is_android && !build_with_mozilla) {
   template("rtc_android_library") {
     android_library(target_name) {
       forward_variables_from(invoker,
