@@ -250,6 +250,7 @@ class ScreenCapturerMac : public DesktopCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void CaptureFrame() override;
   void SetExcludedWindow(WindowId window) override;
   bool GetSourceList(SourceList* screens) override;
@@ -371,10 +372,29 @@ void ScreenCapturerMac::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+  desktop_config_monitor_->Lock();
+  update_screen_configuration_ = true;
+  desktop_config_monitor_->Unlock();
+}
+
+void ScreenCapturerMac::Stop() {
+  if (power_assertion_id_display_ != kIOPMNullAssertionID) {
+    IOPMAssertionRelease(power_assertion_id_display_);
+    power_assertion_id_display_ = kIOPMNullAssertionID;
+  }
+  if (power_assertion_id_user_ != kIOPMNullAssertionID) {
+    IOPMAssertionRelease(power_assertion_id_user_);
+    power_assertion_id_user_ = kIOPMNullAssertionID;
+  }
+
+  callback_ = NULL;
 }
 
 void ScreenCapturerMac::CaptureFrame() {
   int64_t capture_start_time_nanos = rtc::TimeNanos();
+
+  // Spin RunLoop for 1/100th of a second, handling at most one source
+  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, true);
 
   queue_.MoveToNextFrame();
   RTC_DCHECK(!queue_.current_frame() || !queue_.current_frame()->IsShared());
@@ -382,7 +402,8 @@ void ScreenCapturerMac::CaptureFrame() {
   desktop_config_monitor_->Lock();
   MacDesktopConfiguration new_config =
       desktop_config_monitor_->desktop_configuration();
-  if (!desktop_config_.Equals(new_config)) {
+  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
+    update_screen_configuration_ = false;
     desktop_config_ = new_config;
     // If the display configuraiton has changed then refresh capturer data
     // structures. Occasionally, the refresh and move handlers are lost when

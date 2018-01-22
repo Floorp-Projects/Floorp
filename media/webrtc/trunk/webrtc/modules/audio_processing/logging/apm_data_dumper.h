@@ -203,6 +203,17 @@ class ApmDataDumper {
 
   FILE* GetRawFile(const char* name);
   WavWriter* GetWavFile(const char* name, int sample_rate_hz, int num_channels);
+
+  uint32_t debug_written_;
+
+  void updateDebugWritten(uint32_t amount) {
+    debug_written_ += amount;
+    // Limit largest files to a specific (rough) size, to avoid filling up disk.
+    if (debug_written_ >= webrtc::Trace::aec_debug_size()) {
+      webrtc::Trace::set_aec_debug(false);
+    }
+  }
+
 #endif
   RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(ApmDataDumper);
 };

@@ -38,27 +38,22 @@ const wchar_t kDwmapiLibraryName[] = L"dwmapi.dll";
 
 ScreenCapturerWinGdi::ScreenCapturerWinGdi(
     const DesktopCaptureOptions& options) {
-  if (options.disable_effects()) {
-    // Load dwmapi.dll dynamically since it is not available on XP.
-    if (!dwmapi_library_)
-      dwmapi_library_ = LoadLibrary(kDwmapiLibraryName);
+  // Load dwmapi.dll dynamically since it is not available on XP.
+  if (!dwmapi_library_)
+    dwmapi_library_ = LoadLibrary(kDwmapiLibraryName);
 
-    if (dwmapi_library_) {
-      composition_func_ = reinterpret_cast<DwmEnableCompositionFunc>(
-          GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
-    }
+  if (dwmapi_library_) {
+    composition_func_ = reinterpret_cast<DwmEnableCompositionFunc>(
+      GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
+    composition_enabled_func_ = reinterpret_cast<DwmIsCompositionEnabledFunc>
+      (GetProcAddress(dwmapi_library_, "DwmIsCompositionEnabled"));
   }
+
+  disable_composition_ = options.disable_effects();
 }
 
 ScreenCapturerWinGdi::~ScreenCapturerWinGdi() {
-  if (desktop_dc_)
-    ReleaseDC(NULL, desktop_dc_);
-  if (memory_dc_)
-    DeleteDC(memory_dc_);
-
-  // Restore Aero.
-  if (composition_func_)
-    (*composition_func_)(DWM_EC_ENABLECOMPOSITION);
+  Stop();
 
   if (dwmapi_library_)
     FreeLibrary(dwmapi_library_);
@@ -70,6 +65,7 @@ void ScreenCapturerWinGdi::SetSharedMemoryFactory(
 }
 
 void ScreenCapturerWinGdi::CaptureFrame() {
+  RTC_DCHECK(IsGUIThread(false));
   int64_t capture_start_time_nanos = rtc::TimeNanos();
 
   queue_.MoveToNextFrame();
@@ -175,6 +171,7 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
 }
 
 bool ScreenCapturerWinGdi::CaptureImage() {
+  RTC_DCHECK(IsGUIThread(false));
   DesktopRect screen_rect =
       GetScreenRect(current_screen_id_, current_device_key_);
   if (screen_rect.is_empty())

@@ -51,7 +51,8 @@ class RtpHeaderParser {
   bool RTCP() const;
   bool ParseRtcp(RTPHeader* header) const;
   bool Parse(RTPHeader* parsedPacket,
-             RtpHeaderExtensionMap* ptrExtensionMap = nullptr) const;
+             RtpHeaderExtensionMap* ptrExtensionMap = nullptr,
+             bool secured = false) const;
 
  private:
   void ParseOneByteExtensionHeader(RTPHeader* parsedPacket,
