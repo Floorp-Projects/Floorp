@@ -1,0 +1,30 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Enterprise Policies")
+
+DIRS += [
+    'helpers',
+    'schemas',
+]
+
+TEST_DIRS += [
+	'tests'
+]
+
+EXTRA_COMPONENTS += [
+    'EnterprisePolicies.js',
+    'EnterprisePolicies.manifest',
+    'EnterprisePoliciesContent.js',
+]
+
+EXTRA_JS_MODULES.policies += [
+    'Policies.jsm',
+    'PoliciesValidator.jsm',
+]
+
+FINAL_LIBRARY = 'browsercomps'

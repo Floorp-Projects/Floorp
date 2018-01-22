@@ -1009,6 +1009,12 @@ nsXREDirProvider::DoStartup()
     static const char16_t kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nullptr, "profile-do-change", kStartup);
 
+    // Initialize the Enterprise Policies service
+    nsCOMPtr<nsIObserver> policies(do_GetService("@mozilla.org/browser/enterprisepolicies;1"));
+    if (policies) {
+      policies->Observe(nullptr, "policies-startup", nullptr);
+    }
+
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
     if (em) {

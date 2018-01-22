@@ -30,6 +30,7 @@ DIRS += [
     'crashmonitor',
     'diskspacewatcher',
     'downloads',
+    'enterprisepolicies',
     'extensions',
     'filewatcher',
     'finalizationwitness',
