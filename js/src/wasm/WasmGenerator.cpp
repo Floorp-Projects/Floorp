@@ -627,6 +627,9 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
         LinkDataTier::InternalLink link;
         link.patchAtOffset = offsetInModule + codeLabel.patchAt().offset();
         link.targetOffset = offsetInModule + codeLabel.target().offset();
+#ifdef JS_CODELABEL_LINKMODE
+        link.mode = codeLabel.linkMode();
+#endif
         if (!linkDataTier_->internalLinks.append(link))
             return false;
     }

@@ -979,24 +979,6 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
 }
 
 void
-MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
-{
-    int32_t shift = Imm32::ShiftOf(addr.scale).value;
-    if (shift) {
-        // 4 instructions : lui ori jr nop
-        as_sll(ScratchRegister, addr.index, 4);
-        as_addu(ScratchRegister, addr.base, ScratchRegister);
-    } else {
-        as_addu(ScratchRegister, addr.base, addr.index);
-    }
-
-    if (addr.offset)
-        asMasm().addPtr(Imm32(addr.offset), ScratchRegister);
-    as_jr(ScratchRegister);
-    as_nop();
-}
-
-void
 MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src, Register dest, Label* fail)
 {
     as_truncwd(ScratchFloat32Reg, src);

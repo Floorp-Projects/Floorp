@@ -1655,9 +1655,9 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 {
     CodeLabel cl;
 
-    ma_li(scratch, cl.patchAt());
+    ma_li(scratch, &cl);
     Push(scratch);
-    bind(cl.target());
+    bind(&cl);
     uint32_t retAddr = currentOffset();
 
     addCodeLabel(cl);

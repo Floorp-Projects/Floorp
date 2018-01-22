@@ -970,6 +970,13 @@ MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address, Label*
 }
 
 void
+MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
+{
+    loadPtr(addr, ScratchRegister);
+    branch(ScratchRegister);
+}
+
+void
 MacroAssembler::cmp32Move32(Condition cond, Register lhs, Register rhs, Register src,
                             Register dest)
 {
