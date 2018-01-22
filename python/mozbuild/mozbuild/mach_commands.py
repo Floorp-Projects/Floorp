@@ -275,8 +275,10 @@ class CargoProvider(MachCommandBase):
 
     @SubCommand('cargo', 'check',
                 description='Run `cargo check` on a given crate.  Defaults to gkrust.')
+    @CommandArgument('--all-crates', default=None, action='store_true',
+        help='Check all of the crates in the tree.')
     @CommandArgument('crates', default=None, nargs='*', help='The crate name(s) to check.')
-    def check(self, crates=None):
+    def check(self, all_crates=None, crates=None):
         # XXX duplication with `mach vendor rust`
         crates_and_roots = {
             'gkrust': 'toolkit/library/rust',
@@ -286,7 +288,9 @@ class CargoProvider(MachCommandBase):
             'geckodriver': 'testing/geckodriver',
         }
 
-        if crates == None or crates == []:
+        if all_crates:
+            crates = crates_and_roots.keys()
+        elif crates == None or crates == []:
             crates = ['gkrust']
 
         for crate in crates:
