@@ -211,7 +211,6 @@ rtc_static_library("webrtc_h264") {
     ]
     deps += [
       "../../common_video",
-      "../../media:rtc_media_base",
       "//third_party/ffmpeg:ffmpeg",
       "//third_party/openh264:encoder",
     ]
@@ -362,6 +361,10 @@ if (rtc_include_tests) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
         suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
       }
+    }
+
+    if (!build_with_mozilla) {
+      deps += [ "../../media:rtc_media_base" ]
     }
   }
 
