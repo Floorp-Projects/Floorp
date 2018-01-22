@@ -170,6 +170,7 @@ void VideoReceiveStream::Start() {
   RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_sequence_checker_);
   if (decode_thread_.IsRunning())
     return;
+  video_receiver_.Reset();
 
   bool protected_by_fec = config_.rtp.protected_by_flexfec ||
                           rtp_video_stream_receiver_.IsUlpfecEnabled();
@@ -458,5 +459,11 @@ bool VideoReceiveStream::Decode() {
   }
   return true;
 }
+
+bool
+VideoReceiveStream::GetRemoteRTCPSenderInfo(RTCPSenderInfo* sender_info) const {
+  return -1 != rtp_stream_receiver_.rtp_rtcp()->RemoteRTCPStat(sender_info);
+}
+
 }  // namespace internal
 }  // namespace webrtc

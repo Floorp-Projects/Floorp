@@ -22,19 +22,195 @@
 
 #include "rtc_base/logging.h"
 
+#ifdef WEBRTC_LINUX
+#define EVENT_SIZE  ( sizeof (struct inotify_event) )
+#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+#endif
+
 namespace webrtc {
 namespace videocapturemodule {
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
   return new videocapturemodule::DeviceInfoLinux();
 }
 
-DeviceInfoLinux::DeviceInfoLinux() : DeviceInfoImpl() {}
+#ifdef WEBRTC_LINUX
+void DeviceInfoLinux::HandleEvent(inotify_event* event, int fd)
+{
+    if (event->mask & IN_CREATE) {
+        if (fd == _fd_v4l || fd == _fd_snd) {
+            DeviceChange();
+        } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
+            if (_wd_v4l < 0) {
+                // Sometimes inotify_add_watch failed if we call it immediately after receiving this event
+                // Adding 5ms delay to let file system settle down
+                usleep(5*1000);
+                _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+                if (_wd_v4l >= 0) {
+                    DeviceChange();
+                }
+            }
+            if (_wd_snd < 0) {
+                usleep(5*1000);
+                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+                if (_wd_snd >= 0) {
+                    DeviceChange();
+                }
+            }
+        }
+    } else if (event->mask & IN_DELETE) {
+        if (fd == _fd_v4l || fd == _fd_snd) {
+            DeviceChange();
+        }
+    } else if (event->mask & IN_DELETE_SELF) {
+        if (fd == _fd_v4l) {
+            inotify_rm_watch(_fd_v4l, _wd_v4l);
+            _wd_v4l = -1;
+        } else if (fd == _fd_snd) {
+            inotify_rm_watch(_fd_snd, _wd_snd);
+            _wd_snd = -1;
+        } else {
+            assert(false);
+        }
+    }
+}
+
+int DeviceInfoLinux::EventCheck(int fd)
+{
+    struct timeval timeout;
+    fd_set rfds;
+
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 100000;
+
+    FD_ZERO(&rfds);
+    FD_SET(fd, &rfds);
+
+    return select(fd+1, &rfds, NULL, NULL, &timeout);
+}
+
+int DeviceInfoLinux::HandleEvents(int fd)
+{
+    char buffer[BUF_LEN];
+
+    ssize_t r = read(fd, buffer, BUF_LEN);
+
+    if (r <= 0) {
+        return r;
+    }
+
+    ssize_t buffer_i = 0;
+    inotify_event* pevent;
+    size_t eventSize;
+    int count = 0;
+
+    while (buffer_i < r)
+    {
+        pevent = (inotify_event *) (&buffer[buffer_i]);
+        eventSize = sizeof(inotify_event) + pevent->len;
+        char event[sizeof(inotify_event) + FILENAME_MAX + 1] // null-terminated
+            __attribute__ ((aligned(__alignof__(struct inotify_event))));
+
+        memcpy(event, pevent, eventSize);
+
+        HandleEvent((inotify_event*)(event), fd);
+
+        buffer_i += eventSize;
+        count++;
+    }
+
+    return count;
+}
+
+int DeviceInfoLinux::ProcessInotifyEvents()
+{
+    while (0 == _isShutdown.Value()) {
+        if (EventCheck(_fd_dev) > 0) {
+            if (HandleEvents(_fd_dev) < 0) {
+                break;
+            }
+        }
+        if (EventCheck(_fd_v4l) > 0) {
+            if (HandleEvents(_fd_v4l) < 0) {
+                break;
+            }
+        }
+        if (EventCheck(_fd_snd) > 0) {
+            if (HandleEvents(_fd_snd) < 0) {
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+bool DeviceInfoLinux::InotifyEventThread(void* obj)
+{
+    return static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
+}
+
+bool DeviceInfoLinux::InotifyProcess()
+{
+    _fd_v4l = inotify_init();
+    _fd_snd = inotify_init();
+    _fd_dev = inotify_init();
+    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
+        _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+        _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
+        ProcessInotifyEvents();
+
+        if (_wd_v4l >= 0) {
+          inotify_rm_watch(_fd_v4l, _wd_v4l);
+        }
+
+        if (_wd_snd >= 0) {
+          inotify_rm_watch(_fd_snd, _wd_snd);
+        }
+
+        if (_wd_dev >= 0) {
+          inotify_rm_watch(_fd_dev, _wd_dev);
+        }
+
+        close(_fd_v4l);
+        close(_fd_snd);
+        close(_fd_dev);
+        return true;
+    } else {
+        return false;
+    }
+}
+#endif
+
+DeviceInfoLinux::DeviceInfoLinux() : DeviceInfoImpl()
+#ifdef WEBRTC_LINUX
+    , _inotifyEventThread(new rtc::PlatformThread(
+                            InotifyEventThread, this, "InotifyEventThread"))
+    , _isShutdown(0)
+#endif
+{
+#ifdef WEBRTC_LINUX
+    if (_inotifyEventThread)
+    {
+        _inotifyEventThread->Start();
+        _inotifyEventThread->SetPriority(rtc::kHighPriority);
+    }
+}
+#endif
 
 int32_t DeviceInfoLinux::Init() {
   return 0;
 }
 
-DeviceInfoLinux::~DeviceInfoLinux() {}
+DeviceInfoLinux::~DeviceInfoLinux() {
+#ifdef WEBRTC_LINUX
+    ++_isShutdown;
+
+    if (_inotifyEventThread) {
+        _inotifyEventThread->Stop();
+        _inotifyEventThread = nullptr;
+    }
+#endif
+}
 
 uint32_t DeviceInfoLinux::NumberOfDevices() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
@@ -61,7 +237,8 @@ int32_t DeviceInfoLinux::GetDeviceName(uint32_t deviceNumber,
                                        char* deviceUniqueIdUTF8,
                                        uint32_t deviceUniqueIdUTF8Length,
                                        char* /*productUniqueIdUTF8*/,
-                                       uint32_t /*productUniqueIdUTF8Length*/) {
+                                       uint32_t /*productUniqueIdUTF8Length*/,
+                                       pid_t* /*pid*/) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
   // Travel through /dev/video [0-63]
@@ -69,8 +246,9 @@ int32_t DeviceInfoLinux::GetDeviceName(uint32_t deviceNumber,
   char device[20];
   int fd = -1;
   bool found = false;
-  for (int n = 0; n < 64; n++) {
-    sprintf(device, "/dev/video%d", n);
+  int device_index;
+  for (device_index = 0; device_index < 64; device_index++) {
+    sprintf(device, "/dev/video%d", device_index);
     if ((fd = open(device, O_RDONLY)) != -1) {
       if (count == deviceNumber) {
         // Found the device
@@ -119,8 +297,15 @@ int32_t DeviceInfoLinux::GetDeviceName(uint32_t deviceNumber,
       RTC_LOG(LS_INFO) << "buffer passed is too small";
       return -1;
     }
+  } else {
+    // if there's no bus info to use for uniqueId, invent one - and it has to be repeatable
+    if (snprintf(deviceUniqueIdUTF8,
+                 deviceUniqueIdUTF8Length, "fake_%u", device_index) >=
+        (int) deviceUniqueIdUTF8Length)
+    {
+      return -1;
+    }
   }
-
   return 0;
 }
 

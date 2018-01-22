@@ -149,10 +149,12 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
   }
 }
 
+/* TODO: Fix CpuLoadState
 void MediaOptimization::SetCPULoadState(CPULoadState state) {
     CriticalSectionScoped lock(crit_sect_.get());
     loadstate_ = state;
 }
+*/
 
 }  // namespace media_optimization
 }  // namespace webrtc

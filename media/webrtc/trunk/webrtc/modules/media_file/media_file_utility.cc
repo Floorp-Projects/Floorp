@@ -258,8 +258,8 @@ int32_t ModuleFileUtility::InitWavCodec(uint32_t samplesPerSec,
       } else if (samplesPerSec == 44100) {
         strcpy(codec_info_.plname, "L16");
         _codecId = kCodecL16_16kHz;
-        codec_info_.pacsize = 440;
-        codec_info_.plfreq = 44000;
+        codec_info_.pacsize = 441;
+        codec_info_.plfreq = 44100;
       } else if (samplesPerSec == 48000) {
         strcpy(codec_info_.plname, "L16");
         _codecId = kCodecL16_16kHz;

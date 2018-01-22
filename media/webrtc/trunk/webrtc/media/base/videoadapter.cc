@@ -168,6 +168,16 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
   // The max output pixel count is the minimum of the requests from
   // OnOutputFormatRequest and OnResolutionRequest.
   int max_pixel_count = resolution_request_max_pixel_count_;
+  if (scale_) {
+    // We calculate the scaled pixel count from the in_width and in_height,
+    // which is the input resolution. We then take the minimum of the scaled
+    // resolution and the current max_pixel_count. This will allow the
+    // quality scaler to reduce the resolution in response to load, but we
+    // will never go above the requested scaled resolution.
+    int scaled_pixel_count = (in_width*in_height/scale_resolution_by_)/scale_resolution_by_;
+    max_pixel_count = std::min(max_pixel_count, scaled_pixel_count);
+  }
+
   if (requested_format_) {
     max_pixel_count = std::min(
         max_pixel_count, requested_format_->width * requested_format_->height);
@@ -236,8 +246,8 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
   if (scale.numerator != scale.denominator)
     ++frames_scaled_;
 
-  if (previous_width_ && (previous_width_ != *out_width ||
-                          previous_height_ != *out_height)) {
+  if ((previous_width_ || scale_) && (previous_width_ != *out_width ||
+                                      previous_height_ != *out_height)) {
     ++adaption_changes_;
     RTC_LOG(LS_INFO) << "Frame size changed: scaled " << frames_scaled_
                      << " / out " << frames_out_ << " / in " << frames_in_
@@ -270,6 +280,14 @@ void VideoAdapter::OnResolutionFramerateRequest(
   resolution_request_target_pixel_count_ =
       target_pixel_count.value_or(resolution_request_max_pixel_count_);
   max_framerate_request_ = max_framerate_fps;
+}
+
+void VideoAdapter::OnScaleResolutionBy(
+    rtc::Optional<float> scale_resolution_by) {
+  rtc::CritScope cs(&critical_section_);
+  scale_resolution_by_ = scale_resolution_by.value_or(1.0);
+  RTC_DCHECK_GE(scale_resolution_by_, 1.0);
+  scale_ = static_cast<bool>(scale_resolution_by);
 }
 
 }  // namespace cricket

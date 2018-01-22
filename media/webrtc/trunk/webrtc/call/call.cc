@@ -238,6 +238,15 @@ class Call : public webrtc::Call,
   void OnAllocationLimitsChanged(uint32_t min_send_bitrate_bps,
                                  uint32_t max_padding_bitrate_bps) override;
 
+  VoiceEngine* voice_engine() override {
+    internal::AudioState* audio_state =
+        static_cast<internal::AudioState*>(config_.audio_state.get());
+    if (audio_state)
+      return audio_state->voice_engine();
+    else
+      return nullptr;
+  }
+
  private:
   DeliveryStatus DeliverRtcp(MediaType media_type, const uint8_t* packet,
                              size_t length);

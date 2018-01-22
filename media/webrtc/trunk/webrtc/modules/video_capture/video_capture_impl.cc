@@ -85,7 +85,6 @@ VideoCaptureImpl::VideoCaptureImpl()
       _requestedCapability(),
       _lastProcessTimeNanos(rtc::TimeNanos()),
       _lastFrameRateCallbackTimeNanos(rtc::TimeNanos()),
-      _dataCallBack(NULL),
       _lastProcessFrameTimeNanos(rtc::TimeNanos()),
       _rotateFrame(kVideoRotation_0),
       apply_rotation_(false) {
@@ -97,7 +96,6 @@ VideoCaptureImpl::VideoCaptureImpl()
 }
 
 VideoCaptureImpl::~VideoCaptureImpl() {
-  DeRegisterCaptureDataCallback();
   if (_deviceUniqueId)
     delete[] _deviceUniqueId;
 }
@@ -105,18 +103,31 @@ VideoCaptureImpl::~VideoCaptureImpl() {
 void VideoCaptureImpl::RegisterCaptureDataCallback(
     rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
   rtc::CritScope cs(&_apiCs);
-  _dataCallBack = dataCallBack;
+  _dataCallBacks.insert(dataCallBack);
 }
 
-void VideoCaptureImpl::DeRegisterCaptureDataCallback() {
+void VideoCaptureImpl::DeRegisterCaptureDataCallback(
+    rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
   rtc::CritScope cs(&_apiCs);
-  _dataCallBack = NULL;
+  auto it = _dataCallBacks.find(dataCallBack);
+  if (it != _dataCallBacks.end()) {
+    _dataCallBacks.erase(it);
+  }
 }
+
+int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
+  if (_dataCallBacks.empty()) {
+    return StopCapture();
+  } else {
+    return 0;
+  }
+}
+
 int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
-  if (_dataCallBack) {
-    _dataCallBack->OnFrame(captureFrame);
+  for (auto dataCallBack : _dataCallBacks) {
+    dataCallBack->OnFrame(captureFrame);
   }
 
   return 0;
@@ -149,13 +160,11 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
   // SetApplyRotation doesn't take any lock. Make a local copy here.
   bool apply_rotation = apply_rotation_;
 
-  if (apply_rotation) {
-    // Rotating resolution when for 90/270 degree rotations.
-    if (_rotateFrame == kVideoRotation_90 ||
-        _rotateFrame == kVideoRotation_270) {
-      target_width = abs(height);
-      target_height = width;
-    }
+  if (apply_rotation &&
+      (_rotateFrame == kVideoRotation_90 ||
+       _rotateFrame == kVideoRotation_270)) {
+    target_width = abs(height);
+    target_height = width;
   }
 
   // Setting absolute height (in case it was negative).
@@ -191,7 +200,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
       buffer.get()->StrideV(), 0, 0,  // No Cropping
       width, height, target_width, target_height, rotation_mode,
       ConvertVideoType(frameInfo.videoType));
-  if (conversionResult < 0) {
+  if (conversionResult != 0) {
     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
                       << static_cast<int>(frameInfo.videoType) << "to I420.";
     return -1;
@@ -200,6 +209,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
   VideoFrame captureFrame(buffer, 0, rtc::TimeMillis(),
                           !apply_rotation ? _rotateFrame : kVideoRotation_0);
   captureFrame.set_ntp_time_ms(captureTime);
+
+  // This is one ugly hack to let CamerasParent know what rotation
+  // the frame was captured at. Note that this goes against the intended
+  // meaning of rotation of the frame (how to rotate it before rendering).
+  // We do this so CamerasChild can scale to the proper dimensions
+  // later on in the pipe.
+  captureFrame.set_rotation(_rotateFrame);
 
   DeliverCapturedFrame(captureFrame);
 

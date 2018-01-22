@@ -23,6 +23,7 @@
 #include "common_video/include/frame_callback.h"
 #include "media/base/videosinkinterface.h"
 #include "rtc_base/platform_file.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -160,8 +161,13 @@ class VideoReceiveStream {
       // See draft-alvestrand-rmcat-remb for information.
       bool remb = false;
 
+      bool tmmbr = false;
+
       // See draft-holmer-rmcat-transport-wide-cc-extensions for details.
       bool transport_cc = false;
+
+      // TODO(jesup) - there should be a kKeyFrameReqNone
+      KeyFrameRequestMethod keyframe_method = kKeyFrameReqPliRtcp;
 
       // See NackConfig for description.
       NackConfig nack;
@@ -228,6 +234,9 @@ class VideoReceiveStream {
 
   // TODO(pbos): Add info on currently-received codec to Stats.
   virtual Stats GetStats() const = 0;
+
+  //TODO: find replacement for this using call interface
+  //virtual void SetSyncChannel(VoiceEngine* voice_engine, int audio_channel_id) = 0;
 
   // Takes ownership of the file, is responsible for closing it later.
   // Calling this method will close and finalize any current log.

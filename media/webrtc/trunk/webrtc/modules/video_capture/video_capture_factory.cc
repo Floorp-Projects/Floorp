@@ -16,11 +16,7 @@ namespace webrtc {
 
 rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
     const char* deviceUniqueIdUTF8) {
-#if defined(WEBRTC_ANDROID)
-  return nullptr;
-#else
   return videocapturemodule::VideoCaptureImpl::Create(deviceUniqueIdUTF8);
-#endif
 }
 
 rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
@@ -29,11 +25,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
 }
 
 VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo() {
-#if defined(WEBRTC_ANDROID)
-  return nullptr;
-#else
   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo();
-#endif
 }
 
 }  // namespace webrtc

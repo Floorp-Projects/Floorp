@@ -15,6 +15,10 @@
 #include "modules/include/module_common_types.h"
 #include "typedefs.h"  // NOLINT(build/include)
 
+#ifdef XP_WIN
+typedef int pid_t;
+#endif
+
 namespace webrtc
 {
 // Defines

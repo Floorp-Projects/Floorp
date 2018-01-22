@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "api/array_view.h"
 #include "api/optional.h"
@@ -284,12 +285,16 @@ class AcmReceiver {
   rtc::Optional<CodecInst> last_audio_decoder_ RTC_GUARDED_BY(crit_sect_);
   rtc::Optional<SdpAudioFormat> last_audio_format_ RTC_GUARDED_BY(crit_sect_);
   ACMResampler resampler_ RTC_GUARDED_BY(crit_sect_);
-  std::unique_ptr<int16_t[]> last_audio_buffer_ RTC_GUARDED_BY(crit_sect_);
+
+  // After construction, this is only ever touched on the thread that calls
+  // AcmReceiver::GetAudio, and only modified in this method.
+  std::unique_ptr<int16_t[]> last_audio_buffer_;
   CallStatistics call_stats_ RTC_GUARDED_BY(crit_sect_);
   const std::unique_ptr<NetEq> neteq_;  // NetEq is thread-safe; no lock needed.
   const Clock* const clock_;
-  bool resampled_last_output_frame_ RTC_GUARDED_BY(crit_sect_);
+  std::atomic<bool> resampled_last_output_frame_;
   rtc::Optional<int> last_packet_sample_rate_hz_ RTC_GUARDED_BY(crit_sect_);
+  std::atomic<int> last_audio_format_clockrate_hz_;
 };
 
 }  // namespace acm2

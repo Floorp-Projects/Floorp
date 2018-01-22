@@ -115,12 +115,32 @@ const int RtpExtension::kVideoTimingDefaultId = 8;
 const char RtpExtension::kEncryptHeaderExtensionsUri[] =
     "urn:ietf:params:rtp-hdrext:encrypt";
 
+const char* RtpExtension::kRtpStreamIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+const int RtpExtension::kRtpStreamIdDefaultId = 9;
+
+const char* RtpExtension::kRepairedRtpStreamIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
+const int RtpExtension::kRepairedRtpStreamIdDefaultId = 10;
+
+const char* RtpExtension::kMIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:mid";
+const int RtpExtension::kMIdDefaultId = 11;
+
+const char* RtpExtension::kCsrcAudioLevelUri =
+    "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+const int RtpExtension::kCsrcAudioLevelDefaultId = 12;
+
 const int RtpExtension::kMinId = 1;
 const int RtpExtension::kMaxId = 14;
 
 bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
-         uri == webrtc::RtpExtension::kTransportSequenceNumberUri;
+         uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kMIdUri ||
+         uri == webrtc::RtpExtension::kCsrcAudioLevelUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
@@ -130,7 +150,10 @@ bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kPlayoutDelayUri ||
          uri == webrtc::RtpExtension::kVideoContentTypeUri ||
-         uri == webrtc::RtpExtension::kVideoTimingUri;
+         uri == webrtc::RtpExtension::kVideoTimingUri ||
+         uri == webrtc::RtpExtension::kRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kMIdUri;
 }
 
 bool RtpExtension::IsEncryptionSupported(const std::string& uri) {
