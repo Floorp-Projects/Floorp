@@ -158,7 +158,16 @@ if (!build_with_chromium) {
 
       libs = [ "Strmiids.lib" ]
 
-      deps += [ "//third_party/winsdk_samples" ]
+      if (build_with_mozilla) {
+        sources += [
+          "windows/BaseFilter.cpp",
+          "windows/BaseInputPin.cpp",
+          "windows/BasePin.cpp",
+          "windows/MediaType.cpp",
+        ]
+      } else {
+        deps += [ "//third_party/winsdk_samples" ]
+      }
     }
     if (is_ios || is_mac) {
       deps += [ ":video_capture_internal_impl_objc" ]
@@ -169,6 +178,19 @@ if (!build_with_chromium) {
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+
+    if (build_with_mozilla && is_android) {
+      include_dirs = [
+        "/config/external/nspr",
+        "/nsprpub/lib/ds",
+        "/nsprpub/pr/include",
+      ]
+
+      sources = [
+        "android/device_info_android.cc",
+        "android/video_capture_android.cc",
+      ]
     }
   }
 
