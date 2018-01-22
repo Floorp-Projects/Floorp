@@ -49,3 +49,5 @@ fuzzy-if(skiaContent,1,22) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) f
 fuzzy-if(Android,8,630) fuzzy-if(OSX,1,11) fuzzy-if(skiaContent,1,220) fuzzy-if(winWidget&&!layersGPUAccelerated,116,1320) == block-in-inline-3.html block-in-inline-3-ref.html
 == block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == iframe-1.html iframe-1-ref.html
+skip-if(Android) == transformed-1.html transformed-1-ref.html # bug 1430787 for android
+fuzzy-if(Android,2,4) skip-if(!asyncPan||Android) == transformed-2.html transformed-2-ref.html # bug 1430787 for android
