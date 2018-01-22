@@ -616,6 +616,8 @@ public:
 class AudioConfig
 {
 public:
+  // Channel definition is conveniently defined to be in the same order as
+  // WAVEFORMAT && SMPTE, even though this is unused for now.
   enum Channel
   {
     CHANNEL_INVALID = -1,
@@ -623,12 +625,12 @@ public:
     CHANNEL_LEFT,
     CHANNEL_RIGHT,
     CHANNEL_CENTER,
+    CHANNEL_LFE,
+    CHANNEL_RCENTER,
     CHANNEL_LS,
     CHANNEL_RS,
     CHANNEL_RLS,
-    CHANNEL_RCENTER,
     CHANNEL_RRS,
-    CHANNEL_LFE,
   };
 
   class ChannelLayout
@@ -642,12 +644,16 @@ public:
     ChannelLayout(uint32_t aChannels, const Channel* aConfig)
       : ChannelLayout()
     {
-      if (!aConfig) {
+      if (aChannels == 0 || !aConfig) {
         mValid = false;
         return;
       }
       mChannels.AppendElements(aConfig, aChannels);
       UpdateChannelMap();
+    }
+    ChannelLayout(std::initializer_list<Channel> aChannelList)
+      : ChannelLayout(aChannelList.size(), aChannelList.begin())
+    {
     }
     bool operator==(const ChannelLayout& aOther) const
     {
@@ -665,10 +671,8 @@ public:
     {
       return mChannels.Length();
     }
-    uint32_t Map() const
-    {
-      return mChannelMap;
-    }
+    uint32_t Map() const;
+
     // Calculate the mapping table from the current layout to aOther such that
     // one can easily go from one layout to the other by doing:
     // out[channel] = in[map[channel]].
@@ -684,6 +688,71 @@ public:
     {
       return mChannelMap & (1 << aChannel);
     }
+
+    static const ChannelLayout& SMPTEDefault(
+      const ChannelLayout& aChannelLayout);
+
+    // Common channel layout definitions.
+    static ChannelLayout LMONO;
+    static constexpr uint32_t LMONO_MAP = 1 << CHANNEL_MONO;
+    static ChannelLayout LMONO_LFE;
+    static constexpr uint32_t LMONO_LFE_MAP =
+      1 << CHANNEL_MONO | 1 << CHANNEL_LFE;
+    static ChannelLayout LSTEREO;
+    static constexpr uint32_t LSTEREO_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT;
+    static ChannelLayout LSTEREO_LFE;
+    static constexpr uint32_t LSTEREO_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE;
+    static ChannelLayout L3F;
+    static constexpr uint32_t L3F_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER;
+    static ChannelLayout L3F_LFE;
+    static constexpr uint32_t L3F_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LFE;
+    static ChannelLayout L2F1;
+    static constexpr uint32_t L2F1_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_RCENTER;
+    static ChannelLayout L2F1_LFE;
+    static constexpr uint32_t L2F1_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE |
+      1 << CHANNEL_RCENTER;
+    static ChannelLayout L3F1;
+    static constexpr uint32_t L3F1_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_RCENTER;
+    static ChannelLayout L3F1_LFE;
+    static constexpr uint32_t L3F1_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LFE | 1 << CHANNEL_RCENTER;
+    static ChannelLayout L2F2;
+    static constexpr uint32_t L2F2_MAP = 1 << CHANNEL_LEFT |
+                                         1 << CHANNEL_RIGHT | 1 << CHANNEL_LS |
+                                         1 << CHANNEL_RS;
+    static ChannelLayout L2F2_LFE;
+    static constexpr uint32_t L2F2_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE |
+      1 << CHANNEL_LS | 1 << CHANNEL_RS;
+    static ChannelLayout L3F2;
+    static constexpr uint32_t L3F2_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LS | 1 << CHANNEL_RS;
+    static ChannelLayout L3F2_LFE;
+    static constexpr uint32_t L3F2_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LFE | 1 << CHANNEL_LS | 1 << CHANNEL_RS;
+    static ChannelLayout L3F3R_LFE;
+    static constexpr uint32_t L3F3R_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LFE | 1 << CHANNEL_RCENTER | 1 << CHANNEL_LS |
+      1 << CHANNEL_RS;
+    static ChannelLayout L3F4_LFE;
+    static constexpr uint32_t L3F4_LFE_MAP =
+      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
+      1 << CHANNEL_LFE | 1 << CHANNEL_RLS | 1 << CHANNEL_RRS | 1 << CHANNEL_LS |
+      1 << CHANNEL_RS;
+
   private:
     void UpdateChannelMap();
     const Channel* SMPTEDefault(uint32_t aChannels) const;
