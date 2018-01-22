@@ -25,6 +25,14 @@ if (!window.assert_times_equal) {
   };
 }
 
+// Allow implementations to substitute an alternative method for comparing
+// a time value based on its precision requirements with a fixed value.
+if (!window.assert_time_equals_literal) {
+  window.assert_time_equals_literal = (actual, expected, description) => {
+    assert_approx_equals(actual, expected, TIME_PRECISION, description);
+  }
+}
+
 // creates div element, appends it to the document body and
 // removes the created element during test cleanup
 function createDiv(test, doc) {

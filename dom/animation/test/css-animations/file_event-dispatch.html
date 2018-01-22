@@ -125,7 +125,7 @@ promise_test(t => {
     animation.timeline = null;
     return watcher.wait_for('animationcancel');
   }).then(evt => {
-    assert_times_equal(evt.elapsedTime, 0.1);
+    assert_time_equals_literal(evt.elapsedTime, 0.1);
   });
 }, 'Active -> Idle, setting Animation.timeline = null');
 
@@ -138,7 +138,7 @@ promise_test(t => {
     animation.cancel();
     return watcher.wait_for('animationcancel');
   }).then(evt => {
-    assert_times_equal(evt.elapsedTime, 0.05);
+    assert_time_equals_literal(evt.elapsedTime, 0.05);
   });
 }, 'Active -> Idle, calling Animation.cancel()');
 

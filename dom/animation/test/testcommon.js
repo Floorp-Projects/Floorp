@@ -30,6 +30,13 @@ function assert_times_equal(actual, expected, description) {
 }
 
 /*
+ * Compare a time value based on its precision requirements with a fixed value.
+ */
+function assert_time_equals_literal(actual, expected, description) {
+  assert_approx_equals(actual, expected, TIME_PRECISION, description);
+}
+
+/*
  * Compare matrix string like 'matrix(1, 0, 0, 1, 100, 0)'.
  * This function allows error, 0.01, because on Android when we are scaling down
  * the document, it results in some errors.
