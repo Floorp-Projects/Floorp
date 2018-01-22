@@ -881,6 +881,7 @@ class tp6_google(QuantumPageloadTest):
     Quantum Pageload Test - Google
     """
     tpmanifest = '${talos}/tests/quantum_pageload/quantum_pageload_google.manifest'
+    fnbpaint = False
     tphero = True
 
 
