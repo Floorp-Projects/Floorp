@@ -26,7 +26,7 @@ group("base") {
     ":sequenced_task_checker",
     ":weak_ptr",
   ]
-  if (is_android) {
+  if (is_android && !build_with_mozilla) {
     public_deps += [ ":base_java" ]
   }
 }
@@ -224,6 +224,47 @@ rtc_source_set("rtc_base_approved_generic") {
       "logging.h",
     ]
   }
+  if (build_with_mozilla) {
+    sources += [
+      "asyncresolverinterface.cc",
+      "asyncresolverinterface.h",
+      "asyncsocket.cc",
+      "asyncsocket.h",
+      "ipaddress.cc",
+      "ipaddress.h",
+      "messagehandler.cc",
+      "messagehandler.h",
+      "messagequeue.cc",
+      "messagequeue.h",
+      "nethelpers.cc",
+      "nethelpers.h",
+      "physicalsocketserver.cc",
+      "physicalsocketserver.h",
+      "nullsocketserver.cc",
+      "nullsocketserver.h",
+      "signalthread.cc",
+      "signalthread.h",
+      "socketaddress.cc",
+      "socketaddress.h",
+      "thread.cc",
+      "thread.h",
+    ]
+    if (is_android) {
+      sources += [
+        "ifaddrs-android.cc",
+        "ifaddrs-android.h",
+      ]
+    }
+    if (is_win) {
+      sources += [
+        "win32.cc",
+        "win32socketinit.cc",
+      ]
+    }
+    if (is_mac) {
+      sources += [ "macutils.cc" ]
+    }
+  }
   if (is_component_build && is_win) {
     # Copy the VS runtime DLLs into the isolate so that they don't have to be
     # preinstalled on the target machine. The debug runtimes have a "d" at
@@ -361,6 +402,16 @@ rtc_source_set("rtc_task_queue_impl") {
       "task_queue_posix.cc",
       "task_queue_posix.h",
     ]
+
+    if (build_with_mozilla) {
+      include_dirs = [ "/ipc/chromium/src/third_party/libevent/include" ]
+      if (is_linux) {
+        include_dirs += [ "/ipc/chromium/src/third_party/libevent/linux" ]
+      }
+      if (is_android) {
+        include_dirs += [ "/ipc/chromium/src/third_party/libevent/android" ]
+      }
+    }
   } else {
     if (is_mac || is_ios) {
       sources = [
@@ -468,9 +519,11 @@ if (is_ios || is_mac) {
     sources = [
       "thread_darwin.mm",
     ]
-    deps = [
-      ":rtc_base_generic",
-    ]
+    if (!build_with_mozilla) {
+      deps = [
+        ":rtc_base_generic",
+      ]
+    }
     visibility = [ ":rtc_base" ]
   }
 }
@@ -497,10 +550,6 @@ rtc_static_library("rtc_base_generic") {
     "asyncinvoker.h",
     "asyncpacketsocket.cc",
     "asyncpacketsocket.h",
-    "asyncresolverinterface.cc",
-    "asyncresolverinterface.h",
-    "asyncsocket.cc",
-    "asyncsocket.h",
     "asynctcpsocket.cc",
     "asynctcpsocket.h",
     "asyncudpsocket.cc",
@@ -521,25 +570,17 @@ rtc_static_library("rtc_base_generic") {
     "httpcommon-inl.h",
     "httpcommon.cc",
     "httpcommon.h",
-    "ipaddress.cc",
-    "ipaddress.h",
     "messagedigest.cc",
     "messagedigest.h",
-    "messagehandler.cc",
-    "messagehandler.h",
     "messagequeue.cc",
     "messagequeue.h",
     "nethelper.cc",
     "nethelper.h",
-    "nethelpers.cc",
-    "nethelpers.h",
     "network.cc",
     "network.h",
     "network_constants.h",
     "networkmonitor.cc",
     "networkmonitor.h",
-    "nullsocketserver.cc",
-    "nullsocketserver.h",
     "openssl.h",
     "openssladapter.cc",
     "openssladapter.h",
@@ -549,8 +590,6 @@ rtc_static_library("rtc_base_generic") {
     "opensslidentity.h",
     "opensslstreamadapter.cc",
     "opensslstreamadapter.h",
-    "physicalsocketserver.cc",
-    "physicalsocketserver.h",
     "proxyinfo.cc",
     "proxyinfo.h",
     "ratelimiter.cc",
@@ -559,16 +598,12 @@ rtc_static_library("rtc_base_generic") {
     "rtccertificate.h",
     "rtccertificategenerator.cc",
     "rtccertificategenerator.h",
-    "signalthread.cc",
-    "signalthread.h",
     "sigslot.cc",
     "sigslot.h",
     "sigslotrepeater.h",
     "socket.h",
     "socketadapters.cc",
     "socketadapters.h",
-    "socketaddress.cc",
-    "socketaddress.h",
     "socketaddresspair.cc",
     "socketaddresspair.h",
     "socketfactory.h",
@@ -585,9 +620,34 @@ rtc_static_library("rtc_base_generic") {
     "sslstreamadapter.h",
     "stream.cc",
     "stream.h",
-    "thread.cc",
-    "thread.h",
   ]
+
+  if (!build_with_mozilla) {
+    sources += [
+      "asyncresolverinterface.cc",
+      "asyncresolverinterface.h",
+      "asyncsocket.cc",
+      "asyncsocket.h",
+      "ipaddress.cc",
+      "ipaddress.h",
+      "messagehandler.cc",
+      "messagehandler.h",
+      "messagequeue.cc",
+      "messagequeue.h",
+      "nethelpers.cc",
+      "nethelpers.h",
+      "physicalsocketserver.cc",
+      "physicalsocketserver.h",
+      "nullsocketserver.cc",
+      "nullsocketserver.h",
+      "signalthread.cc",
+      "signalthread.h",
+      "socketaddress.cc",
+      "socketaddress.h",
+      "thread.cc",
+      "thread.h",
+    ]
+  }
 
   visibility = [
     ":rtc_base",
@@ -1046,7 +1106,7 @@ if (rtc_include_tests) {
   }
 }
 
-if (is_android) {
+if (is_android && !build_with_mozilla) {
   rtc_android_library("base_java") {
     java_files = [
       "java/src/org/webrtc/ContextUtils.java",

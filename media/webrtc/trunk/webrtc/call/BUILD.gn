@@ -19,15 +19,11 @@ rtc_source_set("call_interfaces") {
     "syncable.cc",
     "syncable.h",
   ]
-  if (!build_with_mozilla) {
-    sources += [ "audio_send_stream.cc" ]
-  }
   deps = [
     ":rtp_interfaces",
     ":video_stream_api",
     "..:webrtc_common",
     "../api:audio_mixer_api",
-    "../api:libjingle_peerconnection_api",
     "../api:optional",
     "../api:transport_api",
     "../api/audio_codecs:audio_codecs_api",
@@ -35,6 +31,13 @@ rtc_source_set("call_interfaces") {
     "../rtc_base:rtc_base",
     "../rtc_base:rtc_base_approved",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../api:libjingle_peerconnection_api" ]
+    sources += [ "audio_send_stream.cc" ]
+  } else {
+    sources += [ "audio_send_stream_call.cc" ]
+  }
 }
 
 # TODO(nisse): These RTP targets should be moved elsewhere
@@ -126,8 +129,11 @@ rtc_static_library("call") {
   public_deps = [
     ":call_interfaces",
     "../api:call_api",
-    "../api:libjingle_peerconnection_api",
   ]
+
+  if (!build_with_mozilla) {
+    public_deps += [ "../api:libjingle_peerconnection_api" ]
+  }
 
   deps = [
     ":bitrate_allocator",
@@ -167,12 +173,15 @@ rtc_source_set("video_stream_api") {
   deps = [
     ":rtp_interfaces",
     "../:webrtc_common",
-    "../api:libjingle_peerconnection_api",
     "../api:optional",
     "../api:transport_api",
     "../common_video:common_video",
     "../rtc_base:rtc_base_approved",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../api:libjingle_peerconnection_api" ]
+  }
 }
 
 if (rtc_include_tests) {

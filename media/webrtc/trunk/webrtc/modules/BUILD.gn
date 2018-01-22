@@ -17,7 +17,6 @@ group("modules") {
     "audio_processing",
     "bitrate_controller",
     "congestion_controller",
-    "desktop_capture",
     "media_file",
     "pacing",
     "remote_bitrate_estimator",
@@ -26,6 +25,10 @@ group("modules") {
     "video_coding",
     "video_processing",
   ]
+
+  if (is_win || is_mac || is_linux || is_bsd) {
+    public_deps += [ "desktop_capture" ]
+  }
 }
 
 rtc_source_set("module_api_public") {
