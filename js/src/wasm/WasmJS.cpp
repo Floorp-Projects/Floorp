@@ -793,7 +793,7 @@ GetBufferSource(JSContext* cx, JSObject* obj, unsigned errorNumber, MutableBytes
     return true;
 }
 
-static SharedCompileArgs
+static MutableCompileArgs
 InitCompileArgs(JSContext* cx)
 {
     ScriptedCaller scriptedCaller;
@@ -2198,7 +2198,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     typedef ExclusiveWaitableData<StreamState> ExclusiveStreamState;
 
     // Immutable:
-    const SharedCompileArgs      compileArgs_;
+    const MutableCompileArgs     compileArgs_;     // immutable during streaming
     const bool                   instantiate_;
     const PersistentRootedObject importObj_;
 
@@ -2217,6 +2217,15 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     // Mutated on helper thread (execute()):
     SharedModule                 module_;
     UniqueChars                  compileError_;
+
+    // Called on some thread before consumeChunk() or streamClosed():
+
+    void noteResponseURLs(const char* url, const char* sourceMapUrl) override {
+        if (url)
+            compileArgs_->responseURLs.baseURL = DuplicateString(url);
+        if (sourceMapUrl)
+            compileArgs_->responseURLs.sourceMapURL = DuplicateString(sourceMapUrl);
+    }
 
     // Called on a stream thread:
 
@@ -2404,7 +2413,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
 
   public:
     CompileStreamTask(JSContext* cx, Handle<PromiseObject*> promise,
-                      const CompileArgs& compileArgs, bool instantiate,
+                      CompileArgs& compileArgs, bool instantiate,
                       HandleObject importObj)
       : PromiseHelperTask(cx, promise),
         compileArgs_(&compileArgs),
@@ -2439,7 +2448,7 @@ class ResolveResponseClosure : public NativeObject
     static const unsigned RESERVED_SLOTS = 4;
     static const Class class_;
 
-    static ResolveResponseClosure* create(JSContext* cx, const CompileArgs& args,
+    static ResolveResponseClosure* create(JSContext* cx, CompileArgs& args,
                                           HandleObject promise, bool instantiate,
                                           HandleObject importObj)
     {
@@ -2451,15 +2460,15 @@ class ResolveResponseClosure : public NativeObject
             return nullptr;
 
         args.AddRef();
-        obj->setReservedSlot(COMPILE_ARGS_SLOT, PrivateValue(const_cast<CompileArgs*>(&args)));
+        obj->setReservedSlot(COMPILE_ARGS_SLOT, PrivateValue(&args));
         obj->setReservedSlot(PROMISE_OBJ_SLOT, ObjectValue(*promise));
         obj->setReservedSlot(INSTANTIATE_SLOT, BooleanValue(instantiate));
         obj->setReservedSlot(IMPORT_OBJ_SLOT, ObjectOrNullValue(importObj));
         return obj;
     }
 
-    const CompileArgs& compileArgs() const {
-        return *(const CompileArgs*)getReservedSlot(COMPILE_ARGS_SLOT).toPrivate();
+    CompileArgs& compileArgs() const {
+        return *(CompileArgs*)getReservedSlot(COMPILE_ARGS_SLOT).toPrivate();
     }
     PromiseObject& promise() const {
         return getReservedSlot(PROMISE_OBJ_SLOT).toObject().as<PromiseObject>();
@@ -2505,7 +2514,7 @@ ResolveResponse_OnFulfilled(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<ResolveResponseClosure*> closure(cx, ToResolveResponseClosure(callArgs));
     Rooted<PromiseObject*> promise(cx, &closure->promise());
-    const CompileArgs& compileArgs = closure->compileArgs();
+    CompileArgs& compileArgs = closure->compileArgs();
     bool instantiate = closure->instantiate();
     Rooted<JSObject*> importObj(cx, closure->importObj());
 
@@ -2547,7 +2556,7 @@ ResolveResponse(JSContext* cx, CallArgs callArgs, Handle<PromiseObject*> promise
 {
     MOZ_ASSERT_IF(importObj, instantiate);
 
-    SharedCompileArgs compileArgs = InitCompileArgs(cx);
+    MutableCompileArgs compileArgs = InitCompileArgs(cx);
     if (!compileArgs)
         return false;
 
