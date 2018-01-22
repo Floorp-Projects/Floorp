@@ -6,22 +6,6 @@
 
 <!ENTITY generalTab.label                "General">
 
-<!ENTITY useCursorNavigation.label       "Always use the cursor keys to navigate within pages">
-<!ENTITY useCursorNavigation.accesskey   "c">
-<!ENTITY searchOnStartTyping.label       "Search for text when you start typing">
-<!ENTITY searchOnStartTyping.accesskey   "x">
-<!ENTITY useOnScreenKeyboard.label       "Show a touch keyboard when necessary">
-<!ENTITY useOnScreenKeyboard.accesskey   "k">
-
-<!ENTITY browsing.label                  "Browsing">
-
-<!ENTITY useAutoScroll.label             "Use autoscrolling">
-<!ENTITY useAutoScroll.accesskey         "a">
-<!ENTITY useSmoothScrolling.label        "Use smooth scrolling">
-<!ENTITY useSmoothScrolling.accesskey    "m">
-<!ENTITY checkUserSpelling.label         "Check your spelling as you type">
-<!ENTITY checkUserSpelling.accesskey     "t">
-
 <!ENTITY dataChoicesTab.label            "Data Choices">
 
 <!-- LOCALIZATION NOTE (healthReportingDisabled.label): This message is displayed above
@@ -47,12 +31,6 @@ available. -->
 
 <!ENTITY networkTab.label                "Network">
 
-<!ENTITY networkProxy.label              "Network Proxy">
-
-<!ENTITY connectionSettingsLearnMore.label "Learn more">
-<!ENTITY connectionSettings.label        "Settings…">
-<!ENTITY connectionSettings.accesskey    "e">
-
 <!--  Site Data section manages sites using Storage API and is under Network -->
 <!ENTITY siteData1.label                 "Cookies and Site Data">
 <!ENTITY clearSiteData1.label            "Clear Data…">
@@ -62,38 +40,6 @@ available. -->
 <!ENTITY siteDataLearnMoreLink.label     "Learn more">
 
 <!ENTITY updateTab.label                 "Update">
-
-<!-- LOCALIZATION NOTE (updateApplication.label):
-  Strings from aboutDialog.dtd are displayed in this section of the preferences.
-  Please check for possible accesskey conflicts.
--->
-<!ENTITY updateApplication.label         "&brandShortName; Updates">
-<!-- LOCALIZATION NOTE (updateApplication.version.*): updateApplication.version.pre
-# is followed by a version number, keep the trailing space or replace it with a
-# different character as needed. updateApplication.version.post is displayed
-# after the version number, and is empty on purpose for English. You can use it
-# if required by your language.
- -->
-<!ENTITY updateApplicationDescription.label
-                                         "Keep &brandShortName; up to date for the best performance, stability, and security.">
-<!ENTITY updateApplication.version.pre   "Version ">
-<!ENTITY updateApplication.version.post  "">
-<!ENTITY updateApplication.description   "Allow &brandShortName; to">
-<!ENTITY updateAuto3.label               "Automatically install updates (recommended)">
-<!ENTITY updateAuto3.accesskey           "A">
-<!ENTITY updateCheckChoose2.label        "Check for updates but let you choose to install them">
-<!ENTITY updateCheckChoose2.accesskey    "C">
-<!ENTITY updateManual2.label             "Never check for updates (not recommended)">
-<!ENTITY updateManual2.accesskey         "N">
-
-<!ENTITY updateHistory2.label            "Show Update History…">
-<!ENTITY updateHistory2.accesskey        "p">
-
-<!ENTITY useService.label                "Use a background service to install updates">
-<!ENTITY useService.accesskey            "b">
-
-<!ENTITY enableSearchUpdate2.label       "Automatically update search engines">
-<!ENTITY enableSearchUpdate2.accesskey   "e">
 
 <!ENTITY certificateTab.label            "Certificates">
 <!ENTITY certPersonal2.description       "When a server requests your personal certificate">
@@ -107,23 +53,3 @@ available. -->
 <!ENTITY viewCerts2.accesskey            "C">
 <!ENTITY viewSecurityDevices2.label      "Security Devices…">
 <!ENTITY viewSecurityDevices2.accesskey  "D">
-
-<!ENTITY performance.label               "Performance">
-<!ENTITY useRecommendedPerformanceSettings2.label
-                                         "Use recommended performance settings">
-<!ENTITY useRecommendedPerformanceSettings2.description
-                                         "These settings are tailored to your computer’s hardware and operating system.">
-<!ENTITY useRecommendedPerformanceSettings2.accesskey
-                                         "U">
-<!ENTITY performanceSettingsLearnMore.label
-                                         "Learn more">
-<!ENTITY limitContentProcessOption.label "Content process limit">
-<!ENTITY limitContentProcessOption.description
-                                         "Additional content processes can improve performance when using multiple tabs, but will also use more memory.">
-<!ENTITY limitContentProcessOption.accesskey   "L">
-<!ENTITY limitContentProcessOption.disabledDescription
-                                         "Modifying the number of content processes is only possible with multiprocess &brandShortName;.">
-<!ENTITY limitContentProcessOption.disabledDescriptionLink
-                                         "Learn how to check if multiprocess is enabled">
-<!ENTITY allowHWAccel.label              "Use hardware acceleration when available">
-<!ENTITY allowHWAccel.accesskey          "r">
