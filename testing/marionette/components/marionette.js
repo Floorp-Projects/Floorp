@@ -284,26 +284,28 @@ MarionetteComponent.prototype.init = function() {
     return;
   }
 
-  // Delay initialization until we are done with delayed startup...
-  Services.tm.idleDispatchToMainThread(() => {
-    // ... and with startup tests.
-    let promise = Promise.resolve();
-    if ("@mozilla.org/test/startuprecorder;1" in Cc)
-      promise = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.done;
-    promise.then(() => {
-      let s;
-      try {
-        Cu.import("chrome://marionette/content/server.js");
-        s = new server.TCPListener(prefs.port);
-        s.start();
-        log.info(`Listening on port ${s.port}`);
-      } finally {
-        if (s) {
-          this.server = s;
-          this.running = true;
-        }
+  // wait for delayed startup...
+  Services.tm.idleDispatchToMainThread(async () => {
+    // ... and for startup tests
+    let startupRecorder = Promise.resolve();
+    if ("@mozilla.org/test/startuprecorder;1" in Cc) {
+      startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
+          .getService().wrappedJSObject.done;
+    }
+    await startupRecorder;
+
+    let s;
+    try {
+      Cu.import("chrome://marionette/content/server.js");
+      s = new server.TCPListener(prefs.port);
+      s.start();
+      log.info(`Listening on port ${s.port}`);
+    } finally {
+      if (s) {
+        this.server = s;
+        this.running = true;
       }
-    });
+    }
   });
 };
 
