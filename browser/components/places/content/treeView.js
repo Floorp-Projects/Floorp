@@ -1784,11 +1784,6 @@ PlacesTreeView.prototype = {
     // We may only get here if the cell is editable.
     let node = this._rows[aRow];
     if (node.title != aText) {
-      if (!PlacesUIUtils.useAsyncTransactions) {
-        let txn = new PlacesEditItemTitleTransaction(node.itemId, aText);
-        PlacesUtils.transactionManager.doTransaction(txn);
-        return;
-      }
       PlacesTransactions.EditTitle({ guid: node.bookmarkGuid, title: aText })
                         .transact().catch(Cu.reportError);
     }

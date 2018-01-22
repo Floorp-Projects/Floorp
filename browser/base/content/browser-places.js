@@ -11,8 +11,6 @@ XPCOMUtils.defineLazyScriptGetter(this, ["PlacesToolbar", "PlacesMenu",
 
 var StarUI = {
   _itemGuids: null,
-  // TODO (bug 1131491): _itemIdsMap is only used for the old transactions manager.
-  _itemIdsMap: null,
   _batching: false,
   _isNewBookmark: false,
   _isComposing: false,
@@ -96,10 +94,8 @@ var StarUI = {
           this._restoreCommandsState();
           let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
           this._removeBookmarksOnPopupHidden = false;
-          let idsForRemoval = this._itemIdsMap;
           let guidsForRemoval = this._itemGuids;
           this._itemGuids = null;
-          this._itemIdsMap = null;
 
           if (this._batching) {
             this.endBatch();
@@ -107,25 +103,11 @@ var StarUI = {
 
           if (removeBookmarksOnPopupHidden && guidsForRemoval) {
             if (this._isNewBookmark) {
-              if (!PlacesUIUtils.useAsyncTransactions) {
-                PlacesUtils.transactionManager.undoTransaction();
-                break;
-              }
               PlacesTransactions.undo().catch(Cu.reportError);
               break;
             }
             // Remove all bookmarks for the bookmark's url, this also removes
             // the tags for the url.
-            if (!PlacesUIUtils.useAsyncTransactions) {
-              if (idsForRemoval) {
-                for (let itemId of idsForRemoval.values()) {
-                  let txn = new PlacesRemoveItemTransaction(itemId);
-                  PlacesUtils.transactionManager.doTransaction(txn);
-                }
-              }
-              break;
-            }
-
             PlacesTransactions.Remove(guidsForRemoval)
                               .transact().catch(Cu.reportError);
           } else if (this._isNewBookmark) {
@@ -230,7 +212,6 @@ var StarUI = {
     }
 
     this._isNewBookmark = aIsNewBookmark;
-    this._itemIdsMap = null;
     this._itemGuids = null;
     // TODO (bug 1131491): Deprecate this once async transactions are enabled
     // and the legacy transactions code is gone.
@@ -291,9 +272,6 @@ var StarUI = {
     await PlacesUtils.bookmarks.fetch({url: aUrl},
       bookmark => this._itemGuids.push(bookmark.guid));
 
-    if (!PlacesUIUtils.useAsyncTransactions) {
-      this._itemIdsMap = await PlacesUtils.promiseManyItemIds(this._itemGuids);
-    }
     let forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
     let bookmarksCount = this._itemGuids.length;
     let label = PluralForm.get(bookmarksCount, forms)
@@ -365,14 +343,10 @@ var StarUI = {
   beginBatch() {
     if (this._batching)
       return;
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(async () => {
-        await this._batchBlockingDeferred.promise;
-      });
-    } else {
-      PlacesUtils.transactionManager.beginBatch(null);
-    }
+    this._batchBlockingDeferred = PromiseUtils.defer();
+    PlacesTransactions.batch(async () => {
+      await this._batchBlockingDeferred.promise;
+    });
     this._batching = true;
   },
 
@@ -380,12 +354,8 @@ var StarUI = {
     if (!this._batching)
       return;
 
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._batchBlockingDeferred.resolve();
-      this._batchBlockingDeferred = null;
-    } else {
-      PlacesUtils.transactionManager.endBatch(false);
-    }
+    this._batchBlockingDeferred.resolve();
+    this._batchBlockingDeferred = null;
     this._batching = false;
   }
 };
@@ -413,75 +383,6 @@ var PlacesCommandHook = {
    *        getting the current page's title
    */
   async bookmarkPage(aBrowser, aShowEditUI, aUrl = null, aTitle = null) {
-    if (PlacesUIUtils.useAsyncTransactions) {
-      await this._bookmarkPagePT(aBrowser, aShowEditUI, aUrl, aTitle);
-      return;
-    }
-
-    // If aUrl is provided, we want to bookmark that url rather than the
-    // the current page
-    var uri = aUrl ? Services.io.newURI(aUrl) : aBrowser.currentURI;
-    var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
-    let isNewBookmark = itemId == -1;
-    if (isNewBookmark) {
-      // Bug 1148838 - Make this code work for full page plugins.
-      var title;
-      var description;
-      var charset;
-
-      let docInfo = aUrl ? {} : await this._getPageDetails(aBrowser);
-
-      try {
-        title = aTitle ||
-                (docInfo.isErrorPage ? PlacesUtils.history.getPageTitle(uri)
-                                     : aBrowser.contentTitle) ||
-                uri.displaySpec;
-        description = docInfo.description;
-        charset = aUrl ? null : aBrowser.characterSet;
-      } catch (e) { }
-
-      if (aShowEditUI) {
-        // If we bookmark the page here but open right into a cancelable
-        // state (i.e. new bookmark in Library), start batching here so
-        // all of the actions can be undone in a single undo step.
-        StarUI.beginBatch();
-      }
-
-      var descAnno = { name: PlacesUIUtils.DESCRIPTION_ANNO, value: description };
-      var txn = new PlacesCreateBookmarkTransaction(uri,
-                                                    PlacesUtils.unfiledBookmarksFolderId,
-                                                    PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                                    title, null, [descAnno]);
-      PlacesUtils.transactionManager.doTransaction(txn);
-      itemId = txn.item.id;
-      // Set the character-set.
-      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
-        PlacesUtils.setCharsetForURI(uri, charset);
-    }
-
-    // Revert the contents of the location bar
-    gURLBar.handleRevert();
-
-    // If it was not requested to open directly in "edit" mode, we are done.
-    if (!aShowEditUI)
-      return;
-
-    let anchor = BookmarkingUI.anchor;
-    if (anchor) {
-      await StarUI.showEditBookmarkPopup(itemId, anchor,
-                                         "bottomcenter topright", isNewBookmark,
-                                         uri);
-      return;
-    }
-
-    // Fall back to showing the panel over the content area.
-    await StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap",
-                                       isNewBookmark, uri);
-  },
-
-  // TODO: Replace bookmarkPage code with this function once legacy
-  // transactions are removed.
-  async _bookmarkPagePT(aBrowser, aShowEditUI, aUrl, aTitle) {
     // If aUrl is provided, we want to bookmark that url rather than the
     // the current page
     let url = aUrl ? new URL(aUrl) : new URL(aBrowser.currentURI.spec);
