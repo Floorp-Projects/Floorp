@@ -113,7 +113,6 @@ class IncrementalRunnable;
 class IntlUtils;
 class Location;
 class MediaQueryList;
-class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;
 class PostMessageEvent;
@@ -676,8 +675,6 @@ public:
        const nsAString& aName,
        const nsAString& aOptions,
        mozilla::ErrorResult& aError);
-  mozilla::dom::Navigator* Navigator();
-  nsIDOMNavigator* GetNavigator() override;
   nsIDOMOfflineResourceList* GetApplicationCache(mozilla::ErrorResult& aError);
   already_AddRefed<nsIDOMOfflineResourceList> GetApplicationCache() override;
 
@@ -1346,7 +1343,6 @@ protected:
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;
 
-  RefPtr<mozilla::dom::Navigator> mNavigator;
   RefPtr<nsScreen>            mScreen;
 
   RefPtr<mozilla::dom::BarProp> mMenubar;

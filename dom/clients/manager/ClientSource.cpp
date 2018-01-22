@@ -401,11 +401,7 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
   RefPtr<ServiceWorkerContainer> swc;
   nsPIDOMWindowInner* window = GetInnerWindow();
   if (window) {
-    RefPtr<Navigator> navigator =
-      static_cast<Navigator*>(window->GetNavigator());
-    if (navigator) {
-      swc = navigator->ServiceWorker();
-    }
+    swc = window->Navigator()->ServiceWorker();
   }
 
   // TODO: Also self.navigator.serviceWorker on workers when its exposed there
@@ -514,11 +510,7 @@ ClientSource::PostMessage(const ClientPostMessageArgs& aArgs)
   nsPIDOMWindowInner* window = GetInnerWindow();
   if (window) {
     globalObject = do_QueryInterface(window);
-    RefPtr<Navigator> navigator =
-      static_cast<Navigator*>(window->GetNavigator());
-    if (navigator) {
-      target = navigator->ServiceWorker();
-    }
+    target = window->Navigator()->ServiceWorker();
   }
 
   if (NS_WARN_IF(!target)) {

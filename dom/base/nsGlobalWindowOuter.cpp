@@ -2606,7 +2606,7 @@ nsPIDOMWindowOuter::SetFrameElementInternal(Element* aFrameElement)
 nsIDOMNavigator*
 nsGlobalWindowOuter::GetNavigator()
 {
-  FORWARD_TO_INNER(GetNavigator, (), nullptr);
+  FORWARD_TO_INNER(Navigator, (), nullptr);
 }
 
 nsIDOMScreen*

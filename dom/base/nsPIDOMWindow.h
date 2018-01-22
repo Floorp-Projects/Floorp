@@ -51,6 +51,7 @@ class ClientState;
 class DocGroup;
 class TabGroup;
 class Element;
+class Navigator;
 class Performance;
 class ServiceWorkerDescriptor;
 class ServiceWorkerRegistration;
@@ -589,7 +590,7 @@ public:
   }
 
   virtual nsIDOMScreen* GetScreen() = 0;
-  virtual nsIDOMNavigator* GetNavigator() = 0;
+  mozilla::dom::Navigator* Navigator();
   virtual mozilla::dom::Location* GetLocation() = 0;
 
   virtual nsresult GetControllers(nsIControllers** aControllers) = 0;
@@ -646,6 +647,8 @@ protected:
 
   RefPtr<mozilla::dom::Performance> mPerformance;
   mozilla::UniquePtr<mozilla::dom::TimeoutManager> mTimeoutManager;
+
+  RefPtr<mozilla::dom::Navigator> mNavigator;
 
   typedef nsRefPtrHashtable<nsStringHashKey,
                             mozilla::dom::ServiceWorkerRegistration>
