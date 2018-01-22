@@ -1170,6 +1170,33 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   return NS_OK;
 }
 
+bool
+nsNativeThemeGTK::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
+                                                   mozilla::wr::IpcResourceUpdateQueue& aResources,
+                                                   const mozilla::layers::StackingContextHelper& aSc,
+                                                   mozilla::layers::WebRenderLayerManager* aManager,
+                                                   nsIFrame* aFrame,
+                                                   uint8_t aWidgetType,
+                                                   const nsRect& aRect)
+{
+  nsPresContext* presContext = aFrame->PresContext();
+  wr::LayoutRect bounds = aSc.ToRelativeLayoutRect(
+    LayoutDeviceRect::FromAppUnits(aRect, presContext->AppUnitsPerDevPixel()));
+
+  switch (aWidgetType) {
+  case NS_THEME_WINDOW:
+  case NS_THEME_DIALOG:
+    aBuilder.PushRect(bounds, bounds, true,
+                      wr::ToColorF(Color::FromABGR(
+                        LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground,
+                                              NS_RGBA(0, 0, 0, 0)))));
+    return true;
+
+  default:
+    return false;
+  }
+}
+
 WidgetNodeType
 nsNativeThemeGTK::NativeThemeToGtkTheme(uint8_t aWidgetType, nsIFrame* aFrame)
 {
