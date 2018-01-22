@@ -172,3 +172,141 @@ function wasmGetScriptBreakpoints(wasmScript) {
     });
     return result;
 }
+
+const WasmHelpers = {};
+
+(function() {
+    let enabled = false;
+    try {
+        enableSingleStepProfiling();
+        disableSingleStepProfiling();
+        enabled = true;
+    } catch (e) {
+        print(e.message);
+    }
+    WasmHelpers.isSingleStepProfilingEnabled = enabled;
+})();
+
+WasmHelpers._normalizeStack = (stack, preciseStacks) => {
+    var wasmFrameTypes = [
+        {re:/^jit call to int64 wasm function$/,                          sub:"i64>"},
+        {re:/^out-of-line coercion for jit entry arguments \(in wasm\)$/, sub:"ool>"},
+        {re:/^wasm-function\[(\d+)\] \(.*\)$/,                            sub:"$1"},
+        {re:/^(fast|slow) exit trampoline (to native )?\(in wasm\)$/,     sub:"<"},
+        {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,                sub:"$1"},
+        {re:/ \(in wasm\)$/,                                              sub:""}
+    ];
+
+    let entryRegexps;
+    if (preciseStacks) {
+        entryRegexps = [
+            {re:/^slow entry trampoline \(in wasm\)$/,                    sub:"!>"},
+            {re:/^fast entry trampoline \(in wasm\)$/,                    sub:">"},
+        ];
+    } else {
+        entryRegexps = [
+            {re:/^(fast|slow) entry trampoline \(in wasm\)$/,             sub:">"}
+        ];
+    }
+    wasmFrameTypes = entryRegexps.concat(wasmFrameTypes);
+
+    var framesIn = stack.split(',');
+    var framesOut = [];
+    for (let frame of framesIn) {
+        for (let {re, sub} of wasmFrameTypes) {
+            if (re.test(frame)) {
+                framesOut.push(frame.replace(re, sub));
+                break;
+            }
+        }
+    }
+
+    return framesOut.join(',');
+};
+
+WasmHelpers._removeAdjacentDuplicates = array => {
+    if (array.length < 2)
+        return;
+    let i = 0;
+    for (let j = 1; j < array.length; j++) {
+        if (array[i] !== array[j])
+            array[++i] = array[j];
+    }
+    array.length = i + 1;
+}
+
+WasmHelpers.normalizeStacks = (stacks, preciseStacks = false) => {
+    let observed = [];
+    for (let i = 0; i < stacks.length; i++)
+        observed[i] = WasmHelpers._normalizeStack(stacks[i], preciseStacks);
+    WasmHelpers._removeAdjacentDuplicates(observed);
+    return observed;
+};
+
+WasmHelpers._compareStacks = (got, expect) => {
+    if (got.length != expect.length) {
+        return false;
+    }
+    for (let i = 0; i < got.length; i++) {
+        if (got[i] !== expect[i])
+            return false;
+    }
+    return true;
+}
+
+WasmHelpers.assertEqImpreciseStacks = (got, expect) => {
+    let observed = WasmHelpers.normalizeStacks(got, /* precise */ false);
+    let same = WasmHelpers._compareStacks(observed, expect);
+    if (!same) {
+        if (observed.length != expect.length) {
+            print(`Got:\n${observed.toSource()}\nExpect:\n${expect.toSource()}`);
+            assertEq(observed.length, expect.length);
+        }
+        for (let i = 0; i < observed.length; i++) {
+            if (observed[i] !== expect[i]) {
+                print(`On stack ${i}, Got:\n${observed[i]}\nExpect:\n${expect[i]}`);
+                assertEq(observed[i], expect[i]);
+            }
+        }
+    }
+}
+
+WasmHelpers.assertStackTrace = (exception, expected) => {
+    let callsites = exception.stack.trim().split('\n').map(line => line.split('@')[0]);
+    assertEq(callsites.length, expected.length);
+    for (let i = 0; i < callsites.length; i++) {
+        assertEq(callsites[i], expected[i]);
+    }
+};
+
+WasmHelpers.nextLineNumber = (n=1) => {
+    return +(new Error().stack).split('\n')[1].split(':')[1] + n;
+}
+
+WasmHelpers.startProfiling = () => {
+    if (!WasmHelpers.isSingleStepProfilingEnabled)
+        return;
+    enableSingleStepProfiling();
+}
+
+WasmHelpers.endProfiling = () => {
+    if (!WasmHelpers.isSingleStepProfilingEnabled)
+        return;
+    return disableSingleStepProfiling();
+}
+
+WasmHelpers.assertEqPreciseStacks = (observed, expectedStacks) => {
+    if (!WasmHelpers.isSingleStepProfilingEnabled)
+        return null;
+
+    observed = WasmHelpers.normalizeStacks(observed, /* precise */ true);
+
+    for (let i = 0; i < expectedStacks.length; i++) {
+        if (WasmHelpers._compareStacks(observed, expectedStacks[i]))
+            return i;
+    }
+
+    throw new Error(`no plausible stacks found, observed: ${observed.join('/')}
+Expected one of:
+${expectedStacks.map(stacks => stacks.join("/")).join('\n')}`);
+}
