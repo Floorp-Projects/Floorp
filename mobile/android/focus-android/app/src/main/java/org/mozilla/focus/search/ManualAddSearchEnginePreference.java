@@ -6,6 +6,8 @@ package org.mozilla.focus.search;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.preference.Preference;
 import android.support.design.widget.TextInputLayout;
 import android.text.Editable;
@@ -28,6 +30,9 @@ public class ManualAddSearchEnginePreference extends Preference {
 
     private ProgressBar progressView;
 
+    private String savedSearchEngineName;
+    private String savedSearchQuery;
+
     public ManualAddSearchEnginePreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -49,7 +54,35 @@ public class ManualAddSearchEnginePreference extends Preference {
         searchQueryEditText.addTextChangedListener(buildTextWatcherForErrorLayout(searchQueryErrorLayout));
 
         progressView = view.findViewById(R.id.progress);
+
+        updateState();
         return view;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        savedSearchEngineName = savedState.searchEngineName;
+        savedSearchQuery = savedState.searchQuery;
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState savedState = new SavedState(superState);
+        savedState.searchEngineName = engineNameEditText.getText().toString();
+        savedState.searchQuery = searchQueryEditText.getText().toString();
+        return savedState;
+    }
+
+    private void updateState() {
+        if (savedSearchEngineName != null) {
+            engineNameEditText.setText(savedSearchEngineName);
+        }
+        if (savedSearchQuery != null) {
+            searchQueryEditText.setText(savedSearchQuery);
+        }
     }
 
     private boolean engineNameIsUnique(String engineName) {
@@ -101,5 +134,49 @@ public class ManualAddSearchEnginePreference extends Preference {
 
     public void setProgressViewShown(final boolean isShown) {
         progressView.setVisibility(isShown ? View.VISIBLE : View.GONE);
+    }
+
+    static class SavedState extends BaseSavedState {
+        String searchEngineName;
+        String searchQuery;
+
+        SavedState(Parcel source) {
+            super(source);
+            searchEngineName = source.readString();
+            searchQuery = source.readString();
+        }
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeString(searchEngineName);
+            dest.writeString(searchQuery);
+        }
+
+        @Override
+        public String toString() {
+            return "ManualAddSearchEnginePreference.SavedState{"
+                    + Integer.toHexString(System.identityHashCode(this))
+                    + " search_engine_name=" + searchEngineName
+                    + " search_query=" + searchQuery
+                    + "}";
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>(){
+                    @Override
+                    public SavedState createFromParcel(Parcel parcel) {
+                        return new SavedState(parcel);
+                    }
+
+                    @Override
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
     }
 }
