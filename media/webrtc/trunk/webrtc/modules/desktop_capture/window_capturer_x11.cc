@@ -277,6 +277,14 @@ bool WindowCapturerLinux::GetWindowTitle(::Window window, std::string* title) {
 
 }  // namespace
 
+int WindowCapturerLinux::GetWindowProcessID(::Window window) {
+  // Get _NET_WM_PID property of the window.
+  Atom process_atom = XInternAtom(display(), "_NET_WM_PID", True);
+  XWindowProperty<uint32_t> process_id(display(), window, process_atom);
+
+  return process_id.is_valid() ? *process_id.data() : 0;
+}
+
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
     const DesktopCaptureOptions& options) {

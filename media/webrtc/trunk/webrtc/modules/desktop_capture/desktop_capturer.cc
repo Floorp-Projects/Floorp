@@ -60,4 +60,14 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
   return capturer;
 }
 
+// static
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateAppCapturer(
+    const DesktopCaptureOptions& options) {
+  std::unique_ptr<DesktopCapturer> capturer = CreateRawAppCapturer(options);
+  if (options.detect_updated_region()) {
+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+  }
+  return capturer;
+}
+
 }  // namespace webrtc

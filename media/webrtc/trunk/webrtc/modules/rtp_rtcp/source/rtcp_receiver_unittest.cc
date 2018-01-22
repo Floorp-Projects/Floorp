@@ -89,6 +89,7 @@ class MockRtcpBandwidthObserver : public RtcpBandwidthObserver {
 
 class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
  public:
+  MOCK_METHOD4(GetSendReportMetadata, bool(uint32_t, uint64_t*, uint32_t*, uint64_t*));
   MOCK_METHOD1(SetTmmbn, void(std::vector<rtcp::TmmbItem>));
   MOCK_METHOD0(OnRequestSendReport, void());
   MOCK_METHOD1(OnReceivedNack, void(const std::vector<uint16_t>&));

@@ -392,5 +392,11 @@ int32_t VideoSender::EnableFrameDropper(bool enable) {
   _mediaOpt.EnableFrameDropper(enable);
   return VCM_OK;
 }
+
+void VideoSender::SetCPULoadState(CPULoadState state) {
+  rtc::CritScope lock(&encoder_crit_);
+  _mediaOpt.SetCPULoadState(state);
+}
+
 }  // namespace vcm
 }  // namespace webrtc
