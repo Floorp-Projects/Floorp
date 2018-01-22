@@ -38,6 +38,7 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerWinDirectx() {
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     const DesktopCaptureOptions& options) {
   std::unique_ptr<DesktopCapturer> capturer(new ScreenCapturerWinGdi(options));
+#ifdef CAPTURE_ALLOW_DIRECTX
   if (options.allow_directx_capturer()) {
     // |dxgi_duplicator_controller| should be alive in this scope to ensure it
     // won't unload DxgiDuplicatorController.
@@ -47,6 +48,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
           CreateScreenCapturerWinDirectx(), std::move(capturer)));
     }
   }
+#endif
 
   if (options.allow_use_magnification_api()) {
     // ScreenCapturerWinMagnifier cannot work on Windows XP or earlier, as well

@@ -15,7 +15,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "base/third_party/libevent/event.h"
+#include "event2/event.h"
+#include "event2/event_compat.h"
+#include "event2/event_struct.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -376,8 +378,8 @@ void TaskQueue::Impl::PostDelayedTask(std::unique_ptr<QueuedTask> task,
     QueueContext* ctx =
         static_cast<QueueContext*>(pthread_getspecific(GetQueuePtrTls()));
     ctx->pending_timers_.push_back(timer);
-    timeval tv = {rtc::dchecked_cast<int>(milliseconds / 1000),
-                  rtc::dchecked_cast<int>(milliseconds % 1000) * 1000};
+    timeval tv = {static_cast<time_t>(milliseconds) / 1000,
+		  static_cast<suseconds_t>((milliseconds % 1000) * 1000)};
     event_add(&timer->ev, &tv);
   } else {
     PostTask(std::unique_ptr<QueuedTask>(

@@ -77,6 +77,7 @@ VP9EncoderImpl::VP9EncoderImpl()
       frames_since_kf_(0),
       num_temporal_layers_(0),
       num_spatial_layers_(0),
+      num_cores_(0),
       is_flexible_mode_(false),
       frames_encoded_(0),
       // Use two spatial when screensharing with flexible mode.
@@ -499,13 +500,6 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
   // We only support one stream at the moment.
   if (frame_types && frame_types->size() > 0) {
     frame_type = (*frame_types)[0];
-  }
-  if (input_image.width() != codec_.width ||
-      input_image.height() != codec_.height) {
-    int ret = UpdateCodecFrameSize(input_image);
-    if (ret < 0) {
-      return ret;
-    }
   }
   RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
   RTC_DCHECK_EQ(input_image.height(), raw_->d_h);

@@ -66,7 +66,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromScreen)) {
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
   assert(capturer.get());
-  capturer->Start(this, MouseCursorMonitor::SHAPE_AND_POSITION);
+  capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
   capturer->Capture();
 
   EXPECT_TRUE(cursor_image_.get());
@@ -105,7 +105,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(FromWindow)) {
             DesktopCaptureOptions::CreateDefault(), sources[i].id));
     assert(capturer.get());
 
-    capturer->Start(this, MouseCursorMonitor::SHAPE_AND_POSITION);
+    capturer->Init(this, MouseCursorMonitor::SHAPE_AND_POSITION);
     capturer->Capture();
 
     EXPECT_TRUE(cursor_image_.get());
@@ -120,7 +120,7 @@ TEST_F(MouseCursorMonitorTest, MAYBE(ShapeOnly)) {
           DesktopCaptureOptions::CreateDefault(),
           webrtc::kFullDesktopScreenId));
   assert(capturer.get());
-  capturer->Start(this, MouseCursorMonitor::SHAPE_ONLY);
+  capturer->Init(this, MouseCursorMonitor::SHAPE_ONLY);
   capturer->Capture();
 
   EXPECT_TRUE(cursor_image_.get());

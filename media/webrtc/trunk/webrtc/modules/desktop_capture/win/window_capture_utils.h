@@ -7,8 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_WINDOW_CAPTURE_UTILS_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_WINDOW_CAPTURE_UTILS_H_
 
 #include <windows.h>
+#include <dwmapi.h>
 
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "rtc_base/constructormagic.h"
@@ -57,7 +60,7 @@ bool GetDcSize(HDC hdc, DesktopSize* size);
 // function returns false if native APIs fail.
 bool IsWindowMaximized(HWND window, bool* result);
 
-typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL* enabled);
+typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL*);
 class AeroChecker {
  public:
   AeroChecker();
@@ -73,3 +76,5 @@ class AeroChecker {
 };
 
 }  // namespace webrtc
+
+#endif

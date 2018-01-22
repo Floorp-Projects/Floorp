@@ -11,12 +11,71 @@
 #ifndef MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 #define MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_H_
 
+#include "modules/audio_processing/include/config.h"
 #include "api/video/video_rotation.h"
 #include "media/base/videosinkinterface.h"
 #include "modules/include/module.h"
 #include "modules/video_capture/video_capture_defines.h"
+#include <set>
+
+#if defined(ANDROID)
+#include <jni.h>
+#endif
 
 namespace webrtc {
+
+// Mozilla addition
+enum class CaptureDeviceType {
+  Camera = 0,
+  Screen = 1,
+  Application = 2,
+  Window = 3,
+  Browser = 4
+};
+// Mozilla addition
+
+struct CaptureDeviceInfo {
+  CaptureDeviceType type;
+
+  CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
+  CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
+
+  static const ConfigOptionID identifier = ConfigOptionID::kCaptureDeviceInfo;
+  const char * TypeName() const
+  {
+    switch(type) {
+    case CaptureDeviceType::Camera: {
+      return "Camera";
+    }
+    case CaptureDeviceType::Screen: {
+      return "Screen";
+    }
+    case CaptureDeviceType::Application: {
+      return "Application";
+    }
+    case CaptureDeviceType::Window: {
+      return "Window";
+    }
+    case CaptureDeviceType::Browser: {
+      return "Browser";
+    }
+    }
+    assert(false);
+    return "UNKOWN-CaptureDeviceType!";
+  }
+};
+
+class VideoInputFeedBack
+{
+public:
+    virtual void OnDeviceChange() = 0;
+protected:
+    virtual ~VideoInputFeedBack(){}
+};
+
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
+  int32_t SetCaptureAndroidVM(JavaVM* javaVM);
+#endif
 
 class VideoCaptureModule: public rtc::RefCountInterface {
  public:
@@ -24,6 +83,22 @@ class VideoCaptureModule: public rtc::RefCountInterface {
   class DeviceInfo {
    public:
     virtual uint32_t NumberOfDevices() = 0;
+    virtual int32_t Refresh() = 0;
+    virtual void DeviceChange() {
+      for (auto inputCallBack : _inputCallBacks) {
+        inputCallBack->OnDeviceChange();
+      }
+    }
+    virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      _inputCallBacks.insert(callBack);
+    }
+
+    virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
+      auto it = _inputCallBacks.find(callBack);
+      if (it != _inputCallBacks.end()) {
+        _inputCallBacks.erase(it);
+      }
+    }
 
     // Returns the available capture devices.
     // deviceNumber   - Index of capture device.
@@ -39,7 +114,8 @@ class VideoCaptureModule: public rtc::RefCountInterface {
         char* deviceUniqueIdUTF8,
         uint32_t deviceUniqueIdUTF8Length,
         char* productUniqueIdUTF8 = 0,
-        uint32_t productUniqueIdUTF8Length = 0) = 0;
+        uint32_t productUniqueIdUTF8Length = 0,
+        pid_t* pid = 0) = 0;
 
 
     // Returns the number of capabilities this device.

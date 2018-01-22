@@ -55,7 +55,8 @@ RTPHeaderExtension::RTPHeaderExtension()
       videoRotation(kVideoRotation_0),
       hasVideoContentType(false),
       videoContentType(VideoContentType::UNSPECIFIED),
-      has_video_timing(false) {}
+      has_video_timing(false),
+      csrcAudioLevels() {}
 
 RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
     default;

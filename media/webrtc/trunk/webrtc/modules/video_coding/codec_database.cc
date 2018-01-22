@@ -219,7 +219,6 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
       new_send_codec.plType != send_codec_.plType ||
       new_send_codec.width != send_codec_.width ||
       new_send_codec.height != send_codec_.height ||
-      new_send_codec.resolution_divisor != send_codec_.resolution_divisor ||
       new_send_codec.maxBitrate != send_codec_.maxBitrate ||
       new_send_codec.minBitrate != send_codec_.minBitrate ||
       new_send_codec.qpMax != send_codec_.qpMax ||

@@ -17,7 +17,7 @@
 
 #include <MMSystem.h>
 
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC) || (defined WEBRTC_BSD))
 
 #include <sys/time.h>
 #include <time.h>
