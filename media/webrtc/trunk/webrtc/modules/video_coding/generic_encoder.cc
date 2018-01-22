@@ -46,6 +46,7 @@ VCMGenericEncoder::~VCMGenericEncoder() {}
 int32_t VCMGenericEncoder::Release() {
   RTC_DCHECK_RUNS_SERIALIZED(&race_checker_);
   TRACE_EVENT0("webrtc", "VCMGenericEncoder::Release");
+  encoder_->RegisterEncodeCompleteCallback(nullptr);
   return encoder_->Release();
 }
 

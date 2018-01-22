@@ -42,14 +42,11 @@ struct {
 void LoadClasses(JNIEnv* jni) {
   ALOGD("LoadClasses");
   for (auto& c : loaded_classes) {
-    jclass localRef = FindClass(jni, c.name);
     ALOGD("name: %s", c.name);
-    CHECK_EXCEPTION(jni) << "Error during FindClass: " << c.name;
-    RTC_CHECK(localRef) << c.name;
-    jclass globalRef = reinterpret_cast<jclass>(jni->NewGlobalRef(localRef));
-    CHECK_EXCEPTION(jni) << "Error during NewGlobalRef: " << c.name;
-    RTC_CHECK(globalRef) << c.name;
-    c.clazz = globalRef;
+    jclass clsRef = mozilla::jni::GetClassRef(jni, c.name);
+    RTC_CHECK(clsRef) << c.name;
+    c.clazz = static_cast<jclass>(jni->NewGlobalRef(clsRef));
+    jni->DeleteLocalRef(clsRef);
   }
 }
 

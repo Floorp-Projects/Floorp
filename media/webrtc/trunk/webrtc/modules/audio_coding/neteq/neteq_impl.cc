@@ -670,8 +670,8 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
       !decoder_database_->IsComfortNoise(main_payload_type)) {
     // The list can be empty here if we got nothing but DTMF payloads.
     AudioDecoder* decoder = decoder_database_->GetDecoder(main_payload_type);
-    RTC_DCHECK(decoder);  // Should always get a valid object, since we have
-                          // already checked that the payload types are known.
+    RTC_DCHECK(decoder); // Should always get a valid object, since we have
+                         // already checked that the payload types are known.
     decoder->IncomingPacket(packet_list.front().payload.data(),
                             packet_list.front().payload.size(),
                             packet_list.front().sequence_number,

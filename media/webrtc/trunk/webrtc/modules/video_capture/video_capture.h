@@ -74,6 +74,8 @@ class VideoCaptureModule: public rtc::RefCountInterface {
         uint32_t positionY) = 0;
 
     virtual ~DeviceInfo() {}
+   private:
+    std::set<VideoInputFeedBack*> _inputCallBacks;
   };
 
   //   Register capture data callback
@@ -81,11 +83,16 @@ class VideoCaptureModule: public rtc::RefCountInterface {
       rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
 
   //  Remove capture data callback
-  virtual void DeRegisterCaptureDataCallback() = 0;
+  virtual void DeRegisterCaptureDataCallback(
+      rtc::VideoSinkInterface<VideoFrame> *dataCallback) = 0;
 
   // Start capture device
   virtual int32_t StartCapture(
       const VideoCaptureCapability& capability) = 0;
+
+  virtual int32_t StopCaptureIfAllClientsClose() = 0;
+
+  virtual bool FocusOnSelectedSource() { return false; };
 
   virtual int32_t StopCapture() = 0;
 

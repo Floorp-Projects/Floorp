@@ -213,6 +213,9 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
     sim_stream->targetBitrate = streams[i].target_bitrate_bps / 1000;
     sim_stream->maxBitrate = streams[i].max_bitrate_bps / 1000;
     sim_stream->qpMax = streams[i].max_qp;
+    // We know .rid is terminated
+    RTC_DCHECK(strlen(streams[i].rid) < sizeof(sim_stream->rid));
+    strncpy(sim_stream->rid, streams[i].rid, sizeof(sim_stream->rid));
     sim_stream->numberOfTemporalLayers = static_cast<unsigned char>(
         streams[i].temporal_layer_thresholds_bps.size() + 1);
 

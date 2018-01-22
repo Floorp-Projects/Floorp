@@ -95,6 +95,11 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
   }
 
   _outputCapturePin = GetOutputPin(_captureFilter, PIN_CATEGORY_CAPTURE);
+  if (_outputCapturePin == NULL)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to get output capture pin";
+    return -1;
+  }
 
   // Create the sink filte used for receiving Captured frames.
   _sinkFilter = new CaptureSinkFilter(SINK_FILTER_NAME, NULL, &hr, *this);
@@ -110,6 +115,11 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
     return -1;
   }
   _inputSendPin = GetInputPin(_sinkFilter);
+  if (_inputSendPin == NULL)
+  {
+    RTC_LOG(LS_ERROR) << "Failed to get input send pin";
+    return -1;
+  }
   // Temporary connect here.
   // This is done so that no one else can use the capture device.
   if (SetCameraOutput(_requestedCapability) != 0) {

@@ -532,6 +532,12 @@ bool RtpFrameReferenceFinder::MissingRequiredFrameVp9(uint16_t picture_id,
   size_t gof_idx = diff % info.gof->num_frames_in_gof;
   size_t temporal_idx = info.gof->temporal_idx[gof_idx];
 
+  if (temporal_idx >= kMaxTemporalLayers) {
+    LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
+                    << "layers are supported.";
+    return true;
+  }
+
   // For every reference this frame has, check if there is a frame missing in
   // the interval (|ref_pid|, |picture_id|) in any of the lower temporal
   // layers. If so, we are missing a required frame.
