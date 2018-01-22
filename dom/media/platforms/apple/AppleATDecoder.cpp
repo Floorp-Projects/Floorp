@@ -313,8 +313,9 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (mChannelLayout && !mAudioConverter) {
-    AudioConfig in(*mChannelLayout.get(), rate);
-    AudioConfig out(channels, rate);
+    AudioConfig in(*mChannelLayout, rate);
+    AudioConfig out(AudioConfig::ChannelLayout::SMPTEDefault(*mChannelLayout),
+                    rate);
     if (!in.IsValid() || !out.IsValid()) {
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("Invalid audio config"));
