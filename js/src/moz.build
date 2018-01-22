@@ -36,8 +36,6 @@ for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
-with Files('builtin/Intl*'):
-    BUG_COMPONENT = component_intl
 with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
