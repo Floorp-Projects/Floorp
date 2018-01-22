@@ -90,6 +90,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/css-visited/selector-adj-sibling-1.html',
     '/layout/reftests/css-visited/selector-adj-sibling-2-ref.html',
     '/layout/reftests/css-visited/selector-adj-sibling-2.html',
+    '/layout/reftests/css-visited/selector-adj-sibling-3-ref.xhtml',
+    '/layout/reftests/css-visited/selector-adj-sibling-3.xhtml',
     '/layout/reftests/css-visited/selector-any-sibling-1-ref.html',
     '/layout/reftests/css-visited/selector-any-sibling-1.html',
     '/layout/reftests/css-visited/selector-any-sibling-2-ref.html',
