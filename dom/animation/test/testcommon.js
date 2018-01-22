@@ -26,7 +26,7 @@ var TIME_PRECISION = 0.0005; // ms
  * times based on their precision requirements.
  */
 function assert_times_equal(actual, expected, description) {
-  assert_approx_equals(actual, expected, TIME_PRECISION, description);
+  assert_approx_equals(actual, expected, TIME_PRECISION * 2, description);
 }
 
 /*
