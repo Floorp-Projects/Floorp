@@ -13,6 +13,7 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
+#include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "vm/SharedMem.h"
 #include "wasm/AsmJS.h"

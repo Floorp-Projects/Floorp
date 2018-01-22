@@ -13,6 +13,7 @@
 #include "jscompartment.h"
 #include "jsprf.h"
 
+#include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AlignmentMaskAnalysis.h"

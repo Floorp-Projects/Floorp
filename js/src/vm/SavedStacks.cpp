@@ -22,6 +22,7 @@
 #include "jsnum.h"
 #include "jsscript.h"
 
+#include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "gc/Rooting.h"
