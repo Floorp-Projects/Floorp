@@ -61,6 +61,10 @@ rtc_static_library("congestion_controller") {
     "../rtp_rtcp",
     "../utility",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../../rtc_base:rtc_base" ]
+  }
 }
 
 if (rtc_include_tests) {

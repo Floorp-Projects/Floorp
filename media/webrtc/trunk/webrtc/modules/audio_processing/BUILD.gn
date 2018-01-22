@@ -7,8 +7,10 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/arm.gni")
-import("//third_party/protobuf/proto_library.gni")
 import("../../webrtc.gni")
+if (!build_with_mozilla) {
+  import("//third_party/protobuf/proto_library.gni")
+}
 
 declare_args() {
   # Disables the usual mode where we trust the reported system delay
