@@ -75,11 +75,8 @@ class VRDisplay;
 class VRServiceTest;
 class StorageManager;
 
-namespace time {
-class TimeManager;
-} // namespace time
-
-class Navigator final : public nsISupports
+class Navigator final : public nsIDOMNavigator
+                      , public nsIMozNavigatorNetwork
                       , public nsWrapperCache
 {
 public:
@@ -182,9 +179,6 @@ public:
   bool IsWebVRContentPresenting() const;
   void RequestVRPresentation(VRDisplay& aDisplay);
   nsINetworkProperties* GetNetworkProperties();
-#ifdef MOZ_TIME_MANAGER
-  time::TimeManager* GetMozTime(ErrorResult& aRv);
-#endif // MOZ_TIME_MANAGER
 
   Presentation* GetPresentation(ErrorResult& aRv);
 
@@ -271,7 +265,6 @@ private:
   RefPtr<network::Connection> mConnection;
   RefPtr<CredentialsContainer> mCredentials;
   RefPtr<MediaDevices> mMediaDevices;
-  RefPtr<time::TimeManager> mTimeManager;
   RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<Presentation> mPresentation;

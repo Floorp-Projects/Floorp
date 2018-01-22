@@ -211,9 +211,6 @@ with Files("Media*Track*"):
 with Files("Mouse*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-with Files("MozTimeManager.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
-
 with Files("MutationEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
@@ -364,7 +361,6 @@ GENERATED_WEBIDL_FILES = [
 
 PREPROCESSED_WEBIDL_FILES = [
     'ChromeUtils.webidl',
-    'Navigator.webidl',
     'Node.webidl',
     'Window.webidl',
 ]
@@ -690,11 +686,11 @@ WEBIDL_FILES = [
     'MozStorageAsyncStatementParams.webidl',
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
-    'MozTimeManager.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
     'NamedNodeMap.webidl',
     'NativeOSFileInternals.webidl',
+    'Navigator.webidl',
     'NetDashboard.webidl',
     'NetworkInformation.webidl',
     'NetworkOptions.webidl',
