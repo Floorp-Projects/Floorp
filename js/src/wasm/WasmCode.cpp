@@ -112,9 +112,13 @@ static bool
 StaticallyLink(const ModuleSegment& ms, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        CodeOffset patchAt(link.patchAtOffset);
-        CodeOffset target(link.targetOffset);
-        Assembler::Bind(ms.base(), patchAt, target);
+        CodeLabel label;
+        label.patchAt()->bind(link.patchAtOffset);
+        label.target()->bind(link.targetOffset);
+#ifdef JS_CODELABEL_LINKMODE
+        label.setLinkMode(static_cast<CodeLabel::LinkMode>(link.mode));
+#endif
+        Assembler::Bind(ms.base(), label);
     }
 
     if (!EnsureBuiltinThunksInitialized())
@@ -141,9 +145,13 @@ static void
 StaticallyUnlink(uint8_t* base, const LinkDataTier& linkData)
 {
     for (LinkDataTier::InternalLink link : linkData.internalLinks) {
-        CodeOffset patchAt(link.patchAtOffset);
-        CodeOffset target(-size_t(base));  // to reset immediate to null
-        Assembler::Bind(base, patchAt, target);
+        CodeLabel label;
+        label.patchAt()->bind(link.patchAtOffset);
+        label.target()->bind(-size_t(base)); // to reset immediate to null
+#ifdef JS_CODELABEL_LINKMODE
+        label.setLinkMode(static_cast<CodeLabel::LinkMode>(link.mode));
+#endif
+        Assembler::Bind(base, label);
     }
 
     for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
