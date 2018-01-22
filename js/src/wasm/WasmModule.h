@@ -62,6 +62,9 @@ struct LinkDataTier : LinkDataTierCacheablePod
     struct InternalLink {
         uint32_t patchAtOffset;
         uint32_t targetOffset;
+#ifdef JS_CODELABEL_LINKMODE
+        uint32_t mode;
+#endif
     };
     typedef Vector<InternalLink, 0, SystemAllocPolicy> InternalLinkVector;
 

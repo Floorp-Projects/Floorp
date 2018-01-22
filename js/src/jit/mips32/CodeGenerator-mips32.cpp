@@ -6,7 +6,6 @@
 
 #include "jit/mips32/CodeGenerator-mips32.h"
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/CodeGenerator.h"
@@ -23,82 +22,6 @@
 
 using namespace js;
 using namespace js::jit;
-
-class js::jit::OutOfLineTableSwitch : public OutOfLineCodeBase<CodeGeneratorMIPS>
-{
-    MTableSwitch* mir_;
-    CodeLabel jumpLabel_;
-
-    void accept(CodeGeneratorMIPS* codegen) {
-        codegen->visitOutOfLineTableSwitch(this);
-    }
-
-  public:
-    OutOfLineTableSwitch(MTableSwitch* mir)
-      : mir_(mir)
-    {}
-
-    MTableSwitch* mir() const {
-        return mir_;
-    }
-
-    CodeLabel* jumpLabel() {
-        return &jumpLabel_;
-    }
-};
-
-void
-CodeGeneratorMIPS::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool)
-{
-    MTableSwitch* mir = ool->mir();
-
-    masm.haltingAlign(sizeof(void*));
-    masm.bind(ool->jumpLabel()->target());
-    masm.addCodeLabel(*ool->jumpLabel());
-
-    for (size_t i = 0; i < mir->numCases(); i++) {
-        LBlock* caseblock = skipTrivialBlocks(mir->getCase(i))->lir();
-        Label* caseheader = caseblock->label();
-        uint32_t caseoffset = caseheader->offset();
-
-        // The entries of the jump table need to be absolute addresses and thus
-        // must be patched after codegen is finished.
-        CodeLabel cl;
-        masm.ma_li(ScratchRegister, cl.patchAt());
-        masm.branch(ScratchRegister);
-        cl.target()->bind(caseoffset);
-        masm.addCodeLabel(cl);
-    }
-}
-
-void
-CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch* mir, Register index,
-                                           Register address)
-{
-    Label* defaultcase = skipTrivialBlocks(mir->getDefault())->lir()->label();
-
-    // Lower value with low value
-    if (mir->low() != 0)
-        masm.subPtr(Imm32(mir->low()), index);
-
-    // Jump to default case if input is out of range
-    int32_t cases = mir->numCases();
-    masm.branchPtr(Assembler::AboveOrEqual, index, ImmWord(cases), defaultcase);
-
-    // To fill in the CodeLabels for the case entries, we need to first
-    // generate the case entries (we don't yet know their offsets in the
-    // instruction stream).
-    OutOfLineTableSwitch* ool = new(alloc()) OutOfLineTableSwitch(mir);
-    addOutOfLineCode(ool, mir);
-
-    // Compute the position where a pointer to the right case stands.
-    masm.ma_li(address, ool->jumpLabel()->patchAt());
-    masm.lshiftPtr(Imm32(4), index);
-    masm.addPtr(index, address);
-
-    masm.branch(address);
-}
-
 
 ValueOperand
 CodeGeneratorMIPS::ToValue(LInstruction* ins, size_t pos)
