@@ -5,7 +5,6 @@ import sys
 
 
 config = {
-    "virtualenv_python_dll": os.path.join(os.path.dirname(sys.executable), 'python27.dll'),
     "virtualenv_path": 'venv',
     "exes": {
         'python': sys.executable,
