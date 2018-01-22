@@ -167,7 +167,7 @@ public class ManualAddSearchEnginePreference extends Preference {
         }
 
         public static final Parcelable.Creator<SavedState> CREATOR =
-                new Parcelable.Creator<SavedState>(){
+                new Parcelable.Creator<SavedState>() {
                     @Override
                     public SavedState createFromParcel(Parcel parcel) {
                         return new SavedState(parcel);
