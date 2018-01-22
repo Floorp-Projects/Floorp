@@ -2,6 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from preferences.js */
+
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -10,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "DeferredTask",
+                                  "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                   "resource://gre/modules/ExtensionSettingsStore.jsm");
 
@@ -17,12 +21,31 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "trackingprotectionUiEnabled",
                                       "privacy.trackingprotection.ui.enabled");
 
 const PREF_SETTING_TYPE = "prefs";
+const PROXY_KEY = "proxyConfig";
+const API_PROXY_PREFS = [
+  "network.proxy.type",
+  "network.proxy.http",
+  "network.proxy.http_port",
+  "network.proxy.share_proxy_settings",
+  "network.proxy.ftp",
+  "network.proxy.ftp_port",
+  "network.proxy.ssl",
+  "network.proxy.ssl_port",
+  "network.proxy.socks",
+  "network.proxy.socks_port",
+  "network.proxy.socks_version",
+  "network.proxy.socks_remote_dns",
+  "network.proxy.no_proxies_on",
+  "network.proxy.autoconfig_url",
+  "signon.autologin.proxy",
+];
 
 let extensionControlledContentIds = {
   "privacy.containers": "browserContainersExtensionContent",
   "homepage_override": "browserHomePageExtensionContent",
   "newTabURL": "browserNewTabExtensionContent",
   "defaultSearch": "browserDefaultSearchExtensionContent",
+  "proxyConfig": "proxyExtensionContent",
   get "websites.trackingProtectionMode"() {
     return {
       button: "trackingProtectionExtensionContentButton",
@@ -33,6 +56,15 @@ let extensionControlledContentIds = {
     };
   }
 };
+
+function getExtensionControlledArgs(settingName) {
+  switch (settingName) {
+    case "proxyConfig":
+      return [document.getElementById("bundleBrand").getString("brandShortName")];
+    default:
+      return [];
+  }
+}
 
 let extensionControlledIds = {};
 
@@ -57,10 +89,15 @@ function getControllingExtensionEls(settingName) {
   };
 }
 
-async function handleControllingExtension(type, settingName) {
+async function getControllingExtension(type, settingName) {
   let info = await getControllingExtensionInfo(type, settingName);
   let addon = info && info.id
     && await AddonManager.getAddonByID(info.id);
+  return addon;
+}
+
+async function handleControllingExtension(type, settingName) {
+  let addon = await getControllingExtension(type, settingName);
 
   // Sometimes the ExtensionSettingsStore gets in a bad state where it thinks
   // an extension is controlling a setting but the extension has been uninstalled
@@ -68,7 +105,7 @@ async function handleControllingExtension(type, settingName) {
   // then we should treat the setting as not being controlled.
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1411046 for an example.
   if (addon) {
-    extensionControlledIds[settingName] = info.id;
+    extensionControlledIds[settingName] = addon.id;
     showControllingExtension(settingName, addon);
   } else {
     let elements = getControllingExtensionEls(settingName);
@@ -85,19 +122,7 @@ async function handleControllingExtension(type, settingName) {
   return !!addon;
 }
 
-async function showControllingExtension(settingName, addon) {
-  // Tell the user what extension is controlling the setting.
-  let elements = getControllingExtensionEls(settingName);
-
-  elements.section.classList.remove("extension-controlled-disabled");
-  let description = elements.description;
-
-  // Remove the old content from the description.
-  while (description.firstChild) {
-    description.firstChild.remove();
-  }
-
-  // Populate the description.
+function getControllingExtensionFragment(settingName, addon, ...extraArgs) {
   let msg = document.getElementById("bundlePreferences")
                     .getString(`extensionControlled.${settingName}`);
   let image = document.createElement("image");
@@ -107,7 +132,24 @@ async function showControllingExtension(settingName, addon) {
   let addonBit = document.createDocumentFragment();
   addonBit.appendChild(image);
   addonBit.appendChild(document.createTextNode(" " + addon.name));
-  let fragment = BrowserUtils.getLocalizedFragment(document, msg, addonBit);
+  return BrowserUtils.getLocalizedFragment(document, msg, addonBit, ...extraArgs);
+}
+
+async function showControllingExtension(settingName, addon) {
+  // Tell the user what extension is controlling the setting.
+  let elements = getControllingExtensionEls(settingName);
+  let extraArgs = getExtensionControlledArgs(settingName);
+
+  elements.section.classList.remove("extension-controlled-disabled");
+  let description = elements.description;
+
+  // Remove the old content from the description.
+  while (description.firstChild) {
+    description.firstChild.remove();
+  }
+
+  let fragment = getControllingExtensionFragment(
+    settingName, addon, ...extraArgs);
   description.appendChild(fragment);
 
   if (elements.button) {
@@ -159,4 +201,21 @@ function makeDisableControllingExtension(type, settingName) {
     let addon = await AddonManager.getAddonByID(id);
     addon.userDisabled = true;
   };
+}
+
+function initializeProxyUI(container) {
+  let deferredUpdate = new DeferredTask(() => {
+    container.updateProxySettingsUI();
+  }, 10);
+  let proxyObserver = {
+    observe: (subject, topic, data) => {
+      if (API_PROXY_PREFS.includes(data)) {
+        deferredUpdate.arm();
+      }
+    },
+  };
+  Services.prefs.addObserver("", proxyObserver);
+  window.addEventListener("unload", () => {
+    Services.prefs.removeObserver("", proxyObserver);
+  });
 }
