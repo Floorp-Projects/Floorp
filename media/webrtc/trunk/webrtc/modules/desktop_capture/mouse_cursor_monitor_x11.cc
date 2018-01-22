@@ -66,7 +66,7 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   MouseCursorMonitorX11(const DesktopCaptureOptions& options, Window window, Window inner_window);
   ~MouseCursorMonitorX11() override;
 
-  void Start(Callback* callback, Mode mode) override;
+  void Init(Callback* callback, Mode mode) override;
   void Stop() override;
   void Capture() override;
 
@@ -128,14 +128,11 @@ MouseCursorMonitorX11::MouseCursorMonitorX11(
 }
 
 MouseCursorMonitorX11::~MouseCursorMonitorX11() {
-  if (have_xfixes_) {
-    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
-                                   this);
-  }
+  Stop();
 }
 
 void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
-  // Init can be called only once per instance of MouseCursorMonitor.
+  // Init can be called only if not started
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
 
@@ -147,12 +144,21 @@ void MouseCursorMonitorX11::Init(Callback* callback, Mode mode) {
 
   if (have_xfixes_) {
     // Register for changes to the cursor shape.
+    XErrorTrap error_trap(display());
     XFixesSelectCursorInput(display(), window_, XFixesDisplayCursorNotifyMask);
     x_display_->AddEventHandler(xfixes_event_base_ + XFixesCursorNotify, this);
 
     CaptureCursor();
   } else {
     RTC_LOG(LS_INFO) << "X server does not support XFixes.";
+  }
+}
+
+void MouseCursorMonitorX11::Stop() {
+  callback_ = NULL;
+  if (have_xfixes_) {
+    x_display_->RemoveEventHandler(xfixes_event_base_ + XFixesCursorNotify,
+                                   this);
   }
 }
 

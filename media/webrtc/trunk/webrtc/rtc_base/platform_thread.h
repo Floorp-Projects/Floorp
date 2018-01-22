@@ -69,7 +69,7 @@ class PlatformThread {
 
   // Spawns a thread and tries to set thread priority according to the priority
   // from when CreateThread was called.
-  void Start();
+  virtual void Start();
 
   bool IsRunning() const;
 
@@ -78,7 +78,7 @@ class PlatformThread {
   PlatformThreadRef GetThreadRef() const;
 
   // Stops (joins) the spawned thread.
-  void Stop();
+  virtual void Stop();
 
   // Set the priority of the thread. Must be called when thread is running.
   // TODO(tommi): Make private and only allow public support via ctor.
@@ -90,8 +90,7 @@ class PlatformThread {
   bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data);
 #endif
 
- private:
-  void Run();
+  virtual void Run();
 
   ThreadRunFunctionDeprecated const run_function_deprecated_ = nullptr;
   ThreadRunFunction const run_function_ = nullptr;
@@ -108,6 +107,7 @@ class PlatformThread {
   bool stop_ = false;
   HANDLE thread_ = nullptr;
   DWORD thread_id_ = 0;
+  CriticalSection cs_;
 #else
   static void* StartThread(void* param);
 
@@ -118,6 +118,44 @@ class PlatformThread {
 #endif  // defined(WEBRTC_WIN)
   RTC_DISALLOW_COPY_AND_ASSIGN(PlatformThread);
 };
+
+#if defined(WEBRTC_WIN)
+class PlatformUIThread : public PlatformThread {
+ public:
+  PlatformUIThread(ThreadRunFunctionDeprecated func, void* obj,
+		  const char* thread_name) :
+  PlatformThread(func, obj, thread_name),
+  hwnd_(nullptr),
+  timerid_(0),
+  timeout_(0) {
+ }
+ virtual ~PlatformUIThread() {}
+
+ void Stop() override;
+
+ /**
+  * Request an async callback soon.
+  */
+ void RequestCallback();
+
+ /**
+  * Request a recurring callback.
+  */
+ bool RequestCallbackTimer(unsigned int milliseconds);
+
+ protected:
+  void Run() override;
+
+ private:
+  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
+  void NativeEventCallback();
+  bool InternalInit();
+
+  HWND hwnd_;
+  UINT_PTR timerid_;
+  unsigned int timeout_;
+};
+#endif
 
 }  // namespace rtc
 

@@ -4,7 +4,7 @@
 
 #include <windows.h>
 #include <assert.h>
-#include "webrtc/modules/desktop_capture/win/win_shared.h"
+#include "modules/desktop_capture/win/win_shared.h"
 
 namespace webrtc {
 

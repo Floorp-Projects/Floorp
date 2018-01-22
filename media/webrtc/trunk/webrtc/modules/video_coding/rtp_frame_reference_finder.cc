@@ -461,8 +461,11 @@ RtpFrameReferenceFinder::FrameDecision RtpFrameReferenceFinder::ManageFrameVp9(
       RTC_LOG(LS_WARNING) << "Received keyframe without scalability structure";
 
     frame->num_references = 0;
-    GofInfo info = gof_info_.find(codec_header.tl0_pic_idx)->second;
-    FrameReceivedVp9(frame->picture_id, &info);
+    auto gof_info_it = gof_info_.find(codec_header.tl0_pic_idx);
+    if (gof_info_it == gof_info_.end())
+      return kDrop;
+
+    FrameReceivedVp9(frame->picture_id, &gof_info_it->second);
     UnwrapPictureIds(frame);
     return kHandOff;
   }
@@ -533,8 +536,8 @@ bool RtpFrameReferenceFinder::MissingRequiredFrameVp9(uint16_t picture_id,
   size_t temporal_idx = info.gof->temporal_idx[gof_idx];
 
   if (temporal_idx >= kMaxTemporalLayers) {
-    LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
-                    << "layers are supported.";
+    RTC_LOG(LS_WARNING) << "At most " << kMaxTemporalLayers << " temporal "
+                        << "layers are supported.";
     return true;
   }
 

@@ -46,6 +46,7 @@ class RateLimiter;
 class ReceiveStatistics;
 class RemoteNtpTimeEstimator;
 class RtcEventLog;
+class RtpPacketObserver;
 class RTPPayloadRegistry;
 class RTPReceiverAudio;
 class RtpPacketReceived;
@@ -68,6 +69,9 @@ struct CallStatistics {
   // The capture ntp time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;
+
+  uint32_t rtcp_sender_packets_sent;
+  uint32_t rtcp_sender_octets_sent;
 };
 
 // See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.
@@ -87,6 +91,7 @@ namespace voe {
 class RtcEventLogProxy;
 class RtcpRttStatsProxy;
 class RtpPacketSenderProxy;
+class StatisticsProxy;
 class TransportFeedbackProxy;
 class TransportSequenceNumberProxy;
 class VoERtcpObserver;
@@ -216,7 +221,11 @@ class Channel
 
   // Audio+Video Sync.
   uint32_t GetDelayEstimate() const;
+  void GetDelayEstimates(int* jitter_buffer_delay_ms,
+                         int* playout_buffer_delay_ms,
+                         int* avsync_offset_ms) const;
   int SetMinimumPlayoutDelay(int delayMs);
+  void SetCurrentSyncOffset(int offsetMs) { _current_sync_offset = offsetMs; }
   int GetPlayoutTimestamp(unsigned int& timestamp);
   int GetRtpRtcp(RtpRtcp** rtpRtcpModule, RtpReceiver** rtp_receiver) const;
 
@@ -225,9 +234,12 @@ class Channel
   int SetSendTelephoneEventPayloadType(int payload_type, int payload_frequency);
 
   // RTP+RTCP
+  int SetLocalMID(const char* mid);
   int SetLocalSSRC(unsigned int ssrc);
   int SetSendAudioLevelIndicationStatus(bool enable, unsigned char id);
-  int SetReceiveAudioLevelIndicationStatus(bool enable, unsigned char id);
+  int SetSendMIDStatus(bool enable, unsigned char id);
+  int SetReceiveAudioLevelIndicationStatus(bool enable, unsigned char id, bool isLevelSsrc);
+  int SetReceiveCsrcAudioLevelIndicationStatus(bool enable, unsigned char id);
   void EnableSendTransportSequenceNumber(int id);
   void EnableReceiveTransportSequenceNumber(int id);
 
@@ -239,6 +251,7 @@ class Channel
   void ResetReceiverCongestionControlObjects();
   void SetRTCPStatus(bool enable);
   int SetRTCP_CNAME(const char cName[256]);
+  int GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats);
   int GetRemoteRTCPReportBlocks(std::vector<ReportBlock>* report_blocks);
   int GetRTPStatistics(CallStatistics& stats);
   void SetNACKStatus(bool enable, int maxNumberOfPackets);
@@ -262,6 +275,10 @@ class Channel
                               uint32_t rate) override;
   void OnIncomingSSRCChanged(uint32_t ssrc) override;
   void OnIncomingCSRCChanged(uint32_t CSRC, bool added) override;
+
+  void OnIncomingReceiverReports(const ReportBlockList& aReportBlocks,
+                                 const int64_t aRoundTripTime,
+                                 const int64_t aReceptionTime);
 
   // From Transport (called by the RTP/RTCP module)
   bool SendRtp(const uint8_t* data,
@@ -319,6 +336,15 @@ class Channel
   // From OverheadObserver in the RTP/RTCP module
   void OnOverheadChanged(size_t overhead_bytes_per_packet) override;
 
+  bool GetRTCPReceiverStatistics(int64_t* timestamp,
+                                 uint32_t* jitterMs,
+                                 uint32_t* cumulativeLost,
+                                 uint32_t* packetsReceived,
+                                 uint64_t* bytesReceived,
+                                 double* packetsFractionLost,
+                                 int64_t* rtt) const;
+  virtual void SetRtpPacketObserver(RtpPacketObserver* observer);
+
   // The existence of this function alongside OnUplinkPacketLossRate is
   // a compromise. We want the encoder to be agnostic of the PLR source, but
   // we also don't want it to receive conflicting information from TWCC and
@@ -334,7 +360,6 @@ class Channel
  private:
   class ProcessAndEncodeAudioTask;
 
-  int GetRemoteSSRC(unsigned int& ssrc);
   void OnUplinkPacketLossRate(float packet_loss_rate);
   bool InputMute() const;
   bool OnRecoveredPacket(const uint8_t* packet, size_t packet_length);
@@ -376,6 +401,7 @@ class Channel
   std::unique_ptr<RtpHeaderParser> rtp_header_parser_;
   std::unique_ptr<RTPPayloadRegistry> rtp_payload_registry_;
   std::unique_ptr<ReceiveStatistics> rtp_receive_statistics_;
+  std::unique_ptr<StatisticsProxy> statistics_proxy_;
   std::unique_ptr<RtpReceiver> rtp_receiver_;
   TelephoneEventHandler* telephone_event_handler_;
   std::unique_ptr<RtpRtcp> _rtpRtcpModule;
@@ -394,6 +420,7 @@ class Channel
   rtc::CriticalSection video_sync_lock_;
   uint32_t playout_timestamp_rtp_ RTC_GUARDED_BY(video_sync_lock_);
   uint32_t playout_delay_ms_ RTC_GUARDED_BY(video_sync_lock_);
+  int _current_sync_offset;
   uint16_t send_sequence_number_;
 
   rtc::CriticalSection ts_stats_lock_;
@@ -438,6 +465,8 @@ class Channel
 
   // TODO(ossu): Remove once GetAudioDecoderFactory() is no longer needed.
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
+
+  RtpPacketObserver* rtp_source_observer_ = nullptr;
 
   rtc::Optional<EncoderProps> cached_encoder_props_;
 

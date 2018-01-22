@@ -14,16 +14,6 @@
 #include <algorithm>
 #include <Cocoa/Cocoa.h>
 
-#if !defined(MAC_OS_X_VERSION_10_7) || \
-    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
-
-@interface NSScreen (LionAPI)
-- (CGFloat)backingScaleFactor;
-- (NSRect)convertRectToBacking:(NSRect)aRect;
-@end
-
-#endif  // MAC_OS_X_VERSION_10_7
-
 namespace webrtc {
 
 namespace {

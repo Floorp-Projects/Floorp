@@ -18,7 +18,7 @@
 
 namespace webrtc {
 
-class H264SpropParameterSetsTest : public testing::Test {
+class H264SpropParameterSetsTest : public ::testing::Test {
  public:
   H264SpropParameterSets h264_sprop;
 };

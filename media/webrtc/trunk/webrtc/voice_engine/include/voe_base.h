@@ -64,6 +64,14 @@ class WEBRTC_DLLEXPORT VoiceEngine {
  protected:
   VoiceEngine() {}
   ~VoiceEngine() {}
+
+ private:
+  // VS 2015 (others?) gets confused by a baseclass with no vtbl, and
+  // static_cast<VoiceEngineImpl*>(mVoiceEngine) produces a bad ptr.  It
+  // might also be related to the total size of the object.
+
+  // Add a virtual method to assuage the poor compiler.
+  virtual void DummyVS2015BugFix() {};
 };
 
 // VoEBase

@@ -32,6 +32,7 @@ class PacketRouter;
 class RtcEventLog;
 class RtcpBandwidthObserver;
 class RtcpRttStats;
+class RtpPacketObserver;
 class RtpPacketSender;
 class RtpPacketReceived;
 class RtpReceiver;
@@ -61,11 +62,15 @@ class ChannelProxy : public RtpPacketSinkInterface {
       rtc::FunctionView<void(std::unique_ptr<AudioEncoder>*)> modifier);
 
   virtual void SetRTCPStatus(bool enable);
+  virtual void SetLocalMID(const char* mid);
   virtual void SetLocalSSRC(uint32_t ssrc);
   virtual void SetRTCP_CNAME(const std::string& c_name);
   virtual void SetNACKStatus(bool enable, int max_packets);
   virtual void SetSendAudioLevelIndicationStatus(bool enable, int id);
-  virtual void SetReceiveAudioLevelIndicationStatus(bool enable, int id);
+  virtual void SetReceiveAudioLevelIndicationStatus(bool enable, int id,
+                                                    bool isLevelSsrc = true);
+  virtual void SetReceiveCsrcAudioLevelIndicationStatus(bool enable, int id);
+  virtual void SetSendMIDStatus(bool enable, int id);
   virtual void EnableSendTransportSequenceNumber(int id);
   virtual void EnableReceiveTransportSequenceNumber(int id);
   virtual void RegisterSenderCongestionControlObjects(
@@ -75,7 +80,17 @@ class ChannelProxy : public RtpPacketSinkInterface {
       PacketRouter* packet_router);
   virtual void ResetSenderCongestionControlObjects();
   virtual void ResetReceiverCongestionControlObjects();
+  virtual bool GetRTCPPacketTypeCounters(RtcpPacketTypeCounter& stats);
+  virtual bool GetRTCPReceiverStatistics(int64_t* timestamp,
+                                         uint32_t* jitterMs,
+                                         uint32_t* cumulativeLost,
+                                         uint32_t* packetsReceived,
+                                         uint64_t* bytesReceived,
+                                         double* packetsFractionLost,
+                                         int64_t* rtt) const;
   virtual CallStatistics GetRTCPStatistics() const;
+  virtual int GetRTPStatistics(unsigned int& averageJitterMs,
+                               unsigned int& cumulativeLost) const;
   virtual std::vector<ReportBlock> GetRemoteRTCPReportBlocks() const;
   virtual NetworkStatistics GetNetworkStatistics() const;
   virtual AudioDecodingCallStats GetDecodingCallStatistics() const;
@@ -87,6 +102,9 @@ class ChannelProxy : public RtpPacketSinkInterface {
   virtual double GetTotalOutputEnergy() const;
   virtual double GetTotalOutputDuration() const;
   virtual uint32_t GetDelayEstimate() const;
+  virtual void GetDelayEstimates(int* jitter_buffer_delay_ms,
+                                 int* playout_buffer_delay_ms,
+                                 int* avsync_offset_ms) const;
   virtual bool SetSendTelephoneEventPayloadType(int payload_type,
                                                 int payload_frequency);
   virtual bool SendTelephoneEventOutband(int event, int duration_ms);
@@ -120,6 +138,8 @@ class ChannelProxy : public RtpPacketSinkInterface {
   virtual void OnRecoverableUplinkPacketLossRate(
       float recoverable_packet_loss_rate);
   virtual std::vector<webrtc::RtpSource> GetSources() const;
+
+  virtual void SetRtpPacketObserver(RtpPacketObserver* observer);
 
  private:
   Channel* channel() const;

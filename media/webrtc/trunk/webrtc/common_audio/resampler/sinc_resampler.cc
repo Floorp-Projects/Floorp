@@ -118,8 +118,6 @@ double SincScaleFactor(double io_ratio) {
 
 }  // namespace
 
-namespace webrtc {
-
 const size_t SincResampler::kKernelSize;
 
 // If we know the minimum architecture at compile time, avoid CPU detection.

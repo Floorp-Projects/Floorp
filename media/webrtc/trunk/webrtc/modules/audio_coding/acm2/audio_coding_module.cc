@@ -1068,6 +1068,10 @@ rtc::Optional<SdpAudioFormat> AudioCodingModuleImpl::ReceiveFormat() const {
   return receiver_.LastAudioFormat();
 }
 
+int AudioCodingModuleImpl::ReceiveSampleRate() const {
+  return receiver_.LastAudioSampleRate();
+}
+
 // Incoming packet from network parsed and ready for decode.
 int AudioCodingModuleImpl::IncomingPacket(const uint8_t* incoming_payload,
                                           const size_t payload_length,

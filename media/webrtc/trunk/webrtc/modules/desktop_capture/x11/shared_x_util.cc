@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
+#include "modules/desktop_capture/x11/shared_x_util.h"
 
 namespace webrtc {
 
@@ -44,7 +44,7 @@ WindowUtilX11::~WindowUtilX11() {
   ::Window *children;
   unsigned int num_children;
   if (!XQueryTree(display(), window, &root, &parent, &children, &num_children)) {
-    LOG(LS_ERROR) << "Failed to query for child windows although window"
+    RTC_LOG(LS_ERROR) << "Failed to query for child windows although window"
                   << "does not have a valid WM_STATE.";
     return 0;
   }
@@ -118,7 +118,7 @@ bool WindowUtilX11::GetWindowTitle(::Window window, std::string* title) {
                                              &cnt);
         if (status >= Success && cnt && *list) {
           if (cnt > 1) {
-            LOG(LS_INFO) << "Window has " << cnt << " text properties, only using the first one.";
+            RTC_LOG(LS_INFO) << "Window has " << cnt << " text properties, only using the first one.";
           }
           *title = *list;
           result = true;
@@ -147,7 +147,7 @@ bool WindowUtilX11::BringWindowToFront(::Window window) {
   // Find the root window to pass event to.
   int status = XQueryTree(display(), window, &root, &parent, &children, &num_children);
   if (status == 0) {
-    LOG(LS_ERROR) << "Failed to query for the root window.";
+    RTC_LOG(LS_ERROR) << "Failed to query for the root window.";
     return false;
   }
 
