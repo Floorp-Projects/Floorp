@@ -1362,7 +1362,7 @@ CSS_PROP_EFFECTS(
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
-    0,
+    VARIANT_AH,
     nullptr,
     offsetof(nsStyleEffects, mClip),
     eStyleAnimType_Custom)
@@ -1375,7 +1375,7 @@ CSS_PROP_SVGRESET(
         CSS_PROPERTY_CREATES_STACKING_CONTEXT |
         CSS_PROPERTY_STORES_CALC,
     "",
-    0,
+    VARIANT_HUO,
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
