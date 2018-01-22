@@ -88,7 +88,7 @@ fuzzy-if(gtkWidget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 != 82711-1-ref.html 82711-2-ref.html
 != 82711-1-ref.html 82711-3-ref.html
 != 82711-2-ref.html 82711-3-ref.html
-fuzzy-if(Android,4,1) == 84400-1.html 84400-1-ref.html
+fuzzy-if(Android,4,3) == 84400-1.html 84400-1-ref.html
 fuzzy-if(skiaContent,2,13) == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
 == 97777-2.html 97777-2-ref.html
