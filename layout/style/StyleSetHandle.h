@@ -115,7 +115,7 @@ public:
     // nsStyleSet or ServoStyleSet.  See corresponding comments in
     // nsStyleSet.h for descriptions of these methods.
 
-    inline void Init(nsPresContext* aPresContext);
+    inline void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
     inline void BeginShutdown();
     inline void Shutdown();
     inline bool GetAuthorStyleDisabled() const;
