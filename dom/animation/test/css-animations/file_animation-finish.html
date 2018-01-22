@@ -45,11 +45,10 @@ async_test(function(t) {
     assert_equals(animation.playState, 'finished',
                   'The play state of a paused animation should become ' +
                   '"finished" after finish() is called');
-    assert_approx_equals(animation.startTime,
-                         animation.timeline.currentTime - ANIM_DURATION,
-                         0.0001,
-                         'The start time of a paused animation should be set ' +
-                         'after calling finish()');
+    assert_times_equal(animation.startTime,
+                       animation.timeline.currentTime - ANIM_DURATION,
+                       'The start time of a paused animation should be set ' +
+                       'after calling finish()');
     t.done();
   }));
 }, 'Test finish() while paused');
@@ -69,11 +68,10 @@ test(function(t) {
   assert_equals(animation.playState, 'finished',
                 'The play state of a pause-pending animation should become ' +
                 '"finished" after finish() is called');
-  assert_approx_equals(animation.startTime,
-                       animation.timeline.currentTime - ANIM_DURATION / 2,
-                       0.0001,
-                       'The start time of a pause-pending animation should ' +
-                       'be set after calling finish()');
+  assert_times_equal(animation.startTime,
+                     animation.timeline.currentTime - ANIM_DURATION / 2,
+                     'The start time of a pause-pending animation should ' +
+                     'be set after calling finish()');
 }, 'Test finish() while pause-pending with positive playbackRate');
 
 test(function(t) {
