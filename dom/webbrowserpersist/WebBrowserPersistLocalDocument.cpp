@@ -6,6 +6,8 @@
 #include "WebBrowserPersistLocalDocument.h"
 #include "WebBrowserPersistDocumentParent.h"
 
+#include "mozilla/dom/Attr.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -19,16 +21,15 @@
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDOMAttributeMap.h"
 #include "nsFrameLoader.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
@@ -393,36 +394,30 @@ ResourceReader::OnWalkURI(const nsACString& aURISpec)
     return OnWalkURI(uri);
 }
 
-static nsresult
+static void
 ExtractAttribute(nsIDOMNode* aNode,
                  const char* aAttribute,
                  const char* aNamespaceURI,
                  nsCString&  aValue)
 {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
     // Find the named URI attribute on the (element) node and store
     // a reference to the URI that maps onto a local file name
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attr));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItemNS(namespaceURI, attribute);
     if (attr) {
         nsAutoString value;
-        rv = attr->GetValue(value);
-        NS_ENSURE_SUCCESS(rv, rv);
-        aValue = NS_ConvertUTF16toUTF8(value);
+        attr->GetValue(value);
+        CopyUTF16toUTF8(value, aValue);
     } else {
         aValue.Truncate();
     }
-    return NS_OK;
 }
 
 nsresult
@@ -431,8 +426,7 @@ ResourceReader::OnWalkAttribute(nsIDOMNode* aNode,
                                 const char* aNamespaceURI)
 {
     nsAutoCString uriSpec;
-    nsresult rv = ExtractAttribute(aNode, aAttribute, aNamespaceURI, uriSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ExtractAttribute(aNode, aAttribute, aNamespaceURI, uriSpec);
     if (uriSpec.IsEmpty()) {
         return NS_OK;
     }
@@ -687,23 +681,22 @@ PersistNodeFixup::FixupAttribute(nsIDOMNode* aNode,
                                  const char* aAttribute,
                                  const char* aNamespaceURI)
 {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     NS_ConvertASCIItoUTF16 attribute(aAttribute);
     NS_ConvertASCIItoUTF16 namespaceURI(aNamespaceURI);
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItemNS(namespaceURI, attribute, getter_AddRefs(attr));
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItemNS(namespaceURI, attribute);
+    nsresult rv = NS_OK;
     if (attr) {
         nsString uri;
         attr->GetValue(uri);
         rv = FixupURI(uri);
         if (NS_SUCCEEDED(rv)) {
-            attr->SetValue(uri);
+            IgnoredErrorResult err;
+            attr->SetValue(uri, err);
         }
     }
 
@@ -717,17 +710,14 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     MOZ_ASSERT(element);
 
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-    nsresult rv = element->GetAttributes(getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
     // Make all anchor links absolute so they point off onto the Internet
     nsString attribute(NS_LITERAL_STRING("href"));
-    nsCOMPtr<nsIDOMAttr> attr;
-    rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attr));
+    RefPtr<dom::Attr> attr = attrMap->GetNamedItem(attribute);
     if (attr) {
         nsString oldValue;
         attr->GetValue(oldValue);
@@ -751,14 +741,15 @@ PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
                       ? mTargetBaseURI : mCurrentBaseURI;
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
-        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
-                       mParent->GetCharacterSet(), relativeURI);
+        nsresult rv = NS_NewURI(getter_AddRefs(newURI), oldCValue,
+                                mParent->GetCharacterSet(), relativeURI);
         if (NS_SUCCEEDED(rv) && newURI) {
             newURI->SetUserPass(EmptyCString());
             nsAutoCString uriSpec;
             rv = newURI->GetSpec(uriSpec);
             NS_ENSURE_SUCCESS(rv, rv);
-            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec));
+            IgnoredErrorResult err;
+            attr->SetValue(NS_ConvertUTF8toUTF16(uriSpec), err);
         }
     }
 

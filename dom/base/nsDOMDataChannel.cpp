@@ -113,31 +113,22 @@ nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow)
 
 // Most of the GetFoo()/SetFoo()s don't need to touch shared resources and
 // are safe after Close()
-NS_IMETHODIMP
+void
 nsDOMDataChannel::GetLabel(nsAString& aLabel)
 {
   mDataChannel->GetLabel(aLabel);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDOMDataChannel::GetProtocol(nsAString& aProtocol)
 {
   mDataChannel->GetProtocol(aProtocol);
-  return NS_OK;
 }
 
 uint16_t
 nsDOMDataChannel::Id() const
 {
   return mDataChannel->GetStream();
-}
-
-NS_IMETHODIMP
-nsDOMDataChannel::GetId(uint16_t *aId)
-{
-  *aId = Id();
-  return NS_OK;
 }
 
 // XXX should be GetType()?  Open question for the spec
@@ -147,24 +138,10 @@ nsDOMDataChannel::Reliable() const
   return mDataChannel->GetType() == mozilla::DataChannelConnection::RELIABLE;
 }
 
-NS_IMETHODIMP
-nsDOMDataChannel::GetReliable(bool* aReliable)
-{
-  *aReliable = Reliable();
-  return NS_OK;
-}
-
 bool
 nsDOMDataChannel::Ordered() const
 {
   return mDataChannel->GetOrdered();
-}
-
-NS_IMETHODIMP
-nsDOMDataChannel::GetOrdered(bool* aOrdered)
-{
-  *aOrdered = Ordered();
-  return NS_OK;
 }
 
 RTCDataChannelState
@@ -173,28 +150,6 @@ nsDOMDataChannel::ReadyState() const
   return static_cast<RTCDataChannelState>(mDataChannel->GetReadyState());
 }
 
-
-NS_IMETHODIMP
-nsDOMDataChannel::GetReadyState(nsAString& aReadyState)
-{
-  // mState is handled on multiple threads and needs locking
-  uint16_t readyState = mozilla::DataChannel::CLOSED;
-  if (!mSentClose) {
-    readyState = mDataChannel->GetReadyState();
-  }
-  // From the WebRTC spec
-  const char * stateName[] = {
-    "connecting",
-    "open",
-    "closing",
-    "closed"
-  };
-  MOZ_ASSERT(/*readyState >= mozilla::DataChannel::CONNECTING && */ // Always true due to datatypes
-             readyState <= mozilla::DataChannel::CLOSED);
-  aReadyState.AssignASCII(stateName[readyState]);
-
-  return NS_OK;
-}
 
 uint32_t
 nsDOMDataChannel::BufferedAmount() const
@@ -211,53 +166,17 @@ nsDOMDataChannel::BufferedAmountLowThreshold() const
   return mDataChannel->GetBufferedAmountLowThreshold();
 }
 
-NS_IMETHODIMP
-nsDOMDataChannel::GetBufferedAmount(uint32_t* aBufferedAmount)
-{
-  *aBufferedAmount = BufferedAmount();
-  return NS_OK;
-}
-
 void
 nsDOMDataChannel::SetBufferedAmountLowThreshold(uint32_t aThreshold)
 {
   mDataChannel->SetBufferedAmountLowThreshold(aThreshold);
 }
 
-NS_IMETHODIMP nsDOMDataChannel::GetBinaryType(nsAString & aBinaryType)
-{
-  switch (mBinaryType) {
-  case DC_BINARY_TYPE_ARRAYBUFFER:
-    aBinaryType.AssignLiteral("arraybuffer");
-    break;
-  case DC_BINARY_TYPE_BLOB:
-    aBinaryType.AssignLiteral("blob");
-    break;
-  default:
-    NS_ERROR("Should not happen");
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDataChannel::SetBinaryType(const nsAString& aBinaryType)
-{
-  if (aBinaryType.EqualsLiteral("arraybuffer")) {
-    mBinaryType = DC_BINARY_TYPE_ARRAYBUFFER;
-  } else if (aBinaryType.EqualsLiteral("blob")) {
-    mBinaryType = DC_BINARY_TYPE_BLOB;
-  } else  {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsDOMDataChannel::Close()
 {
   mDataChannel->Close();
   UpdateMustKeepAlive();
-  return NS_OK;
 }
 
 // All of the following is copy/pasted from WebSocket.cpp.

@@ -10,7 +10,6 @@
 #include "nsIDOMEvent.h"
 #include "nsAtom.h"
 #include "nsIBaseWindow.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"

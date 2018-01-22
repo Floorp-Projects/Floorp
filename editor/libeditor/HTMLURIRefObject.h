@@ -10,6 +10,7 @@
 #include "nsISupportsImpl.h"
 #include "nsIURIRefObject.h"
 #include "nscore.h"
+#include "mozilla/RefPtr.h"
 
 #define NS_URI_REF_OBJECT_CID                          \
 { /* {bdd79df6-1dd1-11b2-b29c-c3d63a58f1d2} */         \
@@ -17,7 +18,7 @@
     { 0xb2, 0x9c, 0xc3, 0xd6, 0x3a, 0x58, 0xf1, 0xd2 } \
 }
 
-class nsIDOMMozNamedAttrMap;
+class nsDOMAttributeMap;
 class nsIDOMNode;
 
 namespace mozilla {
@@ -36,7 +37,7 @@ protected:
   virtual ~HTMLURIRefObject();
 
   nsCOMPtr<nsIDOMNode> mNode;
-  nsCOMPtr<nsIDOMMozNamedAttrMap> mAttributes;
+  RefPtr<nsDOMAttributeMap> mAttributes;
   uint32_t mCurAttrIndex;
   uint32_t mAttributeCnt;
 };

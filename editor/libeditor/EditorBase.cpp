@@ -61,7 +61,6 @@
 #include "nsIAbsorbingTransaction.h"    // for nsIAbsorbingTransaction
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMAttr.h"                 // for nsIDOMAttr
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
@@ -69,7 +68,6 @@
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
-#include "nsIDOMMozNamedAttrMap.h"      // for nsIDOMMozNamedAttrMap
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList

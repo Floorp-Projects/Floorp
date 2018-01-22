@@ -388,7 +388,6 @@ function test_isEqualNode_wholeDoc()
 
 function n(node)  { return node ? node.QueryInterface(nsIDOMNode) : null; }
 function el(node) { return node ? node.QueryInterface(nsIDOMElement) : null; }
-function at(node) { return node ? node.QueryInterface(nsIDOMAttr) : null; }
 
 
 // TESTING FUNCTIONS

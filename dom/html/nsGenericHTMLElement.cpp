@@ -27,7 +27,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMWindow.h"
