@@ -2255,19 +2255,13 @@ nsGlobalWindowInner::Self()
 }
 
 Navigator*
-nsGlobalWindowInner::Navigator()
+nsPIDOMWindowInner::Navigator()
 {
   if (!mNavigator) {
     mNavigator = new mozilla::dom::Navigator(this);
   }
 
   return mNavigator;
-}
-
-nsIDOMNavigator*
-nsGlobalWindowInner::GetNavigator()
-{
-  return Navigator();
 }
 
 nsScreen*
