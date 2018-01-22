@@ -752,12 +752,23 @@ static inline wr::WrFilterOpType ToWrFilterOpType(uint32_t type) {
 
 // Corresponds to an "internal" webrender clip id. That is, a
 // ClipId::Clip(x,pipeline_id) maps to a WrClipId{x}. We use a struct wrapper
-// instead of a typedef so that this is a distinct type from FrameMetrics::ViewID
-// and the compiler will catch accidental conversions between the two.
+// instead of a typedef so that this is a distinct type from ids generated
+// by scroll and position:sticky nodes  and the compiler will catch accidental
+// conversions between them.
 struct WrClipId {
   uint64_t id;
 
   bool operator==(const WrClipId& other) const {
+    return id == other.id;
+  }
+};
+
+// Corresponds to a clip id for for a scroll frame in webrender. Similar
+// to WrClipId but a separate struct so we don't get them mixed up in C++.
+struct WrScrollId {
+  uint64_t id;
+
+  bool operator==(const WrScrollId& other) const {
     return id == other.id;
   }
 };
@@ -772,7 +783,7 @@ struct WrStickyId {
   }
 };
 
-typedef Variant<layers::FrameMetrics::ViewID, WrClipId> ScrollOrClipId;
+typedef Variant<WrScrollId, WrClipId> ScrollOrClipId;
 
 enum class WebRenderError : int8_t {
   INITIALIZE = 0,

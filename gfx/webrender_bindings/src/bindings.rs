@@ -989,8 +989,8 @@ pub extern "C" fn wr_transaction_scroll_layer(
     new_scroll_origin: LayoutPoint
 ) {
     assert!(unsafe { is_in_compositor_thread() });
-    let clip_id = ClipId::new(scroll_id, pipeline_id);
-    txn.scroll_node_with_id(new_scroll_origin, clip_id, ScrollClamping::NoClamping);
+    let scroll_id = IdType::ExternalScrollId(ExternalScrollId(scroll_id, pipeline_id));
+    txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
 }
 
 #[no_mangle]
@@ -1458,11 +1458,11 @@ fn make_scroll_info(state: &mut WrState,
     if let Some(&sid) = scroll_id {
         if let Some(&cid) = clip_id {
             Some(ClipAndScrollInfo::new(
-                ClipId::new(sid, state.pipeline_id),
+                ClipId::Clip(sid, state.pipeline_id),
                 ClipId::Clip(cid, state.pipeline_id)))
         } else {
             Some(ClipAndScrollInfo::simple(
-                ClipId::new(sid, state.pipeline_id)))
+                ClipId::Clip(sid, state.pipeline_id)))
         }
     } else if let Some(&cid) = clip_id {
         Some(ClipAndScrollInfo::simple(
@@ -1492,10 +1492,10 @@ pub extern "C" fn wr_dp_define_clip(state: &mut WrState,
     let mask : Option<ImageMask> = unsafe { mask.as_ref() }.map(|x| x.into());
 
     let clip_id = if info.is_some() {
-        state.frame_builder.dl_builder.define_clip_with_parent(None,
+        state.frame_builder.dl_builder.define_clip_with_parent(
             info.unwrap().scroll_node_id, clip_rect, complex_iter, mask)
     } else {
-        state.frame_builder.dl_builder.define_clip(None, clip_rect, complex_iter, mask)
+        state.frame_builder.dl_builder.define_clip(clip_rect, complex_iter, mask)
     };
     // return the u64 id value from inside the ClipId::Clip(..)
     match clip_id {
@@ -1533,7 +1533,7 @@ pub extern "C" fn wr_dp_define_sticky_frame(state: &mut WrState,
                                             -> u64 {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = state.frame_builder.dl_builder.define_sticky_frame(
-        None, content_rect, SideOffsets2D::new(
+        content_rect, SideOffsets2D::new(
             unsafe { top_margin.as_ref() }.cloned(),
             unsafe { right_margin.as_ref() }.cloned(),
             unsafe { bottom_margin.as_ref() }.cloned(),
@@ -1555,30 +1555,49 @@ pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
                                             ancestor_scroll_id: *const u64,
                                             ancestor_clip_id: *const u64,
                                             content_rect: LayoutRect,
-                                            clip_rect: LayoutRect) {
+                                            clip_rect: LayoutRect)
+                                            -> u64 {
     assert!(unsafe { is_in_main_thread() });
 
     let info = make_scroll_info(state,
                                 unsafe { ancestor_scroll_id.as_ref() },
                                 unsafe { ancestor_clip_id.as_ref() });
 
-    let clip_id = ClipId::new(scroll_id, state.pipeline_id);
-    if info.is_some() {
+    let new_id = if info.is_some() {
         state.frame_builder.dl_builder.define_scroll_frame_with_parent(
-            Some(clip_id), info.unwrap().scroll_node_id, content_rect,
-            clip_rect, vec![], None, ScrollSensitivity::Script);
+            info.unwrap().scroll_node_id,
+            Some(ExternalScrollId(scroll_id, state.pipeline_id)),
+            content_rect,
+            clip_rect,
+            vec![],
+            None,
+            ScrollSensitivity::Script
+        )
     } else {
         state.frame_builder.dl_builder.define_scroll_frame(
-            Some(clip_id), content_rect, clip_rect, vec![], None,
-            ScrollSensitivity::Script);
+            Some(ExternalScrollId(scroll_id, state.pipeline_id)),
+            content_rect,
+            clip_rect,
+            vec![],
+            None,
+            ScrollSensitivity::Script
+        )
     };
+
+    match new_id {
+        ClipId::Clip(id, pipeline_id) => {
+            assert!(pipeline_id == state.pipeline_id);
+            id
+        },
+        _ => panic!("Got unexpected clip id type"),
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
                                           scroll_id: u64) {
     debug_assert!(unsafe { is_in_main_thread() });
-    let clip_id = ClipId::new(scroll_id, state.pipeline_id);
+    let clip_id = ClipId::Clip(scroll_id, state.pipeline_id);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
 }
 
