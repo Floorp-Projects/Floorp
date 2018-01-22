@@ -3875,7 +3875,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // Initialize GTK here for splash.
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-  // Disable XInput2 support due to focus bugginess. See bugs 1182700, 1170342.
+  // Disable XInput2 multidevice support due to focus bugginess.
+  // See bugs 1182700, 1170342.
+  // gdk_disable_multidevice() affects Gdk X11 backend only,
+  // the multidevice support is always enabled on Wayland backend.
   const char* useXI2 = PR_GetEnv("MOZ_USE_XINPUT2");
   if (!useXI2 || (*useXI2 == '0'))
     gdk_disable_multidevice();
