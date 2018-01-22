@@ -419,26 +419,25 @@ AudioConfig::Channel
 ConvertChannelLabel(AudioChannelLabel id)
 {
   switch (id) {
-    case kAudioChannelLabel_Mono:
-      return AudioConfig::CHANNEL_MONO;
     case kAudioChannelLabel_Left:
-      return AudioConfig::CHANNEL_LEFT;
+      return AudioConfig::CHANNEL_FRONT_LEFT;
     case kAudioChannelLabel_Right:
-      return AudioConfig::CHANNEL_RIGHT;
+      return AudioConfig::CHANNEL_FRONT_RIGHT;
+    case kAudioChannelLabel_Mono:
     case kAudioChannelLabel_Center:
-      return AudioConfig::CHANNEL_CENTER;
+      return AudioConfig::CHANNEL_FRONT_CENTER;
     case kAudioChannelLabel_LFEScreen:
       return AudioConfig::CHANNEL_LFE;
     case kAudioChannelLabel_LeftSurround:
-      return AudioConfig::CHANNEL_LS;
+      return AudioConfig::CHANNEL_SIDE_LEFT;
     case kAudioChannelLabel_RightSurround:
-      return AudioConfig::CHANNEL_RS;
+      return AudioConfig::CHANNEL_SIDE_RIGHT;
     case kAudioChannelLabel_CenterSurround:
-      return AudioConfig::CHANNEL_RCENTER;
+      return AudioConfig::CHANNEL_BACK_CENTER;
     case kAudioChannelLabel_RearSurroundLeft:
-      return AudioConfig::CHANNEL_RLS;
+      return AudioConfig::CHANNEL_BACK_LEFT;
     case kAudioChannelLabel_RearSurroundRight:
-      return AudioConfig::CHANNEL_RRS;
+      return AudioConfig::CHANNEL_BACK_RIGHT;
     default:
       return AudioConfig::CHANNEL_INVALID;
   }

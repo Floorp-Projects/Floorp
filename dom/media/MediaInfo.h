@@ -621,16 +621,25 @@ public:
   enum Channel
   {
     CHANNEL_INVALID = -1,
-    CHANNEL_MONO = 0,
-    CHANNEL_LEFT,
-    CHANNEL_RIGHT,
-    CHANNEL_CENTER,
+    CHANNEL_FRONT_LEFT = 0,
+    CHANNEL_FRONT_RIGHT,
+    CHANNEL_FRONT_CENTER,
     CHANNEL_LFE,
-    CHANNEL_RCENTER,
-    CHANNEL_LS,
-    CHANNEL_RS,
-    CHANNEL_RLS,
-    CHANNEL_RRS,
+    CHANNEL_BACK_LEFT,
+    CHANNEL_BACK_RIGHT,
+    CHANNEL_FRONT_LEFT_OF_CENTER,
+    CHANNEL_FRONT_RIGHT_OF_CENTER,
+    CHANNEL_BACK_CENTER,
+    CHANNEL_SIDE_LEFT,
+    CHANNEL_SIDE_RIGHT,
+    // From WAVEFORMAT definition.
+    CHANNEL_TOP_CENTER,
+    CHANNEL_TOP_FRONT_LEFT,
+    CHANNEL_TOP_FRONT_CENTER,
+    CHANNEL_TOP_FRONT_RIGHT,
+    CHANNEL_TOP_BACK_LEFT,
+    CHANNEL_TOP_BACK_CENTER,
+    CHANNEL_TOP_BACK_RIGHT
   };
 
   class ChannelLayout
@@ -694,64 +703,85 @@ public:
 
     // Common channel layout definitions.
     static ChannelLayout LMONO;
-    static constexpr uint32_t LMONO_MAP = 1 << CHANNEL_MONO;
+    static constexpr uint32_t LMONO_MAP = 1 << CHANNEL_FRONT_CENTER;
     static ChannelLayout LMONO_LFE;
     static constexpr uint32_t LMONO_LFE_MAP =
-      1 << CHANNEL_MONO | 1 << CHANNEL_LFE;
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
     static ChannelLayout LSTEREO;
     static constexpr uint32_t LSTEREO_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT;
     static ChannelLayout LSTEREO_LFE;
     static constexpr uint32_t LSTEREO_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE;
     static ChannelLayout L3F;
-    static constexpr uint32_t L3F_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER;
+    static constexpr uint32_t L3F_MAP = 1 << CHANNEL_FRONT_LEFT |
+                                        1 << CHANNEL_FRONT_RIGHT |
+                                        1 << CHANNEL_FRONT_CENTER;
     static ChannelLayout L3F_LFE;
     static constexpr uint32_t L3F_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LFE;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE;
     static ChannelLayout L2F1;
-    static constexpr uint32_t L2F1_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_RCENTER;
+    static constexpr uint32_t L2F1_MAP = 1 << CHANNEL_FRONT_LEFT |
+                                         1 << CHANNEL_FRONT_RIGHT |
+                                         1 << CHANNEL_BACK_CENTER;
     static ChannelLayout L2F1_LFE;
     static constexpr uint32_t L2F1_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE |
-      1 << CHANNEL_RCENTER;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+      1 << CHANNEL_BACK_CENTER;
     static ChannelLayout L3F1;
     static constexpr uint32_t L3F1_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_RCENTER;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_BACK_CENTER;
+    static ChannelLayout LSURROUND; // Same as 3F1
+    static constexpr uint32_t LSURROUND_MAP = L3F1_MAP;
     static ChannelLayout L3F1_LFE;
     static constexpr uint32_t L3F1_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LFE | 1 << CHANNEL_RCENTER;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_CENTER;
     static ChannelLayout L2F2;
-    static constexpr uint32_t L2F2_MAP = 1 << CHANNEL_LEFT |
-                                         1 << CHANNEL_RIGHT | 1 << CHANNEL_LS |
-                                         1 << CHANNEL_RS;
+    static constexpr uint32_t L2F2_MAP =
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
     static ChannelLayout L2F2_LFE;
     static constexpr uint32_t L2F2_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_LFE |
-      1 << CHANNEL_LS | 1 << CHANNEL_RS;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
+    static ChannelLayout LQUAD;
+    static constexpr uint32_t LQUAD_MAP =
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
+    static ChannelLayout LQUAD_LFE;
+    static constexpr uint32_t LQUAD_MAP_LFE =
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT | 1 << CHANNEL_LFE |
+      1 << CHANNEL_BACK_LEFT | 1 << CHANNEL_BACK_RIGHT;
     static ChannelLayout L3F2;
     static constexpr uint32_t L3F2_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LS | 1 << CHANNEL_RS;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_SIDE_LEFT |
+      1 << CHANNEL_SIDE_RIGHT;
     static ChannelLayout L3F2_LFE;
     static constexpr uint32_t L3F2_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LFE | 1 << CHANNEL_LS | 1 << CHANNEL_RS;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_SIDE_LEFT |
+      1 << CHANNEL_SIDE_RIGHT;
+    // 3F2_LFE Alias
+    static ChannelLayout L5POINT1_SURROUND;
+    static constexpr uint32_t L5POINT1_SURROUND_MAP = L3F2_LFE_MAP;
     static ChannelLayout L3F3R_LFE;
     static constexpr uint32_t L3F3R_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LFE | 1 << CHANNEL_RCENTER | 1 << CHANNEL_LS |
-      1 << CHANNEL_RS;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_CENTER |
+      1 << CHANNEL_SIDE_LEFT | 1 << CHANNEL_SIDE_RIGHT;
     static ChannelLayout L3F4_LFE;
     static constexpr uint32_t L3F4_LFE_MAP =
-      1 << CHANNEL_LEFT | 1 << CHANNEL_RIGHT | 1 << CHANNEL_CENTER |
-      1 << CHANNEL_LFE | 1 << CHANNEL_RLS | 1 << CHANNEL_RRS | 1 << CHANNEL_LS |
-      1 << CHANNEL_RS;
+      1 << CHANNEL_FRONT_LEFT | 1 << CHANNEL_FRONT_RIGHT |
+      1 << CHANNEL_FRONT_CENTER | 1 << CHANNEL_LFE | 1 << CHANNEL_BACK_LEFT |
+      1 << CHANNEL_BACK_RIGHT | 1 << CHANNEL_SIDE_LEFT |
+      1 << CHANNEL_SIDE_RIGHT;
+    // 3F4_LFE Alias
+    static ChannelLayout L7POINT1_SURROUND;
+    static constexpr uint32_t L7POINT1_SURROUND_MAP = L3F4_LFE_MAP;
 
   private:
     void UpdateChannelMap();
