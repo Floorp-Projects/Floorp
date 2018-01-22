@@ -29,7 +29,7 @@ public:
 
   void OpenFD(PRFileDesc* aFd)
   {
-    MOZ_ASSERT(!IsOpen());
+    MOZ_DIAGNOSTIC_ASSERT(!IsOpen());
     mFd = aFd;
     mGood = !!mFd;
     mBuffer.reset(new uint8_t[kBufferSize]);
