@@ -132,7 +132,7 @@ public:
   CreateXBLServoStyleSet(nsPresContext* aPresContext,
                          const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
 
-  void Init(nsPresContext* aPresContext);
+  void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
   void BeginShutdown() {}
   void Shutdown();
 
@@ -600,27 +600,13 @@ private:
 
   const Kind mKind;
 
-  // The owner document of this style set. Null if this is an XBL style set.
-  //
-  // TODO(emilio): This should become a DocumentOrShadowRoot, and be owned by it
-  // directly instead of the shell, eventually.
-  nsIDocument* mDocument;
-
-  const nsPresContext* GetPresContext() const {
-    return const_cast<ServoStyleSet*>(this)->GetPresContext();
-  }
-
-  /**
-   * Return the associated pres context if we're the master style set and we
-   * have an associated pres shell.
-   */
-  nsPresContext* GetPresContext();
+  // Nullptr if this is an XBL style set, or if we've been already detached from
+  // our shell.
+  nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
 
   // Because XBL style set could be used by multiple PresContext, we need to
   // store the last PresContext pointer which uses this XBL styleset for
   // computing medium rule changes.
-  //
-  // FIXME(emilio): This is a hack, and is broken. See bug 1406875.
   void* MOZ_NON_OWNING_REF mLastPresContextUsesXBLStyleSet = nullptr;
 
   UniquePtr<RawServoStyleSet> mRawSet;
@@ -648,6 +634,9 @@ private:
   // Map from raw Servo style rule to Gecko's wrapper object.
   // Constructed lazily when requested by devtools.
   UniquePtr<ServoStyleRuleMap> mStyleRuleMap;
+
+  // This can be null if we are used to hold XBL style sheets.
+  RefPtr<nsBindingManager> mBindingManager;
 
   static ServoStyleSet* sInServoTraversal;
 };

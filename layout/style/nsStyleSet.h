@@ -110,7 +110,7 @@ class nsStyleSet final
 
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
-  void Init(nsPresContext* aPresContext);
+  void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
 
   nsRuleNode* GetRuleTree() { return mRuleTree; }
 
