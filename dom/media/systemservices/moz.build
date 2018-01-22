@@ -22,6 +22,7 @@ if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
         '/media/webrtc/signaling',
         '/media/webrtc/trunk',
+        '/media/webrtc/trunk/webrtc',
     ]
 
 if CONFIG['OS_TARGET'] == 'Android':

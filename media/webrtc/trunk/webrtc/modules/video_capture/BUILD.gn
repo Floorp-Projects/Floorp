@@ -115,6 +115,12 @@ if (!build_with_chromium) {
         # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
         suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
       }
+
+      if (build_with_mozilla) {
+        cflags = [
+          "-fobjc-arc",  # CLANG_ENABLE_OBJC_ARC = YES.
+        ]
+      }
     }
   }
 
@@ -127,7 +133,7 @@ if (!build_with_chromium) {
       "../../system_wrappers",
     ]
 
-    if (is_linux) {
+    if (is_linux || is_bsd) {
       sources = [
         "linux/device_info_linux.cc",
         "linux/device_info_linux.h",
