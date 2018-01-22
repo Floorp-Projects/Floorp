@@ -6,7 +6,6 @@
 #include "txXPathTreeWalker.h"
 #include "nsAtom.h"
 #include "nsIAttribute.h"
-#include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"

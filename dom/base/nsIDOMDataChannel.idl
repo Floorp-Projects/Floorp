@@ -4,29 +4,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-%{C++
-#ifdef GetBinaryType
-// Windows apparently has a #define for GetBinaryType...
-#undef GetBinaryType
-#endif
-%}
-
-interface nsIVariant;
-
 [builtinclass, uuid(b00a4ca7-312e-4926-84f6-8ebb43e53d83)]
 interface nsIDOMDataChannel : nsIDOMEventTarget
 {
-  readonly attribute DOMString label;
-  readonly attribute DOMString protocol;
-  readonly attribute boolean reliable;
-  readonly attribute boolean ordered;
-
-  readonly attribute DOMString readyState;
-  readonly attribute unsigned long bufferedAmount;
-
-  readonly attribute unsigned short id;
-
-  attribute DOMString binaryType;
-
-  void close();
 };

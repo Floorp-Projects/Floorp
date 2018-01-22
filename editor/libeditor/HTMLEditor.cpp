@@ -2626,8 +2626,7 @@ HTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 
       nsAtom* name = attribute->NodeInfo()->NameAtom();
 
-      rv = attribute->GetValue(value);
-      NS_ENSURE_SUCCESS(rv, rv);
+      attribute->GetValue(value);
 
       rv = SetInlineProperty(nsGkAtoms::a, name, value);
       NS_ENSURE_SUCCESS(rv, rv);

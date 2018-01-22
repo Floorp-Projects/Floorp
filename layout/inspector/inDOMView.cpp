@@ -10,12 +10,11 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIAttribute.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMAttr.h"
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsBindingManager.h"
 #include "nsNameSpaceManager.h"
@@ -23,6 +22,7 @@
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
+#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/InspectorUtils.h"
@@ -641,7 +641,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
 
   // get the dom attribute node, if there is any
   nsCOMPtr<nsIDOMElement> el(do_QueryInterface(aElement));
-  nsCOMPtr<nsIDOMAttr> domAttr;
+  RefPtr<dom::Attr> domAttr;
   nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {
     nsNameSpaceManager* nsm = nsNameSpaceManager::GetInstance();
@@ -654,9 +654,9 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     if (NS_FAILED(rv)) {
       return;
     }
-    (void)el->GetAttributeNodeNS(attrNS, attrStr, getter_AddRefs(domAttr));
+    domAttr = aElement->GetAttributeNodeNS(attrNS, attrStr);
   } else {
-    (void)el->GetAttributeNode(attrStr, getter_AddRefs(domAttr));
+    domAttr = aElement->GetAttributeNode(attrStr);
   }
 
   if (aModType == nsIDOMMutationEvent::MODIFICATION) {
@@ -672,10 +672,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
       return;
     }
     // get the number of attributes on this content node
-    nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
-    el->GetAttributes(getter_AddRefs(attrs));
-    uint32_t attrCount;
-    attrs->GetLength(&attrCount);
+    uint32_t attrCount = aElement->GetAttrCount();
 
     inDOMViewNode* contentNode = nullptr;
     int32_t contentRow;
@@ -735,7 +732,8 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
     for (row = contentRow+1; row < GetRowCount(); ++row) {
       checkNode = GetNodeAt(row);
       if (checkNode->level == baseLevel+1) {
-        domAttr = do_QueryInterface(checkNode->node);
+        nsCOMPtr<nsIAttribute> attr = do_QueryInterface(checkNode->node);
+        domAttr = static_cast<dom::Attr*>(attr.get());
         if (domAttr) {
           nsAutoString attrName;
           domAttr->GetNodeName(attrName);
@@ -1168,13 +1166,9 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   NS_ENSURE_ARG(aNode);
   // attribute nodes
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ATTRIBUTE) {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
     if (element) {
-      nsCOMPtr<nsIDOMMozNamedAttrMap> attrs;
-      element->GetAttributes(getter_AddRefs(attrs));
-      if (attrs) {
-        AppendAttrsToArray(attrs, aResult);
-      }
+      AppendAttrsToArray(element->Attributes(), aResult);
     }
   }
 
@@ -1209,7 +1203,7 @@ inDOMView::GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, ns
   return NS_OK;
 }
 
-nsresult
+void
 inDOMView::AppendKidsToArray(nsINodeList* aKids,
                              nsCOMArray<nsIDOMNode>& aArray)
 {
@@ -1243,20 +1237,15 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
       aArray.AppendElement(node.forget());
     }
   }
-
-  return NS_OK;
 }
 
 nsresult
-inDOMView::AppendAttrsToArray(nsIDOMMozNamedAttrMap* aAttributes,
+inDOMView::AppendAttrsToArray(nsDOMAttributeMap* aAttributes,
                               nsCOMArray<nsIDOMNode>& aArray)
 {
-  uint32_t l = 0;
-  aAttributes->GetLength(&l);
-  nsCOMPtr<nsIDOMAttr> attribute;
+  uint32_t l = aAttributes->Length();
   for (uint32_t i = 0; i < l; ++i) {
-    aAttributes->Item(i, getter_AddRefs(attribute));
-    aArray.AppendElement(attribute.forget());
+    aArray.AppendElement(aAttributes->Item(i));
   }
   return NS_OK;
 }
