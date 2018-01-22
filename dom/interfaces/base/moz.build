@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMHistory.idl',
     'nsIDOMModalContentWindow.idl',
-    'nsIDOMNavigator.idl',
     'nsIDOMScreen.idl',
     'nsIDOMWindow.idl',
     'nsIDOMWindowCollection.idl',

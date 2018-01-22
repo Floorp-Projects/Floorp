@@ -173,9 +173,7 @@ Navigator::~Navigator()
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Navigator)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNavigator)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigator)
-  NS_INTERFACE_MAP_ENTRY(nsIMozNavigatorNetwork)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Navigator)
@@ -277,10 +275,6 @@ Navigator::Invalidate()
     mVRServiceTest = nullptr;
   }
 }
-
-//*****************************************************************************
-//    Navigator::nsIDOMNavigator
-//*****************************************************************************
 
 void
 Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
@@ -1486,16 +1480,11 @@ Navigator::RequestVRPresentation(VRDisplay& aDisplay)
   win->DispatchVRDisplayActivate(aDisplay.DisplayId(), VRDisplayEventReason::Requested);
 }
 
-//*****************************************************************************
-//    Navigator::nsIMozNavigatorNetwork
-//*****************************************************************************
-
-NS_IMETHODIMP
-Navigator::GetProperties(nsINetworkProperties** aProperties)
+nsINetworkProperties*
+Navigator::GetNetworkProperties()
 {
-  ErrorResult rv;
-  NS_IF_ADDREF(*aProperties = GetConnection(rv));
-  return NS_OK;
+  IgnoredErrorResult rv;
+  return GetConnection(rv);
 }
 
 network::Connection*

@@ -12,8 +12,6 @@
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIDOMNavigator.h"
-#include "nsIMozNavigatorNetwork.h"
 #include "nsWrapperCache.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
@@ -26,6 +24,7 @@ class nsPluginArray;
 class nsMimeTypeArray;
 class nsPIDOMWindowInner;
 class nsIDOMNavigatorSystemMessages;
+class nsINetworkProperties;
 class nsIPrincipal;
 class nsIURI;
 
@@ -80,18 +79,14 @@ namespace time {
 class TimeManager;
 } // namespace time
 
-class Navigator final : public nsIDOMNavigator
-                      , public nsIMozNavigatorNetwork
+class Navigator final : public nsISupports
                       , public nsWrapperCache
 {
 public:
   explicit Navigator(nsPIDOMWindowInner* aInnerWindow);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Navigator,
-                                                         nsIDOMNavigator)
-  NS_DECL_NSIDOMNAVIGATOR
-  NS_DECL_NSIMOZNAVIGATORNETWORK
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Navigator)
 
   static void Init();
 
@@ -186,6 +181,7 @@ public:
   bool IsWebVRContentDetected() const;
   bool IsWebVRContentPresenting() const;
   void RequestVRPresentation(VRDisplay& aDisplay);
+  nsINetworkProperties* GetNetworkProperties();
 #ifdef MOZ_TIME_MANAGER
   time::TimeManager* GetMozTime(ErrorResult& aRv);
 #endif // MOZ_TIME_MANAGER

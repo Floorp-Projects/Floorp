@@ -2658,8 +2658,8 @@ nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
     if (!navigator)
         return;
 
-    nsCOMPtr<nsINetworkProperties> networkProperties;
-    navigator->GetProperties(getter_AddRefs(networkProperties));
+    nsCOMPtr<nsINetworkProperties> networkProperties =
+        navigator->GetNetworkProperties();
     if (!networkProperties)
         return;
 
