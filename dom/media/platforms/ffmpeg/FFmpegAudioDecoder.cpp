@@ -180,6 +180,8 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
   return audio;
 }
 
+typedef AudioConfig::ChannelLayout ChannelLayout;
+
 MediaResult
 FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                         uint8_t* aData,
@@ -259,9 +261,14 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
           RESULT_DETAIL("Invalid count of accumulated audio samples"));
       }
 
-      aResults.AppendElement(new AudioData(
-        samplePosition, pts, duration,
-        mFrame->nb_samples, Move(audio), numChannels, samplingRate));
+      aResults.AppendElement(new AudioData(samplePosition,
+                                           pts,
+                                           duration,
+                                           mFrame->nb_samples,
+                                           Move(audio),
+                                           numChannels,
+                                           samplingRate,
+                                           mCodecContext->channel_layout));
 
       pts = newpts;
 
