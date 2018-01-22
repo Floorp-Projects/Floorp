@@ -72,8 +72,6 @@ rtc_source_set("rtc_event_log_api") {
   deps = [
     "..:webrtc_common",
     "../api:array_view",
-    "../api:libjingle_logging_api",
-    "../api:libjingle_peerconnection_api",
     "../call:video_stream_api",
     "../modules/audio_coding:audio_network_adaptor_config",
     "../modules/remote_bitrate_estimator:remote_bitrate_estimator",
@@ -81,6 +79,13 @@ rtc_source_set("rtc_event_log_api") {
     "../rtc_base:rtc_base_approved",
     "../system_wrappers",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "../api:libjingle_logging_api",
+      "../api:libjingle_peerconnection_api"
+    ]
+  }
 
   # TODO(eladalon): Remove this.
   if (!build_with_chromium && is_clang) {

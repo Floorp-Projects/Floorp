@@ -55,7 +55,6 @@ rtc_static_library("voice_engine") {
     "../api:array_view",
     "../api:audio_mixer_api",
     "../api:call_api",
-    "../api:libjingle_peerconnection_api",
     "../api:optional",
     "../api:refcountedbase",
     "../api:transport_api",
@@ -78,6 +77,10 @@ rtc_static_library("voice_engine") {
     "../rtc_base:rtc_task_queue",
     "../system_wrappers",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../api:libjingle_peerconnection_api" ]
+  }
 }
 
 rtc_static_library("audio_level") {

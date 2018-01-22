@@ -161,7 +161,7 @@ rtc_source_set("test_support") {
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  if (is_android) {
+  if (!build_with_mozilla && is_android) {
     deps += [ "//base:base" ]
   }
 
@@ -714,7 +714,7 @@ rtc_source_set("audio_codec_mocks") {
   ]
 }
 
-if (!build_with_chromium && is_android) {
+if (!build_with_chromium && !build_with_mozilla && is_android) {
   rtc_android_library("native_test_java") {
     testonly = true
     java_files = [

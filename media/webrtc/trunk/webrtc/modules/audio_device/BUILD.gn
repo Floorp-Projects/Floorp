@@ -376,7 +376,7 @@ if (rtc_include_tests) {
   }
 }
 
-if (!build_with_chromium && is_android) {
+if ((!build_with_chromium && !build_with_mozilla) && is_android) {
   rtc_android_library("audio_device_java") {
     java_files = [
       "android/java/src/org/webrtc/voiceengine/BuildInfo.java",
