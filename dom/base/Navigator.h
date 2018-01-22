@@ -115,8 +115,8 @@ public:
    */
   void OnNavigation();
 
-  // The XPCOM GetProduct is OK
-  // The XPCOM GetLanguage is OK
+  void GetProduct(nsAString& aProduct);
+  void GetLanguage(nsAString& aLanguage);
   void GetAppName(nsAString& aAppName, CallerType aCallerType) const;
   void GetAppVersion(nsAString& aAppName, CallerType aCallerType,
                      ErrorResult& aRv) const;
@@ -132,7 +132,7 @@ public:
   nsMimeTypeArray* GetMimeTypes(ErrorResult& aRv);
   nsPluginArray* GetPlugins(ErrorResult& aRv);
   Permissions* GetPermissions(ErrorResult& aRv);
-  // The XPCOM GetDoNotTrack is ok
+  void GetDoNotTrack(nsAString& aResult);
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
 
@@ -156,15 +156,12 @@ public:
   bool Vibrate(const nsTArray<uint32_t>& aDuration);
   void SetVibrationPermission(bool aPermitted, bool aPersistent);
   uint32_t MaxTouchPoints();
-  void GetAppCodeName(nsString& aAppCodeName, ErrorResult& aRv)
-  {
-    aRv = GetAppCodeName(aAppCodeName);
-  }
+  void GetAppCodeName(nsAString& aAppCodeName, ErrorResult& aRv);
   void GetOscpu(nsAString& aOscpu, CallerType aCallerType,
                 ErrorResult& aRv) const;
-  // The XPCOM GetVendor is OK
-  // The XPCOM GetVendorSub is OK
-  // The XPCOM GetProductSub is OK
+  void GetVendorSub(nsAString& aVendorSub);
+  void GetVendor(nsAString& aVendor);
+  void GetProductSub(nsAString& aProductSub);
   bool CookieEnabled();
   void GetBuildID(nsAString& aBuildID, CallerType aCallerType,
                   ErrorResult& aRv) const;
