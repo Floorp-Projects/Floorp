@@ -30,6 +30,7 @@
 
 #include "builtin/IntlTimeZoneData.h"
 #include "ds/Sort.h"
+#include "gc/FreeOp.h"
 #include "js/Date.h"
 #if ENABLE_INTL_API
 #include "unicode/ucal.h"

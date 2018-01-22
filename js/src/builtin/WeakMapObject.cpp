@@ -10,6 +10,7 @@
 #include "jscntxt.h"
 
 #include "builtin/WeakSetObject.h"
+#include "gc/FreeOp.h"
 #include "vm/SelfHosting.h"
 
 #include "vm/Interpreter-inl.h"
