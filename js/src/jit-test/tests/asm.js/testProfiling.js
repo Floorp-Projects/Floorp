@@ -37,10 +37,10 @@ function assertStackContainsSeq(got, expect)
         for (var j = 0; j < parts.length; j++) {
             var frame = parts[j];
             frame = frame.replace(/ \([^\)]*\)/g, "");
-            frame = frame.replace(/fast FFI trampoline to native/g, "N");
+            frame = frame.replace(/fast exit trampoline to native/g, "N");
             frame = frame.replace(/^call to( asm.js)? native .*\(in wasm\)$/g, "N");
-            frame = frame.replace(/(fast|slow) FFI trampoline/g, "<");
-            frame = frame.replace(/slow entry trampoline/g, ">");
+            frame = frame.replace(/(fast|slow) exit trampoline/g, "<");
+            frame = frame.replace(/(fast|slow) entry trampoline/g, ">");
             frame = frame.replace(/(\/[^\/,<]+)*\/testProfiling.js/g, "");
             frame = frame.replace(/testBuiltinD2D/g, "");
             frame = frame.replace(/testBuiltinF2F/g, "");

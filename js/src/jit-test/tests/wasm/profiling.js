@@ -1,78 +1,20 @@
-try {
-    enableSingleStepProfiling();
-    disableSingleStepProfiling();
-} catch(e) {
-    // Single step profiling not supported here.
+if (!WasmHelpers.isSingleStepProfilingEnabled)
     quit();
-}
 
 const Module = WebAssembly.Module;
 const Instance = WebAssembly.Instance;
 const Table = WebAssembly.Table;
 
-function normalize(stack)
-{
-    var wasmFrameTypes = [
-        {re:/^slow entry trampoline \(in wasm\)$/,                   sub:">"},
-        {re:/^wasm-function\[(\d+)\] \(.*\)$/,                       sub:"$1"},
-        {re:/^(fast|slow) FFI trampoline (to native )?\(in wasm\)$/, sub:"<"},
-        {re:/^call to[ asm.js]? native (.*) \(in wasm\)$/,           sub:"$1"},
-        {re:/ \(in wasm\)$/,                                         sub:""}
-    ];
+const { assertEqImpreciseStacks, startProfiling, endProfiling } = WasmHelpers;
 
-    var framesIn = stack.split(',');
-    var framesOut = [];
-    for (let frame of framesIn) {
-        for (let {re, sub} of wasmFrameTypes) {
-            if (re.test(frame)) {
-                framesOut.push(frame.replace(re, sub));
-                break;
-            }
-        }
-    }
-
-    return framesOut.join(',');
-}
-
-function removeAdjacentDuplicates(array) {
-    if (array.length < 2)
-        return;
-    let i = 0;
-    for (let j = 1; j < array.length; j++) {
-        if (array[i] !== array[j])
-            array[++i] = array[j];
-    }
-    array.length = i + 1;
-}
-
-function assertEqStacks(got, expect)
-{
-    for (let i = 0; i < got.length; i++)
-        got[i] = normalize(got[i]);
-
-    removeAdjacentDuplicates(got);
-
-    if (got.length != expect.length) {
-        print(`Got:\n${got.toSource()}\nExpect:\n${expect.toSource()}`);
-        assertEq(got.length, expect.length);
-    }
-
-    for (let i = 0; i < got.length; i++) {
-        if (got[i] !== expect[i]) {
-            print(`On stack ${i}, Got:\n${got[i]}\nExpect:\n${expect[i]}`);
-            assertEq(got[i], expect[i]);
-        }
-    }
-}
-
-function test(code, importObj, expect)
+function test(code, importObj, expectedStacks)
 {
     enableGeckoProfiling();
 
     var f = wasmEvalText(code, importObj).exports[""];
-    enableSingleStepProfiling();
+    startProfiling();
     f();
-    assertEqStacks(disableSingleStepProfiling(), expect);
+    assertEqImpreciseStacks(endProfiling(), expectedStacks);
 
     disableGeckoProfiling();
 }
@@ -137,7 +79,8 @@ if (getBuildConfiguration()["arm-simulator"]) {
             )
         )`,
         this,
-        ["", ">", "0,>", "<,0,>", `i64.${op},0,>`, "<,0,>", "0,>", ">", ""]);
+        ["", ">", "0,>", "<,0,>", `i64.${op},0,>`, "<,0,>", "0,>", ">", ""],
+        );
     }
 }
 
@@ -149,7 +92,8 @@ test(`(module
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "current_memory,0,>", "<,0,>", "0,>", ">", ""]);
+["", ">", "0,>", "<,0,>", "current_memory,0,>", "<,0,>", "0,>", ">", ""],
+);
 
 // grow_memory is a callout.
 test(`(module
@@ -160,7 +104,8 @@ test(`(module
     )
 )`,
 this,
-["", ">", "0,>", "<,0,>", "grow_memory,0,>", "<,0,>", "0,>", ">", ""]);
+["", ">", "0,>", "<,0,>", "grow_memory,0,>", "<,0,>", "0,>", ">", ""],
+);
 
 // A few math builtins.
 for (let type of ['f32', 'f64']) {
@@ -184,7 +129,7 @@ for (let type of ['f32', 'f64']) {
         var f = wasmEvalText(code).exports[""];
         enableSingleStepProfiling();
         assertThrowsInstanceOf(f, error);
-        assertEqStacks(disableSingleStepProfiling(), expect);
+        assertEqImpreciseStacks(disableSingleStepProfiling(), expect);
         disableGeckoProfiling();
     }
 
@@ -230,7 +175,7 @@ for (let type of ['f32', 'f64']) {
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e.tbl.get(0)(), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", ""]);
     disableGeckoProfiling();
 
     assertEq(e.foo(), 42);
@@ -240,7 +185,7 @@ for (let type of ['f32', 'f64']) {
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e.tbl.get(1)(), 13);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", ">", ""]);
     disableGeckoProfiling();
 
     assertEq(e.tbl.get(0)(), 42);
@@ -251,7 +196,7 @@ for (let type of ['f32', 'f64']) {
     enableSingleStepProfiling();
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(1)(), 13);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
     disableGeckoProfiling();
 
     var e2 = wasmEvalText(`
@@ -267,19 +212,19 @@ for (let type of ['f32', 'f64']) {
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(0), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
 
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(1), 13);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "1,1,>", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", "1,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
 
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(2), 99);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
 })();
 
@@ -301,7 +246,7 @@ for (let type of ['f32', 'f64']) {
     enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.bar(), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
     assertEq(e2.bar(), 42);
 
@@ -311,7 +256,7 @@ for (let type of ['f32', 'f64']) {
     var e4 = new Instance(m2, {a:e3}).exports;
     enableSingleStepProfiling();
     assertEq(e4.bar(), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
     disableGeckoProfiling();
     assertEq(e4.bar(), 42);
 })();
@@ -377,7 +322,7 @@ for (let type of ['f32', 'f64']) {
     // Test normal conditions.
     enableSingleStepProfiling();
     assertEq(i.foo(0), 42);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "2,>", "<,2,>",
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "2,>", "<,2,>",
         // Losing stack information while the JIT func prologue sets profiler
         // virtual FP.
         "",
@@ -394,7 +339,7 @@ for (let type of ['f32', 'f64']) {
     // Test rectifier frame.
     enableSingleStepProfiling();
     assertEq(i.id(100), 100);
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "3,>", "<,3,>",
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "3,>", "<,3,>",
         // Rectifier frame time is spent here (lastProfilingFrame has not been
         // set).
         "",
@@ -409,7 +354,7 @@ for (let type of ['f32', 'f64']) {
 
     enableSingleStepProfiling();
     assertEq(i.foo(1337), -(2**31));
-    assertEqStacks(disableSingleStepProfiling(), ["", ">", "2,>", "<,2,>", "", "<,2,>", "",
+    assertEqImpreciseStacks(disableSingleStepProfiling(), ["", ">", "2,>", "<,2,>", "", "<,2,>", "",
         // Back into the jit exit (frame info has been recovered).
         // Inline conversion fails, we skip to the OOL path, call from there
         // and get back to the jit exit.
