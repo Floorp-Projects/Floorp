@@ -185,10 +185,13 @@ class VideoReceiver : public Module {
   int32_t SetReceiveChannelParameters(int64_t rtt);
   int32_t SetVideoProtection(VCMVideoProtection videoProtection, bool enable);
 
+  void SetCPULoadState(CPULoadState state);
+
   int64_t TimeUntilNextProcess() override;
   void Process() override;
 
   void TriggerDecoderShutdown();
+  void Reset();
 
  protected:
   int32_t Decode(const webrtc::VCMEncodedFrame& frame)

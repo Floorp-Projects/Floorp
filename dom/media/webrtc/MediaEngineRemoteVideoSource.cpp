@@ -592,7 +592,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer,
   }
 
   rtc::Callback0<void> callback_unused;
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer =
+  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
     new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
       aProps.width(),
       aProps.height(),
@@ -831,11 +831,9 @@ LogCapability(const char* aHeader,
     "Unknown codec"
   };
 
-  LOG(("%s: %4u x %4u x %2u maxFps, %s, %s. Distance = %" PRIu32,
+  LOG(("%s: %4u x %4u x %2u maxFps, %s. Distance = %" PRIu32,
        aHeader, aCapability.width, aCapability.height, aCapability.maxFPS,
-       types[std::min(std::max(uint32_t(0), uint32_t(aCapability.rawType)),
-                      uint32_t(sizeof(types) / sizeof(*types) - 1))],
-       codec[std::min(std::max(uint32_t(0), uint32_t(aCapability.codecType)),
+       codec[std::min(std::max(uint32_t(0), uint32_t(aCapability.videoType)),
                       uint32_t(sizeof(codec) / sizeof(*codec) - 1))],
        aDistance));
 }
@@ -1003,24 +1001,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(
     TrimLessFitCandidates(candidateSet);
   }
 
-  // Any remaining multiples all have the same distance, but may vary on
-  // format. Some formats are more desirable for certain use like WebRTC.
-  // E.g. I420 over RGB24 can remove a needless format conversion.
-
-  bool found = false;
-  for (auto& candidate : candidateSet) {
-    const webrtc::CaptureCapability& cap = candidate.mCapability;
-    if (cap.rawType == webrtc::RawVideoType::kVideoI420 ||
-        cap.rawType == webrtc::RawVideoType::kVideoYUY2 ||
-        cap.rawType == webrtc::RawVideoType::kVideoYV12) {
-      aCapability = cap;
-      found = true;
-      break;
-    }
-  }
-  if (!found) {
-    aCapability = candidateSet[0].mCapability;
-  }
+  aCapability = candidateSet[0].mCapability;
 
   LogCapability("Chosen capability", aCapability, sameDistance);
   return true;

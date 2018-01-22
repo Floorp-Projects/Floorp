@@ -101,7 +101,19 @@ inline void SetBE32(void* memory, uint32_t v) {
 }
 
 inline void SetBE64(void* memory, uint64_t v) {
+#ifdef WEBRTC_WIN
+  //Mozilla: because we support Win7, htonll is not visible to us
+  Set8(memory, 0, static_cast<uint8_t>(v >> 56));
+  Set8(memory, 1, static_cast<uint8_t>(v >> 48));
+  Set8(memory, 2, static_cast<uint8_t>(v >> 40));
+  Set8(memory, 3, static_cast<uint8_t>(v >> 32));
+  Set8(memory, 4, static_cast<uint8_t>(v >> 24));
+  Set8(memory, 5, static_cast<uint8_t>(v >> 16));
+  Set8(memory, 6, static_cast<uint8_t>(v >> 8));
+  Set8(memory, 7, static_cast<uint8_t>(v >> 0));
+#else
   *static_cast<uint64_t*>(memory) = htobe64(v);
+#endif
 }
 
 inline uint16_t GetBE16(const void* memory) {
@@ -113,7 +125,18 @@ inline uint32_t GetBE32(const void* memory) {
 }
 
 inline uint64_t GetBE64(const void* memory) {
+#ifdef WEBRTC_WIN
+  return (static_cast<uint64_t>(Get8(memory, 0)) << 56) |
+         (static_cast<uint64_t>(Get8(memory, 1)) << 48) |
+         (static_cast<uint64_t>(Get8(memory, 2)) << 40) |
+         (static_cast<uint64_t>(Get8(memory, 3)) << 32) |
+         (static_cast<uint64_t>(Get8(memory, 4)) << 24) |
+         (static_cast<uint64_t>(Get8(memory, 5)) << 16) |
+         (static_cast<uint64_t>(Get8(memory, 6)) << 8) |
+         (static_cast<uint64_t>(Get8(memory, 7)) << 0);
+#else
   return be64toh(*static_cast<const uint64_t*>(memory));
+#endif
 }
 
 inline void SetLE16(void* memory, uint16_t v) {
@@ -158,7 +181,13 @@ inline uint32_t HostToNetwork32(uint32_t n) {
 }
 
 inline uint64_t HostToNetwork64(uint64_t n) {
+#ifdef WEBRTC_WIN
+  uint64_t result;
+  SetBE64(&result, n);
+  return result;
+#else
   return htobe64(n);
+#endif
 }
 
 inline uint16_t NetworkToHost16(uint16_t n) {
@@ -170,7 +199,11 @@ inline uint32_t NetworkToHost32(uint32_t n) {
 }
 
 inline uint64_t NetworkToHost64(uint64_t n) {
+#ifdef WEBRTC_WIN
+  return GetBE64(&n);
+#else
   return be64toh(n);
+#endif
 }
 
 }  // namespace rtc

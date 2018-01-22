@@ -17,10 +17,50 @@
 #include "rtc_base/logging.h"
 
 #include <Dvdmedia.h>
-#include <Streams.h>
+#include <dbt.h>
+#include <ks.h>
 
 namespace webrtc {
 namespace videocapturemodule {
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    DeviceInfoDS* pParent;
+    if (uiMsg == WM_CREATE)
+    {
+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
+    }
+    else if (uiMsg == WM_DESTROY)
+    {
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
+    }
+    else if (uiMsg == WM_DEVICECHANGE)
+    {
+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+        if (pParent)
+        {
+            pParent->DeviceChange();
+        }
+    }
+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
+}
+
+void _FreeMediaType(AM_MEDIA_TYPE& mt)
+{
+    if (mt.cbFormat != 0)
+    {
+        CoTaskMemFree((PVOID)mt.pbFormat);
+        mt.cbFormat = 0;
+        mt.pbFormat = NULL;
+    }
+    if (mt.pUnk != NULL)
+    {
+        // pUnk should not be used.
+        mt.pUnk->Release();
+        mt.pUnk = NULL;
+    }
+}
 
 // static
 DeviceInfoDS* DeviceInfoDS::Create() {
@@ -33,8 +73,7 @@ DeviceInfoDS* DeviceInfoDS::Create() {
 }
 
 DeviceInfoDS::DeviceInfoDS()
-    : _dsDevEnum(NULL),
-      _dsMonikerDevEnum(NULL),
+    : DeviceInfoImpl(), _dsDevEnum(NULL),
       _CoUninitializeIsRequired(true) {
   // 1) Initialize the COM library (make Windows load the DLLs).
   //
@@ -78,14 +117,31 @@ DeviceInfoDS::DeviceInfoDS()
                        << " => RPC_E_CHANGED_MODE, error 0x" << std::hex << hr;
     }
   }
+
+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
+  _wndClass = {0};
+  _wndClass.lpfnWndProc = &WndProc;
+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
+  _wndClass.hInstance = _hInstance;
+
+  if (RegisterClass(&_wndClass))
+  {
+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
+                         NULL, _hInstance, this);
+  }
 }
 
 DeviceInfoDS::~DeviceInfoDS() {
-  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
   RELEASE_AND_CLEAR(_dsDevEnum);
   if (_CoUninitializeIsRequired) {
     CoUninitialize();
   }
+  if (_hwnd != NULL)
+  {
+    DestroyWindow(_hwnd);
+  }
+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
 }
 
 int32_t DeviceInfoDS::Init() {
@@ -100,7 +156,7 @@ int32_t DeviceInfoDS::Init() {
 }
 uint32_t DeviceInfoDS::NumberOfDevices() {
   ReadLockScoped cs(_apiLock);
-  return GetDeviceInfo(0, 0, 0, 0, 0, 0, 0);
+  return GetDeviceInfo(0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
@@ -109,11 +165,14 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
                                     char* deviceUniqueIdUTF8,
                                     uint32_t deviceUniqueIdUTF8Length,
                                     char* productUniqueIdUTF8,
-                                    uint32_t productUniqueIdUTF8Length) {
+                                    uint32_t productUniqueIdUTF8Length,
+                                    pid_t* pid)
+{
   ReadLockScoped cs(_apiLock);
   const int32_t result = GetDeviceInfo(
       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-      deviceUniqueIdUTF8Length, productUniqueIdUTF8, productUniqueIdUTF8Length);
+      deviceUniqueIdUTF8Length, productUniqueIdUTF8, productUniqueIdUTF8Length,
+      pid);
   return result > (int32_t)deviceNumber ? 0 : -1;
 }
 
@@ -123,16 +182,17 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
                                     char* deviceUniqueIdUTF8,
                                     uint32_t deviceUniqueIdUTF8Length,
                                     char* productUniqueIdUTF8,
-                                    uint32_t productUniqueIdUTF8Length)
-
+                                    uint32_t productUniqueIdUTF8Length,
+                                    pid_t* pid)
 {
   // enumerate all video capture devices
-  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
+  IEnumMoniker* _dsMonikerDevEnum = NULL;
   HRESULT hr = _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                                  &_dsMonikerDevEnum, 0);
   if (hr != NOERROR) {
     RTC_LOG(LS_INFO) << "Failed to enumerate CLSID_SystemDeviceEnum, error 0x"
                      << std::hex << hr << ". No webcam exist?";
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return 0;
   }
 
@@ -165,6 +225,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
               if (convResult == 0) {
                 RTC_LOG(LS_INFO) << "Failed to convert device name to UTF8, "
                                  << "error = " << GetLastError();
+                RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                 return -1;
               }
             }
@@ -184,6 +245,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
                   RTC_LOG(LS_INFO)
                       << "Failed to convert device "
                       << "name to UTF8, error = " << GetLastError();
+                  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                   return -1;
                 }
                 if (productUniqueIdUTF8 && productUniqueIdUTF8Length > 0) {
@@ -202,8 +264,9 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
     }
   }
   if (deviceNameLength) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " " << deviceNameUTF8;
+    RTC_LOG(LS_INFO) << __FUNCTION__ << ": deviceName: " << deviceNameUTF8;
   }
+  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
   return index;
 }
 
@@ -218,12 +281,13 @@ IBaseFilter* DeviceInfoDS::GetDeviceFilter(const char* deviceUniqueIdUTF8,
   }
 
   // enumerate all video capture devices
-  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
+  IEnumMoniker* _dsMonikerDevEnum = NULL;
   HRESULT hr = _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                                  &_dsMonikerDevEnum, 0);
   if (hr != NOERROR) {
     RTC_LOG(LS_INFO) << "Failed to enumerate CLSID_SystemDeviceEnum, error 0x"
                      << std::hex << hr << ". No webcam exist?";
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return 0;
   }
   _dsMonikerDevEnum->Reset();
@@ -279,6 +343,7 @@ IBaseFilter* DeviceInfoDS::GetDeviceFilter(const char* deviceUniqueIdUTF8,
       pM->Release();
     }
   }
+  RELEASE_AND_CLEAR(_dsMonikerDevEnum);
   return captureFilter;
 }
 
@@ -297,7 +362,6 @@ int32_t DeviceInfoDS::GetWindowsCapability(
 }
 
 int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-
 {
   // Reset old capability list
   _captureCapabilities.clear();
@@ -371,7 +435,8 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
   GUID preferedVideoFormat = FORMAT_VideoInfo;
   for (int32_t tmp = 0; tmp < count; ++tmp) {
     hr = streamConfig->GetStreamCaps(tmp, &pmt, reinterpret_cast<BYTE*>(&caps));
-    if (!FAILED(hr)) {
+    // Bug 1181265 - perhaps a helper dll returns success with nullptr
+    if (!FAILED(hr) && pmt) {
       if (pmt->majortype == MEDIATYPE_Video &&
           pmt->formattype == FORMAT_VideoInfo2) {
         RTC_LOG(LS_INFO) << "Device support FORMAT_VideoInfo2";
@@ -436,7 +501,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
       }
 
       if (hrVC == S_OK) {
-        LONGLONG* frameDurationList;
+        LONGLONG* frameDurationList = NULL;
         LONGLONG maxFPS;
         long listSize;
         SIZE size;
@@ -453,7 +518,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
 
         // On some odd cameras, you may get a 0 for duration.
         // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-        if (hrVC == S_OK && listSize > 0 &&
+        // Initialize and check the returned list for null since
+        // some broken drivers don't modify it.
+        if (hrVC == S_OK && listSize > 0 && frameDurationList &&
             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
           capability.supportFrameRateControl = true;
@@ -464,6 +531,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
             capability.maxFPS = static_cast<int>(10000000 / avgTimePerFrame);
           else
             capability.maxFPS = 0;
+        }
+        if (frameDurationList) {
+          CoTaskMemFree((PVOID)frameDurationList); // NULL not safe
         }
       } else  // use existing method in case IAMVideoControl is not supported
       {
@@ -510,7 +580,6 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
         RTC_LOG(LS_WARNING)
             << "Device support unknown media type " << strGuid << ", width "
             << capability.width << ", height " << capability.height;
-        continue;
       }
 
       _captureCapabilities.push_back(capability);
@@ -520,7 +589,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
                        << " type:" << static_cast<int>(capability.videoType)
                        << " fps:" << capability.maxFPS;
     }
-    DeleteMediaType(pmt);
+    _FreeMediaType(*pmt);
     pmt = NULL;
   }
   RELEASE_AND_CLEAR(streamConfig);

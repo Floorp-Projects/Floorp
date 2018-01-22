@@ -86,6 +86,7 @@ class RtpVideoStreamReceiver : public RtpData,
                        const std::map<std::string, std::string>& codec_params);
   uint32_t GetRemoteSsrc() const;
   int GetCsrcs(uint32_t* csrcs) const;
+  void GetRID(char rid[256]) const;
 
   RtpReceiver* GetRtpReceiver() const;
   RtpRtcp* rtp_rtcp() const { return rtp_rtcp_.get(); }

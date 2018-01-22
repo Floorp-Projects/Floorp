@@ -62,7 +62,7 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
                         ScreenId screen_id);
   ~MouseCursorMonitorMac() override;
 
-  void Start(Callback* callback, Mode mode) override;
+  void Init(Callback* callback, Mode mode) override;
   void Stop() override;
   void Capture() override;
 
@@ -107,6 +107,10 @@ void MouseCursorMonitorMac::Init(Callback* callback, Mode mode) {
 
   callback_ = callback;
   mode_ = mode;
+}
+
+void MouseCursorMonitorMac::Stop() {
+  callback_ = NULL;
 }
 
 void MouseCursorMonitorMac::Capture() {

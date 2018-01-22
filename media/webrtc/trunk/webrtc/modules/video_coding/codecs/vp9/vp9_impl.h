@@ -122,6 +122,7 @@ class VP9EncoderImpl : public VP9Encoder {
   size_t frames_since_kf_;
   uint8_t num_temporal_layers_;
   uint8_t num_spatial_layers_;
+  uint8_t num_cores_;
 
   // Used for flexible mode.
   bool is_flexible_mode_;
