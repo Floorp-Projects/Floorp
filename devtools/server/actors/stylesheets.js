@@ -474,7 +474,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       return null;
     }
     let content = request._response.content;
-    if (request._discardResponseBody || request._truncated || !content) {
+    if (request._discardResponseBody || !content) {
       return null;
     }
     if (content.text.type != "longString") {

@@ -37,7 +37,6 @@ add_task(function* () {
   info("Checking Netmonitor contents.");
   let shortRequests = [];
   let longRequests = [];
-  let hugeRequests = [];
   for (let item of getSortedRequests(store.getState())) {
     if (item.url.endsWith("doc_short_string.css")) {
       shortRequests.push(item);
@@ -45,18 +44,10 @@ add_task(function* () {
     if (item.url.endsWith("doc_long_string.css")) {
       longRequests.push(item);
     }
-    if (item.url.endsWith("doc_huge_string.css")) {
-      hugeRequests.push(item);
-    }
   }
 
   is(shortRequests.length, 1,
      "Got one request for doc_short_string.css after Style Editor was loaded.");
   is(longRequests.length, 1,
      "Got one request for doc_long_string.css after Style Editor was loaded.");
-
-  // Requests with a response body size greater than 1MB cannot be fetched from the
-  // netmonitor, the style editor should perform a separate request.
-  is(hugeRequests.length, 2,
-     "Got two requests for doc_huge_string.css after Style Editor was loaded.");
 });
