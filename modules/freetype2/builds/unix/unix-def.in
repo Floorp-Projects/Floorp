@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2017 by
+# Copyright 1996-2018 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -43,6 +43,7 @@ DISTCLEAN += $(OBJ_BUILD)/config.cache  \
              $(OBJ_BUILD)/unix-def.mk   \
              $(OBJ_BUILD)/unix-cc.mk    \
              $(OBJ_BUILD)/ftconfig.h    \
+             $(OBJ_BUILD)/ftoption.h    \
              $(LIBTOOL)                 \
              $(OBJ_BUILD)/Makefile
 

@@ -2,7 +2,7 @@
 //
 //   A fuzzing function to test FreeType's rasterizers with libFuzzer.
 //
-// Copyright 2016-2017 by
+// Copyright 2016-2018 by
 // David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 // This file is part of the FreeType project, and may only be used,
