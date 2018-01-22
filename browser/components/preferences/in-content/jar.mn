@@ -4,6 +4,7 @@
 
 browser.jar:
    content/browser/preferences/in-content/preferences.js
+   content/browser/preferences/in-content/extensionControlled.js
 *  content/browser/preferences/in-content/preferences.xul
    content/browser/preferences/in-content/subdialogs.js
 
