@@ -34,36 +34,6 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
-// Frame manipulation functions.
-
-uint32_t
-MacroAssembler::framePushed() const
-{
-    return framePushed_;
-}
-
-void
-MacroAssembler::setFramePushed(uint32_t framePushed)
-{
-    framePushed_ = framePushed;
-}
-
-void
-MacroAssembler::adjustFrame(int32_t value)
-{
-    MOZ_ASSERT_IF(value < 0, framePushed_ >= uint32_t(-value));
-    setFramePushed(framePushed_ + value);
-}
-
-void
-MacroAssembler::implicitPop(uint32_t bytes)
-{
-    MOZ_ASSERT(bytes % sizeof(intptr_t) == 0);
-    MOZ_ASSERT(bytes <= INT32_MAX);
-    adjustFrame(-int32_t(bytes));
-}
-
-// ===============================================================
 // Stack manipulation functions.
 
 CodeOffset
