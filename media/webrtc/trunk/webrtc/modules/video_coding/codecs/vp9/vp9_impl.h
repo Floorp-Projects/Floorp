@@ -72,6 +72,9 @@ class VP9EncoderImpl : public VP9Encoder {
   // Call encoder initialize function and set control settings.
   int InitAndSetControlSettings(const VideoCodec* inst);
 
+  // Update frame size for codec.
+  int UpdateCodecFrameSize(const VideoFrame& input_image);
+
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
                              uint32_t timestamp);

@@ -143,6 +143,7 @@ class AudioCodingModuleImpl final : public AudioCodingModule {
   int ReceiveCodec(CodecInst* current_codec) const override;
 
   rtc::Optional<SdpAudioFormat> ReceiveFormat() const override;
+  int ReceiveSampleRate() const override;
 
   // Incoming packet from network parsed and ready for decode.
   int IncomingPacket(const uint8_t* incoming_payload,

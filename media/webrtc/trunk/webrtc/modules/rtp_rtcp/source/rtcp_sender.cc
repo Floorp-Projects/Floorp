@@ -177,6 +177,10 @@ RTCPSender::RTCPSender(
 
       xr_send_receiver_reference_time_enabled_(false),
       packet_type_counter_observer_(packet_type_counter_observer) {
+  memset(last_send_report_, 0, sizeof(last_send_report_));
+  memset(last_rtcp_time_, 0, sizeof(last_rtcp_time_));
+  memset(lastSRPacketCount_, 0, sizeof(lastSRPacketCount_));
+  memset(lastSROctetCount_, 0, sizeof(lastSROctetCount_));
   RTC_DCHECK(transport_ != nullptr);
 
   builders_[kRtcpSr] = &RTCPSender::BuildSR;
@@ -206,8 +210,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
   if (method_ == RtcpMode::kOff && new_method != RtcpMode::kOff) {
     // When switching on, reschedule the next packet
     next_time_to_send_rtcp_ =
-      clock_->TimeInMilliseconds() +
-      (audio_ ? RTCP_INTERVAL_AUDIO_MS / 2 : RTCP_INTERVAL_VIDEO_MS / 2);
+      clock_->TimeInMilliseconds() + RTCP_INTERVAL_RAPID_SYNC_MS / 2;
   }
   method_ = new_method;
 }
@@ -428,7 +431,44 @@ bool RTCPSender::TimeToSendRTCPReport(bool sendKeyframeBeforeRTP) const {
   return false;
 }
 
+bool
+RTCPSender::GetSendReportMetadata(const uint32_t sendReport,
+                                  uint64_t *timeOfSend,
+                                  uint32_t *packetCount,
+                                  uint64_t *octetCount)
+{
+  rtc::CritScope lock(&critical_section_rtcp_sender_);
+
+  // This is only saved when we are the sender
+  if ((last_send_report_[0] == 0) || (sendReport == 0)) {
+    return false;
+  } else {
+    for (int i = 0; i < RTCP_NUMBER_OF_SR; ++i) {
+      if (last_send_report_[i] == sendReport) {
+        *timeOfSend = last_rtcp_time_[i];
+        *packetCount = lastSRPacketCount_[i];
+        *octetCount = lastSROctetCount_[i];
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildSR(const RtcpContext& ctx) {
+  for (int i = (RTCP_NUMBER_OF_SR - 2); i >= 0; i--) {
+    // shift old
+    last_send_report_[i + 1] = last_send_report_[i];
+    last_rtcp_time_[i + 1] = last_rtcp_time_[i];
+    lastSRPacketCount_[i+1] = lastSRPacketCount_[i];
+    lastSROctetCount_[i+1] = lastSROctetCount_[i];
+  }
+
+  last_rtcp_time_[0] = ctx.now_.ToMs();
+  last_send_report_[0] = (ctx.now_.seconds() << 16) + (ctx.now_.fractions() >> 16);
+  lastSRPacketCount_[0] = ctx.feedback_state_.packets_sent;
+  lastSROctetCount_[0] = ctx.feedback_state_.media_bytes_sent;
+
   // Timestamp shouldn't be estimated before first media frame.
   RTC_DCHECK_GE(last_frame_capture_time_ms_, 0);
   // The timestamp of this RTCP packet should be estimated as the timestamp of

@@ -164,6 +164,7 @@ bool WindowCapturerWin::GetSourceList(SourceList* sources) {
 }
 
 bool WindowCapturerWin::SelectSource(SourceId id) {
+  assert(IsGUIThread(false));
   HWND window = reinterpret_cast<HWND>(id);
   if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
@@ -175,6 +176,7 @@ bool WindowCapturerWin::SelectSource(SourceId id) {
 }
 
 bool WindowCapturerWin::FocusOnSelectedSource() {
+  assert(IsGUIThread(false));
   if (!window_)
     return false;
 

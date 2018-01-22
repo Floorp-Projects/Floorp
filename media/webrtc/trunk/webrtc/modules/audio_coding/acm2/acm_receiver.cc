@@ -318,6 +318,10 @@ rtc::Optional<SdpAudioFormat> AcmReceiver::LastAudioFormat() const {
   return last_audio_format_;
 }
 
+int AcmReceiver::LastAudioSampleRate() const {
+  return last_audio_format_clockrate_hz_;
+}
+
 void AcmReceiver::GetNetworkStatistics(NetworkStatistics* acm_stat) {
   NetEqNetworkStatistics neteq_stat;
   // NetEq function always returns zero, so we don't check the return value.
