@@ -294,17 +294,16 @@ MarionetteComponent.prototype.init = function() {
     }
     await startupRecorder;
 
-    let s;
     try {
       Cu.import("chrome://marionette/content/server.js");
-      s = new server.TCPListener(prefs.port);
-      s.start();
-      log.info(`Listening on port ${s.port}`);
-    } finally {
-      if (s) {
-        this.server = s;
-        this.running = true;
-      }
+      let listener = new server.TCPListener(prefs.port);
+      listener.start();
+      log.info(`Listening on port ${listener.port}`);
+      this.server = listener;
+      this.running = true;
+    } catch (e) {
+      log.fatal("Remote protocol server failed to start", e);
+      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
     }
   });
 };
