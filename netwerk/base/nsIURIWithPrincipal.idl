@@ -6,6 +6,7 @@
 
 interface nsIPrincipal;
 interface nsIURI;
+interface nsIURIMutator;
 
 /**
  * nsIURIWithPrincipal is implemented by URIs which are associated with a
@@ -24,4 +25,15 @@ interface nsIURIWithPrincipal : nsISupports
      * The uri for the principal.
      */
     readonly attribute nsIURI principalUri;
+};
+
+[builtinclass, uuid(fa138a89-c76e-4b7f-95ec-c7b56ded5ef5)]
+interface nsIPrincipalURIMutator : nsISupports
+{
+    /**
+     * Associates a principal to the mutated URI.
+     * Would normally return nsIURIMutator, but since it only gets called
+     * from C++, there is no need for that.
+     */
+    [must_use, noscript] void setPrincipal(in nsIPrincipal aPrincipal);
 };
