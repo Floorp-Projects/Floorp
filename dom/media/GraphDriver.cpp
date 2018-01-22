@@ -627,6 +627,7 @@ AudioCallbackDriver::Init()
 
   output.channels = mOutputChannels;
   output.layout = CubebUtils::GetPreferredChannelLayoutOrSMPTE(cubebContext, mOutputChannels);
+  output.prefs = CUBEB_STREAM_PREF_NONE;
 
   Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
   if (latencyPref) {
