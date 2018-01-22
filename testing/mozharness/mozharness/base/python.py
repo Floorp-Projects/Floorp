@@ -310,9 +310,6 @@ class VirtualenvMixin(object):
 
         This uses the copy of virtualenv that is vendored in mozharness.
 
-        c['virtualenv_python_dll'] is an optional config item that works
-        around an old windows virtualenv bug.
-
         virtualenv_modules can be a list of module names to install, e.g.
 
             virtualenv_modules = ['module1', 'module2']
