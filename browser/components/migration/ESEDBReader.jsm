@@ -33,7 +33,7 @@ const MAX_STR_LENGTH = 64 * 1024;
 const KERNEL = {};
 KERNEL.FILETIME = new ctypes.StructType("FILETIME", [
   {dwLowDateTime: ctypes.uint32_t},
-  {dwHighDateTime: ctypes.uint32_t}
+  {dwHighDateTime: ctypes.uint32_t},
 ]);
 KERNEL.SYSTEMTIME = new ctypes.StructType("SYSTEMTIME", [
   {wYear: ctypes.uint16_t},
@@ -43,7 +43,7 @@ KERNEL.SYSTEMTIME = new ctypes.StructType("SYSTEMTIME", [
   {wHour: ctypes.uint16_t},
   {wMinute: ctypes.uint16_t},
   {wSecond: ctypes.uint16_t},
-  {wMilliseconds: ctypes.uint16_t}
+  {wMilliseconds: ctypes.uint16_t},
 ]);
 
 // DB column types, cribbed from the ESE header
@@ -97,7 +97,7 @@ ESE.JET_COLUMNDEF = new ctypes.StructType("JET_COLUMNDEF", [
   {"cp": ctypes.unsigned_short },
   {"wCollate": ctypes.unsigned_short }, /* Must be 0 */
   {"cbMax": ctypes.unsigned_long },
-  {"grbit": ESE.JET_GRBIT }
+  {"grbit": ESE.JET_GRBIT },
 ]);
 
 // Track open databases

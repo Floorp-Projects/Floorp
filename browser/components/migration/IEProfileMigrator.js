@@ -78,7 +78,7 @@ History.prototype = {
         { uri,
           title,
           visits: [{ transitionType,
-                     visitDate: lastVisitTime }]
+                     visitDate: lastVisitTime }],
         }
       );
     }
@@ -94,9 +94,9 @@ History.prototype = {
       ignoreResults: true,
       handleCompletion(updatedCount) {
         aCallback(updatedCount > 0);
-      }
+      },
     });
-  }
+  },
 };
 
 // IE form password migrator supporting windows from XP until 7 and IE from 7 until 11
@@ -272,7 +272,7 @@ IE7FormPasswords.prototype = {
       // Bytes 24-35 are not needed and not documented
       {"unknown4": ctypes.uint32_t},
       {"unknown5": ctypes.uint32_t},
-      {"unknown6": ctypes.uint32_t}
+      {"unknown6": ctypes.uint32_t},
     ]);
 
     // the structure of a IE7 decrypted login item
@@ -289,7 +289,7 @@ IE7FormPasswords.prototype = {
       // Bytes 20-31 are not needed and not documented
       {"unknown1": ctypes.uint32_t},
       {"unknown2": ctypes.uint32_t},
-      {"unknown3": ctypes.uint32_t}
+      {"unknown3": ctypes.uint32_t},
     ]);
 
     let url = uri.prePath;
@@ -402,7 +402,7 @@ Object.defineProperty(IEProfileMigrator.prototype, "sourceHomePageURL", {
     }
 
     return homepage;
-  }
+  },
 });
 
 IEProfileMigrator.prototype.classDescription = "IE Profile Migrator";
