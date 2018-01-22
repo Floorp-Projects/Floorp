@@ -196,6 +196,18 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty("box-shadow");
   ok(testValues(values, expected), "property box-shadow's values");
 
+  // Regression test for bug 1255379.
+  var expected = [ "inherit", "initial", "unset", "none", "url",
+                   "polygon", "circle", "ellipse", "inset",
+                   "fill-box", "stroke-box", "view-box", "margin-box",
+                   "border-box", "padding-box", "content-box" ];
+  var values = InspectorUtils.getCSSValuesForProperty("clip-path");
+  ok(testValues(values, expected), "property clip-path's values");
+
+  var expected = [ "inherit", "initial", "unset", "auto", "rect" ];
+  var values = InspectorUtils.getCSSValuesForProperty("clip");
+  ok(testValues(values, expected), "property clip's values");
+
   SimpleTest.finish();
 }
 

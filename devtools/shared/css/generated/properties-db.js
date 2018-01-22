@@ -2882,7 +2882,6 @@ exports.CSS_PROPERTIES = {
       "border-block-start-style",
       "border-block-start-width",
       "border-bottom-color",
-      "-moz-border-bottom-colors",
       "border-bottom-left-radius",
       "border-bottom-right-radius",
       "border-bottom-style",
@@ -2900,16 +2899,13 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-style",
       "border-inline-start-width",
       "border-left-color",
-      "-moz-border-left-colors",
       "border-left-style",
       "border-left-width",
       "border-right-color",
-      "-moz-border-right-colors",
       "border-right-style",
       "border-right-width",
       "border-spacing",
       "border-top-color",
-      "-moz-border-top-colors",
       "border-top-left-radius",
       "border-top-right-radius",
       "border-top-style",
@@ -4972,8 +4968,10 @@ exports.CSS_PROPERTIES = {
     ],
     "supports": [],
     "values": [
+      "auto",
       "inherit",
       "initial",
+      "rect",
       "unset"
     ]
   },
@@ -4986,9 +4984,22 @@ exports.CSS_PROPERTIES = {
       11
     ],
     "values": [
+      "border-box",
+      "circle",
+      "content-box",
+      "ellipse",
+      "fill-box",
       "inherit",
       "initial",
-      "unset"
+      "inset",
+      "margin-box",
+      "none",
+      "padding-box",
+      "polygon",
+      "stroke-box",
+      "unset",
+      "url",
+      "view-box"
     ]
   },
   "clip-rule": {
