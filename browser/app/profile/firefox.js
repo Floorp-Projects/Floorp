@@ -915,9 +915,6 @@ pref("browser.sessionstore.max_write_failures", 5);
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
-// Whether useAsyncTransactions is enabled or not.
-pref("browser.places.useAsyncTransactions", true);
-
 // Whether history is enabled or not.
 pref("places.history.enabled", true);
 
