@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component for Win32 (body).                    */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -65,7 +65,7 @@
 
 
     va_start( ap, fmt );
-    vprintf( fmt, ap );
+    vfprintf( stderr, fmt, ap );
     /* send the string to the debugger as well */
     vsprintf( buf, fmt, ap );
     OutputDebugStringA( buf );

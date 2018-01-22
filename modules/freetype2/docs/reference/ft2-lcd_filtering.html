@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,13 +100,13 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="lcd_filtering">LCD Filtering</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_LcdFilter">FT_LcdFilter</a></td><td><a href="#FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></td></tr>
-<tr><td><a href="#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td><a href="#FT_PARAM_TAG_LCD_FILTER_WEIGHTS">FT_PARAM_TAG_LCD_FILTER_WEIGHTS</a></td></tr>
+<tr><td><a href="#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td></td></tr>
 </table>
 
 
@@ -217,6 +217,23 @@
   FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
   <b>FT_Library_SetLcdFilterWeights</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>      library,
                                   <span class="keyword">unsigned</span> <span class="keyword">char</span>  *weights );
+
+
+  /*
+   * @type:
+   *   FT_LcdFiveTapFilter
+   *
+   * @description:
+   *   A <span class="keyword">typedef</span> for passing the five LCD filter weights to
+   *   @<a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a> within an @<a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structure.
+   *
+   * @since:
+   *   2.8
+   *
+   */
+#define FT_LCD_FILTER_FIVE_TAPS  5
+
+  <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>  FT_LcdFiveTapFilter[FT_LCD_FILTER_FIVE_TAPS];
 </pre>
 
 <p>This function can be used to enable LCD filter with custom weights, instead of using presets in <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a>.</p>
@@ -236,37 +253,10 @@
 
 <h4>note</h4>
 <p>Due to <b>PATENTS</b> covering subpixel rendering, this function doesn't do anything except returning &lsquo;FT_Err_Unimplemented_Feature&rsquo; if the configuration macro FT_CONFIG_OPTION_SUBPIXEL_RENDERING is not defined in your build of the library, which should correspond to all default builds of FreeType.</p>
-<p>LCD filter weights can also be set per face using <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a> with <a href="ft2-lcd_filtering.html#FT_PARAM_TAG_LCD_FILTER_WEIGHTS">FT_PARAM_TAG_LCD_FILTER_WEIGHTS</a>.</p>
+<p>LCD filter weights can also be set per face using <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a> with <a href="ft2-parameter_tags.html#FT_PARAM_TAG_LCD_FILTER_WEIGHTS">FT_PARAM_TAG_LCD_FILTER_WEIGHTS</a>.</p>
 
 <h4>since</h4>
 <p>2.4.0</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
-<h3 id="FT_PARAM_TAG_LCD_FILTER_WEIGHTS">FT_PARAM_TAG_LCD_FILTER_WEIGHTS</h3>
-<p>Defined in FT_LCD_FILTER_H (freetype/ftlcdfil.h).</p>
-<pre>
-#define <b>FT_PARAM_TAG_LCD_FILTER_WEIGHTS</b> \
-          <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'l', 'c', 'd', 'f' )
-
-
-  /*
-   * @type:
-   *   FT_LcdFiveTapFilter
-   *
-   * @description:
-   *   A <span class="keyword">typedef</span> for passing the five LCD filter weights to
-   *   @<a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a> within an @<a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> structure.
-   *
-   */
-#define FT_LCD_FILTER_FIVE_TAPS  5
-
-  <span class="keyword">typedef</span> <a href="ft2-basic_types.html#FT_Byte">FT_Byte</a>  FT_LcdFiveTapFilter[FT_LCD_FILTER_FIVE_TAPS];
-</pre>
-
-<p>An <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> tag to be used with <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a>. The corresponding argument specifies the five LCD filter weights for a given face (if using <a href="ft2-base_interface.html#FT_LOAD_TARGET_XXX">FT_LOAD_TARGET_LCD</a>, for example), overriding the global default values or the values set up with <a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a>.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
