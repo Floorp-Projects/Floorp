@@ -1127,7 +1127,8 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate,
   nsPIDOMWindowOuter *domWindow = doc->GetWindow();
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
-  return domWindow->UpdateCommands(commandsToUpdate, sel, reason);
+  domWindow->UpdateCommands(commandsToUpdate, sel, reason);
+  return NS_OK;
 }
 
 // END nsTextInputListener
