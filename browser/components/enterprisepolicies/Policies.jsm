@@ -35,6 +35,12 @@ this.Policies = {
       }
     }
   },
+
+  "dont_check_default_browser": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("browser.shell.checkDefaultBrowser", false);
+    }
+  }
 };
 
 /*
