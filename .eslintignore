@@ -77,6 +77,10 @@ browser/base/content/newtab/**
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
+# This file is split into two in order to keep it as a valid json file
+# for documentation purposes (policies.json) but to be accessed by the
+# code as a .jsm (schema.jsm)
+browser/components/enterprisepolicies/schemas/schema.jsm
 # generated & special files in cld2
 browser/components/translation/cld2/**
 # Screenshots and Follow-on search are imported as a system add-on and have

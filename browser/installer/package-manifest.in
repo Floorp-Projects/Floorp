@@ -229,6 +229,7 @@
 @RESPATH@/components/dom_presentation.xpt
 @RESPATH@/components/downloads.xpt
 @RESPATH@/components/editor.xpt
+@RESPATH@/components/enterprisepolicies.xpt
 @RESPATH@/components/extensions.xpt
 @RESPATH@/components/exthandler.xpt
 @RESPATH@/components/fastfind.xpt
@@ -379,6 +380,9 @@
 @RESPATH@/browser/components/browser-newtab.xpt
 @RESPATH@/browser/components/aboutNewTabService.js
 @RESPATH@/browser/components/NewTabComponents.manifest
+@RESPATH@/browser/components/EnterprisePolicies.js
+@RESPATH@/browser/components/EnterprisePoliciesContent.js
+@RESPATH@/browser/components/EnterprisePolicies.manifest
 @RESPATH@/components/Downloads.manifest
 @RESPATH@/components/DownloadLegacy.js
 @RESPATH@/components/thumbnails.xpt
