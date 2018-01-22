@@ -10,13 +10,10 @@ import("//build/config/linux/pkg_config.gni")
 import("../webrtc.gni")
 
 group("media") {
-  public_deps = []
-  if (!build_with_mozilla) {
-    public_deps += [
-      ":rtc_media",
-      ":rtc_media_base",
-    ]
-  }
+  public_deps = [
+    ":rtc_media",
+    ":rtc_media_base",
+  ]
 }
 
 config("rtc_media_defines_config") {
@@ -72,14 +69,8 @@ rtc_static_library("rtc_media_base") {
     "base/mediaconstants.h",
     "base/mediaengine.cc",
     "base/mediaengine.h",
-    "base/rtpdataengine.cc",
-    "base/rtpdataengine.h",
-    "base/rtputils.cc",
-    "base/rtputils.h",
     "base/streamparams.cc",
     "base/streamparams.h",
-    "base/turnutils.cc",
-    "base/turnutils.h",
     "base/videoadapter.cc",
     "base/videoadapter.h",
     "base/videobroadcaster.cc",
@@ -98,6 +89,17 @@ rtc_static_library("rtc_media_base") {
     # TODO(aleloi): add "base/videosourceinterface.h"
   ]
 
+  if (!build_with_mozilla) {
+    srcs += [
+      "base/rtpdataengine.cc",
+      "base/rtpdataengine.h",
+      "base/rtputils.cc",
+      "base/rtputils.h",
+      "base/turnutils.cc",
+      "base/turnutils.h",
+    ]
+  }
+
   if (!build_with_chromium && is_clang) {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
@@ -114,7 +116,6 @@ rtc_static_library("rtc_media_base") {
 
   deps += [
     "..:webrtc_common",
-    "../api:libjingle_peerconnection_api",
     "../api:optional",
     "../api:video_frame_api",
     "../api:video_frame_api_i420",
@@ -131,7 +132,10 @@ rtc_static_library("rtc_media_base") {
   public_deps += [ ":rtc_h264_profile_id" ]
 
   if (!build_with_mozilla) {
-    deps += [ "../p2p" ]
+    deps += [
+      "../api:libjingle_peerconnection_api",
+      "../p2p"
+    ]
   }
 
   if (is_nacl) {
@@ -176,22 +180,27 @@ rtc_static_library("rtc_audio_video") {
     "engine/videoencodersoftwarefallbackwrapper.h",
     "engine/vp8_encoder_simulcast_proxy.cc",
     "engine/vp8_encoder_simulcast_proxy.h",
-    "engine/webrtcmediaengine.cc",
-    "engine/webrtcmediaengine.h",
-    "engine/webrtcvideocapturer.cc",
-    "engine/webrtcvideocapturer.h",
-    "engine/webrtcvideocapturerfactory.cc",
-    "engine/webrtcvideocapturerfactory.h",
     "engine/webrtcvideodecoderfactory.cc",
     "engine/webrtcvideodecoderfactory.h",
     "engine/webrtcvideoencoderfactory.cc",
     "engine/webrtcvideoencoderfactory.h",
-    "engine/webrtcvideoengine.cc",
-    "engine/webrtcvideoengine.h",
-    "engine/webrtcvoe.h",
-    "engine/webrtcvoiceengine.cc",
-    "engine/webrtcvoiceengine.h",
   ]
+
+  if (!build_with_mozilla) {
+    sources += [
+      "engine/webrtcvideocapturer.cc",
+      "engine/webrtcvideocapturer.h",
+      "engine/webrtcvideocapturerfactory.cc",
+      "engine/webrtcvideocapturerfactory.h",
+      "engine/webrtcmediaengine.cc",
+      "engine/webrtcmediaengine.h",
+      "engine/webrtcvideoengine.cc",
+      "engine/webrtcvideoengine.h",
+      "engine/webrtcvoe.h",
+      "engine/webrtcvoiceengine.cc",
+      "engine/webrtcvoiceengine.h",
+    ]
+  }
 
   configs += [ ":rtc_media_warnings_config" ]
 
@@ -247,7 +256,6 @@ rtc_static_library("rtc_audio_video") {
     ":rtc_media_base",
     "..:webrtc_common",
     "../api:call_api",
-    "../api:libjingle_peerconnection_api",
     "../api:optional",
     "../api:transport_api",
     "../api:video_frame_api",
@@ -266,8 +274,6 @@ rtc_static_library("rtc_audio_video") {
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
-    "../p2p:rtc_p2p",
-    "../pc:rtc_pc_base",
     "../rtc_base:rtc_base",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_task_queue",
@@ -276,6 +282,14 @@ rtc_static_library("rtc_audio_video") {
     "../video",
     "../voice_engine",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "../api:libjingle_peerconnection_api",
+      "../p2p:rtc_p2p",
+      "../pc:rtc_pc_base",
+    ]
+  }
 }
 
 rtc_static_library("rtc_data") {
@@ -319,18 +333,26 @@ rtc_static_library("rtc_data") {
     "..:webrtc_common",
     "../api:call_api",
     "../api:transport_api",
-    "../p2p:rtc_p2p",
     "../rtc_base:rtc_base",
     "../rtc_base:rtc_base_approved",
     "../system_wrappers",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [ "../p2p:rtc_p2p" ]
+  }
 }
 
 rtc_source_set("rtc_media") {
   public_deps = [
     ":rtc_audio_video",
-    ":rtc_data",
   ]
+
+  if (!build_with_mozilla) {
+    public_deps += [
+      ":rtc_data",
+    ]
+  }
 }
 
 if (rtc_include_tests) {

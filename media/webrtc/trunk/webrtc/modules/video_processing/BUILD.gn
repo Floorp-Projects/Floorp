@@ -44,6 +44,8 @@ rtc_static_library("video_processing") {
     # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
     suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
   }
+
+  include_dirs = [ "$rtc_libyuv_dir/include" ]
 }
 
 rtc_source_set("denoiser_filter") {
