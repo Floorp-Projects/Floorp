@@ -216,6 +216,145 @@ bool PlayoutDelayLimits::Write(uint8_t* data,
   return true;
 }
 
+// RtpStreamId.
+constexpr RTPExtensionType RtpStreamId::kId;
+constexpr const char* RtpStreamId::kUri;
+
+bool RtpStreamId::Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid) {
+  if (data.empty() || data[0] == 0 ||  // Valid rsid can't be empty.
+      data.size() > StreamId::kMaxSize) // mozilla
+    return false;
+  // If there is a \0 character in the middle of the |data|, it will be treated
+  // as the end of the StreamId when StreamId::size() is called.
+  rsid->Set(data);
+  RTC_DCHECK(!rsid->empty());
+  return true;
+}
+
+bool RtpStreamId::Write(uint8_t* data, const StreamId& rsid) {
+  RTC_DCHECK_GE(rsid.size(), 1);
+  RTC_DCHECK_LE(rsid.size(), StreamId::kMaxSize);
+  memcpy(data, rsid.data(), rsid.size());
+  return true;
+}
+
+bool RtpStreamId::Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid) {
+  if (data.empty() || data[0] == 0 ||  // Valid rsid can't be empty.
+      data.size() > StreamId::kMaxSize) // mozilla
+    return false;
+  const char* str = reinterpret_cast<const char*>(data.data());
+  // If there is a \0 character in the middle of the |data|, treat it as end of
+  // the string. Well-formed rsid shouldn't contain it.
+  rsid->assign(str, strnlen(str, data.size()));
+  RTC_DCHECK(!rsid->empty());
+  return true;
+}
+
+bool RtpStreamId::Write(uint8_t* data, const std::string& rsid) {
+  RTC_DCHECK_GE(rsid.size(), 1);
+  RTC_DCHECK_LE(rsid.size(), StreamId::kMaxSize);
+  memcpy(data, rsid.data(), rsid.size());
+  return true;
+}
+
+// RepairedRtpStreamId.
+constexpr RTPExtensionType RepairedRtpStreamId::kId;
+constexpr const char* RepairedRtpStreamId::kUri;
+
+// RtpStreamId and RepairedRtpStreamId use the same format to store rsid.
+bool RepairedRtpStreamId::Parse(rtc::ArrayView<const uint8_t> data,
+                                StreamId* rsid) {
+  return RtpStreamId::Parse(data, rsid);
+}
+
+size_t RepairedRtpStreamId::ValueSize(const StreamId& rsid) {
+  return RtpStreamId::ValueSize(rsid);
+}
+
+bool RepairedRtpStreamId::Write(uint8_t* data, const StreamId& rsid) {
+  return RtpStreamId::Write(data, rsid);
+}
+
+bool RepairedRtpStreamId::Parse(rtc::ArrayView<const uint8_t> data,
+                                std::string* rsid) {
+  return RtpStreamId::Parse(data, rsid);
+}
+
+size_t RepairedRtpStreamId::ValueSize(const std::string& rsid) {
+  return RtpStreamId::ValueSize(rsid);
+}
+
+bool RepairedRtpStreamId::Write(uint8_t* data, const std::string& rsid) {
+  return RtpStreamId::Write(data, rsid);
+}
+
+// MId
+constexpr RTPExtensionType MId::kId;
+constexpr const char* MId::kUri;
+
+bool MId::Parse(rtc::ArrayView<const uint8_t> data, StreamId* mid) {
+  return RtpStreamId::Parse(data, mid);
+}
+
+size_t MId::ValueSize(const StreamId& mid) {
+  return RtpStreamId::ValueSize(mid);
+}
+
+bool MId::Write(uint8_t* data, const StreamId& mid) {
+  return RtpStreamId::Write(data, mid);
+}
+
+bool MId::Parse(rtc::ArrayView<const uint8_t> data, std::string* mid) {
+  return RtpStreamId::Parse(data, mid);
+}
+
+size_t MId::ValueSize(const std::string& mid) {
+  return RtpStreamId::ValueSize(mid);
+}
+
+bool MId::Write(uint8_t* data, const std::string& mid) {
+  return RtpStreamId::Write(data, mid);
+}
+
+// CSRCAudioLevel
+//  Sample Audio Level Encoding Using the One-Byte Header Format
+//  Note that the range of len is 1 to 15 which is encoded as 0 to 14
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |  ID   | len=2 |0|   level 1   |0|   level 2   |0|   level 3   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+constexpr RTPExtensionType CsrcAudioLevel::kId;
+constexpr const char* CsrcAudioLevel::kUri;
+
+bool CsrcAudioLevel::Parse(rtc::ArrayView<const uint8_t> data,
+                           CsrcAudioLevelList* csrcAudioLevels) {
+  if (data.size() < 1 || data.size() > kRtpCsrcSize)
+    return false;
+  csrcAudioLevels->numAudioLevels = data.size();
+  for(uint8_t i = 0; i < csrcAudioLevels->numAudioLevels; i++) {
+    // Ensure range is 0 to 127 inclusive
+    csrcAudioLevels->arrOfAudioLevels[i] = 0x7f & data[i];
+  }
+  return true;
+}
+
+size_t CsrcAudioLevel::ValueSize(const CsrcAudioLevelList& csrcAudioLevels) {
+  return csrcAudioLevels.numAudioLevels;
+}
+
+bool CsrcAudioLevel::Write(uint8_t* data,
+                           const CsrcAudioLevelList& csrcAudioLevels) {
+  RTC_DCHECK_GE(csrcAudioLevels.numAudioLevels, 0);
+  for(uint8_t i = 0; i < csrcAudioLevels.numAudioLevels; i++) {
+    data[i] = csrcAudioLevels.arrOfAudioLevels[i] & 0x7f;
+  }
+  // This extension if used must have at least one audio level
+  return csrcAudioLevels.numAudioLevels;
+}
+
 // Video Content Type.
 //
 // E.g. default video or screenshare.

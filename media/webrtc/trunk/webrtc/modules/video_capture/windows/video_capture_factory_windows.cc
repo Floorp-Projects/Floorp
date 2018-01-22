@@ -23,8 +23,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
   return DeviceInfoDS::Create();
 }
 
-rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
-    const char* device_id) {
+rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(const char* device_id) {
   if (device_id == nullptr)
     return nullptr;
 

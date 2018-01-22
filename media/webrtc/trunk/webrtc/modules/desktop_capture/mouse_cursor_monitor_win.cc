@@ -43,7 +43,8 @@ class MouseCursorMonitorWin : public MouseCursorMonitor {
   explicit MouseCursorMonitorWin(ScreenId screen);
   ~MouseCursorMonitorWin() override;
 
-  void Init(Callback* callback, Mode mode) override;
+  void Start(Callback* callback, Mode mode) override;
+  void Stop() override;
   void Capture() override;
 
  private:

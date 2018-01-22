@@ -25,6 +25,7 @@ class WindowCapturerNull : public DesktopCapturer {
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -53,6 +54,10 @@ void WindowCapturerNull::Start(Callback* callback) {
   assert(callback);
 
   callback_ = callback;
+}
+
+void WindowCapturerNull::Stop() {
+  callback_ = NULL;
 }
 
 void WindowCapturerNull::CaptureFrame() {

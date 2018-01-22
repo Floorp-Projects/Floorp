@@ -118,8 +118,10 @@ int DtmfToneGenerator::Init(int fs, int event, int attenuation) {
     fs_index = 1;
   } else if (fs == 32000) {
     fs_index = 2;
-  } else if (fs == 48000) {
+  } else if (fs == 44100) {
     fs_index = 3;
+  } else if (fs == 48000) {
+    fs_index = 4;
   } else {
     RTC_NOTREACHED();
     fs_index = 1;  // Default to 8000 Hz.

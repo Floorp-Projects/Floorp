@@ -199,6 +199,7 @@ int DtmfBuffer::SetSampleRate(int fs_hz) {
   if (fs_hz != 8000 &&
       fs_hz != 16000 &&
       fs_hz != 32000 &&
+      fs_hz != 44100 &&
       fs_hz != 48000) {
     return kInvalidSampleRate;
   }

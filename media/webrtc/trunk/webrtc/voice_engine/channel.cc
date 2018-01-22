@@ -1160,6 +1160,10 @@ int Channel::SetSendAudioLevelIndicationStatus(bool enable, unsigned char id) {
   return SetSendRtpHeaderExtension(enable, kRtpExtensionAudioLevel, id);
 }
 
+int Channel::SetSendMIDStatus(bool enable, unsigned char id) {
+  return SetSendRtpHeaderExtension(enable, kRtpExtensionMId, id);
+}
+
 int Channel::SetReceiveAudioLevelIndicationStatus(bool enable,
                                                   unsigned char id) {
   rtp_header_parser_->DeregisterRtpHeaderExtension(kRtpExtensionAudioLevel);
@@ -1283,12 +1287,14 @@ int Channel::GetRemoteRTCPReportBlocks(
 
 int Channel::GetRTPStatistics(CallStatistics& stats) {
   // --- RtcpStatistics
+  // GetStatistics() grabs the stream_lock_ inside the object
+  // rtp_receiver_->SSRC grabs a lock too.
 
   // The jitter statistics is updated for each received RTP packet and is
   // based on received packets.
   RtcpStatistics statistics;
   StreamStatistician* statistician =
-      rtp_receive_statistics_->GetStatistician(rtp_receiver_->SSRC());
+    rtp_receive_statistics_->GetStatistician(rtp_receiver_->SSRC());
   if (statistician) {
     statistician->GetStatistics(&statistics,
                                 _rtpRtcpModule->RTCP() == RtcpMode::kOff);
@@ -1592,13 +1598,12 @@ int Channel::SetSendRtpHeaderExtension(bool enable,
 }
 
 int Channel::GetRtpTimestampRateHz() const {
-  const auto format = audio_coding_->ReceiveFormat();
+  int sampleRate = audio_coding_->ReceiveSampleRate();
   // Default to the playout frequency if we've not gotten any packets yet.
   // TODO(ossu): Zero clockrate can only happen if we've added an external
   // decoder for a format we don't support internally. Remove once that way of
   // adding decoders is gone!
-  return (format && format->clockrate_hz != 0)
-             ? format->clockrate_hz
+  return sampleRate != 0 ? sampleRate
              : audio_coding_->PlayoutFrequency();
 }
 
