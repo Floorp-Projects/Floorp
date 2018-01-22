@@ -355,6 +355,7 @@ public:
                 EmptyString(), EmptyString(), true, 1)
     , mRate(0)
     , mChannels(0)
+    , mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP)
     , mBitDepth(0)
     , mProfile(0)
     , mExtendedProfile(0)
@@ -367,6 +368,7 @@ public:
     : TrackInfo(aOther)
     , mRate(aOther.mRate)
     , mChannels(aOther.mChannels)
+    , mChannelMap(aOther.mChannelMap)
     , mBitDepth(aOther.mBitDepth)
     , mProfile(aOther.mProfile)
     , mExtendedProfile(aOther.mExtendedProfile)
@@ -403,6 +405,11 @@ public:
 
   // Number of audio channels.
   uint32_t mChannels;
+  // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
+  // definition. A value of UNKNOWN_MAP indicates unknown layout.
+  // ChannelMap is an unsigned bitmap compatible with Windows' WAVE and FFmpeg
+  // channel map.
+  AudioConfig::ChannelLayout::ChannelMap mChannelMap;
 
   // Bits per sample.
   uint32_t mBitDepth;
