@@ -25,6 +25,10 @@ this.devtools_network = class extends ExtensionAPI {
               });
             };
           }).api(),
+
+          getHAR: function() {
+            return context.devToolsToolbox.getHARFromNetMonitor();
+          },
         },
       },
     };
