@@ -1678,4 +1678,20 @@ DistributeRange(const Range<Keyframe>& aRange)
   }
 }
 
+template
+nsTArray<AnimationProperty>
+KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+  const nsTArray<Keyframe>& aKeyframes,
+  dom::Element* aElement,
+  GeckoStyleContext* aStyle,
+  dom::CompositeOperation aEffectComposite);
+
+template
+nsTArray<AnimationProperty>
+KeyframeUtils::GetAnimationPropertiesFromKeyframes(
+  const nsTArray<Keyframe>& aKeyframes,
+  dom::Element* aElement,
+  const ServoStyleContext* aStyle,
+  dom::CompositeOperation aEffectComposite);
+
 } // namespace mozilla
