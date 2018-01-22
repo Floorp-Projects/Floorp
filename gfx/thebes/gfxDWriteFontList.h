@@ -18,7 +18,7 @@
  // To work around this, until the build environment is updated,
  // we #include an extra header that contains copies of the relevant
  // classes/interfaces we need.
-#if WINVER < 0x0A00
+#if !defined(__MINGW32__) && WINVER < 0x0A00
 #include "dw-extra.h"
 #endif
 
