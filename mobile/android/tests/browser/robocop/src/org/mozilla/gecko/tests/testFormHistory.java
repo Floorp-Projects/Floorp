@@ -28,9 +28,8 @@ public class testFormHistory extends OldBaseTest {
         ContentResolver cr = context.getContentResolver();
         ContentValues[] cvs = new ContentValues[1];
         cvs[0] = new ContentValues();
-
+ 
         blockForGeckoReady();
-        blockForFormHistoryReady();
 
         Uri formHistoryUri;
         Uri insertUri;
