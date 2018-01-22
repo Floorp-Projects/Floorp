@@ -4595,6 +4595,11 @@ class JS_PUBLIC_API(StreamConsumer)
     // contract described above.
     enum CloseReason { EndOfFile, Error };
     virtual void streamClosed(CloseReason reason) = 0;
+
+    // Provides optional stream attributes such as base or source mapping URLs.
+    // Necessarily called before consumeChunk() or streamClosed(). The caller
+    // retains ownership of the given strings.
+    virtual void noteResponseURLs(const char* maybeUrl, const char* maybeSourceMapUrl) = 0;
 };
 
 enum class MimeType { Wasm };

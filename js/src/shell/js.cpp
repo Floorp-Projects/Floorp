@@ -5926,6 +5926,23 @@ BufferStreamMain(BufferStreamJob* job)
 }
 
 static bool
+EnsureLatin1CharsLinearString(JSContext* cx, HandleValue value, JS::MutableHandle<JSLinearString*> result)
+{
+    if (!value.isString()) {
+        result.set(nullptr);
+        return true;
+    }
+    RootedString str(cx, value.toString());
+    if (!str->isLinear() || !str->hasLatin1Chars()) {
+        JS_ReportErrorASCII(cx, "only latin1 chars and linear strings are expected");
+        return false;
+    }
+    result.set(&str->asLinear());
+    MOZ_ASSERT(result->hasLatin1Chars());
+    return true;
+}
+
+static bool
 ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::StreamConsumer* consumer)
 {
     SharedMem<uint8_t*> dataPointer;
@@ -5933,6 +5950,30 @@ ConsumeBufferSource(JSContext* cx, JS::HandleObject obj, JS::MimeType, JS::Strea
     if (!IsBufferSource(obj, &dataPointer, &byteLength)) {
         JS_ReportErrorASCII(cx, "shell streaming consumes a buffer source (buffer or view)");
         return false;
+    }
+
+    {
+        RootedValue url(cx);
+        if (!JS_GetProperty(cx, obj, "url", &url))
+            return false;
+        RootedLinearString urlStr(cx);
+        if (!EnsureLatin1CharsLinearString(cx, url, &urlStr))
+            return false;
+
+        RootedValue mapUrl(cx);
+        if (!JS_GetProperty(cx, obj, "sourceMappingURL", &mapUrl))
+            return false;
+        RootedLinearString mapUrlStr(cx);
+        if (!EnsureLatin1CharsLinearString(cx, mapUrl, &mapUrlStr))
+            return false;
+
+        JS::AutoCheckCannotGC nogc;
+        consumer->noteResponseURLs(urlStr
+                                   ? reinterpret_cast<const char*>(urlStr->latin1Chars(nogc))
+                                   : nullptr,
+                                   mapUrlStr
+                                   ? reinterpret_cast<const char*>(mapUrlStr->latin1Chars(nogc))
+                                   : nullptr);
     }
 
     auto job = cx->make_unique<BufferStreamJob>(consumer);
