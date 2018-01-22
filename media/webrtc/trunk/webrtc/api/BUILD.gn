@@ -13,9 +13,11 @@ if (is_android) {
 }
 
 group("api") {
-  public_deps = [
-    ":libjingle_peerconnection_api",
-  ]
+  public_deps = []
+
+  if (!build_with_mozilla) {
+    public_deps += [ ":libjingle_peerconnection_api" ]
+  }
 }
 
 rtc_source_set("call_api") {
@@ -336,7 +338,6 @@ if (rtc_include_tests) {
       "fakemetricsobserver.h",
     ]
     deps = [
-      ":libjingle_peerconnection_api",
       "../api:peerconnection_and_implicit_call_api",
       "../media:rtc_media_base",
       "../rtc_base:rtc_base_approved",
@@ -344,6 +345,9 @@ if (rtc_include_tests) {
     if (!build_with_chromium && is_clang) {
       # Suppress warnings from the Chromium Clang plugin (bugs.webrtc.org/163).
       suppressed_configs += [ "//build/config/clang:find_bad_constructs" ]
+    }
+    if (!build_with_mozilla) {
+      deps += [ ":libjingle_peerconnection_api" ]
     }
   }
 

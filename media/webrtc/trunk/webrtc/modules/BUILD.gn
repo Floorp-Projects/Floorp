@@ -255,10 +255,13 @@ if (rtc_include_tests) {
       "remote_bitrate_estimator:remote_bitrate_estimator_unittests",
       "rtp_rtcp:rtp_rtcp_unittests",
       "utility:utility_unittests",
-      "video_capture",
       "video_coding:video_coding_unittests",
       "video_processing:video_processing_unittests",
     ]
+
+    if (!build_with_mozilla) {
+      deps += [ "video_capture" ]
+    }
 
     data = modules_unittests_resources
 

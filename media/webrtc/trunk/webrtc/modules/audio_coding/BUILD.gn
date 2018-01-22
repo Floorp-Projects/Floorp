@@ -9,7 +9,9 @@
 import("../../webrtc.gni")
 import("audio_coding.gni")
 import("//build/config/arm.gni")
-import("//third_party/protobuf/proto_library.gni")
+if (!build_with_mozilla) {
+  import("//third_party/protobuf/proto_library.gni")
+}
 
 audio_codec_deps = [
   ":cng",
@@ -808,7 +810,7 @@ rtc_static_library("webrtc_opus") {
   if (rtc_build_opus) {
     public_deps += [ rtc_opus_dir ]
   } else if (build_with_mozilla) {
-    include_dirs = [ getenv("DIST") + "/include/opus" ]
+    include_dirs = [ "/media/libopus/include" ]
   }
 }
 
