@@ -181,6 +181,10 @@ protected:
     virtual nsresult EnsureFile();
 
 private:
+    nsresult Init(uint32_t urlType, int32_t defaultPort, const nsACString &spec,
+                  const char *charset, nsIURI *baseURI);
+    nsresult SetDefaultPort(int32_t aNewDefaultPort);
+
     int32_t  Port() { return mPort == -1 ? mDefaultPort : mPort; }
 
     void     ReplacePortInSpec(int32_t aNewPort);

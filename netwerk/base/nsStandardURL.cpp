@@ -3298,7 +3298,7 @@ nsStandardURL::SetFile(nsIFile *file)
 // nsStandardURL::nsIStandardURL
 //----------------------------------------------------------------------------
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::Init(uint32_t urlType,
                     int32_t defaultPort,
                     const nsACString &spec,
@@ -3355,7 +3355,7 @@ nsStandardURL::Init(uint32_t urlType,
     return SetSpecWithEncoding(buf, encoding);
 }
 
-NS_IMETHODIMP
+nsresult
 nsStandardURL::SetDefaultPort(int32_t aNewDefaultPort)
 {
     ENSURE_MUTABLE();
