@@ -327,13 +327,16 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
     data = mAudioConverter->Process(Move(data));
   }
 
-  RefPtr<AudioData> audio = new AudioData(aSample->mOffset,
-                                          aSample->mTime,
-                                          duration,
-                                          numFrames,
-                                          data.Forget(),
-                                          channels,
-                                          rate);
+  RefPtr<AudioData> audio =
+    new AudioData(aSample->mOffset,
+                  aSample->mTime,
+                  duration,
+                  numFrames,
+                  data.Forget(),
+                  channels,
+                  rate,
+                  mChannelLayout ? mChannelLayout->Map()
+                                 : AudioConfig::ChannelLayout::UNKNOWN_MAP);
   mDecodedSamples.AppendElement(Move(audio));
   return NS_OK;
 }
