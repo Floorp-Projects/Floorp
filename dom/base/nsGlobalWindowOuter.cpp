@@ -2603,7 +2603,7 @@ nsPIDOMWindowOuter::SetFrameElementInternal(Element* aFrameElement)
   mFrameElement = aFrameElement;
 }
 
-nsIDOMNavigator*
+Navigator*
 nsGlobalWindowOuter::GetNavigator()
 {
   FORWARD_TO_INNER(Navigator, (), nullptr);
