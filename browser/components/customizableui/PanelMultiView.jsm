@@ -195,11 +195,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   get currentShowPromise() {
     return this._currentShowPromise || Promise.resolve();
   }
-  get _keyNavigationMap() {
-    if (!this.__keyNavigationMap)
-      this.__keyNavigationMap = new Map();
-    return this.__keyNavigationMap;
-  }
 
   connect() {
     this.knownViews = new Set(Array.from(
@@ -297,20 +292,15 @@ this.PanelMultiView = class extends this.AssociatedToNode {
   }
 
   goBack() {
+    if (this.openViews.length < 2) {
+      // This may be called by keyboard navigation or external code when only
+      // the main view is open.
+      return;
+    }
+
     let previous = this.openViews.pop().node;
     let current = this._currentSubView;
-    return this.showSubView(current, null, previous);
-  }
-
-  /**
-   * Checks whether it is possible to navigate backwards currently. Returns
-   * false if this is the panelmultiview's mainview, true otherwise.
-   *
-   * @param  {panelview} view View to check, defaults to the currently active view.
-   * @return {Boolean}
-   */
-  _canGoBack(view = this._currentSubView) {
-    return view.id != this._mainViewId;
+    this.showSubView(current, null, previous);
   }
 
   showMainView() {
@@ -437,7 +427,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       await this._cleanupTransitionPhase();
       if (playTransition) {
         await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
-        this._updateKeyboardFocus(viewNode);
+        nextPanelView.focusSelectedElement();
       } else {
         this.hideAllViewsExcept(nextPanelView);
       }
@@ -622,6 +612,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       this._transitionDetails = null;
 
     let nextPanelView = PanelView.forNode(viewNode);
+    let prevPanelView = PanelView.forNode(previousViewNode);
 
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
@@ -629,7 +620,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     previousViewNode.removeAttribute("in-transition");
     viewNode.removeAttribute("in-transition");
     if (reverse)
-      this._resetKeyNavigation(previousViewNode);
+      prevPanelView.clearNavigation();
 
     if (anchor)
       anchor.removeAttribute("open");
@@ -721,10 +712,13 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     }
     switch (aEvent.type) {
       case "keydown":
-        this._keyNavigation(aEvent);
+        if (!this._transitioning) {
+          PanelView.forNode(this._currentSubView)
+                   .keyNavigation(aEvent, this._dir);
+        }
         break;
       case "mousemove":
-        this._resetKeyNavigation();
+        this.openViews.forEach(panelView => panelView.clearNavigation());
         break;
       case "popupshowing": {
         this.node.setAttribute("panelopen", "true");
@@ -772,7 +766,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         }
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
-        this._resetKeyNavigation();
+        this.openViews.forEach(panelView => panelView.clearNavigation());
         this.openViews = [];
 
         // Clear the main view size caches. The dimensions could be different
@@ -787,194 +781,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this.dispatchCustomEvent("PanelMultiViewHidden");
         break;
       }
-    }
-  }
-
-  /**
-   * Based on going up or down, select the previous or next focusable button
-   * in the current view.
-   *
-   * @param {Object}  navMap   the navigation keyboard map object for the view
-   * @param {Array}   buttons  an array of focusable buttons to select an item from.
-   * @param {Boolean} isDown   whether we're going down (true) or up (false) in this view.
-   *
-   * @return {DOMNode} the button we selected.
-   */
-  _updateSelectedKeyNav(navMap, buttons, isDown) {
-    let lastSelected = navMap.selected && navMap.selected.get();
-    let newButton = null;
-    let maxIdx = buttons.length - 1;
-    if (lastSelected) {
-      let buttonIndex = buttons.indexOf(lastSelected);
-      if (buttonIndex != -1) {
-        // Buttons may get selected whilst the panel is shown, so add an extra
-        // check here.
-        do {
-          buttonIndex = buttonIndex + (isDown ? 1 : -1);
-        } while (buttons[buttonIndex] && buttons[buttonIndex].disabled);
-        if (isDown && buttonIndex > maxIdx)
-          buttonIndex = 0;
-        else if (!isDown && buttonIndex < 0)
-          buttonIndex = maxIdx;
-        newButton = buttons[buttonIndex];
-      } else {
-        // The previously selected item is no longer selectable. Find the next item:
-        let allButtons = lastSelected.closest("panelview").getElementsByTagName("toolbarbutton");
-        let maxAllButtonIdx = allButtons.length - 1;
-        let allButtonIndex = allButtons.indexOf(lastSelected);
-        while (allButtonIndex >= 0 && allButtonIndex <= maxAllButtonIdx) {
-          allButtonIndex++;
-          // Check if the next button is in the list of focusable buttons.
-          buttonIndex = buttons.indexOf(allButtons[allButtonIndex]);
-          if (buttonIndex != -1) {
-            // If it is, just use that button if we were going down, or the previous one
-            // otherwise. If this was the first button, newButton will end up undefined,
-            // which is fine because we'll fall back to using the last button at the
-            // bottom of this method.
-            newButton = buttons[isDown ? buttonIndex : buttonIndex - 1];
-            break;
-          }
-        }
-      }
-    }
-
-    // If we couldn't find something, select the first or last item:
-    if (!newButton) {
-      newButton = buttons[isDown ? 0 : maxIdx];
-    }
-    navMap.selected = Cu.getWeakReference(newButton);
-    return newButton;
-  }
-
-  /**
-   * Allow for navigating subview buttons using the arrow keys and the Enter key.
-   * The Up and Down keys can be used to navigate the list up and down and the
-   * Enter, Right or Left - depending on the text direction - key can be used to
-   * simulate a click on the currently selected button.
-   * The Right or Left key - depending on the text direction - can be used to
-   * navigate to the previous view, functioning as a shortcut for the view's
-   * back button.
-   * Thus, in LTR mode:
-   *  - The Right key functions the same as the Enter key, simulating a click
-   *  - The Left key triggers a navigation back to the previous view.
-   *
-   * @param {KeyEvent} event
-   */
-  _keyNavigation(event) {
-    if (this._transitioning)
-      return;
-
-    let view = this._currentSubView;
-    let navMap = this._keyNavigationMap.get(view);
-    if (!navMap) {
-      navMap = {};
-      this._keyNavigationMap.set(view, navMap);
-    }
-
-    let buttons = navMap.buttons;
-    if (!buttons || !buttons.length) {
-      buttons = navMap.buttons = PanelView.forNode(view).getNavigableElements();
-      // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
-      for (let button of buttons) {
-        if (!button.classList.contains("subviewbutton-back") &&
-            !button.hasAttribute("tabindex")) {
-          button.setAttribute("tabindex", 0);
-        }
-      }
-    }
-    if (!buttons.length)
-      return;
-
-    let stop = () => {
-      event.stopPropagation();
-      event.preventDefault();
-    };
-
-    let keyCode = event.code;
-    switch (keyCode) {
-      case "ArrowDown":
-      case "ArrowUp":
-      case "Tab": {
-        stop();
-        let isDown = (keyCode == "ArrowDown") ||
-                     (keyCode == "Tab" && !event.shiftKey);
-        let button = this._updateSelectedKeyNav(navMap, buttons, isDown);
-        button.focus();
-        break;
-      }
-      case "ArrowLeft":
-      case "ArrowRight": {
-        stop();
-        let dir = this._dir;
-        if ((dir == "ltr" && keyCode == "ArrowLeft") ||
-            (dir == "rtl" && keyCode == "ArrowRight")) {
-          if (this._canGoBack(view))
-            this.goBack();
-          break;
-        }
-        // If the current button is _not_ one that points to a subview, pressing
-        // the arrow key shouldn't do anything.
-        if (!navMap.selected || !navMap.selected.get() ||
-            !navMap.selected.get().classList.contains("subviewbutton-nav")) {
-          break;
-        }
-        // Fall-through...
-      }
-      case "Space":
-      case "Enter": {
-        let button = navMap.selected && navMap.selected.get();
-        if (!button)
-          break;
-        stop();
-
-        // Unfortunately, 'tabindex' doesn't execute the default action, so
-        // we explicitly do this here.
-        // We are sending a command event and then a click event.
-        // This is done in order to mimic a "real" mouse click event.
-        // The command event executes the action, then the click event closes the menu.
-        button.doCommand();
-        let clickEvent = new event.target.ownerGlobal.MouseEvent("click", {"bubbles": true});
-        button.dispatchEvent(clickEvent);
-        break;
-      }
-    }
-  }
-
-  /**
-   * Clear all traces of keyboard navigation happening right now.
-   *
-   * @param {panelview} view View to reset the key navigation attributes of.
-   *                         If no view is passed, all navigation attributes for
-   *                         this panelmultiview are cleared.
-   */
-  _resetKeyNavigation(view) {
-    let viewToBlur = view || this._currentSubView;
-    let navMap = this._keyNavigationMap.get(viewToBlur);
-    if (navMap && navMap.selected && navMap.selected.get()) {
-      navMap.selected.get().blur();
-    }
-
-    // We clear the entire key navigation map ONLY if *no* view was passed in.
-    // This happens e.g. when the popup is hidden completely, or the user moves
-    // their mouse.
-    // If a view is passed in, we just delete the map for that view. This happens
-    // when going back from a view (which resets the map for that view only)
-    if (view) {
-      this._keyNavigationMap.delete(view);
-    } else {
-      this._keyNavigationMap.clear();
-    }
-  }
-
-  /**
-   * Focus the last selected element in the view, if any.
-   *
-   * @param {panelview} view the view in which to update keyboard focus.
-   */
-  _updateKeyboardFocus(view) {
-    let navMap = this._keyNavigationMap.get(view);
-    if (navMap && navMap.selected && navMap.selected.get()) {
-      navMap.selected.get().focus();
     }
   }
 };
@@ -1143,5 +949,184 @@ this.PanelView = class extends this.AssociatedToNode {
       let bounds = dwu.getBoundsWithoutFlushing(button);
       return bounds.width > 0 && bounds.height > 0;
     });
+  }
+
+  /**
+   * Element that is currently selected with the keyboard, or null if no element
+   * is selected. Since the reference is held weakly, it can become null or
+   * undefined at any time.
+   *
+   * The element is usually, but not necessarily, in the "buttons" property
+   * which in turn is initialized from the getNavigableElements list.
+   */
+  get selectedElement() {
+    return this._selectedElement && this._selectedElement.get();
+  }
+  set selectedElement(value) {
+    if (!value) {
+      delete this._selectedElement;
+    } else {
+      this._selectedElement = Cu.getWeakReference(value);
+    }
+  }
+
+  /**
+   * Based on going up or down, select the previous or next focusable button.
+   *
+   * @param {Boolean} isDown   whether we're going down (true) or up (false).
+   *
+   * @return {DOMNode} the button we selected.
+   */
+  moveSelection(isDown) {
+    let buttons = this.buttons;
+    let lastSelected = this.selectedElement;
+    let newButton = null;
+    let maxIdx = buttons.length - 1;
+    if (lastSelected) {
+      let buttonIndex = buttons.indexOf(lastSelected);
+      if (buttonIndex != -1) {
+        // Buttons may get selected whilst the panel is shown, so add an extra
+        // check here.
+        do {
+          buttonIndex = buttonIndex + (isDown ? 1 : -1);
+        } while (buttons[buttonIndex] && buttons[buttonIndex].disabled);
+        if (isDown && buttonIndex > maxIdx)
+          buttonIndex = 0;
+        else if (!isDown && buttonIndex < 0)
+          buttonIndex = maxIdx;
+        newButton = buttons[buttonIndex];
+      } else {
+        // The previously selected item is no longer selectable. Find the next item:
+        let allButtons = lastSelected.closest("panelview").getElementsByTagName("toolbarbutton");
+        let maxAllButtonIdx = allButtons.length - 1;
+        let allButtonIndex = allButtons.indexOf(lastSelected);
+        while (allButtonIndex >= 0 && allButtonIndex <= maxAllButtonIdx) {
+          allButtonIndex++;
+          // Check if the next button is in the list of focusable buttons.
+          buttonIndex = buttons.indexOf(allButtons[allButtonIndex]);
+          if (buttonIndex != -1) {
+            // If it is, just use that button if we were going down, or the previous one
+            // otherwise. If this was the first button, newButton will end up undefined,
+            // which is fine because we'll fall back to using the last button at the
+            // bottom of this method.
+            newButton = buttons[isDown ? buttonIndex : buttonIndex - 1];
+            break;
+          }
+        }
+      }
+    }
+
+    // If we couldn't find something, select the first or last item:
+    if (!newButton) {
+      newButton = buttons[isDown ? 0 : maxIdx];
+    }
+    this.selectedElement = newButton;
+    return newButton;
+  }
+
+  /**
+   * Allow for navigating subview buttons using the arrow keys and the Enter key.
+   * The Up and Down keys can be used to navigate the list up and down and the
+   * Enter, Right or Left - depending on the text direction - key can be used to
+   * simulate a click on the currently selected button.
+   * The Right or Left key - depending on the text direction - can be used to
+   * navigate to the previous view, functioning as a shortcut for the view's
+   * back button.
+   * Thus, in LTR mode:
+   *  - The Right key functions the same as the Enter key, simulating a click
+   *  - The Left key triggers a navigation back to the previous view.
+   *
+   * @param {KeyEvent} event
+   * @param {String} dir
+   *        Direction for arrow navigation, either "ltr" or "rtl".
+   */
+  keyNavigation(event, dir) {
+    let buttons = this.buttons;
+    if (!buttons || !buttons.length) {
+      buttons = this.buttons = this.getNavigableElements();
+      // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
+      for (let button of buttons) {
+        if (!button.classList.contains("subviewbutton-back") &&
+            !button.hasAttribute("tabindex")) {
+          button.setAttribute("tabindex", 0);
+        }
+      }
+    }
+    if (!buttons.length)
+      return;
+
+    let stop = () => {
+      event.stopPropagation();
+      event.preventDefault();
+    };
+
+    let keyCode = event.code;
+    switch (keyCode) {
+      case "ArrowDown":
+      case "ArrowUp":
+      case "Tab": {
+        stop();
+        let isDown = (keyCode == "ArrowDown") ||
+                     (keyCode == "Tab" && !event.shiftKey);
+        let button = this.moveSelection(isDown);
+        button.focus();
+        break;
+      }
+      case "ArrowLeft":
+      case "ArrowRight": {
+        stop();
+        if ((dir == "ltr" && keyCode == "ArrowLeft") ||
+            (dir == "rtl" && keyCode == "ArrowRight")) {
+          this.node.panelMultiView.goBack();
+          break;
+        }
+        // If the current button is _not_ one that points to a subview, pressing
+        // the arrow key shouldn't do anything.
+        let button = this.selectedElement;
+        if (!button || !button.classList.contains("subviewbutton-nav")) {
+          break;
+        }
+        // Fall-through...
+      }
+      case "Space":
+      case "Enter": {
+        let button = this.selectedElement;
+        if (!button)
+          break;
+        stop();
+
+        // Unfortunately, 'tabindex' doesn't execute the default action, so
+        // we explicitly do this here.
+        // We are sending a command event and then a click event.
+        // This is done in order to mimic a "real" mouse click event.
+        // The command event executes the action, then the click event closes the menu.
+        button.doCommand();
+        let clickEvent = new event.target.ownerGlobal.MouseEvent("click", {"bubbles": true});
+        button.dispatchEvent(clickEvent);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Focus the last selected element in the view, if any.
+   */
+  focusSelectedElement() {
+    let selected = this.selectedElement;
+    if (selected) {
+      selected.focus();
+    }
+  }
+
+  /**
+   * Clear all traces of keyboard navigation happening right now.
+   */
+  clearNavigation() {
+    delete this.buttons;
+    let selected = this.selectedElement;
+    if (selected) {
+      selected.blur();
+      this.selectedElement = null;
+    }
   }
 };
