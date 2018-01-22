@@ -166,7 +166,7 @@ bool IsDesktopElement(XAtomCache* cache, ::Window window) {
 
 int32_t GetWindowState(XAtomCache* cache, ::Window window) {
   // Get WM_STATE property of the window.
-  XWindowProperty<uint32_t> window_state(
+  webrtc::XWindowProperty<uint32_t> window_state(
       cache->display(), window, cache->WmState());
 
   // WM_STATE is considered to be set to WithdrawnState when it missing.
@@ -209,6 +209,15 @@ bool GetWindowList(XAtomCache* cache,
       ::Window app_window =
           GetApplicationWindow(cache, children[num_children - 1 - i]);
       if (app_window && !IsDesktopElement(cache, app_window)) {
+        XWindowAttributes window_attr;
+        if(!XGetWindowAttributes(display, app_window, &window_attr)) {
+          RTC_LOG(LS_ERROR)<<"Bad request for attributes for window ID:" << app_window;
+          continue;
+        }
+        if((window_attr.width <= 0) || (window_attr.height <=0)){
+          continue;
+        }
+
         if (!on_window(app_window)) {
           return true;
         }

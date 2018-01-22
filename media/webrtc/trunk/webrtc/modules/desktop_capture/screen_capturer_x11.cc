@@ -418,7 +418,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
     return nullptr;
   }
 
-  return std::move(capturer);
+  return capturer;
 }
 
 }  // namespace webrtc

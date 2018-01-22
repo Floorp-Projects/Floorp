@@ -28,6 +28,7 @@
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/scoped_ref_ptr.h"
+#include "modules/desktop_capture/x11/shared_x_util.h"
 
 namespace webrtc {
 
@@ -41,6 +42,7 @@ class WindowCapturerLinux : public DesktopCapturer,
 
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
+  void Stop() override;
   void CaptureFrame() override;
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
@@ -55,6 +57,9 @@ class WindowCapturerLinux : public DesktopCapturer,
 
   // Returns window title for the specified X |window|.
   bool GetWindowTitle(::Window window, std::string* title);
+
+  // Returns the id of the owning process.
+  int GetWindowProcessID(::Window window);
 
   Callback* callback_ = nullptr;
 
@@ -96,6 +101,7 @@ bool WindowCapturerLinux::GetSourceList(SourceList* sources) {
                        [this, sources](::Window window) {
                          Source w;
                          w.id = window;
+                         w.pid = (pid_t)GetWindowProcessID(window);
                          if (this->GetWindowTitle(window, &w.title)) {
                            sources->push_back(w);
                          }
@@ -180,14 +186,18 @@ void WindowCapturerLinux::Start(Callback* callback) {
   callback_ = callback;
 }
 
+void WindowCapturerLinux::Stop() {
+  callback_ = NULL;
+}
+
 void WindowCapturerLinux::CaptureFrame() {
+  x_display_->ProcessPendingXEvents();
+
   if (!x_server_pixel_buffer_.IsWindowValid()) {
     RTC_LOG(LS_INFO) << "The window is no longer valid.";
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
-
-  x_display_->ProcessPendingXEvents();
 
   if (!has_composite_extension_) {
     // Without the Xcomposite extension we capture when the whole window is

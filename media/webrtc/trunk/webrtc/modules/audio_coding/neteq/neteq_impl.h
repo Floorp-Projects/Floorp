@@ -412,7 +412,7 @@ class NetEqImpl : public webrtc::NetEq {
   StatisticsCalculator stats_ RTC_GUARDED_BY(crit_sect_);
   int fs_hz_ RTC_GUARDED_BY(crit_sect_);
   int fs_mult_ RTC_GUARDED_BY(crit_sect_);
-  int last_output_sample_rate_hz_ RTC_GUARDED_BY(crit_sect_);
+  std::atomic<int> last_output_sample_rate_hz_;
   size_t output_size_samples_ RTC_GUARDED_BY(crit_sect_);
   size_t decoder_frame_length_ RTC_GUARDED_BY(crit_sect_);
   Modes last_mode_ RTC_GUARDED_BY(crit_sect_);

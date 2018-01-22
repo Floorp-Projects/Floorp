@@ -6,7 +6,7 @@
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_DEVICE_INFO_H_
 
 #include <map>
-#include "webrtc/modules/desktop_capture/desktop_capture_types.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
 
 namespace webrtc {
 

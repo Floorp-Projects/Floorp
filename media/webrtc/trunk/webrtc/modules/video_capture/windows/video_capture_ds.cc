@@ -20,7 +20,7 @@
 namespace webrtc {
 namespace videocapturemodule {
 VideoCaptureDS::VideoCaptureDS()
-    : _captureFilter(NULL),
+    : VideoCaptureImpl(), _dsInfo(), _captureFilter(NULL),
       _graphBuilder(NULL),
       _mediaControl(NULL),
       _sinkFilter(NULL),
@@ -102,7 +102,7 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
   }
 
   // Create the sink filte used for receiving Captured frames.
-  _sinkFilter = new CaptureSinkFilter(SINK_FILTER_NAME, NULL, &hr, *this);
+  _sinkFilter = new CaptureSinkFilter(SINK_FILTER_NAME, NULL, &hr, *this, 0);
   if (hr != S_OK) {
     RTC_LOG(LS_INFO) << "Failed to create send filter";
     return -1;
@@ -122,7 +122,7 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
   }
   // Temporary connect here.
   // This is done so that no one else can use the capture device.
-  if (SetCameraOutput(_requestedCapability) != 0) {
+  if (SetCameraOutputIfNeeded(_requestedCapability) != 0) {
     return -1;
   }
   hr = _mediaControl->Pause();
@@ -139,12 +139,8 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
 int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
   rtc::CritScope cs(&_apiCs);
 
-  if (capability != _requestedCapability) {
-    DisconnectGraph();
-
-    if (SetCameraOutput(capability) != 0) {
-      return -1;
-    }
+  if (SetCameraOutputIfNeeded(capability) != 0) {
+    return -1;
   }
   HRESULT hr = _mediaControl->Run();
   if (FAILED(hr)) {
@@ -157,7 +153,7 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
 int32_t VideoCaptureDS::StopCapture() {
   rtc::CritScope cs(&_apiCs);
 
-  HRESULT hr = _mediaControl->Pause();
+  HRESULT hr = _mediaControl->Stop();
   if (FAILED(hr)) {
     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
     return -1;
@@ -178,8 +174,9 @@ int32_t VideoCaptureDS::CaptureSettings(VideoCaptureCapability& settings) {
   return 0;
 }
 
-int32_t VideoCaptureDS::SetCameraOutput(
-    const VideoCaptureCapability& requestedCapability) {
+int32_t VideoCaptureDS::SetCameraOutputIfNeeded(
+    const VideoCaptureCapability& requestedCapability)
+{
   // Get the best matching capability
   VideoCaptureCapability capability;
   int32_t capabilityIndex;
@@ -191,6 +188,16 @@ int32_t VideoCaptureDS::SetCameraOutput(
            _deviceUniqueId, _requestedCapability, capability)) < 0) {
     return -1;
   }
+
+  if (capability != _activeCapability) {
+    DisconnectGraph();
+    // Store the new mode the camera actually selected
+    _activeCapability = capability;
+  } else {
+    // Camera selected the same mode, nothing to do
+    return 0;
+  }
+
   // Reduce the frame rate if possible.
   if (capability.maxFPS > requestedCapability.maxFPS) {
     capability.maxFPS = requestedCapability.maxFPS;
@@ -198,6 +205,13 @@ int32_t VideoCaptureDS::SetCameraOutput(
     capability.maxFPS = 30;
   }
 
+    return SetCameraOutput(capability, capabilityIndex);
+}
+
+
+int32_t VideoCaptureDS::SetCameraOutput(const VideoCaptureCapability& capability,
+                                        int32_t capabilityIndex)
+{
   // Convert it to the windows capability index since they are not nexessary
   // the same
   VideoCaptureCapabilityWindows windowsCapability;

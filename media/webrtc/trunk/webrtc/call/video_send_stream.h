@@ -193,6 +193,9 @@ class VideoSendStream {
 
       // RTCP CNAME, see RFC 3550.
       std::string c_name;
+
+      std::vector<std::string> rids;
+      std::string mid;
     } rtp;
 
     // Transport for outgoing packets.
@@ -261,6 +264,10 @@ class VideoSendStream {
   virtual void SetSource(
       rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
       const DegradationPreference& degradation_preference) = 0;
+
+  // Gets interface used to signal the current CPU work level to the encoder.
+  // Valid as long as the VideoSendStream is valid.
+  virtual CPULoadStateObserver* LoadStateObserver() = 0;
 
   // Set which streams to send. Must have at least as many SSRCs as configured
   // in the config. Encoder settings are passed on to the encoder instance along
