@@ -2888,6 +2888,10 @@ pref("bidi.browser.ui", false);
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
 
+// Whether underscore should be treated as a word-breaking character for
+// word selection/arrow-key movement purposes.
+pref("layout.word_select.stop_at_underscore", false);
+
 // controls caret style and word-delete during text selection
 // 0 = use platform default
 // 1 = caret moves and blinks as when there is no selection; word
