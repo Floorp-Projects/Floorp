@@ -368,6 +368,13 @@ var gMainPane = {
       Services.obs.removeObserver(newTabObserver, "newtab-url-changed");
     });
 
+    let connectionSettingsLink = document.getElementById("connectionSettingsLearnMore");
+    let connectionSettingsUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") +
+                                "prefs-connection-settings";
+    connectionSettingsLink.setAttribute("href", connectionSettingsUrl);
+    this.updateProxySettingsUI();
+    initializeProxyUI(gMainPane);
+
     if (AppConstants.platform == "win") {
       // Functionality for "Show tabs in taskbar" on Windows 7 and up.
       try {
@@ -1087,7 +1094,28 @@ var gMainPane = {
    * Displays a dialog in which proxy settings may be changed.
    */
   showConnections() {
-    gSubDialog.open("chrome://browser/content/preferences/connection.xul");
+    gSubDialog.open("chrome://browser/content/preferences/connection.xul",
+                    null, null, this.updateProxySettingsUI.bind(this));
+  },
+
+  // Update the UI to show the proper description depending on whether an
+  // extension is in control or not.
+  async updateProxySettingsUI() {
+    let controllingExtension = await getControllingExtension(PREF_SETTING_TYPE, PROXY_KEY);
+    let fragment = controllingExtension ?
+      getControllingExtensionFragment(PROXY_KEY, controllingExtension, this._brandShortName) :
+      BrowserUtils.getLocalizedFragment(
+        document,
+        this._prefsBundle.getString("connectionDesc.label"),
+        this._brandShortName);
+    let description = document.getElementById("connectionSettingsDescription");
+
+    // Remove the old content from the description.
+    while (description.firstChild) {
+      description.firstChild.remove();
+    }
+
+    description.appendChild(fragment);
   },
 
   checkBrowserContainers(event) {
