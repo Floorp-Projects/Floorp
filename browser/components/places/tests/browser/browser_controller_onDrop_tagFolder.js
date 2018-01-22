@@ -39,11 +39,6 @@ add_task(async function setup() {
 });
 
 async function run_drag_test(startBookmarkIndex, newParentGuid) {
-  if (!PlacesUIUtils.useAsyncTransactions) {
-    Assert.ok(true, "Skipping test as async transactions are turned off");
-    return;
-  }
-
   if (!newParentGuid) {
     newParentGuid = PlacesUtils.bookmarks.unfiledGuid;
   }
