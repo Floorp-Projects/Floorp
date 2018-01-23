@@ -551,6 +551,8 @@ class UrlFinder(object):
             return None
         if ' -> ' in url:
             url = url.split(' -> ')[1].rstrip()
+        if '?' in url:
+            url = url.split('?')[0]
 
         url_obj = urlparse.urlparse(url)
         if url_obj.scheme == 'jar':
