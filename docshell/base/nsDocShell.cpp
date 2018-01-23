@@ -10668,6 +10668,11 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     return rv;
   }
 
+  // Document loads should set the reload flag on the channel so that it
+  // can be exposed on the service worker FetchEvent.
+  rv = loadInfo->SetIsDocshellReload(mLoadType & LOAD_CMD_RELOAD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                aURI,
