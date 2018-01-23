@@ -117,6 +117,15 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     // TODO: The ClientInfo is not set properly for worker initiated requests yet.
     mClientInfo = aLoadingContext->OwnerDoc()->GetClientInfo();
 
+    // For subresource loads set the service worker based on the calling
+    // context's controller.
+    // TODO: The controller is not set properly for all requests initiated from a
+    //       worker context.  Some workers will not have an nsINode loading context
+    //       here.
+    if (!nsContentUtils::IsNonSubresourceInternalPolicyType(mInternalContentPolicyType)) {
+      mController = aLoadingContext->OwnerDoc()->GetController();
+    }
+
     nsCOMPtr<nsPIDOMWindowOuter> contextOuter = aLoadingContext->OwnerDoc()->GetWindow();
     if (contextOuter) {
       ComputeIsThirdPartyContext(contextOuter);
