@@ -300,10 +300,10 @@ public:
   void Release();
   void AddRef();
 
+  static int32_t CalculatePaintWorkerCount();
+
 private:
   PaintThread();
-
-  static int32_t CalculatePaintWorkerCount();
 
   bool Init();
   void ShutdownOnPaintThread();
