@@ -7,12 +7,7 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
-        'setup-mock',
         'build',
-        'upload-files',
-        'sendchange',
         'multi-l10n',
         'update',  # decided by query_is_nightly()
     ],
@@ -21,21 +16,6 @@ config = {
     'max_build_output_timeout': 0,
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
-    # mock shtuff
-    'mock_mozilla_dir':  '/builds/mock_mozilla',
-    'mock_target': 'mozilla-centos6-x86_64-android',
-    'mock_files': [
-        ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
-        ('/home/cltbld/.hgrc', '/builds/.hgrc'),
-        ('/home/cltbld/.boto', '/builds/.boto'),
-        ('/builds/gapi.data', '/builds/gapi.data'),
-        ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-        ('/tools/tooltool.py', '/builds/tooltool.py'),
-        ('/builds/mozilla-api.key', '/builds/mozilla-api.key'),
-        ('/builds/mozilla-fennec-geoloc-api.key', '/builds/mozilla-fennec-geoloc-api.key'),
-        ('/builds/crash-stats-api.token', '/builds/crash-stats-api.token'),
-        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
-    ],
     'secret_files': [
         {'filename': '/builds/gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
@@ -71,11 +51,7 @@ config = {
     ],
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox',
-    'tooltool_script': ["/builds/tooltool.py"],
-    'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
-    'enable_talos_sendchange': False,
-    'enable_unittest_sendchange': True,
     'multi_locale': True,
     #########################################################################
 
@@ -97,9 +73,6 @@ config = {
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
         'TOOLTOOL_HOME': '/builds',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         'PATH': '/usr/local/bin:/bin:/usr/bin',
         'SHIP_LICENSED_FONTS': '1',
@@ -115,14 +88,6 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'mock_packages': ['autoconf213', 'mozilla-python27-mercurial', 'yasm',
-                      'ccache', 'zip', "gcc472_0moz1", "gcc473_0moz1",
-                      'java-1.7.0-openjdk-devel', 'zlib-devel',
-                      'glibc-static', 'openssh-clients', 'mpfr',
-                      'wget', 'glibc.i686', 'libstdc++.i686',
-                      'zlib.i686', 'freetype-2.3.11-6.el6_1.8.x86_64',
-                      'ant', 'ant-apache-regexp'
-                      ],
     'src_mozconfig': 'mobile/android/config/mozconfigs/android/nightly',
     #########################################################################
 

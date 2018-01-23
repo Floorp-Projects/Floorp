@@ -1,9 +1,7 @@
 import os
-import sys
 
 config = {
     'default_actions': [
-        'clone-tools',
         'build',
         'check-test',
     ],
@@ -11,11 +9,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
     'vcs_share_base': os.path.join('y:', os.sep, 'hg-shared'),
-    'tooltool_script': [
-        sys.executable,
-        os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')
-    ],
-    'tooltool_bootstrap': 'setup.sh',
     'enable_count_ctors': False,
     'max_build_output_timeout': 60 * 80,
 

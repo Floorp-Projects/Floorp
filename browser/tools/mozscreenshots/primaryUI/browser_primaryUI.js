@@ -11,10 +11,6 @@ add_task(async function capture() {
     return;
   }
 
-  if (AppConstants.platform == "macosx") {
-    // Bug 1425394 - Generate output so mozprocess knows we're still alive for the long session.
-    SimpleTest.requestCompleteLog();
-  }
   let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes", "UIDensities"];
   await TestRunner.start(sets, "primaryUI");
 });

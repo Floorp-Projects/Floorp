@@ -145,49 +145,6 @@ class BuildbotMixin(object):
             contents += "%s:%s\n" % (prop, self.buildbot_properties.get(prop, "None"))
         return self.write_to_file(file_name, contents)
 
-    def invoke_sendchange(self, downloadables=None, branch=None,
-                   username="sendchange-unittest", sendchange_props=None):
-        """ Generic sendchange, currently b2g- and unittest-specific.
-            """
-        c = self.config
-        buildbot = self.query_exe("buildbot", return_type="list")
-        if branch is None:
-            if c.get("debug_build"):
-                platform = re.sub('[_-]debug', '', self.buildbot_config["properties"]["platform"])
-                branch = '%s-%s-debug-unittest' % (self.buildbot_config["properties"]["branch"], platform)
-            else:
-                branch = '%s-%s-opt-unittest' % (self.buildbot_config["properties"]["branch"], self.buildbot_config["properties"]["platform"])
-        sendchange = [
-            'sendchange',
-            '--master', c.get("sendchange_masters")[0],
-            '--username', username,
-            '--branch', branch,
-        ]
-        if self.buildbot_config['sourcestamp'].get("revision"):
-            sendchange += ['-r', self.buildbot_config['sourcestamp']["revision"]]
-        if len(self.buildbot_config['sourcestamp']['changes']) > 0:
-            if self.buildbot_config['sourcestamp']['changes'][0].get('who'):
-                sendchange += ['--username', self.buildbot_config['sourcestamp']['changes'][0]['who']]
-            if self.buildbot_config['sourcestamp']['changes'][0].get('comments'):
-                sendchange += ['--comments', self.buildbot_config['sourcestamp']['changes'][0]['comments'].encode('ascii', 'ignore')]
-        if sendchange_props:
-            for key, value in sendchange_props.iteritems():
-                sendchange.extend(['--property', '%s:%s' % (key, value)])
-        else:
-            if self.buildbot_config["properties"].get("builduid"):
-                sendchange += ['--property', "builduid:%s" % self.buildbot_config["properties"]["builduid"]]
-            sendchange += [
-                '--property', "buildid:%s" % self.query_buildid(),
-                '--property', 'pgo_build:False',
-            ]
-
-        for d in downloadables:
-            sendchange += [d]
-
-        retcode = self.run_command(buildbot + sendchange)
-        if retcode != 0:
-            self.info("The sendchange failed but we don't want to turn the build orange: %s" % retcode)
-
     def query_build_name(self):
         build_name = self.config.get('platform')
         if not build_name:

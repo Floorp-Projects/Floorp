@@ -1,5 +1,4 @@
 import os
-import sys
 
 config = {
     #########################################################################
@@ -8,8 +7,6 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
         'build',
         'update',  # decided by query_is_nightly()
     ],
@@ -27,11 +24,7 @@ config = {
     ],
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
-    'tooltool_script': ["/builds/tooltool.py"],
-    'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': False,
-    'enable_talos_sendchange': False,
-    'enable_unittest_sendchange': False,
     #########################################################################
 
 
@@ -48,9 +41,6 @@ config = {
         'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
         'TOOLTOOL_HOME': '/builds',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         ## 64 bit specific
         'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:\

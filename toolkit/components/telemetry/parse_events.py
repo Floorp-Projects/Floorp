@@ -157,10 +157,11 @@ def string_check(identifier, field, value, min_length=1, max_length=None, regex=
 class EventData:
     """A class representing one event."""
 
-    def __init__(self, category, name, definition):
+    def __init__(self, category, name, definition, strict_type_checks=False):
         self._category = category
         self._name = name
         self._definition = definition
+        self._strict_type_checks = strict_type_checks
 
         type_check_event_fields(self.identifier, name, definition)
 
@@ -206,7 +207,7 @@ class EventData:
 
         # Finish setup.
         expiry_version = definition.get('expiry_version', 'never')
-        if not utils.validate_expiration_version(expiry_version):
+        if not utils.validate_expiration_version(expiry_version) and self._strict_type_checks:
             raise ParserError('{}: invalid expiry_version: {}.'
                               .format(self.identifier, expiry_version))
         definition['expiry_version'] = utils.add_expiration_postfix(expiry_version)
@@ -277,10 +278,11 @@ class EventData:
         return self._definition.get('extra_keys', {}).keys()
 
 
-def load_events(filename):
+def load_events(filename, strict_type_checks):
     """Parses a YAML file containing the event definitions.
 
     :param filename: the YAML file containing the event definitions.
+    :strict_type_checks A boolean indicating whether to use the stricter type checks.
     :raises ParserError: if the event file cannot be opened or parsed.
     """
 
@@ -317,6 +319,6 @@ def load_events(filename):
             string_check(category_name, field='event name', value=name,
                          min_length=1, max_length=MAX_METHOD_NAME_LENGTH,
                          regex=IDENTIFIER_PATTERN)
-            event_list.append(EventData(category_name, name, entry))
+            event_list.append(EventData(category_name, name, entry, strict_type_checks))
 
     return event_list

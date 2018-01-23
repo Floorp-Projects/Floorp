@@ -116,7 +116,7 @@ Bookmarks.prototype = {
       let toolbarBMs = [];
 
       let connection = await Sqlite.openConnection({
-        path: this._file.path
+        path: this._file.path,
       });
 
       try {
@@ -145,7 +145,7 @@ Bookmarks.prototype = {
             bmToInsert = {
               children: [],
               title,
-              type: PlacesUtils.bookmarks.TYPE_FOLDER
+              type: PlacesUtils.bookmarks.TYPE_FOLDER,
             };
             folderMap.set(id, bmToInsert);
           } else {
@@ -158,7 +158,7 @@ Bookmarks.prototype = {
 
             bmToInsert = {
               title,
-              url
+              url,
             };
           }
 
@@ -182,7 +182,7 @@ Bookmarks.prototype = {
       }
     })().then(() => aCallback(true),
                         e => { Cu.reportError(e); aCallback(false); });
-  }
+  },
 };
 
 function Qihoo360seProfileMigrator() {
@@ -190,13 +190,13 @@ function Qihoo360seProfileMigrator() {
     // for v6 and above
     {
       users: ["360se6", "apps", "data", "users"],
-      defaultUser: "default"
+      defaultUser: "default",
     },
     // for earlier versions
     {
       users: ["360se"],
-      defaultUser: "data"
-    }
+      defaultUser: "data",
+    },
   ];
   this._usersDir = null;
   this._defaultUserPath = null;
@@ -287,7 +287,7 @@ Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
       return resources && resources.length > 0;
     });
     return this.__sourceProfiles;
-  }
+  },
 });
 
 Qihoo360seProfileMigrator.prototype._getIdFromConfig = function(aConfig) {
@@ -303,7 +303,7 @@ Qihoo360seProfileMigrator.prototype.getResources = function(aProfile) {
   }
 
   let resources = [
-    new Bookmarks(profileFolder)
+    new Bookmarks(profileFolder),
   ];
   return resources.filter(r => r.exists);
 };

@@ -3,17 +3,11 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
-        'setup-mock',
         'build',
-        'upload-files',
-        'sendchange',
         'check-test',
     ],
     'stage_platform': 'linux-rusttests',
     'enable_signing': False,
-    'enable_talos_sendchange': False,
     #### 32 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
@@ -21,9 +15,6 @@ config = {
         'HG_SHARE_BASE_DIR': '/builds/hg-shared',
         'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         # 32 bit specific
         'PATH': '/usr/local/bin:/usr/lib/ccache:/bin:\
