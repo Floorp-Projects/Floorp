@@ -1750,11 +1750,14 @@ nsGlobalWindowInner::EnsureClientSource()
 
   bool newClientSource = false;
 
-  // Get the load info for the document if we performed a load.  Be careful
-  // not to look at about:blank or about:srcdoc loads, though. They will have
-  // a channel and loadinfo, but their loadinfo will never be controlled.  This
-  // would in turn inadvertantly trigger the logic below to clear the inherited
-  // controller.
+  // Get the load info for the document if we performed a load.  Be careful not
+  // to look at local URLs, though. Local URLs are those that have a scheme of:
+  //  * about:
+  //  * data:
+  //  * blob:
+  // We also do an additional check here so that we only treat about:blank
+  // and about:srcdoc as local URLs.  Other internal firefox about: URLs should
+  // not be treated this way.
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsCOMPtr<nsIChannel> channel = mDoc->GetChannel();
   if (channel) {
@@ -1770,6 +1773,12 @@ nsGlobalWindowInner::EnsureClientSource()
       nsCString spec = uri->GetSpecOrDefault();
       ignoreLoadInfo = spec.EqualsLiteral("about:blank") ||
                        spec.EqualsLiteral("about:srcdoc");
+    } else {
+      // Its not an about: URL, so now check for our other URL types.
+      bool isData = false;
+      bool isBlob = false;
+      ignoreLoadInfo = (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData) ||
+                       (NS_SUCCEEDED(uri->SchemeIs("blob", &isBlob)) && isBlob);
     }
 
     if (!ignoreLoadInfo) {
