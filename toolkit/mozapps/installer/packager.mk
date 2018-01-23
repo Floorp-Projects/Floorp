@@ -119,7 +119,7 @@ make-buildinfo-file:
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
 		$(MOZ_BUILDINFO_FILE) \
 		BUILDID=$(BUILDID) \
-		$(addprefix MOZ_SOURCE_REPO=,MOZ_SOURCE_REPO=$(shell awk '$$2 == "MOZ_SOURCE_REPO" {print $$3}' $(DEPTH)/source-repo.h)) \
+		$(addprefix MOZ_SOURCE_REPO=,$(shell awk '$$2 == "MOZ_SOURCE_REPO" {print $$3}' $(DEPTH)/source-repo.h)) \
 		MOZ_SOURCE_STAMP=$(shell awk '$$2 == "MOZ_SOURCE_STAMP" {print $$3}' $(DEPTH)/source-repo.h) \
 		MOZ_PKG_PLATFORM=$(MOZ_PKG_PLATFORM)
 	echo "buildID=$(BUILDID)" > $(MOZ_BUILDID_INFO_TXT_FILE)
