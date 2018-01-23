@@ -66,7 +66,6 @@ SecretDecoderRing::SecretDecoderRing()
 
 SecretDecoderRing::~SecretDecoderRing()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -77,7 +76,6 @@ SecretDecoderRing::~SecretDecoderRing()
 nsresult
 SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -89,7 +87,7 @@ SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 
   /* Make sure token is initialized. */
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
-  nsresult rv = setPassword(slot.get(), ctx, locker);
+  nsresult rv = setPassword(slot.get(), ctx);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -118,7 +116,6 @@ SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 nsresult
 SecretDecoderRing::Decrypt(const nsACString& data, /*out*/ nsACString& result)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -231,7 +228,6 @@ SecretDecoderRing::DecryptString(const nsACString& encryptedBase64Text,
 NS_IMETHODIMP
 SecretDecoderRing::ChangePassword()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -267,7 +263,6 @@ SecretDecoderRing::Logout()
     return rv;
 
   {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -290,7 +285,6 @@ SecretDecoderRing::LogoutAndTeardown()
     return rv;
 
   {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return NS_ERROR_NOT_AVAILABLE;
     }

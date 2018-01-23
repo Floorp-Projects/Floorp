@@ -815,7 +815,6 @@ nsNSSComponent::UnloadEnterpriseRoots(const MutexAutoLock& /*proof of lock*/)
 NS_IMETHODIMP
 nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
 {
-  nsNSSShutDownPreventionLock lock;
   MutexAutoLock nsNSSComponentLock(mMutex);
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
@@ -833,12 +832,12 @@ nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
     return NS_OK;
   }
   UniqueCERTCertList enterpriseRootsCopy(
-    nsNSSCertList::DupCertList(mEnterpriseRoots, lock));
+    nsNSSCertList::DupCertList(mEnterpriseRoots));
   if (!enterpriseRootsCopy) {
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIX509CertList> enterpriseRootsCertList(
-    new nsNSSCertList(Move(enterpriseRootsCopy), lock));
+    new nsNSSCertList(Move(enterpriseRootsCopy)));
   if (!enterpriseRootsCertList) {
     return NS_ERROR_FAILURE;
   }
@@ -997,14 +996,13 @@ public:
 
 private:
   NS_IMETHOD Run() override;
-  nsresult LoadLoadableRoots(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult LoadLoadableRoots();
   RefPtr<nsNSSComponent> mNSSComponent;
   nsCOMPtr<nsIThread> mThread;
 };
 
 LoadLoadableRootsTask::~LoadLoadableRootsTask()
 {
-  nsNSSShutDownPreventionLock lock;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -1029,12 +1027,11 @@ LoadLoadableRootsTask::Dispatch()
 NS_IMETHODIMP
 LoadLoadableRootsTask::Run()
 {
-  nsNSSShutDownPreventionLock lock;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = LoadLoadableRoots(lock);
+  nsresult rv = LoadLoadableRoots();
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("LoadLoadableRoots failed"));
     // We don't return rv here because then BlockUntilLoadableRootsLoaded will
@@ -1044,7 +1041,7 @@ LoadLoadableRootsTask::Run()
   }
 
   if (NS_SUCCEEDED(rv)) {
-    if (NS_FAILED(LoadExtendedValidationInfo(lock))) {
+    if (NS_FAILED(LoadExtendedValidationInfo())) {
       // This isn't a show-stopper in the same way that failing to load the
       // roots module is.
       MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("failed to load EV info"));
@@ -1073,7 +1070,6 @@ nsNSSComponent::HasActiveSmartCards(bool& result)
   }
 
 #ifndef MOZ_NO_SMART_CARDS
-  nsNSSShutDownPreventionLock lock;
   MutexAutoLock nsNSSComponentLock(mMutex);
 
   AutoSECMODListReadLock secmodLock;
@@ -1098,7 +1094,6 @@ nsNSSComponent::HasUserCertsInstalled(bool& result)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  nsNSSShutDownPreventionLock lock;
   MutexAutoLock nsNSSComponentLock(mMutex);
 
   if (!mNSSInitialized) {
@@ -1142,7 +1137,6 @@ nsresult
 nsNSSComponent::CheckForSmartCardChanges()
 {
 #ifndef MOZ_NO_SMART_CARDS
-  nsNSSShutDownPreventionLock lock;
   MutexAutoLock nsNSSComponentLock(mMutex);
 
   if (!mNSSInitialized) {
@@ -1260,8 +1254,7 @@ GetDirectoryPath(const char* directoryKey, nsCString& result)
 
 
 nsresult
-LoadLoadableRootsTask::LoadLoadableRoots(
-  const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+LoadLoadableRootsTask::LoadLoadableRoots()
 {
   // Find the best Roots module for our purposes.
   // Prefer the application's installation directory,
@@ -2264,7 +2257,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
             ("receiving profile change or XPCOM shutdown notification"));
     ShutdownNSS();
   } else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
-    nsNSSShutDownPreventionLock locker;
     bool clearSessionCache = true;
     NS_ConvertUTF16toUTF8  prefName(someData);
 
@@ -2398,9 +2390,6 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool& result)
 {
   result = false;
 
-  // Create the nsNSSCertificate and get its hash before acquiring mMutex (we
-  // must avoid acquiring mMutex and then creating an
-  // nsNSSShutDownPreventionLock).
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
   if (!nsc) {
     return NS_ERROR_FAILURE;
@@ -2427,9 +2416,6 @@ nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
 {
   result = false;
 
-  // Create the nsNSSCertificate and get its hash before acquiring mMutex (we
-  // must avoid acquiring mMutex and then creating an
-  // nsNSSShutDownPreventionLock).
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
   if (!nsc) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("creating nsNSSCertificate failed"));
@@ -2533,8 +2519,7 @@ getNSSDialogs(void** _result, REFNSIID aIID, const char* contract)
 }
 
 nsresult
-setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx,
-            nsNSSShutDownPreventionLock& /*proofOfLock*/)
+setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx)
 {
   MOZ_ASSERT(slot);
   MOZ_ASSERT(ctx);

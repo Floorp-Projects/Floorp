@@ -58,8 +58,7 @@ private:
 
   static const nsCString mSecretNickname;
 
-  nsresult GetOrCreateWrappingKey(const mozilla::UniquePK11SlotInfo& aSlot,
-                                  const nsNSSShutDownPreventionLock&);
+  nsresult GetOrCreateWrappingKey(const mozilla::UniquePK11SlotInfo& aSlot);
   uint32_t mCounter;
 };
 

@@ -10,26 +10,6 @@
 // demonstrated that shutting down NSS only when all non-main-threads have been
 // joined is feasible (and beneficial).
 
-// Yes, this races. We don't care because we're only temporarily using this to
-// silence compiler warnings. Without it every instance of a
-// nsNSSShutDownPreventionLock would be unused, causing the compiler to
-// complain.
-static int sSilenceCompilerWarnings;
-
-class nsNSSShutDownPreventionLock
-{
-public:
-  nsNSSShutDownPreventionLock()
-  {
-    sSilenceCompilerWarnings++;
-  }
-
-  ~nsNSSShutDownPreventionLock()
-  {
-    sSilenceCompilerWarnings--;
-  }
-};
-
 class nsNSSShutDownObject
 {
 public:

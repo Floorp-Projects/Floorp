@@ -42,7 +42,6 @@ nsPKCS12Blob::nsPKCS12Blob()
 // destructor
 nsPKCS12Blob::~nsPKCS12Blob()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -57,7 +56,6 @@ nsPKCS12Blob::~nsPKCS12Blob()
 nsresult
 nsPKCS12Blob::ImportFromFile(nsIFile *file)
 {
-  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
 
   RetryReason wantRetry;
@@ -79,7 +77,6 @@ nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
                                    nsPKCS12Blob::ImportMode aImportMode,
                                    nsPKCS12Blob::RetryReason &aWantRetry)
 {
-  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   SECStatus srv = SECSuccess;
   SEC_PKCS12DecoderContext *dcx = nullptr;
@@ -188,7 +185,6 @@ nsresult
 nsPKCS12Blob::ExportToFile(nsIFile *file,
                            nsIX509Cert **certs, int numCerts)
 {
-  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   SECStatus srv = SECSuccess;
   SEC_PKCS12ExportContext *ecx = nullptr;
@@ -389,7 +385,6 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
 nsresult
 nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 {
-  nsNSSShutDownPreventionLock locker;
   nsresult rv;
   SECStatus srv;
   uint32_t amount;
@@ -429,7 +424,6 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
 SECItem *
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
-  nsNSSShutDownPreventionLock locker;
   *cancel = false;
   int count = 1;
   nsCString nickname;

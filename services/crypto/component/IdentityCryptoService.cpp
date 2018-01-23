@@ -59,7 +59,6 @@ public:
 private:
   ~KeyPair() override
   {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return;
     }
@@ -101,7 +100,6 @@ public:
 private:
   ~KeyGenRunnable() override
   {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return;
     }
@@ -139,7 +137,6 @@ public:
 private:
   ~SignRunnable() override
   {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return;
     }
@@ -441,7 +438,6 @@ NS_IMETHODIMP
 KeyGenRunnable::Run()
 {
   if (!NS_IsMainThread()) {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       mRv = NS_ERROR_NOT_AVAILABLE;
     } else {
@@ -500,7 +496,6 @@ NS_IMETHODIMP
 SignRunnable::Run()
 {
   if (!NS_IsMainThread()) {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       mRv = NS_ERROR_NOT_AVAILABLE;
     } else {

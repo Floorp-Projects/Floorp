@@ -31,7 +31,6 @@ const SEC_ASN1Template CERT_SignatureDataTemplate[] =
 
 nsDataSignatureVerifier::~nsDataSignatureVerifier()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -47,7 +46,6 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

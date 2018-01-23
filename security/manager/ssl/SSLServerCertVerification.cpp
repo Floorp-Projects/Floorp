@@ -1522,11 +1522,8 @@ SSLServerCertVerificationJob::Dispatch(
 
   // Copy the certificate list so the runnable can take ownership of it in the
   // constructor.
-  // We can safely skip checking if NSS has already shut down here since we're
-  // in the middle of verifying a certificate.
-  nsNSSShutDownPreventionLock lock;
   UniqueCERTCertList peerCertChainCopy =
-    nsNSSCertList::DupCertList(peerCertChain, lock);
+    nsNSSCertList::DupCertList(peerCertChain);
   if (!peerCertChainCopy) {
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
     return SECFailure;
@@ -1567,7 +1564,6 @@ SSLServerCertVerificationJob::Run()
 
   PRErrorCode error;
 
-  nsNSSShutDownPreventionLock nssShutdownPrevention;
   if (mInfoObject->isAlreadyShutDown()) {
     error = SEC_ERROR_USER_CANCELLED;
   } else {

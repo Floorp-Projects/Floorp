@@ -20,8 +20,7 @@
 
 nsresult GetSlotWithMechanism(uint32_t mechanism,
                               nsIInterfaceRequestor* ctx,
-                              PK11SlotInfo** retSlot,
-                              nsNSSShutDownPreventionLock& /*proofOfLock*/);
+                              PK11SlotInfo** retSlot);
 
 #define DEFAULT_RSA_KEYGEN_PE 65537L
 #define DEFAULT_RSA_KEYGEN_ALG SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION

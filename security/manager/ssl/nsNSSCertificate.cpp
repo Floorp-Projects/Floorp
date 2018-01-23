@@ -90,7 +90,6 @@ nsNSSCertificate::ConstructFromDER(char* certDER, int derLen)
 bool
 nsNSSCertificate::InitFromDER(char* certDER, int derLen)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return false;
 
@@ -116,7 +115,6 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert)
   , mPermDelete(false)
   , mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
 
@@ -134,7 +132,6 @@ nsNSSCertificate::nsNSSCertificate()
 
 nsNSSCertificate::~nsNSSCertificate()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -180,7 +177,6 @@ nsNSSCertificate::GetIsSelfSigned(bool* aIsSelfSigned)
 {
   NS_ENSURE_ARG(aIsSelfSigned);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -193,7 +189,6 @@ nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
 {
   NS_ENSURE_ARG(aIsBuiltInRoot);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -207,7 +202,6 @@ nsNSSCertificate::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
 nsresult
 nsNSSCertificate::MarkForPermDeletion()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -309,7 +303,6 @@ nsNSSCertificate::GetKeyUsages(nsAString& text)
 NS_IMETHODIMP
 nsNSSCertificate::GetDbKey(nsACString& aDbKey)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -350,7 +343,6 @@ nsNSSCertificate::GetDbKey(const UniqueCERTCertificate& cert, nsACString& aDbKey
 NS_IMETHODIMP
 nsNSSCertificate::GetDisplayName(nsAString& aDisplayName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -419,7 +411,6 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -439,7 +430,6 @@ nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddresses(uint32_t* aLength, char16_t*** aAddresses)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -479,7 +469,6 @@ NS_IMETHODIMP
 nsNSSCertificate::ContainsEmailAddress(const nsAString& aEmailAddress,
                                        bool* result)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -513,7 +502,6 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString& aEmailAddress,
 NS_IMETHODIMP
 nsNSSCertificate::GetCommonName(nsAString& aCommonName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -530,7 +518,6 @@ nsNSSCertificate::GetCommonName(nsAString& aCommonName)
 NS_IMETHODIMP
 nsNSSCertificate::GetOrganization(nsAString& aOrganization)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -547,7 +534,6 @@ nsNSSCertificate::GetOrganization(nsAString& aOrganization)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerCommonName(nsAString& aCommonName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -564,7 +550,6 @@ nsNSSCertificate::GetIssuerCommonName(nsAString& aCommonName)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -581,7 +566,6 @@ nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerOrganizationUnit(nsAString& aOrganizationUnit)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -598,7 +582,6 @@ nsNSSCertificate::GetIssuerOrganizationUnit(nsAString& aOrganizationUnit)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuer(nsIX509Cert** aIssuer)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -628,7 +611,6 @@ nsNSSCertificate::GetIssuer(nsIX509Cert** aIssuer)
 NS_IMETHODIMP
 nsNSSCertificate::GetOrganizationalUnit(nsAString& aOrganizationalUnit)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -673,7 +655,6 @@ UniqueCERTCertListToMutableArray(/*in*/ UniqueCERTCertList& nssChain,
 NS_IMETHODIMP
 nsNSSCertificate::GetChain(nsIArray** _rvChain)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -718,7 +699,6 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
 NS_IMETHODIMP
 nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -732,7 +712,6 @@ nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
 NS_IMETHODIMP
 nsNSSCertificate::GetIssuerName(nsAString& _issuerName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -746,7 +725,6 @@ nsNSSCertificate::GetIssuerName(nsAString& _issuerName)
 NS_IMETHODIMP
 nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -762,7 +740,6 @@ nsNSSCertificate::GetSerialNumber(nsAString& _serialNumber)
 nsresult
 nsNSSCertificate::GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -800,7 +777,6 @@ nsNSSCertificate::GetSha1Fingerprint(nsAString& _sha1Fingerprint)
 NS_IMETHODIMP
 nsNSSCertificate::GetTokenName(nsAString& aTokenName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -835,7 +811,6 @@ nsNSSCertificate::GetTokenName(nsAString& aTokenName)
 NS_IMETHODIMP
 nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(nsACString& aSha256SPKIDigest)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -860,7 +835,6 @@ nsNSSCertificate::GetSha256SubjectPublicKeyInfoDigest(nsACString& aSha256SPKIDig
 NS_IMETHODIMP
 nsNSSCertificate::GetRawDER(uint32_t* aLength, uint8_t** aArray)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -883,7 +857,6 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
   NS_ENSURE_ARG(aLength);
   NS_ENSURE_ARG(aArray);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -1009,7 +982,6 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
 CERTCertificate*
 nsNSSCertificate::GetCert()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return nullptr;
 
@@ -1019,7 +991,6 @@ nsNSSCertificate::GetCert()
 NS_IMETHODIMP
 nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -1047,7 +1018,6 @@ nsNSSCertificate::GetASN1Structure(nsIASN1Object** aASN1Structure)
 NS_IMETHODIMP
 nsNSSCertificate::Equals(nsIX509Cert* other, bool* result)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -1107,8 +1077,7 @@ NS_IMPL_ISUPPORTS_CI(nsNSSCertList,
                      nsIX509CertList,
                      nsISerializable)
 
-nsNSSCertList::nsNSSCertList(UniqueCERTCertList certList,
-                             const nsNSSShutDownPreventionLock& proofOfLock)
+nsNSSCertList::nsNSSCertList(UniqueCERTCertList certList)
 {
   if (certList) {
     mCertList = Move(certList);
@@ -1124,7 +1093,6 @@ nsNSSCertList::nsNSSCertList()
 
 nsNSSCertList::~nsNSSCertList()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -1151,7 +1119,6 @@ nsNSSCertList::GetCertList()
 NS_IMETHODIMP
 nsNSSCertList::AddCert(nsIX509Cert* aCert)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1174,8 +1141,7 @@ nsNSSCertList::AddCert(nsIX509Cert* aCert)
 }
 
 UniqueCERTCertList
-nsNSSCertList::DupCertList(const UniqueCERTCertList& certList,
-                           const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+nsNSSCertList::DupCertList(const UniqueCERTCertList& certList)
 {
   if (!certList) {
     return nullptr;
@@ -1206,14 +1172,6 @@ nsNSSCertList::DupCertList(const UniqueCERTCertList& certList,
 CERTCertList*
 nsNSSCertList::GetRawCertList()
 {
-  // This function should only be called after acquiring a
-  // nsNSSShutDownPreventionLock. It's difficult to enforce this in code since
-  // this is an implementation of an XPCOM interface function (albeit a
-  // C++-only one), so we acquire the (reentrant) lock and check for shutdown
-  // ourselves here. At the moment it appears that only nsCertTree uses this
-  // function. When that gets removed and replaced by a more reasonable
-  // implementation of the certificate manager, this function can be removed.
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return nullptr;
   }
@@ -1223,7 +1181,6 @@ nsNSSCertList::GetRawCertList()
 NS_IMETHODIMP
 nsNSSCertList::Write(nsIObjectOutputStream* aStream)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1267,7 +1224,6 @@ nsNSSCertList::Write(nsIObjectOutputStream* aStream)
 NS_IMETHODIMP
 nsNSSCertList::Read(nsIObjectInputStream* aStream)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1301,7 +1257,6 @@ nsNSSCertList::Read(nsIObjectInputStream* aStream)
 NS_IMETHODIMP
 nsNSSCertList::GetEnumerator(nsISimpleEnumerator** _retval)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1311,7 +1266,7 @@ nsNSSCertList::GetEnumerator(nsISimpleEnumerator** _retval)
   }
 
   nsCOMPtr<nsISimpleEnumerator> enumerator =
-    new nsNSSCertListEnumerator(mCertList, locker);
+    new nsNSSCertListEnumerator(mCertList);
 
   enumerator.forget(_retval);
   return NS_OK;
@@ -1320,7 +1275,6 @@ nsNSSCertList::GetEnumerator(nsISimpleEnumerator** _retval)
 NS_IMETHODIMP
 nsNSSCertList::Equals(nsIX509CertList* other, bool* result)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1471,16 +1425,14 @@ nsNSSCertList::SegmentCertificateChain(/* out */ nsCOMPtr<nsIX509Cert>& aRoot,
 NS_IMPL_ISUPPORTS(nsNSSCertListEnumerator, nsISimpleEnumerator)
 
 nsNSSCertListEnumerator::nsNSSCertListEnumerator(
-  const UniqueCERTCertList& certList,
-  const nsNSSShutDownPreventionLock& proofOfLock)
+  const UniqueCERTCertList& certList)
 {
   MOZ_ASSERT(certList);
-  mCertList = nsNSSCertList::DupCertList(certList, proofOfLock);
+  mCertList = nsNSSCertList::DupCertList(certList);
 }
 
 nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -1501,7 +1453,6 @@ void nsNSSCertListEnumerator::destructorSafeDestroyNSSReference()
 NS_IMETHODIMP
 nsNSSCertListEnumerator::HasMoreElements(bool* _retval)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1515,7 +1466,6 @@ nsNSSCertListEnumerator::HasMoreElements(bool* _retval)
 NS_IMETHODIMP
 nsNSSCertListEnumerator::GetNext(nsISupports** _retval)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

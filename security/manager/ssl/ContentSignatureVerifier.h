@@ -51,8 +51,7 @@ public:
 private:
   ~ContentSignatureVerifier();
 
-  nsresult UpdateInternal(const nsACString& aData,
-                          const nsNSSShutDownPreventionLock& /*proofOfLock*/);
+  nsresult UpdateInternal(const nsACString& aData);
   nsresult DownloadCertChain();
   nsresult CreateContextInternal(const nsACString& aData,
                                  const nsACString& aCertChain,

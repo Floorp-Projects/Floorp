@@ -19,7 +19,6 @@ nsKeyObject::nsKeyObject()
 
 nsKeyObject::~nsKeyObject()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -49,7 +48,6 @@ nsKeyObject::InitKey(int16_t aAlgorithm, PK11SymKey* aKey)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -67,7 +65,6 @@ nsKeyObject::GetKeyObj(PK11SymKey** _retval)
 
   *_retval = nullptr;
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -101,7 +98,6 @@ nsKeyObjectFactory::nsKeyObjectFactory()
 
 nsKeyObjectFactory::~nsKeyObjectFactory()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -116,7 +112,6 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

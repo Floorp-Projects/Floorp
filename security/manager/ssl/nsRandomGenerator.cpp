@@ -19,7 +19,6 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
   NS_ENSURE_ARG_POINTER(aBuffer);
   *aBuffer = nullptr;
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -47,7 +46,6 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
 
 nsRandomGenerator::~nsRandomGenerator()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }

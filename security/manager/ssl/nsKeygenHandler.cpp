@@ -222,7 +222,6 @@ nsKeygenFormProcessor::nsKeygenFormProcessor()
 
 nsKeygenFormProcessor::~nsKeygenFormProcessor()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -275,12 +274,11 @@ nsKeygenFormProcessor::Init()
 nsresult
 nsKeygenFormProcessor::GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return GetSlotWithMechanism(aMechanism, m_ctx, aSlot, locker);
+  return GetSlotWithMechanism(aMechanism, m_ctx, aSlot);
 }
 
 uint32_t MapGenMechToAlgoMech(uint32_t mechanism)
@@ -318,7 +316,7 @@ uint32_t MapGenMechToAlgoMech(uint32_t mechanism)
 
 nsresult
 GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
-                     PK11SlotInfo** aSlot, nsNSSShutDownPreventionLock& /*proofOfLock*/)
+                     PK11SlotInfo** aSlot)
 {
     PK11SlotList * slotList = nullptr;
     char16_t** tokenNameList = nullptr;
@@ -426,7 +424,6 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                     nsAString& aOutPublicKey,
                                     const nsAString& aKeyParams)
 {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -552,7 +549,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
       }
 
     /* Make sure token is initialized. */
-    rv = setPassword(slot, m_ctx, locker);
+    rv = setPassword(slot, m_ctx);
     if (NS_FAILED(rv))
         goto loser;
 
