@@ -95,7 +95,7 @@ add_task(async function onPermissionChange() {
 
   doc.getElementById("btnApplyChanges").click();
 
-  await TestUtils.waitForCondition(() =>
+  await waitForCondition(() =>
     SitePermissions.get(URI, "desktop-notification").state == SitePermissions.BLOCK);
 
   SitePermissions.remove(URI, "desktop-notification");
@@ -112,7 +112,7 @@ add_task(async function onPermissionDelete() {
   richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   Assert.equal(SitePermissions.get(URI, "desktop-notification").state,
                SitePermissions.ALLOW,
@@ -120,7 +120,7 @@ add_task(async function onPermissionDelete() {
 
   doc.getElementById("btnApplyChanges").click();
 
-  await TestUtils.waitForCondition(() =>
+  await waitForCondition(() =>
     SitePermissions.get(URI, "desktop-notification").state == SitePermissions.UNKNOWN);
 });
 
@@ -135,7 +135,7 @@ add_task(async function onAllPermissionsDelete() {
   SitePermissions.set(u, "desktop-notification", SitePermissions.ALLOW);
 
   doc.getElementById("removeAllPermissions").click();
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   Assert.equal(SitePermissions.get(URI, "desktop-notification").state,
      SitePermissions.ALLOW);
@@ -144,7 +144,7 @@ add_task(async function onAllPermissionsDelete() {
 
   doc.getElementById("btnApplyChanges").click();
 
-  await TestUtils.waitForCondition(() =>
+  await waitForCondition(() =>
     (SitePermissions.get(URI, "desktop-notification").state == SitePermissions.UNKNOWN) &&
       (SitePermissions.get(u, "desktop-notification").state == SitePermissions.UNKNOWN));
 });
@@ -164,11 +164,11 @@ add_task(async function onPermissionChangeAndDelete() {
   richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   doc.getElementById("btnApplyChanges").click();
 
-  await TestUtils.waitForCondition(() =>
+  await waitForCondition(() =>
     SitePermissions.get(URI, "desktop-notification").state == SitePermissions.UNKNOWN);
 });
 
@@ -201,7 +201,7 @@ add_task(async function onPermissionDeleteCancel() {
   richlistbox.selectItem(richlistbox.getItemAtIndex(0));
   doc.getElementById("removePermission").click();
 
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
+  await waitForCondition(() => richlistbox.itemCount == 0);
 
   doc.getElementById("cancel").click();
 
