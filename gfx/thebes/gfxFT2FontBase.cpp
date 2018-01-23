@@ -516,10 +516,10 @@ gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
         // Failed to get the FT_Face? Give up already.
         return 0;
     }
+    bool hinting = gfxPlatform::GetPlatform()->FontHintingEnabled();
     int32_t flags =
-        gfxPlatform::GetPlatform()->FontHintingEnabled()
-            ? FT_LOAD_ADVANCE_ONLY
-            : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
+        hinting ? FT_LOAD_ADVANCE_ONLY
+                : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
     FT_Error ftError = FT_Load_Glyph(face.get(), aGID, flags);
     MOZ_ASSERT(!ftError);
     if (ftError != FT_Err_Ok) {
@@ -527,7 +527,11 @@ gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
         return 0;
     }
     FT_Fixed advance = 0;
-    if (face.get()->face_flags & FT_FACE_FLAG_SCALABLE) {
+    // Due to freetype bug 52683 we MUST use the linearHoriAdvance field when
+    // dealing with a variation font; also use it for scalable fonts when not
+    // applying hinting. Otherwise, prefer hinted width from glyph->advance.x.
+    if ((face.get()->face_flags & FT_FACE_FLAG_SCALABLE) &&
+        (!hinting || (face.get()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS))) {
         advance = face.get()->glyph->linearHoriAdvance;
     } else {
         advance = face.get()->glyph->advance.x << 10; // convert 26.6 to 16.16
