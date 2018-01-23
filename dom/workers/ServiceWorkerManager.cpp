@@ -1993,6 +1993,25 @@ ServiceWorkerManager::PrincipalToScopeKey(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+/* static */ nsresult
+ServiceWorkerManager::PrincipalInfoToScopeKey(const PrincipalInfo& aPrincipalInfo,
+                                              nsACString& aKey)
+{
+  if (aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto content = aPrincipalInfo.get_ContentPrincipalInfo();
+
+  nsAutoCString suffix;
+  content.attrs().CreateSuffix(suffix);
+
+  aKey = content.originNoSuffix();
+  aKey.Append(suffix);
+
+  return NS_OK;
+}
+
 /* static */ void
 ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
                                               ServiceWorkerRegistrationInfo* aInfo)
@@ -2438,38 +2457,53 @@ public:
 } // anonymous namespace
 
 void
-ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
-                                         nsIDocument* aDoc,
-                                         nsIInterceptedChannel* aChannel,
-                                         bool aIsReload,
-                                         bool aIsSubresourceLoad,
+ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
                                          ErrorResult& aRv)
 {
   MOZ_ASSERT(aChannel);
   AssertIsOnMainThread();
 
-  RefPtr<ServiceWorkerInfo> serviceWorker;
+  nsCOMPtr<nsIChannel> internalChannel;
+  aRv = aChannel->GetChannel(getter_AddRefs(internalChannel));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
   nsCOMPtr<nsILoadGroup> loadGroup;
+  aRv = internalChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
-  if (aIsSubresourceLoad) {
-    MOZ_ASSERT(aDoc);
+  nsCOMPtr<nsILoadInfo> loadInfo = internalChannel->GetLoadInfo();
+  if (NS_WARN_IF(!loadInfo)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
 
-    serviceWorker = GetActiveWorkerInfoForDocument(aDoc);
-    if (!serviceWorker) {
+  RefPtr<ServiceWorkerInfo> serviceWorker;
+
+  if (!nsContentUtils::IsNonSubresourceRequest(internalChannel)) {
+    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
+    if (NS_WARN_IF(controller.isNothing())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    loadGroup = aDoc->GetDocumentLoadGroup();
-  } else {
-    nsCOMPtr<nsIChannel> internalChannel;
-    aRv = aChannel->GetChannel(getter_AddRefs(internalChannel));
-    if (NS_WARN_IF(aRv.Failed())) {
+    RefPtr<ServiceWorkerRegistrationInfo> registration =
+      GetRegistration(controller.ref().PrincipalInfo(), controller.ref().Scope());
+    if (NS_WARN_IF(!registration)) {
+      aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    internalChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-
+    serviceWorker = registration->GetActive();
+    if (NS_WARN_IF(!serviceWorker) ||
+        NS_WARN_IF(serviceWorker->Descriptor().Id() != controller.ref().Id())) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+  } else {
     nsCOMPtr<nsIURI> uri;
     aRv = aChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
     if (NS_WARN_IF(aRv.Failed())) {
@@ -2478,12 +2512,12 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
 
     // non-subresource request means the URI contains the principal
     nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(uri, aOriginAttributes);
+      BasePrincipal::CreateCodebasePrincipal(uri,
+                                             loadInfo->GetOriginAttributes());
 
     RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(principal, uri);
-    if (!registration) {
-      NS_WARNING("No registration found when dispatching the fetch event");
+    if (NS_WARN_IF(!registration)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
@@ -2493,58 +2527,52 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     // before we get to this point.  Therefore we must handle a nullptr
     // active worker here.
     serviceWorker = registration->GetActive();
-    if (!serviceWorker) {
+    if (NS_WARN_IF(!serviceWorker)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
 
     // If there is a reserved client it should be marked as controlled before
     // the FetchEvent is dispatched.
-    nsCOMPtr<nsILoadInfo> loadInfo = internalChannel->GetLoadInfo();
-    if (loadInfo) {
-      Maybe<ClientInfo> clientInfo = loadInfo->GetReservedClientInfo();
+    Maybe<ClientInfo> clientInfo = loadInfo->GetReservedClientInfo();
 
-      // Also override the initial about:blank controller since the real
-      // network load may be intercepted by a different service worker.  If
-      // the intial about:blank has a controller here its simply been
-      // inherited from its parent.
-      if (clientInfo.isNothing()) {
-        clientInfo = loadInfo->GetInitialClientInfo();
+    // Also override the initial about:blank controller since the real
+    // network load may be intercepted by a different service worker.  If
+    // the intial about:blank has a controller here its simply been
+    // inherited from its parent.
+    if (clientInfo.isNothing()) {
+      clientInfo = loadInfo->GetInitialClientInfo();
 
-        // TODO: We need to handle the case where the initial about:blank is
-        //       controlled, but the final document load is not.  Right now
-        //       the spec does not really say what to do.  There currently
-        //       is no way for the controller to be cleared from a client in
-        //       the spec or our implementation.  We may want to force a
-        //       new inner window to be created instead of reusing the
-        //       initial about:blank global.  See bug 1419620 and the spec
-        //       issue here: https://github.com/w3c/ServiceWorker/issues/1232
-      }
-
-      if (clientInfo.isSome()) {
-        // First, attempt to mark the reserved client controlled directly.  This
-        // will update the controlled status in the ClientManagerService in the
-        // parent.  It will also eventually propagate back to the ClientSource.
-        StartControllingClient(clientInfo.ref(), registration);
-      }
-
-      // But we also note the reserved state on the LoadInfo.  This allows the
-      // ClientSource to be updated immediately after the nsIChannel starts.
-      // This is necessary to have the correct controller in place for immediate
-      // follow-on requests.
-      loadInfo->SetController(serviceWorker->Descriptor());
+      // TODO: We need to handle the case where the initial about:blank is
+      //       controlled, but the final document load is not.  Right now
+      //       the spec does not really say what to do.  There currently
+      //       is no way for the controller to be cleared from a client in
+      //       the spec or our implementation.  We may want to force a
+      //       new inner window to be created instead of reusing the
+      //       initial about:blank global.  See bug 1419620 and the spec
+      //       issue here: https://github.com/w3c/ServiceWorker/issues/1232
     }
-  }
 
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    if (clientInfo.isSome()) {
+      // First, attempt to mark the reserved client controlled directly.  This
+      // will update the controlled status in the ClientManagerService in the
+      // parent.  It will also eventually propagate back to the ClientSource.
+      StartControllingClient(clientInfo.ref(), registration);
+    }
+
+    // But we also note the reserved state on the LoadInfo.  This allows the
+    // ClientSource to be updated immediately after the nsIChannel starts.
+    // This is necessary to have the correct controller in place for immediate
+    // follow-on requests.
+    loadInfo->SetController(serviceWorker->Descriptor());
   }
 
   MOZ_DIAGNOSTIC_ASSERT(serviceWorker);
 
   nsCOMPtr<nsIRunnable> continueRunnable =
     new ContinueDispatchFetchEventRunnable(serviceWorker->WorkerPrivate(),
-                                           aChannel, loadGroup, aIsReload);
+                                           aChannel, loadGroup,
+                                           loadInfo->GetIsDocshellReload());
 
   // When this service worker was registered, we also sent down the permissions
   // for the runnable. They should have arrived by now, but we still need to
@@ -2556,13 +2584,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
                                                             continueRunnable));
     });
 
-  nsCOMPtr<nsIChannel> innerChannel;
-  aRv = aChannel->GetChannel(getter_AddRefs(innerChannel));
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(innerChannel);
+  nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(internalChannel);
 
   // If there is no upload stream, then continue immediately
   if (!uploadChannel) {
@@ -3085,6 +3107,19 @@ ServiceWorkerManager::GetRegistration(nsIPrincipal* aPrincipal,
 
   nsAutoCString scopeKey;
   nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return GetRegistration(scopeKey, aScope);
+}
+
+already_AddRefed<ServiceWorkerRegistrationInfo>
+ServiceWorkerManager::GetRegistration(const PrincipalInfo& aPrincipalInfo,
+                                      const nsACString& aScope) const
+{
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalInfoToScopeKey(aPrincipalInfo, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
