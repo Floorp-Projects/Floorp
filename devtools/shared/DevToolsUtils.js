@@ -669,20 +669,32 @@ function newChannelForURL(url, { policy, window, principal }) {
     securityFlags: securityFlags,
     uri: uri
   };
-  let prin = principal;
-  if (!prin) {
-    let oa = {};
-    if (window) {
-      oa = window.document.nodePrincipal.originAttributes;
-    }
-    prin = Services.scriptSecurityManager
-                   .createCodebasePrincipal(uri, oa);
-  }
-  // contentPolicyType is required when specifying a principal
+
+  // Ensure that we have some contentPolicyType type set if one was
+  // not provided.
   if (!channelOptions.contentPolicyType) {
     channelOptions.contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
   }
-  channelOptions.loadingPrincipal = prin;
+
+  // If a window is provided, always use it's document as the loadingNode.
+  // This will provide the correct principal, origin attributes, service
+  // worker controller, etc.
+  if (window) {
+    channelOptions.loadingNode = window.document;
+  } else {
+    // If a window is not provided, then we must set a loading principal.
+
+    // If the caller did not provide a principal, then we use the URI
+    // to create one.  Note, it's not clear what use cases require this
+    // and it may not be correct.
+    let prin = principal;
+    if (!prin) {
+      prin = Services.scriptSecurityManager
+                     .createCodebasePrincipal(uri, {});
+    }
+
+    channelOptions.loadingPrincipal = prin;
+  }
 
   try {
     return NetUtil.newChannel(channelOptions);
