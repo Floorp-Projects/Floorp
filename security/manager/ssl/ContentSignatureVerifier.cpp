@@ -44,9 +44,6 @@ const nsLiteralCString kPREFIX = NS_LITERAL_CSTRING("Content-Signature:\x00");
 
 ContentSignatureVerifier::~ContentSignatureVerifier()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -146,10 +143,6 @@ ContentSignatureVerifier::CreateContextInternal(const nsACString& aData,
                                                 const nsACString& aName)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   UniqueCERTCertList certCertList(CERT_NewCertList());
   if (!certCertList) {
@@ -406,10 +399,6 @@ NS_IMETHODIMP
 ContentSignatureVerifier::Update(const nsACString& aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   // If we didn't create the context yet, bail!
   if (!mHasCertChain) {
@@ -430,10 +419,6 @@ ContentSignatureVerifier::End(bool* _retval)
 {
   NS_ENSURE_ARG(_retval);
   MOZ_ASSERT(NS_IsMainThread());
-  if (isAlreadyShutDown()) {
-    CSVerifier_LOG(("CSVerifier: nss is already shutdown\n"));
-    return NS_ERROR_FAILURE;
-  }
 
   // If we didn't create the context yet, bail!
   if (!mHasCertChain) {

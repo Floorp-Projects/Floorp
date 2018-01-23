@@ -38,9 +38,6 @@ nsCryptoHash::nsCryptoHash()
 
 nsCryptoHash::~nsCryptoHash()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -62,10 +59,6 @@ NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 NS_IMETHODIMP
 nsCryptoHash::Init(uint32_t algorithm)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   HASH_HashType hashType;
   switch (algorithm) {
     case nsICryptoHash::MD2:
@@ -134,10 +127,6 @@ nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
 NS_IMETHODIMP
 nsCryptoHash::Update(const uint8_t *data, uint32_t len)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -149,10 +138,6 @@ nsCryptoHash::Update(const uint8_t *data, uint32_t len)
 NS_IMETHODIMP
 nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -205,10 +190,6 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mInitialized) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -241,9 +222,6 @@ nsCryptoHMAC::nsCryptoHMAC()
 
 nsCryptoHMAC::~nsCryptoHMAC()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -263,10 +241,6 @@ nsCryptoHMAC::destructorSafeDestroyNSSReference()
 NS_IMETHODIMP
 nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (mHMACContext) {
     mHMACContext = nullptr;
   }
@@ -319,10 +293,6 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 NS_IMETHODIMP
 nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mHMACContext)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -339,10 +309,6 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mHMACContext)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -398,10 +364,6 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!mHMACContext)
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -425,10 +387,6 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 NS_IMETHODIMP
 nsCryptoHMAC::Reset()
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (PK11_DigestBegin(mHMACContext.get()) != SECSuccess) {
     return NS_ERROR_FAILURE;
   }

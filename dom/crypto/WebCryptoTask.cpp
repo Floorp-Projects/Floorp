@@ -405,11 +405,7 @@ WebCryptoTask::Run()
 {
   // Run heavy crypto operations on the thread pool, off the original thread.
   if (!IsOnOriginalThread()) {
-    if (isAlreadyShutDown()) {
-      mRv = NS_ERROR_NOT_AVAILABLE;
-    } else {
-      mRv = CalculateResult();
-    }
+    mRv = CalculateResult();
 
     // Back to the original thread, i.e. continue below.
     mOriginalEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -459,10 +455,6 @@ nsresult
 WebCryptoTask::CalculateResult()
 {
   MOZ_ASSERT(!IsOnOriginalThread());
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_DOM_UNKNOWN_ERR;
-  }
 
   return DoCrypto();
 }
@@ -3726,9 +3718,7 @@ WebCryptoTask::~WebCryptoTask()
 {
   MOZ_ASSERT(mReleasedNSSResources);
 
-  if (!isAlreadyShutDown()) {
-    shutdown(ShutdownCalledFrom::Object);
-  }
+  shutdown(ShutdownCalledFrom::Object);
 
   if (mWorkerHolder) {
     NS_ProxyRelease(

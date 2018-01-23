@@ -222,10 +222,6 @@ nsKeygenFormProcessor::nsKeygenFormProcessor()
 
 nsKeygenFormProcessor::~nsKeygenFormProcessor()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -274,10 +270,6 @@ nsKeygenFormProcessor::Init()
 nsresult
 nsKeygenFormProcessor::GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   return GetSlotWithMechanism(aMechanism, m_ctx, aSlot);
 }
 
@@ -424,10 +416,6 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                     nsAString& aOutPublicKey,
                                     const nsAString& aKeyParams)
 {
-    if (isAlreadyShutDown()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
     nsresult rv = NS_ERROR_FAILURE;
     nsAutoCString keystring;
     char *keyparamsString = nullptr;

@@ -395,9 +395,6 @@ NS_IMPL_ISUPPORTS(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
 
 nsSSLStatus::~nsSSLStatus()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -414,10 +411,6 @@ nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus)
 nsresult
 nsSSLStatus::SetSucceededCertChain(UniqueCERTCertList aCertList)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // nsNSSCertList takes ownership of certList
   mSucceededCertChain = new nsNSSCertList(Move(aCertList));
 
