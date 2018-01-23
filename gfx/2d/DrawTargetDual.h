@@ -49,7 +49,7 @@ public:
   virtual already_AddRefed<SourceSurface> Snapshot() override {
     return MakeAndAddRef<SourceSurfaceDual>(mA, mB);
   }
-  virtual IntSize GetSize() override { return mA->GetSize(); }
+  virtual IntSize GetSize() const override { return mA->GetSize(); }
 
   virtual void DetachAllSnapshots() override;
 

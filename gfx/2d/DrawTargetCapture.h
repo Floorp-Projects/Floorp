@@ -37,7 +37,7 @@ public:
                                                               float aOpacity) override;
   virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
   virtual void DetachAllSnapshots() override;
-  virtual IntSize GetSize() override { return mSize; }
+  virtual IntSize GetSize() const override { return mSize; }
   virtual void Flush() override {}
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,
