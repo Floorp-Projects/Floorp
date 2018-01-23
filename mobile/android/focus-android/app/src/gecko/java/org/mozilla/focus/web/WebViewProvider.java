@@ -25,10 +25,6 @@ public class WebViewProvider {
     }
 
     public static View create(Context context, AttributeSet attrs) {
-        final GeckoSessionSettings settings = new GeckoSessionSettings();
-        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
-        settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
-        settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true);
         final GeckoView geckoView = new GeckoWebView(context, attrs);
 
         return geckoView;
@@ -48,13 +44,21 @@ public class WebViewProvider {
         private boolean canGoBack;
         private boolean canGoForward;
         private boolean isSecure;
+        private GeckoSession geckoSession;
 
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
-            GeckoSession.setContentListener(createContentListener());
-            GeckoSession.setProgressListener(createProgressListener());
-            GeckoSession.setNavigationListener(createNavigationListener());
+
+            final GeckoSessionSettings settings = new GeckoSessionSettings();
+            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+            settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
+            settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true);
+
+            geckoSession = new GeckoSession(settings);
+            geckoSession.setContentListener(createContentListener());
+            geckoSession.setProgressListener(createProgressListener());
+            geckoSession.setNavigationListener(createNavigationListener());
 
             // TODO: set long press listener, call through to callback.onLinkLongPress()
         }
@@ -70,13 +74,33 @@ public class WebViewProvider {
         }
 
         @Override
+        public void goBack() {
+
+        }
+
+        @Override
+        public void goForward() {
+
+        }
+
+        @Override
+        public void reload() {
+
+        }
+
+        @Override
+        public void destroy() {
+
+        }
+
+        @Override
         public void onResume() {
 
         }
 
         @Override
         public void stopLoading() {
-            this.stop();
+            geckoSession.stop();
             callback.onPageFinished(isSecure);
         }
 
@@ -88,7 +112,7 @@ public class WebViewProvider {
         @Override
         public void loadUrl(final String url) {
             currentUrl = url;
-            loadUrl(currentUrl);
+            geckoSession.loadUri(currentUrl);
         }
 
         @Override
@@ -168,7 +192,7 @@ public class WebViewProvider {
                 public boolean onLoadUri(GeckoSession session, String uri, GeckoSession.NavigationListener.TargetWindow where) {
                     // If this is trying to load in a new tab, just load it in the current one
                     if (where == TargetWindow.NEW) {
-                        loadUrl(uri);
+                        geckoSession.loadUri(uri);
                         return true;
                     }
 
