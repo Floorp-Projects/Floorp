@@ -98,8 +98,8 @@ function is_hidden(element, message) {
   ok(isHidden(element), message);
 }
 
-function dispatchKeyPress(key, keyCode) {
-  select1.dispatchEvent(new KeyboardEvent("keypress", {key, keyCode}));
+function dispatchKeyDown(key, keyCode) {
+  select1.dispatchEvent(new KeyboardEvent("keydown", {key, keyCode}));
 }
 
 add_task(async function test_addressLine_combines_address_city_region_postalCode_country() {
@@ -184,27 +184,27 @@ add_task(async function test_up_down_keys_change_selected_item() {
   select1.focus();
   ok(!select1.open, "select should not be open after focusing");
 
-  dispatchKeyPress("ArrowDown", 40);
+  dispatchKeyDown("ArrowDown", 40);
   ok(!option1.selected, "option 1 should no longer be selected");
   ok(option2.selected, "option 2 should now be selected");
 
-  dispatchKeyPress("ArrowDown", 40);
+  dispatchKeyDown("ArrowDown", 40);
   ok(!option2.selected, "option 2 should no longer be selected");
   ok(option3.selected, "option 3 should now be selected");
 
-  dispatchKeyPress("ArrowDown", 40);
+  dispatchKeyDown("ArrowDown", 40);
   ok(option3.selected, "option 3 should remain selected");
   ok(!option1.selected, "option 1 should not be selected");
 
-  dispatchKeyPress("ArrowUp", 38);
+  dispatchKeyDown("ArrowUp", 38);
   ok(!option3.selected, "option 3 should no longer be selected");
   ok(option2.selected, "option 2 should now be selected");
 
-  dispatchKeyPress("ArrowUp", 38);
+  dispatchKeyDown("ArrowUp", 38);
   ok(!option2.selected, "option 2 should no longer be selected");
   ok(option1.selected, "option 1 should now be selected");
 
-  dispatchKeyPress("ArrowUp", 38);
+  dispatchKeyDown("ArrowUp", 38);
   ok(option1.selected, "option 1 should remain selected");
   ok(!option3.selected, "option 3 should not be selected");
 
@@ -219,28 +219,28 @@ add_task(async function test_open_close_from_keyboard() {
 
   ok(!select1.open, "select should not be open by default");
 
-  dispatchKeyPress(" ", 32);
+  dispatchKeyDown(" ", 32);
   ok(select1.open, "select should now be open");
   ok(option1.selected, "option 1 should be selected by default");
 
-  dispatchKeyPress("ArrowDown", 40);
+  dispatchKeyDown("ArrowDown", 40);
   ok(!option1.selected, "option 1 should not be selected");
   ok(option2.selected, "option 2 should now be selected");
   ok(select1.open, "select should remain open");
 
-  dispatchKeyPress("ArrowUp", 38);
+  dispatchKeyDown("ArrowUp", 38);
   ok(option1.selected, "option 1 should now be selected");
   ok(!option2.selected, "option 2 should not be selected");
   ok(select1.open, "select should remain open");
 
-  dispatchKeyPress("Enter", 13);
+  dispatchKeyDown("Enter", 13);
   ok(option1.selected, "option 1 should now be selected");
   ok(!select1.open, "select should be closed");
 
-  dispatchKeyPress(" ", 32);
+  dispatchKeyDown(" ", 32);
   ok(select1.open, "select should now be open");
 
-  dispatchKeyPress("Escape", 27);
+  dispatchKeyDown("Escape", 27);
   ok(!select1.open, "select should be closed");
 });
 

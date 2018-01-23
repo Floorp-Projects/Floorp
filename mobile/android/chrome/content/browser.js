@@ -1690,7 +1690,11 @@ var BrowserApp = {
 
       case "FormHistory:Init": {
         // Force creation/upgrade of formhistory.sqlite
-        FormHistory.count({});
+        FormHistory.count({}, {
+          handleCompletion() {
+            GlobalEventDispatcher.sendRequest({ type: "FormHistory:Ready" });
+          },
+        });
         GlobalEventDispatcher.unregisterListener(this, event);
         break;
       }

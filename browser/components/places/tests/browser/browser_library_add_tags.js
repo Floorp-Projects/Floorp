@@ -12,7 +12,7 @@ add_task(async function test_add_tags() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
 
-  // Open the Library and select the "UnfilledBookmarks".
+  // Open the Library on "UnfiledBookmarks".
   let library = await promiseLibrary("UnfiledBookmarks");
 
   let bookmarkNode = library.ContentTree.view.selectedNode;

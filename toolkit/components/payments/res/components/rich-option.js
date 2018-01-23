@@ -14,19 +14,15 @@
 class RichOption extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() { return ["selected", "hidden"]; }
 
-  constructor() {
-    super();
-
-    this.addEventListener("click", this);
-    this.addEventListener("keypress", this);
-  }
-
   connectedCallback() {
     this.render();
     let richSelect = this.closest("rich-select");
     if (richSelect && richSelect.render) {
       richSelect.render();
     }
+
+    this.addEventListener("click", this);
+    this.addEventListener("keydown", this);
   }
 
   handleEvent(event) {
@@ -35,8 +31,8 @@ class RichOption extends ObservedPropertiesMixin(HTMLElement) {
         this.onClick(event);
         break;
       }
-      case "keypress": {
-        this.onKeyPress(event);
+      case "keydown": {
+        this.onKeyDown(event);
         break;
       }
     }
@@ -52,7 +48,7 @@ class RichOption extends ObservedPropertiesMixin(HTMLElement) {
     }
   }
 
-  onKeyPress(event) {
+  onKeyDown(event) {
     if (!this.disabled &&
         event.which == 13 /* Enter */) {
       for (let option of this.parentNode.children) {

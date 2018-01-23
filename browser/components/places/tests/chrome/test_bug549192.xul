@@ -129,8 +129,7 @@
           let promiseDeleted = promiseURIDeleted();
           tree.controller.remove("Removing page");
           await promiseDeleted;
-          ok(treeView.treeIndexForNode(node) == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE,
-            node.uri + " removed.");
+          ok(treeView.treeIndexForNode(node) == -1, node.uri + " removed.");
           is(treeView.rowCount, rc - i - 1, "Rows count decreased");
         }
 

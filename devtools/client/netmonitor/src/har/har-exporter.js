@@ -119,6 +119,16 @@ const HarExporter = {
     });
   },
 
+  /**
+   * Get HAR data as JSON object.
+   *
+   * @param Object options
+   *        Configuration object, see save() for detailed description.
+   */
+  getHar: function (options) {
+    return this.fetchHarData(options).then(JSON.parse);
+  },
+
   // Helpers
 
   fetchHarData: function (options) {

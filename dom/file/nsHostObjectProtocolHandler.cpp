@@ -892,20 +892,23 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 
   DataInfo* info = GetDataInfo(aSpec);
 
+  nsCOMPtr<nsIPrincipal> principal;
+  RefPtr<mozilla::dom::BlobImpl> blob;
+  if (info && info->mObjectType == DataInfo::eBlobImpl) {
+    MOZ_ASSERT(info->mBlobImpl);
+    principal = info->mPrincipal;
+    blob = info->mBlobImpl;
+  }
+
   nsCOMPtr<nsIURI> uri;
   rv = NS_MutateURI(new nsHostObjectURI::Mutator())
          .SetSpec(aSpec)
+         .Apply<nsIBlobURIMutator>(&nsIBlobURIMutator::SetBlobImpl, blob)
+         .Apply<nsIPrincipalURIMutator>(&nsIPrincipalURIMutator::SetPrincipal, principal)
          .Finalize(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsHostObjectURI> hostURI = static_cast<nsHostObjectURI*>(uri.get());
-  if (info && info->mObjectType == DataInfo::eBlobImpl) {
-    MOZ_ASSERT(info->mBlobImpl);
-    hostURI->mPrincipal = info->mPrincipal;
-    hostURI->mBlobImpl = info->mBlobImpl;
-  }
-
-  NS_TryToSetImmutable(hostURI);
+  NS_TryToSetImmutable(uri);
   uri.forget(aResult);
 
   if (info && info->mObjectType == DataInfo::eBlobImpl) {

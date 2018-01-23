@@ -291,7 +291,7 @@ class ParserBase
     bool checkOptionsCalled:1;
 #endif
 
-    /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
+    /* Unexpected end of input, i.e. Eof not at top-level. */
     bool isUnexpectedEOF_:1;
 
     /* AwaitHandling */ uint8_t awaitHandling_:2;
@@ -383,7 +383,7 @@ class ParserBase
     enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
     enum ForInitLocation { InForInit, NotInForInit };
 
-    // While on a |let| TOK_NAME token, examine |next| (which must already be
+    // While on a |let| Name token, examine |next| (which must already be
     // gotten).  Indicate whether |next|, the next token already gotten with
     // modifier TokenStream::None, continues a LexicalDeclaration.
     bool nextTokenContinuesLetDeclaration(TokenKind next);
@@ -1164,7 +1164,7 @@ class GeneralParser
     bool checkBindingIdentifier(PropertyName* ident,
                                 uint32_t offset,
                                 YieldHandling yieldHandling,
-                                TokenKind hint = TokenKind::TOK_LIMIT);
+                                TokenKind hint = TokenKind::Limit);
 
     PropertyName* labelOrIdentifierReference(YieldHandling yieldHandling);
 
@@ -1239,7 +1239,7 @@ class GeneralParser
 
     bool checkLabelOrIdentifierReference(PropertyName* ident, uint32_t offset,
                                          YieldHandling yieldHandling,
-                                         TokenKind hint = TokenKind::TOK_LIMIT);
+                                         TokenKind hint = TokenKind::Limit);
 
     Node statementList(YieldHandling yieldHandling);
 

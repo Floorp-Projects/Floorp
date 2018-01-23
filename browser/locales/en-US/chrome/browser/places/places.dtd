@@ -73,9 +73,6 @@
 <!ENTITY cmd.reloadLivebookmark.label      "Reload Live Bookmark">
 <!ENTITY cmd.reloadLivebookmark.accesskey  "R">
 
-<!ENTITY cmd.moveBookmarks.label                  "Move…">
-<!ENTITY cmd.moveBookmarks.accesskey              "M">
-
 <!ENTITY col.name.label          "Name">
 <!ENTITY col.tags.label          "Tags">
 <!ENTITY col.url.label           "Location">
