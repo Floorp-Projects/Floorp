@@ -13,7 +13,7 @@ using js::AutoLockMonitor;
 
 struct OffThreadTask {
     OffThreadTask()
-      : monitor(js::mutexid::TestMutex),
+      : monitor(js::mutexid::ShellOffThreadState),
         token(nullptr)
     {}
 
