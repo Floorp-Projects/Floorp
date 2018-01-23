@@ -13,6 +13,20 @@ interface nsIDOMNode;
 interface nsIPrincipal;
 interface nsILoadInfo;
 
+%{C++
+#include "mozilla/Maybe.h"
+
+namespace mozilla {
+namespace dom {
+class ClientInfo;
+class ServiceWorkerDescriptor;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ref] native const_MaybeClientInfoRef(const mozilla::Maybe<mozilla::dom::ClientInfo>);
+[ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
+
 /**
  * nsIIOService provides a set of network utility functions.  This interface
  * duplicates many of the nsIProtocolHandler methods in a protocol handler
@@ -92,6 +106,17 @@ interface nsIIOService : nsISupports
                                   in nsIPrincipal aTriggeringPrincipal,
                                   in unsigned long aSecurityFlags,
                                   in unsigned long aContentPolicyType);
+
+    [noscript, nostdcall, notxpcom]
+    nsresult NewChannelFromURIWithClientAndController(in nsIURI aURI,
+                                                      in nsIDOMNode aLoadingNode,
+                                                      in nsIPrincipal aLoadingPrincipal,
+                                                      in nsIPrincipal aTriggeringPrincipal,
+                                                      in const_MaybeClientInfoRef aLoadingClientInfo,
+                                                      in const_MaybeServiceWorkerDescriptorRef aController,
+                                                      in unsigned long aSecurityFlags,
+                                                      in unsigned long aContentPolicyType,
+                                                      out nsIChannel aResult);
 
     /**
      * Equivalent to newChannelFromURI2(aURI, aLoadingNode, ...)
