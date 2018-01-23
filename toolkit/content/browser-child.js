@@ -221,6 +221,9 @@ var WebProgressListener = {
     let json = this._setupJSON(aWebProgress, aRequest);
     let objects = this._setupObjects(aWebProgress, aRequest);
 
+    let classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
+    json.matchedList = classChannel.matchedList;
+
     json.state = aState;
     json.status = SecurityUI.getSSLStatusAsString();
 
