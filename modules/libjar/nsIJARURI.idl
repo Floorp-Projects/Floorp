@@ -28,7 +28,7 @@ interface nsIJARURI : nsIURL {
      * Returns the entry specified for this JAR URI (e.g., "ocean.html").  This
      * value may contain %-escaped byte sequences.
      */
-    attribute AUTF8String JAREntry;
+    readonly attribute AUTF8String JAREntry;
 
     /**
      * Create a clone of the JAR URI with a new root URI (the URI for the

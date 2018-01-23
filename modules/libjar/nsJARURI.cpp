@@ -882,7 +882,7 @@ nsJARURI::GetJAREntry(nsACString &entryPath)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJARURI::SetJAREntry(const nsACString &entryPath)
 {
     return CreateEntryURL(entryPath, mCharsetHint.get(),
