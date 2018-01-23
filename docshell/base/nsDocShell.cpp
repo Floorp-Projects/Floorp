@@ -14301,26 +14301,10 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> doc;
-
-  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
-  if (isSubresourceLoad) {
-    doc = GetDocument();
-    if (!doc) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
-  bool isReload = mLoadType & LOAD_CMD_RELOAD;
-
   ErrorResult error;
-  swm->DispatchFetchEvent(mOriginAttributes, doc, aChannel, isReload,
-                          isSubresourceLoad, error);
+  swm->DispatchFetchEvent(aChannel, error);
   if (NS_WARN_IF(error.Failed())) {
+    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
     return error.StealNSResult();
   }
 
