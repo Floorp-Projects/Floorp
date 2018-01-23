@@ -910,6 +910,7 @@ private: // data members
   nsTObserverArray<nsWeakPtr> mScrollObservers;
   mozilla::OriginAttributes mOriginAttributes;
   mozilla::UniquePtr<mozilla::dom::ClientSource> mInitialClientSource;
+  nsCOMPtr<nsINetworkInterceptController> mInterceptController;
   RefPtr<nsDOMNavigationTiming> mTiming;
   RefPtr<nsDSURIContentListener> mContentListener;
   RefPtr<nsGlobalWindowOuter> mScriptGlobal;
