@@ -14,6 +14,7 @@
 #include "mozilla/dom/Text.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
+#include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsINode.h"
@@ -400,6 +401,26 @@ public:
   }
 
   /**
+   * SetAfter() sets mChild to next sibling of aChild.
+   */
+  void
+  SetAfter(const nsINode* aChild)
+  {
+    MOZ_ASSERT(aChild);
+    nsIContent* nextSibling = aChild->GetNextSibling();
+    if (nextSibling) {
+      Set(nextSibling);
+      return;
+    }
+    nsINode* parentNode = aChild->GetParentNode();
+    if (NS_WARN_IF(!parentNode)) {
+      Clear();
+      return;
+    }
+    SetToEndOf(parentNode);
+  }
+
+  /**
    * Clear() makes the instance not point anywhere.
    */
   void
@@ -584,6 +605,23 @@ public:
     }
     MOZ_ASSERT(mOffset.isSome());
     return mOffset.value() == mParent->Length();
+  }
+
+  bool
+  IsBRElementAtEndOfContainer() const
+  {
+    if (NS_WARN_IF(!mParent)) {
+      return false;
+    }
+    if (!mParent->IsContainerNode()) {
+      return false;
+    }
+    const_cast<SelfType*>(this)->EnsureChild();
+    if (!mChild ||
+        mChild->GetNextSibling()) {
+      return false;
+    }
+    return mChild->IsHTMLElement(nsGkAtoms::br);
   }
 
   // Convenience methods for switching between the two types
