@@ -9,6 +9,7 @@
 #include "gtest/gtest.h"
 
 #include "FuzzingInterface.h"
+#include "LibFuzzerRegistry.h"
 
 extern "C" {
 #include <csi_platform.h>

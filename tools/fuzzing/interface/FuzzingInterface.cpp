@@ -7,18 +7,13 @@
  * Interface implementation for the unified fuzzing interface
  */
 
-#include "FuzzingInterfaceStream.h"
+#include "FuzzingInterface.h"
 
-#include "mozilla/Assertions.h"
-
-#ifndef JS_STANDALONE
 #include "nsNetUtil.h"
-#endif
 
 namespace mozilla {
 
 #ifdef __AFL_COMPILER
-
 void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc) {
     nsresult rv;
     nsCOMPtr<nsIProperties> dirService =
@@ -44,6 +39,29 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc) 
     }
 }
 
+void afl_interface_raw(const char* testFile, FuzzingTestFuncRaw testFunc) {
+    char* buf = NULL;
+
+    while(__AFL_LOOP(1000)) {
+      std::ifstream is;
+      is.open (testFile, std::ios::binary);
+      is.seekg (0, std::ios::end);
+      int len = is.tellg();
+      is.seekg (0, std::ios::beg);
+      MOZ_RELEASE_ASSERT(len >= 0);
+      if (!len) {
+        is.close();
+        continue;
+      }
+      buf = (char*)realloc(buf, len);
+      MOZ_RELEASE_ASSERT(buf);
+      is.read(buf,len);
+      is.close();
+      testFunc((uint8_t*)buf, (size_t)len);
+    }
+
+    free(buf);
+}
 #endif
 
 } // namespace mozilla

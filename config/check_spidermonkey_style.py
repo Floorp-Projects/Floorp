@@ -69,8 +69,6 @@ included_inclnames_to_ignore = set([
     'jscustomallocator.h',      # provided by embedders;  allowed to be missing
     'js-config.h',              # generated in $OBJDIR
     'fdlibm.h',                 # fdlibm
-    'FuzzerDefs.h',             # included without a path
-    'FuzzingInterface.h',       # included without a path
     'mozmemory.h',              # included without a path
     'pratom.h',                 # NSPR
     'prcvar.h',                 # NSPR

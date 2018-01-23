@@ -3,22 +3,19 @@
  * * License, v. 2.0. If a copy of the MPL was not distributed with this
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FuzzerRegistry.h"
+#include "LibFuzzerRegistry.h"
 
 namespace mozilla {
 
-class FuzzerRunner {
+class LibFuzzerRunner {
 public:
   int Run(int* argc, char*** argv);
-
-#ifdef LIBFUZZER
   void setParams(LibFuzzerDriver aDriver);
 
 private:
   LibFuzzerDriver mFuzzerDriver;
-#endif
 };
 
-extern FuzzerRunner* fuzzerRunner;
+extern LibFuzzerRunner* libFuzzerRunner;
 
 } // namespace mozilla
