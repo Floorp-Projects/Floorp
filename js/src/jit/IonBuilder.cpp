@@ -13214,7 +13214,7 @@ IonBuilder::jsop_instanceof()
         return resumeAfter(ins);
     } while (false);
 
-    MInstanceOfCache* ins = MInstanceOfCache::New(alloc(), obj, rhs);
+    MCallInstanceOf* ins = MCallInstanceOf::New(alloc(), obj, rhs);
 
     current->add(ins);
     current->push(ins);

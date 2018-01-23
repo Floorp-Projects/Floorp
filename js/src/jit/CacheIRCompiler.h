@@ -47,7 +47,6 @@ namespace jit {
     _(LoadStringLengthResult)             \
     _(LoadStringCharResult)               \
     _(LoadArgumentsObjectArgResult)       \
-    _(LoadInstanceOfObjectResult)         \
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
     _(LoadDenseElementExistsResult)       \
@@ -712,8 +711,6 @@ class CacheIRStubInfo
     js::GCPtr<T>& getStubField(ICStub* stub, uint32_t field) const {
         return getStubField<ICStub, T>(stub, field);
     }
-
-    uintptr_t getStubRawWord(ICStub* stub, uint32_t field) const;
 
     void copyStubData(ICStub* src, ICStub* dest) const;
 };
