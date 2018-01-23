@@ -149,87 +149,83 @@ job-template:
       config:
          by-build-platform:
             linux-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux32.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux32.py
                - taskcluster_nightly.py
             linux64-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux64.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux64.py
                - taskcluster_nightly.py
             macosx64-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/macosx64.py
+               - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
                - taskcluster_nightly.py
-            win32-nightly: []
-            win64-nightly: []
+            win32-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/win32.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win32.py
+               - taskcluster_nightly.py
+            win64-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/win64.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win64.py
+               - taskcluster_nightly.py
             linux-devedition-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux_devedition.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux32.py
                - taskcluster_nightly.py
             linux64-devedition-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux64_devedition.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux64.py
                - taskcluster_nightly.py
             macosx64-devedition-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/macosx64_devedition.py
+               - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
                - taskcluster_nightly.py
-            win32-devedition-nightly: []
-            win64-devedition-nightly: []
+            win32-devedition-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/win32_devedition.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win32.py
+               - taskcluster_nightly.py
+            win64-devedition-nightly:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/win64_devedition.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win64.py
+               - taskcluster_nightly.py
             android-api-16-nightly:
                - taskcluster_nightly.py
                - single_locale/{project}_android-api-16.py
+               - single_locale/tc_common.py
                - single_locale/tc_android-api-16.py
       # no default, so we fail on new entries
       options:
-         by-build-platform:
-            linux-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux32.py
-            linux64-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux64.py
-            macosx64-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/macosx64.py
-            win32-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/win32.py
-               - config=single_locale/tc_win32.py
-               - config=taskcluster_nightly.py
-               - revision=$GECKO_HEAD_REV
-            win64-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/win64.py
-               - config=single_locale/tc_win64.py
-               - config=taskcluster_nightly.py
-               - revision=$GECKO_HEAD_REV
-            linux-devedition-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux_devedition.py
-            linux64-devedition-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux64_devedition.py
-            macosx64-devedition-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/macosx64_devedition.py
-            win32-devedition-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/win32_devedition.py
-               - config=single_locale/tc_win32.py
-               - config=taskcluster_nightly.py
-               - revision=$GECKO_HEAD_REV
-            win64-devedition-nightly:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/win64_devedition.py
-               - config=single_locale/tc_win64.py
-               - config=taskcluster_nightly.py
-               - revision=$GECKO_HEAD_REV
-            default: []
+         - revision=$GECKO_HEAD_REV
       actions:
          by-build-platform:
             default: ['clone-locales', 'list-locales', 'setup', 'repack',

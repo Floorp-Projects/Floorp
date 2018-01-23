@@ -15,7 +15,6 @@ else:
 exes = {
     'tooltool.py': ["/builds/tooltool.py"],
     'python': PYTHON,
-    'virtualenv': [PYTHON, '/usr/local/lib/python2.7/dist-packages/virtualenv.py'],
 }
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.tar.bz2")

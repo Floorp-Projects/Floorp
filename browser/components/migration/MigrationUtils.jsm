@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
     return [
       "firefox", "edge", "ie", "chrome", "chromium", "360se",
-      "canary"
+      "canary",
     ];
   }
   if (AppConstants.platform == "macosx") {
@@ -445,7 +445,7 @@ this.MigratorPrototype = {
     }
     this._resourcesByProfile[profileKey] = this.getResources(aProfile);
     return this._resourcesByProfile[profileKey];
-  }
+  },
 };
 
 this.MigrationUtils = Object.freeze({
@@ -532,7 +532,7 @@ this.MigrationUtils = Object.freeze({
 
     const OVERRIDES = {
       "4_firefox": "4_firefox_history_and_bookmarks",
-      "64_firefox": "64_firefox_other"
+      "64_firefox": "64_firefox_other",
     };
     aKey = OVERRIDES[aKey] || aKey;
 
@@ -589,7 +589,7 @@ this.MigrationUtils = Object.freeze({
     let source = this.getLocalizedString("sourceName" + sourceNameStr);
     let title = this.getLocalizedString("importedBookmarksFolder", [source]);
     return (await PlacesUtils.bookmarks.insert({
-      type: PlacesUtils.bookmarks.TYPE_FOLDER, parentGuid, title
+      type: PlacesUtils.bookmarks.TYPE_FOLDER, parentGuid, title,
     })).guid;
   },
 
@@ -980,7 +980,7 @@ this.MigrationUtils = Object.freeze({
     return insertionPromise.then(bm => {
       let {guid, lastModified, type} = bm;
       gUndoData.get("bookmarks").push({
-        parentGuid, guid, lastModified, type
+        parentGuid, guid, lastModified, type,
       });
       return bm;
     });

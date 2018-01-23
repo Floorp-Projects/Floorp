@@ -42,10 +42,8 @@ from mozharness.mozilla.buildbot import (
     TBPL_WORST_LEVEL_TUPLE,
 )
 from mozharness.mozilla.purge import PurgeMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.signing import SigningMixin
-from mozharness.mozilla.mock import ERROR_MSGS as MOCK_ERROR_MSGS
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 from mozharness.mozilla.updates.balrog import BalrogMixin
@@ -70,7 +68,6 @@ because it was a forced build.',
     'tooltool_manifest_undetermined': '"tooltool_manifest_src" not set, \
 Skipping run_tooltool...',
 }
-ERROR_MSGS.update(MOCK_ERROR_MSGS)
 
 
 ### Output Parsers
@@ -661,12 +658,6 @@ BUILD_BASE_CONFIG_OPTIONS = [
         "dest": "who",
         "default": '',
         "help": "stores who made the created the buildbot change."}],
-    [["--disable-mock"], {
-        "dest": "disable_mock",
-        "action": "store_true",
-        "help": "do not run under mock despite what gecko-config says",
-    }],
-
 ]
 
 
@@ -678,7 +669,7 @@ def generate_build_UID():
     return uuid.uuid4().hex
 
 
-class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
+class BuildScript(BuildbotMixin, PurgeMixin, BalrogMixin,
                   SigningMixin, VirtualenvMixin, MercurialScript,
                   SecretsMixin, PerfherderResourceOptionsMixin):
     def __init__(self, **kwargs):
@@ -834,7 +825,7 @@ or run without that action (ie: --no-{action})"
             # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
             # mac, and that confuses mach.
             del env['MOZ_OBJDIR']
-            return self.get_output_from_command_m(cmd,
+            return self.get_output_from_command(cmd,
                 cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
@@ -1173,7 +1164,7 @@ or run without that action (ie: --no-{action})"
         env.update(self.query_mach_build_env())
 
         self._assert_cfg_valid_for_action(
-            ['tooltool_script', 'tooltool_url'],
+            ['tooltool_url'],
             'build'
         )
         c = self.config
@@ -1210,8 +1201,8 @@ or run without that action (ie: --no-{action})"
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
-        self.run_command_m(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
-                           env=env)
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
+                         env=env)
 
     def query_revision(self, source_path=None):
         """ returns the revision of the build
@@ -1243,38 +1234,6 @@ or run without that action (ie: --no-{action})"
                     hg + ['parent', '--template', '{node}'], cwd=source_path
                 )
         return revision.encode('ascii', 'replace') if revision else None
-
-    def _checkout_source(self):
-        """use vcs_checkout to grab source needed for build."""
-        # TODO make this method its own action
-        c = self.config
-        dirs = self.query_abs_dirs()
-        repo = self._query_repo()
-        vcs_checkout_kwargs = {
-            'repo': repo,
-            'dest': dirs['abs_src_dir'],
-            'revision': self.query_revision(),
-            'env': self.query_build_env()
-        }
-        if c.get('clone_by_revision'):
-            vcs_checkout_kwargs['clone_by_revision'] = True
-
-        if c.get('clone_with_purge'):
-            vcs_checkout_kwargs['clone_with_purge'] = True
-        vcs_checkout_kwargs['clone_upstream_url'] = c.get('clone_upstream_url')
-        rev = self.vcs_checkout(**vcs_checkout_kwargs)
-        if c.get('is_automation'):
-            changes = self.buildbot_config['sourcestamp']['changes']
-            if changes:
-                comments = changes[0].get('comments', '')
-                self.set_buildbot_property('comments',
-                                           comments,
-                                           write_to_file=True)
-            else:
-                self.warning(ERROR_MSGS['comments_undetermined'])
-            self.set_buildbot_property('got_revision',
-                                       rev,
-                                       write_to_file=True)
 
     def _count_ctors(self):
         """count num of ctors and set testresults."""
@@ -1374,7 +1333,7 @@ or run without that action (ie: --no-{action})"
         # mac, and that confuses mach.
         del env['MOZ_OBJDIR']
         for prop in properties_needed:
-            prop_val = self.get_output_from_command_m(
+            prop_val = self.get_output_from_command(
                 base_cmd + [prop['ini_name']], cwd=dirs['abs_obj_dir'],
                 halt_on_failure=halt_on_failure, env=env
             )
@@ -1630,19 +1589,6 @@ or run without that action (ie: --no-{action})"
                                    hash_prop.strip().split(' ', 2)[1],
                                    write_to_file=True)
 
-    def clone_tools(self):
-        """clones the tools repo."""
-        self._assert_cfg_valid_for_action(['tools_repo'], 'clone_tools')
-        c = self.config
-        dirs = self.query_abs_dirs()
-        repo = {
-            'repo': c['tools_repo'],
-            'vcs': 'hg',
-            'dest': dirs['abs_tools_dir'],
-            'output_timeout': 1200,
-        }
-        self.vcs_checkout(**repo)
-
     def _create_mozbuild_dir(self, mozbuild_path=None):
         if not mozbuild_path:
             env = self.query_build_env()
@@ -1652,9 +1598,6 @@ or run without that action (ie: --no-{action})"
         else:
             self.warning("mozbuild_path could not be determined. skipping "
                          "creating it.")
-
-    def checkout_sources(self):
-        self._checkout_source()
 
     def preflight_build(self):
         """set up machine state for a complete build."""
@@ -1700,7 +1643,7 @@ or run without that action (ie: --no-{action})"
         else:
             mach = [sys.executable, 'mach']
 
-        return_code = self.run_command_m(
+        return_code = self.run_command(
             command=mach + ['--log-no-times', 'build', '-v'],
             cwd=dirs['abs_src_dir'],
             env=env,
@@ -1764,15 +1707,15 @@ or run without that action (ie: --no-{action})"
             '--summary',
         ]
 
-        self.run_command_m(cmd, env=self.query_build_env(), cwd=base_work_dir,
-                           halt_on_failure=True)
+        self.run_command(cmd, env=self.query_build_env(), cwd=base_work_dir,
+                         halt_on_failure=True)
 
         package_cmd = [
             'make',
             'echo-variable-PACKAGE',
             'AB_CD=multi',
         ]
-        package_filename = self.get_output_from_command_m(
+        package_filename = self.get_output_from_command(
             package_cmd,
             cwd=objdir,
         )
@@ -1787,10 +1730,10 @@ or run without that action (ie: --no-{action})"
                                         package_filename=package_filename,
                                         )
         upload_cmd = ['make', 'upload', 'AB_CD=multi']
-        self.run_command_m(upload_cmd,
-                           env=self.query_mach_build_env(multiLocale=False),
-                           cwd=objdir, halt_on_failure=True,
-                           output_parser=parser)
+        self.run_command(upload_cmd,
+                         env=self.query_mach_build_env(multiLocale=False),
+                         cwd=objdir, halt_on_failure=True,
+                         output_parser=parser)
         for prop in parser.matches:
             self.set_buildbot_property(prop,
                                        parser.matches[prop],
@@ -1800,7 +1743,7 @@ or run without that action (ie: --no-{action})"
             'echo-variable-UPLOAD_FILES',
             'AB_CD=multi',
         ]
-        output = self.get_output_from_command_m(
+        output = self.get_output_from_command(
             upload_files_cmd,
             cwd=objdir,
         )
@@ -1823,64 +1766,12 @@ or run without that action (ie: --no-{action})"
         command = [sys.executable, 'mach', '--log-no-times']
         command.extend(mach_command_args)
 
-        self.run_command_m(
+        self.run_command(
             command=command,
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 20),
             halt_on_failure=True,
         )
-
-    def preflight_package_source(self):
-        self._get_mozconfig()
-
-    def package_source(self):
-        """generates source archives and uploads them"""
-        env = self.query_build_env()
-        env.update(self.query_mach_build_env())
-        dirs = self.query_abs_dirs()
-
-        self.run_command_m(
-            command=[sys.executable, 'mach', '--log-no-times', 'configure'],
-            cwd=dirs['abs_src_dir'],
-            env=env, output_timeout=60*3, halt_on_failure=True,
-        )
-        self.run_command_m(
-            command=[
-                'make', 'source-package', 'hg-bundle', 'source-upload',
-                'HG_BUNDLE_REVISION=%s' % self.query_revision(),
-                'UPLOAD_HG_BUNDLE=1',
-            ],
-            cwd=dirs['abs_obj_dir'],
-            env=env, output_timeout=60*45, halt_on_failure=True,
-        )
-
-    def generate_source_signing_manifest(self):
-        """Sign source checksum file"""
-        env = self.query_build_env()
-        env.update(self.query_mach_build_env())
-        if env.get("UPLOAD_HOST") != "localhost":
-            self.warning("Skipping signing manifest generation. Set "
-                         "UPLOAD_HOST to `localhost' to enable.")
-            return
-
-        if not env.get("UPLOAD_PATH"):
-            self.warning("Skipping signing manifest generation. Set "
-                         "UPLOAD_PATH to enable.")
-            return
-
-        dirs = self.query_abs_dirs()
-        objdir = dirs['abs_obj_dir']
-
-        output = self.get_output_from_command_m(
-            command=['make', 'echo-variable-SOURCE_CHECKSUM_FILE'],
-            cwd=objdir,
-        )
-        files = shlex.split(output)
-        abs_files = [os.path.abspath(os.path.join(objdir, f)) for f in files]
-        manifest_file = os.path.join(env["UPLOAD_PATH"],
-                                     "signing_manifest.json")
-        self.write_to_file(manifest_file,
-                           self.generate_signing_manifest(abs_files))
 
     def check_test(self):
         if self.config.get('forced_artifact_build'):
@@ -1903,10 +1794,10 @@ or run without that action (ie: --no-{action})"
 
         parser = CheckTestCompleteParser(config=c,
                                          log_obj=self.log_obj)
-        return_code = self.run_command_m(command=cmd,
-                                         cwd=dirs['abs_src_dir'],
-                                         env=env,
-                                         output_parser=parser)
+        return_code = self.run_command(command=cmd,
+                                       cwd=dirs['abs_src_dir'],
+                                       env=env,
+                                       output_parser=parser)
         tbpl_status = parser.evaluate_parser(return_code)
         return_code = EXIT_STATUS_DICT[tbpl_status]
 
@@ -2186,102 +2077,6 @@ or run without that action (ie: --no-{action})"
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
 
-    def sendchange(self):
-        if os.environ.get('TASK_ID'):
-            self.info("We are not running this in buildbot; skipping")
-            return
-
-        if self.config.get('enable_talos_sendchange'):
-            self._do_sendchange('talos')
-        else:
-            self.info("'enable_talos_sendchange' is false; skipping")
-
-        if self.config.get('enable_unittest_sendchange'):
-            self._do_sendchange('unittest')
-        else:
-            self.info("'enable_unittest_sendchange' is false; skipping")
-
-    def _do_sendchange(self, test_type):
-        c = self.config
-
-        # grab any props available from this or previous unclobbered runs
-        self.generate_build_props(console_output=False,
-                                  halt_on_failure=False)
-
-        installer_url = self.query_buildbot_property('packageUrl')
-        if not installer_url:
-            # don't burn the job but we should turn orange
-            self.error("could not determine packageUrl property to use "
-                       "against sendchange. Was it set after 'mach build'?")
-            self.return_code = self.worst_level(
-                1,  self.return_code, AUTOMATION_EXIT_CODES[::-1]
-            )
-            self.return_code = 1
-            return
-        tests_url = self.query_buildbot_property('testsUrl')
-        # Contains the url to a manifest describing the test packages required
-        # for each unittest harness.
-        # For the moment this property is only set on desktop builds. Android
-        # builds find the packages manifest based on the upload
-        # directory of the installer.
-        test_packages_url = self.query_buildbot_property('testPackagesUrl')
-        pgo_build = c.get('pgo_build', False) or self._compile_against_pgo()
-
-        # these cmds are sent to mach through env vars. We won't know the
-        # packageUrl or testsUrl until mach runs upload target so we let mach
-        #  fill in the rest of the cmd
-        sendchange_props = {
-            'buildid': self.query_buildid(),
-            'builduid': self.query_builduid(),
-            'pgo_build': pgo_build,
-        }
-        if self.query_is_nightly():
-            sendchange_props['nightly_build'] = True
-        if test_type == 'talos':
-            if pgo_build:
-                build_type = 'pgo-'
-            else:  # we don't do talos sendchange for debug so no need to check
-                build_type = ''  # leave 'opt' out of branch for talos
-            talos_branch = "%s-%s-%s%s" % (self.branch,
-                                           self.stage_platform,
-                                           build_type,
-                                           'talos')
-            self.invoke_sendchange(downloadables=[installer_url],
-                            branch=talos_branch,
-                            username='sendchange',
-                            sendchange_props=sendchange_props)
-        elif test_type == 'unittest':
-            # do unittest sendchange
-            if c.get('debug_build'):
-                build_type = ''  # for debug builds we append nothing
-            elif pgo_build:
-                build_type = '-pgo'
-            else:  # generic opt build
-                build_type = '-opt'
-
-            if c.get('unittest_platform'):
-                platform = c['unittest_platform']
-            else:
-                platform = self.stage_platform
-
-            platform_and_build_type = "%s%s" % (platform, build_type)
-            unittest_branch = "%s-%s-%s" % (self.branch,
-                                            platform_and_build_type,
-                                            'unittest')
-
-            downloadables = [installer_url]
-            if test_packages_url:
-                downloadables.append(test_packages_url)
-            else:
-                downloadables.append(tests_url)
-
-            self.invoke_sendchange(downloadables=downloadables,
-                                   branch=unittest_branch,
-                                   sendchange_props=sendchange_props)
-        else:
-            self.fatal('type: "%s" is unknown for sendchange type. valid '
-                       'strings are "unittest" or "talos"' % test_type)
-
     def update(self):
         """ submit balrog update steps. """
         if self.config.get('forced_artifact_build'):
@@ -2309,7 +2104,7 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
-        return_code = self.run_command_m(
+        return_code = self.run_command(
             command=[sys.executable, 'mach', 'valgrind-test'],
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 40)

@@ -24,7 +24,7 @@ def set_defaults(config, jobs):
         worker = job.setdefault('worker', {})
         worker.setdefault('env', {})
         if worker_os == "linux":
-            worker.setdefault('docker-image', {'in-tree': 'desktop-build'})
+            worker.setdefault('docker-image', {'in-tree': 'debian7-amd64-build'})
             worker['chain-of-trust'] = True
         elif worker_os == "windows":
             worker['chain-of-trust'] = True
