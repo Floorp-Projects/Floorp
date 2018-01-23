@@ -2,6 +2,11 @@
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -gline-tables-only"
 
+#add-on signing is checked but not enforced
+MOZ_REQUIRE_SIGNING=0
+# Enable MOZ_ALLOW_LEGACY_EXTENSIONS
+ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
+
 . $topsrcdir/build/mozconfig.stylo
 
 # ASan specific options on Linux
