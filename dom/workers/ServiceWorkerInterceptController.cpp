@@ -61,16 +61,17 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
 NS_IMETHODIMP
 ServiceWorkerInterceptController::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
+  // Note, do not cancel the interception here.  The caller will try to
+  // ResetInterception() on error.
+
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
-    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   ErrorResult error;
   swm->DispatchFetchEvent(aChannel, error);
   if (NS_WARN_IF(error.Failed())) {
-    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
     return error.StealNSResult();
   }
 
