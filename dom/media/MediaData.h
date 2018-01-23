@@ -6,6 +6,7 @@
 #if !defined(MediaData_h)
 #define MediaData_h
 
+#include "AudioConfig.h"
 #include "AudioSampleFormat.h"
 #include "ImageTypes.h"
 #include "SharedBuffer.h"
