@@ -36,8 +36,3 @@ if CONFIG['COMPILE_ENVIRONMENT'] and CONFIG['BUILD_CTYPES']:
         '/config/external/ffi',
     ]
 
-if CONFIG['JS_STANDALONE'] and CONFIG['FUZZING']:
-    DIRS += [
-        '/tools/fuzzing/',
-    ]
-

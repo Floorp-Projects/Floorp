@@ -6,8 +6,8 @@
 
 Library('fuzzer')
 
-EXPORTS += [
-    'FuzzerDefs.h',
+DIRS += [
+  'harness',
 ]
 
 SOURCES += [
