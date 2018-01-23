@@ -49,7 +49,7 @@ add_task(async function addALoginException() {
   let btnBlock = doc.getElementById("btnBlock");
   btnBlock.click();
 
-  await waitForCondition(() => tree.view.rowCount == 1);
+  await TestUtils.waitForCondition(() => tree.view.rowCount == 1);
 
   Assert.equal(tree.view.getCellText(0, tree.treeBoxObject.columns.getColumnAt(0)),
                "http://www.example.com");
@@ -69,7 +69,7 @@ add_task(async function deleteALoginException() {
     EventUtils.synthesizeKey("VK_DELETE", {});
   }
 
-  await waitForCondition(() => tree.view.rowCount == 0);
+  await TestUtils.waitForCondition(() => tree.view.rowCount == 0);
 
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   is_element_visible(content.gSubDialog._dialogs[0]._box,

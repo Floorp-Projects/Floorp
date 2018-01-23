@@ -110,7 +110,7 @@ this.TestUtils = {
    *        if the condition has not yet returned true. Defaults to 50
    *        (~5 seconds for 100ms intervals)
    * @return Promise
-   *        Resolves when condition is true.
+   *        Resolves with the return value of the condition function.
    *        Rejects if timeout is exceeded or condition ever throws.
    */
   waitForCondition(condition, msg, interval = 100, maxTries = 50) {
@@ -136,7 +136,7 @@ this.TestUtils = {
 
         if (conditionPassed) {
           clearInterval(intervalID);
-          resolve();
+          resolve(conditionPassed);
         }
         tries++;
       }, interval);
