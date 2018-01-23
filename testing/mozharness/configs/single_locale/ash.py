@@ -35,7 +35,6 @@ config = {
     ),
 
     # repositories
-    "mozilla_dir": "ash",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",
