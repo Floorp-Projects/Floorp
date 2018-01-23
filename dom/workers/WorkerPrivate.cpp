@@ -4830,6 +4830,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     }
 
     nsCOMPtr<nsIDocument> document;
+    Maybe<ClientInfo> clientInfo;
 
     if (globalWindow) {
       // Only use the current inner window, and only use it if the caller can
@@ -4861,6 +4862,8 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mBaseURI = document->GetDocBaseURI();
       loadInfo.mLoadGroup = document->GetDocumentLoadGroup();
       NS_ENSURE_TRUE(loadInfo.mLoadGroup, NS_ERROR_FAILURE);
+
+      clientInfo = globalWindow->GetClientInfo();
 
       // Use the document's NodePrincipal as loading principal if we're not being
       // called from chrome.
@@ -4977,6 +4980,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                                         loadInfo.mBaseURI,
                                         document, loadInfo.mLoadGroup,
                                         aScriptURL,
+                                        clientInfo,
                                         ContentPolicyType(aWorkerType),
                                         useDefaultEncoding,
                                         getter_AddRefs(loadInfo.mChannel));
