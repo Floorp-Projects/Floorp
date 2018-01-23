@@ -4363,8 +4363,8 @@ nsDocument::GetChildCount() const
 }
 
 nsresult
-nsDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                          bool aNotify)
+nsDocument::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
+                                     bool aNotify)
 {
   if (aKid->IsElement() && GetRootElement()) {
     NS_WARNING("Inserting root element when we already have one");
@@ -6881,7 +6881,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       if (!title) {
         return NS_OK;
       }
-      rootElement->InsertChildAt(title, 0, true);
+      rootElement->InsertChildAt_Deprecated(title, 0, true);
     }
   } else if (rootElement->IsHTMLElement()) {
     if (!title) {

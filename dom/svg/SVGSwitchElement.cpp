@@ -82,11 +82,12 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSwitchElement)
 // nsINode methods
 
 nsresult
-SVGSwitchElement::InsertChildAt(nsIContent* aKid,
-                                uint32_t aIndex,
-                                bool aNotify)
+SVGSwitchElement::InsertChildAt_Deprecated(nsIContent* aKid,
+                                           uint32_t aIndex,
+                                           bool aNotify)
 {
-  nsresult rv = SVGSwitchElementBase::InsertChildAt(aKid, aIndex, aNotify);
+  nsresult rv = SVGSwitchElementBase::InsertChildAt_Deprecated(aKid, aIndex,
+                                                               aNotify);
   if (NS_SUCCEEDED(rv)) {
     MaybeInvalidate();
   }

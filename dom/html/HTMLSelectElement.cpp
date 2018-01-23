@@ -204,13 +204,14 @@ HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
 }
 
 nsresult
-HTMLSelectElement::InsertChildAt(nsIContent* aKid,
-                                 uint32_t aIndex,
-                                 bool aNotify)
+HTMLSelectElement::InsertChildAt_Deprecated(nsIContent* aKid,
+                                            uint32_t aIndex,
+                                            bool aNotify)
 {
   SafeOptionListMutation safeMutation(this, this, aKid, aIndex, aNotify);
-  nsresult rv = nsGenericHTMLFormElementWithState::InsertChildAt(aKid, aIndex,
-                                                                 aNotify);
+  nsresult rv =
+    nsGenericHTMLFormElementWithState::InsertChildAt_Deprecated(aKid, aIndex,
+                                                                aNotify);
   if (NS_FAILED(rv)) {
     safeMutation.MutationFailed();
   }
