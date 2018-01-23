@@ -46,12 +46,16 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsINode* aLoadingContext,
                    nsSecurityFlags aSecurityFlags,
-                   nsContentPolicyType aContentPolicyType)
+                   nsContentPolicyType aContentPolicyType,
+                   const Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
+                   const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController)
   : mLoadingPrincipal(aLoadingContext ?
                         aLoadingContext->NodePrincipal() : aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal ?
                            aTriggeringPrincipal : mLoadingPrincipal.get())
   , mPrincipalToInherit(nullptr)
+  , mClientInfo(aLoadingClientInfo)
+  , mController(aController)
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mContextForTopLevelLoad(nullptr)
   , mSecurityFlags(aSecurityFlags)
@@ -93,6 +97,11 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   MOZ_ASSERT(skipContentTypeCheck ||
              mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT);
 
+  // We should only get an explicit controller for subresource requests.
+  MOZ_DIAGNOSTIC_ASSERT(
+    aController.isNothing() ||
+    !nsContentUtils::IsNonSubresourceInternalPolicyType(mInternalContentPolicyType));
+
   // TODO(bug 1259873): Above, we initialize mIsThirdPartyContext to false meaning
   // that consumers of LoadInfo that don't pass a context or pass a context from
   // which we can't find a window will default to assuming that they're 1st
@@ -113,16 +122,18 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 
   if (aLoadingContext) {
     // Ensure that all network requests for a window client have the ClientInfo
-    // properly set.
-    // TODO: The ClientInfo is not set properly for worker initiated requests yet.
-    mClientInfo = aLoadingContext->OwnerDoc()->GetClientInfo();
+    // properly set.  Workers must currently pass the loading ClientInfo explicitly.
+    // We allow main thread requests to explicitly pass the value as well.
+    if (mClientInfo.isNothing()) {
+      mClientInfo = aLoadingContext->OwnerDoc()->GetClientInfo();
+    }
 
     // For subresource loads set the service worker based on the calling
-    // context's controller.
-    // TODO: The controller is not set properly for all requests initiated from a
-    //       worker context.  Some workers will not have an nsINode loading context
-    //       here.
-    if (!nsContentUtils::IsNonSubresourceInternalPolicyType(mInternalContentPolicyType)) {
+    // context's controller.  Workers must currently pass the controller in
+    // explicitly.  We allow main thread requests to explicitly pass the value
+    // as well, but otherwise extract from the loading context here.
+    if (mController.isNothing() &&
+        !nsContentUtils::IsNonSubresourceInternalPolicyType(mInternalContentPolicyType)) {
       mController = aLoadingContext->OwnerDoc()->GetController();
     }
 
