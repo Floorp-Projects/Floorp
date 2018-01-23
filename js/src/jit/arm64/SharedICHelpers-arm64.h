@@ -121,31 +121,6 @@ EmitStowICValues(MacroAssembler& masm, int values)
     }
 }
 
-inline void
-EmitUnstowICValues(MacroAssembler& masm, int values, bool discard = false)
-{
-    MOZ_ASSERT(values >= 0 && values <= 2);
-    switch (values) {
-      case 1:
-        // Unstow R0.
-        if (discard)
-            masm.Drop(Operand(sizeof(Value)));
-        else
-            masm.popValue(R0);
-        break;
-      case 2:
-        // Unstow R0 and R1.
-        if (discard)
-            masm.Drop(Operand(sizeof(Value) * 2));
-        else
-            masm.pop(R1.valueReg(), R0.valueReg());
-        break;
-      default:
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Expected 1 or 2 values");
-    }
-    masm.adjustFrame(-values * sizeof(Value));
-}
-
 template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)

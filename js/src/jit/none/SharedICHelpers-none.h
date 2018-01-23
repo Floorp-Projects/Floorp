@@ -20,7 +20,6 @@ inline void EmitReturnFromIC(MacroAssembler&) { MOZ_CRASH(); }
 inline void EmitChangeICReturnAddress(MacroAssembler&, Register) { MOZ_CRASH(); }
 inline void EmitBaselineLeaveStubFrame(MacroAssembler&, bool v = false) { MOZ_CRASH(); }
 inline void EmitStowICValues(MacroAssembler&, int) { MOZ_CRASH(); }
-inline void EmitUnstowICValues(MacroAssembler&, int, bool v = false) { MOZ_CRASH(); }
 inline void EmitStubGuardFailure(MacroAssembler&) { MOZ_CRASH(); }
 
 template <typename T> inline void EmitPreBarrier(MacroAssembler&, T, MIRType) { MOZ_CRASH(); }

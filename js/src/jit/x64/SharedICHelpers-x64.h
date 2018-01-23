@@ -116,35 +116,6 @@ EmitStowICValues(MacroAssembler& masm, int values)
     }
 }
 
-inline void
-EmitUnstowICValues(MacroAssembler& masm, int values, bool discard = false)
-{
-    MOZ_ASSERT(values >= 0 && values <= 2);
-    switch(values) {
-      case 1:
-        // Unstow R0
-        masm.pop(ICTailCallReg);
-        if (discard)
-            masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
-        else
-            masm.popValue(R0);
-        masm.push(ICTailCallReg);
-        break;
-      case 2:
-        // Unstow R0 and R1
-        masm.pop(ICTailCallReg);
-        if (discard) {
-            masm.addPtr(Imm32(sizeof(Value) * 2), BaselineStackReg);
-        } else {
-            masm.popValue(R1);
-            masm.popValue(R0);
-        }
-        masm.push(ICTailCallReg);
-        break;
-    }
-    masm.adjustFrame(-values * sizeof(Value));
-}
-
 template <typename AddrType>
 inline void
 EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
