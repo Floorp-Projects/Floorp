@@ -6129,9 +6129,9 @@
   },
   "FX_TAB_REMOTE_NAVIGATION_DELAY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gkrizsanits@mozilla.com", "mconley@mozilla.com"],
+    "alert_emails": ["mconley@mozilla.com"],
     "bug_numbers": [1352961],
-    "expires_in_version": "61",
+    "expires_in_version": "66",
     "kind": "exponential",
     "high": 4000,
     "n_buckets": 100,
