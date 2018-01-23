@@ -46,6 +46,7 @@
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -458,6 +459,8 @@ nsDocShell::Init()
   mContentListener = new nsDSURIContentListener(this);
   rv = mContentListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mInterceptController = new ServiceWorkerInterceptController();
 
   // We want to hold a strong ref to the loadgroup, so it better hold a weak
   // ref to us...  use an InterfaceRequestorProxy to do this.
@@ -14254,61 +14257,14 @@ NS_IMETHODIMP
 nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, nsIChannel* aChannel,
                                       bool* aShouldIntercept)
 {
-  *aShouldIntercept = false;
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return NS_OK;
-  }
-
-  // For subresource requests we base our decision solely on the client's
-  // controller value.  Any settings that would have blocked service worker
-  // access should have been set before the initial navigation created the
-  // window.
-  if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
-    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
-    *aShouldIntercept = controller.isSome();
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI,
-                                           loadInfo->GetOriginAttributes());
-
-  // For navigations, first check to see if we are allowed to control a
-  // window with the given URL.
-  if (!ServiceWorkerAllowedToControlWindow(principal, aURI)) {
-    return NS_OK;
-  }
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    return NS_OK;
-  }
-
-  // We're allowed to control a window, so check with the ServiceWorkerManager
-  // for a matching service worker.
-  *aShouldIntercept = swm->IsAvailable(principal, aURI);
-  return NS_OK;
+  return mInterceptController->ShouldPrepareForIntercept(aURI, aChannel,
+                                                         aShouldIntercept);
 }
 
 NS_IMETHODIMP
 nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
-    return NS_OK;
-  }
-
-  ErrorResult error;
-  swm->DispatchFetchEvent(aChannel, error);
-  if (NS_WARN_IF(error.Failed())) {
-    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
-    return error.StealNSResult();
-  }
-
-  return NS_OK;
+  return mInterceptController->ChannelIntercepted(aChannel);
 }
 
 bool
