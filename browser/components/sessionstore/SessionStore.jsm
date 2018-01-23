@@ -173,6 +173,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DevToolsShim: "chrome://devtools-shim/content/DevToolsShim.jsm",
   GlobalState: "resource:///modules/sessionstore/GlobalState.jsm",
   PrivacyFilter: "resource:///modules/sessionstore/PrivacyFilter.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   RecentWindow: "resource:///modules/RecentWindow.jsm",
   RunState: "resource:///modules/sessionstore/RunState.jsm",
   SessionCookies: "resource:///modules/sessionstore/SessionCookies.jsm",
@@ -1602,37 +1603,45 @@ var SessionStoreInternal = {
     RunState.setQuitting();
 
     if (!syncShutdown) {
-      // We've got some time to shut down, so let's do this properly.
-      // To prevent blocker from breaking the 60 sec limit(which will cause a
-      // crash) of async shutdown during flushing all windows, we resolve the
-      // promise passed to blocker once:
-      // 1. the flushing exceed 50 sec, or
-      // 2. 'oop-frameloader-crashed' or 'ipc:content-shutdown' is observed.
-      // Thus, Firefox still can open the last session on next startup.
+      // We've got some time to shut down, so let's do this properly that there
+      // will be a complete session available upon next startup.
+      // To prevent a blocker from taking longer than the DELAY_CRASH_MS limit
+      // (which will cause a crash) of AsyncShutdown whilst flushing all windows,
+      // we resolve the Promise blocker once:
+      // 1. the flush duration exceeds 10 seconds before DELAY_CRASH_MS, or
+      // 2. 'oop-frameloader-crashed', or
+      // 3. 'ipc:content-shutdown' is observed.
       AsyncShutdown.quitApplicationGranted.addBlocker(
         "SessionStore: flushing all windows",
         () => {
-          var promises = [];
-          promises.push(this.flushAllWindowsAsync(progress));
-          promises.push(this.looseTimer(50000));
+          // Set up the list of promises that will signal a complete sessionstore
+          // shutdown: either all data is saved, or we crashed or the message IPC
+          // channel went away in the meantime.
+          let promises = [this.flushAllWindowsAsync(progress)];
 
-          var promiseOFC = new Promise(resolve => {
-            Services.obs.addObserver(function obs(subject, topic) {
-              Services.obs.removeObserver(obs, topic);
-              resolve();
-            }, "oop-frameloader-crashed");
-          });
-          promises.push(promiseOFC);
+          const observeTopic = topic => {
+            let deferred = PromiseUtils.defer();
+            const cleanup = () => Services.obs.removeObserver(deferred.resolve, topic);
+            Services.obs.addObserver(deferred.resolve, topic);
+            deferred.promise.then(cleanup, cleanup);
+            return deferred;
+          }
 
-          var promiseICS = new Promise(resolve => {
-            Services.obs.addObserver(function obs(subject, topic) {
-              Services.obs.removeObserver(obs, topic);
-              resolve();
-            }, "ipc:content-shutdown");
-          });
-          promises.push(promiseICS);
+          // Build a list of deferred executions that require cleanup once the
+          // Promise race is won.
+          // Ensure that the timer fires earlier than the AsyncShutdown crash timer.
+          let waitTimeMaxMs = Math.max(0, AsyncShutdown.DELAY_CRASH_MS - 10000);
+          let defers = [this.looseTimer(waitTimeMaxMs),
+            observeTopic("oop-frameloader-crashed"), observeTopic("ipc:content-shutdown")];
+          // Add these monitors to the list of Promises to start the race.
+          promises.push(...defers.map(deferred => deferred.promise));
 
-          return Promise.race(promises);
+          return Promise.race(promises)
+            .then(() => {
+              // When a Promise won the race, make sure we clean up the running
+              // monitors.
+              defers.forEach(deferred => deferred.reject());
+            });
         },
         () => progress);
     } else {
@@ -4798,18 +4807,17 @@ var SessionStoreInternal = {
     let DELAY_BEAT = 1000;
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let beats = Math.ceil(delay / DELAY_BEAT);
-    let promise =  new Promise(resolve => {
-      timer.initWithCallback(function() {
-        if (beats <= 0) {
-          resolve();
-        }
-        --beats;
-      }, DELAY_BEAT, Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
-    });
+    let deferred = PromiseUtils.defer();
+    timer.initWithCallback(function() {
+      if (beats <= 0) {
+        deferred.resolve();
+      }
+      --beats;
+    }, DELAY_BEAT, Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
     // Ensure that the timer is both canceled once we are done with it
     // and not garbage-collected until then.
-    promise.then(() => timer.cancel(), () => timer.cancel());
-    return promise;
+    deferred.promise.then(() => timer.cancel(), () => timer.cancel());
+    return deferred;
   },
 
   /**
