@@ -179,7 +179,15 @@
                       label="&cmd.new_separator.label;"
                       accesskey="&cmd.new_separator.accesskey;"/>
 
-#ifndef XP_MACOSX
+#ifdef XP_MACOSX
+            <menuseparator id="orgDeleteSeparator"/>
+
+            <menuitem id="orgDelete"
+                      command="cmd_delete"
+                      label="&deleteCmd.label;"
+                      key="key_delete"
+                      accesskey="&deleteCmd.accesskey;"/>
+#else
             <menuseparator id="orgUndoSeparator"/>
 
             <menuitem id="orgUndo"
@@ -227,16 +235,6 @@
                       key="key_selectAll"
                       accesskey="&selectAllCmd.accesskey;"/>
 
-#endif
-            <menuseparator id="orgMoveSeparator"/>
-
-#ifdef XP_MACOSX
-            <menuitem id="orgDelete"
-                      command="cmd_delete"
-                      label="&deleteCmd.label;"
-                      key="key_delete"
-                      accesskey="&deleteCmd.accesskey;"/>
-#else
             <menuseparator id="orgCloseSeparator"/>
 
             <menuitem id="orgClose"
