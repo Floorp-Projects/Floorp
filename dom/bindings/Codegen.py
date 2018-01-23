@@ -2706,8 +2706,15 @@ class AttrDefiner(PropertyDefiner):
                           not isNonExposedNavigatorObjectGetter(m, descriptor)]
         else:
             attributes = []
-        self.chrome = [m for m in attributes if isChromeOnly(m)]
-        self.regular = [m for m in attributes if not isChromeOnly(m)]
+
+        attributes = [
+            {"name": name, "attr": attr}
+            for attr in attributes
+            for name in [attr.identifier.name] + attr.bindingAliases
+        ]
+
+        self.chrome = [m for m in attributes if isChromeOnly(m["attr"])]
+        self.regular = [m for m in attributes if not isChromeOnly(m["attr"])]
         self.static = static
         self.unforgeable = unforgeable
 
@@ -2723,6 +2730,9 @@ class AttrDefiner(PropertyDefiner):
     def generateArray(self, array, name):
         if len(array) == 0:
             return ""
+
+        def condition(m, d):
+            return PropertyDefiner.getControllingCondition(m["attr"], d)
 
         def flags(attr):
             unforgeable = " | JSPROP_PERMANENT" if self.unforgeable else ""
@@ -2791,16 +2801,16 @@ class AttrDefiner(PropertyDefiner):
             return "%s, %s" % \
                    (accessor, jitinfo)
 
-        def specData(attr):
-            return (attr.identifier.name, flags(attr), getter(attr),
-                    setter(attr))
+        def specData(entry):
+            name, attr = entry["name"], entry["attr"]
+            return (name, flags(attr), getter(attr), setter(attr))
 
         return self.generatePrefableArray(
             array, name,
             lambda fields: '  { "%s", %s, %s, %s }' % fields,
             '  { nullptr, 0, nullptr, nullptr, nullptr, nullptr }',
             'JSPropertySpec',
-            PropertyDefiner.getControllingCondition, specData)
+            condition, specData)
 
 
 class ConstDefiner(PropertyDefiner):
