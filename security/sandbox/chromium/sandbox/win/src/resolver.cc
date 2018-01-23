@@ -53,7 +53,7 @@ NTSTATUS ResolverThunk::ResolveInterceptor(const void* interceptor_module,
   if (!pe.VerifyMagic())
     return STATUS_INVALID_IMAGE_FORMAT;
 
-  *address = pe.GetProcAddress(interceptor_name);
+  *address = reinterpret_cast<void*>(pe.GetProcAddress(interceptor_name));
 
   if (!(*address))
     return STATUS_PROCEDURE_NOT_FOUND;

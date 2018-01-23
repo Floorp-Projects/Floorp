@@ -16,3 +16,4 @@ mingw_duplicate_instatinations.patch
 mingw_msvc_requirement_error.patch
 mingw_copy_s.patch
 mingw_operator_new.patch
+mingw_cast_getprocaddress.patch
