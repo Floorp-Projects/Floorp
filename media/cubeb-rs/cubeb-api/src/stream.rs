@@ -246,6 +246,13 @@ where
         Ok(())
     }
 
+    pub fn reset_default_device(&self) -> Result<()> {
+        unsafe {
+            try_call!(sys::cubeb_stream_reset_default_device(self.raw));
+        }
+        Ok(())
+    }
+
     // Get the current stream playback position.
     pub fn position(&self) -> Result<u64> {
         let mut position: u64 = 0;

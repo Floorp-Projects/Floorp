@@ -6155,7 +6155,7 @@ public:
    * nsDisplayPerspective created for that.
    */
   const Matrix4x4& GetTransform() const;
-  Matrix4x4 GetTransformForRendering();
+  Matrix4x4 GetTransformForRendering(mozilla::LayoutDevicePoint* aOutOrigin = nullptr);
 
   /**
    * Return the transform that is aggregation of all transform on the

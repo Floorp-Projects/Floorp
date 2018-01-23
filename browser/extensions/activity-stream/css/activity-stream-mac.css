@@ -55,14 +55,20 @@ input {
     background-image: url("../data/content/assets/glyph-import-16.svg"); }
   .icon.icon-new-window {
     background-image: url("../data/content/assets/glyph-newWindow-16.svg"); }
+    .icon.icon-new-window:dir(rtl) {
+      transform: scaleX(-1); }
   .icon.icon-new-window-private {
     background-image: url("chrome://browser/skin/privateBrowsing.svg"); }
   .icon.icon-settings {
     background-image: url("chrome://browser/skin/settings.svg"); }
   .icon.icon-pin {
     background-image: url("../data/content/assets/glyph-pin-16.svg"); }
+    .icon.icon-pin:dir(rtl) {
+      transform: scaleX(-1); }
   .icon.icon-unpin {
     background-image: url("../data/content/assets/glyph-unpin-16.svg"); }
+    .icon.icon-unpin:dir(rtl) {
+      transform: scaleX(-1); }
   .icon.icon-edit {
     background-image: url("../data/content/assets/glyph-edit-16.svg"); }
   .icon.icon-pocket {
@@ -81,6 +87,8 @@ input {
     background-size: 12px;
     height: 12px;
     width: 12px; }
+    .icon.icon-pin-small:dir(rtl) {
+      transform: scaleX(-1); }
   .icon.icon-check {
     background-image: url("chrome://browser/skin/check.svg"); }
   .icon.icon-webextension {
@@ -323,15 +331,6 @@ main {
       .top-sites-list .top-site-outer .context-menu-button:-moz-any(:active, :focus) {
         opacity: 1;
         transform: scale(1); }
-    .top-sites-list .top-site-outer:-moz-any(.active, :focus, :hover) .tile {
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 5px #D7D7DB;
-      transition: box-shadow 150ms; }
-    .top-sites-list .top-site-outer:-moz-any(.active, :focus, :hover) .edit-menu {
-      opacity: 1;
-      transform: scale(1); }
-    .top-sites-list .top-site-outer:-moz-any(.active, :focus, :hover) .context-menu-button {
-      opacity: 1;
-      transform: scale(1); }
     .top-sites-list .top-site-outer .tile {
       border-radius: 6px;
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 4px 0 rgba(12, 12, 13, 0.1);
@@ -451,6 +450,15 @@ main {
     .top-sites-list .top-site-outer.placeholder .edit-menu:last-child button {
       background-size: 13px;
       width: 23px; }
+  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .tile {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 5px #D7D7DB;
+    transition: box-shadow 150ms; }
+  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .edit-menu {
+    opacity: 1;
+    transform: scale(1); }
+  .top-sites-list:not(.dnd-active) .top-site-outer:-moz-any(.active, :focus, :hover) .context-menu-button {
+    opacity: 1;
+    transform: scale(1); }
 
 .edit-topsites-wrapper .edit-topsites-button {
   border-right: 1px solid #D7D7DB;

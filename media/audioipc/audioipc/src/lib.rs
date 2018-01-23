@@ -17,61 +17,64 @@ extern crate serde_derive;
 extern crate bincode;
 extern crate bytes;
 extern crate cubeb_core;
+#[macro_use]
+extern crate futures;
+extern crate iovec;
 extern crate libc;
 extern crate memmap;
-extern crate mio;
-extern crate mio_uds;
 extern crate serde;
+#[macro_use]
+extern crate scoped_tls;
+extern crate tokio_core;
+#[macro_use]
+extern crate tokio_io;
+extern crate tokio_uds;
 
 pub mod async;
+pub mod cmsg;
 pub mod codec;
-mod connection;
 pub mod errors;
+pub mod fd_passing;
+pub mod frame;
+pub mod rpc;
+pub mod core;
 pub mod messages;
 mod msg;
 pub mod shm;
 
-pub use connection::*;
+use iovec::IoVec;
+
+#[cfg(target_os = "linux")]
+use libc::MSG_CMSG_CLOEXEC;
 pub use messages::{ClientMessage, ServerMessage};
 
 use std::env::temp_dir;
 use std::io;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
-use std::os::unix::net;
 use std::path::PathBuf;
+#[cfg(not(target_os = "linux"))]
+const MSG_CMSG_CLOEXEC: libc::c_int = 0;
 
 // Extend sys::os::unix::net::UnixStream to support sending and receiving a single file desc.
 // We can extend UnixStream by using traits, eliminating the need to introduce a new wrapped
 // UnixStream type.
-pub trait RecvFd {
-    fn recv_fd(&mut self, bytes: &mut [u8]) -> io::Result<(usize, Option<RawFd>)>;
+pub trait RecvMsg {
+    fn recv_msg(&mut self, iov: &mut [&mut IoVec], cmsg: &mut [u8]) -> io::Result<(usize, usize, i32)>;
 }
 
-pub trait SendFd {
-    fn send_fd(&mut self, bytes: &[u8], fd: Option<RawFd>) -> io::Result<(usize)>;
+pub trait SendMsg {
+    fn send_msg(&mut self, iov: &[&IoVec], cmsg: &[u8]) -> io::Result<usize>;
 }
 
-impl RecvFd for net::UnixStream {
-    fn recv_fd(&mut self, buf_to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd>)> {
-        msg::recvmsg(self.as_raw_fd(), buf_to_recv)
+impl<T: AsRawFd> RecvMsg for T {
+    fn recv_msg(&mut self, iov: &mut [&mut IoVec], cmsg: &mut [u8]) -> io::Result<(usize, usize, i32)> {
+        msg::recv_msg_with_flags(self.as_raw_fd(), iov, cmsg, MSG_CMSG_CLOEXEC)
     }
 }
 
-impl RecvFd for mio_uds::UnixStream {
-    fn recv_fd(&mut self, buf_to_recv: &mut [u8]) -> io::Result<(usize, Option<RawFd>)> {
-        msg::recvmsg(self.as_raw_fd(), buf_to_recv)
-    }
-}
-
-impl SendFd for net::UnixStream {
-    fn send_fd(&mut self, buf_to_send: &[u8], fd_to_send: Option<RawFd>) -> io::Result<usize> {
-        msg::sendmsg(self.as_raw_fd(), buf_to_send, fd_to_send)
-    }
-}
-
-impl SendFd for mio_uds::UnixStream {
-    fn send_fd(&mut self, buf_to_send: &[u8], fd_to_send: Option<RawFd>) -> io::Result<usize> {
-        msg::sendmsg(self.as_raw_fd(), buf_to_send, fd_to_send)
+impl<T: AsRawFd> SendMsg for T {
+    fn send_msg(&mut self, iov: &[&IoVec], cmsg: &[u8]) -> io::Result<usize> {
+        msg::send_msg_with_flags(self.as_raw_fd(), iov, cmsg, 0)
     }
 }
 

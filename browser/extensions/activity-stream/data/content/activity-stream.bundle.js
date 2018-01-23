@@ -3053,7 +3053,7 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
     }
     return external__React__default.a.createElement(
       "ul",
-      { className: "top-sites-list" },
+      { className: `top-sites-list${this.state.draggedSite ? " dnd-active" : ""}` },
       topSitesUI
     );
   }
@@ -3257,14 +3257,20 @@ class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponen
     this.onAddButtonClick = this.onAddButtonClick.bind(this);
     this.onFormClose = this.onFormClose.bind(this);
     this.onEdit = this.onEdit.bind(this);
+    this.dispatchEditModalUserEvent = this.dispatchEditModalUserEvent.bind(this);
   }
-  onEditButtonClick() {
-    this.setState({ showEditModal: !this.state.showEditModal });
+  dispatchEditModalUserEvent() {
     const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
     this.props.dispatch(Actions["a" /* actionCreators */].UserEvent({
       source: TOP_SITES_SOURCE,
       event
     }));
+  }
+  onEditButtonClick() {
+    function toggleEditModal(prevState) {
+      return { showEditModal: !prevState.showEditModal };
+    }
+    this.setState(toggleEditModal, this.dispatchEditModalUserEvent);
   }
   onModalOverlayClick() {
     this.setState({ showEditModal: false, showAddForm: false, showEditForm: false });
