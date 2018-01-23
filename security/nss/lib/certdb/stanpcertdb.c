@@ -343,7 +343,7 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
         /* First, see if it is already a temp cert */
         c = NSSCryptoContext_FindCertificateByEncodedCertificate(gCC,
                                                                  &encoding);
-        if (!c) {
+        if (!c && handle) {
             /* Then, see if it is already a perm cert */
             c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle,
                                                                    &encoding);

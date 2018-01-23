@@ -29,6 +29,7 @@ ssl_EncodeUintX(PRUint8 *to, PRUint64 value, unsigned int bytes)
 SECStatus
 sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
 {
+    PORT_Assert(b);
     if (b->fixed) {
         PORT_Assert(newLen <= b->space);
         if (newLen > b->space) {
@@ -84,6 +85,7 @@ sslBuffer_AppendVariable(sslBuffer *b, const PRUint8 *data, unsigned int len,
                          unsigned int size)
 {
     PORT_Assert(size <= 4 && size > 0);
+    PORT_Assert(b);
     if (len >= (1ULL << (8 * size))) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
@@ -95,7 +97,11 @@ sslBuffer_AppendVariable(sslBuffer *b, const PRUint8 *data, unsigned int len,
 
     ssl_EncodeUintX(SSL_BUFFER_NEXT(b), len, size);
     b->len += size;
-    PORT_Memcpy(SSL_BUFFER_NEXT(b), data, len);
+    if (len != 0) {
+        PORT_Assert(data);
+        /* We sometimes pass NULL, 0 and memcpy() doesn't want NULL. */
+        PORT_Memcpy(SSL_BUFFER_NEXT(b), data, len);
+    }
     b->len += len;
     return SECSuccess;
 }
@@ -169,37 +175,63 @@ sslBuffer_Clear(sslBuffer *b)
 }
 
 SECStatus
-ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, unsigned int size)
+sslRead_Read(sslReader *reader, unsigned int count, sslReadBuffer *out)
 {
-    if (size > item->len) {
+    if (!reader || !out) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (reader->buf.len < reader->offset ||
+        count > SSL_READER_REMAINING(reader)) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
 
-    *buf = item->data;
-    item->data += size;
-    item->len -= size;
+    out->buf = SSL_READER_CURRENT(reader);
+    out->len = count;
+    reader->offset += count;
+
     return SECSuccess;
 }
 
 SECStatus
-ssl3_ConsumeNumberFromItem(SECItem *item, PRUint32 *num, unsigned int size)
+sslRead_ReadVariable(sslReader *reader, unsigned int sizeLen, sslReadBuffer *out)
 {
-    int i;
-
-    if (size > item->len || size > sizeof(*num)) {
+    PRUint64 variableLen = 0;
+    SECStatus rv = sslRead_ReadNumber(reader, sizeLen, &variableLen);
+    if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_BAD_DATA);
         return SECFailure;
     }
+    if (!variableLen) {
+        // It is ok to have an empty variable.
+        out->len = variableLen;
+        return SECSuccess;
+    }
+    return sslRead_Read(reader, variableLen, out);
+}
 
-    *num = 0;
-    for (i = 0; i < size; i++) {
-        *num = (*num << 8) + item->data[i];
+SECStatus
+sslRead_ReadNumber(sslReader *reader, unsigned int bytes, PRUint64 *num)
+{
+    if (!reader || !num) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    if (reader->buf.len < reader->offset ||
+        bytes > SSL_READER_REMAINING(reader) ||
+        bytes > 8) {
+        PORT_SetError(SEC_ERROR_BAD_DATA);
+        return SECFailure;
+    }
+    unsigned int i;
+    PRUint64 number = 0;
+    for (i = 0; i < bytes; i++) {
+        number = (number << 8) + reader->buf.buf[i + reader->offset];
     }
 
-    item->data += size;
-    item->len -= size;
-
+    reader->offset = reader->offset + bytes;
+    *num = number;
     return SECSuccess;
 }
 

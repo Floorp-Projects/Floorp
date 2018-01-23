@@ -15,6 +15,7 @@
 
 static int ssl_isInited = 0;
 static PRCallOnceType ssl_init = { 0 };
+PR_STATIC_ASSERT(sizeof(unsigned long) <= sizeof(PRUint64));
 
 PRStatus
 ssl_InitCallOnce(void *arg)

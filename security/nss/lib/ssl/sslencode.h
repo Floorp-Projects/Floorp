@@ -47,13 +47,6 @@ SECStatus sslBuffer_InsertLength(sslBuffer *b, unsigned int at,
                                  unsigned int size);
 void sslBuffer_Clear(sslBuffer *b);
 
-/* All of these functions modify the underlying SECItem, and so should
- * be performed on a shallow copy.*/
-SECStatus ssl3_ConsumeFromItem(SECItem *item,
-                               PRUint8 **buf, unsigned int size);
-SECStatus ssl3_ConsumeNumberFromItem(SECItem *item,
-                                     PRUint32 *num, unsigned int size);
-
 SECStatus ssl3_AppendHandshake(sslSocket *ss, const void *void_src,
                                unsigned int bytes);
 SECStatus ssl3_AppendHandshakeHeader(sslSocket *ss,
@@ -65,5 +58,28 @@ SECStatus ssl3_AppendHandshakeVariable(sslSocket *ss, const PRUint8 *src,
 SECStatus ssl3_AppendBufferToHandshake(sslSocket *ss, sslBuffer *buf);
 SECStatus ssl3_AppendBufferToHandshakeVariable(sslSocket *ss, sslBuffer *buf,
                                                unsigned int lenSize);
+
+typedef struct {
+    const PRUint8 *buf;
+    unsigned int len;
+} sslReadBuffer;
+typedef struct {
+    sslReadBuffer buf;
+    unsigned int offset;
+} sslReader;
+#define SSL_READER(b, l) \
+    {                    \
+        { b, l }, 0      \
+    }
+#define SSL_READER_CURRENT(r) \
+    ((r)->buf.buf + (r)->offset)
+#define SSL_READER_REMAINING(r) \
+    ((r)->buf.len - (r)->offset)
+SECStatus sslRead_Read(sslReader *reader, unsigned int count,
+                       sslReadBuffer *out);
+SECStatus sslRead_ReadVariable(sslReader *reader, unsigned int sizeLen,
+                               sslReadBuffer *out);
+SECStatus sslRead_ReadNumber(sslReader *reader, unsigned int bytes,
+                             PRUint64 *val);
 
 #endif /* __sslencode_h_ */

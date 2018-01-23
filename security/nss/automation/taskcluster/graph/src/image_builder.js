@@ -30,7 +30,7 @@ export async function buildTask({name, path}) {
   let ns = `docker.images.v1.${process.env.TC_PROJECT}.${name}.hash.${hash}`;
 
   return {
-    name: "Image Builder",
+    name: `Image Builder (${name})`,
     image: "nssdev/image_builder:0.1.5",
     routes: ["index." + ns],
     env: {

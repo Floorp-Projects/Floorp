@@ -60,7 +60,7 @@ TEST_P(TlsConnectGenericPre13, ConnectResumed) {
   Connect();
 }
 
-TEST_P(TlsConnectGeneric, ConnectClientCacheDisabled) {
+TEST_P(TlsConnectGenericResumption, ConnectClientCacheDisabled) {
   ConfigureSessionCache(RESUME_NONE, RESUME_SESSIONID);
   Connect();
   SendReceive();
@@ -71,7 +71,7 @@ TEST_P(TlsConnectGeneric, ConnectClientCacheDisabled) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectServerCacheDisabled) {
+TEST_P(TlsConnectGenericResumption, ConnectServerCacheDisabled) {
   ConfigureSessionCache(RESUME_SESSIONID, RESUME_NONE);
   Connect();
   SendReceive();
@@ -82,7 +82,7 @@ TEST_P(TlsConnectGeneric, ConnectServerCacheDisabled) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectSessionCacheDisabled) {
+TEST_P(TlsConnectGenericResumption, ConnectSessionCacheDisabled) {
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
   Connect();
   SendReceive();
@@ -93,7 +93,7 @@ TEST_P(TlsConnectGeneric, ConnectSessionCacheDisabled) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeSupportBoth) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeSupportBoth) {
   // This prefers tickets.
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   Connect();
@@ -106,7 +106,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeSupportBoth) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeClientTicketServerBoth) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientTicketServerBoth) {
   // This causes no resumption because the client needs the
   // session cache to resume even with tickets.
   ConfigureSessionCache(RESUME_TICKET, RESUME_BOTH);
@@ -120,7 +120,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientTicketServerBoth) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicket) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientBothTicketServerTicket) {
   // This causes a ticket resumption.
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
@@ -133,7 +133,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicket) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeClientServerTicketOnly) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientServerTicketOnly) {
   // This causes no resumption because the client needs the
   // session cache to resume even with tickets.
   ConfigureSessionCache(RESUME_TICKET, RESUME_TICKET);
@@ -147,7 +147,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientServerTicketOnly) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeClientBothServerNone) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientBothServerNone) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_NONE);
   Connect();
   SendReceive();
@@ -159,7 +159,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothServerNone) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectResumeClientNoneServerBoth) {
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientNoneServerBoth) {
   ConfigureSessionCache(RESUME_NONE, RESUME_BOTH);
   Connect();
   SendReceive();
@@ -202,7 +202,7 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {
   SendReceive();
 }
 
-TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtClient) {
+TEST_P(TlsConnectGenericResumption, ConnectWithExpiredTicketAtClient) {
   SSLInt_SetTicketLifetime(1);  // one second
   // This causes a ticket resumption.
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -397,7 +397,7 @@ TEST_P(TlsConnectTls13, TestTls13ResumeDifferentGroup) {
   server_->ConfigNamedGroups(kFFDHEGroups);
   Connect();
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 // We need to enable different cipher suites at different times in the following
@@ -417,7 +417,7 @@ static uint16_t ChooseAnotherCipher(uint16_t version) {
 }
 
 // Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectGeneric, TestResumeClientDifferentCipher) {
+TEST_P(TlsConnectGenericResumption, TestResumeClientDifferentCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   client_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
@@ -442,7 +442,7 @@ TEST_P(TlsConnectGeneric, TestResumeClientDifferentCipher) {
 }
 
 // Test that we don't resume when we can't negotiate the same cipher.
-TEST_P(TlsConnectGeneric, TestResumeServerDifferentCipher) {
+TEST_P(TlsConnectGenericResumption, TestResumeServerDifferentCipher) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
@@ -572,7 +572,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   // The filter will go away when we reset, so save the captured extension.
   DataBuffer initialTicket(c1->extension());
   ASSERT_LT(0U, initialTicket.len());
@@ -590,7 +590,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   ASSERT_LT(0U, c2->extension().len());
 
   ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
@@ -845,13 +845,13 @@ TEST_F(TlsConnectTest, TestTls13ResumptionForcedDowngrade) {
   server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
 }
 
-TEST_P(TlsConnectGeneric, ReConnectTicket) {
+TEST_P(TlsConnectGenericResumption, ReConnectTicket) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   // Resume
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
@@ -859,7 +859,7 @@ TEST_P(TlsConnectGeneric, ReConnectTicket) {
   Connect();
   // Only the client knows this.
   CheckKeysResumption(ssl_kea_ecdh, ssl_grp_none, ssl_grp_ec_curve25519,
-                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
 }
 
 TEST_P(TlsConnectGenericPre13, ReConnectCache) {
@@ -868,22 +868,22 @@ TEST_P(TlsConnectGenericPre13, ReConnectCache) {
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   // Resume
   Reset();
   ExpectResumption(RESUME_SESSIONID);
   Connect();
   CheckKeysResumption(ssl_kea_ecdh, ssl_grp_none, ssl_grp_ec_curve25519,
-                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
 }
 
-TEST_P(TlsConnectGeneric, ReConnectAgainTicket) {
+TEST_P(TlsConnectGenericResumption, ReConnectAgainTicket) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   server_->EnableSingleCipher(ChooseOneCipher(version_));
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   // Resume
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
@@ -891,7 +891,7 @@ TEST_P(TlsConnectGeneric, ReConnectAgainTicket) {
   Connect();
   // Only the client knows this.
   CheckKeysResumption(ssl_kea_ecdh, ssl_grp_none, ssl_grp_ec_curve25519,
-                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
   // Resume connection again
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
@@ -899,7 +899,119 @@ TEST_P(TlsConnectGeneric, ReConnectAgainTicket) {
   Connect();
   // Only the client knows this.
   CheckKeysResumption(ssl_kea_ecdh, ssl_grp_none, ssl_grp_ec_curve25519,
-                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+                      ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
+}
+
+void CheckGetInfoResult(uint32_t alpnSize, uint32_t earlyDataSize,
+                        ScopedCERTCertificate& cert,
+                        ScopedSSLResumptionTokenInfo& token) {
+  ASSERT_TRUE(cert);
+  ASSERT_TRUE(token->peerCert);
+
+  // Check that the server cert is the correct one.
+  ASSERT_EQ(cert->derCert.len, token->peerCert->derCert.len);
+  EXPECT_EQ(0, memcmp(cert->derCert.data, token->peerCert->derCert.data,
+                      cert->derCert.len));
+
+  ASSERT_EQ(alpnSize, token->alpnSelectionLen);
+  EXPECT_EQ(0, memcmp("a", token->alpnSelection, token->alpnSelectionLen));
+
+  ASSERT_EQ(earlyDataSize, token->maxEarlyDataSize);
+}
+
+TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfo) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+
+  StartConnect();
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+
+  // Get resumption token infos
+  SSLResumptionTokenInfo tokenInfo = {0};
+  ScopedSSLResumptionTokenInfo token(&tokenInfo);
+  client_->GetTokenInfo(token);
+  ScopedCERTCertificate cert(
+      PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
+
+  CheckGetInfoResult(0, 0, cert, token);
+
+  Handshake();
+  CheckConnected();
+
+  SendReceive();
+}
+
+TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfoAlpn) {
+  EnableAlpn();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  CheckAlpn("a");
+  SendReceive();
+
+  Reset();
+  EnableAlpn();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+
+  StartConnect();
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+
+  // Get resumption token infos
+  SSLResumptionTokenInfo tokenInfo = {0};
+  ScopedSSLResumptionTokenInfo token(&tokenInfo);
+  client_->GetTokenInfo(token);
+  ScopedCERTCertificate cert(
+      PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
+
+  CheckGetInfoResult(1, 0, cert, token);
+
+  Handshake();
+  CheckConnected();
+  CheckAlpn("a");
+
+  SendReceive();
+}
+
+TEST_P(TlsConnectTls13ResumptionToken, ConnectResumeGetInfoZeroRtt) {
+  EnableAlpn();
+  SSLInt_RolloverAntiReplay();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  server_->Set0RttEnabled(true);
+  Connect();
+  CheckAlpn("a");
+  SendReceive();
+
+  Reset();
+  EnableAlpn();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+
+  StartConnect();
+  server_->Set0RttEnabled(true);
+  client_->Set0RttEnabled(true);
+  ASSERT_TRUE(client_->MaybeSetResumptionToken());
+
+  // Get resumption token infos
+  SSLResumptionTokenInfo tokenInfo = {0};
+  ScopedSSLResumptionTokenInfo token(&tokenInfo);
+  client_->GetTokenInfo(token);
+  ScopedCERTCertificate cert(
+      PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
+
+  CheckGetInfoResult(1, 1024, cert, token);
+
+  ZeroRttSendReceive(true, true);
+  Handshake();
+  ExpectEarlyDataAccepted(true);
+  CheckConnected();
+  CheckAlpn("a");
+
+  SendReceive();
 }
 
 }  // namespace nss_test

@@ -405,6 +405,9 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngrade) {
 // The client should abort the connection when sending a 0-rtt handshake but
 // the servers responds with a TLS 1.2 ServerHello. (with app data)
 TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
+  const char* k0RttData = "ABCDEF";
+  const PRInt32 k0RttDataLen = static_cast<PRInt32>(strlen(k0RttData));
+
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   server_->Set0RttEnabled(true);  // set ticket_allow_early_data
   Connect();
@@ -422,27 +425,28 @@ TEST_P(TlsConnectTls13, TestTls13ZeroRttDowngradeEarlyData) {
   // Send the early data xtn in the CH, followed by early app data. The server
   // will fail right after sending its flight, when receiving the early data.
   client_->Set0RttEnabled(true);
-  ZeroRttSendReceive(true, false, [this]() {
-    client_->ExpectSendAlert(kTlsAlertIllegalParameter);
-    if (variant_ == ssl_variant_stream) {
-      server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
-    }
-    return true;
-  });
+  client_->Handshake();  // Send ClientHello.
+  PRInt32 rv =
+      PR_Write(client_->ssl_fd(), k0RttData, k0RttDataLen);  // 0-RTT write.
+  EXPECT_EQ(k0RttDataLen, rv);
 
-  client_->Handshake();
-  server_->Handshake();
-  ASSERT_TRUE_WAIT(
-      (client_->error_code() == SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA), 2000);
-
-  // DTLS will timeout as we bump the epoch when installing the early app data
-  // cipher suite. Thus the encrypted alert will be ignored.
   if (variant_ == ssl_variant_stream) {
-    // The server sends an alert when receiving the early app data record.
-    ASSERT_TRUE_WAIT(
-        (server_->error_code() == SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA),
-        2000);
+    // When the server receives the early data, it will fail.
+    server_->ExpectSendAlert(kTlsAlertUnexpectedMessage);
+    server_->Handshake();  // Consume ClientHello
+    EXPECT_EQ(TlsAgent::STATE_ERROR, server_->state());
+    server_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
+  } else {
+    // If it's datagram, we just discard the early data.
+    server_->Handshake();  // Consume ClientHello
+    EXPECT_EQ(TlsAgent::STATE_CONNECTING, server_->state());
   }
+
+  // The client now reads the ServerHello and fails.
+  ASSERT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+  client_->ExpectSendAlert(kTlsAlertIllegalParameter);
+  client_->Handshake();
+  client_->CheckErrorCode(SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA);
 }
 
 static void CheckEarlyDataLimit(const std::shared_ptr<TlsAgent>& agent,
@@ -521,6 +525,8 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
   client_->Handshake();  // Send ClientHello
   CheckEarlyDataLimit(client_, limit);
 
+  server_->Handshake();  // Process ClientHello, send server flight.
+
   // Lift the limit on the client.
   EXPECT_EQ(SECSuccess,
             SSLInt_SetSocketMaxEarlyDataSize(client_->ssl_fd(), 1000));
@@ -534,21 +540,31 @@ TEST_P(TlsConnectTls13, ReceiveTooMuchEarlyData) {
     // This error isn't fatal for DTLS.
     ExpectAlert(server_, kTlsAlertUnexpectedMessage);
   }
-  server_->Handshake();  // Process ClientHello, send server flight.
-  server_->Handshake();  // Just to make sure that we don't read ahead.
+
+  server_->Handshake();  // This reads the early data and maybe throws an error.
+  if (variant_ == ssl_variant_stream) {
+    server_->CheckErrorCode(SSL_ERROR_TOO_MUCH_EARLY_DATA);
+  } else {
+    EXPECT_EQ(TlsAgent::STATE_CONNECTING, server_->state());
+  }
   CheckEarlyDataLimit(server_, limit);
 
-  // Attempt to read early data.
+  // Attempt to read early data. This will get an error.
   std::vector<uint8_t> buf(strlen(message) + 1);
   EXPECT_GT(0, PR_Read(server_->ssl_fd(), buf.data(), buf.capacity()));
   if (variant_ == ssl_variant_stream) {
-    server_->CheckErrorCode(SSL_ERROR_TOO_MUCH_EARLY_DATA);
+    EXPECT_EQ(SSL_ERROR_HANDSHAKE_FAILED, PORT_GetError());
+  } else {
+    EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
   }
 
-  client_->Handshake();  // Process the handshake.
-  client_->Handshake();  // Process the alert.
+  client_->Handshake();  // Process the server's first flight.
   if (variant_ == ssl_variant_stream) {
+    client_->Handshake();  // Process the alert.
     client_->CheckErrorCode(SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT);
+  } else {
+    server_->Handshake();  // Finish connecting.
+    EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
   }
 }
 
