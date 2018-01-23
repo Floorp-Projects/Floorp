@@ -1264,3 +1264,7 @@ body #output-container {
 .sidebar-contents .object-inspector {
   min-width: 100%;
 }
+
+.theme-twisty {
+  cursor: default;
+}
