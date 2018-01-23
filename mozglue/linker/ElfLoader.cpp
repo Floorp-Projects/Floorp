@@ -41,6 +41,12 @@ extern "C" MOZ_EXPORT const void *
 __gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
 #endif
 
+/* Ideally we'd #include <link.h>, but that's a world of pain
+ * Moreover, not all versions of android support it, so we need a weak
+ * reference. */
+extern "C" MOZ_EXPORT int
+dl_iterate_phdr(dl_phdr_cb callback, void *data) __attribute__((weak));
+
 /* Pointer to the PT_DYNAMIC section of the executable or library
  * containing this code. */
 extern "C" Elf::Dyn _DYNAMIC[];
@@ -200,10 +206,30 @@ DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
 int
 __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
 {
+  DlIteratePhdrHelper helper;
+  AutoLock lock(&ElfLoader::Singleton.handlesMutex);
+
+  if (dl_iterate_phdr) {
+    for (ElfLoader::LibHandleList::reverse_iterator it =
+	   ElfLoader::Singleton.handles.rbegin();
+	 it < ElfLoader::Singleton.handles.rend(); ++it) {
+      BaseElf* elf = (*it)->AsBaseElf();
+      if (!elf) {
+	continue;
+      }
+      int ret = helper.fill_and_call(callback, (*it)->GetBase(),
+				     (*it)->GetPath(), data);
+      if (ret)
+        return ret;
+    }
+    return dl_iterate_phdr(callback, data);
+  }
+
+  /* For versions of Android that don't support dl_iterate_phdr (< 5.0),
+   * we go through the debugger helper data, which is known to be racy, but
+   * there's not much we can do about this :( . */
   if (!ElfLoader::Singleton.dbg)
     return -1;
-
-  DlIteratePhdrHelper helper;
 
   for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
        it < ElfLoader::Singleton.dbg.end(); ++it) {
