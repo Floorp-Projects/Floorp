@@ -15,7 +15,7 @@ ProfileMigrator.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsIProfileMigrator]),
   classDescription: "Profile Migrator",
   contractID: "@mozilla.org/toolkit/profile-migrator;1",
-  classID: Components.ID("6F8BB968-C14F-4D6F-9733-6C6737B35DCE")
+  classID: Components.ID("6F8BB968-C14F-4D6F-9733-6C6737B35DCE"),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ProfileMigrator]);

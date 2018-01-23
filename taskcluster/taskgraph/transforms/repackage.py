@@ -161,7 +161,7 @@ def make_job_description(config, jobs):
                 )
 
             run['tooltool-downloads'] = 'internal'
-            worker['docker-image'] = {"in-tree": "desktop-build"}
+            worker['docker-image'] = {"in-tree": "debian7-amd64-build"}
 
         description = (
             "Repackaging for locale '{locale}' for build '"

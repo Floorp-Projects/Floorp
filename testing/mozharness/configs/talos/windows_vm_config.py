@@ -20,7 +20,6 @@ config = {
     "virtualenv_modules": ['pywin32', 'talos', 'mozinstall'],
     "exes": {
         'python': PYTHON,
-        'virtualenv': [PYTHON, os.path.join(os.path.dirname(sys.executable), 'Lib', 'site-packages', 'virtualenv.py')],
         'easy_install': ['%s/scripts/python' % VENV_PATH,
                          '%s/scripts/easy_install-2.7-script.py' % VENV_PATH],
         'mozinstall': ['%s/scripts/python' % VENV_PATH,

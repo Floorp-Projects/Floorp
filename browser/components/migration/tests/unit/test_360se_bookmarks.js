@@ -45,7 +45,7 @@ add_task(async function() {
   PlacesUtils.bookmarks.addObserver(bmObserver);
 
   await promiseMigration(migrator, MigrationUtils.resourceTypes.BOOKMARKS, {
-    id: "default"
+    id: "default",
   });
   PlacesUtils.bookmarks.removeObserver(bmObserver);
 

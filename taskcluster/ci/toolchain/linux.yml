@@ -256,7 +256,6 @@ linux64-libdmg:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
     run:
         using: toolchain-script

@@ -38,7 +38,6 @@ jobs:
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_searchfox_and_debug.py
-                - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
@@ -63,7 +62,6 @@ jobs:
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_mac_64_cross_builds.py
-                - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
             custom-build-variant-cfg: cross-debug-searchfox
             secrets: true

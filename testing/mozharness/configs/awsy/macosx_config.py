@@ -1,5 +1,4 @@
 import os
-import platform
 
 PYTHON = "/usr/bin/env python"
 VENV_PATH = '%s/build/venv' % os.getcwd()
