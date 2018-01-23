@@ -606,9 +606,14 @@ impl Cursor {
         unsafe { clang_CXXMethod_isConst(self.x) != 0 }
     }
 
-    /// Is this cursor's referent a member function that is declared `const`?
+    /// Is this cursor's referent a member function that is virtual?
     pub fn method_is_virtual(&self) -> bool {
         unsafe { clang_CXXMethod_isVirtual(self.x) != 0 }
+    }
+
+    /// Is this cursor's referent a member function that is pure virtual?
+    pub fn method_is_pure_virtual(&self) -> bool {
+        unsafe { clang_CXXMethod_isPureVirtual(self.x) != 0 }
     }
 
     /// Is this cursor's referent a struct or class with virtual members?
@@ -627,6 +632,67 @@ impl Cursor {
             x: unsafe { clang_getCursorResultType(self.x) },
         };
         if rt.is_valid() { Some(rt) } else { None }
+    }
+
+    /// Gets the tokens that correspond to that cursor.
+    pub fn tokens(&self) -> Option<Vec<Token>> {
+        let range = self.extent();
+        let mut tokens = vec![];
+        unsafe {
+            let tu = clang_Cursor_getTranslationUnit(self.x);
+            let mut token_ptr = ptr::null_mut();
+            let mut num_tokens: c_uint = 0;
+            clang_tokenize(tu, range, &mut token_ptr, &mut num_tokens);
+            if token_ptr.is_null() {
+                return None;
+            }
+
+            let token_array =
+                slice::from_raw_parts(token_ptr, num_tokens as usize);
+            for &token in token_array.iter() {
+                let kind = clang_getTokenKind(token);
+                let spelling =
+                    cxstring_into_string(clang_getTokenSpelling(tu, token));
+
+                tokens.push(Token {
+                    kind: kind,
+                    spelling: spelling,
+                });
+            }
+            clang_disposeTokens(tu, token_ptr, num_tokens);
+        }
+        Some(tokens)
+    }
+
+    /// Gets the tokens that correspond to that cursor as  `cexpr` tokens.
+    pub fn cexpr_tokens(self) -> Option<Vec<cexpr::token::Token>> {
+        use cexpr::token;
+
+        self.tokens().map(|tokens| {
+            tokens
+                .into_iter()
+                .filter_map(|token| {
+                    let kind = match token.kind {
+                        CXToken_Punctuation => token::Kind::Punctuation,
+                        CXToken_Literal => token::Kind::Literal,
+                        CXToken_Identifier => token::Kind::Identifier,
+                        CXToken_Keyword => token::Kind::Keyword,
+                        // NB: cexpr is not too happy about comments inside
+                        // expressions, so we strip them down here.
+                        CXToken_Comment => return None,
+                        _ => {
+                            error!("Found unexpected token kind: {:?}", token);
+                            return None;
+                        }
+                    };
+
+                    Some(token::Token {
+                        kind: kind,
+                        raw: token.spelling.into_bytes().into_boxed_slice(),
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
     }
 }
 
@@ -1345,71 +1411,6 @@ impl TranslationUnit {
     /// Is this the null translation unit?
     pub fn is_null(&self) -> bool {
         self.x.is_null()
-    }
-
-    /// Invoke Clang's lexer on this translation unit and get the stream of
-    /// tokens that come out.
-    pub fn tokens(&self, cursor: &Cursor) -> Option<Vec<Token>> {
-        let range = cursor.extent();
-        let mut tokens = vec![];
-        unsafe {
-            let mut token_ptr = ptr::null_mut();
-            let mut num_tokens: c_uint = 0;
-            clang_tokenize(self.x, range, &mut token_ptr, &mut num_tokens);
-            if token_ptr.is_null() {
-                return None;
-            }
-
-            let token_array =
-                slice::from_raw_parts(token_ptr, num_tokens as usize);
-            for &token in token_array.iter() {
-                let kind = clang_getTokenKind(token);
-                let spelling =
-                    cxstring_into_string(clang_getTokenSpelling(self.x, token));
-
-                tokens.push(Token {
-                    kind: kind,
-                    spelling: spelling,
-                });
-            }
-            clang_disposeTokens(self.x, token_ptr, num_tokens);
-        }
-        Some(tokens)
-    }
-
-    /// Convert a set of tokens from clang into `cexpr` tokens, for further
-    /// processing.
-    pub fn cexpr_tokens(
-        &self,
-        cursor: &Cursor,
-    ) -> Option<Vec<cexpr::token::Token>> {
-        use cexpr::token;
-
-        self.tokens(cursor).map(|tokens| {
-            tokens
-                .into_iter()
-                .filter_map(|token| {
-                    let kind = match token.kind {
-                        CXToken_Punctuation => token::Kind::Punctuation,
-                        CXToken_Literal => token::Kind::Literal,
-                        CXToken_Identifier => token::Kind::Identifier,
-                        CXToken_Keyword => token::Kind::Keyword,
-                        // NB: cexpr is not too happy about comments inside
-                        // expressions, so we strip them down here.
-                        CXToken_Comment => return None,
-                        _ => {
-                            error!("Found unexpected token kind: {:?}", token);
-                            return None;
-                        }
-                    };
-
-                    Some(token::Token {
-                        kind: kind,
-                        raw: token.spelling.into_bytes().into_boxed_slice(),
-                    })
-                })
-                .collect::<Vec<_>>()
-        })
     }
 }
 

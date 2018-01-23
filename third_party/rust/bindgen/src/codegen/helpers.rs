@@ -1,7 +1,9 @@
 //! Helpers for code generation that don't need macro expansion.
 
+use ir::context::BindgenContext;
 use ir::layout::Layout;
 use quote;
+use std::mem;
 
 pub mod attributes {
     use quote;
@@ -86,6 +88,39 @@ pub fn blob(layout: Layout) -> quote::Tokens {
     }
 }
 
+/// Integer type of the same size as the given `Layout`.
+pub fn integer_type(layout: Layout) -> Option<quote::Tokens> {
+    // This guard can be weakened when Rust implements u128.
+    if layout.size > mem::size_of::<u64>() {
+        None
+    } else {
+        Some(blob(layout))
+    }
+}
+
+/// Generates a bitfield allocation unit type for a type with the given `Layout`.
+pub fn bitfield_unit(ctx: &BindgenContext, layout: Layout) -> quote::Tokens {
+    let mut tokens = quote! {};
+
+    if ctx.options().enable_cxx_namespaces {
+        tokens.append(quote! { root:: });
+    }
+
+    let align = match layout.align {
+        n if n >= 8 => quote! { u64 },
+        4 => quote! { u32 },
+        2 => quote! { u16 },
+        _ => quote! { u8  },
+    };
+
+    let size = layout.size;
+    tokens.append(quote! {
+        __BindgenBitfieldUnit<[u8; #size], #align>
+    });
+
+    tokens
+}
+
 pub mod ast_ty {
     use ir::context::BindgenContext;
     use ir::function::FunctionSig;
@@ -140,13 +175,6 @@ pub mod ast_ty {
         // Don't use quote! { #val } because that adds the type suffix.
         let mut tokens = quote! {};
         tokens.append(val.to_string());
-        tokens
-    }
-
-    /// Returns hex representation of the given value.
-    pub fn hex_expr(val: u64) -> quote::Tokens {
-        let mut tokens = quote! {};
-        tokens.append(format!("{:#x}", val));
         tokens
     }
 

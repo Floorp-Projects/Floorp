@@ -81,10 +81,32 @@ public:
   class Mutator
     : public nsIURIMutator
     , public BaseURIMutator<nsHostObjectURI>
+    , public nsIBlobURIMutator
+    , public nsIPrincipalURIMutator
   {
     NS_DECL_ISUPPORTS
     NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
     NS_DEFINE_NSIMUTATOR_COMMON
+
+    MOZ_MUST_USE NS_IMETHOD
+    SetBlobImpl(mozilla::dom::BlobImpl *aBlobImpl) override
+    {
+        if (!mURI) {
+            return NS_ERROR_NULL_POINTER;
+        }
+        mURI->mBlobImpl = aBlobImpl;
+        return NS_OK;
+    }
+
+    MOZ_MUST_USE NS_IMETHOD
+    SetPrincipal(nsIPrincipal *aPrincipal) override
+    {
+        if (!mURI) {
+            return NS_ERROR_NULL_POINTER;
+        }
+        mURI->mPrincipal = aPrincipal;
+        return NS_OK;
+    }
 
     explicit Mutator() { }
   private:

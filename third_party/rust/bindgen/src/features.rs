@@ -140,8 +140,6 @@ macro_rules! rust_feature_def {
 rust_feature_def!(
     /// Untagged unions ([RFC 1444](https://github.com/rust-lang/rfcs/blob/master/text/1444-union.md))
     => untagged_union;
-    /// Constant function ([RFC 911](https://github.com/rust-lang/rfcs/blob/master/text/0911-const-fn.md))
-    => const_fn;
     /// `thiscall` calling convention ([Tracking issue](https://github.com/rust-lang/rust/issues/42202))
     => thiscall_abi;
     /// builtin impls for `Clone` ([PR](https://github.com/rust-lang/rust/pull/43690))
@@ -161,7 +159,6 @@ impl From<RustTarget> for RustFeatures {
         }
 
         if rust_target >= RustTarget::Nightly {
-            features.const_fn = true;
             features.thiscall_abi = true;
         }
 

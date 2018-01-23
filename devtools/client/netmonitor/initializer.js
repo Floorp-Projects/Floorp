@@ -24,8 +24,11 @@ const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { Connector } = require("./src/connector/index");
 const { configureStore } = require("./src/utils/create-store");
 const App = createFactory(require("./src/components/App"));
-const { getDisplayedRequestById } = require("./src/selectors/index");
 const { EVENTS } = require("./src/constants");
+const {
+  getDisplayedRequestById,
+  getSortedRequests
+} = require("./src/selectors/index");
 
 // Inject EventEmitter into global window.
 EventEmitter.decorate(window);
@@ -42,7 +45,7 @@ window.connector = connector;
 /**
  * Global Netmonitor object in this panel. This object can be consumed
  * by other panels (e.g. Console is using inspectRequest), by the
- * Launchpad (bootstrap), etc.
+ * Launchpad (bootstrap), WebExtension API (getHAR), etc.
  */
 window.Netmonitor = {
   bootstrap({ toolbox, panel }) {
@@ -75,6 +78,25 @@ window.Netmonitor = {
   destroy() {
     unmountComponentAtNode(this.mount);
     return connector.disconnect();
+  },
+
+  /**
+   * Returns list of requests currently available in the panel.
+   */
+  getHar() {
+    let { HarExporter } = require("devtools/client/netmonitor/src/har/har-exporter");
+    let { getLongString, getTabTarget, requestData } = connector;
+    let { form: { title, url } } = getTabTarget();
+    let state = store.getState();
+
+    let options = {
+      getString: getLongString,
+      items: getSortedRequests(state),
+      requestData,
+      title: title || url,
+    };
+
+    return HarExporter.getHar(options);
   },
 
   /**

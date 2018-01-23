@@ -230,7 +230,7 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsHostObjectURI::Mutator, nsIURISetters, nsIURIMutator)
+NS_IMPL_ISUPPORTS(nsHostObjectURI::Mutator, nsIURISetters, nsIURIMutator, nsIBlobURIMutator, nsIPrincipalURIMutator)
 
 NS_IMETHODIMP
 nsHostObjectURI::Mutate(nsIURIMutator** aMutator)
