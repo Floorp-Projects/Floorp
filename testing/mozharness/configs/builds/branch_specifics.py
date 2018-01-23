@@ -215,8 +215,6 @@ config = {
     },
     'try': {
         'repo_path': 'try',
-        'clone_by_revision': True,
-        'clone_with_purge': True,
         'tinderbox_build_dir': '%(who)s-%(got_revision)s',
         'to_tinderbox_dated': False,
         'include_post_upload_builddir': True,

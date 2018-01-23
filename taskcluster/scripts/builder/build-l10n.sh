@@ -98,7 +98,6 @@ cd /builds/worker
 
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   --disable-mock \
-  --revision ${GECKO_HEAD_REV} \
   $actions \
   $options \
   ${config_path_cmds} \

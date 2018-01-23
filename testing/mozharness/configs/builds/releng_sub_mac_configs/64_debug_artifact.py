@@ -1,5 +1,4 @@
 import os
-import sys
 
 config = {
     #########################################################################
@@ -7,11 +6,7 @@ config = {
 
     'default_actions': [
         'clobber',
-        'clone-tools',
-        # 'setup-mock',
-        'checkout-sources',
         'build',
-        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
@@ -20,9 +15,7 @@ config = {
     'vcs_share_base': '/builds/hg-shared',
     # debug specific
     'debug_build': True,
-    'enable_talos_sendchange': False,
     # allows triggering of test jobs when --artifact try syntax is detected on buildbot
-    'enable_unittest_sendchange': True,
     'perfherder_extra_options': ['artifact'],
     #########################################################################
 
@@ -41,9 +34,6 @@ config = {
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         # debug-specific
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',

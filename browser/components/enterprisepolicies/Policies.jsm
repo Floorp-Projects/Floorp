@@ -35,4 +35,46 @@ this.Policies = {
       }
     }
   },
+
+  "dont_check_default_browser": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("browser.shell.checkDefaultBrowser", false);
+    }
+  }
 };
+
+/*
+ * ====================
+ * = HELPER FUNCTIONS =
+ * ====================
+ *
+ * The functions below are helpers to be used by several policies.
+ */
+
+function setAndLockPref(prefName, prefValue) {
+  if (Services.prefs.prefIsLocked(prefName)) {
+    Services.prefs.unlockPref(prefName);
+  }
+
+  let defaults = Services.prefs.getDefaultBranch("");
+
+  switch (typeof(prefValue)) {
+    case "boolean":
+      defaults.setBoolPref(prefName, prefValue);
+      break;
+
+    case "number":
+      if (!Number.isInteger(prefValue)) {
+        throw new Error(`Non-integer value for ${prefName}`);
+      }
+
+      defaults.setIntPref(prefName, prefValue);
+      break;
+
+    case "string":
+      defaults.setStringPref(prefName, prefValue);
+      break;
+  }
+
+  Services.prefs.lockPref(prefName);
+}

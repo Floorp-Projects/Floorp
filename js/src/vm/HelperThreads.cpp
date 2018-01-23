@@ -502,7 +502,9 @@ ScriptParseTask::parse(JSContext* cx)
     SourceBufferHolder srcBuf(range.begin().get(), range.length(), SourceBufferHolder::NoOwnership);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    JSScript* script = frontend::CompileGlobalScript(cx, alloc, ScopeKind::Global,
+    ScopeKind scopeKind = options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+    JSScript* script = frontend::CompileGlobalScript(cx, alloc, scopeKind,
                                                      options, srcBuf,
                                                      /* sourceObjectOut = */ &sourceObject.get());
     if (script)

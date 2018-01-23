@@ -865,15 +865,22 @@ def build_docker_worker_payload(config, task, task_def):
         # the run-task content into the cache name. However, doing so preserves
         # the mechanism whereby changing run-task results in new caches
         # everywhere.
+
+        # As an additional mechanism to force the use of different caches, the
+        # string literal in the variable below can be changed. This is
+        # preferred to changing run-task because it doesn't require images
+        # to be rebuilt.
+        cache_version = 'v1'
+
         if run_task:
-            suffix = '-%s' % _run_task_suffix()
+            suffix = '-%s-%s' % (cache_version, _run_task_suffix())
 
             if out_of_tree_image:
                 name_hash = hashlib.sha256(out_of_tree_image).hexdigest()
                 suffix += name_hash[0:12]
 
         else:
-            suffix = ''
+            suffix = '-%s' % cache_version
 
         skip_untrusted = config.params.is_try() or level == 1
 

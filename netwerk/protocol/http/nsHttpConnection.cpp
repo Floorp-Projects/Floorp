@@ -95,6 +95,7 @@ nsHttpConnection::nsHttpConnection()
     , mReceivedSocketWouldBlockDuringFastOpen(false)
     , mCheckNetworkStallsWithTFO(false)
     , mLastRequestBytesSentTime(0)
+    , mBootstrappedTimingsSet(false)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -631,10 +632,13 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
         if (!mFastOpen) {
             mExperienced = true;
         }
-        nsHttpTransaction *hTrans = trans->QueryHttpTransaction();
-        if (hTrans) {
-            hTrans->BootstrapTimings(mBootstrappedTimings);
-            SetUrgentStartPreferred(hTrans->ClassOfService() & nsIClassOfService::UrgentStart);
+        if (mBootstrappedTimingsSet) {
+            mBootstrappedTimingsSet = false;
+            nsHttpTransaction *hTrans = trans->QueryHttpTransaction();
+            if (hTrans) {
+                hTrans->BootstrapTimings(mBootstrappedTimings);
+                SetUrgentStartPreferred(hTrans->ClassOfService() & nsIClassOfService::UrgentStart);
+            }
         }
         mBootstrappedTimings = TimingStruct();
     }
@@ -2521,6 +2525,7 @@ nsHttpConnection::SetFastOpenStatus(uint8_t tfoStatus) {
 void
 nsHttpConnection::BootstrapTimings(TimingStruct times)
 {
+    mBootstrappedTimingsSet = true;
     mBootstrappedTimings = times;
 }
 
@@ -2532,7 +2537,7 @@ nsHttpConnection::SetEvent(nsresult aStatus)
     mBootstrappedTimings.domainLookupStart = TimeStamp::Now();
     break;
   case NS_NET_STATUS_RESOLVED_HOST:
-    mBootstrappedTimings.domainLookupStart = TimeStamp::Now();
+    mBootstrappedTimings.domainLookupEnd = TimeStamp::Now();
     break;
   case NS_NET_STATUS_CONNECTING_TO:
     mBootstrappedTimings.connectStart = TimeStamp::Now();

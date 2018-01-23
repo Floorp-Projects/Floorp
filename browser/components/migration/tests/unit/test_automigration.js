@@ -269,7 +269,7 @@ add_task(async function checkUndoRemoval() {
         transitionType: PlacesUtils.history.TRANSITION_LINK,
         visitDate: now_uSec - 100 * kUsecPerMin,
       },
-    ]
+    ],
   }]);
   await frecencyUpdatePromise;
 
@@ -335,23 +335,23 @@ add_task(async function checkUndoBookmarksState() {
   let url = "http://www.example.com";
   let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
   let {guid, lastModified} = await MigrationUtils.insertBookmarkWrapper({
-    title, url, parentGuid
+    title, url, parentGuid,
   });
   Assert.deepEqual((await MigrationUtils.stopAndRetrieveUndoData()).get("bookmarks"),
       [{lastModified, parentGuid, guid, type: TYPE_BOOKMARK}]);
 
   MigrationUtils.initializeUndoData();
   ({guid, lastModified} = await MigrationUtils.insertBookmarkWrapper({
-    title, parentGuid, type: TYPE_FOLDER
+    title, parentGuid, type: TYPE_FOLDER,
   }));
   let folder = {guid, lastModified, parentGuid, type: TYPE_FOLDER};
   let folderGuid = folder.guid;
   ({guid, lastModified} = await MigrationUtils.insertBookmarkWrapper({
-    title, url, parentGuid: folderGuid
+    title, url, parentGuid: folderGuid,
   }));
   let kid1 = {guid, lastModified, parentGuid: folderGuid, type: TYPE_BOOKMARK};
   ({guid, lastModified} = await MigrationUtils.insertBookmarkWrapper({
-    title, url, parentGuid: folderGuid
+    title, url, parentGuid: folderGuid,
   }));
   let kid2 = {guid, lastModified, parentGuid: folderGuid, type: TYPE_BOOKMARK};
 
@@ -375,28 +375,28 @@ add_task(async function testBookmarkRemovalByUndo() {
   let url = "http://www.mymagicaluniqueurl.com";
   let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
   let {guid} = await MigrationUtils.insertBookmarkWrapper({
-    title: "Some folder", parentGuid, type: TYPE_FOLDER
+    title: "Some folder", parentGuid, type: TYPE_FOLDER,
   });
   let folderGuid = guid;
   let itemsToRemove = [];
   ({guid} = await MigrationUtils.insertBookmarkWrapper({
-    title: "Inner folder", parentGuid: folderGuid, type: TYPE_FOLDER
+    title: "Inner folder", parentGuid: folderGuid, type: TYPE_FOLDER,
   }));
   let innerFolderGuid = guid;
   itemsToRemove.push(innerFolderGuid);
 
   ({guid} = await MigrationUtils.insertBookmarkWrapper({
-    title: "Inner inner folder", parentGuid: innerFolderGuid, type: TYPE_FOLDER
+    title: "Inner inner folder", parentGuid: innerFolderGuid, type: TYPE_FOLDER,
   }));
   itemsToRemove.push(guid);
 
   ({guid} = await MigrationUtils.insertBookmarkWrapper({
-    title: "Inner nested item", url: "http://inner-nested-example.com", parentGuid: guid
+    title: "Inner nested item", url: "http://inner-nested-example.com", parentGuid: guid,
   }));
   itemsToRemove.push(guid);
 
   ({guid} = await MigrationUtils.insertBookmarkWrapper({
-    title, url, parentGuid: folderGuid
+    title, url, parentGuid: folderGuid,
   }));
   itemsToRemove.push(guid);
 
@@ -579,7 +579,7 @@ add_task(async function checkUndoVisitsState() {
       onManyFrecenciesChanged() {
         PlacesUtils.history.removeObserver(this);
         resolve();
-      }
+      },
     });
   });
   await PlacesUtils.history.insertMany([{
@@ -608,7 +608,7 @@ add_task(async function checkUndoVisitsState() {
 
   let frecencyChangesExpected = new Map([
     ["http://www.example.com/", PromiseUtils.defer()],
-    ["http://www.example.org/", PromiseUtils.defer()]
+    ["http://www.example.org/", PromiseUtils.defer()],
   ]);
   let uriDeletedExpected = new Map([
     ["http://www.mozilla.org/", PromiseUtils.defer()],

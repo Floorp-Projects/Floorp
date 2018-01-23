@@ -1,5 +1,4 @@
 import os
-import sys
 
 platform = "win32"
 
@@ -42,8 +41,6 @@ config = {
     # ToolTool
     "tooltool_manifest_src": 'browser\\config\\tooltool-manifests\\{}\\releng.manifest'.format(platform),
     'tooltool_url': 'https://api.pub.build.mozilla.org/tooltool/',
-    'tooltool_script': [sys.executable,
-                        'C:/mozilla-build/tooltool.py'],
     'tooltool_cache': os.environ.get('TOOLTOOL_CACHE'),
 
     'run_configure': False,

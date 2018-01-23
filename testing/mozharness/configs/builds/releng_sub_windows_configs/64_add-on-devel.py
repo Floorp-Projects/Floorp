@@ -3,18 +3,12 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
-        # 'setup-mock', windows do not use mock
         'build',
-        'upload-files',
-#        'sendchange',
         'check-test',
 #        'update',
     ],
     'stage_platform': 'win64-add-on-devel',
     'build_type': 'add-on-devel',
-    'enable_talos_sendchange': False,
     #### 64 bit build specific #####
     'env': {
         'BINSCOPE': 'C:/Program Files (x86)/Microsoft/SDL BinScope/BinScope.exe',
