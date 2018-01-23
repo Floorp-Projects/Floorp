@@ -7,7 +7,6 @@
 #define mozilla_TextEditor_h
 
 #include "mozilla/EditorBase.h"
-#include "mozilla/TextEditRules.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditor.h"
@@ -30,6 +29,8 @@ namespace mozilla {
 
 class AutoEditInitRulesTrigger;
 class HTMLEditRules;
+enum class EditAction : int32_t;
+
 namespace dom {
 class Selection;
 } // namespace dom
@@ -255,7 +256,6 @@ protected:
                          const nsACString& aCharacterSet);
 
 protected:
-  RefPtr<TextEditRules> mRules;
   nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
   nsString mCachedDocumentEncoderType;
   int32_t mWrapColumn;

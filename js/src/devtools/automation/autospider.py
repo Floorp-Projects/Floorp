@@ -276,7 +276,7 @@ else:
         CONFIGURE_ARGS += ' --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32'
 
 if platform.system() == 'Linux':
-    CONFIGURE_ARGS += ' --enable-stdcxx-compat'
+    CONFIGURE_ARGS = '--enable-stdcxx-compat ' + CONFIGURE_ARGS
 
 # Timeouts.
 ACTIVE_PROCESSES = set()

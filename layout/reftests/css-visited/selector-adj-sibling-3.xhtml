@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test for bug 1431539</title>
+<style>
+  a { text-decoration: none }
+  :visited { color: green }
+  :-moz-any(:visited) + span {
+    color: red;
+  }
+</style>
+</head>
+<body>
+<a href="visited-page.html">
+  <a href="visited-page.html">visited</a>
+  <span>Should be green</span>
+</a>
+</body>
+</html>

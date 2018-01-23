@@ -281,17 +281,19 @@ nsString gAbsoluteArgv0Path;
 extern "C" MFBT_API bool IsSignalHandlingBroken();
 #endif
 
-#ifdef LIBFUZZER
-#include "LibFuzzerRunner.h"
+#ifdef FUZZING
+#include "FuzzerRunner.h"
 
 namespace mozilla {
-LibFuzzerRunner* libFuzzerRunner = 0;
+FuzzerRunner* fuzzerRunner = 0;
 } // namespace mozilla
 
+#ifdef LIBFUZZER
 void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
-  mozilla::libFuzzerRunner->setParams(aDriver);
+  mozilla::fuzzerRunner->setParams(aDriver);
 }
 #endif
+#endif // FUZZING
 
 namespace mozilla {
 int (*RunGTest)(int*, char**) = 0;
@@ -3875,7 +3877,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // Initialize GTK here for splash.
 
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-  // Disable XInput2 support due to focus bugginess. See bugs 1182700, 1170342.
+  // Disable XInput2 multidevice support due to focus bugginess.
+  // See bugs 1182700, 1170342.
+  // gdk_disable_multidevice() affects Gdk X11 backend only,
+  // the multidevice support is always enabled on Wayland backend.
   const char* useXI2 = PR_GetEnv("MOZ_USE_XINPUT2");
   if (!useXI2 || (*useXI2 == '0'))
     gdk_disable_multidevice();
@@ -3888,10 +3893,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return 1;
 #endif /* MOZ_WIDGET_GTK */
 
-#ifdef LIBFUZZER
-  if (PR_GetEnv("LIBFUZZER")) {
+#ifdef FUZZING
+  if (PR_GetEnv("FUZZER")) {
     *aExitFlag = true;
-    return mozilla::libFuzzerRunner->Run(&gArgc, &gArgv);
+    return mozilla::fuzzerRunner->Run(&gArgc, &gArgv);
   }
 #endif
 

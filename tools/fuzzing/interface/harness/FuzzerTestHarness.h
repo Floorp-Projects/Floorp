@@ -9,8 +9,8 @@
  * and stdio.h/stdlib.h.
  */
 
-#ifndef LibFuzzerTestHarness_h__
-#define LibFuzzerTestHarness_h__
+#ifndef FuzzerTestHarness_h__
+#define FuzzerTestHarness_h__
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -73,7 +73,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
       nsresult rv = NS_InitXPCOM2(&mServMgr, nullptr, this);
       if (NS_FAILED(rv))
       {
-        fail("NS_InitXPCOM2 returned failure code 0x%x", rv);
+        fail("NS_InitXPCOM2 returned failure code 0x%" PRIx32, static_cast<uint32_t>(rv));
         mServMgr = nullptr;
         return;
       }
@@ -107,7 +107,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
         nsresult rv = NS_ShutdownXPCOM(nullptr);
         if (NS_FAILED(rv))
         {
-          fail("XPCOM shutdown failed with code 0x%x", rv);
+          fail("XPCOM shutdown failed with code 0x%" PRIx32, static_cast<uint32_t>(rv));
           exit(1);
         }
       }
@@ -273,4 +273,4 @@ ScopedXPCOM::Release()
 
 } // namespace
 
-#endif  // LibFuzzerTestHarness_h__
+#endif  // FuzzerTestHarness_h__
