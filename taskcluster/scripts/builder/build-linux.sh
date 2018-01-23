@@ -122,7 +122,6 @@ python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   ${config_cmds} \
   $debug_flag \
   $custom_build_variant_cfg_flag \
-  --disable-mock \
   $actions \
   $options \
   --log-level=debug \

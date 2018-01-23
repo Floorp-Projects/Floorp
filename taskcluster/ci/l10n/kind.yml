@@ -80,38 +80,31 @@ job-template:
       config:
          by-build-platform:
             linux-l10n:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux32.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux32.py
             linux64-l10n:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/linux64.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux64.py
             macosx64:
+               - single_locale/production.py
+               - single_locale/{project}.py
+               - single_locale/macosx64.py
+               - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
             android-api-16-l10n:
                - single_locale/{project}_android-api-16.py
+               - single_locale/tc_common.py
                - single_locale/tc_android-api-16.py
       # no default, so we fail on new entries
       options:
-         by-build-platform:
-            linux-l10n:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux32.py
-               - total-chunks=1
-               - this-chunk=1
-            linux64-l10n:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/linux64.py
-               - total-chunks=1
-               - this-chunk=1
-            macosx64:
-               - environment-config=single_locale/production.py
-               - branch-config=single_locale/{project}.py
-               - platform-config=single_locale/macosx64.py
-               - total-chunks=1
-               - this-chunk=1
-            default:
-               - total-chunks=1
-               - this-chunk=1
+         - total-chunks=1
+         - this-chunk=1
       actions:
          by-build-platform:
             default: [clone-locales list-locales setup repack summary]

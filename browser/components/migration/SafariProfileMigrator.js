@@ -237,7 +237,7 @@ History.prototype = {
             ignoreResults: true,
             handleCompletion(updatedCount) {
               aCallback(updatedCount > 0);
-            }
+            },
           });
         } else {
           aCallback(false);
@@ -247,7 +247,7 @@ History.prototype = {
         aCallback(false);
       }
     });
-  }
+  },
 };
 
 /**
@@ -305,7 +305,7 @@ MainPreferencesPropertyList.prototype = {
     this._dict = PropertyListUtils._readFromArrayBufferSync(
       new Uint8Array(bytes).buffer);
     return this._dict;
-  }
+  },
 };
 
 function SearchStrings(aMainPreferencesPropertyListInstance) {
@@ -331,7 +331,7 @@ SearchStrings.prototype = {
           }
         }
       }, aCallback));
-  }
+  },
 };
 
 function SafariProfileMigrator() {
@@ -399,7 +399,7 @@ Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyL
       return this._mainPreferencesPropertyList;
     }
     return this._mainPreferencesPropertyList;
-  }
+  },
 });
 
 Object.defineProperty(SafariProfileMigrator.prototype, "sourceHomePageURL", {
@@ -410,7 +410,7 @@ Object.defineProperty(SafariProfileMigrator.prototype, "sourceHomePageURL", {
         return dict.get("HomePage");
     }
     return "";
-  }
+  },
 });
 
 SafariProfileMigrator.prototype.classDescription = "Safari Profile Migrator";

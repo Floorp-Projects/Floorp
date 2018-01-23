@@ -313,9 +313,7 @@ class VirtualenvMixin(object):
         """
         Create a python virtualenv.
 
-        The virtualenv exe can be defined in c['virtualenv'] or
-        c['exes']['virtualenv'], as a string (path) or list (path +
-        arguments).
+        This uses the copy of virtualenv that is vendored in mozharness.
 
         c['virtualenv_python_dll'] is an optional config item that works
         around an old windows virtualenv bug.

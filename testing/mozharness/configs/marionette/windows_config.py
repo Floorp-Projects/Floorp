@@ -11,7 +11,6 @@ config = {
     "virtualenv_path": 'venv',
     "exes": {
         'python': 'c:/mozilla-build/python27/python',
-        'virtualenv': ['c:/mozilla-build/python27/python', 'c:/mozilla-build/buildbotve/virtualenv.py'],
         'hg': 'c:/mozilla-build/hg/hg',
         'mozinstall': ['%s/build/venv/scripts/python' % os.getcwd(),
                        '%s/build/venv/scripts/mozinstall-script.py' % os.getcwd()],

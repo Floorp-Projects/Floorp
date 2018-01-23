@@ -59,6 +59,7 @@ class ImageUtils;
 template<typename T> class MapDataIntoBufferSource;
 class Promise;
 class PostMessageEvent; // For StructuredClone between windows.
+class ImageBitmapShutdownObserver;
 
 struct ImageBitmapCloneData final
 {
@@ -175,6 +176,8 @@ public:
 
   size_t GetAllocatedSize() const;
 
+  void OnShutdown();
+
 protected:
 
   /*
@@ -270,6 +273,8 @@ protected:
   gfx::IntRect mPictureRect;
 
   const gfxAlphaType mAlphaType;
+
+  RefPtr<ImageBitmapShutdownObserver> mShutdownObserver;
 
   /*
    * Set mIsCroppingAreaOutSideOfSourceImage if image bitmap was cropped to the

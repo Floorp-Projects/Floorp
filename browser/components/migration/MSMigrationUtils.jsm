@@ -65,12 +65,12 @@ function CtypesKernelHelpers() {
     {wHour: wintypes.WORD},
     {wMinute: wintypes.WORD},
     {wSecond: wintypes.WORD},
-    {wMilliseconds: wintypes.WORD}
+    {wMilliseconds: wintypes.WORD},
   ]);
 
   this._structs.FILETIME = new ctypes.StructType("FILETIME", [
     {dwLowDateTime: wintypes.DWORD},
-    {dwHighDateTime: wintypes.DWORD}
+    {dwHighDateTime: wintypes.DWORD},
   ]);
 
   try {
@@ -133,7 +133,7 @@ CtypesKernelHelpers.prototype = {
                                systemTime.wMinute,
                                systemTime.wSecond,
                                systemTime.wMilliseconds) / 1000);
-  }
+  },
 };
 
 function CtypesVaultHelpers() {
@@ -256,7 +256,7 @@ CtypesVaultHelpers.prototype = {
       this._vaultcliLib.close();
     } catch (ex) {}
     this._vaultcliLib = null;
-  }
+  },
 };
 
 /**
@@ -644,7 +644,7 @@ Cookies.prototype = {
                            expireTime,
                            {});
     }
-  }
+  },
 };
 
 function getTypedURLs(registryKeyPath) {
@@ -871,7 +871,7 @@ WindowsVaultFormPasswords.prototype = {
       return false;
     }
     return undefined;
-  }
+  },
 };
 
 var MSMigrationUtils = {
