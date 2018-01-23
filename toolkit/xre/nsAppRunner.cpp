@@ -281,19 +281,17 @@ nsString gAbsoluteArgv0Path;
 extern "C" MFBT_API bool IsSignalHandlingBroken();
 #endif
 
-#ifdef FUZZING
-#include "FuzzerRunner.h"
+#ifdef LIBFUZZER
+#include "LibFuzzerRunner.h"
 
 namespace mozilla {
-FuzzerRunner* fuzzerRunner = 0;
+LibFuzzerRunner* libFuzzerRunner = 0;
 } // namespace mozilla
 
-#ifdef LIBFUZZER
 void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
-  mozilla::fuzzerRunner->setParams(aDriver);
+  mozilla::libFuzzerRunner->setParams(aDriver);
 }
 #endif
-#endif // FUZZING
 
 namespace mozilla {
 int (*RunGTest)(int*, char**) = 0;
@@ -3893,10 +3891,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return 1;
 #endif /* MOZ_WIDGET_GTK */
 
-#ifdef FUZZING
-  if (PR_GetEnv("FUZZER")) {
+#ifdef LIBFUZZER
+  if (PR_GetEnv("LIBFUZZER")) {
     *aExitFlag = true;
-    return mozilla::fuzzerRunner->Run(&gArgc, &gArgv);
+    return mozilla::libFuzzerRunner->Run(&gArgc, &gArgv);
   }
 #endif
 

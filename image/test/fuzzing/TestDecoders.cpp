@@ -20,7 +20,7 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
-#include "FuzzingInterfaceStream.h"
+#include "FuzzingInterface.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
