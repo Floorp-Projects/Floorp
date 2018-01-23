@@ -14256,27 +14256,24 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, nsIChannel* aChannel,
 {
   *aShouldIntercept = false;
 
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return NS_OK;
+  }
+
   // For subresource requests we base our decision solely on the client's
   // controller value.  Any settings that would have blocked service worker
   // access should have been set before the initial navigation created the
   // window.
   if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    if (!doc) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    ErrorResult rv;
-    *aShouldIntercept = doc->GetController().isSome();
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
-
+    const Maybe<ServiceWorkerDescriptor>& controller = loadInfo->GetController();
+    *aShouldIntercept = controller.isSome();
     return NS_OK;
   }
 
   nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
+    BasePrincipal::CreateCodebasePrincipal(aURI,
+                                           loadInfo->GetOriginAttributes());
 
   // For navigations, first check to see if we are allowed to control a
   // window with the given URL.
