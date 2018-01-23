@@ -16,7 +16,7 @@ const S100NS_PER_MS = 10;
 const AUTH_TYPE = {
   SCHEME_HTML: 0,
   SCHEME_BASIC: 1,
-  SCHEME_DIGEST: 2
+  SCHEME_DIGEST: 2,
 };
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
@@ -178,7 +178,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
       return resources && resources.length > 0;
     }, this);
     return this.__sourceProfiles;
-  }
+  },
 });
 
 Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
@@ -200,7 +200,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceHomePageURL", {
       }
     }
     return "";
-  }
+  },
 });
 
 Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
@@ -257,7 +257,7 @@ function GetBookmarksResource(aProfileFolder) {
         }
       })().then(() => aCallback(true),
               () => aCallback(false));
-    }
+    },
   };
 }
 
@@ -320,7 +320,7 @@ function GetHistoryResource(aProfileFolder) {
                 } else {
                   reject(new Error("Couldn't add visits"));
                 }
-              }
+              },
             });
           });
         }
@@ -329,7 +329,7 @@ function GetHistoryResource(aProfileFolder) {
                 Cu.reportError(ex);
                 aCallback(false);
               });
-    }
+    },
   };
 }
 

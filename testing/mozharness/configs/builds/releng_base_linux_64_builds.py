@@ -10,12 +10,7 @@ config = {
 
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
-        'setup-mock',
         'build',
-        'upload-files',
-        'sendchange',
         'check-test',
         'update',  # decided by query_is_nightly()
     ],
@@ -23,22 +18,6 @@ config = {
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': True,
-    # mock shtuff
-    'mock_mozilla_dir':  '/builds/mock_mozilla',
-    'mock_target': 'mozilla-centos6-x86_64',
-    'mock_files': [
-        ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
-        ('/home/cltbld/.hgrc', '/builds/.hgrc'),
-        ('/home/cltbld/.boto', '/builds/.boto'),
-        ('/builds/gapi.data', '/builds/gapi.data'),
-        ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-        ('/tools/tooltool.py', '/builds/tooltool.py'),
-        ('/builds/mozilla-desktop-geoloc-api.key', '/builds/mozilla-desktop-geoloc-api.key'),
-        ('/builds/crash-stats-api.token', '/builds/crash-stats-api.token'),
-        ('/builds/adjust-sdk.token', '/builds/adjust-sdk.token'),
-        ('/builds/adjust-sdk-beta.token', '/builds/adjust-sdk-beta.token'),
-        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
-    ],
     'secret_files': [
         {'filename': '/builds/gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
@@ -54,11 +33,7 @@ config = {
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
     'vcs_share_base': '/builds/hg-shared',
-    'tooltool_script': ["/builds/tooltool.py"],
-    'tooltool_bootstrap': "setup.sh",
     'enable_count_ctors': True,
-    'enable_talos_sendchange': False,
-    'enable_unittest_sendchange': True,
     #########################################################################
 
 
@@ -77,9 +52,6 @@ config = {
         'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
         'TOOLTOOL_HOME': '/builds',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         ## 64 bit specific
         'PATH': '/usr/local/bin:/usr/lib64/ccache:/bin:\
@@ -99,32 +71,6 @@ config = {
         'MINIDUMP_STACKWALK': '%(abs_tools_dir)s/breakpad/linux64/minidump_stackwalk',
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
-    'mock_packages': [
-        'autoconf213', 'python', 'mozilla-python27', 'zip', 'mozilla-python27-mercurial',
-        'git', 'ccache', 'perl-Test-Simple', 'perl-Config-General',
-        'yasm', 'wget',
-        'mpfr',  # required for system compiler
-        'xorg-x11-font*',  # fonts required for PGO
-        'imake',  # required for makedepend!?!
-        ### <-- from releng repo
-        'gcc45_0moz3', 'gcc454_0moz1', 'gcc472_0moz1', 'gcc473_0moz1',
-        'yasm', 'ccache',
-        ###
-        'valgrind', 'dbus-x11',
-        ######## 64 bit specific ###########
-        'glibc-static', 'libstdc++-static',
-        'gtk2-devel', 'libnotify-devel',
-        'alsa-lib-devel', 'libcurl-devel', 'wireless-tools-devel',
-        'libX11-devel', 'libXt-devel', 'mesa-libGL-devel', 'gnome-vfs2-devel',
-        'GConf2-devel',
-        ### from releng repo
-        'gcc45_0moz3', 'gcc454_0moz1', 'gcc472_0moz1', 'gcc473_0moz1',
-        'yasm', 'ccache',
-        ###
-        'pulseaudio-libs-devel', 'gstreamer-devel',
-        'gstreamer-plugins-base-devel', 'freetype-2.3.11-6.el6_1.8.x86_64',
-        'freetype-devel-2.3.11-6.el6_1.8.x86_64'
-    ],
     'mozconfig_platform': 'linux64',
     'mozconfig_variant': 'nightly',
     #########################################################################

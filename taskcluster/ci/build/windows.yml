@@ -221,7 +221,7 @@ win32-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
         using: mozharness
-        actions: [clone-tools, build, check-test, update]
+        actions: [build, check-test, update]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -257,7 +257,7 @@ win64-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
-        actions: [clone-tools, build, check-test, update]
+        actions: [build, check-test, update]
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
         config:
@@ -323,7 +323,6 @@ win32-add-on-devel/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win32.py
             - builds/taskcluster_sub_win32/addondevel.py
-            - balrog/production.py
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
         - win64-clang-cl
@@ -353,7 +352,6 @@ win64-add-on-devel/opt:
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
             - builds/taskcluster_sub_win64/addondevel.py
-            - balrog/production.py
     run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
     toolchains:
         - win64-clang-cl
@@ -655,6 +653,7 @@ win32-mingw32/debug:
         max-run-time: 7200
     run:
         using: mozharness
+        actions: [build, check-test]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py

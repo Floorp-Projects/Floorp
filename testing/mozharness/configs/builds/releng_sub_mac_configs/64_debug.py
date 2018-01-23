@@ -3,19 +3,12 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'clone-tools',
-        'checkout-sources',
-        # 'setup-mock',
         'build',
-        'upload-files',
-        'sendchange',
         'check-test',
         'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
-    'enable_talos_sendchange': False,
-    'enable_unittest_sendchange': False,
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
@@ -25,9 +18,6 @@ config = {
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         ## 64 bit specific

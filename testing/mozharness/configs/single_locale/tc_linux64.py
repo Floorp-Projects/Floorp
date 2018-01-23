@@ -19,6 +19,4 @@ config = {
         'UPLOAD_HOST': 'localhost',
         'UPLOAD_PATH': '/builds/worker/artifacts/',
     },
-    "mozilla_dir": "src/",
-    "simple_name_move": True,
 }

@@ -116,6 +116,10 @@ DebuggerPanel.prototype = {
     return { frames, selected };
   },
 
+  isPaused() {
+    return this._selectors.isPaused(this._getState());
+  },
+
   selectSource(url, line) {
     this._actions.selectSourceURL(url, { location: { line } });
   },

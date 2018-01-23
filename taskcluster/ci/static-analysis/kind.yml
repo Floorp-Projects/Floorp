@@ -37,7 +37,6 @@ jobs:
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_stat_and_debug.py
-                - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
@@ -61,7 +60,6 @@ jobs:
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_stat_and_opt.py
-                - balrog/production.py
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false

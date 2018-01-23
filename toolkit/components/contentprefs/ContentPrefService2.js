@@ -1141,7 +1141,8 @@ ContentPrefService2.prototype = {
         for (let i = aOldVersion; i < aNewVersion; i++) {
           let migrationName = "_dbMigrate" + i + "To" + (i + 1);
           if (typeof this[migrationName] != "function") {
-            throw ("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
+            throw new Error("no migrator function from version " + aOldVersion + " to version " +
+                            aNewVersion);
           }
           this[migrationName](aDBConnection);
         }
@@ -1233,7 +1234,7 @@ HostnameGrouper.prototype = {
 
       group = aURI.host;
       if (!group)
-        throw ("can't derive group from host; no host in URI");
+        throw new Error("can't derive group from host; no host in URI");
     } catch (ex) {
       // If we don't have a host, then use the entire URI (minus the query,
       // reference, and hash, if possible) as the group.  This means that URIs

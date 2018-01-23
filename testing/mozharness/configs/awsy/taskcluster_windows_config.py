@@ -12,10 +12,6 @@ config = {
     "virtualenv_path": 'venv',
     "exes": {
         'python': sys.executable,
-        'virtualenv': [
-            sys.executable,
-            os.path.join(os.path.dirname(sys.executable), 'Lib', 'site-packages', 'virtualenv.py')
-        ],
         'mozinstall': ['build/venv/scripts/python', 'build/venv/scripts/mozinstall-script.py'],
         'tooltool.py': [sys.executable, os.path.join(os.environ['MOZILLABUILD'], 'tooltool.py')],
         'hg': os.path.join(os.environ['PROGRAMFILES'], 'Mercurial', 'hg')

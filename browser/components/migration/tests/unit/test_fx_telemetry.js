@@ -219,7 +219,7 @@ add_task(async function test_datareporting_many() {
     "datareporting": {
       "state.json": shouldBeCopied,
       "session-state.json": shouldBeCopied,
-    }
+    },
   });
 });
 
@@ -237,7 +237,7 @@ add_task(async function test_no_session_state() {
   checkDirectoryContains(targetDir, {
     "datareporting": {
       "state.json": stateContent,
-    }
+    },
   });
 });
 
@@ -255,7 +255,7 @@ add_task(async function test_no_state() {
   checkDirectoryContains(targetDir, {
     "datareporting": {
       "session-state.json": sessionStateContent,
-    }
+    },
   });
 });
 
