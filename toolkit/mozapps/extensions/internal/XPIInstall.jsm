@@ -1841,7 +1841,7 @@ class AddonInstall {
 
         if (isUpgrade) {
           this.addon =  XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
-                                                        file.persistentDescriptor);
+                                                        file.path);
           let state = XPIStates.getAddon(this.installLocation.name, this.addon.id);
           if (state) {
             state.syncWithDB(this.addon, true);
@@ -1850,7 +1850,7 @@ class AddonInstall {
           }
         } else {
           this.addon.active = (this.addon.visible && !this.addon.disabled);
-          this.addon = XPIDatabase.addAddonMetadata(this.addon, file.persistentDescriptor);
+          this.addon = XPIDatabase.addAddonMetadata(this.addon, file.path);
           XPIStates.addAddon(this.addon);
           this.addon.installDate = this.addon.updateDate;
           XPIDatabase.saveChanges();
