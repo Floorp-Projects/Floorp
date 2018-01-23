@@ -10,13 +10,13 @@ function handleRequest(request, response)
   response.setHeader("Cache-Control", "no-cache", false);
   response.setStatusLine("1.1", 302, "Found");
 
-  if (query === "script") {
-    response.setHeader("Location", "data:text/html," + escape(SCRIPT_DATA), false);
+  if (query === "script" || query === "modulescript") {
+    response.setHeader("Location", "data:text/javascript," + escape(SCRIPT_DATA), false);
     return;
   }
 
   if (query === "worker") {
-    response.setHeader("Location", "data:text/html," + escape(WORKER_DATA), false);
+    response.setHeader("Location", "data:text/javascript," + escape(WORKER_DATA), false);
     return;
   }
 

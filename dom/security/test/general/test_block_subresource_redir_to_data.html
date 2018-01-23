@@ -8,11 +8,12 @@
 <body>
 
 <script id="testScriptRedirectToData"></script>
+<script id="testModuleScriptRedirectToData" type="module"></script>
 
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-const NUM_TESTS = 2;
+const NUM_TESTS = 3;
 
 var testCounter = 0;
 function checkFinish() {
@@ -47,6 +48,20 @@ worker.onmessage = function() {
   checkFinish();
 };
 worker.postMessage("dummy");
+
+// --- test script modules
+SpecialPowers.pushPrefEnv({set: [["dom.moduleScripts.enabled", true]]}, function() {
+  let testModuleScriptRedirectToData = document.getElementById("testModuleScriptRedirectToData");
+  testModuleScriptRedirectToData.onerror = function() {
+    ok(true, "module script that redirects to data: URI should not load");
+    checkFinish();
+  }
+  testModuleScriptRedirectToData.onload = function() {
+    ok(false, "module script that redirects to data: URI should not load");
+    checkFinish();
+  }
+  testModuleScriptRedirectToData.src = "file_block_subresource_redir_to_data.sjs?modulescript";
+});
 
 </script>
 </body>
