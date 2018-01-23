@@ -17,14 +17,20 @@ def inline(doc):
     return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
-class TestMouseAction(MarionetteTestCase):
+class BaseLegacyMouseAction(MarionetteTestCase):
+
     def setUp(self):
-        MarionetteTestCase.setUp(self)
+        super(BaseLegacyMouseAction, self).setUp()
+
         if self.marionette.session_capabilities["platformName"] == "darwin":
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
+
         self.action = Actions(self.marionette)
+
+
+class TestLegacyMouseAction(BaseLegacyMouseAction):
 
     def test_click_action(self):
         test_html = self.marionette.absolute_url("test.html")
@@ -92,23 +98,31 @@ class TestMouseAction(MarionetteTestCase):
             self.action.click(go_button).perform()
         self.wait_for_condition(lambda mn: mn.get_url() == data_uri)
 
+
+class TestChromeLegacyMouseAction(BaseLegacyMouseAction):
+
+    def setUp(self):
+        super(TestChromeLegacyMouseAction, self).setUp()
+
+        self.marionette.set_context("chrome")
+
     def test_chrome_double_click(self):
-        self.marionette.navigate("about:blank")
         test_word = "quux"
 
-        with self.marionette.using_context("chrome"):
-            urlbar = self.marionette.find_element(By.ID, "urlbar")
-            self.assertEqual("", urlbar.get_property("value"))
+        with self.marionette.using_context("content"):
+            self.marionette.navigate("about:blank")
 
-            urlbar.send_keys(test_word)
-            self.assertEqual(urlbar.get_property("value"), test_word)
-            (self.action.double_click(urlbar).perform()
-                        .key_down(self.mod_key)
-                        .key_down("x").perform())
-            self.assertEqual(urlbar.get_property("value"), "")
+        urlbar = self.marionette.find_element(By.ID, "urlbar")
+        self.assertEqual("", urlbar.get_property("value"))
+
+        urlbar.send_keys(test_word)
+        self.assertEqual(urlbar.get_property("value"), test_word)
+        (self.action.double_click(urlbar).perform()
+                    .key_down(self.mod_key)
+                    .key_down("x").perform())
+        self.assertEqual(urlbar.get_property("value"), "")
 
     def test_chrome_context_click_action(self):
-        self.marionette.set_context("chrome")
         def context_menu_state():
             cm_el = self.marionette.find_element(By.ID, "tabContextMenu")
             return cm_el.get_property("state")
