@@ -29,7 +29,6 @@
       <field name="_valueEntered">false</field>
       <field name="_spinButtons">null</field>
       <field name="_value">0</field>
-      <field name="decimalSymbol">"."</field>
 
       <property name="spinButtons" readonly="true">
         <getter>
@@ -48,13 +47,12 @@
         <getter>
           if (this._valueEntered) {
             var newval = this.inputField.value;
-            newval = newval.replace(this.decimalSymbol, ".");
-            this._validateValue(newval, false);
+            this._validateValue(newval);
           }
           return this._value;
         </getter>
         <setter>
-          this._validateValue(val, false);
+          this._validateValue(val);
           return val;
         </setter>
       </property>
@@ -68,7 +66,7 @@
           if (typeof val == "number") {
             this.setAttribute("min", val);
             if (this.valueNumber < val)
-              this._validateValue(val, false);
+              this._validateValue(val);
           }
           return val;
         ]]>
@@ -89,51 +87,11 @@
             val = min;
           this.setAttribute("max", val);
           if (this.valueNumber > val)
-            this._validateValue(val, false);
+            this._validateValue(val);
           return val;
         ]]>
         </setter>
       </property>
-
-      <property name="decimalPlaces">
-        <getter>
-          var places = this.getAttribute("decimalplaces");
-          return places ? Number(places) : 0;
-        </getter>
-        <setter>
-          if (typeof val == "number") {
-            this.setAttribute("decimalplaces", val);
-            this._validateValue(this.valueNumber, false);
-          }
-          return val;
-        </setter>
-      </property>
-
-      <property name="increment">
-        <getter>
-          var increment = this.getAttribute("increment");
-          return increment ? Number(increment) : 1;
-        </getter>
-        <setter>
-        <![CDATA[
-          if (typeof val == "number")
-            this.setAttribute("increment", val);
-          return val;
-        ]]>
-        </setter>
-      </property>
-
-      <method name="decrease">
-        <body>
-          return this._validateValue(this.valueNumber - this.increment, true);
-        </body>
-      </method>
-
-      <method name="increase">
-        <body>
-          return this._validateValue(this.valueNumber + this.increment, true);
-        </body>
-      </method>
 
       <method name="_modifyUp">
         <body>
@@ -141,7 +99,7 @@
             if (this.disabled || this.readOnly)
               return;
             var oldval = this.valueNumber;
-            var newval = this.increase();
+            var newval = this._validateValue(this.valueNumber + 1);
             this.inputField.select();
             if (oldval != newval)
               this._fireChange();
@@ -154,7 +112,7 @@
             if (this.disabled || this.readOnly)
               return;
             var oldval = this.valueNumber;
-            var newval = this.decrease();
+            var newval = this._validateValue(this.valueNumber - 1);
             this.inputField.select();
             if (oldval != newval)
               this._fireChange();
@@ -178,10 +136,10 @@
 
       <method name="_validateValue">
         <parameter name="aValue"/>
-        <parameter name="aIsIncDec"/>
         <body>
           <![CDATA[
             aValue = Number(aValue) || 0;
+            aValue = Math.round(aValue);
 
             var min = this.min;
             var max = this.max;
@@ -190,12 +148,9 @@
             else if (aValue > max)
               aValue = max;
 
-            var places = this.decimalPlaces;
-            aValue = (places == Infinity) ? "" + aValue : aValue.toFixed(places);
-
             this._valueEntered = false;
             this._value = Number(aValue);
-            this.inputField.value = aValue.replace(/\./, this.decimalSymbol);
+            this.inputField.value = aValue;
 
             this._enableDisableButtons();
 
@@ -216,12 +171,8 @@
         if (this.max < this.min)
           this.max = this.min;
 
-        var dsymbol = (Number(5.4)).toLocaleString().match(/\D/);
-        if (dsymbol != null)
-          this.decimalSymbol = dsymbol[0];
-
         var value = this.inputField.value || 0;
-        this._validateValue(value, false);
+        this._validateValue(value);
       ]]></constructor>
 
     </implementation>
@@ -234,11 +185,6 @@
       <handler event="keypress">
         <![CDATA[
           if (!event.ctrlKey && !event.metaKey && !event.altKey && event.charCode) {
-            if (event.charCode == this.decimalSymbol.charCodeAt(0) &&
-                this.decimalPlaces &&
-                String(this.inputField.value).indexOf(this.decimalSymbol) == -1)
-              return;
-
             if (event.charCode == 45 && this.min < 0)
               return;
 
@@ -267,8 +213,7 @@
       <handler event="change">
         if (event.originalTarget == this.inputField) {
           var newval = this.inputField.value;
-          newval = newval.replace(this.decimalSymbol, ".");
-          this._validateValue(newval, false);
+          this._validateValue(newval);
         }
       </handler>
     </handlers>

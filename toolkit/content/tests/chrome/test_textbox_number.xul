@@ -14,17 +14,11 @@
   <textbox id="n2" type="number" value="10" min="5" max="15"/>
 </hbox>
 <hbox>
-  <textbox id="n3" type="number" size="4" value="25" min="1" max="12" increment="3"/>
-</hbox>
-<hbox>
   <textbox id="n4" type="number" size="4" value="-2" min="-8" max="18"/>
   <textbox id="n5" type="number" value="-17" min="-10" max="-3"/>
 </hbox>
 <hbox>
   <textbox id="n6" type="number" size="4" value="9" min="12" max="8"/>
-</hbox>
-<hbox>
-  <textbox id="n7" type="number" size="4" value="4.678" min="2" max="10.5" decimalplaces="2"/>
   <textbox id="n8" type="number" hidespinbuttons="true"/>
 </hbox>
 <hbox>
@@ -44,29 +38,17 @@ SimpleTest.waitForExplicitFinish();
 function doTests() {
   var n1 = $("n1");
   var n2 = $("n2");
-  var n3 = $("n3");
   var n4 = $("n4");
   var n5 = $("n5");
   var n6 = $("n6");
-  var n7 = $("n7");
 
   testValsMinMax(n1, "initial n1", 0, 0, Infinity);
   testValsMinMax(n2, "initial n2", 10, 5, 15);
-  testValsMinMax(n3, "initial n3", 12, 1, 12);
   testValsMinMax(n4, "initial n4", -2, -8, 18);
   testValsMinMax(n5, "initial n5", -10, -10, -3);
   testValsMinMax(n6, "initial n6", 12, 12, 12);
-  testValsMinMax(n7, "initial n7", 4.68, 2, 10.5); // value should be rounded
 
   ok(n1.spinButtons != null && n1.spinButtons.localName == "spinbuttons", "spinButtons set");
-  isnot(n1.decimalSymbol, "", "n1.decimalSymbol is set to something");
-  n1.decimalSymbol = ".";
-  SimpleTest.is(n1.decimalSymbol, ".", "n1.decimalSymbol set to '.'");
-  SimpleTest.is(n1.increment, 1, "increment defaults to 1");
-  SimpleTest.is(n1.decimalPlaces, 0, "decimalPlaces defaults to 0");
-
-  SimpleTest.is(n3.increment, 3, "increment when set to 1");
-  SimpleTest.is(n7.decimalPlaces, 2, "decimalPlaces when set to 2");
 
   // test changing the value
   n1.value = "1700";
@@ -83,12 +65,6 @@ function doTests() {
   testVals(n2, "set value below min negative,", 5);
   n5.value = -2;
   testVals(n5, "set value above max positive,", -3);
-  n7.value = 5.999;
-  testVals(n7, "set value to decimal,", 6, "6.00");
-  n7.value = "1.42";
-  testVals(n7, "set value to decimal below min,", 2.00, "2.00");
-  n7.value = 24.1;
-  testVals(n7, "set value to decimal above max,", 10.5, "10.50");
   n1.value = 4.75;
   testVals(n1, "set value to decimal round,", 5);
 
@@ -104,12 +80,6 @@ function doTests() {
   n5.valueNumber = -8;
   n5.valueNumber = -1;
   testVals(n5, "set valueNumber above max positive,", -3);
-  n7.valueNumber = 8.23;
-  testVals(n7, "set valueNumber to decimal,", 8.23);
-  n7.valueNumber = 0.77;
-  testVals(n7, "set valueNumber to decimal below min,", 2.00, "2.00");
-  n7.valueNumber = 29.157;
-  testVals(n7, "set valueNumber to decimal above max,", 10.5, "10.50");
   n1.value = 8.9;
   testVals(n1, "set valueNumber to decimal round,", 9);
 
@@ -117,48 +87,14 @@ function doTests() {
   n1.value = 6;
   n1.min = 8;
   testValsMinMax(n1, "set integer min,", 8, 8, Infinity);
-  n7.value = 5.5;
-  n7.min = 6.7;
-  testValsMinMax(n7, "set decimal min,", 6.7, 6.7, 10.5, "6.70");
 
   // test changing the max
   n1.value = 25;
   n1.max = 22;
   testValsMinMax(n1, "set integer max,", 22, 8, 22);
-  n7.value = 10.2;
-  n7.max = 10.1;
-  testValsMinMax(n7, "set decimal max,", 10.1, 6.7, 10.1, "10.10");
 
-  // test decrease() and increase() methods
+  // test increase and decrease via the keyboard and the spinbuttons
   testIncreaseDecrease(n1, "integer", 1, 0, 8, 22);
-  testIncreaseDecrease(n7, "decimal", 1, 2, 6.7, 10.1);
-  testIncreaseDecrease(n3, "integer with increment", 3, 0, 1, 12);
-
-  n7.min = 2.7;
-  n7.value = 10.1;
-  n7.increment = 4.3;
-  SimpleTest.is(n7.increment, 4.3, "increment changed");
-  testIncreaseDecrease(n7, "integer with increment", 4.3, 2, 2.7, 10.1);
-
-  n1.value = 22;
-  n1.decimalPlaces = 3;
-  testVals(n1, "set decimalPlaces 3", 22, "22.000");
-  n1.value = 10.624;
-  testVals(n1, "set decimalPlaces 3 set value,", 10.624);
-  n1.decimalPlaces = 0;
-  testVals(n1, "set decimalPlaces 0 set value,", 11);
-  n1.decimalPlaces = Infinity;
-  n1.value = 10.678123;
-  testVals(n1, "set decimalPlaces Infinity set value,", 10.678123);
-
-  n1.decimalSymbol = ",";
-  SimpleTest.is(n1.decimalSymbol, ",", "n1.decimalSymbol set to ','");
-  n1.value = "9.67";
-  testVals(n1, "set decimalPlaces set value,", 9.67);
-
-  n1.decimalSymbol = ".";
-  SimpleTest.is(n1.decimalSymbol, ".", "n1.decimalSymbol set back to '.'");
-  n1.decimalPlaces = 0;
 
   // UI tests
   n1.min = 5;
@@ -256,11 +192,8 @@ function testVals(nb, name, valueNumber, valueFieldNumber) {
 
   SimpleTest.is(nb.value, "" + valueNumber, name + " value is '" + valueNumber + "'");
   SimpleTest.is(nb.valueNumber, valueNumber, name + " valueNumber is " + valueNumber);
-
-  // This value format depends on the localized decimal symbol.
-  var localizedValue = valueFieldNumber.replace(/\./, nb.decimalSymbol);
-  SimpleTest.is(nb.inputField.value, localizedValue,
-      name + " inputField value is '" + localizedValue + "'");
+  SimpleTest.is(nb.inputField.value, valueFieldNumber,
+      name + " inputField value is '" + valueFieldNumber + "'");
 }
 
 function testValsMinMax(nb, name, valueNumber, min, max, valueFieldNumber) {
@@ -269,22 +202,8 @@ function testValsMinMax(nb, name, valueNumber, min, max, valueFieldNumber) {
   SimpleTest.is(nb.max, max, name + " max is " + max);
 }
 
-function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max)
-{
+function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max) {
   testid += " ";
-
-  nb.value = max;
-  nb.decrease();
-  testVals(nb, testid + "decrease method", max - increment,
-           (max - increment).toFixed(fixedCount));
-  nb.increase();
-  testVals(nb, testid + "increase method", max, max.toFixed(fixedCount));
-  nb.value = min;
-  nb.decrease();
-  testVals(nb, testid + "decrease method at min", min, min.toFixed(fixedCount));
-  nb.value = max;
-  nb.increase();
-  testVals(nb, testid + "increase method at max", max, max.toFixed(fixedCount));
 
   nb.focus();
   nb.value = min;
