@@ -2365,46 +2365,6 @@ nsNavBookmarks::GetFolderIdForItem(int64_t aItemId, int64_t* _parentId)
   return NS_OK;
 }
 
-
-nsresult
-nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
-                                           nsTArray<int64_t>& aResult)
-{
-  NS_ENSURE_ARG(aURI);
-
-  // Double ordering covers possible lastModified ties, that could happen when
-  // importing, syncing or due to extensions.
-  // Note: not using a JOIN is cheaper in this case.
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "/* do not warn (bug 1175249) */ "
-    "SELECT b.id "
-    "FROM moz_bookmarks b "
-    "JOIN moz_bookmarks t on t.id = b.parent "
-    "WHERE b.fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url) AND "
-    "t.parent IS NOT :tags_root "
-    "ORDER BY b.lastModified DESC, b.id DESC "
-  );
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  int64_t tagsRootId = TagsRootId();
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), aURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_root"), tagsRootId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool more;
-  while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&more))) && more) {
-    int64_t bookmarkId;
-    rv = stmt->GetInt64(0, &bookmarkId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(aResult.AppendElement(bookmarkId), NS_ERROR_OUT_OF_MEMORY);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult
 nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
                                    nsTArray<BookmarkData>& aBookmarks)
@@ -2461,37 +2421,6 @@ nsNavBookmarks::GetBookmarksForURI(nsIURI* aURI,
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsNavBookmarks::GetBookmarkIdsForURI(nsIURI* aURI, uint32_t* aCount,
-                                     int64_t** aBookmarks)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(aCount);
-  NS_ENSURE_ARG_POINTER(aBookmarks);
-
-  *aCount = 0;
-  *aBookmarks = nullptr;
-  nsTArray<int64_t> bookmarks;
-
-  // Get the information from the DB as a TArray
-  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Copy the results into a new array for output
-  if (bookmarks.Length()) {
-    *aBookmarks =
-      static_cast<int64_t*>(moz_xmalloc(sizeof(int64_t) * bookmarks.Length()));
-    if (!*aBookmarks)
-      return NS_ERROR_OUT_OF_MEMORY;
-    for (uint32_t i = 0; i < bookmarks.Length(); i ++)
-      (*aBookmarks)[i] = bookmarks[i];
-  }
-
-  *aCount = bookmarks.Length();
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsNavBookmarks::GetItemIndex(int64_t aItemId, int32_t* _index)
