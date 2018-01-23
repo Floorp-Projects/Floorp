@@ -436,7 +436,6 @@
     <content>
       <xul:label anonid="message"/>
       <xul:progressmeter anonid="progress" class="download-progress"/>
->
       <xul:button anonid="install-remote-btn" hidden="true"
                   class="addon-control install" label="&addon.install.label;"
                   tooltiptext="&addon.install.tooltip;"
