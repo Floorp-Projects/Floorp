@@ -1903,12 +1903,8 @@ var SessionStoreInternal = {
 
     // Only restore if browser has been lazy.
     if (aTab.__SS_lazyData && !browser.__SS_restoreState && TabStateCache.get(browser)) {
-      if (TabCrashHandler.willShowCrashedTab(browser)) {
-        this.enterCrashedState(browser);
-      } else {
-        let tabState = TabState.clone(aTab);
-        this.restoreTab(aTab, tabState);
-      }
+      let tabState = TabState.clone(aTab);
+      this.restoreTab(aTab, tabState);
     }
 
     // The browser has been inserted now, so lazy data is no longer relevant.
@@ -2124,7 +2120,20 @@ var SessionStoreInternal = {
 
       if (browser.__SS_restoreState &&
           browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE) {
+        // If __SS_restoreState is still on the browser and it is
+        // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
+        // this tab yet.
+        //
+        // It's possible that this tab was recently revived, and that
+        // we've deferred showing the tab crashed page for it (if the
+        // tab crashed in the background). If so, we need to re-enter
+        // the crashed state, since we'll be showing the tab crashed
+        // page.
+        if (TabCrashHandler.willShowCrashedTab(browser)) {
+          this.enterCrashedState(browser);
+        } else {
           this.restoreTabContent(tab);
+        }
       }
     }
   },
@@ -2883,7 +2892,19 @@ var SessionStoreInternal = {
       return;
     }
 
+    // Sanity check - the browser to be revived should not be remote
+    // at this point.
+    if (browser.isRemoteBrowser) {
+      throw new Error("SessionStore.reviveCrashedTab: " +
+                      "Somehow a crashed browser is still remote.");
+    }
+
+    // We put the browser at about:blank in case the user is
+    // restoring tabs on demand. This way, the user won't see
+    // a flash of the about:tabcrashed page after selecting
+    // the revived tab.
     aTab.removeAttribute("crashed");
+    browser.loadURI("about:blank", null, null);
 
     let data = TabState.collect(aTab);
     this.restoreTab(aTab, data, {
