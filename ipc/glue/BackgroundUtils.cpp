@@ -31,6 +31,8 @@ class OptionalLoadInfoArgs;
 }
 
 using mozilla::BasePrincipal;
+using mozilla::Maybe;
+using mozilla::dom::ServiceWorkerDescriptor;
 using namespace mozilla::net;
 
 namespace ipc {
@@ -366,6 +368,12 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  OptionalIPCServiceWorkerDescriptor ipcController = mozilla::void_t();
+  const Maybe<ServiceWorkerDescriptor>& controller = aLoadInfo->GetController();
+  if (controller.isSome()) {
+    ipcController = controller.ref().ToIPC();
+  }
+
   *aOptionalLoadInfoArgs =
     LoadInfoArgs(
       loadingPrincipalInfo,
@@ -395,6 +403,7 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       redirectChain,
       ancestorPrincipals,
       aLoadInfo->AncestorOuterWindowIDs(),
+      ipcController,
       aLoadInfo->CorsUnsafeHeaders(),
       aLoadInfo->GetForcePreflight(),
       aLoadInfo->GetIsPreflight(),
@@ -474,12 +483,19 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     ancestorPrincipals.AppendElement(ancestorPrincipal.forget());
   }
 
+  Maybe<ServiceWorkerDescriptor> controller;
+  if (loadInfoArgs.controller().type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
+    controller.emplace(ServiceWorkerDescriptor(
+      loadInfoArgs.controller().get_IPCServiceWorkerDescriptor()));
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo =
     new mozilla::LoadInfo(loadingPrincipal,
                           triggeringPrincipal,
                           principalToInherit,
                           sandboxedLoadingPrincipal,
                           resultPrincipalURI,
+                          controller,
                           loadInfoArgs.securityFlags(),
                           loadInfoArgs.contentPolicyType(),
                           static_cast<LoadTainting>(loadInfoArgs.tainting()),
