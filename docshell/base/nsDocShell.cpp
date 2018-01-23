@@ -14251,7 +14251,7 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
 }
 
 NS_IMETHODIMP
-nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceRequest,
+nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, nsIChannel* aChannel,
                                       bool* aShouldIntercept)
 {
   *aShouldIntercept = false;
@@ -14260,7 +14260,7 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
   // controller value.  Any settings that would have blocked service worker
   // access should have been set before the initial navigation created the
   // window.
-  if (!aIsNonSubresourceRequest) {
+  if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
     nsCOMPtr<nsIDocument> doc = GetDocument();
     if (!doc) {
       return NS_ERROR_NOT_AVAILABLE;

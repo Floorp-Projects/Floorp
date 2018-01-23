@@ -3079,7 +3079,7 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
 
   if (controller && mLoadInfo && !BypassServiceWorker() && !internalRedirect) {
     nsresult rv = controller->ShouldPrepareForIntercept(aURI ? aURI : mURI.get(),
-                                                        nsContentUtils::IsNonSubresourceRequest(this),
+                                                        this,
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {
       return false;
