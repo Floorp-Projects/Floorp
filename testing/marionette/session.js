@@ -378,6 +378,7 @@ session.Capabilities = class extends Map {
       ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
       ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
+      ["moz:useNonSpecCompliantPointerOrigin", false],
       ["moz:webdriverClick", true],
     ]);
   }
@@ -465,14 +466,19 @@ session.Capabilities = class extends Map {
           matched.set("timeouts", timeouts);
           break;
 
-        case "moz:webdriverClick":
-          assert.boolean(v);
-          matched.set("moz:webdriverClick", v);
-          break;
-
         case "moz:accessibilityChecks":
           assert.boolean(v);
           matched.set("moz:accessibilityChecks", v);
+          break;
+
+        case "moz:useNonSpecCompliantPointerOrigin":
+          assert.boolean(v);
+          matched.set("moz:useNonSpecCompliantPointerOrigin", v);
+          break;
+
+        case "moz:webdriverClick":
+          assert.boolean(v);
+          matched.set("moz:webdriverClick", v);
           break;
       }
     }
