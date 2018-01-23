@@ -2,7 +2,7 @@
 //
 //   A fuzzing function to test FreeType with libFuzzer.
 //
-// Copyright 2015-2017 by
+// Copyright 2015-2018 by
 // David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 // This file is part of the FreeType project, and may only be used,
@@ -43,8 +43,7 @@
 #include FT_OUTLINE_H
 #include FT_BBOX_H
 #include FT_MODULE_H
-#include FT_CFF_DRIVER_H
-#include FT_TRUETYPE_DRIVER_H
+#include FT_DRIVER_H
 #include FT_MULTIPLE_MASTERS_H
 
 
@@ -61,7 +60,7 @@
         return;
 
       // try to activate Adobe's CFF engine; it might not be the default
-      unsigned int  cff_hinting_engine = FT_CFF_HINTING_ADOBE;
+      unsigned int  cff_hinting_engine = FT_HINTING_ADOBE;
       FT_Property_Set( library,
                        "cff",
                        "hinting-engine", &cff_hinting_engine );

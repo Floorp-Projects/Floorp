@@ -1,0 +1,18 @@
+{
+  "policies": {
+    "block_about_config": true,
+    "dont_check_default_browser": true,
+
+    "flash_plugin": {
+      "allow": [
+        "https://www.example.com"
+      ],
+
+      "block": [
+        "https://www.example.org"
+      ]
+    },
+
+    "block_about_profiles": true
+  }
+}

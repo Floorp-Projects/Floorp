@@ -601,6 +601,14 @@ public:
                                                   nullptr);
     }
 
+    // But starting a process can failure for any number of reasons. Reject the
+    // promise if we could not.
+    if (!targetProcess) {
+      mPromise->Reject(NS_ERROR_ABORT, __func__);
+      mPromise = nullptr;
+      return NS_OK;
+    }
+
     ClientOpenWindowOpParent* actor =
       new ClientOpenWindowOpParent(mArgs, mPromise);
 

@@ -41,7 +41,7 @@ DrawEventRecorderPRFileDesc::IsOpen()
 void
 DrawEventRecorderPRFileDesc::OpenFD(PRFileDesc* aFd)
 {
-  MOZ_ASSERT(!IsOpen());
+  MOZ_DIAGNOSTIC_ASSERT(!IsOpen());
 
   mOutputStream.OpenFD(aFd);
   WriteHeader(mOutputStream);
@@ -50,7 +50,7 @@ DrawEventRecorderPRFileDesc::OpenFD(PRFileDesc* aFd)
 void
 DrawEventRecorderPRFileDesc::Close()
 {
-  MOZ_ASSERT(IsOpen());
+  MOZ_DIAGNOSTIC_ASSERT(IsOpen());
 
   mOutputStream.Close();
 }

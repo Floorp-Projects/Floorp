@@ -50,7 +50,7 @@ public:
     return nullptr;
   }
 
-  void GetAppCodeName(nsString& aAppCodeName) const
+  void GetAppCodeName(nsString& aAppCodeName, ErrorResult& /* unused */) const
   {
     aAppCodeName.AssignLiteral("Mozilla");
   }

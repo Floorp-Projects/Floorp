@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    VMS-specific configuration file (specification only).                */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2018 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,6 +32,7 @@
   /* the library.                                                          */
   /*                                                                       */
   /*************************************************************************/
+
 
 #ifndef FTCONFIG_H_
 #define FTCONFIG_H_
@@ -209,12 +210,12 @@ FT_BEGIN_HEADER
 
 #endif
 
-#if FT_SIZEOF_INT == (32 / FT_CHAR_BIT)
+#if FT_SIZEOF_INT == 4
 
   typedef signed int      FT_Int32;
   typedef unsigned int    FT_UInt32;
 
-#elif FT_SIZEOF_LONG == (32 / FT_CHAR_BIT)
+#elif FT_SIZEOF_LONG == 4
 
   typedef signed long     FT_Int32;
   typedef unsigned long   FT_UInt32;
@@ -225,12 +226,12 @@ FT_BEGIN_HEADER
 
 
   /* look up an integer type that is at least 32 bits */
-#if FT_SIZEOF_INT >= (32 / FT_CHAR_BIT)
+#if FT_SIZEOF_INT >= 4
 
   typedef int            FT_Fast;
   typedef unsigned int   FT_UFast;
 
-#elif FT_SIZEOF_LONG >= (32 / FT_CHAR_BIT)
+#elif FT_SIZEOF_LONG >= 4
 
   typedef long           FT_Fast;
   typedef unsigned long  FT_UFast;
@@ -238,14 +239,24 @@ FT_BEGIN_HEADER
 #endif
 
 
-  /* determine whether we have a 64-bit int type for platforms without */
-  /* Autoconf                                                          */
-#if FT_SIZEOF_LONG == (64 / FT_CHAR_BIT)
+  /* determine whether we have a 64-bit int type  */
+  /* (mostly for environments without `autoconf') */
+#if FT_SIZEOF_LONG == 8
 
   /* FT_LONG64 must be defined if a 64-bit type is available */
 #define FT_LONG64
 #define FT_INT64   long
 #define FT_UINT64  unsigned long
+
+  /* we handle the LLP64 scheme separately for GCC and clang, */
+  /* suppressing the `long long' warning                      */
+#elif ( FT_SIZEOF_LONG == 4 )       && \
+      defined( HAVE_LONG_LONG_INT ) && \
+      defined( __GNUC__ )
+#pragma GCC diagnostic ignored "-Wlong-long"
+#define FT_LONG64
+#define FT_INT64   long long int
+#define FT_UINT64  unsigned long long int
 
   /*************************************************************************/
   /*                                                                       */
@@ -298,7 +309,7 @@ FT_BEGIN_HEADER
 
 #endif /* __STDC_VERSION__ >= 199901L */
 
-#endif /* FT_SIZEOF_LONG == (64 / FT_CHAR_BIT) */
+#endif /* FT_SIZEOF_LONG == 8 */
 
 #ifdef FT_LONG64
   typedef FT_INT64   FT_Int64;
@@ -338,6 +349,14 @@ FT_BEGIN_HEADER
 #endif
 
 
+  /* Use FT_LOCAL and FT_LOCAL_DEF to declare and define, respectively, */
+  /* a function that gets used only within the scope of a module.       */
+  /* Normally, both the header and source code files for such a         */
+  /* function are within a single module directory.                     */
+  /*                                                                    */
+  /* Intra-module arrays should be tagged with FT_LOCAL_ARRAY and       */
+  /* FT_LOCAL_ARRAY_DEF.                                                */
+  /*                                                                    */
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT
 
 #define FT_LOCAL( x )      static  x
@@ -359,6 +378,12 @@ FT_BEGIN_HEADER
 #define FT_LOCAL_ARRAY_DEF( x )  const  x
 
 
+  /* Use FT_BASE and FT_BASE_DEF to declare and define, respectively, */
+  /* functions that are used in more than a single module.  In the    */
+  /* current setup this implies that the declaration is in a header   */
+  /* file in the `include/freetype/internal' directory, and the       */
+  /* function body is in a file in `src/base'.                        */
+  /*                                                                  */
 #ifndef FT_BASE
 
 #ifdef __cplusplus
@@ -381,6 +406,37 @@ FT_BEGIN_HEADER
 #endif /* !FT_BASE_DEF */
 
 
+  /*   When compiling FreeType as a DLL, some systems/compilers need a     */
+  /*   special attribute in front OR after the return type of function     */
+  /*   declarations.                                                       */
+  /*                                                                       */
+  /*   Two macros are used within the FreeType source code to define       */
+  /*   exported library functions: FT_EXPORT and FT_EXPORT_DEF.            */
+  /*                                                                       */
+  /*     FT_EXPORT( return_type )                                          */
+  /*                                                                       */
+  /*       is used in a function declaration, as in                        */
+  /*                                                                       */
+  /*         FT_EXPORT( FT_Error )                                         */
+  /*         FT_Init_FreeType( FT_Library*  alibrary );                    */
+  /*                                                                       */
+  /*                                                                       */
+  /*     FT_EXPORT_DEF( return_type )                                      */
+  /*                                                                       */
+  /*       is used in a function definition, as in                         */
+  /*                                                                       */
+  /*         FT_EXPORT_DEF( FT_Error )                                     */
+  /*         FT_Init_FreeType( FT_Library*  alibrary )                     */
+  /*         {                                                             */
+  /*           ... some code ...                                           */
+  /*           return FT_Err_Ok;                                           */
+  /*         }                                                             */
+  /*                                                                       */
+  /*   You can provide your own implementation of FT_EXPORT and            */
+  /*   FT_EXPORT_DEF here if you want.                                     */
+  /*                                                                       */
+  /*   To export a variable, use FT_EXPORT_VAR.                            */
+  /*                                                                       */
 #ifndef FT_EXPORT
 
 #ifdef __cplusplus
@@ -424,7 +480,13 @@ FT_BEGIN_HEADER
   /* functions which are accessed by (global) function pointers.     */
   /*                                                                 */
   /*                                                                 */
-  /* FT_CALLBACK_DEF is used to _define_ a callback function.        */
+  /* FT_CALLBACK_DEF is used to _define_ a callback function,        */
+  /* located in the same source code file as the structure that uses */
+  /* it.                                                             */
+  /*                                                                 */
+  /* FT_BASE_CALLBACK and FT_BASE_CALLBACK_DEF are used to declare   */
+  /* and define a callback function, respectively, in a similar way  */
+  /* as FT_BASE and FT_BASE_DEF work.                                */
   /*                                                                 */
   /* FT_CALLBACK_TABLE is used to _declare_ a constant variable that */
   /* contains pointers to callback functions.                        */
@@ -443,6 +505,16 @@ FT_BEGIN_HEADER
 #define FT_CALLBACK_DEF( x )  static  x
 #endif
 #endif /* FT_CALLBACK_DEF */
+
+#ifndef FT_BASE_CALLBACK
+#ifdef __cplusplus
+#define FT_BASE_CALLBACK( x )      extern "C"  x
+#define FT_BASE_CALLBACK_DEF( x )  extern "C"  x
+#else
+#define FT_BASE_CALLBACK( x )      extern  x
+#define FT_BASE_CALLBACK_DEF( x )  x
+#endif
+#endif /* FT_BASE_CALLBACK */
 
 #ifndef FT_CALLBACK_TABLE
 #ifdef __cplusplus

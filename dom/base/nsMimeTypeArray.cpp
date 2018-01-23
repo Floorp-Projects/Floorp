@@ -8,12 +8,11 @@
 
 #include "mozilla/dom/MimeTypeArrayBinding.h"
 #include "mozilla/dom/MimeTypeBinding.h"
-#include "nsIDOMNavigator.h"
 #include "nsPIDOMWindow.h"
 #include "nsPluginArray.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
-#include "Navigator.h"
+#include "mozilla/dom/Navigator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsPluginTags.h"
@@ -173,15 +172,10 @@ nsMimeTypeArray::EnsurePluginMimeTypes()
     return;
   }
 
-  nsCOMPtr<nsIDOMNavigator> navigator = mWindow->GetNavigator();
+  RefPtr<Navigator> navigator = mWindow->Navigator();
 
-  if (!navigator) {
-    return;
-  }
-
-  ErrorResult rv;
-  nsPluginArray *pluginArray =
-    static_cast<Navigator*>(navigator.get())->GetPlugins(rv);
+  IgnoredErrorResult rv;
+  nsPluginArray *pluginArray = navigator->GetPlugins(rv);
   if (!pluginArray) {
     return;
   }

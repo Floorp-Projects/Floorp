@@ -612,7 +612,7 @@
 
 	* src/base/ftobjs.c (ft_recompute_scaled_metrics): Re-enable
 	conservative rounding of metrics to avoid breaking clients like
-	Pango (see http://bugzilla.gnome.org/show_bug.cgi?id=327852).
+	Pango (see https://bugzilla.gnome.org/show_bug.cgi?id=327852).
 
 2006-02-25  Werner Lemberg  <wl@gnu.org>
 
@@ -2318,7 +2318,7 @@
 
 	Further information on the SING Glyphlet format can be found at:
 
-	  http://www.adobe.com/products/indesign/sing_gaiji.html
+	  https://www.adobe.com/content/dam/acom/en/devnet/font/pdfs/5148.SING_Tutorial.pdf
 
 	* include/freetype/tttags.h (TTAG_SING, TTAG_META): New macros for
 	the OpenType tables `SING' and `META'.  These two tables are used in
@@ -2821,7 +2821,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2005-2017 by
+Copyright 2005-2018 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

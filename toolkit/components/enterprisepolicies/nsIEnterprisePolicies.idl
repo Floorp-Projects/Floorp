@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(6a568972-cc91-4bf5-963e-3768f3319b8a)]
+interface nsIEnterprisePolicies : nsISupports
+{
+  const unsigned short UNINITIALIZED = 0;
+  const unsigned short INACTIVE      = 1;
+  const unsigned short ACTIVE        = 2;
+  const unsigned short FAILED        = 3;
+
+  readonly attribute short status;
+
+  bool isAllowed(in ACString feature);
+};

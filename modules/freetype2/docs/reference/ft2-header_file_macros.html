@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,37 +100,35 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="header_file_macros">Header File Macros</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_LZW_H">FT_LZW_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
-<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
-<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
-<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
-<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a></td></tr>
-<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a></td></tr>
-<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_BDF_H">FT_BDF_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_CID_H">FT_CID_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_GZIP_H">FT_GZIP_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_LZW_H">FT_LZW_H</a></td></tr>
+<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
+<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
+<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
+<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
+<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
+<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
 <tr><td><a href="#FT_LIST_H">FT_LIST_H</a></td><td><a href="#FT_MAC_H">FT_MAC_H</a></td></tr>
 <tr><td><a href="#FT_OUTLINE_H">FT_OUTLINE_H</a></td><td><a href="#FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</a></td></tr>
 <tr><td><a href="#FT_SIZES_H">FT_SIZES_H</a></td><td><a href="#FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</a></td></tr>
 <tr><td><a href="#FT_MODULE_H">FT_MODULE_H</a></td><td><a href="#FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</a></td></tr>
 <tr><td><a href="#FT_RENDER_H">FT_RENDER_H</a></td><td><a href="#FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</a></td></tr>
-<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
-<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
-<tr><td><a href="#FT_PCF_DRIVER_H">FT_PCF_DRIVER_H</a></td><td><a href="#FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</a></td></tr>
-<tr><td><a href="#FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</a></td><td><a href="#FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</a></td><td><a href="#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</a></td><td><a href="#FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_TAGS_H">FT_TRUETYPE_TAGS_H</a></td><td><a href="#FT_INCREMENTAL_H">FT_INCREMENTAL_H</a></td></tr>
-<tr><td><a href="#FT_BDF_H">FT_BDF_H</a></td><td><a href="#FT_GASP_H">FT_GASP_H</a></td></tr>
-<tr><td><a href="#FT_CID_H">FT_CID_H</a></td><td><a href="#FT_ADVANCES_H">FT_ADVANCES_H</a></td></tr>
-<tr><td><a href="#FT_GZIP_H">FT_GZIP_H</a></td><td><a href="#':'">':'</a></td></tr>
+<tr><td><a href="#FT_DRIVER_H">FT_DRIVER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
+<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
+<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</a></td></tr>
+<tr><td><a href="#FT_PCF_DRIVER_H">FT_PCF_DRIVER_H</a></td><td><a href="#FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</a></td></tr>
+<tr><td><a href="#FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</a></td><td><a href="#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</a></td><td><a href="#FT_INCREMENTAL_H">FT_INCREMENTAL_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</a></td><td><a href="#FT_GASP_H">FT_GASP_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_TAGS_H">FT_TRUETYPE_TAGS_H</a></td><td><a href="#FT_ADVANCES_H">FT_ADVANCES_H</a></td></tr>
 </table>
 
 
@@ -322,12 +320,24 @@
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
+<h3 id="FT_DRIVER_H">FT_DRIVER_H</h3>
+<pre>
+#define <b>FT_DRIVER_H</b>  &lt;freetype/ftdriver.h&gt;
+</pre>
+
+<p>A macro used in #include statements to name the file containing structures and macros related to the driver modules.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
 <h3 id="FT_AUTOHINTER_H">FT_AUTOHINTER_H</h3>
 <pre>
-#define <b>FT_AUTOHINTER_H</b>  &lt;freetype/ftautoh.h&gt;
+#define <b>FT_AUTOHINTER_H</b>  <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a>
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the auto-hinting module.</p>
+<p>Deprecated since version 2.9; use <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a> instead.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -335,10 +345,11 @@
 <div class="section">
 <h3 id="FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</h3>
 <pre>
-#define <b>FT_CFF_DRIVER_H</b>  &lt;freetype/ftcffdrv.h&gt;
+#define <b>FT_CFF_DRIVER_H</b>  <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a>
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the CFF driver module.</p>
+<p>Deprecated since version 2.9; use <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a> instead.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -346,10 +357,11 @@
 <div class="section">
 <h3 id="FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</h3>
 <pre>
-#define <b>FT_TRUETYPE_DRIVER_H</b>  &lt;freetype/ftttdrv.h&gt;
+#define <b>FT_TRUETYPE_DRIVER_H</b>  <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a>
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the TrueType driver module.</p>
+<p>Deprecated since version 2.9; use <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a> instead.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -357,10 +369,11 @@
 <div class="section">
 <h3 id="FT_PCF_DRIVER_H">FT_PCF_DRIVER_H</h3>
 <pre>
-#define <b>FT_PCF_DRIVER_H</b>  &lt;freetype/ftpcfdrv.h&gt;
+#define <b>FT_PCF_DRIVER_H</b>  <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a>
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the PCF driver module.</p>
+<p>Deprecated since version 2.9; use <a href="ft2-header_file_macros.html#FT_DRIVER_H">FT_DRIVER_H</a> instead.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -520,44 +533,6 @@
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
-<h3 id="FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</h3>
-<pre>
-#define <b>FT_CACHE_IMAGE_H</b>  <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a>
-</pre>
-
-<p>A macro used in #include statements to name the file containing the &lsquo;glyph image&rsquo; API of the FreeType&nbsp;2 cache sub-system.</p>
-<p>It is used to define a cache for <a href="ft2-glyph_management.html#FT_Glyph">FT_Glyph</a> elements. You can also use the API defined in <a href="ft2-header_file_macros.html#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a> if you only need to store small glyph bitmaps, as it will use less memory.</p>
-<p>This macro is deprecated. Simply include <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a> to have all glyph image-related cache declarations.</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
-<h3 id="FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</h3>
-<pre>
-#define <b>FT_CACHE_SMALL_BITMAPS_H</b>  <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a>
-</pre>
-
-<p>A macro used in #include statements to name the file containing the &lsquo;small bitmaps&rsquo; API of the FreeType&nbsp;2 cache sub-system.</p>
-<p>It is used to define a cache for small glyph bitmaps in a relatively memory-efficient way. You can also use the API defined in <a href="ft2-header_file_macros.html#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a> if you want to cache arbitrary glyph images, including scalable outlines.</p>
-<p>This macro is deprecated. Simply include <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a> to have all small bitmaps-related cache declarations.</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
-<h3 id="FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</h3>
-<pre>
-#define <b>FT_CACHE_CHARMAP_H</b>  <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a>
-</pre>
-
-<p>A macro used in #include statements to name the file containing the &lsquo;charmap&rsquo; API of the FreeType&nbsp;2 cache sub-system.</p>
-<p>This macro is deprecated. Simply include <a href="ft2-header_file_macros.html#FT_CACHE_H">FT_CACHE_H</a> to have all charmap-based cache declarations.</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
 <h3 id="FT_MAC_H">FT_MAC_H</h3>
 <pre>
 #define <b>FT_MAC_H</b>  &lt;freetype/ftmac.h&gt;
@@ -683,17 +658,6 @@
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
-<h3 id="FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</h3>
-<pre>
-#define <b>FT_UNPATENTED_HINTING_H</b>  &lt;freetype/ttunpat.h&gt;
-</pre>
-
-<p>Deprecated.</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
 <h3 id="FT_INCREMENTAL_H">FT_INCREMENTAL_H</h3>
 <pre>
 #define <b>FT_INCREMENTAL_H</b>  &lt;freetype/ftincrem.h&gt;
@@ -722,26 +686,6 @@
 </pre>
 
 <p>A macro used in #include statements to name the file containing the FreeType&nbsp;2 API which returns individual and ranged glyph advances.</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
-
-<div class="section">
-<h3 id="':'">':'</h3>
-<p>Defined in FT_CONFIG_OPTIONS_H (freetype/config/ftoption.h).</p>
-<pre>
-#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
-</pre>
-<h4>property-name1</h4>
-<p>'=' &lt;property-value1&gt;</p>
-
-<h4>module-name2</h4>
-<p>':'</p>
-
-<h4>property-name2</h4>
-<p>'=' &lt;property-value2&gt; ...</p>
-<p>Example:</p>
-<p>FREETYPE_PROPERTIES=truetype:interpreter-version=35 \ cff:no-stem-darkening=1 \ autofitter:warping=1</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
