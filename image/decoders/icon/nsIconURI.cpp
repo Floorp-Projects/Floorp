@@ -597,13 +597,6 @@ nsMozIconURI::GetIconURL(nsIURL** aFileUrl)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetIconURL(nsIURL* aFileUrl)
-{
-  // this isn't called anywhere, needs to go through SetSpec parsing
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsMozIconURI::GetImageSize(uint32_t* aImageSize)
               // measured by # of pixels in a row. defaults to 16.
 {
@@ -612,24 +605,9 @@ nsMozIconURI::GetImageSize(uint32_t* aImageSize)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetImageSize(uint32_t aImageSize)
-              // measured by # of pixels in a row. defaults to 16.
-{
-  mSize = aImageSize;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMozIconURI::GetContentType(nsACString& aContentType)
 {
   aContentType = mContentType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMozIconURI::SetContentType(const nsACString& aContentType)
-{
-  mContentType = aContentType;
   return NS_OK;
 }
 
