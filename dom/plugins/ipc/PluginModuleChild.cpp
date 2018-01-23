@@ -2375,7 +2375,7 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
 
     PluginInstanceChild* instance = PluginScriptableObjectChild::GetInstanceForNPObject(aNPObj);
     if (!instance) {
-        NS_ERROR("Releasing object not in mObjectMap?");
+        // The PluginInstanceChild was destroyed
         return;
     }
 
