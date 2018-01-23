@@ -7,7 +7,6 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const PTV_interfaces = [Ci.nsITreeView,
                         Ci.nsINavHistoryResultObserver,
-                        Ci.nsINavHistoryResultTreeViewer,
                         Ci.nsISupportsWeakReference];
 
 /**
@@ -1193,20 +1192,36 @@ PlacesTreeView.prototype = {
     return val;
   },
 
-  nodeForTreeIndex: function PTV_nodeForTreeIndex(aIndex) {
+  /**
+   * This allows you to get at the real node for a given row index. This is
+   * only valid when a tree is attached.
+   *
+   * @param {Integer} aIndex The index for the node to get.
+   * @return {Ci.nsINavHistoryResultNode} The node.
+   * @throws Cr.NS_ERROR_INVALID_ARG if the index is greater than the number of
+   *                                 rows.
+   */
+  nodeForTreeIndex(aIndex) {
     if (aIndex > this._rows.length)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     return this._getNodeForRow(aIndex);
   },
 
-  treeIndexForNode: function PTV_treeNodeForIndex(aNode) {
+  /**
+   * Reverse of nodeForTreeIndex, returns the row index for a given result node.
+   * The node should be part of the tree.
+   *
+   * @param {Ci.nsINavHistoryResultNode} aNode The node to look for in the tree.
+   * @returns {Integer} The found index, or -1 if the item is not visible or not found.
+   */
+  treeIndexForNode(aNode) {
     // The API allows passing invisible nodes.
     try {
       return this._getRowForNode(aNode, true);
     } catch (ex) { }
 
-    return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
+    return -1;
   },
 
   // nsITreeView
@@ -1304,26 +1319,21 @@ PlacesTreeView.prototype = {
   isContainer: function PTV_isContainer(aRow) {
     // Only leaf nodes aren't listed in the rows array.
     let node = this._rows[aRow];
-    if (node === undefined)
+    if (node === undefined || !PlacesUtils.nodeIsContainer(node))
       return false;
 
-    if (PlacesUtils.nodeIsContainer(node)) {
-      // Flat-lists may ignore expandQueries and other query options when
-      // they are asked to open a container.
-      if (this._flatList)
-        return true;
-
-      // treat non-expandable childless queries as non-containers
-      if (PlacesUtils.nodeIsQuery(node)) {
-        let parent = node.parent;
-        if ((PlacesUtils.nodeIsQuery(parent) ||
-             PlacesUtils.nodeIsFolder(parent)) &&
-            !PlacesUtils.asQuery(node).hasChildren)
-          return PlacesUtils.asQuery(parent).queryOptions.expandQueries;
-      }
+    // Flat-lists may ignore expandQueries and other query options when
+    // they are asked to open a container.
+    if (this._flatList)
       return true;
+
+    // Treat non-expandable childless queries as non-containers, unless they
+    // are tags.
+    if (PlacesUtils.nodeIsQuery(node) && !PlacesUtils.nodeIsTagQuery(node)) {
+      PlacesUtils.asQuery(node);
+      return node.queryOptions.expandQueries || node.hasChildren;
     }
-    return false;
+    return true;
   },
 
   isContainerOpen: function PTV_isContainerOpen(aRow) {

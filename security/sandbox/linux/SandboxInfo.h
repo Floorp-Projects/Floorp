@@ -40,8 +40,7 @@ public:
     kHasPrivilegedUserNamespaces = 1 << 6,
     // Env var MOZ_PERMISSIVE_CONTENT_SANDBOX
     kPermissive        = 1 << 7,
-    // Something is creating threads when we need to still be single-threaded.
-    kUnexpectedThreads = 1 << 8,
+    // (1 << 8) was kUnexpectedThreads
   };
 
   bool Test(Flags aFlag) const { return (mFlags & aFlag) == aFlag; }
@@ -63,17 +62,9 @@ public:
     return mFlags;
   }
 
-  // For bug 1222500 or anything else like it: On desktop, this is
-  // called in the parent process at a point when it should still be
-  // single-threaded, to check that the SandboxEarlyInit() call in a
-  // child process is early enough to be single-threaded.  If not,
-  // kUnexpectedThreads is set and affected flags (user namespaces;
-  // possibly others in the future) are cleared.
-  static MOZ_EXPORT void ThreadingCheck();
 private:
   enum Flags mFlags;
-  // This should be const, but has to allow for ThreadingCheck.
-  static MOZ_EXPORT SandboxInfo sSingleton;
+  static const MOZ_EXPORT SandboxInfo sSingleton;
   SandboxInfo();
 };
 

@@ -4338,35 +4338,30 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
 }
 
 void
-PresShell::DocumentStatesChanged(nsIDocument* aDocument,
-                                 EventStates aStateMask)
+PresShell::DocumentStatesChanged(nsIDocument* aDocument, EventStates aStateMask)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  MOZ_ASSERT(!aStateMask.IsEmpty());
 
   if (mDidInitialize) {
-    Element* rootElement = aDocument->GetRootElement();
-    bool needRestyle = false;
     if (mStyleSet->IsServo()) {
-      needRestyle = rootElement &&
-        (mStyleSet->AsServo()->HasDocumentStateDependency(aStateMask) ||
-         aDocument->BindingManager()->
-           AnyBindingHasDocumentStateDependency(aStateMask));
-    } else {
-      needRestyle = mStyleSet->AsGecko()->
-        HasDocumentStateDependentStyle(rootElement, aStateMask);
-    }
-    if (needRestyle) {
-      mPresContext->RestyleManager()->PostRestyleEvent(rootElement,
-                                                       eRestyle_Subtree,
-                                                       nsChangeHint(0));
-      VERIFY_STYLE_TREE;
+      mStyleSet->AsServo()->InvalidateStyleForDocumentStateChanges(aStateMask);
+    } else if (Element* rootElement = aDocument->GetRootElement()) {
+      const bool needRestyle =
+        mStyleSet->AsGecko()->HasDocumentStateDependentStyle(
+          rootElement, aStateMask);
+      if (needRestyle) {
+        mPresContext->RestyleManager()->PostRestyleEvent(rootElement,
+                                                         eRestyle_Subtree,
+                                                         nsChangeHint(0));
+        VERIFY_STYLE_TREE;
+      }
     }
   }
 
   if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    nsIFrame* root = mFrameConstructor->GetRootFrame();
-    if (root) {
+    if (nsIFrame* root = mFrameConstructor->GetRootFrame()) {
       root->SchedulePaint();
     }
   }

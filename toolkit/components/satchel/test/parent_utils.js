@@ -23,8 +23,10 @@ var ParentUtils = {
     return entries;
   },
 
-  cleanUpFormHist() {
-    FormHistory.update({ op: "remove" });
+  cleanUpFormHist(callback) {
+    FormHistory.update({ op: "remove" }, {
+      handleCompletion: callback,
+    });
   },
 
   updateFormHistory(changes) {
@@ -116,7 +118,9 @@ var ParentUtils = {
 
   cleanup() {
     gAutocompletePopup.removeEventListener("popupshown", this._popupshownListener);
-    this.cleanUpFormHist();
+    this.cleanUpFormHist(() => {
+      sendAsyncMessage("cleanup-done");
+    });
   },
 };
 

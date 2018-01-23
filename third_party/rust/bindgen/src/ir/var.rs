@@ -127,7 +127,7 @@ impl ClangSubItemParser for Var {
                     visitor.parsed_macro(&cursor.spelling());
                 }
 
-                let value = parse_macro(ctx, &cursor, ctx.translation_unit());
+                let value = parse_macro(ctx, &cursor);
 
                 let (id, value) = match value {
                     Some(v) => v,
@@ -294,11 +294,10 @@ impl ClangSubItemParser for Var {
 fn parse_macro(
     ctx: &BindgenContext,
     cursor: &clang::Cursor,
-    unit: &clang::TranslationUnit,
 ) -> Option<(Vec<u8>, cexpr::expr::EvalResult)> {
     use cexpr::{expr, nom};
 
-    let mut cexpr_tokens = match unit.cexpr_tokens(cursor) {
+    let mut cexpr_tokens = match cursor.cexpr_tokens() {
         None => return None,
         Some(tokens) => tokens,
     };
@@ -328,14 +327,11 @@ fn parse_macro(
     }
 }
 
-fn parse_int_literal_tokens(
-    cursor: &clang::Cursor,
-    unit: &clang::TranslationUnit,
-) -> Option<i64> {
+fn parse_int_literal_tokens(cursor: &clang::Cursor) -> Option<i64> {
     use cexpr::{expr, nom};
     use cexpr::expr::EvalResult;
 
-    let cexpr_tokens = match unit.cexpr_tokens(cursor) {
+    let cexpr_tokens = match cursor.cexpr_tokens() {
         None => return None,
         Some(tokens) => tokens,
     };
@@ -357,7 +353,7 @@ fn get_integer_literal_from_cursor(
         match c.kind() {
             CXCursor_IntegerLiteral |
             CXCursor_UnaryOperator => {
-                value = parse_int_literal_tokens(&c, unit);
+                value = parse_int_literal_tokens(&c);
             }
             CXCursor_UnexposedExpr => {
                 value = get_integer_literal_from_cursor(&c, unit);

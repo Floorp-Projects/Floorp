@@ -45,7 +45,6 @@
     "functions": [
       {
         "name": "getHAR",
-        "unsupported": true,
         "type": "function",
         "description": "Returns HAR log that contains all known network requests.",
         "async": "callback",

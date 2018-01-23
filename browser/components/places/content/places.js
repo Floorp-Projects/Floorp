@@ -240,22 +240,15 @@ var PlacesOrganizer = {
     if (!this._places.hasSelection)
       return;
 
-    var node = this._places.selectedNode;
-    var queries = PlacesUtils.asQuery(node).getQueries();
-
-    // Items are only excluded on the left pane.
-    var options = node.queryOptions.clone();
-    options.excludeItems = false;
-    var placeURI = PlacesUtils.history.queriesToQueryString(queries,
-                                                            queries.length,
-                                                            options);
+    let node = this._places.selectedNode;
+    let placeURI = node.uri;
 
     // If either the place of the content tree in the right pane has changed or
     // the user cleared the search box, update the place, hide the search UI,
     // and update the back/forward buttons by setting location.
     if (ContentArea.currentPlace != placeURI || !resetSearchBox) {
       ContentArea.currentPlace = placeURI;
-      this.location = node.uri;
+      this.location = placeURI;
     }
 
     // When we invalidate a container we use suppressSelectionEvent, when it is
@@ -264,9 +257,9 @@ var PlacesOrganizer = {
     // that we cannot return any earlier than this point, because when
     // !resetSearchBox, we need to update location and hide the UI as above,
     // even though the selection has not changed.
-    if (node.uri == this._cachedLeftPaneSelectedURI)
+    if (placeURI == this._cachedLeftPaneSelectedURI)
       return;
-    this._cachedLeftPaneSelectedURI = node.uri;
+    this._cachedLeftPaneSelectedURI = placeURI;
 
     // At this point, resetSearchBox is true, because the left pane selection
     // has changed; otherwise we would have returned earlier.
