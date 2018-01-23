@@ -51,7 +51,7 @@ function parseOptions(opts) {
   }
 
   // Parse tools.
-  let allTools = ["clang-format", "scan-build", "hacl"];
+  let allTools = ["clang-format", "scan-build", "hacl", "saw"];
   let tools = intersect(opts.tools.split(/\s*,\s*/), allTools);
 
   // If the given value is "all" run all tools.
@@ -77,7 +77,8 @@ function filter(opts) {
     // are not affected by platform or build type selectors.
     if (task.platform == "nss-tools") {
       return opts.tools.some(tool => {
-        return task.symbol.toLowerCase().startsWith(tool);
+        return task.symbol.toLowerCase().startsWith(tool) ||
+               (task.group && task.group.toLowerCase().startsWith(tool));
       });
     }
 

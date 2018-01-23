@@ -37,6 +37,8 @@ NSS build tool options:
     --msan           do an msan build
     --sancov         do sanitize coverage builds
                      --sancov=func sets coverage to function level for example
+    --emit-llvm      emit LLVM bitcode while building
+                     (requires the gold linker, use clang-3.8 for SAW)
     --disable-tests  don't build tests and corresponding cmdline utils
     --system-sqlite  use system sqlite
     --no-zdefs       don't set -Wl,-z,defs

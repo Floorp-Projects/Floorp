@@ -55,7 +55,7 @@ class TlsConnectTestBase : public ::testing::Test {
   // Clear the server session cache.
   void ClearServerCache();
   // Make sure TLS is configured for a connection.
-  void EnsureTlsSetup();
+  virtual void EnsureTlsSetup();
   // Reset and keep the same certificate names
   void Reset();
   // Reset, and update the certificate names on both peers
@@ -206,6 +206,50 @@ class TlsConnectGeneric : public TlsConnectTestBase,
                               std::tuple<SSLProtocolVariant, uint16_t>> {
  public:
   TlsConnectGeneric();
+};
+
+class TlsConnectGenericResumption
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<
+          std::tuple<SSLProtocolVariant, uint16_t, bool>> {
+ private:
+  bool external_cache_;
+
+ public:
+  TlsConnectGenericResumption();
+
+  virtual void EnsureTlsSetup() {
+    TlsConnectTestBase::EnsureTlsSetup();
+    // Enable external resumption token cache.
+    if (external_cache_) {
+      client_->SetResumptionTokenCallback();
+    }
+  }
+};
+
+class TlsConnectTls13ResumptionToken
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<SSLProtocolVariant> {
+ public:
+  TlsConnectTls13ResumptionToken();
+
+  virtual void EnsureTlsSetup() {
+    TlsConnectTestBase::EnsureTlsSetup();
+    client_->SetResumptionTokenCallback();
+  }
+};
+
+class TlsConnectGenericResumptionToken
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<
+          std::tuple<SSLProtocolVariant, uint16_t>> {
+ public:
+  TlsConnectGenericResumptionToken();
+
+  virtual void EnsureTlsSetup() {
+    TlsConnectTestBase::EnsureTlsSetup();
+    client_->SetResumptionTokenCallback();
+  }
 };
 
 // A Pre TLS 1.2 generic test.

@@ -69,7 +69,7 @@ TEST_P(TlsConnectGeneric, ConnectEcdheP384Client) {
   server_->ConfigNamedGroups(groups);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 // This causes a HelloRetryRequest in TLS 1.3.  Earlier versions don't care.
@@ -82,7 +82,7 @@ TEST_P(TlsConnectGeneric, ConnectEcdheP384Server) {
   server_->ConfigNamedGroups(groups);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   EXPECT_EQ(version_ == SSL_LIBRARY_VERSION_TLS_1_3,
             hrr_capture->buffer().len() != 0);
 }
@@ -112,7 +112,7 @@ TEST_P(TlsKeyExchangeTest, P384Priority) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 
   std::vector<SSLNamedGroup> shares = {ssl_grp_ec_secp384r1};
   CheckKEXDetails(groups, shares);
@@ -129,7 +129,7 @@ TEST_P(TlsKeyExchangeTest, DuplicateGroupConfig) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 
   std::vector<SSLNamedGroup> shares = {ssl_grp_ec_secp384r1};
   std::vector<SSLNamedGroup> expectedGroups = {ssl_grp_ec_secp384r1,
@@ -147,7 +147,7 @@ TEST_P(TlsKeyExchangeTest, P384PriorityDHEnabled) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 
   if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
     std::vector<SSLNamedGroup> shares = {ssl_grp_ec_secp384r1};
@@ -172,7 +172,7 @@ TEST_P(TlsConnectGenericPre13, P384PriorityOnServer) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
@@ -188,7 +188,7 @@ TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp384r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 class TlsKeyExchangeGroupCapture : public TlsHandshakeFilter {
@@ -276,7 +276,7 @@ TEST_P(TlsConnectStreamPre13, ConfiguredGroupsRenegotiate) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   CheckConnected();
 
   // The renegotiation has to use the same preferences as the original session.
@@ -284,7 +284,7 @@ TEST_P(TlsConnectStreamPre13, ConfiguredGroupsRenegotiate) {
   client_->StartRenegotiate();
   Handshake();
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 TEST_P(TlsKeyExchangeTest, Curve25519) {
@@ -318,7 +318,7 @@ TEST_P(TlsConnectGenericPre13, GroupPreferenceServerPriority) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 #ifndef NSS_DISABLE_TLS_1_3
@@ -337,7 +337,7 @@ TEST_P(TlsKeyExchangeTest13, Curve25519P256EqualPriorityClient13) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_secp256r1};
   CheckKEXDetails(client_groups, shares);
 }
@@ -357,7 +357,7 @@ TEST_P(TlsKeyExchangeTest13, Curve25519P256EqualPriorityServer13) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
   CheckKEXDetails(client_groups, shares);
 }
@@ -379,7 +379,7 @@ TEST_P(TlsKeyExchangeTest13, EqualPriorityTestRetryECServer13) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
   CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
@@ -401,7 +401,7 @@ TEST_P(TlsKeyExchangeTest13, NotEqualPriorityWithIntermediateGroup13) {
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
   CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
@@ -423,7 +423,7 @@ TEST_P(TlsKeyExchangeTest13,
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
   CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
@@ -445,7 +445,7 @@ TEST_P(TlsKeyExchangeTest13,
   Connect();
 
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519};
   CheckKEXDetails(client_groups, shares, ssl_grp_ec_secp256r1);
 }
@@ -507,7 +507,7 @@ TEST_P(TlsKeyExchangeTest13, MultipleClientShares) {
 
   // The server would accept 25519 but its preferred group (P256) has to win.
   CheckKeys(ssl_kea_ecdh, ssl_grp_ec_secp256r1, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   const std::vector<SSLNamedGroup> shares = {ssl_grp_ec_curve25519,
                                              ssl_grp_ec_secp256r1};
   CheckKEXDetails(client_groups, shares);

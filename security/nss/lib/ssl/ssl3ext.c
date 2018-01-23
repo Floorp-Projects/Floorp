@@ -519,6 +519,8 @@ ssl3_HandleParsedExtensions(sslSocket *ss, SSLHandshakeType message)
                     }
                 /* Fall through. */
                 case tls13_extension_disallowed:
+                    SSL_TRC(3, ("%d: TLS13: unexpected extension %d in message %d",
+                                SSL_GETPID(), extension, message));
                     tls13_FatalError(ss, SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION,
                                      unsupported_extension);
                     return SECFailure;
