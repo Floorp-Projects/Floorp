@@ -28,6 +28,7 @@
 #include "vm/Interpreter.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "jit/SharedICHelpers-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using mozilla::BitwiseCast;
