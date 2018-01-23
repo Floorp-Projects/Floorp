@@ -76,6 +76,26 @@ async function openNewTabAndConsole(url, clearJstermHistory = true) {
 }
 
 /**
+ * Subscribe to the store and log out stringinfied versions of messages.
+ * This is a helper function for debugging, to make is easier to see what
+ * happened during the test in the log.
+ *
+ * @param object hud
+ */
+function logAllStoreChanges(hud) {
+  const store = hud.ui.newConsoleOutput.getStore();
+  // Adding logging each time the store is modified in order to check
+  // the store state in case of failure.
+  store.subscribe(() => {
+    const messages = [...store.getState().messages.messagesById.values()];
+    const debugMessages = messages.map(({id, type, parameters, messageText}) => {
+      return {id, type, parameters, messageText};
+    });
+    info("messages : " + JSON.stringify(debugMessages));
+  });
+}
+
+/**
  * Wait for messages in the web console output, resolving once they are received.
  *
  * @param object options
