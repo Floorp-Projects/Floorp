@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>BuildMachineOSBuild</key>
+  <string>${BUILD_MACHINE_OS_BUILD}</string>
+  <key>DTCompiler</key>
+  <string>${GCC_VERSION}</string>
+  <key>DTSDKBuild</key>
+  <string>${MAC_SDK_BUILD}</string>
+  <key>DTSDKName</key>
+  <string>${MAC_SDK_NAME}</string>
+  <key>DTXcode</key>
+  <string>${XCODE_VERSION}</string>
+  <key>DTXcodeBuild</key>
+  <string>${XCODE_BUILD}</string>
+  <key>CFBundleShortVersionString</key>
+  <string>${VERSION}</string>
+  <key>CFBundleVersion</key>
+  <string>${VERSION_BUILD}</string>
+  <key>CFBundleIdentifier</key>
+  <string>org.chromium.${PRODUCT_NAME:rfc1034identifier}</string>
+  <key>SCM_REVISION</key>
+  <string>${COMMIT_HASH}</string>
+</dict>
+</plist>

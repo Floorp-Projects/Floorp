@@ -624,7 +624,7 @@ ParentOffset(nsINode *aNode, int32_t *aChildOffset)
   nsIContent* parent = aNode->GetParent();
   if (parent)
   {
-    *aChildOffset = parent->IndexOf(aNode);
+    *aChildOffset = parent->ComputeIndexOf(aNode);
 
     return parent;
   }
@@ -2791,7 +2791,7 @@ nsFrameSelection::SelectCellElement(nsIContent *aCellElement)
   nsIContent *parent = aCellElement->GetParent();
 
   // Get child offset
-  int32_t offset = parent->IndexOf(aCellElement);
+  int32_t offset = parent->ComputeIndexOf(aCellElement);
 
   return CreateAndAddRange(parent, offset);
 }

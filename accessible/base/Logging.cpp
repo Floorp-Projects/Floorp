@@ -834,7 +834,7 @@ logging::Node(const char* aDescr, nsINode* aNode)
   }
 
   nsINode* parentNode = aNode->GetParentNode();
-  int32_t idxInParent = parentNode ? parentNode->IndexOf(aNode) : - 1;
+  int32_t idxInParent = parentNode ? parentNode->ComputeIndexOf(aNode) : - 1;
 
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
     printf("%s: %p, text node, idx in parent: %d\n",
