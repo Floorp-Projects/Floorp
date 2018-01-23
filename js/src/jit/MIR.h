@@ -4357,7 +4357,7 @@ class MCallDOMNative : public MCall
 // fun.apply(self, arguments)
 class MApplyArgs
   : public MTernaryInstruction,
-    public MixPolicy<ObjectPolicy<0>, NoTypePolicy<1>, BoxPolicy<2> >::Data
+    public MixPolicy<ObjectPolicy<0>, UnboxedInt32Policy<1>, BoxPolicy<2> >::Data
 {
   protected:
     // Monomorphic cache of single target from TI, or nullptr.
