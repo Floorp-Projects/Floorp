@@ -516,6 +516,11 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
   WrBridge()->BeginClearCachedResources();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();
+  // Clear all active compositor animation ids.
+  // When ClearCachedResources is called, all animations are removed
+  // by WebRenderBridgeParent::RecvClearCachedResources().
+  mActiveCompositorAnimationIds.clear();
+  mDiscardedCompositorAnimationsIds.Clear();
   WrBridge()->EndClearCachedResources();
 }
 
