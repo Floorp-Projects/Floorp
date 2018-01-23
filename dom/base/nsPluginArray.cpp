@@ -170,13 +170,8 @@ nsPluginArray::Refresh(bool aReloadDocuments)
   mPlugins.Clear();
   mCTPPlugins.Clear();
 
-  nsCOMPtr<nsIDOMNavigator> navigator = mWindow->GetNavigator();
-
-  if (!navigator) {
-    return;
-  }
-
-  static_cast<mozilla::dom::Navigator*>(navigator.get())->RefreshMIMEArray();
+  RefPtr<Navigator> navigator = mWindow->Navigator();
+  navigator->RefreshMIMEArray();
 
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
   if (aReloadDocuments && webNav) {

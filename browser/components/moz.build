@@ -38,6 +38,7 @@ DIRS += [
     'customizableui',
     'dirprovider',
     'downloads',
+    'enterprisepolicies',
     'extensions',
     'feeds',
     'migration',

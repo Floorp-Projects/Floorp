@@ -1,6 +1,6 @@
-This directory contains freetype2 v2.8 downloaded from
+This directory contains FreeType v2.9 downloaded from
 https://download.savannah.gnu.org/releases/freetype/
 
-There are currently no local changes applied to the freetype tree,
+There are currently no local changes applied to the FreeType tree,
 except that the file docs/LICENSE.TXT has been copied to the top-level
 directory of the FreeType tree as LICENSE.TXT.

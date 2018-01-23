@@ -2255,19 +2255,13 @@ nsGlobalWindowInner::Self()
 }
 
 Navigator*
-nsGlobalWindowInner::Navigator()
+nsPIDOMWindowInner::Navigator()
 {
   if (!mNavigator) {
     mNavigator = new mozilla::dom::Navigator(this);
   }
 
   return mNavigator;
-}
-
-nsIDOMNavigator*
-nsGlobalWindowInner::GetNavigator()
-{
-  return Navigator();
 }
 
 nsScreen*
@@ -4295,15 +4289,14 @@ nsGlobalWindowInner::ConvertDialogOptions(const nsAString& aOptions,
   }
 }
 
-nsresult
+void
 nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
                                     nsISelection* aSel,
                                     int16_t aReason)
 {
   if (GetOuterWindowInternal()) {
-    return GetOuterWindowInternal()->UpdateCommands(anAction, aSel, aReason);
+    GetOuterWindowInternal()->UpdateCommands(anAction, aSel, aReason);
   }
-  return NS_OK;
 }
 
 Selection*

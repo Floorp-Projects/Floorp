@@ -2,7 +2,7 @@
 //
 //   A custom fuzzer mutator to test for FreeType with libFuzzer.
 //
-// Copyright 2015-2017 by
+// Copyright 2015-2018 by
 // David Turner, Robert Wilhelm, and Werner Lemberg.
 //
 // This file is part of the FreeType project, and may only be used,

@@ -4,7 +4,7 @@ libdir=%libdir%
 includedir=%includedir%
 
 Name: FreeType 2
-URL: http://freetype.org
+URL: https://freetype.org
 Description: A free, high-quality, and portable font engine.
 Version: %ft_version%
 Requires:
