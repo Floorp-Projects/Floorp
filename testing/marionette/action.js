@@ -340,12 +340,15 @@ action.PointerOrigin = {
   Pointer: "pointer",
 };
 
+/** Flag for WebDriver spec conforming pointer origin calculation. */
+action.specCompatPointerOrigin = true;
+
 /**
  * Look up a PointerOrigin.
  *
  * @param {(string|Element)=} obj
  *     Origin for a <code>pointerMove</code> action.  Must be one of
- *     "viewport" (default), "pointer", or a DOM element or a DOM element.
+ *     "viewport" (default), "pointer", or a DOM element.
  *
  * @return {action.PointerOrigin}
  *     Pointer origin.
@@ -971,11 +974,18 @@ action.Mouse = class {
  *     actions for one tick.
  * @param {WindowProxy} window
  *     Current window global.
+ * @param {boolean=} [specCompatPointerOrigin=true] specCompatPointerOrigin
+ *     Flag to turn off the WebDriver spec conforming pointer origin
+ *     calculation. It has to be kept until all Selenium bindings can
+ *     successfully handle the WebDriver spec conforming Pointer Origin
+ *     calculation. See https://bugzilla.mozilla.org/show_bug.cgi?id=1429338.
  *
  * @return {Promise}
  *     Promise for dispatching all actions in |chain|.
  */
-action.dispatch = function(chain, window) {
+action.dispatch = function(chain, window, specCompatPointerOrigin = true) {
+  action.specCompatPointerOrigin = specCompatPointerOrigin;
+
   let chainEvents = (async () => {
     for (let tickActions of chain) {
       await action.dispatchTickActions(
@@ -1008,8 +1018,7 @@ action.dispatch = function(chain, window) {
  * @return {Promise}
  *     Promise for dispatching all tick-actions and pending DOM events.
  */
-action.dispatchTickActions = function(
-    tickActions, tickDuration, window) {
+action.dispatchTickActions = function(tickActions, tickDuration, window) {
   let pendingEvents = tickActions.map(toEvents(tickDuration, window));
   return Promise.all(pendingEvents);
 };
@@ -1429,7 +1438,10 @@ function inViewPort(x, y, win) {
 
 function getElementCenter(el, window) {
   if (element.isDOMElement(el)) {
-    return element.getInViewCentrePoint(el.getClientRects()[0], window);
+    if (action.specCompatPointerOrigin) {
+      return element.getInViewCentrePoint(el.getClientRects()[0], window);
+    }
+    return element.coordinates(el);
   }
   return {};
 }

@@ -787,7 +787,9 @@ function createATouch(el, corx, cory, touchId) {
  */
 async function performActions(msg) {
   let chain = action.Chain.fromJSON(msg.actions);
-  await action.dispatch(chain, curContainer.frame);
+  await action.dispatch(chain, curContainer.frame,
+      !capabilities.get("moz:useNonSpecCompliantPointerOrigin"),
+  );
 }
 
 /**
