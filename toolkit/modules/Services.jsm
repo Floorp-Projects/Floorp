@@ -122,6 +122,9 @@ if (AppConstants.MOZ_GECKO_PROFILER) {
 if (AppConstants.MOZ_TOOLKIT_SEARCH) {
   initTable.search = ["@mozilla.org/browser/search-service;1", "nsIBrowserSearchService"];
 }
+if (AppConstants.MOZ_BUILD_APP == "browser") {
+  initTable.policies = ["@mozilla.org/browser/enterprisepolicies;1", "nsIEnterprisePolicies"];
+}
 
 XPCOMUtils.defineLazyServiceGetters(Services, initTable);
 

@@ -17,61 +17,115 @@
     <ClCompile Include="..\..\..\src\autofit\autofit.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\bdf\bdf.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\cff\cff.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftbase.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftbitmap.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\cache\ftcache.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ftdebug.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftfstype.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftgasp.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftglyph.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\gzip\ftgzip.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftinit.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftsystem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\bdf\bdf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cache\ftcache.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cff\cff.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\cid\type1cid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gzip\ftgzip.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\lzw\ftlzw.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftstroke.c">
+    <ClCompile Include="..\..\..\src\pfr\pfr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftsystem.c">
+    <ClCompile Include="..\..\..\src\pcf\pcf.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\psaux\psaux.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pshinter\pshinter.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\psnames\psmodule.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\raster\raster.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\sfnt\sfnt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\smooth\smooth.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\truetype\truetype.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\type1\type1.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\type42\type42.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winfonts\winfnt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ftdebug.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftbbox.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftbdf.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftbitmap.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftcid.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftfntfmt.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftfstype.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftgasp.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftglyph.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftgxval.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftlcdfil.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftmm.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftotval.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftpatent.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftpfr.c">
+      <Filter>Source Files\FT_MODULES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\base\ftstroke.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftsynth.c">
@@ -81,54 +135,6 @@
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\base\ftwinfnt.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftlcdfil.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftgxval.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftotval.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\base\ftpatent.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\pcf\pcf.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\pfr\pfr.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\psaux\psaux.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\pshinter\pshinter.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\psnames\psmodule.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\raster\raster.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\sfnt\sfnt.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\truetype\truetype.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\type1\type1.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\cid\type1cid.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\type42\type42.c">
-      <Filter>Source Files\FT_MODULES</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\winfonts\winfnt.c">
       <Filter>Source Files\FT_MODULES</Filter>
     </ClCompile>
   </ItemGroup>

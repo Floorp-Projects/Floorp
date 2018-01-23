@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="module_management">Module Management</h1>
 <h2>Synopsis</h2>
@@ -416,11 +416,11 @@
 <p>The module name.</p>
 </td></tr>
 <tr><td class="val" id="property_name">property_name</td><td class="desc">
-<p>The property name. Properties are described in the &lsquo;Synopsis&rsquo; subsection of the module's documentation.</p>
+<p>The property name. Properties are described in section &lsquo;<a href="ft2-properties.html#properties">Driver properties</a>&rsquo;.</p>
 <p>Note that only a few modules have properties.</p>
 </td></tr>
 <tr><td class="val" id="value">value</td><td class="desc">
-<p>A generic pointer to a variable or structure that gives the new value of the property. The exact definition of &lsquo;value&rsquo; is dependent on the property; see the &lsquo;Synopsis&rsquo; subsection of the module's documentation.</p>
+<p>A generic pointer to a variable or structure that gives the new value of the property. The exact definition of &lsquo;value&rsquo; is dependent on the property; see section &lsquo;<a href="ft2-properties.html#properties">Driver properties</a>&rsquo;.</p>
 </td></tr>
 </table>
 
@@ -468,14 +468,14 @@
 <p>The module name.</p>
 </td></tr>
 <tr><td class="val" id="property_name">property_name</td><td class="desc">
-<p>The property name. Properties are described in the &lsquo;Synopsis&rsquo; subsection of the module's documentation.</p>
+<p>The property name. Properties are described in section &lsquo;<a href="ft2-properties.html#properties">Driver properties</a>&rsquo;.</p>
 </td></tr>
 </table>
 
 <h4>inout</h4>
 <table class="fields">
 <tr><td class="val" id="value">value</td><td class="desc">
-<p>A generic pointer to a variable or structure that gives the value of the property. The exact definition of &lsquo;value&rsquo; is dependent on the property; see the &lsquo;Synopsis&rsquo; subsection of the module's documentation.</p>
+<p>A generic pointer to a variable or structure that gives the value of the property. The exact definition of &lsquo;value&rsquo; is dependent on the property; see section &lsquo;<a href="ft2-properties.html#properties">Driver properties</a>&rsquo;.</p>
 </td></tr>
 </table>
 
@@ -514,24 +514,18 @@
   <b>FT_Set_Default_Properties</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>  library );
 </pre>
 
-<p>If compilation option FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES is set, this function reads the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable to control driver properties. See sections &lsquo;<a href="ft2-auto_hinter.html#auto_hinter">The auto-hinter</a>&rsquo;, &lsquo;<a href="ft2-cff_driver.html#cff_driver">The CFF driver</a>&rsquo;, &lsquo;<a href="ft2-pcf_driver.html#pcf_driver">The PCF driver</a>&rsquo;, and &lsquo;<a href="ft2-tt_driver.html#tt_driver">The TrueType driver</a>&rsquo; for more.</p>
+<p>If compilation option FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES is set, this function reads the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable to control driver properties. See section &lsquo;<a href="ft2-properties.html#properties">Driver properties</a>&rsquo; for more.</p>
 <p>If the compilation option is not set, this function does nothing.</p>
 <p>&lsquo;FREETYPE_PROPERTIES&rsquo; has the following syntax form (broken here into multiple lines for better readability).</p>
 <pre class="colored">
   &lt;optional whitespace&gt;
+  &lt;module-name1&gt; ':'
+  &lt;property-name1&gt; '=' &lt;property-value1&gt;
+  &lt;whitespace&gt;
+  &lt;module-name2&gt; ':'
+  &lt;property-name2&gt; '=' &lt;property-value2&gt;
+  ...
 </pre>
-
-<h4>module-name1</h4>
-<p>':'</p>
-
-<h4>property-name1</h4>
-<p>'=' &lt;property-value1&gt;</p>
-
-<h4>module-name2</h4>
-<p>':'</p>
-
-<h4>property-name2</h4>
-<p>'=' &lt;property-value2&gt; ... }</p>
 <p>Example:</p>
 <pre class="colored">
   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \
@@ -545,6 +539,9 @@
 <p>A handle to a new library object.</p>
 </td></tr>
 </table>
+
+<h4>since</h4>
+<p>2.8</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

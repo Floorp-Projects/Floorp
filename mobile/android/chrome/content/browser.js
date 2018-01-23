@@ -2695,6 +2695,10 @@ var NativeWindow = {
       return this.defaultContext = Strings.browser.GetStringFromName("browser.menu.context.default");
     },
 
+    get nonLinkContext() {
+      return "";
+    },
+
     /* Gets menuitems for an arbitrary node
      * Parameters:
      *   element - The element to look at. If this element has a contextmenu attribute, the
@@ -2757,6 +2761,20 @@ var NativeWindow = {
       return false;
     },
 
+    // Returns true if there are any link-related context menu items
+    _shouldPreventDefault: function() {
+      for (let context in this.menus) {
+        if (context === this.nonLinkContext) {
+          continue;
+        }
+        let menu = this.menus[context];
+        if (menu.length > 0) {
+          return true;
+        }
+      }
+      return false;
+    },
+
     /* Returns a label to be shown in a tabbed ui if there are multiple "contexts". For instance, if this
      * is an image inside an <a> tag, we may have a "link" context and an "image" one.
      */
@@ -2766,7 +2784,10 @@ var NativeWindow = {
         try {
           let uri = this.makeURI(this._getLinkURL(element));
           return Strings.browser.GetStringFromName("browser.menu.context." + uri.scheme);
-        } catch(ex) { }
+        } catch(ex) {
+          // Fallback to the default
+          return this.defaultContext;
+        }
       }
 
       // Otherwise we try the nodeName
@@ -2774,8 +2795,7 @@ var NativeWindow = {
         return Strings.browser.GetStringFromName("browser.menu.context." + element.nodeName.toLowerCase());
       } catch(ex) { }
 
-      // Fallback to the default
-      return this.defaultContext;
+      return this.nonLinkContext;
     },
 
     // Adds context menu items added through the add-on api
@@ -2823,8 +2843,10 @@ var NativeWindow = {
       if (this._shouldShow()) {
         BrowserEventHandler._cancelTapHighlight();
 
-        // Consume / preventDefault the event, and show the contextmenu.
-        event.preventDefault();
+        if (this._shouldPreventDefault()) {
+          // Consume / preventDefault the event.
+          event.preventDefault();
+        }
         this._innerShow(this._target, event.clientX, event.clientY);
         this._target = null;
 

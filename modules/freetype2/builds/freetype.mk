@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2017 by
+# Copyright 1996-2018 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -152,6 +152,9 @@ endif
 #
 ifneq ($(wildcard $(OBJ_DIR)/ftoption.h),)
   FTOPTION_H    := $(OBJ_DIR)/ftoption.h
+  FTOPTION_FLAG := $DFT_CONFIG_OPTIONS_H="<ftoption.h>"
+else ifneq ($(wildcard $(BUILD_DIR)/ftoption.h),)
+  FTOPTION_H    := $(BUILD_DIR)/ftoption.h
   FTOPTION_FLAG := $DFT_CONFIG_OPTIONS_H="<ftoption.h>"
 endif
 

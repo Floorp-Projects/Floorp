@@ -1483,6 +1483,19 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
 #endif
     }
     nsCString failureReason;
+
+    // Some software GPU emulation implementations will happily try to create
+    // unreasonably big surfaces and then fail in awful ways.
+    // Let's at least limit this to the default max texture size we use for content,
+    // anything larger than that will fail to render on the content side anyway.
+    // We can revisit this value and make it even tighter if need be.
+    const int max_fb_size = 32767;
+    const LayoutDeviceIntSize size = mWidget->GetClientSize();
+    if (size.width > max_fb_size || size.height > max_fb_size) {
+      failureReason = "FEATURE_FAILURE_MAX_FRAMEBUFFER_SIZE";
+      return nullptr;
+    }
+
     MOZ_ASSERT(!gfxVars::UseWebRender() || aBackendHints[i] == LayersBackend::LAYERS_BASIC);
     if (compositor && compositor->Initialize(&failureReason)) {
       if (failureReason.IsEmpty()){

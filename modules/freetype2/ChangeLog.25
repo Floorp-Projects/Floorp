@@ -112,8 +112,8 @@
 	Original patch is designed by Werner Lemberg.  Extra part
 	for otvalid and gxvalid are added by suzuki toshiya, see
 	discussion:
-	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00002.html
-	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00007.html
+	https://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00002.html
+	https://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00007.html
 
 	* include/internal/ftvalid.h: Introduce FT_THROW() in FT_INVALID_().
 	* src/gxvalid/gxvcommn.h: Ditto.
@@ -144,7 +144,7 @@
 	for Borland's bug tracker entry.
 
 	Reported by Yuliana Zigangirova <zigangirova@inbox.ru>,
-	http://lists.gnu.org/archive/html/freetype-devel/2014-04/msg00001.html.
+	https://lists.gnu.org/archive/html/freetype-devel/2014-04/msg00001.html.
 
 	* include/internal/ftvalid.h (FT_ValidatorRec), src/smooth/ftgrays.c
 	(gray_TWorker_): Move `ft_jmp_buf' field to be the first element.
@@ -2669,8 +2669,8 @@
 	with Carbon framework is incompatible with that by FreeType 2
 	without Carbon framework.)  Found by Khaled Hosny and Hin-Tak Leung.
 
-	http://lists.gnu.org/archive/html/freetype-devel/2013-02/msg00035.html
-	http://lists.gnu.org/archive/html/freetype-devel/2013-12/msg00027.html
+	https://lists.gnu.org/archive/html/freetype-devel/2013-02/msg00035.html
+	https://lists.gnu.org/archive/html/freetype-devel/2013-12/msg00027.html
 
 	* src/base/ftrfork.c (FT_Raccess_Get_DataOffsets): Add a switch
 	`sort_by_res_id' to control the fragmented resource ordering.
@@ -3181,7 +3181,7 @@
 
 	Problem reported by Hin-Tak Leung <htl10@users.sourceforge.net>; see
 
-	  http://lists.nongnu.org/archive/html/freetype-devel/2013-08/msg00005.html
+	  https://lists.nongnu.org/archive/html/freetype-devel/2013-08/msg00005.html
 
 	for details.
 
@@ -3556,7 +3556,7 @@
 
 	Suggested by Akira Tagoh, see
 
-	  http://lists.gnu.org/archive/html/freetype/2013-09/msg00030.html
+	  https://lists.gnu.org/archive/html/freetype/2013-09/msg00030.html
 
 	* src/bdf/bdfdrivr.c (BDF_Face_Init): Return `Invalid_Argument'
 	error if the font could be opened but non-zero `face_index' is
@@ -5145,7 +5145,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2013-2017 by
+Copyright 2013-2018 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

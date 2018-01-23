@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,52 +100,12 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="pcf_driver">The PCF driver</h1>
-<h2>Synopsis</h2>
-<table class="synopsis">
-<tr><td><a href="#no-long-family-names">no-long-family-names</a></td><td></td><td></td></tr>
-</table>
 
-
-<p>While FreeType's PCF driver doesn't expose API functions by itself, it is possible to control its behaviour with <a href="ft2-module_management.html#FT_Property_Set">FT_Property_Set</a> and <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a>. Right now, there is a single property &lsquo;no-long-family-names&rsquo; available if FreeType is compiled with PCF_CONFIG_OPTION_LONG_FAMILY_NAMES.</p>
+<p>While FreeType's PCF driver doesn't expose API functions by itself, it is possible to control its behaviour with <a href="ft2-module_management.html#FT_Property_Set">FT_Property_Set</a> and <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a>. Right now, there is a single property <a href="ft2-properties.html#no-long-family-names">no-long-family-names</a> available if FreeType is compiled with PCF_CONFIG_OPTION_LONG_FAMILY_NAMES.</p>
 <p>The PCF driver's module name is &lsquo;pcf&rsquo;.</p>
-
-<div class="section">
-<h3 id="no-long-family-names">no-long-family-names</h3>
-<p>Defined in FT_PCF_DRIVER_H (freetype/ftpcfdrv.h).</p>
-<pre>
-FT_END_HEADER
-
-
-#endif /* FTPCFDRV_H_ */
-
-
-/* END */
-</pre>
-
-<p>If PCF_CONFIG_OPTION_LONG_FAMILY_NAMES is active while compiling FreeType, the PCF driver constructs long family names.</p>
-<p>There are many PCF fonts just called &lsquo;Fixed&rsquo; which look completely different, and which have nothing to do with each other. When selecting &lsquo;Fixed&rsquo; in KDE or Gnome one gets results that appear rather random, the style changes often if one changes the size and one cannot select some fonts at all. The improve this situation, the PCF module prepends the foundry name (plus a space) to the family name. It also checks whether there are &lsquo;wide&rsquo; characters; all put together, family names like &lsquo;Sony Fixed&rsquo; or &lsquo;Misc Fixed Wide&rsquo; are constructed.</p>
-<p>If &lsquo;no-long-family-names&rsquo; is set, this feature gets switched off.</p>
-<pre class="colored">
-  FT_Library  library;
-  FT_Bool     no_long_family_names = TRUE;
-
-
-  FT_Init_FreeType( &amp;library );
-
-  FT_Property_Set( library, "pcf",
-                            "no-long-family-names",
-                            &amp;no_long_family_names );
-</pre>
-
-<h4>note</h4>
-<p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
-<p>This property can be set via the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable (using values 1 and 0 for &lsquo;on&rsquo; and &lsquo;off&rsquo;, respectively).</p>
-
-<hr>
-<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 </body>
 </html>

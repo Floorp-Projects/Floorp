@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="outline_processing">Outline Processing</h1>
 <h2>Synopsis</h2>
@@ -157,8 +157,8 @@
 </td></tr>
 <tr><td class="val" id="tags">tags</td><td class="desc">
 <p>A pointer to an array of &lsquo;n_points&rsquo; chars, giving each outline point's type.</p>
-<p>If bit&nbsp;0 is unset, the point is &lsquo;off&rsquo; the curve, i.e., a Bézier control point, while it is &lsquo;on&rsquo; if set.</p>
-<p>Bit&nbsp;1 is meaningful for &lsquo;off&rsquo; points only. If set, it indicates a third-order Bézier arc control point; and a second-order control point if unset.</p>
+<p>If bit&nbsp;0 is unset, the point is &lsquo;off&rsquo; the curve, i.e., a Bezier control point, while it is &lsquo;on&rsquo; if set.</p>
+<p>Bit&nbsp;1 is meaningful for &lsquo;off&rsquo; points only. If set, it indicates a third-order Bezier arc control point; and a second-order control point if unset.</p>
 <p>If bit&nbsp;2 is set, bits 5-7 contain the drop-out mode (as defined in the OpenType specification; the value is the same as the argument to the SCANMODE instruction).</p>
 <p>Bits 3 and&nbsp;4 are reserved for internal purposes.</p>
 </td></tr>
@@ -256,7 +256,6 @@
 
 <h4>note</h4>
 <p>If the outline's &lsquo;owner&rsquo; field is not set, only the outline descriptor will be released.</p>
-<p>The reason why this function takes an &lsquo;library&rsquo; parameter is simply to use ft_mem_free().</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -475,7 +474,7 @@
                        <a href="ft2-basic_types.html#FT_BBox">FT_BBox</a>           *acbox );
 </pre>
 
-<p>Return an outline's &lsquo;control box&rsquo;. The control box encloses all the outline's points, including Bézier control points. Though it coincides with the exact bounding box for most glyphs, it can be slightly larger in some situations (like when rotating an outline that contains Bézier outside arcs).</p>
+<p>Return an outline's &lsquo;control box&rsquo;. The control box encloses all the outline's points, including Bezier control points. Though it coincides with the exact bounding box for most glyphs, it can be slightly larger in some situations (like when rotating an outline that contains Bezier outside arcs).</p>
 <p>Computing the control box is very fast, while getting the bounding box can take much more time as it needs to walk over all segments and arcs in the outline. To get the latter, you can use the &lsquo;ftbbox&rsquo; component, which is dedicated to this single task.</p>
 
 <h4>input</h4>
@@ -507,7 +506,7 @@
                        <a href="ft2-basic_types.html#FT_BBox">FT_BBox</a>     *abbox );
 </pre>
 
-<p>Compute the exact bounding box of an outline. This is slower than computing the control box. However, it uses an advanced algorithm that returns <i>very</i> quickly when the two boxes coincide. Otherwise, the outline Bézier arcs are traversed to extract their extrema.</p>
+<p>Compute the exact bounding box of an outline. This is slower than computing the control box. However, it uses an advanced algorithm that returns <i>very</i> quickly when the two boxes coincide. Otherwise, the outline Bezier arcs are traversed to extract their extrema.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -622,7 +621,7 @@
                         <span class="keyword">void</span>*                    user );
 </pre>
 
-<p>Walk over an outline's structure to decompose it into individual segments and Bézier arcs. This function also emits &lsquo;move to&rsquo; operations to indicate the start of new contours in the outline.</p>
+<p>Walk over an outline's structure to decompose it into individual segments and Bezier arcs. This function also emits &lsquo;move to&rsquo; operations to indicate the start of new contours in the outline.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -668,7 +667,7 @@
   } <b>FT_Outline_Funcs</b>;
 </pre>
 
-<p>A structure to hold various function pointers used during outline decomposition in order to emit segments, conic, and cubic Béziers.</p>
+<p>A structure to hold various function pointers used during outline decomposition in order to emit segments, conic, and cubic Beziers.</p>
 
 <h4>fields</h4>
 <table class="fields">
@@ -679,10 +678,10 @@
 <p>The segment emitter.</p>
 </td></tr>
 <tr><td class="val" id="conic_to">conic_to</td><td class="desc">
-<p>The second-order Bézier arc emitter.</p>
+<p>The second-order Bezier arc emitter.</p>
 </td></tr>
 <tr><td class="val" id="cubic_to">cubic_to</td><td class="desc">
-<p>The third-order Bézier arc emitter.</p>
+<p>The third-order Bezier arc emitter.</p>
 </td></tr>
 <tr><td class="val" id="shift">shift</td><td class="desc">
 <p>The shift that is applied to coordinates before they are sent to the emitter.</p>
@@ -776,7 +775,7 @@
 </pre>
 
 <p>A function pointer type used to describe the signature of a &lsquo;conic to&rsquo; function during outline walking or decomposition.</p>
-<p>A &lsquo;conic to&rsquo; is emitted to indicate a second-order Bézier arc in the outline.</p>
+<p>A &lsquo;conic to&rsquo; is emitted to indicate a second-order Bezier arc in the outline.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -811,15 +810,15 @@
 </pre>
 
 <p>A function pointer type used to describe the signature of a &lsquo;cubic to&rsquo; function during outline walking or decomposition.</p>
-<p>A &lsquo;cubic to&rsquo; is emitted to indicate a third-order Bézier arc.</p>
+<p>A &lsquo;cubic to&rsquo; is emitted to indicate a third-order Bezier arc.</p>
 
 <h4>input</h4>
 <table class="fields">
 <tr><td class="val" id="control1">control1</td><td class="desc">
-<p>A pointer to the first Bézier control point.</p>
+<p>A pointer to the first Bezier control point.</p>
 </td></tr>
 <tr><td class="val" id="control2">control2</td><td class="desc">
-<p>A pointer to the second Bézier control point.</p>
+<p>A pointer to the second Bezier control point.</p>
 </td></tr>
 <tr><td class="val" id="to">to</td><td class="desc">
 <p>A pointer to the target end point.</p>
