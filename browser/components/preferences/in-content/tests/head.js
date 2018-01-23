@@ -74,6 +74,53 @@ function promiseLoadSubDialog(aURL) {
   });
 }
 
+/**
+ * Waits a specified number of miliseconds for a specified event to be
+ * fired on a specified element.
+ *
+ * Usage:
+ *    let receivedEvent = waitForEvent(element, "eventName");
+ *    // Do some processing here that will cause the event to be fired
+ *    // ...
+ *    // Now yield until the Promise is fulfilled
+ *    yield receivedEvent;
+ *    if (receivedEvent && !(receivedEvent instanceof Error)) {
+ *      receivedEvent.msg == "eventName";
+ *      // ...
+ *    }
+ *
+ * @param aSubject the element that should receive the event
+ * @param aEventName the event to wait for
+ * @param aTimeoutMs the number of miliseconds to wait before giving up
+ * @returns a Promise that resolves to the received event, or to an Error
+ */
+function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
+  let eventDeferred = Promise.defer();
+  let timeoutMs = aTimeoutMs || kDefaultWait;
+  let stack = new Error().stack;
+  let timerID = setTimeout(function wfe_canceller() {
+    aSubject.removeEventListener(aEventName, listener);
+    eventDeferred.reject(new Error(aEventName + " event timeout at " + stack));
+  }, timeoutMs);
+
+  var listener = function(aEvent) {
+    if (aTarget && aTarget !== aEvent.target)
+      return;
+
+    // stop the timeout clock and resume
+    clearTimeout(timerID);
+    eventDeferred.resolve(aEvent);
+  };
+
+  function cleanup(aEventOrError) {
+    // unhook listener in case of success or failure
+    aSubject.removeEventListener(aEventName, listener);
+    return aEventOrError;
+  }
+  aSubject.addEventListener(aEventName, listener);
+  return eventDeferred.promise.then(cleanup, cleanup);
+}
+
 function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   return new Promise(resolve => {
     let finalPrefPaneLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
