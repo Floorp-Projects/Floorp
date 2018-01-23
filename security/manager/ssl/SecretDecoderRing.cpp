@@ -10,6 +10,8 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Services.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -23,9 +25,40 @@
 #include "ssl.h" // For SSL_ClearSessionCache
 
 using namespace mozilla;
+using dom::Promise;
 
-// NOTE: Should these be the thread-safe versions?
 NS_IMPL_ISUPPORTS(SecretDecoderRing, nsISecretDecoderRing)
+
+void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
+                                 RefPtr<Promise>& aPromise) {
+  nsCOMPtr<nsISecretDecoderRing> sdrService =
+    do_GetService(NS_SECRETDECODERRING_CONTRACTID);
+  InfallibleTArray<nsString> cipherTexts(plaintexts.Length());
+
+  nsresult rv = NS_ERROR_FAILURE;
+  for (uint32_t i = 0; i < plaintexts.Length(); ++i) {
+    const nsCString& plaintext = plaintexts[i];
+    nsCString cipherText;
+    rv = sdrService->EncryptString(plaintext, cipherText);
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      break;
+    }
+
+    cipherTexts.AppendElement(NS_ConvertASCIItoUTF16(cipherText));
+  }
+
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableFunction("BackgroundSdrEncryptStringsResolve",
+                           [rv, aPromise = Move(aPromise), cipherTexts = Move(cipherTexts)]() {
+                             if (NS_FAILED(rv)) {
+                               aPromise->MaybeReject(rv);
+                             } else {
+                               aPromise->MaybeResolve(cipherTexts);
+                             }
+                           }));
+  NS_DispatchToMainThread(runnable);
+}
 
 SecretDecoderRing::SecretDecoderRing()
 {
@@ -129,6 +162,51 @@ SecretDecoderRing::EncryptString(const nsACString& text,
     return rv;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SecretDecoderRing::AsyncEncryptStrings(uint32_t plaintextsCount,
+                                       const char16_t** plaintexts,
+                                       JSContext* aCx,
+                                       nsISupports** aPromise) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(plaintextsCount);
+  NS_ENSURE_ARG_POINTER(plaintexts);
+  NS_ENSURE_ARG_POINTER(aCx);
+
+  nsIGlobalObject* globalObject =
+    xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  InfallibleTArray<nsCString> plaintextsUtf8(plaintextsCount);
+  for (uint32_t i = 0; i < plaintextsCount; ++i) {
+    plaintextsUtf8.AppendElement(NS_ConvertUTF16toUTF8(plaintexts[i]));
+  }
+  nsCOMPtr<nsIRunnable> runnable(
+    NS_NewRunnableFunction("BackgroundSdrEncryptStrings",
+      [promise, plaintextsUtf8 = Move(plaintextsUtf8)]() mutable {
+        BackgroundSdrEncryptStrings(plaintextsUtf8, promise);
+      }));
+
+  nsCOMPtr<nsIThread> encryptionThread;
+  nsresult rv = NS_NewNamedThread("AsyncSDRThread",
+                                  getter_AddRefs(encryptionThread),
+                                  runnable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  promise.forget(aPromise);
   return NS_OK;
 }
 

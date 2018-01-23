@@ -28,6 +28,17 @@ interface nsILoginManagerCrypto : nsISupports {
    */
   AString encrypt(in AString plainText);
 
+  /*
+   * encryptMany
+   *
+   * @param plainTexts
+   *        The strings to be encrypted.
+   *
+   * Encrypts the specified strings, similar to encrypt, but returning a promise
+   * which resolves with the the encrypted strings.
+   */
+  jsval encryptMany(in jsval plainTexts);
+
   /**
    * decrypt
    *
