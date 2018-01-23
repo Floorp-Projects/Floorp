@@ -316,10 +316,48 @@ public:
     class Mutator
         : public nsIURIMutator
         , public BaseURIMutator<nsStandardURL>
+        , public nsIStandardURLMutator
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
         NS_DEFINE_NSIMUTATOR_COMMON
+
+        MOZ_MUST_USE NS_IMETHOD
+        Init(uint32_t aURLType, int32_t aDefaultPort,
+             const nsACString& aSpec, const char* aCharset, nsIURI* aBaseURI,
+             nsIURIMutator** aMutator) override
+        {
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            RefPtr<nsStandardURL> uri;
+            if (mURI) {
+              // We don't need to instantiate a new object we already have one
+              mURI.swap(uri);
+            } else {
+              uri = new nsStandardURL();
+            }
+            nsresult rv = uri->Init(aURLType, aDefaultPort, aSpec, aCharset, aBaseURI);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            mURI = uri;
+            return NS_OK;
+        }
+
+        MOZ_MUST_USE NS_IMETHODIMP
+        SetDefaultPort(int32_t aNewDefaultPort, nsIURIMutator** aMutator) override
+        {
+            if (!mURI) {
+                return NS_ERROR_NULL_POINTER;
+            }
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return mURI->SetDefaultPort(aNewDefaultPort);
+        }
 
         explicit Mutator() { }
     private:
