@@ -142,27 +142,6 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aOptions) {
   });
 }
 
-function waitForCondition(aConditionFn, aMaxTries = 50, aCheckInterval = 100) {
-  return new Promise((resolve, reject) => {
-    function tryNow() {
-      tries++;
-      let rv = aConditionFn();
-      if (rv) {
-        resolve(rv);
-      } else if (tries < aMaxTries) {
-        tryAgain();
-      } else {
-        reject("Condition timed out: " + aConditionFn.toSource());
-      }
-    }
-    function tryAgain() {
-      setTimeout(tryNow, aCheckInterval);
-    }
-    let tries = 0;
-    tryAgain();
-  });
-}
-
 function promiseWindowDialogOpen(buttonAction, url) {
   return new Promise(resolve => {
     Services.ww.registerNotification(function onOpen(subj, topic, data) {
