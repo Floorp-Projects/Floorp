@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
@@ -53,6 +52,7 @@ public class FirefoxAccounts {
     final Account[] accounts =
         AccountManager.get(context).getAccountsByType(FxAccountConstants.ACCOUNT_TYPE);
     if (accounts.length > 0) {
+      FirefoxAccountsUtils.optionallySeparateAccountsDuringFirstRun(context, accounts);
       return accounts;
     }
 
@@ -108,38 +108,6 @@ public class FirefoxAccounts {
       return accounts[0];
     }
     return null;
-  }
-
-  /**
-   * @return
-   *     the {@link State} instance associated with the current account, or <code>null</code> if
-   *     no accounts exist.
-   */
-  public static State getFirefoxAccountState(final Context context) {
-    final Account account = getFirefoxAccount(context);
-    if (account == null) {
-      return null;
-    }
-
-    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-    try {
-      return fxAccount.getState();
-    } catch (final Exception ex) {
-      Logger.warn(LOG_TAG, "Could not get FX account state.", ex);
-      return null;
-    }
-  }
-
-  /*
-   * @param context Android context
-   * @return the email address associated with the configured Firefox account if one exists; null otherwise.
-   */
-  public static String getFirefoxAccountEmail(final Context context) {
-    final Account account = getFirefoxAccount(context);
-    if (account == null) {
-      return null;
-    }
-    return account.name;
   }
 
   public static void logSyncOptions(Bundle syncOptions) {

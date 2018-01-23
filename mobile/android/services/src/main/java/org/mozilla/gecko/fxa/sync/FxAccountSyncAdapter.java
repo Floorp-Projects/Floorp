@@ -22,7 +22,9 @@ import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FirefoxAccountsUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.EnvironmentUtils;
 import org.mozilla.gecko.fxa.devices.FxAccountDeviceListUpdater;
 import org.mozilla.gecko.fxa.devices.FxAccountDeviceRegistrator;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
@@ -31,6 +33,7 @@ import org.mozilla.gecko.fxa.authenticator.FxADefaultLoginStateMachineDelegate;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
 import org.mozilla.gecko.fxa.login.Married;
+import org.mozilla.gecko.fxa.login.Separated;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
@@ -504,6 +507,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final Context context = getContext();
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+
+    // Is pickle file for this account absent, and does this look like a first run? Separate the account.
+    if (EnvironmentUtils.isFirstRun(getContext())) {
+      if (FirefoxAccountsUtils.separateAccountIfPickleFileAbsent(context, fxAccount)) {
+        Logger.info(LOG_TAG, "Syncing in a 'first run' scenario without a pickle file; skipping sync & separating the account.");
+        return;
+      }
+    }
 
     // This flag is used to conclude whether we should ignore syncing
     // based on user preference for syncing over metered connections.
