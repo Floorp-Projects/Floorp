@@ -230,10 +230,6 @@
 #endif
             <menuseparator id="orgMoveSeparator"/>
 
-            <menuitem id="orgMoveBookmarks"
-                      command="placesCmd_moveBookmarks"
-                      label="&cmd.moveBookmarks.label;"
-                      accesskey="&cmd.moveBookmarks.accesskey;"/>
 #ifdef XP_MACOSX
             <menuitem id="orgDelete"
                       command="cmd_delete"

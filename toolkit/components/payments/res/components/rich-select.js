@@ -24,7 +24,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
 
     this.addEventListener("blur", this);
     this.addEventListener("click", this);
-    this.addEventListener("keypress", this);
+    this.addEventListener("keydown", this);
   }
 
   connectedCallback() {
@@ -50,8 +50,8 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
         this.onClick(event);
         break;
       }
-      case "keypress": {
-        this.onKeyPress(event);
+      case "keydown": {
+        this.onKeyDown(event);
         break;
       }
     }
@@ -70,7 +70,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     }
   }
 
-  onKeyPress(event) {
+  onKeyDown(event) {
     if (event.key == " ") {
       this.open = !this.open;
     } else if (event.key == "ArrowDown") {

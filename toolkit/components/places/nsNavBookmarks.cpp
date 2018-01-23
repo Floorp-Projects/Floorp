@@ -2129,9 +2129,11 @@ nsNavBookmarks::ResultNodeForContainer(int64_t aItemId,
 nsresult
 nsNavBookmarks::QueryFolderChildren(
   int64_t aFolderId,
+  nsNavHistoryQueryOptions* aOriginalOptions,
   nsNavHistoryQueryOptions* aOptions,
   nsCOMArray<nsNavHistoryResultNode>* aChildren)
 {
+  NS_ENSURE_ARG_POINTER(aOriginalOptions);
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_ARG_POINTER(aChildren);
 
@@ -2162,7 +2164,7 @@ nsNavBookmarks::QueryFolderChildren(
   int32_t index = -1;
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    rv = ProcessFolderNodeRow(row, aOptions, aChildren, index);
+    rv = ProcessFolderNodeRow(row, aOriginalOptions, aOptions, aChildren, index);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2173,11 +2175,13 @@ nsNavBookmarks::QueryFolderChildren(
 nsresult
 nsNavBookmarks::ProcessFolderNodeRow(
   mozIStorageValueArray* aRow,
+  nsNavHistoryQueryOptions* aOriginalOptions,
   nsNavHistoryQueryOptions* aOptions,
   nsCOMArray<nsNavHistoryResultNode>* aChildren,
   int32_t& aCurrentIndex)
 {
   NS_ENSURE_ARG_POINTER(aRow);
+  NS_ENSURE_ARG_POINTER(aOriginalOptions);
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_ARG_POINTER(aChildren);
 
@@ -2228,7 +2232,7 @@ nsNavBookmarks::ProcessFolderNodeRow(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    node = new nsNavHistoryFolderResultNode(title, aOptions, id);
+    node = new nsNavHistoryFolderResultNode(title, aOriginalOptions, id);
 
     rv = aRow->GetUTF8String(kGetChildrenIndex_Guid, node->mBookmarkGuid);
     NS_ENSURE_SUCCESS(rv, rv);

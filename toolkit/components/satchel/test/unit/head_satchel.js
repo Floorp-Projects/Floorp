@@ -34,6 +34,15 @@ function getDBVersion(dbfile) {
   return version;
 }
 
+function getFormHistoryDBVersion() {
+  let profileDir = do_get_profile();
+  // Cleanup from any previous tests or failures.
+  let dbFile = profileDir.clone();
+  dbFile.append("formhistory.sqlite");
+  return getDBVersion(dbFile);
+}
+
+
 const isGUID = /[A-Za-z0-9\+\/]{16}/;
 
 // Find form history entries.
@@ -102,9 +111,9 @@ function addEntry(name, value, then) {
   }, then);
 }
 
-function promiseCountEntries(name, value) {
-  return new Promise(res => {
-    countEntries(name, value, res);
+function promiseCountEntries(name, value, checkFn = () => {}) {
+  return new Promise(resolve => {
+    countEntries(name, value, function(result) { checkFn(result); resolve(result); });
   });
 }
 
@@ -131,6 +140,23 @@ function updateFormHistory(changes, then) {
         then();
       }
     },
+  });
+}
+
+function promiseUpdate(change) {
+  return new Promise((resolve, reject) => {
+    FormHistory.update(change, {
+      handleError(error) {
+        this._error = error;
+      },
+      handleCompletion(reason) {
+        if (reason) {
+          reject(this._error);
+        } else {
+          resolve();
+        }
+      },
+    });
   });
 }
 

@@ -5,7 +5,7 @@ use super::item::Item;
 use super::ty::TypeKind;
 use clang;
 use ir::annotations::Annotations;
-use ir::item::ItemCanonicalName;
+use ir::item::ItemCanonicalPath;
 use parse::{ClangItemParser, ParseError};
 
 /// An enum representing custom handling that can be given to a variant.
@@ -130,10 +130,10 @@ impl Enum {
 
     /// Whether the enum should be a bitfield
     pub fn is_bitfield(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        let name = item.canonical_name(ctx);
+        let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
-        ctx.options().bitfield_enums.matches(&name) ||
+        ctx.options().bitfield_enums.matches(&path[1..].join("::")) ||
             (enum_ty.name().is_none() &&
                     self.variants().iter().any(|v| {
                     ctx.options().bitfield_enums.matches(&v.name())
@@ -146,10 +146,10 @@ impl Enum {
         ctx: &BindgenContext,
         item: &Item,
     ) -> bool {
-        let name = item.canonical_name(ctx);
+        let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
-        ctx.options().constified_enum_modules.matches(&name) ||
+        ctx.options().constified_enum_modules.matches(&path[1..].join("::")) ||
             (enum_ty.name().is_none() &&
                  self.variants().iter().any(|v| {
                     ctx.options().constified_enum_modules.matches(&v.name())
@@ -158,10 +158,10 @@ impl Enum {
 
     /// Whether the enum should be a Rust enum
     pub fn is_rustified_enum(&self, ctx: &BindgenContext, item: &Item) -> bool {
-        let name = item.canonical_name(ctx);
+        let path = item.canonical_path(ctx);
         let enum_ty = item.expect_type();
 
-        ctx.options().rustified_enums.matches(&name) ||
+        ctx.options().rustified_enums.matches(&path[1..].join("::")) ||
             (enum_ty.name().is_none() &&
                 self.variants().iter().any(|v| {
                     ctx.options().rustified_enums.matches(&v.name())

@@ -286,7 +286,7 @@ class CargoProvider(MachCommandBase):
             'geckodriver': 'testing/geckodriver',
         }
 
-        if crates == None:
+        if crates == None or crates == []:
             crates = ['gkrust']
 
         for crate in crates:
