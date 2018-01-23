@@ -1851,6 +1851,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   mStorageAllowed = aOther.mStorageAllowed;
   mServiceWorkersTestingInWindow = aOther.mServiceWorkersTestingInWindow;
   mOriginAttributes = aOther.mOriginAttributes;
+  mParentController = aOther.mParentController;
 }
 
 nsresult
@@ -4790,6 +4791,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mOriginAttributes = aParent->GetOriginAttributes();
     loadInfo.mServiceWorkersTestingInWindow =
       aParent->ServiceWorkersTestingInWindow();
+    loadInfo.mParentController = aParent->GetController();
   } else {
     AssertIsOnMainThread();
 
@@ -4920,6 +4922,7 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
         nsContentUtils::StorageAllowedForWindow(globalWindow);
       loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
       loadInfo.mOriginAttributes = nsContentUtils::GetOriginAttributes(document);
+      loadInfo.mParentController = globalWindow->GetController();
     } else {
       // Not a window
       MOZ_ASSERT(isChrome);
