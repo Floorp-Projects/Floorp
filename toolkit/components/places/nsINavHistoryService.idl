@@ -1279,12 +1279,6 @@ interface nsINavHistoryService : nsISupports
   readonly attribute boolean hasHistoryEntries;
 
   /**
-   * Gets the original title of the page.
-   * @deprecated use PlacesUtils.history.fetch instead.
-   */
-  AString getPageTitle(in nsIURI aURI);
-
-  /**
    * This is just like markPageAsTyped (in nsIBrowserHistory, also implemented
    * by the history service), but for bookmarks. It declares that the given URI
    * is being opened as a result of following a bookmark. If this URI is loaded
