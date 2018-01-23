@@ -378,12 +378,11 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   , mAnimationFlag(aFlag)
 {
   MOZ_ASSERT(aElement && aPresShell);
+  MOZ_ASSERT(aPresShell->GetPresContext());
 
   mDocumentWeak = do_GetWeakReference(aPresShell->GetDocument());
   mContent = aElement;
   mPseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElt);
-
-  MOZ_ASSERT(aPresShell->GetPresContext());
 }
 
 nsComputedDOMStyle::~nsComputedDOMStyle()
@@ -518,25 +517,12 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContext(Element* aElement,
                                     nsAtom* aPseudo,
-                                    nsIPresShell* aPresShell,
                                     StyleType aStyleType)
 {
-  // If the content has a pres shell, we must use it.  Otherwise we'd
-  // potentially mix rule trees by using the wrong pres shell's style
-  // set.  Using the pres shell from the content also means that any
-  // content that's actually *in* a document will get the style from the
-  // correct document.
-  nsCOMPtr<nsIPresShell> presShell =
-    nsContentUtils::GetPresShellForContent(aElement);
-  if (!presShell) {
-    presShell = aPresShell;
-    if (!presShell)
-      return nullptr;
+  if (nsIDocument* doc = aElement->GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Style);
   }
-
-  presShell->FlushPendingNotifications(FlushType::Style);
-
-  return GetStyleContextNoFlush(aElement, aPseudo, presShell, aStyleType);
+  return GetStyleContextNoFlush(aElement, aPseudo, aStyleType);
 }
 
 #ifdef MOZ_OLD_STYLE
@@ -834,8 +820,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement()) {
     RefPtr<nsStyleContext> p =
-      GetStyleContextNoFlush(parent->AsElement(), nullptr,
-                             aPresShell, aStyleType);
+      DoGetStyleContextNoFlush(parent->AsElement(), nullptr,
+                               aPresShell, aStyleType, eWithAnimation);
     MOZ_ASSERT(p && p->IsGecko());
     parentContext = GeckoStyleContext::TakeRef(p.forget());
   }
@@ -978,6 +964,11 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     return;
   }
 
+  // TODO(emilio): We may want to handle a few special-cases here:
+  //
+  //  * https://github.com/w3c/csswg-drafts/issues/1964
+  //  * https://github.com/w3c/csswg-drafts/issues/1548
+
   // If the property we are computing relies on layout, then we must flush.
   FlushTarget target = aNeedsLayoutFlush ? FlushTarget::Normal : GetFlushTarget(document);
 
@@ -1097,11 +1088,12 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 #endif
     // Need to resolve a style context
     RefPtr<nsStyleContext> resolvedStyleContext =
-      nsComputedDOMStyle::GetStyleContextNoFlush(
+      DoGetStyleContextNoFlush(
           mContent->AsElement(),
           mPseudo,
           presShellForContent ? presShellForContent.get() : mPresShell,
-          mStyleType);
+          mStyleType,
+          eWithAnimation);
     if (!resolvedStyleContext) {
       ClearStyleContext();
       return;
@@ -1111,9 +1103,8 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     // will flush, since we flushed style at the top of this function.
     // We don't need to check this if we only flushed the parent.
     NS_ASSERTION(target == FlushTarget::ParentOnly ||
-                 (mPresShell &&
-                   currentGeneration ==
-                     mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration()),
+                 currentGeneration ==
+                     mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration(),
                    "why should we have flushed style again?");
 
     SetResolvedStyleContext(Move(resolvedStyleContext), currentGeneration);

@@ -16,7 +16,7 @@ namespace a11y {
 class StyleInfo
 {
 public:
-  StyleInfo(dom::Element* aElement, nsIPresShell* aPresShell);
+  explicit StyleInfo(dom::Element* aElement);
   ~StyleInfo() { }
 
   void Display(nsAString& aValue);

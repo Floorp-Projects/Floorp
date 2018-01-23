@@ -14,11 +14,11 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-StyleInfo::StyleInfo(dom::Element* aElement, nsIPresShell* aPresShell) :
+StyleInfo::StyleInfo(dom::Element* aElement) :
   mElement(aElement)
 {
   mStyleContext =
-    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, aPresShell);
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
 }
 
 void
