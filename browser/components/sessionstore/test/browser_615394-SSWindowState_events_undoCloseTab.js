@@ -1,6 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const testState = {
   windows: [{
@@ -11,18 +9,16 @@ const testState = {
   }]
 };
 
-function test() {
-  /** Test for Bug 615394 - Session Restore should notify when it is beginning and ending a restore **/
-  waitForExplicitFinish();
+// Test for Bug 615394 - Session Restore should notify when it is beginning and
+// ending a restore.
+add_task(async function test_undoCloseTab() {
+  await promiseBrowserState(testState);
 
-  waitForBrowserState(testState, test_undoCloseTab);
-}
-
-function test_undoCloseTab() {
-  let tab = gBrowser.tabs[1],
-      busyEventCount = 0,
-      readyEventCount = 0,
-      reopenedTab;
+  let tab = gBrowser.tabs[1];
+  let busyEventCount = 0;
+  let readyEventCount = 0;
+  // This will be set inside the `onSSWindowStateReady` method.
+  let lastTab;
 
   ss.setTabValue(tab, "foo", "bar");
 
@@ -31,30 +27,31 @@ function test_undoCloseTab() {
   }
 
   function onSSWindowStateReady(aEvent) {
-    reopenedTab = gBrowser.tabs[1];
+    Assert.equal(gBrowser.tabs.length, 2, "Should only have 2 tabs");
+    lastTab = gBrowser.tabs[1];
     readyEventCount++;
-    is(ss.getTabValue(reopenedTab, "foo"), "bar");
-    ss.setTabValue(reopenedTab, "baz", "qux");
-  }
-
-  function onSSTabRestored(aEvent) {
-    is(busyEventCount, 1);
-    is(readyEventCount, 1);
-    is(ss.getTabValue(reopenedTab, "baz"), "qux");
-    is(reopenedTab.linkedBrowser.currentURI.spec, "about:rights");
-
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
-
-    gBrowser.removeTab(gBrowser.tabs[1]);
-    finish();
+    Assert.equal(ss.getTabValue(lastTab, "foo"), "bar");
+    ss.setTabValue(lastTab, "baz", "qux");
   }
 
   window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
   window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, { once: true });
 
-  gBrowser.removeTab(tab);
-  reopenedTab = ss.undoCloseTab(window, 0);
-}
+  let restoredPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "SSTabRestored");
 
+  await BrowserTestUtils.removeTab(tab);
+  let reopenedTab = ss.undoCloseTab(window, 0);
+
+  await Promise.all([restoredPromise, BrowserTestUtils.browserLoaded(reopenedTab.linkedBrowser)]);
+
+  Assert.equal(reopenedTab, lastTab, "Tabs should be the same one.");
+  Assert.equal(busyEventCount, 1);
+  Assert.equal(readyEventCount, 1);
+  Assert.equal(ss.getTabValue(reopenedTab, "baz"), "qux");
+  Assert.equal(reopenedTab.linkedBrowser.currentURI.spec, "about:rights");
+
+  window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+
+  await BrowserTestUtils.removeTab(reopenedTab);
+});
