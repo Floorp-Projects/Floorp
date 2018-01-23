@@ -17,6 +17,9 @@ async function setup() {
   // handle things for us if the test actually hangs.
   requestLongerTimeout(100);
 
+  SimpleTest.requestCompleteLog();
+  //Generate output so mozprocess knows we're still alive for the long session
+
   info("installing extension temporarily");
   let chromeURL = Services.io.newURI(EXTENSION_DIR);
   let dir = chromeRegistry.convertChromeURL(chromeURL).QueryInterface(Ci.nsIFileURL).file;
