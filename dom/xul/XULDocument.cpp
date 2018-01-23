@@ -2089,7 +2089,7 @@ XULDocument::PrepareToWalk()
 
     uint32_t piInsertionPoint = 0;
     if (mState != eState_Master) {
-        int32_t indexOfRoot = IndexOf(GetRootElement());
+        int32_t indexOfRoot = ComputeIndexOf(GetRootElement());
         NS_ASSERTION(indexOfRoot >= 0,
                      "No root content when preparing to walk overlay!");
         piInsertionPoint = indexOfRoot;
@@ -3983,7 +3983,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
         free(str);
 
         if (content) {
-            int32_t pos = aParent->IndexOf(content);
+            int32_t pos = aParent->ComputeIndexOf(content);
 
             if (pos != -1) {
                 pos = isInsertAfter ? pos + 1 : pos;
@@ -4029,7 +4029,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
 nsresult
 XULDocument::RemoveElement(nsINode* aParent, nsINode* aChild)
 {
-    int32_t nodeOffset = aParent->IndexOf(aChild);
+    int32_t nodeOffset = aParent->ComputeIndexOf(aChild);
 
     aParent->RemoveChildAt_Deprecated(nodeOffset, true);
     return NS_OK;

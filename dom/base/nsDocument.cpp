@@ -4351,7 +4351,7 @@ nsDocument::GetChildAt_Deprecated(uint32_t aIndex) const
 }
 
 int32_t
-nsDocument::IndexOf(const nsINode* aPossibleChild) const
+nsDocument::ComputeIndexOf(const nsINode* aPossibleChild) const
 {
   return mChildren.IndexOfChild(aPossibleChild);
 }
@@ -4417,7 +4417,7 @@ nsDocument::RemoveChildNode(nsIContent* aKid, bool aNotify)
   // Any call before that point would restore this soon-to-be-obsolete cached
   // answer, and our clearing here would be fruitless.)
   mCachedRootElement = nullptr;
-  doRemoveChildAt(IndexOf(aKid), aNotify, aKid, mChildren);
+  doRemoveChildAt(ComputeIndexOf(aKid), aNotify, aKid, mChildren);
   MOZ_ASSERT(mCachedRootElement != aKid,
              "Stale pointer in mCachedRootElement, after we tried to clear it "
              "(maybe somebody called GetRootElement() too early?)");

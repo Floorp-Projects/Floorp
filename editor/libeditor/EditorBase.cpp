@@ -1114,7 +1114,7 @@ EditorBase::BeginningOfDocument()
     return NS_ERROR_NULL_POINTER;
   }
 
-  MOZ_ASSERT(parent->IndexOf(firstNode) == 0,
+  MOZ_ASSERT(parent->ComputeIndexOf(firstNode) == 0,
              "How come the first node isn't the left most child in its parent?");
   return selection->Collapse(parent, 0);
 }
@@ -1617,7 +1617,7 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
-  int32_t offset = parent->IndexOf(&aRightNode);
+  int32_t offset = parent->ComputeIndexOf(&aRightNode);
   // Find the number of children of the lefthand node
   uint32_t oldLeftNodeLen = aLeftNode.Length();
 
@@ -1897,7 +1897,7 @@ EditorBase::MoveNode(nsIContent* aNode,
   if (NS_WARN_IF(!oldParent)) {
     return NS_ERROR_FAILURE;
   }
-  int32_t oldOffset = oldParent->IndexOf(aNode);
+  int32_t oldOffset = oldParent->ComputeIndexOf(aNode);
 
   if (aOffset == -1) {
     // Magic value meaning "move to end of aParent"
@@ -3400,23 +3400,23 @@ EditorBase::GetChildOffset(nsINode* aChild,
   MOZ_ASSERT(aChild);
   MOZ_ASSERT(aParent);
 
-  // nsINode::IndexOf() is expensive.  So, if we can return index without
-  // calling it, we should do that.
+  // nsINode::ComputeIndexOf() is expensive.  So, if we can return index
+  // without calling it, we should do that.
 
   // If there is no previous siblings, it means that it's the first child.
   if (aParent->GetFirstChild() == aChild) {
-    MOZ_ASSERT(aParent->IndexOf(aChild) == 0);
+    MOZ_ASSERT(aParent->ComputeIndexOf(aChild) == 0);
     return 0;
   }
 
   // If there is no next siblings, it means that it's the last child.
   if (aParent->GetLastChild() == aChild) {
     int32_t lastChildIndex = static_cast<int32_t>(aParent->Length() - 1);
-    MOZ_ASSERT(aParent->IndexOf(aChild) == lastChildIndex);
+    MOZ_ASSERT(aParent->ComputeIndexOf(aChild) == lastChildIndex);
     return lastChildIndex;
   }
 
-  int32_t index = aParent->IndexOf(aChild);
+  int32_t index = aParent->ComputeIndexOf(aChild);
   MOZ_ASSERT(index != -1);
   return index;
 }

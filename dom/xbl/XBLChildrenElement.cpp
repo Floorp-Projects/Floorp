@@ -164,7 +164,7 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
         index += point->InsertedChildrenLength();
       }
       else {
-        int32_t insIndex = point->IndexOf(aContent);
+        int32_t insIndex = point->ComputeIndexOf(aContent);
         if (insIndex != -1) {
           return index + insIndex;
         }

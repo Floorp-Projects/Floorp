@@ -279,7 +279,7 @@ Attr::GetChildAt_Deprecated(uint32_t aIndex) const
 }
 
 int32_t
-Attr::IndexOf(const nsINode* aPossibleChild) const
+Attr::ComputeIndexOf(const nsINode* aPossibleChild) const
 {
   return -1;
 }

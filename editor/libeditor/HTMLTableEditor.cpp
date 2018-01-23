@@ -671,7 +671,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
     // The row parent and offset where we will insert new row
     nsCOMPtr<nsINode> parentOfRow = parentRow->GetParentNode();
     NS_ENSURE_TRUE(parentOfRow, NS_ERROR_NULL_POINTER);
-    int32_t newRowOffset = parentOfRow->IndexOf(parentRow);
+    int32_t newRowOffset = parentOfRow->ComputeIndexOf(parentRow);
 
     // Adjust for when adding past the end
     if (aAfter && startRowIndex >= rowCount) {
