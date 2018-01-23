@@ -8,7 +8,6 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
     # repositories
-    "mozilla_dir": "mozilla-beta",
     "repos": [{
         "vcs": "hg",
         "repo": "https://hg.mozilla.org/build/tools",

@@ -1,7 +1,9 @@
 config = {
     "platform": "linux",
     "stage_product": "firefox",
-    "mozconfig": "src/browser/config/mozconfigs/linux32/l10n-mozconfig",
+    "app_name": "browser",
+    "mozconfig_platform": "linux32",
+    "mozconfig_variant": "l10n-mozconfig",
     "ssh_key_dir": "/home/mock_mozilla/.ssh",
     "log_name": "single_locale",
     "objdir": "obj-firefox",

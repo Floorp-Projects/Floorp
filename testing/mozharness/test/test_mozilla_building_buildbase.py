@@ -3,7 +3,7 @@ import unittest
 from mozharness.base.log import LogMixin
 from mozharness.base.script import ScriptMixin
 from mozharness.mozilla.building.buildbase import (
-    _get_mozconfig_path, MozconfigPathError,
+    get_mozconfig_path, MozconfigPathError,
 )
 
 
@@ -20,7 +20,7 @@ class FakeScriptMixin(LogMixin, ScriptMixin, object):
 
 class TestMozconfigPath(unittest.TestCase):
     """
-    Tests for :func:`_get_mozconfig_path`.
+    Tests for :func:`get_mozconfig_path`.
     """
 
     def test_path(self):
@@ -29,7 +29,7 @@ class TestMozconfigPath(unittest.TestCase):
         """
         script = FakeScriptMixin()
 
-        abs_src_path = _get_mozconfig_path(
+        abs_src_path = get_mozconfig_path(
             script, config={'src_mozconfig': "path/to/mozconfig"},
             dirs={"abs_src_dir": "/src"},
         )
@@ -48,7 +48,7 @@ class TestMozconfigPath(unittest.TestCase):
             'mozconfig_variant': 'variant',
             'mozconfig_platform': 'platform9000',
         }
-        abs_src_path = _get_mozconfig_path(
+        abs_src_path = get_mozconfig_path(
             script, config=config,
             dirs={"abs_src_dir": "/src"},
         )
@@ -69,7 +69,7 @@ class TestMozconfigPath(unittest.TestCase):
         config = {
             'src_mozconfig_manifest': "helper_files/mozconfig_manifest.json"
         }
-        abs_src_path = _get_mozconfig_path(
+        abs_src_path = get_mozconfig_path(
             script, config=config,
             dirs={
                 "abs_src_dir": "/src",
@@ -117,4 +117,4 @@ class TestMozconfigPath(unittest.TestCase):
 
         for config in configs:
             with self.assertRaises(MozconfigPathError):
-                _get_mozconfig_path(script, config=config, dirs={})
+                get_mozconfig_path(script, config=config, dirs={})

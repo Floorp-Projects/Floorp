@@ -55,7 +55,6 @@ config = {
     },
     "upload_branch": "%s-android-api-16" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "mozilla_dir": MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "key_alias": "release",
     # Mock
