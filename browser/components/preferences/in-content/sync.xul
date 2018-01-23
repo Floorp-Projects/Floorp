@@ -205,15 +205,10 @@
                 hidden="true"/>
       </hbox>
     </groupbox>
-    <label class="fxaMobilePromo">
-        &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
-        --><image class="androidLink"></image><label class="text-link" id="fxaMobilePromo-android-hasFxaAccount"><!--
-        -->&mobilePromo3.androidLink;</label><!--
-        -->&mobilePromo3.iOSBefore;<!--
-        --><image class="iOSLink"></image><label class="text-link" id="fxaMobilePromo-ios-hasFxaAccount"><!--
-        -->&mobilePromo3.iOSLink;</label><!--
-        -->&mobilePromo3.end;
-    </label>
+    <label id="mobilePromo-singledevice"
+           class="text-link fxaMobilePromo">&mobilepromo.singledevice;</label>
+    <label id="mobilePromo-multidevice"
+           class="text-link fxaMobilePromo">&mobilepromo.multidevice;</label>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;
