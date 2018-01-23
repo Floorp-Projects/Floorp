@@ -357,13 +357,25 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
 CodeOffset
 MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
-    MOZ_CRASH("NYI - sub32FromStackPtrWithPatch");
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch = temps.AcquireX();
+    CodeOffset offs = CodeOffset(currentOffset());
+    movz(scratch, 0, 0);
+    movk(scratch, 0, 16);
+    Sub(ARMRegister(dest, 64), sp, scratch);
+    return offs;
 }
 
 void
 MacroAssembler::patchSub32FromStackPtr(CodeOffset offset, Imm32 imm)
 {
-    MOZ_CRASH("NYI - patchSub32FromStackPtr");
+    Instruction* i1 = getInstructionAt(BufferOffset(offset.offset()));
+    MOZ_ASSERT(i1->IsMovz());
+    i1->SetInstructionBits(i1->InstructionBits() | ImmMoveWide(uint16_t(imm.value)));
+
+    Instruction* i2 = getInstructionAt(BufferOffset(offset.offset() + 4));
+    MOZ_ASSERT(i2->IsMovk());
+    i2->SetInstructionBits(i2->InstructionBits() | ImmMoveWide(uint16_t(imm.value >> 16)));
 }
 
 void
@@ -1010,13 +1022,19 @@ MacroAssembler::branch32(Condition cond, wasm::SymbolicAddress lhs, Imm32 rhs, L
 void
 MacroAssembler::branch64(Condition cond, Register64 lhs, Imm64 val, Label* success, Label* fail)
 {
-    MOZ_CRASH("NYI: branch64 reg-imm");
+    Cmp(ARMRegister(lhs.reg, 64), val.value);
+    B(success, cond);
+    if (fail)
+        B(fail);
 }
 
 void
 MacroAssembler::branch64(Condition cond, Register64 lhs, Register64 rhs, Label* success, Label* fail)
 {
-    MOZ_CRASH("NYI: branch64 reg-reg");
+    Cmp(ARMRegister(lhs.reg, 64), ARMRegister(rhs.reg, 64));
+    B(success, cond);
+    if (fail)
+        B(fail);
 }
 
 void
@@ -1788,7 +1806,8 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
 void
 MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
 {
-    MOZ_CRASH("branchToComputedAddress");
+    // Not used by Rabaldr.
+    MOZ_CRASH("NYI - branchToComputedAddress");
 }
 
 void
@@ -1945,14 +1964,16 @@ template <class L>
 void
 MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
 {
-    MOZ_CRASH("NYI");
+    // Not used on ARM64, we rely on signal handling instead
+    MOZ_CRASH("NYI - wasmBoundsCheck");
 }
 
 template <class L>
 void
 MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
 {
-    MOZ_CRASH("NYI");
+    // Not used on ARM64, we rely on signal handling instead
+    MOZ_CRASH("NYI - wasmBoundsCheck");
 }
 
 //}}} check_macroassembler_style
@@ -2042,14 +2063,29 @@ MacroAssemblerCompat::moveStackPtrTo(Register dest)
 void
 MacroAssemblerCompat::loadStackPtr(const Address& src)
 {
-    Ldr(GetStackPointer64(), toMemOperand(src));
-    syncStackPtr();
+    if (sp.Is(GetStackPointer64())) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch = temps.AcquireX();
+        Ldr(scratch, toMemOperand(src));
+        Mov(sp, scratch);
+        // syncStackPtr() not needed since our SP is the real SP.
+    } else {
+        Ldr(GetStackPointer64(), toMemOperand(src));
+        syncStackPtr();
+    }
 }
 
 void
 MacroAssemblerCompat::storeStackPtr(const Address& dest)
 {
-    Str(GetStackPointer64(), toMemOperand(dest));
+    if (sp.Is(GetStackPointer64())) {
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMRegister scratch = temps.AcquireX();
+        Mov(scratch, sp);
+        Str(scratch, toMemOperand(dest));
+    } else {
+        Str(GetStackPointer64(), toMemOperand(dest));
+    }
 }
 
 void

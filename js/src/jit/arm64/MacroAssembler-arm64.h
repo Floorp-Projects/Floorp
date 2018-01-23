@@ -518,12 +518,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     using vixl::MacroAssembler::B;
-    void B(wasm::OldTrapDesc) {
-        MOZ_CRASH("NYI");
-    }
-    void B(wasm::OldTrapDesc, Condition cond) {
-        MOZ_CRASH("NYI");
-    }
+    void B(wasm::OldTrapDesc, Condition cond = Always);
 
     void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                               bool negativeZeroCheck = true)
@@ -699,7 +694,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Br(vixl::ip0);
     }
     void jump(wasm::OldTrapDesc target) {
-        MOZ_CRASH("NYI");
+        B(target);
     }
 
     void align(int alignment) {
@@ -712,7 +707,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         armbuffer_.align(alignment);
     }
     void nopAlign(int alignment) {
-        MOZ_CRASH("NYI");
+        armbuffer_.align(alignment);
     }
 
     void movePtr(Register src, Register dest) {
@@ -1396,7 +1391,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void unboxPrivate(const ValueOperand& src, Register dest) {
-        ubfx(ARMRegister(dest, 64), ARMRegister(src.valueReg(), 64), 1, JSVAL_TAG_SHIFT - 1);
+        Lsl(ARMRegister(dest, 64), ARMRegister(src.valueReg(), 64), 1);
     }
 
     void notBoolean(const ValueOperand& val) {
