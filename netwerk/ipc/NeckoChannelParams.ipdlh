@@ -10,6 +10,7 @@ include protocol PFTPChannel;
 include protocol PChildToParentStream;
 include BlobTypes;
 include URIParams;
+include IPCServiceWorkerDescriptor;
 include IPCStream;
 include PBackgroundSharedTypes;
 
@@ -68,6 +69,13 @@ struct LoadInfoArgs
    */
   PrincipalInfo[]             ancestorPrincipals;
   uint64_t[]                  ancestorOuterWindowIDs;
+
+  /**
+   * Subresource loads may have a controller set based on their owning
+   * window/worker client.  We must send this across IPC to support
+   * performing interception in the parent.
+   */
+  OptionalIPCServiceWorkerDescriptor controller;
 
   nsCString[]                 corsUnsafeHeaders;
   bool                        forcePreflight;
