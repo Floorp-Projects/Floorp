@@ -407,10 +407,7 @@ function getRelativePath(file, dir) {
 }
 
 /**
- * Converts the given opaque descriptor string into an ordinary path
- * string. In practice, the path string is always exactly equal to the
- * descriptor string, but theoretically may not have been on some legacy
- * systems.
+ * Converts the given opaque descriptor string into an ordinary path string.
  *
  * @param {string} descriptor
  *        The opaque descriptor string to convert.
@@ -3626,7 +3623,7 @@ this.XPIProvider = {
     // WebExtension themes are installed as disabled, fix that here.
     addon.userDisabled = false;
 
-    addon = XPIDatabase.addAddonMetadata(addon, file.persistentDescriptor);
+    addon = XPIDatabase.addAddonMetadata(addon, file.path);
 
     XPIStates.addAddon(addon);
     XPIDatabase.saveChanges();
