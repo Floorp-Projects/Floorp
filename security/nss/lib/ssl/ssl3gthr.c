@@ -386,6 +386,13 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
     SSL3Ciphertext cText;
     PRBool keepGoing = PR_TRUE;
 
+    if (ss->ssl3.fatalAlertSent) {
+        SSL_TRC(3, ("%d: SSL3[%d] Cannot gather data; fatal alert already sent",
+                    SSL_GETPID(), ss->fd));
+        PORT_SetError(SSL_ERROR_HANDSHAKE_FAILED);
+        return SECFailure;
+    }
+
     SSL_TRC(30, ("%d: SSL3[%d]: ssl3_GatherCompleteHandshake",
                  SSL_GETPID(), ss->fd));
 

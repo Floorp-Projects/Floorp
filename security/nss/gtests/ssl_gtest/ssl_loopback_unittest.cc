@@ -535,4 +535,27 @@ INSTANTIATE_TEST_CASE_P(Version12Plus, TlsConnectTls12Plus,
                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV12Plus));
 
-}  // namespace nspr_test
+INSTANTIATE_TEST_CASE_P(
+    GenericStream, TlsConnectGenericResumption,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll,
+                       ::testing::Values(true, false)));
+INSTANTIATE_TEST_CASE_P(
+    GenericDatagram, TlsConnectGenericResumption,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
+                       TlsConnectTestBase::kTlsV11Plus,
+                       ::testing::Values(true, false)));
+
+INSTANTIATE_TEST_CASE_P(
+    GenericStream, TlsConnectGenericResumptionToken,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(
+    GenericDatagram, TlsConnectGenericResumptionToken,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
+                       TlsConnectTestBase::kTlsV11Plus));
+
+INSTANTIATE_TEST_CASE_P(GenericDatagram, TlsConnectTls13ResumptionToken,
+                        TlsConnectTestBase::kTlsVariantsAll);
+
+}  // namespace nss_test

@@ -74,12 +74,12 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
           Reset(TlsAgent::kServerRsaSign);
           auth_type_ = ssl_auth_rsa_sign;
           break;
-        case ssl_sig_rsa_pss_sha256:
-        case ssl_sig_rsa_pss_sha384:
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
           Reset(TlsAgent::kServerRsaSign);
           auth_type_ = ssl_auth_rsa_sign;
           break;
-        case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pss_rsae_sha512:
           // You can't fit SHA-512 PSS in a 1024-bit key.
           Reset(TlsAgent::kRsa2048);
           auth_type_ = ssl_auth_rsa_sign;
@@ -313,8 +313,8 @@ static const auto kDummySignatureSchemesParams =
 static SSLSignatureScheme kSignatureSchemesParamsArr[] = {
     ssl_sig_rsa_pkcs1_sha256,       ssl_sig_rsa_pkcs1_sha384,
     ssl_sig_rsa_pkcs1_sha512,       ssl_sig_ecdsa_secp256r1_sha256,
-    ssl_sig_ecdsa_secp384r1_sha384, ssl_sig_rsa_pss_sha256,
-    ssl_sig_rsa_pss_sha384,         ssl_sig_rsa_pss_sha512,
+    ssl_sig_ecdsa_secp384r1_sha384, ssl_sig_rsa_pss_rsae_sha256,
+    ssl_sig_rsa_pss_rsae_sha384,    ssl_sig_rsa_pss_rsae_sha512,
 };
 #endif
 

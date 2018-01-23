@@ -183,9 +183,9 @@ static const SSLSignatureScheme defaultSignatureSchemes[] = {
     ssl_sig_ecdsa_secp384r1_sha384,
     ssl_sig_ecdsa_secp521r1_sha512,
     ssl_sig_ecdsa_sha1,
-    ssl_sig_rsa_pss_sha256,
-    ssl_sig_rsa_pss_sha384,
-    ssl_sig_rsa_pss_sha512,
+    ssl_sig_rsa_pss_rsae_sha256,
+    ssl_sig_rsa_pss_rsae_sha384,
+    ssl_sig_rsa_pss_rsae_sha512,
     ssl_sig_rsa_pkcs1_sha256,
     ssl_sig_rsa_pkcs1_sha384,
     ssl_sig_rsa_pkcs1_sha512,
@@ -852,7 +852,7 @@ ssl3_config_match_init(sslSocket *ss)
  * enabled, has a certificate (as needed), has a viable key agreement method, is
  * usable with the negotiated TLS version, and is otherwise usable. */
 static PRBool
-config_match(const ssl3CipherSuiteCfg *suite, int policy,
+config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
              const SSLVersionRange *vrange, const sslSocket *ss)
 {
     const ssl3CipherSuiteDef *cipher_def;
@@ -888,7 +888,7 @@ config_match(const ssl3CipherSuiteCfg *suite, int policy,
 /* Return the number of cipher suites that are usable. */
 /* called from ssl3_SendClientHello */
 static unsigned int
-count_cipher_suites(sslSocket *ss, int policy)
+count_cipher_suites(sslSocket *ss, PRUint8 policy)
 {
     unsigned int i, count = 0;
 
@@ -2336,6 +2336,11 @@ ssl3_SendRecord(sslSocket *ss,
     if (ss->ssl3.fatalAlertSent) {
         SSL_TRC(3, ("%d: SSL3[%d] Suppress write, fatal alert already sent",
                     SSL_GETPID(), ss->fd));
+        if (type != content_alert) {
+            /* If we are sending an alert, then we already have an
+             * error, so don't overwrite. */
+            PORT_SetError(SSL_ERROR_HANDSHAKE_FAILED);
+        }
         return SECFailure;
     }
 
@@ -2647,9 +2652,7 @@ ssl3_HandleNoCertificate(sslSocket *ss)
          (ss->opt.requireCertificate == SSL_REQUIRE_FIRST_HANDSHAKE))) {
         PRFileDesc *lower;
 
-        if (!ss->opt.noCache) {
-            ss->sec.uncache(ss->sec.ci.sid);
-        }
+        ssl_UncacheSessionID(ss);
         SSL3_SendAlert(ss, alert_fatal, bad_certificate);
 
         lower = ss->fd->lower;
@@ -2711,8 +2714,8 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
         ssl_GetSSL3HandshakeLock(ss);
     }
     if (level == alert_fatal) {
-        if (!ss->opt.noCache && ss->sec.ci.sid) {
-            ss->sec.uncache(ss->sec.ci.sid);
+        if (ss->sec.ci.sid) {
+            ssl_UncacheSessionID(ss);
         }
     }
 
@@ -2976,9 +2979,7 @@ ssl3_HandleAlert(sslSocket *ss, sslBuffer *buf)
         }
     }
     if (level == alert_fatal) {
-        if (!ss->opt.noCache) {
-            ss->sec.uncache(ss->sec.ci.sid);
-        }
+        ssl_UncacheSessionID(ss);
         if ((ss->ssl3.hs.ws == wait_server_hello) &&
             (desc == handshake_failure)) {
             /* XXX This is a hack.  We're assuming that any handshake failure
@@ -3962,17 +3963,20 @@ ssl_SignatureSchemeToHashType(SSLSignatureScheme scheme)
             return ssl_hash_sha1;
         case ssl_sig_rsa_pkcs1_sha256:
         case ssl_sig_ecdsa_secp256r1_sha256:
-        case ssl_sig_rsa_pss_sha256:
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_pss_sha256:
         case ssl_sig_dsa_sha256:
             return ssl_hash_sha256;
         case ssl_sig_rsa_pkcs1_sha384:
         case ssl_sig_ecdsa_secp384r1_sha384:
-        case ssl_sig_rsa_pss_sha384:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_pss_sha384:
         case ssl_sig_dsa_sha384:
             return ssl_hash_sha384;
         case ssl_sig_rsa_pkcs1_sha512:
         case ssl_sig_ecdsa_secp521r1_sha512:
-        case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pss_rsae_sha512:
+        case ssl_sig_rsa_pss_pss_sha512:
         case ssl_sig_dsa_sha512:
             return ssl_hash_sha512;
         case ssl_sig_rsa_pkcs1_sha1md5:
@@ -3994,9 +3998,12 @@ ssl_SignatureSchemeToKeyType(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pkcs1_sha384:
         case ssl_sig_rsa_pkcs1_sha512:
         case ssl_sig_rsa_pkcs1_sha1:
-        case ssl_sig_rsa_pss_sha256:
-        case ssl_sig_rsa_pss_sha384:
-        case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_rsae_sha512:
+        case ssl_sig_rsa_pss_pss_sha256:
+        case ssl_sig_rsa_pss_pss_sha384:
+        case ssl_sig_rsa_pss_pss_sha512:
         case ssl_sig_rsa_pkcs1_sha1md5:
             return rsaKey;
         case ssl_sig_ecdsa_secp256r1_sha256:
@@ -4131,9 +4138,9 @@ ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
         case ssl_sig_rsa_pkcs1_sha256:
         case ssl_sig_rsa_pkcs1_sha384:
         case ssl_sig_rsa_pkcs1_sha512:
-        case ssl_sig_rsa_pss_sha256:
-        case ssl_sig_rsa_pss_sha384:
-        case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_rsae_sha512:
         case ssl_sig_ecdsa_secp256r1_sha256:
         case ssl_sig_ecdsa_secp384r1_sha384:
         case ssl_sig_ecdsa_secp521r1_sha512:
@@ -4145,6 +4152,9 @@ ssl_IsSupportedSignatureScheme(SSLSignatureScheme scheme)
             return PR_TRUE;
 
         case ssl_sig_rsa_pkcs1_sha1md5:
+        case ssl_sig_rsa_pss_pss_sha256:
+        case ssl_sig_rsa_pss_pss_sha384:
+        case ssl_sig_rsa_pss_pss_sha512:
         case ssl_sig_none:
         case ssl_sig_ed25519:
         case ssl_sig_ed448:
@@ -4157,9 +4167,9 @@ PRBool
 ssl_IsRsaPssSignatureScheme(SSLSignatureScheme scheme)
 {
     switch (scheme) {
-        case ssl_sig_rsa_pss_sha256:
-        case ssl_sig_rsa_pss_sha384:
-        case ssl_sig_rsa_pss_sha512:
+        case ssl_sig_rsa_pss_rsae_sha256:
+        case ssl_sig_rsa_pss_rsae_sha384:
+        case ssl_sig_rsa_pss_rsae_sha512:
             return PR_TRUE;
 
         default:
@@ -4589,13 +4599,24 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         }
     }
 
-    /* We ignore ss->sec.ci.sid here, and use ssl_Lookup because Lookup
-     * handles expired entries and other details.
-     * XXX If we've been called from ssl_BeginClientHandshake, then
-     * this lookup is duplicative and wasteful.
-     */
-    sid = (ss->opt.noCache) ? NULL
-                            : ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID, ss->url);
+    /* Check if we have a ss->sec.ci.sid.
+     * Check that it's not expired.
+     * If we have an sid and it comes from an external cache, we use it. */
+    if (ss->sec.ci.sid && ss->sec.ci.sid->cached == in_external_cache) {
+        PORT_Assert(!ss->sec.isServer);
+        sid = ss->sec.ci.sid;
+        SSL_TRC(3, ("%d: SSL3[%d]: using external resumption token in ClientHello",
+                    SSL_GETPID(), ss->fd));
+    } else if (!ss->opt.noCache) {
+        /* We ignore ss->sec.ci.sid here, and use ssl_Lookup because Lookup
+         * handles expired entries and other details.
+         * XXX If we've been called from ssl_BeginClientHandshake, then
+         * this lookup is duplicative and wasteful.
+         */
+        sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID, ss->url);
+    } else {
+        sid = NULL;
+    }
 
     /* We can't resume based on a different token. If the sid exists,
      * make sure the token that holds the master secret still exists ...
@@ -4686,7 +4707,7 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
 
         if (!sidOK) {
             SSL_AtomicIncrementLong(&ssl3stats.sch_sid_cache_not_ok);
-            ss->sec.uncache(sid);
+            ssl_UncacheSessionID(ss);
             ssl_FreeSID(sid);
             sid = NULL;
         }
@@ -5017,7 +5038,7 @@ ssl3_HandleHelloRequest(sslSocket *ss)
     }
 
     if (sid) {
-        ss->sec.uncache(sid);
+        ssl_UncacheSessionID(ss);
         ssl_FreeSID(sid);
         ss->sec.ci.sid = NULL;
     }
@@ -6592,7 +6613,7 @@ ssl3_HandleServerHelloPart2(sslSocket *ss, const SECItem *sidBytes,
 
     /* throw the old one away */
     sid->u.ssl3.keys.resumable = PR_FALSE;
-    ss->sec.uncache(sid);
+    ssl_UncacheSessionID(ss);
     ssl_FreeSID(sid);
 
     /* get a new sid */
@@ -7502,8 +7523,6 @@ ssl3_NewSessionID(sslSocket *ss, PRBool is_server)
 
     sid->u.ssl3.keys.resumable = PR_TRUE;
     sid->u.ssl3.policy = SSL_ALLOWED;
-    sid->u.ssl3.clientWriteKey = NULL;
-    sid->u.ssl3.serverWriteKey = NULL;
     sid->u.ssl3.keys.extendedMasterSecretUsed = PR_FALSE;
 
     if (is_server) {
@@ -8102,6 +8121,9 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
     rv = ssl3_HandleParsedExtensions(ss, ssl_hs_client_hello);
     ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
     if (rv != SECSuccess) {
+        if (PORT_GetError() == SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM) {
+            errCode = SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM;
+        }
         goto loser; /* malformed */
     }
 
@@ -8229,7 +8251,7 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
               !ss->firstHsDone))) {
 
             SSL_AtomicIncrementLong(&ssl3stats.hch_sid_cache_not_ok);
-            ss->sec.uncache(sid);
+            ssl_UncacheSessionID(ss);
             ssl_FreeSID(sid);
             sid = NULL;
         }
@@ -8435,7 +8457,7 @@ cipher_found:
             }
 
             if (ss->sec.ci.sid) {
-                ss->sec.uncache(ss->sec.ci.sid);
+                ssl_UncacheSessionID(ss);
                 PORT_Assert(ss->sec.ci.sid != sid); /* should be impossible, but ... */
                 if (ss->sec.ci.sid != sid) {
                     ssl_FreeSID(ss->sec.ci.sid);
@@ -8531,7 +8553,7 @@ cipher_found:
     if (sid) { /* we had a sid, but it's no longer valid, free it */
         ss->statelessResume = PR_FALSE;
         SSL_AtomicIncrementLong(&ssl3stats.hch_sid_cache_not_ok);
-        ss->sec.uncache(sid);
+        ssl_UncacheSessionID(ss);
         ssl_FreeSID(sid);
         sid = NULL;
     }
@@ -8597,7 +8619,7 @@ alert_loser:
 /* FALLTHRU */
 loser:
     if (sid && sid != ss->sec.ci.sid) {
-        ss->sec.uncache(sid);
+        ssl_UncacheSessionID(ss);
         ssl_FreeSID(sid);
     }
 
@@ -11137,6 +11159,7 @@ ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid, PK11SymKey *secret)
 
     if (ss->xtnData.nextProtoState != SSL_NEXT_PROTO_NO_SUPPORT &&
         ss->xtnData.nextProto.data) {
+        SECITEM_FreeItem(&sid->u.ssl3.alpnSelection, PR_FALSE);
         if (SECITEM_CopyItem(
                 NULL, &sid->u.ssl3.alpnSelection, &ss->xtnData.nextProto) != SECSuccess) {
             return SECFailure; /* error already set. */
@@ -11166,7 +11189,7 @@ ssl3_FinishHandshake(sslSocket *ss)
      * the handshake is finished (we have verified the server's Finished
      * AND the server's certificate) before we update the ticket in the sid.
      *
-     * This must be done before we call ss->sec.cache(ss->sec.ci.sid)
+     * This must be done before we call ssl_CacheSessionID(ss)
      * because CacheSID requires the session ticket to already be set, and also
      * because of the lazy lock creation scheme used by CacheSID and
      * ssl3_SetSIDSessionTicket.
@@ -11181,7 +11204,7 @@ ssl3_FinishHandshake(sslSocket *ss)
 
     if (ss->ssl3.hs.cacheSID) {
         PORT_Assert(ss->sec.ci.sid->cached == never_cached);
-        ss->sec.cache(ss->sec.ci.sid);
+        ssl_CacheSessionID(ss);
         ss->ssl3.hs.cacheSID = PR_FALSE;
     }
 
@@ -12645,8 +12668,8 @@ ssl3_RedoHandshake(sslSocket *ss, PRBool flushCache)
     }
 
     if (sid && flushCache) {
-        ss->sec.uncache(sid); /* remove it from whichever cache it's in. */
-        ssl_FreeSID(sid);     /* dec ref count and free if zero. */
+        ssl_UncacheSessionID(ss); /* remove it from whichever cache it's in. */
+        ssl_FreeSID(sid);         /* dec ref count and free if zero. */
         ss->sec.ci.sid = NULL;
     }
 
