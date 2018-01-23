@@ -65,6 +65,21 @@ def generate_context_hash(topsrcdir, image_path, image_name, args=None):
         os.unlink(p)
 
 
+class HashingWriter(object):
+    """A file object with write capabilities that hashes the written data at
+    the same time it passes down to a real file object."""
+    def __init__(self, writer):
+        self._hash = hashlib.sha256()
+        self._writer = writer
+
+    def write(self, buf):
+        self._hash.update(buf)
+        self._writer.write(buf)
+
+    def hexdigest(self):
+        return self._hash.hexdigest()
+
+
 def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
     """Create a context tarball.
 
@@ -145,16 +160,9 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
         GeneratedFile(b''.join(content))
 
     with open(out_path, 'wb') as fh:
-        create_tar_gz_from_files(fh, archive_files, '%s.tar.gz' % prefix)
-
-    h = hashlib.sha256()
-    with open(out_path, 'rb') as fh:
-        while True:
-            data = fh.read(32768)
-            if not data:
-                break
-            h.update(data)
-    return h.hexdigest()
+        writer = HashingWriter(fh)
+        create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)
+        return writer.hexdigest()
 
 
 def build_from_context(docker_bin, context_path, prefix, tag=None):
