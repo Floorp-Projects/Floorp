@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSSVariableReferenceValue tests</title>
+<link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#cssvariablereferencevalue">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../resources/testhelper.js"></script>
+<script>
+'use strict';
+
+test(() => {
+  assert_throws(new SyntaxError(), () => new CSSVariableReferenceValue('bar'));
+  assert_throws(new SyntaxError(), () => new CSSVariableReferenceValue(''));
+}, 'Constructing a CSSVariableReferenceValue with an invalid variable name throws SyntaxError');
+
+test(() => {
+  let result = new CSSVariableReferenceValue('--foo');
+  assert_throws(new SyntaxError(), () => result.variable = 'bar');
+  assert_equals(result.variable, '--foo');
+  assert_throws(new SyntaxError(), () => result.variable = '');
+  assert_equals(result.variable, '--foo');
+}, 'Updating CSSVariableReferenceValue.variable to an invalid variable name throws SyntaxError');
+
+test(() => {
+  const result = new CSSVariableReferenceValue('--foo');
+  assert_equals(result.variable, '--foo');
+  assert_equals(result.fallback, null);
+}, 'CSSVariableReferenceValue can be constructed with no fallback');
+
+test(() => {
+  const result = new CSSVariableReferenceValue('--foo', new CSSUnparsedValue('lemon'));
+  assert_equals(result.variable, '--foo');
+  assert_style_value_equals(result.fallback, new CSSUnparsedValue('lemon'));
+}, 'CSSVariableReferenceValue can be constructed with fallback');
+
+test(() => {
+  let result = new CSSVariableReferenceValue('--foo');
+  result.variable = '--bar';
+  assert_equals(result.variable, '--bar');
+}, 'CSSVariableReferenceValue.variable can updated to a valid variable name');
+
+test(() => {
+  let result = new CSSVariableReferenceValue('--foo', new CSSUnparsedValue());
+  result.fallback = null;
+  assert_equals(result.fallback, null);
+}, 'CSSVariableReferenceValue.fallback can updated to null');
+
+test(() => {
+  let result = new CSSVariableReferenceValue('--foo');
+  result.fallback = new CSSUnparsedValue('foo');
+  assert_style_value_equals(result.fallback, new CSSUnparsedValue('foo'));
+}, 'CSSVariableReferenceValue.fallback can updated to a CSSUnparsedValue');
+
+</script>
