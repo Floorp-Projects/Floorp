@@ -154,7 +154,7 @@ test(function(t)
   var animation = div.getAnimations()[0];
   var currentTime = animation.timeline.currentTime;
   animation.startTime = currentTime;
-  assert_approx_equals(animation.startTime, currentTime, 0.0001, // rounding error
+  assert_times_equal(animation.startTime, currentTime,
     'Check setting of startTime actually works');
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'startTime');

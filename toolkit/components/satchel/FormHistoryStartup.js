@@ -30,9 +30,6 @@ FormHistoryStartup.prototype = {
       case "formhistory-expire-now":
         FormHistory.expireOldEntries();
         break;
-      case "profile-before-change":
-        FormHistory.shutdown();
-        break;
       case "profile-after-change":
         this.init();
         break;
@@ -51,7 +48,6 @@ FormHistoryStartup.prototype = {
     Services.prefs.addObserver("browser.formfill.", this, true);
 
     // triggers needed service cleanup and db shutdown
-    Services.obs.addObserver(this, "profile-before-change", true);
     Services.obs.addObserver(this, "idle-daily", true);
     Services.obs.addObserver(this, "formhistory-expire-now", true);
 

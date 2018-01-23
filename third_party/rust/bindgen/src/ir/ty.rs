@@ -378,7 +378,7 @@ impl IsOpaque for Type {
             TypeKind::TemplateInstantiation(ref inst) => {
                 inst.is_opaque(ctx, item)
             }
-            TypeKind::Comp(ref comp) => comp.is_opaque(ctx, &()),
+            TypeKind::Comp(ref comp) => comp.is_opaque(ctx, &self.layout),
             TypeKind::ResolvedTypeRef(to) => to.is_opaque(ctx, &()),
             _ => false,
         }

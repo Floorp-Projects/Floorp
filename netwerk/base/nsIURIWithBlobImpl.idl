@@ -6,6 +6,15 @@
 
 interface nsIURI;
 
+%{C++
+namespace mozilla {
+namespace dom {
+  class BlobImpl;
+}}
+%}
+
+[ptr] native BlobImplPtr(mozilla::dom::BlobImpl);
+
 /**
  * nsIURIWithBlobImpl is implemented by URIs which are associated with a
  * specific BlobImpl.
@@ -17,4 +26,15 @@ interface nsIURIWithBlobImpl : nsISupports
      * The BlobImpl associated with the resource returned when loading this uri.
      */
     readonly attribute nsISupports blobImpl;
+};
+
+[builtinclass, uuid(d3e8c9fa-ff07-47cc-90dc-0cc5445ddb59)]
+interface nsIBlobURIMutator : nsISupports
+{
+    /**
+     * Associates a blobImpl to the mutated URI.
+     * Would normally return nsIURIMutator, but since it only gets called
+     * from C++, there is no need for that.
+     */
+    [must_use, noscript] void setBlobImpl(in BlobImplPtr blobImpl);
 };

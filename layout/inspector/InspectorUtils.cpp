@@ -662,13 +662,6 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
         supported = VARIANT_LP;
         break;
 
-      case eCSSProperty__moz_border_bottom_colors:
-      case eCSSProperty__moz_border_left_colors:
-      case eCSSProperty__moz_border_right_colors:
-      case eCSSProperty__moz_border_top_colors:
-        supported = VARIANT_COLOR;
-        break;
-
       case eCSSProperty_text_shadow:
       case eCSSProperty_box_shadow:
         supported = VARIANT_LENGTH | VARIANT_COLOR;

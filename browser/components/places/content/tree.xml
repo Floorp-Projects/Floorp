@@ -242,7 +242,7 @@
             // opening each folder as we go.
             for (var i = parents.length - 1; i >= 0; --i) {
               let index = view.treeIndexForNode(parents[i]);
-              if (index != Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE &&
+              if (index != -1 &&
                   view.isContainer(index) && !view.isContainerOpen(index))
                 view.toggleOpenState(index);
             }
@@ -250,7 +250,7 @@
           }
 
           let index = view.treeIndexForNode(node);
-          if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
+          if (index == -1)
             return;
 
           view.selection.select(index);
@@ -672,7 +672,7 @@
           }
           for (let i = 0; i < nodes.length; i++) {
             var index = resultview.treeIndexForNode(nodes[i]);
-            if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
+            if (index == -1)
               continue;
             selection.rangedSelect(index, index, true);
           }

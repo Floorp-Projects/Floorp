@@ -944,12 +944,12 @@ impl Item {
                         cc.constructors
                     }
                     FunctionKind::Method(MethodKind::Destructor) |
-                    FunctionKind::Method(MethodKind::VirtualDestructor) => {
+                    FunctionKind::Method(MethodKind::VirtualDestructor { .. }) => {
                         cc.destructors
                     }
                     FunctionKind::Method(MethodKind::Static) |
                     FunctionKind::Method(MethodKind::Normal) |
-                    FunctionKind::Method(MethodKind::Virtual) => cc.methods,
+                    FunctionKind::Method(MethodKind::Virtual { .. }) => cc.methods,
                 }
             }
         }

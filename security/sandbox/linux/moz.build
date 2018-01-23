@@ -13,6 +13,11 @@ if CONFIG['OS_TARGET'] == 'Android':
         'mozglue',
     ]
 
+USE_LIBS += [
+    # For PR_GetEnv
+    'nspr',
+]
+
 EXPORTS.mozilla += [
     'Sandbox.h',
     'SandboxInfo.h',
@@ -60,17 +65,14 @@ SOURCES += [
     '../chromium/sandbox/linux/seccomp-bpf/trap.cc',
     '../chromium/sandbox/linux/services/syscall_wrappers.cc',
     'broker/SandboxBrokerCommon.cpp',
-    'LinuxCapabilities.cpp',
     'Sandbox.cpp',
     'SandboxBrokerClient.cpp',
-    'SandboxChroot.cpp',
     'SandboxFilter.cpp',
     'SandboxFilterUtil.cpp',
     'SandboxHooks.cpp',
     'SandboxInfo.cpp',
     'SandboxLogging.cpp',
     'SandboxReporterClient.cpp',
-    'SandboxUtil.cpp',
 ]
 
 if CONFIG['MOZ_GMP_SANDBOX']:

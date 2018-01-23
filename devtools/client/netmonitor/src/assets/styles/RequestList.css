@@ -217,7 +217,7 @@
 /* Status column */
 
 .requests-list-status {
-  width: 8%;
+  min-width: 70px;
    /* Don't ellipsize status codes */
   text-overflow: initial;
 }
@@ -288,7 +288,7 @@
 /* Method column */
 
 .requests-list-method {
-  width: 8%;
+  min-width: 85px;
 }
 
 .theme-firebug .requests-list-method {
@@ -298,7 +298,7 @@
 /* File column */
 
 .requests-list-file {
-  width: 22%;
+  width: 40%;
 }
 
 .requests-list-file.requests-list-column {
@@ -368,7 +368,7 @@
 /* Domain column */
 
 .requests-list-domain {
-  width: 13%;
+  width: 30%;
 }
 
 .requests-list-domain.requests-list-column {
@@ -416,7 +416,7 @@
 /* Cause column */
 
 .requests-list-cause {
-  width: 9%;
+  min-width: 75px;
 }
 
 .requests-list-cause-stack {
@@ -435,19 +435,19 @@
 /* Type column */
 
 .requests-list-type {
-  width: 6%;
+  min-width: 65px;
 }
 
 /* Transferred column */
 
 .requests-list-transferred {
-  width: 9%;
+  min-width: 110px;
 }
 
 /* Size column */
 
 .requests-list-size {
-  width: 7%;
+  min-width: 80px;
 }
 
 .theme-firebug .requests-list-size {
@@ -458,9 +458,9 @@
 /* Waterfall column */
 
 .requests-list-waterfall {
-  width: 20vw;
-  max-width: 20vw;
-  min-width: 20vw;
+  width: 25vw;
+  max-width: 25vw;
+  min-width: 25vw;
   background-repeat: repeat-y;
   background-position: left center;
   /* Background created on a <canvas> in js. */

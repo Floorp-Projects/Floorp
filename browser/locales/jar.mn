@@ -53,7 +53,6 @@
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
-    locale/browser/places/moveBookmarks.dtd        (%chrome/browser/places/moveBookmarks.dtd)
     locale/browser/safebrowsing/phishing-afterload-warning-message.dtd (%chrome/browser/safebrowsing/phishing-afterload-warning-message.dtd)
     locale/browser/safebrowsing/report-phishing.dtd                    (%chrome/browser/safebrowsing/report-phishing.dtd)
     locale/browser/safebrowsing/safebrowsing.properties   (%chrome/browser/safebrowsing/safebrowsing.properties)

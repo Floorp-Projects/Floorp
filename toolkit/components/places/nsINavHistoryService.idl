@@ -196,13 +196,13 @@ interface nsINavHistoryResultNode : nsISupports
   readonly attribute long long itemId;
 
   /**
-   * If the node is an item (bookmark, folder or a separator) this value is the 
+   * If the node is an item (bookmark, folder or a separator) this value is the
    * time that the item was created. For other nodes, this value is 0.
    */
   readonly attribute PRTime dateAdded;
 
   /**
-   * If the node is an item (bookmark, folder or a separator) this value is the 
+   * If the node is an item (bookmark, folder or a separator) this value is the
    * time that the item was last modified. For other nodes, this value is 0.
    *
    *  @note When an item is added lastModified is set to the same value as
@@ -400,7 +400,7 @@ interface nsINavHistoryResultObserver : nsISupports
 
   /**
    * Called right after aNode's title has changed.
-   * 
+   *
    * @param aNode
    *        a result node
    * @param aNewTitle
@@ -411,7 +411,7 @@ interface nsINavHistoryResultObserver : nsISupports
 
   /**
    * Called right after aNode's uri property has changed.
-   * 
+   *
    * @param aNode
    *        a result node
    * @param aNewURI
@@ -457,7 +457,7 @@ interface nsINavHistoryResultObserver : nsISupports
 
   /**
    * Called right after the aNode's keyword property has changed.
-   * 
+   *
    * @param aNode
    *        a uri result node
    * @param aNewKeyword
@@ -469,7 +469,7 @@ interface nsINavHistoryResultObserver : nsISupports
   /**
    * Called right after an annotation of aNode's has changed (set, altered, or
    * unset).
-   * 
+   *
    * @param aNode
    *        a result node
    * @param aAnnoName
@@ -552,43 +552,6 @@ interface nsINavHistoryResultObserver : nsISupports
    * Called by the result when this observer is added.
    */
   attribute nsINavHistoryResult result;
-};
-
-
-/**
- * TODO: Bug 517719.
- *
- * A predefined view adaptor for interfacing results with an nsITree. This
- * object will remove itself from its associated result when the tree has been
- * detached. This prevents circular references. Users should be aware of this,
- * if you want to re-use the same viewer, you will need to keep your own
- * reference to it and re-initialize it when the tree changes. If you use this
- * object, attach it to a result, never attach it to a tree, and forget about
- * it, it will leak!
- */
-[scriptable, uuid(f8b518c0-1faf-11df-8a39-0800200c9a66)]
-interface nsINavHistoryResultTreeViewer : nsINavHistoryResultObserver
-{
-  /**
-   * This allows you to get at the real node for a given row index. This is
-   * only valid when a tree is attached.
-   */
-  nsINavHistoryResultNode nodeForTreeIndex(in unsigned long aIndex);
-
-  /**
-   * Reverse of nodeForFlatIndex, returns the row index for a given result node.
-   * Returns INDEX_INVISIBLE if the item is not visible (for example, its
-   * parent is collapsed). This is only valid when a tree is attached. The
-   * the result will always be INDEX_INVISIBLE if not.
-   * 
-   * Note: This sounds sort of obvious, but it got me: aNode must be a node
-   *       retrieved from the same result that this viewer is for. If you 
-   *       execute another query and get a node from a _different_ result, this 
-   *       function will always return the index of that node in the tree that
-   *       is attached to that result.
-   */
-  const unsigned long INDEX_INVISIBLE = 0xffffffff;
-  unsigned long treeIndexForNode(in nsINavHistoryResultNode aNode);
 };
 
 
@@ -1066,7 +1029,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_VISIT = 1;
 
   /**
-   * This returns query nodes for each predefined date range where we 
+   * This returns query nodes for each predefined date range where we
    * had visits. The node contains information how to load its content:
    * - visits for the given date range will be loaded.
    *
@@ -1075,7 +1038,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_DATE_QUERY = 3;
 
   /**
-   * This returns nsINavHistoryQueryResultNode nodes for each site where we 
+   * This returns nsINavHistoryQueryResultNode nodes for each site where we
    * have visits. The node contains information how to load its content:
    * - last visit for each url in the given host will be loaded.
    *
@@ -1084,7 +1047,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_SITE_QUERY = 4;
 
   /**
-   * This returns nsINavHistoryQueryResultNode nodes for each day where we 
+   * This returns nsINavHistoryQueryResultNode nodes for each day where we
    * have visits. The node contains information how to load its content:
    * - list of hosts visited in the given period will be loaded.
    *
@@ -1232,7 +1195,7 @@ interface nsINavHistoryService : nsISupports
   /**
    * This transition type means that the user typed the page's URL in the
    * URL bar or selected it from URL bar autocomplete results, clicked on
-   * it from a history query (from the History sidebar, History menu, 
+   * it from a history query (from the History sidebar, History menu,
    * or history query in the personal toolbar or Places organizer.
    */
   const unsigned long TRANSITION_TYPED = 2;
@@ -1437,8 +1400,8 @@ interface nsINavHistoryService : nsISupports
   void runInBatchMode(in nsINavHistoryBatchCallback aCallback,
                       in nsISupports aClosure);
 
-  /** 
-   * True if history is disabled. currently, 
+  /**
+   * True if history is disabled. currently,
    * history is disabled if the places.history.enabled pref is false.
    */
   readonly attribute boolean historyDisabled;
