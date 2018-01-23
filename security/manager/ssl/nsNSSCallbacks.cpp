@@ -753,7 +753,6 @@ private:
 
 PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -764,7 +763,6 @@ PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
 void
 PK11PasswordPromptRunnable::RunOnTargetThread()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -991,8 +989,6 @@ SECStatus
 CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 {
   *canFalseStart = false;
-
-  nsNSSShutDownPreventionLock locker;
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
   if (!infoObject) {
@@ -1330,7 +1326,6 @@ IsCertificateDistrustImminent(nsIX509CertList* aCertList,
 }
 
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
-  nsNSSShutDownPreventionLock locker;
   SECStatus rv;
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;

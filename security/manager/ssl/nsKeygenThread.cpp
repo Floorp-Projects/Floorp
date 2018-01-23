@@ -66,7 +66,6 @@ void nsKeygenThread::SetParams(
     void *a_params,
     void *a_wincx )
 {
-  nsNSSShutDownPreventionLock locker;
   MutexAutoLock lock(mutex);
 
     if (!alreadyReceivedParams) {
@@ -178,7 +177,6 @@ nsresult nsKeygenThread::UserCanceled(bool *threadAlreadyClosedDialog)
 
 void nsKeygenThread::Run(void)
 {
-  nsNSSShutDownPreventionLock locker;
   bool canGenerate = false;
 
   {

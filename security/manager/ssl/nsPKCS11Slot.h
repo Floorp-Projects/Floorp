@@ -37,7 +37,7 @@ private:
 
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
-  nsresult refreshSlotInfo(const nsNSSShutDownPreventionLock& proofOfLock);
+  nsresult refreshSlotInfo();
   nsresult GetAttributeHelper(const nsACString& attribute,
                       /*out*/ nsACString& xpcomOutParam);
 };

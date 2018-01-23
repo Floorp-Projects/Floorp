@@ -13,7 +13,6 @@ CryptoTask::~CryptoTask()
 {
   MOZ_ASSERT(mReleasedNSSResources);
 
-  nsNSSShutDownPreventionLock lock;
   if (!isAlreadyShutDown()) {
     shutdown(ShutdownCalledFrom::Object);
   }
@@ -46,7 +45,6 @@ NS_IMETHODIMP
 CryptoTask::Run()
 {
   if (!NS_IsMainThread()) {
-    nsNSSShutDownPreventionLock locker;
     if (isAlreadyShutDown()) {
       mRv = NS_ERROR_NOT_AVAILABLE;
     } else {

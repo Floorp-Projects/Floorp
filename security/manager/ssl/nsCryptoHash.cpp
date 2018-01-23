@@ -38,7 +38,6 @@ nsCryptoHash::nsCryptoHash()
 
 nsCryptoHash::~nsCryptoHash()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -63,7 +62,6 @@ NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 NS_IMETHODIMP
 nsCryptoHash::Init(uint32_t algorithm)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -136,7 +134,6 @@ nsCryptoHash::InitWithString(const nsACString & aAlgorithm)
 NS_IMETHODIMP
 nsCryptoHash::Update(const uint8_t *data, uint32_t len)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -152,7 +149,6 @@ nsCryptoHash::Update(const uint8_t *data, uint32_t len)
 NS_IMETHODIMP
 nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -209,7 +205,6 @@ nsCryptoHash::UpdateFromStream(nsIInputStream *data, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHash::Finish(bool ascii, nsACString & _retval)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -246,7 +241,6 @@ nsCryptoHMAC::nsCryptoHMAC()
 
 nsCryptoHMAC::~nsCryptoHMAC()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -269,7 +263,6 @@ nsCryptoHMAC::destructorSafeDestroyNSSReference()
 NS_IMETHODIMP
 nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -326,7 +319,6 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 NS_IMETHODIMP
 nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -347,7 +339,6 @@ nsCryptoHMAC::Update(const uint8_t *aData, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -407,7 +398,6 @@ nsCryptoHMAC::UpdateFromStream(nsIInputStream *aStream, uint32_t aLen)
 NS_IMETHODIMP
 nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -435,7 +425,6 @@ nsCryptoHMAC::Finish(bool aASCII, nsACString & _retval)
 NS_IMETHODIMP
 nsCryptoHMAC::Reset()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
