@@ -384,13 +384,19 @@ private:
 class MainThreadFetchRunnable : public Runnable
 {
   RefPtr<WorkerFetchResolver> mResolver;
+  const ClientInfo mClientInfo;
+  const Maybe<ServiceWorkerDescriptor> mController;
   RefPtr<InternalRequest> mRequest;
 
 public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
+                          const ClientInfo& aClientInfo,
+                          const Maybe<ServiceWorkerDescriptor>& aController,
                           InternalRequest* aRequest)
     : Runnable("dom::MainThreadFetchRunnable")
     , mResolver(aResolver)
+    , mClientInfo(aClientInfo)
+    , mController(aController)
     , mRequest(aRequest)
   {
     MOZ_ASSERT(mResolver);
@@ -426,6 +432,9 @@ public:
         proxy->GetWorkerPrivate()->GetBaseURI()->GetAsciiSpec(spec);
       }
       fetch->SetWorkerScript(spec);
+
+      fetch->SetClientInfo(mClientInfo);
+      fetch->SetController(mController);
     }
 
     RefPtr<AbortSignal> signal = mResolver->GetAbortSignalForMainThread();
@@ -547,7 +556,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     }
 
     RefPtr<MainThreadFetchRunnable> run =
-      new MainThreadFetchRunnable(resolver, r);
+      new MainThreadFetchRunnable(resolver, worker->GetClientInfo(),
+                                  worker->GetController(), r);
     worker->DispatchToMainThread(run.forget());
   }
 
