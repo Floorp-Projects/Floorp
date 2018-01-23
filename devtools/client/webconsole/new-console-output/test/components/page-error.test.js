@@ -76,7 +76,11 @@ describe("PageError component:", () => {
 
     serviceContainer.openLink = sinon.spy();
     const wrapper = mount(Provider({store},
-      PageError({message, serviceContainer})
+      PageError({
+        message,
+        serviceContainer,
+        dispatch: () => {},
+      })
     ));
 
     // There should be a [Learn more] link.

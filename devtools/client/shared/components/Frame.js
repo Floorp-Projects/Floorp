@@ -219,6 +219,7 @@ class Frame extends Component {
       sourceEl = dom.a({
         onClick: e => {
           e.preventDefault();
+          e.stopPropagation();
           onClick(this.getSourceForClick(frame));
         },
         href: source,
