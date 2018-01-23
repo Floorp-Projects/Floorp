@@ -1095,19 +1095,18 @@ KeyframeEffectReadOnly::RequestRestyle(
 already_AddRefed<nsStyleContext>
 KeyframeEffectReadOnly::GetTargetStyleContext()
 {
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
+  if (!GetRenderedDocument()) {
     return nullptr;
   }
 
   MOZ_ASSERT(mTarget,
-             "Should only have a presshell when we have a target element");
+             "Should only have a document when we have a target element");
 
   nsAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
 
-  return nsComputedDOMStyle::GetStyleContext(mTarget->mElement, pseudo, shell);
+  return nsComputedDOMStyle::GetStyleContext(mTarget->mElement, pseudo);
 }
 
 #ifdef DEBUG

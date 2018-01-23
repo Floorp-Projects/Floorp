@@ -1023,7 +1023,7 @@ InspectorUtils::GetCleanStyleContextForElement(dom::Element* aElement,
   presContext->EnsureSafeToHandOutCSSRules();
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aElement, aPseudo, presShell);
+    nsComputedDOMStyle::GetStyleContext(aElement, aPseudo);
   return styleContext.forget();
 }
 

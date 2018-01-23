@@ -5541,14 +5541,10 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
   // GetStyleContext() flushes style, so we shouldn't assume that any
   // non-owning references we have are still valid.
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aElement, nullptr, shell);
+    nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
+  MOZ_ASSERT(styleContext);
 
-  if (auto servoContext = styleContext->GetAsServo()) {
-    nsPresContext* presContext = shell->GetPresContext();
-    if (!presContext) {
-      return result;
-    }
-
+  if (auto* servoContext = styleContext->GetAsServo()) {
     RefPtr<RawServoDeclarationBlock> declarations =
       ServoCSSParser::ParseProperty(aProperty, aValue,
                                     ServoCSSParser::GetParsingEnvironment(doc));
@@ -5557,11 +5553,10 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
       return result;
     }
 
-    result.mServo = presContext->StyleSet()
-                               ->AsServo()
-                               ->ComputeAnimationValue(aElement,
-                                                       declarations,
-                                                       servoContext);
+    result.mServo =
+      shell->StyleSet()->AsServo()->ComputeAnimationValue(aElement,
+                                                          declarations,
+                                                          servoContext);
     return result;
   }
 

@@ -556,7 +556,7 @@ CSSEditUtils::GetComputedStyle(Element* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  nsIDocument* doc = aElement->GetUncomposedDoc();
+  nsIDocument* doc = aElement->GetComposedDoc();
   NS_ENSURE_TRUE(doc, nullptr);
 
   nsIPresShell* presShell = doc->GetShell();
