@@ -1,7 +1,9 @@
 config = {
     "platform": "win32",
     "stage_product": "firefox",
-    "mozconfig": "src/browser/config/mozconfigs/win32/l10n-mozconfig",
+    "app_name": "browser",
+    "mozconfig_platform": "win32",
+    "mozconfig_variant": "l10n-mozconfig",
     "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",
     "objdir": "obj-firefox",
