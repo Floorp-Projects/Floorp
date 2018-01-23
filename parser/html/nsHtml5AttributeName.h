@@ -498,6 +498,7 @@ public:
   static nsHtml5AttributeName* ATTR_FLOOD_OPACITY;
   static nsHtml5AttributeName* ATTR_LQUOTE;
   static nsHtml5AttributeName* ATTR_NUMOCTAVES;
+  static nsHtml5AttributeName* ATTR_NOMODULE;
   static nsHtml5AttributeName* ATTR_ONLOAD;
   static nsHtml5AttributeName* ATTR_ONMOUSEWHEEL;
   static nsHtml5AttributeName* ATTR_ONMOUSEENTER;

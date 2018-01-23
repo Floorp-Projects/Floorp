@@ -388,7 +388,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   // documentElement?
   nsIContent *rootElement = mDocument->GetRootElement();
   if (rootElement) {
-    NS_ASSERTION(mDocument->IndexOf(rootElement) != -1,
+    NS_ASSERTION(mDocument->ComputeIndexOf(rootElement) != -1,
                  "rootElement not in doc?");
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
     nsNodeUtils::ContentInserted(mDocument, rootElement);

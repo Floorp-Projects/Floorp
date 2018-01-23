@@ -2181,14 +2181,14 @@ LIRGenerator::visitToFloat32(MToFloat32* convert)
 }
 
 void
-LIRGenerator::visitToInt32(MToInt32* convert)
+LIRGenerator::visitToNumberInt32(MToNumberInt32* convert)
 {
     MDefinition* opd = convert->input();
 
     switch (opd->type()) {
       case MIRType::Value:
       {
-        LValueToInt32* lir =
+        auto* lir =
             new(alloc()) LValueToInt32(useBox(opd), tempDouble(), temp(), LValueToInt32::NORMAL);
         assignSnapshot(lir, Bailout_NonPrimitiveInput);
         define(lir, convert);

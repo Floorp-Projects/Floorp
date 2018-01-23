@@ -63,19 +63,31 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
       aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
                                mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
                                mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, false,
-                               mIsAsync, mIsDefer);
+                               mIsAsync, mIsDefer, false);
       break;
     case eSpeculativeLoadScriptFromHead:
       aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
                                mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
                                mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, true,
-                               mIsAsync, mIsDefer);
+                               mIsAsync, mIsDefer, false);
+      break;
+    case eSpeculativeLoadNoModuleScript:
+      aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
+                               mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, false,
+                               mIsAsync, mIsDefer, true);
+      break;
+    case eSpeculativeLoadNoModuleScriptFromHead:
+      aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
+                               mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
+                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, true,
+                               mIsAsync, mIsDefer, true);
       break;
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(mUrlOrSizes, mCharsetOrSrcset, mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,
                               mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
       break;
-    case eSpeculativeLoadManifest:  
+    case eSpeculativeLoadManifest:
       aExecutor->ProcessOfflineManifest(mUrlOrSizes);
       break;
     case eSpeculativeLoadSetDocumentCharset: {

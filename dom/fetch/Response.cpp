@@ -100,7 +100,8 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIURI> baseURI;
-    nsIDocument* doc = GetEntryDocument();
+    nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(aGlobal.GetAsSupports()));
+    nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
     if (doc) {
       baseURI = doc->GetBaseURI();
     }
