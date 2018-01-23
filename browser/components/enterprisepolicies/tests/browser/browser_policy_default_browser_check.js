@@ -21,4 +21,8 @@ add_task(async function test_default_browser_check() {
   ShellService.shouldCheckDefaultBrowser = true;
 
   is(ShellService.shouldCheckDefaultBrowser, false, "Policy is enforced");
+
+  // Unlock the pref because if it stays locked, and this test runs twice in a row,
+  // the first sanity check will fail.
+  Services.prefs.unlockPref("browser.shell.checkDefaultBrowser");
 });
