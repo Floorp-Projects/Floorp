@@ -12923,18 +12923,18 @@ class MInstanceOf
 };
 
 // Implementation for instanceof operator with unknown rhs.
-class MInstanceOfCache
+class MCallInstanceOf
   : public MBinaryInstruction,
     public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >::Data
 {
-    MInstanceOfCache(MDefinition* obj, MDefinition* proto)
+    MCallInstanceOf(MDefinition* obj, MDefinition* proto)
       : MBinaryInstruction(classOpcode, obj, proto)
     {
         setResultType(MIRType::Boolean);
     }
 
   public:
-    INSTRUCTION_HEADER(InstanceOfCache)
+    INSTRUCTION_HEADER(CallInstanceOf)
     TRIVIAL_NEW_WRAPPERS
 };
 

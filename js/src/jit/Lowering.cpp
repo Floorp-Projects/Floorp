@@ -4334,7 +4334,7 @@ LIRGenerator::visitInstanceOf(MInstanceOf* ins)
 }
 
 void
-LIRGenerator::visitInstanceOfCache(MInstanceOfCache* ins)
+LIRGenerator::visitCallInstanceOf(MCallInstanceOf* ins)
 {
     MDefinition* lhs = ins->lhs();
     MDefinition* rhs = ins->rhs();
@@ -4342,9 +4342,9 @@ LIRGenerator::visitInstanceOfCache(MInstanceOfCache* ins)
     MOZ_ASSERT(lhs->type() == MIRType::Value);
     MOZ_ASSERT(rhs->type() == MIRType::Object);
 
-    LInstanceOfCache* lir = new(alloc()) LInstanceOfCache(useBox(lhs),
-                                                          useRegister(rhs));
-    define(lir, ins);
+    LCallInstanceOf* lir = new(alloc()) LCallInstanceOf(useBoxAtStart(lhs),
+                                                        useRegisterAtStart(rhs));
+    defineReturn(lir, ins);
     assignSafepoint(lir, ins);
 }
 
