@@ -72,6 +72,17 @@ MacroAssemblerCompat::asVIXL() const
     return *static_cast<const vixl::MacroAssembler*>(this);
 }
 
+void
+MacroAssemblerCompat::B(wasm::OldTrapDesc target, Condition cond)
+{
+    Label l;
+    if (cond == Always)
+        B(&l);
+    else
+        B(&l, cond);
+    bindLater(&l, target);
+}
+
 BufferOffset
 MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 {
@@ -152,6 +163,7 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
     Label finally;
     Label return_;
     Label bailout;
+    Label wasm;
 
     MOZ_ASSERT(GetStackPointer64().Is(x28)); // Lets the code below be a little cleaner.
 
@@ -163,6 +175,7 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
     asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_FORCED_RETURN),
                       &return_);
     asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
+    asMasm().branch32(Assembler::Equal, r0, Imm32(ResumeFromException::RESUME_WASM), &wasm);
 
     breakpoint(); // Invalid kind.
 
@@ -215,6 +228,15 @@ MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler, Label* profile
     Ldr(x1, MemOperand(GetStackPointer64(), offsetof(ResumeFromException, target)));
     Mov(x0, BAILOUT_RETURN_OK);
     Br(x1);
+
+    // If we are throwing and the innermost frame was a wasm frame, reset SP and
+    // FP; SP is pointing to the unwound return address to the wasm entry, so
+    // we can just ret().
+    bind(&wasm);
+    Ldr(x29, MemOperand(GetStackPointer64(), offsetof(ResumeFromException, framePointer)));
+    Ldr(x28, MemOperand(GetStackPointer64(), offsetof(ResumeFromException, stackPointer)));
+    syncStackPtr();
+    ret();
 }
 
 void
@@ -644,79 +666,126 @@ MacroAssembler::call(JitCode* c)
 CodeOffset
 MacroAssembler::callWithPatch()
 {
-    MOZ_CRASH("NYI");
-    return CodeOffset();
+    bl(0, LabelDoc());
+    return CodeOffset(currentOffset());
 }
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    MOZ_CRASH("NYI");
+    Instruction* inst = getInstructionAt(BufferOffset(callerOffset - 4));
+    MOZ_ASSERT(inst->IsBL());
+    bl(inst, ((int)calleeOffset - ((int)callerOffset - 4)) >> 2);
 }
 
 CodeOffset
 MacroAssembler::farJumpWithPatch()
 {
-    MOZ_CRASH("NYI");
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch = temps.AcquireX();
+    const ARMRegister scratch2 = temps.AcquireX();
+
+    AutoForbidPools afp(this, /* max number of instructions in scope = */ 7);
+
+    mozilla::DebugOnly<uint32_t> before = currentOffset();
+
+    align(8);                   // At most one nop
+
+    Label branch;
+    adr(scratch2, &branch);
+    ldr(scratch, vixl::MemOperand(scratch2, 4));
+    add(scratch2, scratch2, scratch);
+    CodeOffset offs(currentOffset());
+    bind(&branch);
+    br(scratch2);
+    Emit(UINT32_MAX);
+    Emit(UINT32_MAX);
+
+    mozilla::DebugOnly<uint32_t> after = currentOffset();
+
+    MOZ_ASSERT(after - before == 24 || after - before == 28);
+
+    return offs;
 }
 
 void
 MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset)
 {
-    MOZ_CRASH("NYI");
+    Instruction* inst1 = getInstructionAt(BufferOffset(farJump.offset() + 4));
+    Instruction* inst2 = getInstructionAt(BufferOffset(farJump.offset() + 8));
+
+    int64_t distance = (int64_t)targetOffset - (int64_t)farJump.offset();
+
+    MOZ_ASSERT(inst1->InstructionBits() == UINT32_MAX);
+    MOZ_ASSERT(inst2->InstructionBits() == UINT32_MAX);
+
+    inst1->SetInstructionBits((uint32_t)distance);
+    inst2->SetInstructionBits((uint32_t)(distance >> 32));
 }
 
 void
 MacroAssembler::repatchFarJump(uint8_t* code, uint32_t farJumpOffset, uint32_t targetOffset)
 {
-    MOZ_CRASH("NYI");
+    MOZ_CRASH("Unimplemented - never used");
 }
 
 CodeOffset
 MacroAssembler::nopPatchableToNearJump()
 {
-    MOZ_CRASH("NYI");
+    MOZ_CRASH("Unimplemented - never used");
 }
 
 void
 MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
 {
-    MOZ_CRASH("NYI");
+    MOZ_CRASH("Unimplemented - never used");
 }
 
 void
 MacroAssembler::patchNearJumpToNop(uint8_t* jump)
 {
-    MOZ_CRASH("NYI");
+    MOZ_CRASH("Unimplemented - never used");
 }
 
 CodeOffset
 MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
 {
-    MOZ_CRASH("NYI");
-    return CodeOffset();
+    CodeOffset offset(currentOffset());
+    Nop();
+    append(desc, CodeOffset(currentOffset()));
+    return offset;
 }
 
 void
 MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target)
 {
-    MOZ_CRASH("NYI");
+    uint8_t* inst = call - 4;
+    Instruction* instr = reinterpret_cast<Instruction*>(inst);
+    MOZ_ASSERT(instr->IsBL() || instr->IsNOP());
+    bl(instr, (target - inst) >> 2);
+    AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void
 MacroAssembler::patchCallToNop(uint8_t* call)
 {
-    MOZ_CRASH("NYI");
+    uint8_t* inst = call - 4;
+    Instruction* instr = reinterpret_cast<Instruction*>(inst);
+    MOZ_ASSERT(instr->IsBL() || instr->IsNOP());
+    nop(instr);
+    AutoFlushICache::flush(uintptr_t(inst), 4);
 }
 
 void
 MacroAssembler::pushReturnAddress()
 {
+    MOZ_RELEASE_ASSERT(!sp.Is(GetStackPointer64()), "Not valid");
     push(lr);
 }
 
 void
 MacroAssembler::popReturnAddress()
 {
+    MOZ_RELEASE_ASSERT(!sp.Is(GetStackPointer64()), "Not valid");
     pop(lr);
 }
 
@@ -1050,7 +1119,9 @@ MacroAssembler::comment(const char* msg)
 CodeOffset
 MacroAssembler::wasmTrapInstruction()
 {
-    MOZ_CRASH("NYI");
+    CodeOffset offs(currentOffset());
+    Unreachable();
+    return offs;
 }
 
 // FCVTZU behaves as follows:
