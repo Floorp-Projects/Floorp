@@ -34,11 +34,6 @@ add_task(async function setup() {
 // Tests for bug 1391393 - Ensures that if the user cancels the bookmark properties
 // dialog without having done any changes, then no undo is called.
 add_task(async function test_cancel_with_no_changes() {
-  if (!PlacesUIUtils.useAsyncTransactions) {
-    Assert.ok(true, "Skipping test as async transactions are turned off");
-    return;
-  }
-
   await withSidebarTree("bookmarks", async (tree) => {
     tree.selectItems([bookmarks[0].guid]);
 
@@ -75,11 +70,6 @@ add_task(async function test_cancel_with_no_changes() {
 });
 
 add_task(async function test_cancel_with_changes() {
-  if (!PlacesUIUtils.useAsyncTransactions) {
-    Assert.ok(true, "Skipping test as async transactions are turned off");
-    return;
-  }
-
   await withSidebarTree("bookmarks", async (tree) => {
     tree.selectItems([bookmarks[1].guid]);
 

@@ -6953,6 +6953,10 @@ nsWindow::GetWaylandDisplay()
 wl_surface*
 nsWindow::GetWaylandSurface()
 {
-  return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+  if (mContainer)
+    return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+
+  NS_WARNING("nsWindow::GetWaylandSurfaces(): We don't have any mContainer for drawing!");
+  return nullptr;
 }
 #endif
