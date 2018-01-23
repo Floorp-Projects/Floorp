@@ -6883,6 +6883,71 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
   }
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
+  // We shouldn't create new anchor element which has non-empty href unless
+  // splitting middle of it because we assume that users don't want to create
+  // *same* anchor element across two or more paragraphs in most cases.
+  // So, adjust selection start if it's edge of anchor element(s).
+  // XXX We don't support whitespace collapsing in these cases since it needs
+  //     some additional work with WSRunObject but it's not usual case.
+  //     E.g., |<a href="foo"><b>foo []</b> </a>|
+  if (atStartOfSelection.IsStartOfContainer()) {
+    for (nsIContent* container = atStartOfSelection.GetContainerAsContent();
+         container && container != &aParentDivOrP;
+         container = container->GetParent()) {
+      if (HTMLEditUtils::IsLink(container)) {
+        // Found link should be only in right node.  So, we shouldn't split it.
+        atStartOfSelection.Set(container);
+        // Even if we found an anchor element, don't break because DOM API
+        // allows to nest anchor elements.
+      }
+      // If the container is middle of its parent, stop adjusting split point.
+      if (container->GetPreviousSibling()) {
+        // XXX Should we check if previous sibling is visible content?
+        //     E.g., should we ignore comment node, invisible <br> element?
+        break;
+      }
+    }
+  }
+  // We also need to check if selection is at invisible <br> element at end
+  // of an <a href="foo"> element because editor inserts a <br> element when
+  // user types Enter key after a whitespace which is at middle of
+  // <a href="foo"> element and when setting selection at end of the element,
+  // selection becomes referring the <br> element.  We may need to change this
+  // behavior later if it'd be standardized.
+  else if (atStartOfSelection.IsEndOfContainer() ||
+           atStartOfSelection.IsBRElementAtEndOfContainer()) {
+    // If there are 2 <br> elements, the first <br> element is visible.  E.g.,
+    // |<a href="foo"><b>boo[]<br></b><br></a>|, we should split the <a>
+    // element.  Otherwise, E.g., |<a href="foo"><b>boo[]<br></b></a>|,
+    // we should not split the <a> element and ignore inline elements in it.
+    bool foundBRElement = atStartOfSelection.IsBRElementAtEndOfContainer();
+    for (nsIContent* container = atStartOfSelection.GetContainerAsContent();
+         container && container != &aParentDivOrP;
+         container = container->GetParent()) {
+      if (HTMLEditUtils::IsLink(container)) {
+        // Found link should be only in left node.  So, we shouldn't split it.
+        atStartOfSelection.SetAfter(container);
+        // Even if we found an anchor element, don't break because DOM API
+        // allows to nest anchor elements.
+      }
+      // If the container is middle of its parent, stop adjusting split point.
+      if (nsIContent* nextSibling = container->GetNextSibling()) {
+        if (foundBRElement) {
+          // If we've already found a <br> element, we assume found node is
+          // visible <br> or something other node.
+          // XXX Should we check if non-text data node like comment?
+          break;
+        }
+
+        // XXX Should we check if non-text data node like comment?
+        if (!nextSibling->IsHTMLElement(nsGkAtoms::br)) {
+          break;
+        }
+        foundBRElement = true;
+      }
+    }
+  }
+
   bool doesCRCreateNewP = htmlEditor->GetReturnInParagraphCreatesNewParagraph();
 
   bool splitAfterNewBR = false;
