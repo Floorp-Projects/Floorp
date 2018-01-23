@@ -29,7 +29,7 @@ add_task(async function() {
   container.selectItem(ourItem);
   ok(ourItem.selected, "Should be able to select our item.");
 
-  let list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  let list = await TestUtils.waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
   info("Got list after item was selected");
 
   let chooseItem = list.firstChild.querySelector(".choose-app-item");
@@ -52,7 +52,7 @@ add_task(async function() {
   ok(mimeInfo.preferredApplicationHandler.equals(selectedApp), "App should be set as preferred.");
 
   // Check that we display this result:
-  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  list = await TestUtils.waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
   info("Got list after item was selected");
   ok(list.selectedItem, "Should have a selected item");
   ok(mimeInfo.preferredApplicationHandler.equals(list.selectedItem.handlerApp),
@@ -85,7 +85,7 @@ add_task(async function() {
   ok(!mimeInfo.preferredApplicationHandler, "App should no longer be set as preferred.");
 
   // Check that we display this result:
-  list = await waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
+  list = await TestUtils.waitForCondition(() => win.document.getAnonymousElementByAttribute(ourItem, "class", "actionsMenu"));
   ok(list.selectedItem, "Should have a selected item");
   ok(!list.selectedItem.handlerApp,
      "No app should be visible as preferred item.");
