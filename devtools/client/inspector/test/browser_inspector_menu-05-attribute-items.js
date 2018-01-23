@@ -13,6 +13,7 @@ add_task(function* () {
 
   yield testAddAttribute();
   yield testCopyAttributeValue();
+  yield testCopyLongAttributeValue();
   yield testEditAttribute();
   yield testRemoveAttribute();
 
@@ -42,6 +43,23 @@ add_task(function* () {
     };
 
     yield waitForClipboardPromise(() => copyAttributeValue.click(), "the");
+  }
+
+  function* testCopyLongAttributeValue() {
+    info("Testing 'Copy Attribute Value' copies very long attribute values");
+    let copyAttributeValue = getMenuItem("node-menu-copy-attribute");
+    let longAttribute = "#01234567890123456789012345678901234567890123456789" +
+    "12345678901234567890123456789012345678901234567890123456789012345678901" +
+    "23456789012345678901234567890123456789012345678901234567890123456789012" +
+    "34567890123456789012345678901234567890123456789012345678901234567890123";
+
+    inspector.nodeMenuTriggerInfo = {
+      type: "attribute",
+      name: "data-edit",
+      value: longAttribute
+    };
+
+    yield waitForClipboardPromise(() => copyAttributeValue.click(), longAttribute);
   }
 
   function* testEditAttribute() {

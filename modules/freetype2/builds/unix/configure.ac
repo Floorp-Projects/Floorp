@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright 2001-2017 by
+# Copyright 2001-2018 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.8.1], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.9], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='21:0:15'
+version_info='22:0:16'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -112,15 +112,13 @@ AC_TYPE_LONG_LONG_INT
 
 AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.in works])
 orig_CPPFLAGS="${CPPFLAGS}"
-CPPFLAGS="-I${srcdir} -I. ${CPPFLAGS}"
+CPPFLAGS="-I${srcdir} -I. -I${srcdir}/../../include/freetype/config ${CPPFLAGS}"
 
 ac_clean_files=
-for f in ft2build.h ftoption.h ftstdlib.h; do
-  if test ! -f $f; then
-    ac_clean_files="$ac_clean_files $f"
-    touch $f
-  fi
-done
+if test ! -f ft2build.h; then
+  ac_clean_files=ft2build.h
+  touch ft2build.h
+fi
 
 cat > conftest.c <<\_ACEOF
 #include <limits.h>
@@ -509,6 +507,21 @@ fi
 if test x"$with_harfbuzz" = xyes -a "$have_harfbuzz" = no; then
   AC_MSG_ERROR([harfbuzz support requested but library not found])
 fi
+
+
+# check for librt
+#
+# We need `clock_gettime' for the `ftbench' demo program.
+#
+# The code is modeled after gnulib's file `clock_time.m4', ignoring
+# very old Solaris systems.
+
+LIB_CLOCK_GETTIME=
+AC_SEARCH_LIBS([clock_gettime],
+               [rt],
+               [test "$ac_cv_search_clock_gettime" = "none required" \
+                || LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime])
+AC_SUBST([LIB_CLOCK_GETTIME])
 
 
 # Some options handling SDKs/archs in CFLAGS should be copied
@@ -977,26 +990,62 @@ AC_SUBST([build_libtool_libs])
 # changing LDFLAGS value should only be done after
 # lt_cv_prog_compiler_static_works test
 
-if test "$have_zlib" != no; then
-  CFLAGS="$CFLAGS $ZLIB_CFLAGS -DFT_CONFIG_OPTION_SYSTEM_ZLIB"
-  LDFLAGS="$LDFLAGS $ZLIB_LIBS"
-fi
+ftoption_set()
+{
+  regexp="-e \\\"s|.*#.*def.*$1.*|#define $1|\\\""
+  FTOPTION_H_SED="$FTOPTION_H_SED $regexp"
+}
 
+ftoption_unset()
+{
+  regexp="-e \\\"s|.*#.*def.*$1.*|/* #undef $1 */|\\\""
+  FTOPTION_H_SED="$FTOPTION_H_SED $regexp"
+}
+
+if test "$have_zlib" != no; then
+  CFLAGS="$CFLAGS $ZLIB_CFLAGS"
+  LDFLAGS="$LDFLAGS $ZLIB_LIBS"
+  ftoption_set FT_CONFIG_OPTION_SYSTEM_ZLIB
+else
+  ftoption_unset FT_CONFIG_OPTION_SYSTEM_ZLIB
+fi
 if test "$have_bzip2" != no; then
-  CFLAGS="$CFLAGS $BZIP2_CFLAGS -DFT_CONFIG_OPTION_USE_BZIP2"
+  CFLAGS="$CFLAGS $BZIP2_CFLAGS"
   LDFLAGS="$LDFLAGS $BZIP2_LIBS"
+  ftoption_set FT_CONFIG_OPTION_USE_BZIP2
+else
+  ftoption_unset FT_CONFIG_OPTION_USE_BZIP2
 fi
 if test "$have_libpng" != no; then
-  CFLAGS="$CFLAGS $LIBPNG_CFLAGS -DFT_CONFIG_OPTION_USE_PNG"
+  CFLAGS="$CFLAGS $LIBPNG_CFLAGS"
   LDFLAGS="$LDFLAGS $LIBPNG_LIBS"
+  ftoption_set FT_CONFIG_OPTION_USE_PNG
+else
+  ftoption_unset FT_CONFIG_OPTION_USE_PNG
 fi
 if test "$have_harfbuzz" != no; then
-  CFLAGS="$CFLAGS $HARFBUZZ_CFLAGS -DFT_CONFIG_OPTION_USE_HARFBUZZ"
+  CFLAGS="$CFLAGS $HARFBUZZ_CFLAGS"
   LDFLAGS="$LDFLAGS $HARFBUZZ_LIBS"
+  ftoption_set FT_CONFIG_OPTION_USE_HARFBUZZ
+else
+  ftoption_unset FT_CONFIG_OPTION_USE_HARFBUZZ
 fi
 
 AC_SUBST([CFLAGS])
 AC_SUBST([LDFLAGS])
+
+# We don't want to use a template file for `ftoption.h', since compilation
+# should work without calling a configure script also.  For this reason, we
+# copy the `include/freetype/config/ftoption.h' file to the `unix/builds'
+# directory (using a dummy `AC_CONFIG_FILES' call) and apply the just
+# constructed $FTOPTION_H_SED regexp (using the post-action of
+# `AC_CONFIG_FILES'); this is also the version that gets installed later on.
+#
+AC_CONFIG_FILES([ftoption.h:${srcdir}/../../include/freetype/config/ftoption.h],
+  [mv ftoption.h ftoption.tmp
+   eval "sed $FTOPTION_H_SED < ftoption.tmp > ftoption.h"
+   rm ftoption.tmp],
+  [FTOPTION_H_SED="$FTOPTION_H_SED"])
 
 # configuration file -- stay in 8.3 limit
 #

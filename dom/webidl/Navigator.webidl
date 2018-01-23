@@ -37,7 +37,7 @@ Navigator implements NavigatorStorage;
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorID {
   // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
-  [Constant, Cached]
+  [Constant, Cached, Throws]
   readonly attribute DOMString appCodeName; // constant "Mozilla"
   [Constant, Cached, NeedsCallerType]
   readonly attribute DOMString appName;
@@ -169,7 +169,6 @@ callback interface MozIdleObserver {
   void onactive();
 };
 
-// nsIDOMNavigator
 partial interface Navigator {
   [Throws, Constant, Cached, NeedsCallerType]
   readonly attribute DOMString oscpu;

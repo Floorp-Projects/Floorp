@@ -2888,6 +2888,10 @@ pref("bidi.browser.ui", false);
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
 
+// Whether underscore should be treated as a word-breaking character for
+// word selection/arrow-key movement purposes.
+pref("layout.word_select.stop_at_underscore", false);
+
 // controls caret style and word-delete during text selection
 // 0 = use platform default
 // 1 = caret moves and blinks as when there is no selection; word
@@ -3339,8 +3343,12 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
-// Don't use a native event loop in the content process.
+// Whether a native event loop should be used in the content process.
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+pref("dom.ipc.useNativeEventProcessing.content", false);
+#else
 pref("dom.ipc.useNativeEventProcessing.content", true);
+#endif
 
 // Quantum DOM scheduling:
 pref("dom.ipc.scheduler", false);

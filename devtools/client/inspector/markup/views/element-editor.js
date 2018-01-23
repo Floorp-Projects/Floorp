@@ -203,8 +203,8 @@ ElementEditor.prototype = {
     let attribute = node.closest(".attreditor");
     if (attribute) {
       type = "attribute";
-      name = attribute.querySelector(".attr-name").textContent;
-      value = attribute.querySelector(".attr-value").textContent;
+      name = attribute.dataset.attr;
+      value = attribute.dataset.value;
     }
 
     return {type, name, value, el: node};
