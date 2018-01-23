@@ -652,8 +652,9 @@ nsGenericDOMDataNode::ComputeIndexOf(const nsINode* aPossibleChild) const
 }
 
 nsresult
-nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                    bool aNotify)
+nsGenericDOMDataNode::InsertChildAt_Deprecated(nsIContent* aKid,
+                                               uint32_t aIndex,
+                                               bool aNotify)
 {
   return NS_OK;
 }
@@ -758,7 +759,7 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
     if (aCloneAfterOriginal) {
       ++insertionIndex;
     }
-    parent->InsertChildAt(newContent, insertionIndex, true);
+    parent->InsertChildAt_Deprecated(newContent, insertionIndex, true);
   }
 
   newContent.swap(*aReturn);

@@ -83,9 +83,9 @@ HTMLPictureElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
 }
 
 nsresult
-HTMLPictureElement::InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify)
+HTMLPictureElement::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex, bool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt_Deprecated(aKid, aIndex, aNotify);
 
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(aKid, rv);

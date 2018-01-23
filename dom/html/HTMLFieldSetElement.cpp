@@ -140,8 +140,9 @@ HTMLFieldSetElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 }
 
 nsresult
-HTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
-                                   bool aNotify)
+HTMLFieldSetElement::InsertChildAt_Deprecated(nsIContent* aChild,
+                                              uint32_t aIndex,
+                                              bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
@@ -159,7 +160,8 @@ HTMLFieldSetElement::InsertChildAt(nsIContent* aChild, uint32_t aIndex,
     }
   }
 
-  nsresult rv = nsGenericHTMLFormElement::InsertChildAt(aChild, aIndex, aNotify);
+  nsresult rv =
+    nsGenericHTMLFormElement::InsertChildAt_Deprecated(aChild, aIndex, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (firstLegendHasChanged) {

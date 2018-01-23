@@ -2161,7 +2161,7 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
         rv = InsertXULOverlayPI(aProtoPI, aParent, aIndex, node);
     } else {
         // No special processing, just add the PI to the document.
-        rv = aParent->InsertChildAt(node, aIndex, false);
+        rv = aParent->InsertChildAt_Deprecated(node, aIndex, false);
     }
 
     return rv;
@@ -2185,7 +2185,7 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     ssle->SetEnableUpdates(false);
     ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
-    rv = aParent->InsertChildAt(aPINode, aIndex, false);
+    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
     if (NS_FAILED(rv)) return rv;
 
     ssle->SetEnableUpdates(true);
@@ -2217,7 +2217,7 @@ XULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
 {
     nsresult rv;
 
-    rv = aParent->InsertChildAt(aPINode, aIndex, false);
+    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
     if (NS_FAILED(rv)) return rv;
 
     // xul-overlay PI is special only in prolog
@@ -3987,7 +3987,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
 
             if (pos != -1) {
                 pos = isInsertAfter ? pos + 1 : pos;
-                nsresult rv = aParent->InsertChildAt(aChild, pos, aNotify);
+                nsresult rv = aParent->InsertChildAt_Deprecated(aChild, pos, aNotify);
                 if (NS_FAILED(rv))
                     return rv;
 
@@ -4009,7 +4009,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
             // appending.
             if (NS_SUCCEEDED(rv) && pos > 0 &&
                 uint32_t(pos - 1) <= aParent->GetChildCount()) {
-                rv = aParent->InsertChildAt(aChild, pos - 1, aNotify);
+                rv = aParent->InsertChildAt_Deprecated(aChild, pos - 1, aNotify);
                 if (NS_SUCCEEDED(rv))
                     wasInserted = true;
                 // If the insertion fails, then we should still
