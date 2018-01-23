@@ -38,6 +38,11 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(nsIURI* aURI,
     return NS_OK;
   }
 
+  if (nsContentUtils::StorageAllowedForChannel(aChannel) !=
+      nsContentUtils::StorageAccess::eAllow) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIPrincipal> principal =
     BasePrincipal::CreateCodebasePrincipal(aURI,
                                            loadInfo->GetOriginAttributes());
