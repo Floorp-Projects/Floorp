@@ -822,11 +822,6 @@ nsNSSComponent::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
   }
   NS_ENSURE_ARG_POINTER(enterpriseRoots);
 
-  // nsNSSComponent isn't a nsNSSShutDownObject, so we can't check
-  // isAlreadyShutDown(). However, since mEnterpriseRoots is cleared when NSS
-  // shuts down, we can use that as a proxy for checking for NSS shutdown.
-  // (Of course, it may also be the case that no enterprise roots were imported,
-  // so we should just return a null list and NS_OK in this case.)
   if (!mEnterpriseRoots) {
     *enterpriseRoots = nullptr;
     return NS_OK;
@@ -1003,9 +998,6 @@ private:
 
 LoadLoadableRootsTask::~LoadLoadableRootsTask()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -1027,10 +1019,6 @@ LoadLoadableRootsTask::Dispatch()
 NS_IMETHODIMP
 LoadLoadableRootsTask::Run()
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = LoadLoadableRoots();
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("LoadLoadableRoots failed"));

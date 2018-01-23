@@ -26,10 +26,6 @@ nsPK11Token::nsPK11Token(PK11SlotInfo* slot)
   : mUIContext(new PipUIContext())
 {
   MOZ_ASSERT(slot);
-
-  if (isAlreadyShutDown())
-    return;
-
   mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
 
@@ -84,9 +80,6 @@ nsPK11Token::refreshTokenInfo()
 
 nsPK11Token::~nsPK11Token()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -107,10 +100,6 @@ nsresult
 nsPK11Token::GetAttributeHelper(const nsACString& attribute,
                         /*out*/ nsACString& xpcomOutParam)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // Handle removals/insertions.
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     nsresult rv = refreshTokenInfo();
@@ -163,21 +152,13 @@ NS_IMETHODIMP
 nsPK11Token::IsLoggedIn(bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   *_retval = PK11_IsLoggedIn(mSlot.get(), 0);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPK11Token::Login(bool force)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   nsresult rv;
   bool test;
   rv = this->NeedsLogin(&test);
@@ -195,9 +176,6 @@ nsPK11Token::Login(bool force)
 NS_IMETHODIMP
 nsPK11Token::LogoutSimple()
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   // PK11_Logout() can fail if the user wasn't logged in beforehand. We want
   // this method to succeed even in this case, so we ignore the return value.
   Unused << PK11_Logout(mSlot.get());
@@ -224,9 +202,6 @@ nsPK11Token::LogoutAndDropAuthenticatedResources()
 NS_IMETHODIMP
 nsPK11Token::Reset()
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   return MapSECStatus(PK11_ResetToken(mSlot.get(), nullptr));
 }
 
@@ -234,10 +209,6 @@ NS_IMETHODIMP
 nsPK11Token::GetNeedsUserInit(bool* aNeedsUserInit)
 {
   NS_ENSURE_ARG_POINTER(aNeedsUserInit);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   *aNeedsUserInit = PK11_NeedUserInit(mSlot.get());
   return NS_OK;
 }
@@ -246,10 +217,6 @@ NS_IMETHODIMP
 nsPK11Token::CheckPassword(const nsACString& password, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   SECStatus srv =
     PK11_CheckUserPassword(mSlot.get(), PromiseFlatCString(password).get());
   if (srv != SECSuccess) {
@@ -268,10 +235,6 @@ nsPK11Token::CheckPassword(const nsACString& password, bool* _retval)
 NS_IMETHODIMP
 nsPK11Token::InitPassword(const nsACString& initialPassword)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   const nsCString& passwordCStr = PromiseFlatCString(initialPassword);
   // PSM initializes the sqlite-backed softoken with an empty password. The
   // implementation considers this not to be a password (GetHasPassword returns
@@ -292,9 +255,6 @@ NS_IMETHODIMP
 nsPK11Token::ChangePassword(const nsACString& oldPassword,
                             const nsACString& newPassword)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   // PK11_ChangePW() has different semantics for the empty string and for
   // nullptr. In order to support this difference, we need to check IsVoid() to
   // find out if our caller supplied null/undefined args or just empty strings.
@@ -309,11 +269,6 @@ NS_IMETHODIMP
 nsPK11Token::GetHasPassword(bool* hasPassword)
 {
   NS_ENSURE_ARG_POINTER(hasPassword);
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // PK11_NeedLogin returns true if the token is currently configured to require
   // the user to log in (whether or not the user is actually logged in makes no
   // difference).
@@ -325,12 +280,7 @@ NS_IMETHODIMP
 nsPK11Token::NeedsLogin(bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   *_retval = PK11_NeedLogin(mSlot.get());
-
   return NS_OK;
 }
 
@@ -344,10 +294,6 @@ nsPK11TokenDB::nsPK11TokenDB()
 
 nsPK11TokenDB::~nsPK11TokenDB()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -355,11 +301,6 @@ NS_IMETHODIMP
 nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     return NS_ERROR_FAILURE;
@@ -376,11 +317,6 @@ nsPK11TokenDB::FindTokenByName(const nsACString& tokenName,
                        /*out*/ nsIPK11Token** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;

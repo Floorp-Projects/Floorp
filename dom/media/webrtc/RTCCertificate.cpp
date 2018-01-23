@@ -308,9 +308,6 @@ RTCCertificate::RTCCertificate(nsIGlobalObject* aGlobal,
 
 RTCCertificate::~RTCCertificate()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -329,7 +326,7 @@ RTCCertificate::~RTCCertificate()
 RefPtr<DtlsIdentity>
 RTCCertificate::CreateDtlsIdentity() const
 {
-  if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
+  if (!mPrivateKey || !mCertificate) {
     return nullptr;
   }
   UniqueSECKEYPrivateKey key(SECKEY_CopyPrivateKey(mPrivateKey.get()));
@@ -388,7 +385,7 @@ RTCCertificate::WriteCertificate(JSStructuredCloneWriter* aWriter) const
 bool
 RTCCertificate::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {
-  if (isAlreadyShutDown() || !mPrivateKey || !mCertificate) {
+  if (!mPrivateKey || !mCertificate) {
     return false;
   }
 
@@ -432,10 +429,6 @@ RTCCertificate::ReadCertificate(JSStructuredCloneReader* aReader)
 bool
 RTCCertificate::ReadStructuredClone(JSStructuredCloneReader* aReader)
 {
-  if (isAlreadyShutDown()) {
-    return false;
-  }
-
   uint32_t version, authType;
   if (!JS_ReadUint32Pair(aReader, &version, &authType) ||
       version != RTCCERTIFICATE_SC_VERSION) {

@@ -42,10 +42,6 @@ nsPKCS12Blob::nsPKCS12Blob()
 // destructor
 nsPKCS12Blob::~nsPKCS12Blob()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 

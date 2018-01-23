@@ -59,10 +59,6 @@ NS_IMPL_ISUPPORTS(nsNSSCertificateDB, nsIX509CertDB)
 
 nsNSSCertificateDB::~nsNSSCertificateDB()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -75,10 +71,6 @@ nsNSSCertificateDB::FindCertByDBKey(const nsACString& aDBKey,
 
   if (aDBKey.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsresult rv = BlockUntilLoadableRootsLoaded();
@@ -433,10 +425,6 @@ nsNSSCertificateDB::ImportCertificates(uint8_t* data, uint32_t length,
                                        uint32_t type,
                                        nsIInterfaceRequestor* ctx)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // We currently only handle CA certificates.
   if (type != nsIX509Cert::CA_CERT) {
     return NS_ERROR_FAILURE;
@@ -540,10 +528,6 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ImportEmailCertificate(uint8_t* data, uint32_t length,
                                            nsIInterfaceRequestor* ctx)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -629,10 +613,6 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t* data, uint32_t length,
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -698,9 +678,6 @@ NS_IMETHODIMP
 nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 {
   NS_ENSURE_ARG_POINTER(aCert);
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   UniqueCERTCertificate cert(aCert->GetCert());
   if (!cert) {
     return NS_ERROR_FAILURE;
@@ -743,10 +720,6 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
                                  uint32_t trusted)
 {
   NS_ENSURE_ARG_POINTER(cert);
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsNSSCertTrust trust;
   switch (type) {
     case nsIX509Cert::CA_CERT:
@@ -782,10 +755,6 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
 {
   NS_ENSURE_ARG_POINTER(_isTrusted);
   *_isTrusted = false;
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
@@ -832,10 +801,6 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
 NS_IMETHODIMP
 nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   NS_ENSURE_ARG(aFile);
   switch (aType) {
     case nsIX509Cert::CA_CERT:
@@ -891,9 +856,6 @@ nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -919,9 +881,6 @@ nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
   if (!NS_IsMainThread()) {
     return NS_ERROR_NOT_SAME_THREAD;
   }
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -939,10 +898,6 @@ NS_IMETHODIMP
 nsNSSCertificateDB::FindCertByEmailAddress(const nsACString& aEmailAddress,
                                            nsIX509Cert** _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -999,9 +954,6 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509FromBase64(const nsACString& base64,
                                     /*out*/ nsIX509Cert** _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   if (!_retval) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1026,9 +978,6 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509(const nsACString& certDER,
                                   nsIX509Cert** _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   if (NS_WARN_IF(!_retval)) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1169,10 +1118,6 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   }
   *addedCertificate = nullptr;
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsNSSCertTrust trust;
   if (CERT_DecodeTrustString(&trust.GetTrust(), PromiseFlatCString(aTrust).get())
         != SECSuccess) {
@@ -1253,10 +1198,6 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
 NS_IMETHODIMP
 nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = BlockUntilLoadableRootsLoaded();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1288,10 +1229,6 @@ nsNSSCertificateDB::GetEnterpriseRoots(nsIX509CertList** enterpriseRoots)
   }
 
   NS_ENSURE_ARG_POINTER(enterpriseRoots);
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
 #ifdef XP_WIN
   nsCOMPtr<nsINSSComponent> psm(do_GetService(PSM_COMPONENT_CONTRACTID));
@@ -1384,10 +1321,6 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
                                   bool* aHasEVPolicy,
                                   int32_t* /*PRErrorCode*/ _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   return ::VerifyCertAtTime(aCert, aUsage, aFlags, aHostname,
                             mozilla::pkix::Now(),
                             aVerifiedChain, aHasEVPolicy, _retval);
@@ -1403,10 +1336,6 @@ nsNSSCertificateDB::VerifyCertAtTime(nsIX509Cert* aCert,
                                      bool* aHasEVPolicy,
                                      int32_t* /*PRErrorCode*/ _retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   return ::VerifyCertAtTime(aCert, aUsage, aFlags, aHostname,
                             mozilla::pkix::TimeFromEpochInSeconds(aTime),
                             aVerifiedChain, aHasEVPolicy, _retval);
@@ -1476,9 +1405,6 @@ nsNSSCertificateDB::AsyncVerifyCertAtTime(nsIX509Cert* aCert,
                                           uint64_t aTime,
                                           nsICertVerificationCallback* aCallback)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   RefPtr<VerifyCertAtTimeTask> task(new VerifyCertAtTimeTask(aCert, aUsage,
                                                              aFlags, aHostname,
                                                              aTime, aCallback));
@@ -1488,10 +1414,6 @@ nsNSSCertificateDB::AsyncVerifyCertAtTime(nsIX509Cert* aCert,
 NS_IMETHODIMP
 nsNSSCertificateDB::ClearOCSPCache()
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
   certVerifier->ClearOCSPCache();

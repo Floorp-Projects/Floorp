@@ -50,9 +50,6 @@ TransportSecurityInfo::TransportSecurityInfo()
 
 TransportSecurityInfo::~TransportSecurityInfo()
 {
-  if (isAlreadyShutDown())
-    return;
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -1040,10 +1037,6 @@ TransportSecurityInfo::GetFailedCertChain(nsIX509CertList** _result)
 nsresult
 TransportSecurityInfo::SetFailedCertChain(UniqueCERTCertList certList)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   // nsNSSCertList takes ownership of certList
   mFailedCertChain = new nsNSSCertList(Move(certList));
 

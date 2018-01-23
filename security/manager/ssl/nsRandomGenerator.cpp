@@ -19,10 +19,6 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
   NS_ENSURE_ARG_POINTER(aBuffer);
   *aBuffer = nullptr;
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   mozilla::UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     return NS_ERROR_FAILURE;
@@ -46,8 +42,5 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
 
 nsRandomGenerator::~nsRandomGenerator()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   shutdown(ShutdownCalledFrom::Object);
 }

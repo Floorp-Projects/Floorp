@@ -70,11 +70,6 @@ U2FSoftTokenManager::U2FSoftTokenManager(uint32_t aCounter)
 
 U2FSoftTokenManager::~U2FSoftTokenManager()
 {
-
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -366,10 +361,6 @@ U2FSoftTokenManager::Init()
     return NS_OK;
   }
 
-  if (NS_WARN_IF(isAlreadyShutDown())) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   MOZ_ASSERT(slot.get());
 
@@ -570,10 +561,6 @@ U2FSoftTokenManager::IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
                                   const nsTArray<uint8_t>& aAppParam,
                                   bool& aResult)
 {
-  if (NS_WARN_IF(isAlreadyShutDown())) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!mInitialized) {
     nsresult rv = Init();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -620,10 +607,6 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredent
                               const nsTArray<uint8_t>& aChallenge,
                               uint32_t aTimeoutMS)
 {
-  if (NS_WARN_IF(isAlreadyShutDown())) {
-    return U2FRegisterPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
-  }
-
   if (!mInitialized) {
     nsresult rv = Init();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -751,10 +734,6 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials
                           bool aRequireUserVerification,
                           uint32_t aTimeoutMS)
 {
-  if (NS_WARN_IF(isAlreadyShutDown())) {
-    return U2FSignPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
-  }
-
   // The U2F softtoken doesn't support user verification.
   if (aRequireUserVerification) {
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);

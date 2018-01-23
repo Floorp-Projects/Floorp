@@ -26,10 +26,6 @@ NS_IMPL_ISUPPORTS(nsPKCS11Slot, nsIPKCS11Slot)
 nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo* slot)
 {
   MOZ_ASSERT(slot);
-
-  if (isAlreadyShutDown())
-    return;
-
   mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
   Unused << refreshSlotInfo();
@@ -75,9 +71,6 @@ nsPKCS11Slot::refreshSlotInfo()
 
 nsPKCS11Slot::~nsPKCS11Slot()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -98,10 +91,6 @@ nsresult
 nsPKCS11Slot::GetAttributeHelper(const nsACString& attribute,
                          /*out*/ nsACString& xpcomOutParam)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
     nsresult rv = refreshSlotInfo();
     if (NS_FAILED(rv)) {
@@ -116,9 +105,6 @@ nsPKCS11Slot::GetAttributeHelper(const nsACString& attribute,
 NS_IMETHODIMP
 nsPKCS11Slot::GetName(/*out*/ nsACString& name)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   // |csn| is non-owning.
   char* csn = PK11_GetSlotName(mSlot.get());
   if (csn && *csn) {
@@ -164,10 +150,6 @@ NS_IMETHODIMP
 nsPKCS11Slot::GetToken(nsIPK11Token** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   nsCOMPtr<nsIPK11Token> token = new nsPK11Token(mSlot.get());
   token.forget(_retval);
   return NS_OK;
@@ -176,9 +158,6 @@ nsPKCS11Slot::GetToken(nsIPK11Token** _retval)
 NS_IMETHODIMP
 nsPKCS11Slot::GetTokenName(/*out*/ nsACString& tokenName)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (!PK11_IsPresent(mSlot.get())) {
     tokenName.SetIsVoid(true);
     return NS_OK;
@@ -199,10 +178,6 @@ NS_IMETHODIMP
 nsPKCS11Slot::GetStatus(uint32_t* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (PK11_IsDisabled(mSlot.get())) {
     *_retval = SLOT_DISABLED;
   } else if (!PK11_IsPresent(mSlot.get())) {
@@ -225,18 +200,11 @@ NS_IMPL_ISUPPORTS(nsPKCS11Module, nsIPKCS11Module)
 nsPKCS11Module::nsPKCS11Module(SECMODModule* module)
 {
   MOZ_ASSERT(module);
-
-  if (isAlreadyShutDown())
-    return;
-
   mModule.reset(SECMOD_ReferenceModule(module));
 }
 
 nsPKCS11Module::~nsPKCS11Module()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -256,9 +224,6 @@ nsPKCS11Module::destructorSafeDestroyNSSReference()
 NS_IMETHODIMP
 nsPKCS11Module::GetName(/*out*/ nsACString& name)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   name = mModule->commonName;
   return NS_OK;
 }
@@ -266,9 +231,6 @@ nsPKCS11Module::GetName(/*out*/ nsACString& name)
 NS_IMETHODIMP
 nsPKCS11Module::GetLibName(/*out*/ nsACString& libName)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (mModule->dllName) {
     libName = mModule->dllName;
   } else {
@@ -282,9 +244,6 @@ nsPKCS11Module::FindSlotByName(const nsACString& name,
                        /*out*/ nsIPKCS11Slot** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
 
   const nsCString& flatName = PromiseFlatCString(name);
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("Getting \"%s\"", flatName.get()));
@@ -321,9 +280,6 @@ nsPKCS11Module::ListSlots(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   nsresult rv = CheckForSmartCardChanges();
   if (NS_FAILED(rv)) {
     return rv;
