@@ -53,6 +53,8 @@ class GeckoViewContent extends GeckoViewModule {
     debug("onEvent: " + aEvent);
     switch (aEvent) {
       case "GeckoViewContent:ExitFullScreen":
+        this.messageManager.sendAsyncMessage("GeckoView:DOMFullscreenExited");
+        break;
       case "GeckoView:ZoomToInput":
         this.messageManager.sendAsyncMessage(aEvent);
         break;
