@@ -45,6 +45,7 @@ public class WebViewProvider {
         private boolean canGoForward;
         private boolean isSecure;
         private GeckoSession geckoSession;
+        private String webViewTitle;
 
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -113,6 +114,7 @@ public class WebViewProvider {
         public void loadUrl(final String url) {
             currentUrl = url;
             geckoSession.loadUri(currentUrl);
+            callback.onProgress(10);
         }
 
         @Override
@@ -122,17 +124,28 @@ public class WebViewProvider {
 
         @Override
         public void setBlockingEnabled(boolean enabled) {
-            // We can't actually do this?
+//            getSettings().setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled);
         }
 
         private ContentListener createContentListener() {
             return new ContentListener() {
                 @Override
                 public void onTitleChange(GeckoSession session, String title) {
+                    webViewTitle = title;
                 }
 
                 @Override
                 public void onFullScreen(GeckoSession session, boolean fullScreen) {
+                    if (fullScreen) {
+                        callback.onEnterFullScreen(new FullscreenCallback() {
+                            @Override
+                            public void fullScreenExited() {
+                                geckoSession.exitFullScreen();
+                            }
+                        }, null);
+                    } else {
+                        callback.onExitFullScreen();
+                    }
                 }
 
                 @Override
@@ -175,6 +188,7 @@ public class WebViewProvider {
             return new NavigationListener() {
                 public void onLocationChange(GeckoSession session, String url) {
                     currentUrl = url;
+                    System.out.println(currentUrl);
                     if (callback != null) {
                         callback.onURLChanged(url);
                     }
@@ -224,7 +238,12 @@ public class WebViewProvider {
 
         @Override
         public String getTitle() {
-            return "?";
+            return webViewTitle;
+        }
+
+        @Override
+        public void exitFullscreen() {
+            geckoSession.exitFullScreen();
         }
     }
 }
