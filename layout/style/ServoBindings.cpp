@@ -1216,12 +1216,6 @@ Gecko_AtomEqualsUTF8IgnoreCase(nsAtom* aAtom, const char* aString, uint32_t aLen
 }
 
 void
-Gecko_EnsureMozBorderColors(nsStyleBorder* aBorder)
-{
-  aBorder->EnsureBorderColors();
-}
-
-void
 Gecko_nsTArray_FontFamilyName_AppendNamed(nsTArray<FontFamilyName>* aNames,
                                           nsAtom* aName,
                                           bool aQuoted)

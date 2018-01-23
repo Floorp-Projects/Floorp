@@ -178,6 +178,7 @@ impl Builder {
             output_vector.push(header);
         }
 
+        output_vector.push("--rust-target".into());
         output_vector.push(self.options.rust_target.into());
 
         self.options
@@ -1607,16 +1608,20 @@ impl Bindings {
         }
 
         if let Some(h) = options.input_header.as_ref() {
-            let md = std::fs::metadata(h).ok().unwrap();
-            if !md.is_file() {
-                eprintln!("error: '{}' is a folder", h);
+            if let Ok(md) = std::fs::metadata(h) {
+                if md.is_dir() {
+                    eprintln!("error: '{}' is a folder", h);
+                    return Err(());
+                }
+                if !can_read(&md.permissions()) {
+                    eprintln!("error: insufficient permissions to read '{}'", h);
+                    return Err(());
+                }
+                options.clang_args.push(h.clone())
+            } else {
+                eprintln!("error: header '{}' does not exist.", h);
                 return Err(());
             }
-            if !can_read(&md.permissions()) {
-                eprintln!("error: insufficient permissions to read '{}'", h);
-                return Err(());
-            }
-            options.clang_args.push(h.clone())
         }
 
         for f in options.input_unsaved_files.iter() {
@@ -1706,18 +1711,9 @@ impl Bindings {
         let rustfmt = which::which("rustfmt")
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_owned()))?;
 
-        // Prefer using the `rustfmt-nightly` version of `rustmft`, if
-        // possible. It requires being run via `rustup run nightly ...`.
-        let mut cmd = if let Ok(rustup) = which::which("rustup") {
-            let mut cmd = Command::new(rustup);
-            cmd.args(&["run", "nightly", "rustfmt", "--"]);
-            cmd
-        } else {
-            Command::new(rustfmt)
-        };
+        let mut cmd = Command::new(rustfmt);
 
         cmd
-            .args(&["--write-mode=display"])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
 
@@ -1895,6 +1891,7 @@ fn commandline_flag_unit_test_function() {
     let command_line_flags = bindings.command_line_flags();
 
     let test_cases = vec![
+        "--rust-target",
         "--no-derive-default",
         "--generate",
         "function,types,vars,methods,constructors,destructors",
@@ -1914,6 +1911,7 @@ fn commandline_flag_unit_test_function() {
 
     let command_line_flags = bindings.command_line_flags();
     let test_cases = vec![
+        "--rust-target",
         "input_header",
         "--no-derive-default",
         "--generate",

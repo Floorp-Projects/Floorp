@@ -4480,6 +4480,7 @@
               window.addEventListener("MozAfterPaint", this);
               window.addEventListener("MozLayerTreeReady", this);
               window.addEventListener("MozLayerTreeCleared", this);
+              window.addEventListener("TabBrowserDiscarded", this);
               window.addEventListener("TabRemotenessChange", this);
               window.addEventListener("sizemodechange", this);
               window.addEventListener("occlusionstatechange", this);
@@ -4524,6 +4525,7 @@
               window.removeEventListener("MozAfterPaint", this);
               window.removeEventListener("MozLayerTreeReady", this);
               window.removeEventListener("MozLayerTreeCleared", this);
+              window.removeEventListener("TabBrowserDiscarded", this);
               window.removeEventListener("TabRemotenessChange", this);
               window.removeEventListener("sizemodechange", this);
               window.removeEventListener("occlusionstatechange", this);
@@ -4967,6 +4969,12 @@
               }
             },
 
+            // Called when a tab is discarded
+            onTabDiscarded(tab) {
+              this.logState(`onTabDiscarded(${tab._tPos})`);
+              this.setTabStateNoAction(tab, this.STATE_UNLOADED);
+            },
+
             // Called when a tab has been removed, and the browser node is
             // about to be removed from the DOM.
             onTabRemoved(tab) {
@@ -5203,6 +5211,8 @@
                 this.onLayersCleared(event.originalTarget);
               } else if (event.type == "TabRemotenessChange") {
                 this.onRemotenessChange(event.target);
+              } else if (event.type == "TabBrowserDiscarded") {
+                this.onTabDiscarded(event.target);
               } else if (event.type == "sizemodechange" ||
                          event.type == "occlusionstatechange") {
                 this.onSizeModeOrOcclusionStateChange();
@@ -6219,8 +6229,7 @@
           if (this.selectedBrowser == browser) {
             TabCrashHandler.onSelectedBrowserCrash(browser);
           } else {
-            this.updateBrowserRemoteness(browser, false);
-            SessionStore.reviveCrashedTab(tab);
+            this.discardBrowser(browser);
           }
 
           tab.removeAttribute("soundplaying");
@@ -7840,8 +7849,6 @@
           else
             this.removeAttribute("visuallyselected");
           this.parentNode.tabbrowser._tabAttrModified(this, ["visuallyselected"]);
-
-          this._setPositionAttributes(val);
 
           return val;
           ]]>

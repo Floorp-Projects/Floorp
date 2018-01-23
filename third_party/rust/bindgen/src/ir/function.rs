@@ -27,17 +27,26 @@ pub enum FunctionKind {
 
 impl FunctionKind {
     fn from_cursor(cursor: &clang::Cursor) -> Option<FunctionKind> {
+        // FIXME(emilio): Deduplicate logic with `ir::comp`.
         Some(match cursor.kind() {
             clang_sys::CXCursor_FunctionDecl => FunctionKind::Function,
             clang_sys::CXCursor_Constructor => FunctionKind::Method(
                 MethodKind::Constructor,
             ),
             clang_sys::CXCursor_Destructor => FunctionKind::Method(
-                MethodKind::Destructor,
+                if cursor.method_is_virtual() {
+                    MethodKind::VirtualDestructor {
+                        pure_virtual: cursor.method_is_pure_virtual(),
+                    }
+                } else {
+                    MethodKind::Destructor
+                }
             ),
             clang_sys::CXCursor_CXXMethod => {
                 if cursor.method_is_virtual() {
-                    FunctionKind::Method(MethodKind::Virtual)
+                    FunctionKind::Method(MethodKind::Virtual {
+                        pure_virtual: cursor.method_is_pure_virtual(),
+                    })
                 } else if cursor.method_is_static() {
                     FunctionKind::Method(MethodKind::Static)
                 } else {

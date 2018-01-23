@@ -1111,26 +1111,6 @@ static bool IsVisibleBorderStyle(uint8_t aStyle)
           aStyle != NS_STYLE_BORDER_STYLE_HIDDEN);
 }
 
-struct nsBorderColors
-{
-  nsBorderColors() = default;
-
-  // GCC cannot generate this copy constructor correctly, since nsTArray
-  // has explicit copy constructor, and we use array of nsTArray here.
-  // See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=82235
-  nsBorderColors(const nsBorderColors& aOther) {
-    NS_FOR_CSS_SIDES(side) {
-      mColors[side] = aOther.mColors[side];
-    }
-  }
-
-  const nsTArray<nscolor>& operator[](mozilla::Side aSide) const {
-    return mColors[aSide];
-  }
-
-  nsTArray<nscolor> mColors[4];
-};
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
 {
   explicit nsStyleBorder(const nsPresContext* aContext);
@@ -1151,18 +1131,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   void Destroy(nsPresContext* aContext);
 
   nsChangeHint CalcDifference(const nsStyleBorder& aNewData) const;
-
-  void EnsureBorderColors() {
-    if (!mBorderColors) {
-      mBorderColors.reset(new nsBorderColors);
-    }
-  }
-
-  void ClearBorderColors(mozilla::Side aSide) {
-    if (mBorderColors) {
-      mBorderColors->mColors[aSide].Clear();
-    }
-  }
 
   // Return whether aStyle is a visible style.  Invisible styles cause
   // the relevant computed border width to be 0.
@@ -1244,8 +1212,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder
   }
 
 public:
-  // [reset] composite (stripe) colors
-  mozilla::UniquePtr<nsBorderColors> mBorderColors;
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
   nsStyleImage   mBorderImageSource;  // [reset]
   nsStyleSides   mBorderImageSlice;   // [reset] factor, percent

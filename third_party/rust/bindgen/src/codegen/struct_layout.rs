@@ -16,6 +16,7 @@ pub struct StructLayoutTracker<'a> {
     name: &'a str,
     ctx: &'a BindgenContext,
     comp: &'a CompInfo,
+    is_packed: bool,
     latest_offset: usize,
     padding_count: usize,
     latest_field_layout: Option<Layout>,
@@ -81,12 +82,14 @@ impl<'a> StructLayoutTracker<'a> {
     pub fn new(
         ctx: &'a BindgenContext,
         comp: &'a CompInfo,
+        ty: &'a Type,
         name: &'a str,
     ) -> Self {
         StructLayoutTracker {
             name: name,
             ctx: ctx,
             comp: comp,
+            is_packed: comp.is_packed(ctx, &ty.layout(ctx)),
             latest_offset: 0,
             padding_count: 0,
             latest_field_layout: None,
@@ -180,7 +183,7 @@ impl<'a> StructLayoutTracker<'a> {
 
         let will_merge_with_bitfield = self.align_to_latest_field(field_layout);
 
-        let padding_layout = if self.comp.packed() {
+        let padding_layout = if self.is_packed {
             None
         } else {
             let padding_bytes = match field_offset {
@@ -269,7 +272,7 @@ impl<'a> StructLayoutTracker<'a> {
                           self.latest_field_layout.unwrap().align) ||
                  layout.align > mem::size_of::<*mut ()>())
         {
-            let layout = if self.comp.packed() {
+            let layout = if self.is_packed {
                 Layout::new(padding_bytes, 1)
             } else if self.last_field_was_bitfield ||
                        layout.align > mem::size_of::<*mut ()>()
@@ -316,7 +319,7 @@ impl<'a> StructLayoutTracker<'a> {
     ///
     /// This is just to avoid doing the same check also in pad_field.
     fn align_to_latest_field(&mut self, new_field_layout: Layout) -> bool {
-        if self.comp.packed() {
+        if self.is_packed {
             // Skip to align fields when packed.
             return false;
         }
@@ -335,9 +338,12 @@ impl<'a> StructLayoutTracker<'a> {
             new_field_layout
         );
 
+        // Avoid divide-by-zero errors if align is 0.
+        let align = cmp::max(1, layout.align);
+
         if self.last_field_was_bitfield &&
-            new_field_layout.align <= layout.size % layout.align &&
-            new_field_layout.size <= layout.size % layout.align
+            new_field_layout.align <= layout.size % align &&
+            new_field_layout.size <= layout.size % align
         {
             // The new field will be coalesced into some of the remaining bits.
             //

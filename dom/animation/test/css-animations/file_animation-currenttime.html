@@ -57,7 +57,7 @@ test(function(t)
   animation.startTime = animation.timeline.currentTime;
 
   animation.currentTime = 50 * MS_PER_SEC;
-  assert_times_equal(animation.currentTime, 50 * MS_PER_SEC,
+  assert_time_equals_literal(animation.currentTime, 50 * MS_PER_SEC,
     'Check setting of currentTime actually works');
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'currentTime');

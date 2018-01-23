@@ -74,8 +74,6 @@
              oncommand="goDoPlacesCommand('placesCmd_reload');"/>
     <command id="placesCmd_sortBy:name"
              oncommand="goDoPlacesCommand('placesCmd_sortBy:name');"/>
-    <command id="placesCmd_moveBookmarks"
-             oncommand="goDoPlacesCommand('placesCmd_moveBookmarks');"/>
     <command id="placesCmd_deleteDataHost"
              oncommand="goDoPlacesCommand('placesCmd_deleteDataHost');"/>
     <command id="placesCmd_createBookmark"

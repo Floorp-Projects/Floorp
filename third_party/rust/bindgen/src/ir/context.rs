@@ -1970,7 +1970,14 @@ impl BindgenContext {
                     CXType_Float => FloatKind::Float,
                     CXType_Double => FloatKind::Double,
                     CXType_LongDouble => FloatKind::LongDouble,
-                    _ => panic!("Non floating-type complex?"),
+                    CXType_Float128 => FloatKind::Float128,
+                    _ => {
+                        panic!(
+                            "Non floating-type complex? {:?}, {:?}",
+                            ty,
+                            float_type,
+                        )
+                    },
                 };
                 TypeKind::Complex(float_kind)
             }
@@ -2092,7 +2099,7 @@ impl BindgenContext {
             ::clang_sys::CXCursor_Namespace,
             "Be a nice person"
         );
-        let tokens = match self.translation_unit.tokens(&cursor) {
+        let tokens = match cursor.tokens() {
             Some(tokens) => tokens,
             None => return (None, ModuleKind::Normal),
         };

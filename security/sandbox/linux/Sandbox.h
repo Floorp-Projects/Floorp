@@ -17,8 +17,9 @@
 
 namespace mozilla {
 
-// This must be called early, while the process is still single-threaded.
-MOZ_EXPORT void SandboxEarlyInit(GeckoProcessType aType);
+// This must be called early, before glib creates any worker threads.
+// (See bug 1176099.)
+MOZ_EXPORT void SandboxEarlyInit();
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Call only if SandboxInfo::CanSandboxContent() returns true.

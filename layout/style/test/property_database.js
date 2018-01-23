@@ -8302,60 +8302,12 @@ if (false) {
     other_values: [ "green", "#fc3" ],
     invalid_values: [ "000000", "ff00ff" ]
   };
-
-  gCSSProperties["-moz-border-bottom-colors"] = {
-    domProp: "MozBorderBottomColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  };
-
-  gCSSProperties["-moz-border-left-colors"] = {
-    domProp: "MozBorderLeftColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  };
-
-  gCSSProperties["-moz-border-right-colors"] = {
-    domProp: "MozBorderRightColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  };
-
-  gCSSProperties["-moz-border-top-colors"] = {
-    domProp: "MozBorderTopColors",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    applies_to_first_letter: true,
-    initial_values: [ "none" ],
-    other_values: [ "red green", "red #fc3", "#ff00cc", "currentColor", "blue currentColor orange currentColor" ],
-    invalid_values: [ "red none", "red inherit", "red, green", "none red", "inherit red", "ff00cc" ]
-  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
   gCSSProperties["animation"].invalid_values.push("2s unset");
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset", "unset, normal");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
-  if (gCSSProperties["-moz-border-bottom-colors"])
-    gCSSProperties["-moz-border-bottom-colors"].invalid_values.push("red unset", "unset red");
-  if (gCSSProperties["-moz-border-left-colors"])
-    gCSSProperties["-moz-border-left-colors"].invalid_values.push("red unset", "unset red");
-  if (gCSSProperties["-moz-border-right-colors"])
-    gCSSProperties["-moz-border-right-colors"].invalid_values.push("red unset", "unset red");
-  if (gCSSProperties["-moz-border-top-colors"])
-    gCSSProperties["-moz-border-top-colors"].invalid_values.push("red unset", "unset red");
   gCSSProperties["border-radius"].invalid_values.push("unset 2px", "unset / 2px", "2px unset", "2px / unset");
   gCSSProperties["border-bottom-left-radius"].invalid_values.push("unset 2px", "2px unset");
   gCSSProperties["border-bottom-right-radius"].invalid_values.push("unset 2px", "2px unset");
