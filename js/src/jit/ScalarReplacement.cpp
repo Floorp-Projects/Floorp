@@ -865,8 +865,8 @@ IndexOf(MDefinition* ins, int32_t* res)
         indexDef = indexDef->toSpectreMaskIndex()->index();
     if (indexDef->isBoundsCheck())
         indexDef = indexDef->toBoundsCheck()->index();
-    if (indexDef->isToInt32())
-        indexDef = indexDef->toToInt32()->getOperand(0);
+    if (indexDef->isToNumberInt32())
+        indexDef = indexDef->toToNumberInt32()->getOperand(0);
     MConstant* indexDefConst = indexDef->maybeConstantValue();
     if (!indexDefConst || indexDefConst->type() != MIRType::Int32)
         return false;

@@ -12,17 +12,15 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
-#include "nsIPrintStatusFeedback.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 
-class nsPrintProgress : public nsIPrintProgress, public nsIPrintStatusFeedback
+class nsPrintProgress : public nsIPrintProgress
 {
 public:
 	NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPRINTPROGRESS
   NS_DECL_NSIWEBPROGRESSLISTENER
-  NS_DECL_NSIPRINTSTATUSFEEDBACK
 
   explicit nsPrintProgress(nsIPrintSettings* aPrintSettings);
 

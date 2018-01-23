@@ -1,3 +1,28 @@
-Functions changes summary: 0 Removed, 0 Changed (5 filtered out), 0 Added function
+Functions changes summary: 0 Removed, 1 Changed (2 filtered out), 0 Added function
 Variables changes summary: 0 Removed, 0 Changed, 0 Added variable
+
+1 function with some indirect sub-type change:
+
+  [C]'function SECStatus SSL_GetChannelInfo(SSLChannelInfo*, PRUintn)' at sslinfo.c:12:1 has some indirect sub-type changes:
+    parameter 1 of type 'SSLChannelInfo*' has sub-type changes:
+      in pointed to type 'typedef SSLChannelInfo' at sslt.h:318:1:
+        underlying type 'struct SSLChannelInfoStr' at sslt.h:259:1 changed:
+          1 data member change:
+           type of 'SSLSignatureScheme SSLChannelInfoStr::signatureScheme' changed:
+             underlying type 'enum __anonymous_enum__' changed:
+               3 enumerator deletions:
+                 '__anonymous_enum__::ssl_sig_rsa_pss_sha256' value '2052'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_sha384' value '2053'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_sha512' value '2054'
+
+               6 enumerator insertions:
+                 '__anonymous_enum__::ssl_sig_rsa_pss_rsae_sha256' value '2052'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_rsae_sha384' value '2053'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_rsae_sha512' value '2054'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_pss_sha256' value '2057'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_pss_sha384' value '2058'
+                 '__anonymous_enum__::ssl_sig_rsa_pss_pss_sha512' value '2059'
+
+
+
 

@@ -91,6 +91,7 @@ while [ $# -gt 0 ]; do
         --sancov=?*) enable_sancov "${1#*=}" ;;
         --pprof) gyp_params+=(-Duse_pprof=1) ;;
         --ct-verif) gyp_params+=(-Dct_verif=1) ;;
+        --emit-llvm) gyp_params+=(-Demit_llvm=1 -Dsign_libs=0) ;;
         --disable-tests) gyp_params+=(-Ddisable_tests=1) ;;
         --no-zdefs) gyp_params+=(-Dno_zdefs=1) ;;
         --system-sqlite) gyp_params+=(-Duse_system_sqlite=1) ;;

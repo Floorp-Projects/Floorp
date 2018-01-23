@@ -269,9 +269,43 @@ check_abi()
         abidiff --hd1 $PREVDIST/public/ --hd2 $NEWDIST/public \
             $PREVDIST/*/lib/$SO $NEWDIST/*/lib/$SO \
             > ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt
-        if [ $? -ne 0 ]; then
+        RET=$?
+        ABIDIFF_ERROR=$((($RET & 0x01) != 0))
+        ABIDIFF_USAGE_ERROR=$((($RET & 0x02) != 0))
+        ABIDIFF_ABI_CHANGE=$((($RET & 0x04) != 0))
+        ABIDIFF_ABI_INCOMPATIBLE_CHANGE=$((($RET & 0x08) != 0))
+        ABIDIFF_UNKNOWN_BIT_SET=$((($RET & 0xf0) != 0))
+
+        # If abidiff reports an error, or a usage error, or if it sets a result
+        # bit value this script doesn't know yet about, we'll report failure.
+        # For ABI changes, we don't yet report an error. We'll compare the
+        # result report with our whitelist. This allows us to silence changes
+        # that we're already aware of and have been declared acceptable.
+
+        REPORT_RET_AS_FAILURE=0
+        if [ $ABIDIFF_ERROR -ne 0 ]; then
+            print_log "abidiff reported ABIDIFF_ERROR."
+            REPORT_RET_AS_FAILURE=1
+        fi
+        if [ $ABIDIFF_USAGE_ERROR -ne 0 ]; then
+            print_log "abidiff reported ABIDIFF_USAGE_ERROR."
+            REPORT_RET_AS_FAILURE=1
+        fi
+        if [ $ABIDIFF_UNKNOWN_BIT_SET -ne 0 ]; then
+            print_log "abidiff reported ABIDIFF_UNKNOWN_BIT_SET."
+            REPORT_RET_AS_FAILURE=1
+        fi
+
+        if [ $ABIDIFF_ABI_CHANGE -ne 0 ]; then
+            print_log "Ignoring abidiff result ABI_CHANGE, instead we'll check for non-whitelisted differences."
+        fi
+        if [ $ABIDIFF_ABI_INCOMPATIBLE_CHANGE -ne 0 ]; then
+            print_log "Ignoring abidiff result ABIDIFF_ABI_INCOMPATIBLE_CHANGE, instead we'll check for non-whitelisted differences."
+        fi
+
+        if [ $REPORT_RET_AS_FAILURE -ne 0 ]; then
             ABI_PROBLEM_FOUND=1
-            print_log "FAILED to run abidiff {$PREVDIST , $NEWDIST} for $SO, or failed writing to ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt"
+            print_log "abidiff {$PREVDIST , $NEWDIST} for $SO FAILED with result $RET, or failed writing to ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt"
         fi
         if [ ! -f ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt ]; then
             ABI_PROBLEM_FOUND=1

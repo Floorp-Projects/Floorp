@@ -264,7 +264,7 @@ RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
   }
 
   nsCOMPtr<nsINode> parent = aNode->GetParentNode();
-  int32_t offset = parent ? parent->IndexOf(aNode) : -1;
+  int32_t offset = parent ? parent->ComputeIndexOf(aNode) : -1;
 
   // check for range endpoints that are after aNode and in the same parent
   for (size_t i = 0; i < count; i++) {

@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Variant.h"
 
 #include "jsapi.h"
 
@@ -131,10 +132,13 @@ using MarkBitObservers = JS::WeakCache<NonshrinkingGCObjectVector>;
 using StackChars = Vector<char16_t, 0, SystemAllocPolicy>;
 #endif
 
+class OffThreadJob;
+
 // Per-context shell state.
 struct ShellContext
 {
     explicit ShellContext(JSContext* cx);
+    ~ShellContext();
 
     bool isWorker;
     double timeoutInterval;
@@ -172,6 +176,11 @@ struct ShellContext
 
     JS::UniqueChars moduleLoadPath;
     UniquePtr<MarkBitObservers> markObservers;
+
+    // Off-thread parse state.
+    js::Monitor offThreadMonitor;
+    Vector<OffThreadJob*, 0, SystemAllocPolicy> offThreadJobs;
+
 };
 
 extern ShellContext*

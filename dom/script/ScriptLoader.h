@@ -296,11 +296,15 @@ public:
    * @param aIntegrity The expect hash url, if avail, of the request
    * @param aScriptFromHead Whether or not the script was a child of head
    */
-  virtual void PreloadURI(nsIURI* aURI, const nsAString& aCharset,
+  virtual void PreloadURI(nsIURI* aURI,
+                          const nsAString& aCharset,
                           const nsAString& aType,
                           const nsAString& aCrossOrigin,
                           const nsAString& aIntegrity,
-                          bool aScriptFromHead, bool aAsync, bool aDefer,
+                          bool aScriptFromHead,
+                          bool aAsync,
+                          bool aDefer,
+                          bool aNoModule,
                           const mozilla::net::ReferrerPolicy aReferrerPolicy);
 
   /**

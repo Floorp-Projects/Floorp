@@ -1862,7 +1862,7 @@ IonBuilder::inlineStrCharCodeAt(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* index = MToInt32::New(alloc(), callInfo.getArg(0));
+    MInstruction* index = MToNumberInt32::New(alloc(), callInfo.getArg(0));
     current->add(index);
 
     MStringLength* length = MStringLength::New(alloc(), callInfo.thisArg());
@@ -1972,7 +1972,7 @@ IonBuilder::inlineStrCharAt(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MInstruction* index = MToInt32::New(alloc(), callInfo.getArg(0));
+    MInstruction* index = MToNumberInt32::New(alloc(), callInfo.getArg(0));
     current->add(index);
 
     MStringLength* length = MStringLength::New(alloc(), callInfo.thisArg());
@@ -3142,7 +3142,7 @@ IonBuilder::inlineToInteger(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    MToInt32* toInt32 = MToInt32::New(alloc(), callInfo.getArg(0));
+    auto* toInt32 = MToNumberInt32::New(alloc(), callInfo.getArg(0));
     current->add(toInt32);
     current->push(toInt32);
     return InliningStatus_Inlined;
@@ -4261,7 +4261,7 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
     if (!ElementAccessIsTypedArray(constraints(), array, *index, arrayType))
         return false;
 
-    MInstruction* indexAsInt32 = MToInt32::New(alloc(), *index);
+    MInstruction* indexAsInt32 = MToNumberInt32::New(alloc(), *index);
     current->add(indexAsInt32);
     *index = indexAsInt32;
 

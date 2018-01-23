@@ -2,7 +2,7 @@
 
 function toint32() {
 
-    // The test case to trigger MToInt32 operation.
+    // The test case to trigger MToNumberInt32 operation.
     var ToInteger = getSelfHostedValue("ToInteger");
 
     // Case1: The input operand is constant int32.

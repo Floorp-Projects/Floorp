@@ -1,0 +1,186 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+FINAL_LIBRARY = "webrtc"
+
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/cropped_desktop_frame.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/cropping_window_capturer.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_and_cursor_composer.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_options.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capturer.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capturer_differ_wrapper.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_device_info.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_frame_rotation.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/differ_block.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor.cc",
+    "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_helper.cc"
+]
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/media/libyuv/libyuv/include/",
+    "/media/webrtc/trunk/"
+]
+
+COMPILE_FLAGS["STL"] = []
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
+DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["MULTI_MONITOR_SCREENSHARE"] = True
+DEFINES["EXPAT_RELATIVE_PATH"] = True
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NVALGRIND"] = True
+    DEFINES["NDEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc"
+    ]
+
+    OS_LIBS += [
+        "d3d11",
+        "dxgi",
+        "winmm"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/cropping_window_capturer_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_frame_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/cursor.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/d3d_device.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/desktop.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/desktop_device_info_win.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_adapter_duplicator.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_duplicator_controller.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_output_duplicator.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_texture.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_texture_mapping.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/dxgi_texture_staging.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/scoped_thread_desktop.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/screen_capture_utils.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/screen_capturer_win_magnifier.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/win_shared.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/win/window_capture_utils.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_win.cc"
+    ]
+
+    DEFINES["_WIN32_WINNT"] = "0x0A00"
+    DEFINES["_HAS_EXCEPTIONS"] = "0"
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["_USING_V110_SDK71_"] = True
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["__STD_C"] = True
+    DEFINES["UNICODE"] = True
+    DEFINES["NOMINMAX"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True
+    DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+    DEFINES["WIN32"] = True
+    DEFINES["PSAPI_VERSION"] = "1"
+    DEFINES["WEBRTC_WIN"] = True
+    DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_ATL_NO_OPENGL"] = True
+    DEFINES["WINVER"] = "0x0A00"
+    DEFINES["_CRT_SECURE_NO_WARNINGS"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["NTDDI_VERSION"] = "0x0A000000"
+    DEFINES["_WINDOWS"] = True
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    OS_LIBS += [
+        "rt",
+        "X11",
+        "X11-xcb",
+        "xcb",
+        "Xcomposite",
+        "Xcursor",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xi",
+        "Xrender"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/x11/desktop_device_info_x11.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/x11/shared_x_display.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/x11/shared_x_util.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/x11/x_error_trap.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.cc"
+    ]
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    OS_LIBS += [
+        "-framework AppKit",
+        "-framework IOKit",
+        "-framework OpenGL"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/app_capturer_mac.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/desktop_device_info_mac.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/scoped_pixel_buffer_object.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mac/window_list_utils.cc",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/mouse_cursor_monitor_mac.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/screen_capturer_mac.mm",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/window_capturer_mac.mm"
+    ]
+
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["OS_TARGET"] == "Darwin" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+Library("desktop_capture_gn")

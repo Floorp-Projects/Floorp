@@ -15,25 +15,27 @@ class PRemotePrintJobChild;
 }
 }
 
-class nsPrintingProxy: public nsIPrintingPromptService,
-                       public mozilla::embedding::PPrintingChild
+class nsPrintingProxy final: public nsIPrintingPromptService,
+                             public mozilla::embedding::PPrintingChild
 {
-    virtual ~nsPrintingProxy();
-
 public:
-    nsPrintingProxy();
-
     static already_AddRefed<nsPrintingProxy> GetInstance();
-
-    nsresult Init();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPRINTINGPROMPTSERVICE
 
+    /**
+     * Used to proxy nsIPrintSettings.savePrintSettingsToPrefs calls to the
+     * parent process.
+     *
+     * @param aFlags - kInitSave* flags from nsIPrintSettings's to specify
+     *          which settings to save.
+     */
     nsresult SavePrintSettings(nsIPrintSettings* aPS,
                                bool aUsePrinterNamePrefix,
                                uint32_t aFlags);
 
+protected:
     virtual PPrintProgressDialogChild*
     AllocPPrintProgressDialogChild() override;
 
@@ -51,6 +53,13 @@ public:
 
     virtual bool
     DeallocPRemotePrintJobChild(PRemotePrintJobChild* aActor) override;
+
+private:
+    nsPrintingProxy();
+
+    virtual ~nsPrintingProxy();
+
+    nsresult Init();
 };
 
 #endif

@@ -81,6 +81,13 @@ rtc_static_library("audio_device") {
     "include/audio_device_defines.h",
   ]
 
+  if (build_with_mozilla) {
+    sources += [
+      "opensl/single_rw_fifo.cc",
+      "opensl/single_rw_fifo.h",
+    ]
+  }
+
   include_dirs = []
   if (is_linux) {
     include_dirs += [ "linux" ]
@@ -126,26 +133,36 @@ rtc_static_library("audio_device") {
         "log",
         "OpenSLES",
       ]
+
+      if (build_with_mozilla) {
+        include_dirs += [
+          "/config/external/nspr",
+          "/nsprpub/lib/ds",
+          "/nsprpub/pr/include",
+        ]
+      }
     }
     if (rtc_use_dummy_audio_file_devices) {
       defines += [ "WEBRTC_DUMMY_FILE_DEVICES" ]
     } else {
       if (is_linux) {
         sources += [
-          "linux/alsasymboltable_linux.cc",
-          "linux/alsasymboltable_linux.h",
-          "linux/audio_device_alsa_linux.cc",
-          "linux/audio_device_alsa_linux.h",
-          "linux/audio_mixer_manager_alsa_linux.cc",
-          "linux/audio_mixer_manager_alsa_linux.h",
           "linux/latebindingsymboltable_linux.cc",
           "linux/latebindingsymboltable_linux.h",
         ]
-        defines += [ "LINUX_ALSA" ]
-        libs = [
-          "dl",
-          "X11",
-        ]
+        libs = [ "dl" ]
+        if (!build_with_mozilla) {
+          sources += [
+            "linux/alsasymboltable_linux.cc",
+            "linux/alsasymboltable_linux.h",
+            "linux/audio_device_alsa_linux.cc",
+            "linux/audio_device_alsa_linux.h",
+            "linux/audio_mixer_manager_alsa_linux.cc",
+            "linux/audio_mixer_manager_alsa_linux.h",
+          ]
+          defines += [ "LINUX_ALSA" ]
+          libs += [ "X11" ]
+        }
         if (rtc_include_pulse_audio) {
           sources += [
             "linux/audio_device_pulse_linux.cc",

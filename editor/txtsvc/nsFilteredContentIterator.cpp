@@ -250,7 +250,7 @@ ContentToParentOffset(nsIContent* aContent, nsIContent** aParent,
   if (!parent)
     return;
 
-  *aOffset = parent->IndexOf(aContent);
+  *aOffset = parent->ComputeIndexOf(aContent);
   parent.forget(aParent);
 }
 

@@ -12,7 +12,8 @@
 
 class nsHtml5TreeOpExecutor;
 
-enum eHtml5SpeculativeLoad {
+enum eHtml5SpeculativeLoad
+{
 #ifdef DEBUG
   eSpeculativeLoadUninitialized,
 #endif
@@ -25,6 +26,8 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadPictureSource,
   eSpeculativeLoadScript,
   eSpeculativeLoadScriptFromHead,
+  eSpeculativeLoadNoModuleScript,
+  eSpeculativeLoadNoModuleScriptFromHead,
   eSpeculativeLoadStyle,
   eSpeculativeLoadManifest,
   eSpeculativeLoadSetDocumentCharset,
@@ -134,12 +137,18 @@ class nsHtml5SpeculativeLoad {
                            nsHtml5String aIntegrity,
                            bool aParserInHead,
                            bool aAsync,
-                           bool aDefer)
+                           bool aDefer,
+                           bool aNoModule)
     {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
-      mOpCode = aParserInHead ?
-          eSpeculativeLoadScriptFromHead : eSpeculativeLoadScript;
+      if (aNoModule) {
+          mOpCode = aParserInHead ? eSpeculativeLoadNoModuleScriptFromHead
+                                  : eSpeculativeLoadNoModuleScript;
+      } else {
+          mOpCode = aParserInHead ? eSpeculativeLoadScriptFromHead
+                                  : eSpeculativeLoadScript;
+      }
       aUrl.ToString(mUrlOrSizes);
       aCharset.ToString(mCharsetOrSrcset);
       aType.ToString(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity);
@@ -235,7 +244,6 @@ class nsHtml5SpeculativeLoad {
     nsHtml5SpeculativeLoad& operator=(const nsHtml5SpeculativeLoad&) = delete;
 
     eHtml5SpeculativeLoad mOpCode;
-
 
     /**
      * Whether the refering element has async and/or defer attributes.
