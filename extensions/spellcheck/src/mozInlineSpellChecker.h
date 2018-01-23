@@ -3,40 +3,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __mozinlinespellchecker_h__
-#define __mozinlinespellchecker_h__
-
-#include "mozilla/TextEditor.h"
-
-#include "mozISpellI18NUtil.h"
+#ifndef mozilla_mozInlineSpellChecker_h
+#define mozilla_mozInlineSpellChecker_h
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMTreeWalker.h"
-#include "nsIEditActionListener.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsRange.h"
 #include "nsWeakReference.h"
 
-// X.h defines KeyPress
-#ifdef KeyPress
-#undef KeyPress
-#endif
-
+class InitEditorSpellCheckCallback;
 class mozInlineSpellWordUtil;
 class mozInlineSpellChecker;
+class mozISpellI18NUtil;
 class mozInlineSpellResume;
-class InitEditorSpellCheckCallback;
 class UpdateCurrentDictionaryCallback;
-class mozInlineSpellResume;
+
+namespace mozilla {
+class EditorSpellCheck;
+class TextEditor;
+enum class EditAction : int32_t;
+} // namespace mozilla
 
 class mozInlineSpellStatus
 {
 public:
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(EditAction aAction,
+  nsresult InitForEditorChange(mozilla::EditAction aAction,
                                nsINode* aAnchorNode, uint32_t aAnchorOffset,
                                nsINode* aPreviousNode, uint32_t aPreviousOffset,
                                nsINode* aStartNode, uint32_t aStartOffset,
@@ -115,7 +111,6 @@ protected:
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,
-                                    public nsIEditActionListener,
                                     public nsIDOMEventListener,
                                     public nsSupportsWeakReference
 {
@@ -133,8 +128,8 @@ private:
   static SpellCheckingState gCanEnableSpellChecking;
 
   RefPtr<mozilla::TextEditor> mTextEditor;
-  nsCOMPtr<nsIEditorSpellCheck> mSpellCheck;
-  nsCOMPtr<nsIEditorSpellCheck> mPendingSpellCheck;
+  RefPtr<mozilla::EditorSpellCheck> mSpellCheck;
+  RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;
   nsCOMPtr<mozISpellI18NUtil> mConverter;
 
@@ -179,22 +174,27 @@ private:
   // the whole document.
   bool mFullSpellCheckScheduled;
 
+  // Set to true when this instance needs to listen to edit actions of
+  // the editor.
+  bool mIsListeningToEditActions;
+
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIEDITACTIONLISTENER
   NS_DECL_NSIINLINESPELLCHECKER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozInlineSpellChecker, nsIDOMEventListener)
+
+  mozilla::EditorSpellCheck* GetEditorSpellCheck();
 
   // returns true if there are any spell checking dictionaries available
   static bool CanEnableInlineSpellChecking();
   // update the cached value whenever the list of available dictionaries changes
   static void UpdateCanEnableInlineSpellChecking();
 
-  nsresult Blur(nsIDOMEvent* aEvent);
-  nsresult MouseClick(nsIDOMEvent* aMouseEvent);
-  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  nsresult OnBlur(nsIDOMEvent* aEvent);
+  nsresult OnMouseClick(nsIDOMEvent* aMouseEvent);
+  nsresult OnKeyPress(nsIDOMEvent* aKeyEvent);
 
   mozInlineSpellChecker();
 
@@ -251,6 +251,11 @@ public:
 
   nsresult ResumeCheck(mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
 
+  // Those methods are called when mTextEditor splits a node or joins the
+  // given nodes.
+  void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
+  void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
+
 protected:
   virtual ~mozInlineSpellChecker();
 
@@ -263,6 +268,9 @@ protected:
   void ChangeNumPendingSpellChecks(int32_t aDelta,
                                    mozilla::TextEditor* aTextEditor = nullptr);
   void NotifyObservers(const char* aTopic, mozilla::TextEditor* aTextEditor);
+
+  void StartToListenToEditActions() { mIsListeningToEditActions = true; }
+  void EndListeningToEditActions() { mIsListeningToEditActions = false; }
 };
 
-#endif /* __mozinlinespellchecker_h__ */
+#endif // #ifndef mozilla_mozInlineSpellChecker_h

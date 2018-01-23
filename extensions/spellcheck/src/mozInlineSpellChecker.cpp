@@ -32,14 +32,17 @@
  * when we know that we are checking as a result of navigation.
  */
 
-#include "mozilla/EditorBase.h"
+#include "mozInlineSpellChecker.h"
+
+#include "mozilla/EditAction.h"
+#include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Selection.h"
-#include "mozInlineSpellChecker.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
+#include "mozISpellI18NUtil.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIDOMNode.h"
@@ -524,7 +527,6 @@ NS_IMPL_ISUPPORTS(InitEditorSpellCheckCallback, nsIEditorSpellCheckCallback)
 
 NS_INTERFACE_MAP_BEGIN(mozInlineSpellChecker)
   NS_INTERFACE_MAP_ENTRY(nsIInlineSpellChecker)
-  NS_INTERFACE_MAP_ENTRY(nsIEditActionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
@@ -561,6 +563,12 @@ mozInlineSpellChecker::mozInlineSpellChecker() :
 
 mozInlineSpellChecker::~mozInlineSpellChecker()
 {
+}
+
+EditorSpellCheck*
+mozInlineSpellChecker::GetEditorSpellCheck()
+{
+  return mSpellCheck ? mSpellCheck : mPendingSpellCheck;
 }
 
 NS_IMETHODIMP
@@ -696,7 +704,7 @@ mozInlineSpellChecker::RegisterEventListeners()
     return NS_ERROR_FAILURE;
   }
 
-  mTextEditor->AddEditActionListener(this);
+  StartToListenToEditActions();
 
   nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
@@ -717,7 +725,7 @@ mozInlineSpellChecker::UnregisterEventListeners()
     return NS_ERROR_FAILURE;
   }
 
-  mTextEditor->RemoveEditActionListener(this);
+  EndListeningToEditActions();
 
   nsCOMPtr<nsIDocument> doc = mTextEditor->GetDocument();
   if (NS_WARN_IF(!doc)) {
@@ -762,24 +770,16 @@ mozInlineSpellChecker::SetEnableRealTimeSpell(bool aEnabled)
     return NS_OK;
   }
 
-  mPendingSpellCheck =
-    do_CreateInstance("@mozilla.org/editor/editorspellchecker;1");
-  NS_ENSURE_STATE(mPendingSpellCheck);
-
   nsCOMPtr<nsITextServicesFilter> filter =
     do_CreateInstance("@mozilla.org/editor/txtsrvfiltermail;1");
-  if (!filter) {
-    mPendingSpellCheck = nullptr;
-    NS_ENSURE_STATE(filter);
+  if (NS_WARN_IF(!filter)) {
+    return NS_ERROR_FAILURE;
   }
+
+  mPendingSpellCheck = new EditorSpellCheck();
   mPendingSpellCheck->SetFilter(filter);
 
   mPendingInitEditorSpellCheckCallback = new InitEditorSpellCheckCallback(this);
-  if (!mPendingInitEditorSpellCheckCallback) {
-    mPendingSpellCheck = nullptr;
-    NS_ENSURE_STATE(mPendingInitEditorSpellCheckCallback);
-  }
-
   nsresult rv = mPendingSpellCheck->InitSpellChecker(
                   mTextEditor, false, mPendingInitEditorSpellCheckCallback);
   if (NS_FAILED(rv)) {
@@ -1037,99 +1037,26 @@ mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
   return ScheduleSpellCheck(Move(status));
 }
 
-NS_IMETHODIMP
-mozInlineSpellChecker::WillCreateNode(const nsAString& aTag,
-                                      nsIDOMNode* aNextSiblingOfNewNode)
+void
+mozInlineSpellChecker::DidSplitNode(nsINode* aExistingRightNode,
+                                    nsINode* aNewLeftNode)
 {
-  return NS_OK;
+  if (!mIsListeningToEditActions) {
+    return;
+  }
+  nsIDOMNode* newLeftDOMNode =
+    aNewLeftNode ? aNewLeftNode->AsDOMNode() : nullptr;
+  SpellCheckBetweenNodes(newLeftDOMNode, 0, newLeftDOMNode, 0);
 }
 
-NS_IMETHODIMP
-mozInlineSpellChecker::DidCreateNode(const nsAString& aTag,
-                                     nsIDOMNode* aNewNode,
-                                     nsresult aResult)
+void
+mozInlineSpellChecker::DidJoinNodes(nsINode& aLeftNode,
+                                    nsINode& aRightNode)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::WillInsertNode(nsIDOMNode* aNode,
-                                      nsIDOMNode* aNextSiblingOfNewNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidInsertNode(nsIDOMNode* aNode,
-                                     nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteNode(nsIDOMNode *aChild)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::WillSplitNode(nsIDOMNode* aExistingRightNode,
-                                     int32_t aOffset)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-mozInlineSpellChecker::DidSplitNode(nsIDOMNode* aExistingRightNode,
-                                    nsIDOMNode* aNewLeftNode)
-{
-  return SpellCheckBetweenNodes(aNewLeftNode, 0, aNewLeftNode, 0);
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::WillJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMNode *aParent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidJoinNodes(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode,
-                                                  nsIDOMNode *aParent, nsresult aResult)
-{
-  return SpellCheckBetweenNodes(aRightNode, 0, aRightNode, 0);
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString & aString)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset,
-                                                   const nsAString & aString, nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::WillDeleteSelection(nsISelection *aSelection)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::DidDeleteSelection(nsISelection *aSelection)
-{
-  return NS_OK;
+  if (!mIsListeningToEditActions) {
+    return;
+  }
+  SpellCheckBetweenNodes(aRightNode.AsDOMNode(), 0, aRightNode.AsDOMNode(), 0);
 }
 
 // mozInlineSpellChecker::MakeSpellCheckRange
@@ -1897,32 +1824,35 @@ mozInlineSpellChecker::HandleNavigationEvent(bool aForceWordSpellCheck,
   return NS_OK;
 }
 
-NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
+NS_IMETHODIMP
+mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
   if (eventType.EqualsLiteral("blur")) {
-    return Blur(aEvent);
+    return OnBlur(aEvent);
   }
   if (eventType.EqualsLiteral("click")) {
-    return MouseClick(aEvent);
+    return OnMouseClick(aEvent);
   }
   if (eventType.EqualsLiteral("keypress")) {
-    return KeyPress(aEvent);
+    return OnKeyPress(aEvent);
   }
 
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
+nsresult
+mozInlineSpellChecker::OnBlur(nsIDOMEvent* aEvent)
 {
   // force spellcheck on blur, for instance when tabbing out of a textbox
   HandleNavigationEvent(true);
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
+nsresult
+mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
 {
   nsCOMPtr<nsIDOMMouseEvent>mouseEvent = do_QueryInterface(aMouseEvent);
   NS_ENSURE_TRUE(mouseEvent, NS_OK);
@@ -1935,7 +1865,8 @@ nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
   return NS_OK;
 }
 
-nsresult mozInlineSpellChecker::KeyPress(nsIDOMEvent* aKeyEvent)
+nsresult
+mozInlineSpellChecker::OnKeyPress(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
   NS_ENSURE_TRUE(keyEvent, NS_OK);
@@ -1995,8 +1926,8 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
   // mSpellCheck is null and mPendingSpellCheck is nonnull while the spell
   // checker is being initialized.  Calling UpdateCurrentDictionary on
   // mPendingSpellCheck simply queues the dictionary update after the init.
-  nsCOMPtr<nsIEditorSpellCheck> spellCheck = mSpellCheck ? mSpellCheck :
-                                             mPendingSpellCheck;
+  RefPtr<EditorSpellCheck> spellCheck =
+    mSpellCheck ? mSpellCheck : mPendingSpellCheck;
   if (!spellCheck) {
     return NS_OK;
   }
