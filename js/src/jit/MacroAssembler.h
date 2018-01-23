@@ -2292,8 +2292,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     enum IntConversionBehavior {
+        // These two try to convert the input to an int32 using ToNumber and
+        // will fail if the resulting int32 isn't strictly equal to the input.
         IntConversion_Normal,
         IntConversion_NegativeZeroCheck,
+        // These two will convert the input to an int32 with loss of precision.
         IntConversion_Truncate,
         IntConversion_ClampToUint8,
     };
@@ -2335,9 +2338,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister temp, Register output,
                                   Label* fail, IntConversionBehavior behavior);
 
-    //
-    // Convenience functions for converting values to int32.
-    //
+    // This carries over the MToNumberInt32 operation on the ValueOperand
+    // input; see comment at the top of this class.
     void convertValueToInt32(ValueOperand value, MDefinition* input,
                              FloatRegister temp, Register output, Label* fail,
                              bool negativeZeroCheck,
@@ -2350,9 +2352,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                           conversion);
     }
 
-    //
-    // Convenience functions for truncating values to int32.
-    //
+    // This carries over the MTruncateToInt32 operation on the ValueOperand
+    // input; see the comment at the top of this class.
     void truncateValueToInt32(ValueOperand value, MDefinition* input,
                               Label* handleStringEntry, Label* handleStringRejoin,
                               Label* truncateDoubleSlow,

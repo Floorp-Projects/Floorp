@@ -836,7 +836,7 @@ HTMLEditRules::GetAlignment(bool* aMixed,
   OwningNonNull<Element> root = *htmlEditor->GetRoot();
 
   int32_t rootOffset = root->GetParentNode() ?
-                       root->GetParentNode()->IndexOf(root) : -1;
+                       root->GetParentNode()->ComputeIndexOf(root) : -1;
 
   nsRange* firstRange = selection->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
@@ -2361,7 +2361,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         bool moveOnly = true;
 
         selNode = visNode->GetParentNode();
-        selOffset = selNode ? selNode->IndexOf(visNode) : -1;
+        selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
 
         bool interLineIsRight;
         rv = aSelection->GetInterlinePosition(&interLineIsRight);
@@ -5450,12 +5450,12 @@ HTMLEditRules::CheckForInvisibleBR(Element& aBlock,
 
     testNode = rightmostNode->GetParentNode();
     // Since rightmostNode is always the last child, its index is equal to the
-    // child count, so instead of IndexOf() we use the faster GetChildCount(),
-    // and assert the equivalence below.
+    // child count, so instead of ComputeIndexOf() we use the faster
+    // GetChildCount(), and assert the equivalence below.
     testOffset = testNode->GetChildCount();
 
     // Use offset + 1, so last node is included in our evaluation
-    MOZ_ASSERT(testNode->IndexOf(rightmostNode) + 1 == testOffset);
+    MOZ_ASSERT(testNode->ComputeIndexOf(rightmostNode) + 1 == testOffset);
   } else if (aOffset) {
     testNode = &aBlock;
     // We'll check everything to the left of the input position
@@ -5559,7 +5559,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
       }
       selStartNode = wsObj.mStartReasonNode->GetParentNode();
       selStartOffset = selStartNode ?
-        selStartNode->IndexOf(wsObj.mStartReasonNode) : -1;
+        selStartNode->ComputeIndexOf(wsObj.mStartReasonNode) : -1;
     }
   }
 
@@ -5579,7 +5579,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
         }
         selEndNode = wsObj.mEndReasonNode->GetParentNode();
         selEndOffset = selEndNode
-          ? selEndNode->IndexOf(wsObj.mEndReasonNode) + 1 : 0;
+          ? selEndNode->ComputeIndexOf(wsObj.mEndReasonNode) + 1 : 0;
       } else if (wsType == WSType::thisBlock) {
         // We want to keep looking up.  But stop if we are crossing table
         // element boundaries, or if we hit the root.
@@ -5589,7 +5589,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
           break;
         }
         selEndNode = wsObj.mEndReasonNode->GetParentNode();
-        selEndOffset = 1 + selEndNode->IndexOf(wsObj.mEndReasonNode);
+        selEndOffset = 1 + selEndNode->ComputeIndexOf(wsObj.mEndReasonNode);
       } else {
         break;
       }
@@ -6772,7 +6772,7 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
 
   // Remember where the header is
   nsCOMPtr<nsINode> headerParent = aHeader.GetParentNode();
-  int32_t offset = headerParent ? headerParent->IndexOf(&aHeader) : -1;
+  int32_t offset = headerParent ? headerParent->ComputeIndexOf(&aHeader) : -1;
 
   // Get ws code to adjust any ws
   nsCOMPtr<nsINode> node = &aNode;
@@ -7187,7 +7187,7 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
         RefPtr<nsAtom> nodeAtom = aListItem.NodeInfo()->NameAtom();
         if (nodeAtom == nsGkAtoms::dd || nodeAtom == nsGkAtoms::dt) {
           nsCOMPtr<nsINode> list = aListItem.GetParentNode();
-          int32_t itemOffset = list ? list->IndexOf(&aListItem) : -1;
+          int32_t itemOffset = list ? list->ComputeIndexOf(&aListItem) : -1;
 
           nsAtom* listAtom = nodeAtom == nsGkAtoms::dt ? nsGkAtoms::dd
                                                         : nsGkAtoms::dt;
@@ -7649,7 +7649,7 @@ HTMLEditRules::JoinNodesSmart(nsIContent& aNodeLeft,
   if (NS_WARN_IF(!parent)) {
     return EditorDOMPoint();
   }
-  int32_t parOffset = parent->IndexOf(&aNodeLeft);
+  int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
   nsCOMPtr<nsINode> rightParent = aNodeRight.GetParentNode();
 
   // If they don't have the same parent, first move the right node to after the

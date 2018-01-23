@@ -540,3 +540,6 @@ ER3(SSL_ERROR_RX_MALFORMED_KEY_UPDATE, (SSL_ERROR_BASE + 170),
 
 ER3(SSL_ERROR_TOO_MANY_KEY_UPDATES, (SSL_ERROR_BASE + 171),
     "SSL attempted too many key updates.")
+
+ER3(SSL_ERROR_HANDSHAKE_FAILED, (SSL_ERROR_BASE + 172),
+    "SSL handshake has already failed. No more operations possible.")

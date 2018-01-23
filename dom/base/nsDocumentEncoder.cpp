@@ -1797,7 +1797,7 @@ nsHTMLCopyEncoder::GetNodeLocation(nsIDOMNode *inChild,
       if (!cChild || !content)
         return NS_ERROR_NULL_POINTER;
 
-      *outOffset = content->IndexOf(cChild);
+      *outOffset = content->ComputeIndexOf(cChild);
     }
   }
   return result;

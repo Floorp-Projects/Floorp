@@ -143,7 +143,7 @@ WSRunObject::PrepareToDeleteNode(HTMLEditor* aHTMLEditor,
 
   nsCOMPtr<nsINode> parent = aContent->GetParentNode();
   NS_ENSURE_STATE(parent);
-  int32_t offset = parent->IndexOf(aContent);
+  int32_t offset = parent->ComputeIndexOf(aContent);
 
   WSRunObject leftWSObj(aHTMLEditor, parent, offset);
   WSRunObject rightWSObj(aHTMLEditor, parent, offset + 1);

@@ -127,7 +127,8 @@ TEST_P(TlsConnectTls12, ServerAuthCheckSigAlg) {
   EXPECT_TRUE(buffer.Read(1, 2, &tmp)) << "read NamedCurve";
   EXPECT_EQ(ssl_grp_ec_curve25519, tmp);
   EXPECT_TRUE(buffer.Read(3, 1, &tmp)) << " read ECPoint";
-  CheckSigScheme(capture_ske, 4 + tmp, client_, ssl_sig_rsa_pss_sha256, 1024);
+  CheckSigScheme(capture_ske, 4 + tmp, client_, ssl_sig_rsa_pss_rsae_sha256,
+                 1024);
 }
 
 TEST_P(TlsConnectTls12, ClientAuthCheckSigAlg) {
@@ -154,7 +155,8 @@ TEST_P(TlsConnectTls12, ClientAuthBigRsaCheckSigAlg) {
   server_->RequestClientAuth(true);
   Connect();
   CheckKeys();
-  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pss_sha256, 2048);
+  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pss_rsae_sha256,
+                 2048);
 }
 
 class TlsZeroCertificateRequestSigAlgsFilter : public TlsHandshakeFilter {
@@ -620,6 +622,31 @@ TEST_P(TlsConnectGenericPre13, AuthCompleteDelayed) {
   client_->DeletePacketFilter();
 }
 
+TEST_P(TlsConnectGenericPre13, AuthCompleteFailDelayed) {
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
+
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+  client_->Handshake();  // Send ClientKeyExchange and Finished
+  server_->Handshake();  // Send Finished
+  // The server should now report that it is connected
+  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+
+  // The client should send nothing from here on.
+  client_->SetPacketFilter(std::make_shared<EnforceNoActivity>());
+  client_->Handshake();
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+
+  // Report failure.
+  client_->DeletePacketFilter();
+  client_->ExpectSendAlert(kTlsAlertBadCertificate);
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(),
+                                                    SSL_ERROR_BAD_CERTIFICATE));
+  client_->Handshake();  // Fail
+  EXPECT_EQ(TlsAgent::STATE_ERROR, client_->state());
+}
+
 // TLS 1.3 handles a delayed AuthComplete callback differently since the
 // shape of the handshake is different.
 TEST_P(TlsConnectTls13, AuthCompleteDelayed) {
@@ -643,6 +670,44 @@ TEST_P(TlsConnectTls13, AuthCompleteDelayed) {
   server_->Handshake();  // Transition to connected and send NewSessionTicket
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
   EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+}
+
+TEST_P(TlsConnectTls13, AuthCompleteFailDelayed) {
+  client_->SetAuthCertificateCallback(AuthCompleteBlock);
+
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, server_->state());
+
+  // The client will send nothing until AuthCertificateComplete is called.
+  client_->SetPacketFilter(std::make_shared<EnforceNoActivity>());
+  client_->Handshake();
+  EXPECT_EQ(TlsAgent::STATE_CONNECTING, client_->state());
+
+  // Report failure.
+  client_->DeletePacketFilter();
+  ExpectAlert(client_, kTlsAlertBadCertificate);
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(),
+                                                    SSL_ERROR_BAD_CERTIFICATE));
+  client_->Handshake();  // This should now fail.
+  server_->Handshake();  // Get the error.
+  EXPECT_EQ(TlsAgent::STATE_ERROR, client_->state());
+  EXPECT_EQ(TlsAgent::STATE_ERROR, server_->state());
+}
+
+static SECStatus AuthCompleteFail(TlsAgent*, PRBool, PRBool) {
+  PORT_SetError(SSL_ERROR_BAD_CERTIFICATE);
+  return SECFailure;
+}
+
+TEST_P(TlsConnectGeneric, AuthFailImmediate) {
+  client_->SetAuthCertificateCallback(AuthCompleteFail);
+
+  StartConnect();
+  ConnectExpectAlert(client_, kTlsAlertBadCertificate);
+  client_->CheckErrorCode(SSL_ERROR_BAD_CERTIFICATE);
 }
 
 static const SSLExtraServerCertData ServerCertDataRsaPkcs1Decrypt = {
@@ -796,8 +861,8 @@ INSTANTIATE_TEST_CASE_P(
         ::testing::Values(TlsAgent::kServerRsaSign),
         ::testing::Values(ssl_auth_rsa_sign),
         ::testing::Values(ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pkcs1_sha384,
-                          ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_sha256,
-                          ssl_sig_rsa_pss_sha384)));
+                          ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_rsae_sha256,
+                          ssl_sig_rsa_pss_rsae_sha384)));
 // PSS with SHA-512 needs a bigger key to work.
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeBigRsa, TlsSignatureSchemeConfiguration,
@@ -805,7 +870,7 @@ INSTANTIATE_TEST_CASE_P(
                        TlsConnectTestBase::kTlsV12Plus,
                        ::testing::Values(TlsAgent::kRsa2048),
                        ::testing::Values(ssl_auth_rsa_sign),
-                       ::testing::Values(ssl_sig_rsa_pss_sha512)));
+                       ::testing::Values(ssl_sig_rsa_pss_rsae_sha512)));
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeRsaSha1, TlsSignatureSchemeConfiguration,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,

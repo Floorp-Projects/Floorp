@@ -316,7 +316,7 @@ void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
 {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
   MOZ_ASSERT(parent);
-  int32_t index = parent->IndexOf(aPreviousSibling) + 1;
+  int32_t index = parent->ComputeIndexOf(aPreviousSibling) + 1;
   RemoveMenuAtIndex(index);
 }
 
@@ -328,7 +328,7 @@ void nsMenuBarX::ObserveContentInserted(nsIDocument* aDocument,
   if (newMenu) {
     nsresult rv = newMenu->Create(this, this, aChild);
     if (NS_SUCCEEDED(rv))
-      InsertMenuAtIndex(newMenu, aContainer->IndexOf(aChild));
+      InsertMenuAtIndex(newMenu, aContainer->ComputeIndexOf(aChild));
     else
       delete newMenu;
   }

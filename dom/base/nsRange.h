@@ -257,7 +257,7 @@ public:
     if (!parentNode) {
       return nullptr;
     }
-    int32_t indexInParent = parentNode->IndexOf(aNode);
+    int32_t indexInParent = parentNode->ComputeIndexOf(aNode);
     if (NS_WARN_IF(indexInParent < 0)) {
       return nullptr;
     }
@@ -273,7 +273,7 @@ public:
     if (!parentNode) {
       return nullptr;
     }
-    int32_t indexInParent = parentNode->IndexOf(aNode);
+    int32_t indexInParent = parentNode->ComputeIndexOf(aNode);
     if (NS_WARN_IF(indexInParent < 0)) {
       return nullptr;
     }
@@ -475,8 +475,8 @@ protected:
   /**
    * XXX nsRange should accept 0 - UINT32_MAX as offset.  However, users of
    *     nsRange treat offset as int32_t.  Additionally, some other internal
-   *     APIs like nsINode::IndexOf() use int32_t.  Therefore, nsRange should
-   *     accept only 0 - INT32_MAX as valid offset for now.
+   *     APIs like nsINode::ComputeIndexOf() use int32_t.  Therefore,
+   *     nsRange should accept only 0 - INT32_MAX as valid offset for now.
    */
   static bool IsValidOffset(uint32_t aOffset)
   {

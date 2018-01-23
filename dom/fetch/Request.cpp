@@ -319,7 +319,8 @@ Request::Constructor(const GlobalObject& aGlobal,
     nsAutoString requestURL;
     nsCString fragment;
     if (NS_IsMainThread()) {
-      nsIDocument* doc = GetEntryDocument();
+      nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
+      nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
       if (doc) {
         GetRequestURLFromDocument(doc, input, requestURL, fragment, aRv);
       } else {
@@ -368,7 +369,8 @@ Request::Constructor(const GlobalObject& aGlobal,
     } else {
       nsAutoString referrerURL;
       if (NS_IsMainThread()) {
-        nsIDocument* doc = GetEntryDocument();
+        nsCOMPtr<nsPIDOMWindowInner> inner(do_QueryInterface(global));
+        nsIDocument* doc = inner ? inner->GetExtantDoc() : nullptr;
         nsCOMPtr<nsIURI> uri;
         if (doc) {
           uri = ParseURLFromDocument(doc, referrer, aRv);

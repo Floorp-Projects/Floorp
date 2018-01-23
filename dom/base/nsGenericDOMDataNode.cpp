@@ -646,14 +646,15 @@ nsGenericDOMDataNode::GetChildAt_Deprecated(uint32_t aIndex) const
 
 
 int32_t
-nsGenericDOMDataNode::IndexOf(const nsINode* aPossibleChild) const
+nsGenericDOMDataNode::ComputeIndexOf(const nsINode* aPossibleChild) const
 {
   return -1;
 }
 
 nsresult
-nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
-                                    bool aNotify)
+nsGenericDOMDataNode::InsertChildAt_Deprecated(nsIContent* aKid,
+                                               uint32_t aIndex,
+                                               bool aNotify)
 {
   return NS_OK;
 }
@@ -754,11 +755,11 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
 
   nsCOMPtr<nsINode> parent = GetParentNode();
   if (parent) {
-    int32_t insertionIndex = parent->IndexOf(this);
+    int32_t insertionIndex = parent->ComputeIndexOf(this);
     if (aCloneAfterOriginal) {
       ++insertionIndex;
     }
-    parent->InsertChildAt(newContent, insertionIndex, true);
+    parent->InsertChildAt_Deprecated(newContent, insertionIndex, true);
   }
 
   newContent.swap(*aReturn);
@@ -820,7 +821,7 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
   if (!parent)
     return GetData(aWholeText);
 
-  int32_t index = parent->IndexOf(this);
+  int32_t index = parent->ComputeIndexOf(this);
   NS_WARNING_ASSERTION(index >= 0,
                        "Trying to use .wholeText with an anonymous"
                        "text node child of a binding parent?");

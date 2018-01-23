@@ -24,7 +24,7 @@ TEST_P(TlsConnectGeneric, ConnectDhe) {
   EnableOnlyDheCiphers();
   Connect();
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 TEST_P(TlsConnectTls13, SharesForBothEcdheAndDhe) {
@@ -455,7 +455,7 @@ TEST_P(TlsConnectGenericPre13, NamedGroupMismatchPre13) {
 
   Connect();
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_custom, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 }
 
 // Same test but for TLS 1.3. This has to fail.
@@ -499,8 +499,8 @@ TEST_P(TlsConnectGenericPre13, PreferredFfdhe) {
   Connect();
   client_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
   server_->CheckKEA(ssl_kea_dh, ssl_grp_ffdhe_3072, 3072);
-  client_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
-  server_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_sha256);
+  client_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
+  server_->CheckAuthType(ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
 }
 
 TEST_P(TlsConnectGenericPre13, MismatchDHE) {
@@ -524,7 +524,7 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
   Connect();
   SendReceive();  // Need to read so that we absorb the session ticket.
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -538,7 +538,7 @@ TEST_P(TlsConnectTls13, ResumeFfdhe) {
   ExpectResumption(RESUME_TICKET);
   Connect();
   CheckKeys(ssl_kea_dh, ssl_grp_ffdhe_2048, ssl_auth_rsa_sign,
-            ssl_sig_rsa_pss_sha256);
+            ssl_sig_rsa_pss_rsae_sha256);
   ASSERT_LT(0UL, clientCapture->extension().len());
   ASSERT_LT(0UL, serverCapture->extension().len());
 }

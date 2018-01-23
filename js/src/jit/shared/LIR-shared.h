@@ -4375,9 +4375,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2>
     const LDefinition* temp() {
         return getTemp(1);
     }
-    MToInt32* mirNormal() const {
+    MToNumberInt32* mirNormal() const {
         MOZ_ASSERT(mode_ == NORMAL);
-        return mir_->toToInt32();
+        return mir_->toToNumberInt32();
     }
     MTruncateToInt32* mirTruncate() const {
         MOZ_ASSERT(mode_ == TRUNCATE);
@@ -4401,8 +4401,8 @@ class LDoubleToInt32 : public LInstructionHelper<1, 1, 0>
         setOperand(0, in);
     }
 
-    MToInt32* mir() const {
-        return mir_->toToInt32();
+    MToNumberInt32* mir() const {
+        return mir_->toToNumberInt32();
     }
 };
 
@@ -4419,8 +4419,8 @@ class LFloat32ToInt32 : public LInstructionHelper<1, 1, 0>
         setOperand(0, in);
     }
 
-    MToInt32* mir() const {
-        return mir_->toToInt32();
+    MToNumberInt32* mir() const {
+        return mir_->toToNumberInt32();
     }
 };
 

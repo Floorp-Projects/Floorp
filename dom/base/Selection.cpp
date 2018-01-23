@@ -1686,7 +1686,7 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
   if (NS_WARN_IF(!parent)) {
     return NS_ERROR_FAILURE;
   }
-  int32_t offset = parent->IndexOf(content);
+  int32_t offset = parent->ComputeIndexOf(content);
 
   return GetPrimaryOrCaretFrameForNodeOffset(parent, offset, aReturnFrame,
                                              aOffsetUsed, aVisual);
@@ -2585,7 +2585,7 @@ Selection::Collapse(const RawRangeBoundary& aPoint, ErrorResult& aRv)
       // done yet.  However, it's called only when the container is a text
       // node.  In such case, offset has always been set since it cannot have
       // any children.  So, this doesn't cause computing offset with expensive
-      // method, nsINode::IndexOf().
+      // method, nsINode::ComputeIndexOf().
       if ((aPoint.Container()->AsContent() == f->GetContent() &&
            f->GetContentEnd() == static_cast<int32_t>(aPoint.Offset())) ||
           (aPoint.Container() == f->GetContent()->GetParentNode() &&

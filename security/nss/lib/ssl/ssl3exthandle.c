@@ -182,7 +182,7 @@ ssl3_ClientSendSessionTicketXtn(const sslSocket *ss, TLSExtensionData *xtnData,
 
     /* Never send an extension with a ticket for TLS 1.3, but
      * OK to send the empty one in case the server does 1.2. */
-    if (sid->cached == in_client_cache &&
+    if ((sid->cached == in_client_cache || sid->cached == in_external_cache) &&
         sid->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
         return SECSuccess;
     }
@@ -1219,6 +1219,7 @@ ssl_CreateSIDFromTicket(sslSocket *ss, const SECItem *rawTicket,
         }
     }
     if (parsedTicket->alpnSelection.data != NULL) {
+        SECITEM_FreeItem(&sid->u.ssl3.alpnSelection, PR_FALSE);
         rv = SECITEM_CopyItem(NULL, &sid->u.ssl3.alpnSelection,
                               &parsedTicket->alpnSelection);
         if (rv != SECSuccess) {
@@ -1245,7 +1246,7 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, const SECItem *ticket,
     SECStatus rv;
 
     if (ss->sec.ci.sid != NULL) {
-        ss->sec.uncache(ss->sec.ci.sid);
+        ssl_UncacheSessionID(ss);
         ssl_FreeSID(ss->sec.ci.sid);
         ss->sec.ci.sid = NULL;
     }
@@ -1652,9 +1653,14 @@ ssl3_HandleSigAlgsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
                                    &xtnData->sigSchemes,
                                    &xtnData->numSigSchemes,
                                    &data->data, &data->len);
-    if (rv != SECSuccess || xtnData->numSigSchemes == 0) {
+    if (rv != SECSuccess) {
         ssl3_ExtSendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        return SECFailure;
+    }
+    if (xtnData->numSigSchemes == 0) {
+        ssl3_ExtSendAlert(ss, alert_fatal, handshake_failure);
+        PORT_SetError(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
         return SECFailure;
     }
     /* Check for trailing data. */

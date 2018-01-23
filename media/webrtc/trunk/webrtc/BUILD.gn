@@ -11,7 +11,9 @@
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("build/webrtc.gni")
-import("//third_party/protobuf/proto_library.gni")
+if (!build_with_mozilla) {
+  import("//third_party/protobuf/proto_library.gni")
+}
 if (is_android) {
   import("//build/config/android/config.gni")
   import("//build/config/android/rules.gni")
@@ -74,6 +76,12 @@ config("common_inherited_config") {
       "WEBRTC_LINUX",
       "WEBRTC_ANDROID",
     ]
+
+    if (build_with_mozilla) {
+      defines += [
+        "WEBRTC_ANDROID_OPENSLES",
+      ]
+    }
   }
   if (is_chromeos) {
     defines += [ "CHROMEOS" ]
@@ -244,25 +252,40 @@ if (!build_with_chromium) {
 
     deps = [
       ":webrtc_common",
-      "api",
       "api:transport_api",
       "audio",
       "base",
       "call",
       "common_audio",
       "common_video",
-      "logging",
       "media",
       "modules",
       "modules/video_capture:video_capture_internal_impl",
-      "p2p",
-      "pc",
       "sdk",
-      "stats",
       "system_wrappers",
       "video",
       "voice_engine",
     ]
+
+    if (build_with_mozilla) {
+      deps += [
+        "api:video_frame_api",
+        "system_wrappers:field_trial_default",
+        "system_wrappers:metrics_default",
+      ]
+
+      if (!is_android) {
+        deps += [ "video_engine" ]
+      }
+    } else {
+      deps += [
+        "api",
+        "logging",
+        "p2p",
+        "pc",
+        "stats",
+      ]
+    }
 
     if (rtc_enable_protobuf) {
       defines += [ "ENABLE_RTC_EVENT_LOG" ]

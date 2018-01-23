@@ -599,8 +599,8 @@ Range::Range(const MDefinition* def)
         // mimick a possible truncation.
         switch (def->type()) {
           case MIRType::Int32:
-            // MToInt32 cannot truncate. So we can safely clamp.
-            if (def->isToInt32())
+            // MToNumberInt32 cannot truncate. So we can safely clamp.
+            if (def->isToNumberInt32())
                 clampToInt32();
             else
                 wrapAroundToInt32();
@@ -1743,7 +1743,7 @@ MTruncateToInt32::computeRange(TempAllocator& alloc)
 }
 
 void
-MToInt32::computeRange(TempAllocator& alloc)
+MToNumberInt32::computeRange(TempAllocator& alloc)
 {
     // No clamping since this computes the range *before* bailouts.
     setRange(new(alloc) Range(getOperand(0)));
@@ -2861,7 +2861,7 @@ TruncateTest(TempAllocator& alloc, MTest* test)
             if (!alloc.ensureBallast())
                 return false;
             MBasicBlock* block = inner->block();
-            inner = MToInt32::New(alloc, inner);
+            inner = MToNumberInt32::New(alloc, inner);
             block->insertBefore(block->lastIns(), inner->toInstruction());
         }
         MOZ_ASSERT(inner->type() == MIRType::Int32);
@@ -3049,7 +3049,7 @@ RemoveTruncatesOnOutput(MDefinition* truncated)
 
     for (MUseDefIterator use(truncated); use; use++) {
         MDefinition* def = use.def();
-        if (!def->isTruncateToInt32() || !def->isToInt32())
+        if (!def->isTruncateToInt32() || !def->isToNumberInt32())
             continue;
 
         def->replaceAllUsesWith(truncated);
@@ -3074,7 +3074,7 @@ AdjustTruncatedInputs(TempAllocator& alloc, MDefinition* truncated)
         } else {
             MInstruction* op;
             if (kind == MDefinition::TruncateAfterBailouts)
-                op = MToInt32::New(alloc, truncated->getOperand(i));
+                op = MToNumberInt32::New(alloc, truncated->getOperand(i));
             else
                 op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
 
@@ -3385,7 +3385,7 @@ MMod::collectRangeInfoPreTrunc()
 }
 
 void
-MToInt32::collectRangeInfoPreTrunc()
+MToNumberInt32::collectRangeInfoPreTrunc()
 {
     Range inputRange(input());
     if (!inputRange.canBeNegativeZero())

@@ -9,7 +9,9 @@
 import("../../build/webrtc.gni")
 import("audio_coding.gni")
 import("//build/config/arm.gni")
-import("//third_party/protobuf/proto_library.gni")
+if (!build_with_mozilla) {
+  import("//third_party/protobuf/proto_library.gni")
+}
 
 audio_codec_deps = [
   ":cng",
@@ -22,14 +24,12 @@ if (rtc_include_ilbc) {
 if (rtc_include_opus) {
   audio_codec_deps += [ ":webrtc_opus" ]
 }
-if (!build_with_mozilla) {
-  if (current_cpu == "arm") {
-    audio_codec_deps += [ ":isac_fix" ]
-  } else {
-    audio_codec_deps += [ ":isac" ]
-  }
-  audio_codec_deps += [ ":g722" ]
+if (current_cpu == "arm") {
+  audio_codec_deps += [ ":isac_fix" ]
+} else {
+  audio_codec_deps += [ ":isac" ]
 }
+audio_codec_deps += [ ":g722" ]
 if (!build_with_mozilla && !build_with_chromium) {
   audio_codec_deps += [ ":red" ]
 }
@@ -873,7 +873,7 @@ rtc_source_set("webrtc_opus_c") {
       rtc_opus_dir,
     ]
   } else if (build_with_mozilla) {
-    include_dirs = [ getenv("DIST") + "/include/opus" ]
+    include_dirs = [ "/media/libopus/include" ]
   }
 
   deps = [
@@ -1043,17 +1043,15 @@ rtc_static_library("neteq") {
     defines += [ "WEBRTC_CODEC_OPUS" ]
     deps += [ ":webrtc_opus" ]
   }
-  if (!build_with_mozilla) {
-    if (current_cpu == "arm") {
-      defines += [ "WEBRTC_CODEC_ISACFX" ]
-      deps += [ ":isac_fix" ]
-    } else {
-      defines += [ "WEBRTC_CODEC_ISAC" ]
-      deps += [ ":isac" ]
-    }
-    defines += [ "WEBRTC_CODEC_G722" ]
-    deps += [ ":g722" ]
+  if (current_cpu == "arm") {
+    defines += [ "WEBRTC_CODEC_ISACFX" ]
+    deps += [ ":isac_fix" ]
+  } else {
+    defines += [ "WEBRTC_CODEC_ISAC" ]
+    deps += [ ":isac" ]
   }
+  defines += [ "WEBRTC_CODEC_G722" ]
+  deps += [ ":g722" ]
 }
 
 # Although providing only test support, this target must be outside of the

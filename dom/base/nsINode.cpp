@@ -607,7 +607,7 @@ nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError)
     nsContentUtils::MaybeFireNodeRemoved(&aOldChild, this, OwnerDoc());
   }
 
-  int32_t index = IndexOf(&aOldChild);
+  int32_t index = ComputeIndexOf(&aOldChild);
   if (index == -1) {
     // aOldChild isn't one of our children.
     aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
@@ -721,7 +721,7 @@ nsINode::Normalize()
                  "Should always have a parent unless "
                  "mutation events messed us up");
     if (parent) {
-      parent->RemoveChildAt_Deprecated(parent->IndexOf(node), true);
+      parent->RemoveChildAt_Deprecated(parent->ComputeIndexOf(node), true);
     }
   }
 }
@@ -1005,9 +1005,9 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       // child1 or child2 can be an attribute here. This will work fine since
-      // IndexOf will return -1 for the attribute making the attribute be
-      // considered before any child.
-      return parent->IndexOf(child1) < parent->IndexOf(child2) ?
+      // ComputeIndexOf will return -1 for the attribute making the
+      // attribute be considered before any child.
+      return parent->ComputeIndexOf(child1) < parent->ComputeIndexOf(child2) ?
         static_cast<uint16_t>(nsIDOMNode::DOCUMENT_POSITION_PRECEDING) :
         static_cast<uint16_t>(nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
     }
@@ -1474,7 +1474,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
         nsIContent* parent = tmp->GetParent();
         if (parent && !parent->UnoptimizableCCNode() &&
             parent->HasKnownLiveWrapper()) {
-          MOZ_ASSERT(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
+          MOZ_ASSERT(parent->ComputeIndexOf(tmp) >= 0, "Parent doesn't own us?");
           return false;
         }
       }
@@ -1930,7 +1930,7 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   // nsDocument::RemoveChildNode().
   MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
              aKid == GetChildAt_Deprecated(aIndex) &&
-             IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
+             ComputeIndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
   MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
 
   nsMutationGuard::DidMutate();
@@ -2025,8 +2025,8 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return true;
       }
 
-      int32_t doctypeIndex = aParent->IndexOf(docTypeContent);
-      int32_t insertIndex = aParent->IndexOf(aRefChild);
+      int32_t doctypeIndex = aParent->ComputeIndexOf(docTypeContent);
+      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
@@ -2061,8 +2061,8 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return false;
       }
 
-      int32_t rootIndex = aParent->IndexOf(rootElement);
-      int32_t insertIndex = aParent->IndexOf(aRefChild);
+      int32_t rootIndex = aParent->ComputeIndexOf(rootElement);
+      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefChild or we end up before it.  Either one is
@@ -2180,7 +2180,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    // This check happens again further down (though then using IndexOf).
+    // This check happens again further down (though then using
+    // ComputeIndexOf).
     // We're only checking this here to avoid firing mutation events when
     // none should be fired.
     // It's ok that we do the check twice in the case when firing mutation
@@ -2240,7 +2241,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   nsIContent* newContent = aNewChild->AsContent();
   nsCOMPtr<nsINode> oldParent = newContent->GetParentNode();
   if (oldParent) {
-    int32_t removeIndex = oldParent->IndexOf(newContent);
+    int32_t removeIndex = oldParent->ComputeIndexOf(newContent);
     if (removeIndex < 0) {
       // newContent is anonymous.  We can't deal with this, so just bail
       NS_ERROR("How come our flags didn't catch this?");
@@ -2415,7 +2416,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // parent list.
   int32_t insPos;
   if (nodeToInsertBefore) {
-    insPos = IndexOf(nodeToInsertBefore);
+    insPos = ComputeIndexOf(nodeToInsertBefore);
     if (insPos < 0) {
       // XXXbz How the heck would _that_ happen, exactly?
       aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
@@ -2491,8 +2492,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     for (uint32_t i = 0; i < count; ++i, ++insPos) {
       // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child.
-      aError = InsertChildAt(fragChildren->ElementAt(i), insPos,
-                             !appending);
+      aError = InsertChildAt_Deprecated(fragChildren->ElementAt(i), insPos,
+                                        !appending);
       if (aError.Failed()) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
@@ -2534,7 +2535,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       mb.SetPrevSibling(GetChildAt_Deprecated(insPos - 1));
       mb.SetNextSibling(GetChildAt_Deprecated(insPos));
     }
-    aError = InsertChildAt(newContent, insPos, true);
+    aError = InsertChildAt_Deprecated(newContent, insPos, true);
     if (aError.Failed()) {
       return nullptr;
     }
