@@ -1254,28 +1254,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Get all bookmarks for a URL, excluding items under tags.
-   */
-  getBookmarksForURI:
-  function PU_getBookmarksForURI(aURI) {
-    return this.bookmarks.getBookmarkIdsForURI(aURI);
-  },
-
-  /**
-   * Get the most recently added/modified bookmark for a URL, excluding items
-   * under tags.
-   *
-   * @param aURI
-   *        nsIURI of the page we will look for.
-   * @returns itemId of the found bookmark, or -1 if nothing is found.
-   */
-  getMostRecentBookmarkForURI:
-  function PU_getMostRecentBookmarkForURI(aURI) {
-    let bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI);
-    return bmkIds.length ? bmkIds[0] : -1;
-  },
-
-  /**
    * Returns a nsNavHistoryContainerResultNode with forced excludeItems and
    * expandQueries.
    * @param   aNode
