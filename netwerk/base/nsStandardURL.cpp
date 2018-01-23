@@ -2226,7 +2226,7 @@ nsStandardURL::SetPathQueryRef(const nsACString &input)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsStandardURL::Mutator, nsIURISetters, nsIURIMutator)
+NS_IMPL_ISUPPORTS(nsStandardURL::Mutator, nsIURISetters, nsIURIMutator, nsIStandardURLMutator)
 
 NS_IMETHODIMP
 nsStandardURL::Mutate(nsIURIMutator** aMutator)
