@@ -368,6 +368,24 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  OptionalIPCClientInfo ipcClientInfo = mozilla::void_t();
+  const Maybe<ClientInfo>& clientInfo = aLoadInfo->GetClientInfo();
+  if (clientInfo.isSome()) {
+    ipcClientInfo = clientInfo.ref().ToIPC();
+  }
+
+  OptionalIPCClientInfo ipcReservedClientInfo = mozilla::void_t();
+  const Maybe<ClientInfo>& reservedClientInfo = aLoadInfo->GetReservedClientInfo();
+  if (reservedClientInfo.isSome()) {
+    ipcReservedClientInfo = reservedClientInfo.ref().ToIPC();
+  }
+
+  OptionalIPCClientInfo ipcInitialClientInfo = mozilla::void_t();
+  const Maybe<ClientInfo>& initialClientInfo = aLoadInfo->GetInitialClientInfo();
+  if (initialClientInfo.isSome()) {
+    ipcInitialClientInfo = initialClientInfo.ref().ToIPC();
+  }
+
   OptionalIPCServiceWorkerDescriptor ipcController = mozilla::void_t();
   const Maybe<ServiceWorkerDescriptor>& controller = aLoadInfo->GetController();
   if (controller.isSome()) {
@@ -403,6 +421,9 @@ LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
       redirectChain,
       ancestorPrincipals,
       aLoadInfo->AncestorOuterWindowIDs(),
+      ipcClientInfo,
+      ipcReservedClientInfo,
+      ipcInitialClientInfo,
       ipcController,
       aLoadInfo->CorsUnsafeHeaders(),
       aLoadInfo->GetForcePreflight(),
@@ -483,6 +504,29 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
     ancestorPrincipals.AppendElement(ancestorPrincipal.forget());
   }
 
+  Maybe<ClientInfo> clientInfo;
+  if (loadInfoArgs.clientInfo().type() != OptionalIPCClientInfo::Tvoid_t) {
+    clientInfo.emplace(ClientInfo(loadInfoArgs.clientInfo().get_IPCClientInfo()));
+  }
+
+  Maybe<ClientInfo> reservedClientInfo;
+  if (loadInfoArgs.reservedClientInfo().type() != OptionalIPCClientInfo::Tvoid_t) {
+    reservedClientInfo.emplace(
+      ClientInfo(loadInfoArgs.reservedClientInfo().get_IPCClientInfo()));
+  }
+
+  Maybe<ClientInfo> initialClientInfo;
+  if (loadInfoArgs.initialClientInfo().type() != OptionalIPCClientInfo::Tvoid_t) {
+    initialClientInfo.emplace(
+      ClientInfo(loadInfoArgs.initialClientInfo().get_IPCClientInfo()));
+  }
+
+  // We can have an initial client info or a reserved client info, but not both.
+  MOZ_DIAGNOSTIC_ASSERT(reservedClientInfo.isNothing() ||
+                        initialClientInfo.isNothing());
+  NS_ENSURE_TRUE(reservedClientInfo.isNothing() ||
+                 initialClientInfo.isNothing(), NS_ERROR_UNEXPECTED);
+
   Maybe<ServiceWorkerDescriptor> controller;
   if (loadInfoArgs.controller().type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
     controller.emplace(ServiceWorkerDescriptor(
@@ -495,6 +539,9 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           principalToInherit,
                           sandboxedLoadingPrincipal,
                           resultPrincipalURI,
+                          clientInfo,
+                          reservedClientInfo,
+                          initialClientInfo,
                           controller,
                           loadInfoArgs.securityFlags(),
                           loadInfoArgs.contentPolicyType(),
