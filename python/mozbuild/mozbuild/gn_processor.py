@@ -510,7 +510,7 @@ def generate_gn_config(config, srcdir, output, non_unified_sources, gn_binary,
     gn_args = '--args=%s' % ' '.join(['%s=%s' % (k, str_for_arg(v)) for k, v
                                       in input_variables.iteritems()])
     gn_arg_string = '_'.join([str(input_variables[k]) for k in sorted(input_variables.keys())])
-    out_dir = mozpath.join(config.topobjdir, 'gn-output')
+    out_dir = mozpath.join(output, 'gn-output')
     gen_args = [
         config.substs['GN'], 'gen', out_dir, gn_args, '--ide=json',
     ]
@@ -560,7 +560,7 @@ class GnMozbuildWriterBackend(BuildBackend):
                 # Check the objdir for a gn-config in to aide debugging in cases
                 # someone is running both steps on the same machine and want to
                 # sanity check moz.build generation for a particular config.
-                gn_config_files = glob.glob(mozpath.join(obj.topobjdir,
+                gn_config_files = glob.glob(mozpath.join(obj.objdir, obj.target_dir,
                                                          'gn-output', '*.json'))
             if gn_config_files:
                 print("Writing moz.build files based on the following gn configs: %s" %
