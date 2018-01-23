@@ -65,6 +65,7 @@ job-defaults:
                   https://net-mozaws-prod-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
          LC_ALL: C.UTF-8
          LANG: C.UTF-8
+         L10N_CHANGESETS: "{config_params[head_repository]}/raw-file/{config_params[head_rev]}/browser/locales/l10n-changesets.json"
       taskcluster-proxy: true
    notifications:
       completed:
