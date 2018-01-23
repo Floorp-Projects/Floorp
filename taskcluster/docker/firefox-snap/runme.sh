@@ -6,7 +6,6 @@ set -xe
 test $VERSION
 test $BUILD_NUMBER
 test $CANDIDATES_DIR
-test $L10N_CHANGESETS
 
 # Optional env variables
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
@@ -36,12 +35,12 @@ DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
 mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
 cp -v "$SCRIPT_DIRECTORY/firefox.desktop" "$DISTRIBUTION_DIR"
 
-# Use list of locales to fetch L10N XPIs
-$CURL -o "${WORKSPACE}/l10n_changesets.json" "$L10N_CHANGESETS"
-locales=$(python3 "$SCRIPT_DIRECTORY/extract_locales_from_l10n_json.py" "${WORKSPACE}/l10n_changesets.json")
+# Use release-specific list of locales to fetch L10N XPIs
+$CURL -o "${WORKSPACE}/l10n_changesets.txt" "${CANDIDATES_DIR}/${VERSION}-candidates/build${BUILD_NUMBER}/l10n_changesets.txt"
+cat "${WORKSPACE}/l10n_changesets.txt"
 
 mkdir -p "$DISTRIBUTION_DIR/extensions"
-for locale in $locales; do
+for locale in $(grep -v ja-JP-mac "${WORKSPACE}/l10n_changesets.txt" | awk '{print $1}'); do
     $CURL -o "$SOURCE_DEST/distribution/extensions/langpack-${locale}@firefox.mozilla.org.xpi" \
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
@@ -80,7 +79,7 @@ cat signing_manifest.json
 # TODO: Make this part an independent task
 if [ "$PUSH_TO_CHANNEL" != "" ]; then
   echo "Beta version detected. Uploading to Ubuntu Store (no channel)..."
-  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" "http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/$PUSH_TO_CHANNEL"
+  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" 'http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/$PUSH_TO_CHANNEL'
   snapcraft push "$TARGET_FULL_PATH"
 else
   echo "Non-beta version detected. Nothing else to do."
