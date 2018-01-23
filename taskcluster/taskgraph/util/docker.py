@@ -52,17 +52,17 @@ def docker_image(name, by_tag=False):
     return '{}/{}:{}'.format(registry, name, tag)
 
 
+class VoidWriter(object):
+    """A file object with write capabilities that does nothing with the written
+    data."""
+    def write(self, buf):
+        pass
+
+
 def generate_context_hash(topsrcdir, image_path, image_name, args=None):
     """Generates a sha256 hash for context directory used to build an image."""
 
-    # It is a bit unfortunate we have to create a temp file here - it would
-    # be nicer to use an in-memory buffer.
-    fd, p = tempfile.mkstemp()
-    os.close(fd)
-    try:
-        return create_context_tar(topsrcdir, image_path, p, image_name, args)
-    finally:
-        os.unlink(p)
+    return stream_context_tar(topsrcdir, image_path, VoidWriter(), image_name, args)
 
 
 class HashingWriter(object):
@@ -103,6 +103,13 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
 
     Returns the SHA-256 hex digest of the created archive.
     """
+    with open(out_path, 'wb') as fh:
+        return stream_context_tar(topsrcdir, context_dir, fh, prefix, args)
+
+
+def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
+    """Like create_context_tar, but streams the tar file to the `out_file` file
+    object."""
     archive_files = {}
     replace = []
 
@@ -159,10 +166,9 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix, args=None):
     archive_files[os.path.join(prefix, 'Dockerfile')] = \
         GeneratedFile(b''.join(content))
 
-    with open(out_path, 'wb') as fh:
-        writer = HashingWriter(fh)
-        create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)
-        return writer.hexdigest()
+    writer = HashingWriter(out_file)
+    create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)
+    return writer.hexdigest()
 
 
 def build_from_context(docker_bin, context_path, prefix, tag=None):
