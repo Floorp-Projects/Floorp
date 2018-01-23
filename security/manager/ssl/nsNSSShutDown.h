@@ -24,8 +24,6 @@ public:
 
   void shutdown(ShutdownCalledFrom) {}
 
-  bool isAlreadyShutDown() const { return false; }
-
 protected:
   virtual void virtualDestroyNSSReference() = 0;
 };

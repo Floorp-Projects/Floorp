@@ -162,9 +162,6 @@ CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
 
 CryptoKey::~CryptoKey()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -452,7 +449,7 @@ nsresult CryptoKey::SetSymKey(const CryptoBuffer& aSymKey)
 nsresult
 CryptoKey::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
 {
-  if (!aPrivateKey || isAlreadyShutDown()) {
+  if (!aPrivateKey) {
     mPrivateKey = nullptr;
     return NS_OK;
   }
@@ -464,7 +461,7 @@ CryptoKey::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
 nsresult
 CryptoKey::SetPublicKey(SECKEYPublicKey* aPublicKey)
 {
-  if (!aPublicKey || isAlreadyShutDown()) {
+  if (!aPublicKey) {
     mPublicKey = nullptr;
     return NS_OK;
   }
@@ -482,7 +479,7 @@ CryptoKey::GetSymKey() const
 UniqueSECKEYPrivateKey
 CryptoKey::GetPrivateKey() const
 {
-  if (!mPrivateKey || isAlreadyShutDown()) {
+  if (!mPrivateKey) {
     return nullptr;
   }
   return UniqueSECKEYPrivateKey(SECKEY_CopyPrivateKey(mPrivateKey.get()));
@@ -491,7 +488,7 @@ CryptoKey::GetPrivateKey() const
 UniqueSECKEYPublicKey
 CryptoKey::GetPublicKey() const
 {
-  if (!mPublicKey || isAlreadyShutDown()) {
+  if (!mPublicKey) {
     return nullptr;
   }
   return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(mPublicKey.get()));
@@ -1234,10 +1231,6 @@ CryptoKey::PublicKeyValid(SECKEYPublicKey* aPubKey)
 bool
 CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {
-  if (isAlreadyShutDown()) {
-    return false;
-  }
-
   // Write in five pieces
   // 1. Attributes
   // 2. Symmetric key as raw (if present)
@@ -1268,10 +1261,6 @@ CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 bool
 CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader)
 {
-  if (isAlreadyShutDown()) {
-    return false;
-  }
-
   // Ensure that NSS is initialized.
   if (!EnsureNSSInitializedChromeOrContent()) {
     return false;

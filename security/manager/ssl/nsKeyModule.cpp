@@ -19,9 +19,6 @@ nsKeyObject::nsKeyObject()
 
 nsKeyObject::~nsKeyObject()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -48,10 +45,6 @@ nsKeyObject::InitKey(int16_t aAlgorithm, PK11SymKey* aKey)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   mSymKey.reset(aKey);
   return NS_OK;
 }
@@ -64,10 +57,6 @@ nsKeyObject::GetKeyObj(PK11SymKey** _retval)
   }
 
   *_retval = nullptr;
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   if (!mSymKey) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -98,9 +87,6 @@ nsKeyObjectFactory::nsKeyObjectFactory()
 
 nsKeyObjectFactory::~nsKeyObjectFactory()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -110,10 +96,6 @@ nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,
 {
   if (!_retval || aAlgorithm != nsIKeyObject::HMAC) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
   }
 
   CK_MECHANISM_TYPE cipherMech = CKM_GENERIC_SECRET_KEY_GEN;

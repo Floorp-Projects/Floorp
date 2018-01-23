@@ -753,20 +753,12 @@ private:
 
 PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
 void
 PK11PasswordPromptRunnable::RunOnTargetThread()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
   if (!mIR) {
@@ -997,12 +989,6 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   }
 
   infoObject->SetFalseStartCallbackCalled();
-
-  if (infoObject->isAlreadyShutDown()) {
-    MOZ_CRASH("SSL socket used after NSS shut down");
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
-  }
 
   PreliminaryHandshakeDone(fd);
 

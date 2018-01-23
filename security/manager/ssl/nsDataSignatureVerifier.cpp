@@ -31,10 +31,6 @@ const SEC_ASN1Template CERT_SignatureDataTemplate[] =
 
 nsDataSignatureVerifier::~nsDataSignatureVerifier()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
-
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -45,10 +41,6 @@ nsDataSignatureVerifier::VerifyData(const nsACString& aData,
                                     bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   // Allocate an arena to handle the majority of the allocations
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));

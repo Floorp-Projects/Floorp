@@ -118,9 +118,6 @@ BackgroundFileSaver::BackgroundFileSaver()
 BackgroundFileSaver::~BackgroundFileSaver()
 {
   LOG(("Destroying BackgroundFileSaver [this = %p]", this));
-  if (isAlreadyShutDown()) {
-    return;
-  }
   destructorSafeDestroyNSSReference();
   shutdown(ShutdownCalledFrom::Object);
 }
@@ -552,11 +549,9 @@ BackgroundFileSaver::ProcessStateChange()
 
   // Create the digest context if requested and NSS hasn't been shut down.
   if (sha256Enabled && !mDigestContext) {
-    if (!isAlreadyShutDown()) {
-      mDigestContext = UniquePK11Context(
-        PK11_CreateDigestContext(SEC_OID_SHA256));
-      NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
-    }
+    mDigestContext = UniquePK11Context(
+      PK11_CreateDigestContext(SEC_OID_SHA256));
+    NS_ENSURE_TRUE(mDigestContext, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // When we are requested to append to an existing file, we should read the
@@ -578,10 +573,6 @@ BackgroundFileSaver::ProcessStateChange()
         if (count == 0) {
           // We reached the end of the file.
           break;
-        }
-
-        if (isAlreadyShutDown()) {
-          return NS_ERROR_NOT_AVAILABLE;
         }
 
         nsresult rv = MapSECStatus(
@@ -719,15 +710,13 @@ BackgroundFileSaver::CheckCompletion()
 
   // Finish computing the hash
   if (!failed && mDigestContext) {
-    if (!isAlreadyShutDown()) {
-      Digest d;
-      rv = d.End(SEC_OID_SHA256, mDigestContext);
-      if (NS_SUCCEEDED(rv)) {
-        MutexAutoLock lock(mLock);
-        mSha256 =
-          nsDependentCSubstring(BitwiseCast<char*, unsigned char*>(d.get().data),
-                                d.get().len);
-      }
+    Digest d;
+    rv = d.End(SEC_OID_SHA256, mDigestContext);
+    if (NS_SUCCEEDED(rv)) {
+      MutexAutoLock lock(mLock);
+      mSha256 =
+        nsDependentCSubstring(BitwiseCast<char*, unsigned char*>(d.get().data),
+                              d.get().len);
     }
   }
 
@@ -810,10 +799,6 @@ nsresult
 BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Cannot extract signature on main thread");
-
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   {
     MutexAutoLock lock(mLock);
     if (!mSignatureInfoEnabled) {
@@ -1212,9 +1197,6 @@ DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
 
 DigestOutputStream::~DigestOutputStream()
 {
-  if (isAlreadyShutDown()) {
-    return;
-  }
   shutdown(ShutdownCalledFrom::Object);
 }
 
@@ -1233,10 +1215,6 @@ DigestOutputStream::Flush()
 NS_IMETHODIMP
 DigestOutputStream::Write(const char* aBuf, uint32_t aCount, uint32_t* retval)
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   nsresult rv = MapSECStatus(
     PK11_DigestOp(mDigestContext,
                   BitwiseCast<const unsigned char*, const char*>(aBuf),

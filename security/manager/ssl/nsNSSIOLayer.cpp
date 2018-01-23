@@ -358,10 +358,6 @@ nsNSSSocketInfo::GetAlpnEarlySelection(nsACString& aAlpnSelected)
 {
   aAlpnSelected.Truncate();
 
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   SSLPreliminaryChannelInfo info;
   SECStatus rv = SSL_GetPreliminaryChannelInfo(mFd, &info, sizeof(info));
   if (rv != SECSuccess || !info.canSendEarlyData) {
@@ -402,9 +398,6 @@ nsNSSSocketInfo::SetEarlyDataAccepted(bool aAccepted)
 NS_IMETHODIMP
 nsNSSSocketInfo::DriveHandshake()
 {
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
   if (!mFd) {
     return NS_ERROR_FAILURE;
   }
@@ -584,8 +577,6 @@ nsNSSSocketInfo::StartTLS()
 NS_IMETHODIMP
 nsNSSSocketInfo::SetNPNList(nsTArray<nsCString>& protocolArray)
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
   if (!mFd)
     return NS_ERROR_FAILURE;
 
@@ -613,9 +604,6 @@ nsNSSSocketInfo::SetNPNList(nsTArray<nsCString>& protocolArray)
 nsresult
 nsNSSSocketInfo::ActivateSSL()
 {
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
   if (SECSuccess != SSL_OptionSet(mFd, SSL_SECURITY, true))
     return NS_ERROR_FAILURE;
   if (SECSuccess != SSL_ResetHandshake(mFd, false))
@@ -756,11 +744,6 @@ getSocketInfoIfRunning(PRFileDesc* fd, Operation op)
   }
 
   nsNSSSocketInfo* socketInfo = (nsNSSSocketInfo*) fd->secret;
-
-  if (socketInfo->isAlreadyShutDown()) {
-    PR_SetError(PR_SOCKET_SHUTDOWN_ERROR, 0);
-    return nullptr;
-  }
 
   if (socketInfo->GetErrorCode()) {
     PRErrorCode err = socketInfo->GetErrorCode();

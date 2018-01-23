@@ -1564,71 +1564,67 @@ SSLServerCertVerificationJob::Run()
 
   PRErrorCode error;
 
-  if (mInfoObject->isAlreadyShutDown()) {
-    error = SEC_ERROR_USER_CANCELLED;
-  } else {
-    Telemetry::HistogramID successTelemetry
-      = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX;
-    Telemetry::HistogramID failureTelemetry
-      = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX;
+  Telemetry::HistogramID successTelemetry
+    = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX;
+  Telemetry::HistogramID failureTelemetry
+    = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX;
 
-    // Reset the error code here so we can detect if AuthCertificate fails to
-    // set the error code if/when it fails.
-    PR_SetError(0, 0);
-    SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
-                                   mPeerCertChain, mStapledOCSPResponse.get(),
-                                   mSCTsFromTLSExtension.get(),
-                                   mProviderFlags, mTime);
-    MOZ_ASSERT(mPeerCertChain || rv != SECSuccess,
-               "AuthCertificate() should take ownership of chain on failure");
-    if (rv == SECSuccess) {
-      uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
-      RefPtr<SSLServerCertVerificationResult> restart(
-        new SSLServerCertVerificationResult(mInfoObject, 0,
-                                            successTelemetry, interval));
-      restart->Dispatch();
-      Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
-      return NS_OK;
-    }
+  // Reset the error code here so we can detect if AuthCertificate fails to
+  // set the error code if/when it fails.
+  PR_SetError(0, 0);
+  SECStatus rv = AuthCertificate(*mCertVerifier, mInfoObject, mCert,
+                                 mPeerCertChain, mStapledOCSPResponse.get(),
+                                 mSCTsFromTLSExtension.get(),
+                                 mProviderFlags, mTime);
+  MOZ_ASSERT(mPeerCertChain || rv != SECSuccess,
+             "AuthCertificate() should take ownership of chain on failure");
+  if (rv == SECSuccess) {
+    uint32_t interval = (uint32_t) ((TimeStamp::Now() - mJobStartTime).ToMilliseconds());
+    RefPtr<SSLServerCertVerificationResult> restart(
+      new SSLServerCertVerificationResult(mInfoObject, 0,
+                                          successTelemetry, interval));
+    restart->Dispatch();
+    Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
+    return NS_OK;
+  }
 
-    // Note: the interval is not calculated once as PR_GetError MUST be called
-    // before any other  function call
-    error = PR_GetError();
+  // Note: the interval is not calculated once as PR_GetError MUST be called
+  // before any other  function call
+  error = PR_GetError();
 
-    TimeStamp now = TimeStamp::Now();
-    Telemetry::AccumulateTimeDelta(failureTelemetry, mJobStartTime, now);
+  TimeStamp now = TimeStamp::Now();
+  Telemetry::AccumulateTimeDelta(failureTelemetry, mJobStartTime, now);
 
-    if (error != 0) {
-      RefPtr<CertErrorRunnable> runnable(
-          CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject, mCert,
-                                  mFdForLogging, mProviderFlags, mPRTime));
-      if (!runnable) {
-        // CreateCertErrorRunnable set a new error code
-        error = PR_GetError();
-      } else {
-        // We must block the the socket transport service thread while the
-        // main thread executes the CertErrorRunnable. The CertErrorRunnable
-        // will dispatch the result asynchronously, so we don't have to block
-        // this thread waiting for it.
+  if (error != 0) {
+    RefPtr<CertErrorRunnable> runnable(
+        CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject, mCert,
+                                mFdForLogging, mProviderFlags, mPRTime));
+    if (!runnable) {
+      // CreateCertErrorRunnable set a new error code
+      error = PR_GetError();
+    } else {
+      // We must block the the socket transport service thread while the
+      // main thread executes the CertErrorRunnable. The CertErrorRunnable
+      // will dispatch the result asynchronously, so we don't have to block
+      // this thread waiting for it.
 
-        MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                ("[%p][%p] Before dispatching CertErrorRunnable\n",
-                mFdForLogging, runnable.get()));
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("[%p][%p] Before dispatching CertErrorRunnable\n",
+              mFdForLogging, runnable.get()));
 
-        nsresult nrv;
-        nsCOMPtr<nsIEventTarget> stsTarget
-          = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &nrv);
-        if (NS_SUCCEEDED(nrv)) {
-          nrv = stsTarget->Dispatch(new CertErrorRunnableRunnable(runnable),
-                                    NS_DISPATCH_NORMAL);
-        }
-        if (NS_SUCCEEDED(nrv)) {
-          return NS_OK;
-        }
-
-        NS_ERROR("Failed to dispatch CertErrorRunnable");
-        error = PR_INVALID_STATE_ERROR;
+      nsresult nrv;
+      nsCOMPtr<nsIEventTarget> stsTarget
+        = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &nrv);
+      if (NS_SUCCEEDED(nrv)) {
+        nrv = stsTarget->Dispatch(new CertErrorRunnableRunnable(runnable),
+                                  NS_DISPATCH_NORMAL);
       }
+      if (NS_SUCCEEDED(nrv)) {
+        return NS_OK;
+      }
+
+      NS_ERROR("Failed to dispatch CertErrorRunnable");
+      error = PR_INVALID_STATE_ERROR;
     }
   }
 
