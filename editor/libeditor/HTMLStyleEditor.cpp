@@ -837,7 +837,7 @@ HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 
   if (HTMLEditUtils::IsNamedAnchor(parent)) {
     startNode = parent->GetParentNode();
-    startOffset = startNode ? startNode->IndexOf(parent) : -1;
+    startOffset = startNode ? startNode->ComputeIndexOf(parent) : -1;
   }
 
   parent = endNode;
@@ -849,7 +849,7 @@ HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange)
 
   if (HTMLEditUtils::IsNamedAnchor(parent)) {
     endNode = parent->GetParentNode();
-    endOffset = endNode ? endNode->IndexOf(parent) + 1 : 0;
+    endOffset = endNode ? endNode->ComputeIndexOf(parent) + 1 : 0;
   }
 
   nsresult rv = aRange.SetStartAndEnd(startNode, startOffset,
@@ -873,7 +873,7 @@ HTMLEditor::PromoteInlineRange(nsRange& aRange)
          IsEditable(startNode) && IsAtFrontOfNode(*startNode, startOffset)) {
     nsCOMPtr<nsINode> parent = startNode->GetParentNode();
     NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-    startOffset = parent->IndexOf(startNode);
+    startOffset = parent->ComputeIndexOf(startNode);
     startNode = parent;
   }
 
@@ -882,7 +882,7 @@ HTMLEditor::PromoteInlineRange(nsRange& aRange)
     nsCOMPtr<nsINode> parent = endNode->GetParentNode();
     NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
     // We are AFTER this node
-    endOffset = 1 + parent->IndexOf(endNode);
+    endOffset = 1 + parent->ComputeIndexOf(endNode);
     endNode = parent;
   }
 
@@ -909,7 +909,7 @@ HTMLEditor::IsAtFrontOfNode(nsINode& aNode,
 
   nsCOMPtr<nsIContent> firstNode = GetFirstEditableChild(aNode);
   NS_ENSURE_TRUE(firstNode, true);
-  if (aNode.IndexOf(firstNode) < aOffset) {
+  if (aNode.ComputeIndexOf(firstNode) < aOffset) {
     return false;
   }
   return true;
@@ -929,7 +929,7 @@ HTMLEditor::IsAtEndOfNode(nsINode& aNode,
 
   nsCOMPtr<nsIContent> lastNode = GetLastEditableChild(aNode);
   NS_ENSURE_TRUE(lastNode, true);
-  if (aNode.IndexOf(lastNode) < aOffset) {
+  if (aNode.ComputeIndexOf(lastNode) < aOffset) {
     return true;
   }
   return false;

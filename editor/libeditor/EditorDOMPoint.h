@@ -351,7 +351,7 @@ public:
       const_cast<SelfType*>(this)->mOffset = mozilla::Some(0);
     } else {
       const_cast<SelfType*>(this)->mOffset =
-        mozilla::Some(mParent->IndexOf(mChild));
+        mozilla::Some(mParent->ComputeIndexOf(mChild));
     }
     return mOffset.value();
   }

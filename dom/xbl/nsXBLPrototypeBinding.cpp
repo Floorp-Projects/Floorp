@@ -483,7 +483,8 @@ nsXBLPrototypeBinding::LocateInstance(Element* aBoundElement,
   if (!copyParent)
     return nullptr;
 
-  nsIContent* child = copyParent->GetChildAt_Deprecated(templParent->IndexOf(aTemplChild));
+  nsIContent* child =
+    copyParent->GetChildAt_Deprecated(templParent->ComputeIndexOf(aTemplChild));
   if (child && child->IsElement()) {
     return child->AsElement();
   }
