@@ -71,6 +71,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mEnforceSecurity(false)
   , mInitialSecurityCheckDone(false)
   , mIsThirdPartyContext(false)
+  , mIsDocshellReload(false)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -258,6 +259,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   , mEnforceSecurity(false)
   , mInitialSecurityCheckDone(false)
   , mIsThirdPartyContext(false) // NB: TYPE_DOCUMENT implies not third-party.
+  , mIsDocshellReload(false)
   , mForcePreflight(false)
   , mIsPreflight(false)
   , mLoadTriggeredFromExternal(false)
@@ -330,6 +332,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mEnforceSecurity(rhs.mEnforceSecurity)
   , mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone)
   , mIsThirdPartyContext(rhs.mIsThirdPartyContext)
+  , mIsDocshellReload(rhs.mIsDocshellReload)
   , mOriginAttributes(rhs.mOriginAttributes)
   , mRedirectChainIncludingInternalRedirects(
       rhs.mRedirectChainIncludingInternalRedirects)
@@ -365,6 +368,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aEnforceSecurity,
                    bool aInitialSecurityCheckDone,
                    bool aIsThirdPartyContext,
+                   bool aIsDocshellReload,
                    const OriginAttributes& aOriginAttributes,
                    RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
                    RedirectHistoryArray& aRedirectChain,
@@ -396,6 +400,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mEnforceSecurity(aEnforceSecurity)
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
   , mIsThirdPartyContext(aIsThirdPartyContext)
+  , mIsDocshellReload(aIsDocshellReload)
   , mOriginAttributes(aOriginAttributes)
   , mAncestorPrincipals(Move(aAncestorPrincipals))
   , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
@@ -700,6 +705,20 @@ LoadInfo::GetLoadErrorPage(bool* aResult)
 {
   *aResult =
     (mSecurityFlags & nsILoadInfo::SEC_LOAD_ERROR_PAGE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsDocshellReload(bool* aResult)
+{
+  *aResult = mIsDocshellReload;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsDocshellReload(bool aValue)
+{
+  mIsDocshellReload = aValue;
   return NS_OK;
 }
 
