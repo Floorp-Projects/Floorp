@@ -811,20 +811,23 @@ nsNavHistory::GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQuerie
   for (i = 0; i < aQueries.Count(); i ++) {
     nsNavHistoryQuery* query = aQueries[i];
 
+    bool hasSearchTerms = !query->SearchTerms().IsEmpty();
     if (query->Folders().Length() > 0 ||
         query->OnlyBookmarked() ||
-        query->Tags().Length() > 0) {
+        query->Tags().Length() > 0 ||
+        (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+         hasSearchTerms)) {
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
     }
 
     // Note: we don't currently have any complex non-bookmarked items, but these
     // are expected to be added. Put detection of these items here.
-    if (!query->SearchTerms().IsEmpty() ||
+    if (hasSearchTerms ||
         !query->Domain().IsVoid() ||
         query->Uri() != nullptr)
       nonTimeBasedItems = true;
 
-    if (! query->Domain().IsVoid())
+    if (!query->Domain().IsVoid())
       domainBasedItems = true;
   }
 
