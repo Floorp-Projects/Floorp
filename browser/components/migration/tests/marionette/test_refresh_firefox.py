@@ -45,45 +45,41 @@ class TestFirefoxRefresh(MarionetteTestCase):
         """, script_args=(self._username, self._password))
 
     def createBookmarkInMenu(self):
-        self.marionette.execute_script("""
+        error = self.runAsyncCode("""
           let url = arguments[0];
           let title = arguments[1];
-          PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.bookmarksMenuFolder,
-            makeURI(url), 0, title);
+          PlacesUtils.bookmarks.insert({
+            parentGuid: PlacesUtils.bookmarks.menuGuid, url, title
+          }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
         """, script_args=(self._bookmarkURL, self._bookmarkText))
+        if error:
+            print error
 
     def createBookmarksOnToolbar(self):
-        self.marionette.execute_script("""
+        error = self.runAsyncCode("""
+          let children = [];
           for (let i = 1; i <= 5; i++) {
-            PlacesUtils.bookmarks.insertBookmark(PlacesUtils.toolbarFolderId,
-              makeURI(`about:rights?p=${i}`), 0, `Bookmark ${i}`);
+            children.push({url: `about:rights?p=${i}`, title: `Bookmark ${i}`});
           }
+          PlacesUtils.bookmarks.insertTree({
+            guid: PlacesUtils.bookmarks.toolbarGuid,
+            children
+          }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
         """)
+        if error:
+            print error
 
     def createHistory(self):
         error = self.runAsyncCode("""
-          // Copied from PlacesTestUtils, which isn't available in Marionette tests.
-          let didReturn;
-          PlacesUtils.asyncHistory.updatePlaces(
-            [{title: arguments[1], uri: makeURI(arguments[0]), visits: [{
-                transitionType: Ci.nsINavHistoryService.TRANSITION_LINK,
-                visitDate: (Date.now() - 5000) * 1000,
-                referrerURI: makeURI("about:mozilla"),
-              }]
-            }],
-            {
-              handleError(resultCode, place) {
-                didReturn = true;
-                marionetteScriptFinished("Unexpected error in adding visit: " + resultCode);
-              },
-              handleResult() {},
-              handleCompletion() {
-                if (!didReturn) {
-                  marionetteScriptFinished(false);
-                }
-              },
-            }
-          );
+          PlacesUtils.history.insert({
+            url: arguments[0],
+            title: arguments[1],
+            visits: [{
+              date: new Date(Date.now() - 5000),
+              referrer: "about:mozilla"
+            }]
+          }).then(() => marionetteScriptFinished(false),
+                  ex => marionetteScriptFinished("Unexpected error in adding visit: " + ex));
         """, script_args=(self._historyURL, self._historyTitle))
         if error:
             print error
@@ -209,10 +205,12 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertEqual(loginCount, 2, "No other logins are present")
 
     def checkBookmarkInMenu(self):
-        titleInBookmarks = self.marionette.execute_script("""
+        titleInBookmarks = self.runAsyncCode("""
           let url = arguments[0];
-          let bookmarkIds = PlacesUtils.bookmarks.getBookmarkIdsForURI(makeURI(url), {}, {});
-          return bookmarkIds.length == 1 ? PlacesUtils.bookmarks.getItemTitle(bookmarkIds[0]) : "";
+          PlacesUtils.bookmarks.fetch({url}).then(
+            bookmark => marionetteScriptFinished(bookmark ? bookmark.title : ""),
+            ex => marionetteScriptFinished(ex)
+          );
         """, script_args=(self._bookmarkURL,))
         self.assertEqual(titleInBookmarks, self._bookmarkText)
 
