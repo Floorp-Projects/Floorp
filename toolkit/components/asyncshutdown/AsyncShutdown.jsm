@@ -360,15 +360,6 @@ this.AsyncShutdown = {
       return getPhase;
     }
     return undefined;
-  },
-
-  /**
-   * This constant is used as the amount of milliseconds to allow shutdown to be
-   * blocked until we crash the process forcibly and is read from the
-   * 'toolkit.asyncshutdown.crash_timeout' pref.
-   */
-  get DELAY_CRASH_MS() {
-    return DELAY_CRASH_MS;
   }
 };
 
