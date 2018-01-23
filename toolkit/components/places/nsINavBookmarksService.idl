@@ -606,12 +606,6 @@ interface nsINavBookmarksService : nsISupports
                     [optional] in unsigned short aSource);
 
   /**
-   * Get an item's type (bookmark, separator, folder).
-   * The type is one of the TYPE_* constants defined above.
-   */
-  unsigned short getItemType(in long long aItemId);
-
-  /**
    * Change the bookmarked URI for a bookmark.
    * This changes which "place" the bookmark points at,
    * which means all annotations, etc are carried along.
