@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSSPositionValue tests</title>
+<link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#positionvalue-objects">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../resources/testhelper.js"></script>
+<script>
+'use strict';
+
+const gInvalidTestCases = [
+  { value: 'auto', desc: 'a keyword'},
+  { value: 10, desc: 'a double'},
+  { value: 0, desc: 'a unitless zero'},
+  { value: '10px', desc: 'a string length'},
+  { value: CSS.number(10), desc: 'a number CSSUnitValue'},
+  { value: CSS.s(10), desc: 'a time dimension CSSUnitValue'},
+  { value: new CSSMathSum(CSS.deg(1)), desc: 'a CSSMathValue of angle type' },
+];
+
+for (const {value, desc} of gInvalidTestCases) {
+  test(() => {
+    assert_throws(new TypeError(), () => new CSSPositionValue(value, CSS.px(0)));
+    assert_throws(new TypeError(), () => new CSSPositionValue(CSS.px(0), value));
+  }, 'Constructing a CSSPositionValue with ' + desc + ' throws a TypeError');
+}
+
+for (const attr of ['x', 'y']) {
+  for (const {value, desc} of gInvalidTestCases) {
+    test(() => {
+      const position = new CSSPositionValue(CSS.px(0), CSS.px(0));
+      assert_throws(new TypeError(), () => position[attr] = value);
+      assert_style_value_equals(position[attr], CSS.px(0));
+    }, 'Updating CSSPositionValue.' + attr + ' with ' + desc + ' throws a TypeError');
+  }
+}
+
+const gValidTestCases = [
+  { value: CSS.px(1), desc: 'a length CSSUnitValue' },
+  { value: CSS.percent(10), desc: 'a percent CSSUnitValue' },
+  { value: new CSSMathSum(CSS.px(1)), desc: 'a CSSMathValue of length type' },
+  { value: new CSSMathSum(CSS.percent(1)), desc: 'a CSSMathValue of percent type' },
+];
+
+for (const {value: x, desc: xDesc} of gValidTestCases) {
+  for (const {value: y, desc: yDesc} of gValidTestCases) {
+    test(() => {
+      const position = new CSSPositionValue(x, y);
+      assert_equals(position.x, x);
+      assert_equals(position.y, y);
+    }, 'CSSPositionValue can be constructed from ' + xDesc + ' and ' + yDesc);
+  }
+}
+
+for (const attr of ['x', 'y']) {
+  for (const {value, desc} of gValidTestCases) {
+    test(() => {
+      const position = new CSSPositionValue(CSS.px(0), CSS.px(0));
+      position[attr] = value;
+      assert_style_value_equals(position[attr], value);
+    }, 'CSSPositionValue.' + attr + ' can be updated to ' + desc);
+  }
+}
+
+</script>
