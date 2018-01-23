@@ -33,16 +33,15 @@ def generate(output, idlFilename, preprocessorHeader):
         if pref is not "":
             extendedAttrs.append('Pref="%s"' % pref)
 
-        # webkit properties get a capitalized "WebkitFoo" accessor (added here)
-        # as well as a camelcase "webkitFoo" accessor (added next).
+        # webkit properties get a camelcase "webkitFoo" accessor
+        # as well as a capitalized "WebkitFoo" alias (added here).
         if (prop.startswith("Webkit")):
-            props += generateLine(prop, extendedAttrs)
+            extendedAttrs.append('BindingAlias="%s"' % prop)
 
-        # Generate a line with camelCase spelling of property-name (or capitalized,
+        # Generate a name with camelCase spelling of property-name (or capitalized,
         # for Moz-prefixed properties):
         if not prop.startswith("Moz"):
             prop = prop[0].lower() + prop[1:]
-        props += generateLine(prop, extendedAttrs)
 
         # Per spec, what's actually supposed to happen here is that we're supposed
         # to have properties for:
@@ -56,15 +55,14 @@ def generate(output, idlFilename, preprocessorHeader):
         # in that list.
         #
         # In practice, cssFloat is the only case in which "name" doesn't contain
-        # "-" but also doesn't match "prop".  So the above generatePropLine() call
-        # covered (3) and all of (1) except "float".  If we now output attributes
+        # "-" but also doesn't match "prop".  So the generateLine() call will
+        # cover (3) and all of (1) except "float".  If we now add an alias
         # for all the cases where "name" doesn't match "prop", that will cover
         # "float" and (2).
         if prop != name:
-            extendedAttrs.append('BinaryName="%s"' % prop)
-            # Throw in a '_' before the attribute name, because some of these
-            # property names collide with IDL reserved words.
-            props += generateLine("_" + name, extendedAttrs)
+            extendedAttrs.append('BindingAlias="%s"' % name)
+
+        props += generateLine(prop, extendedAttrs)
 
 
     idlFile = open(idlFilename, "r")
