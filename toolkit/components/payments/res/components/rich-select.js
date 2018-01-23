@@ -30,6 +30,14 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   connectedCallback() {
     this.setAttribute("tabindex", "0");
     this.render();
+
+    this._mutationObserver = new MutationObserver(() => {
+      this.render();
+    });
+    this._mutationObserver.observe(this, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   get popupBox() {
@@ -140,14 +148,13 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       selectedChild.selected = true;
     }
 
-    if (!this._optionsAreEquivalent(this._selectedChild, selectedChild)) {
-      let selectedClone = this.querySelector(":scope > .rich-select-selected-clone");
+    let selectedClone = this.querySelector(":scope > .rich-select-selected-clone");
+    if (!this._optionsAreEquivalent(selectedClone, selectedChild)) {
       if (selectedClone) {
         selectedClone.remove();
       }
 
       if (selectedChild) {
-        this._selectedChild = selectedChild;
         selectedClone = selectedChild.cloneNode(false);
         selectedClone.removeAttribute("id");
         selectedClone.classList.add("rich-select-selected-clone");

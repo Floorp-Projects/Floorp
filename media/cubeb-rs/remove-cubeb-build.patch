@@ -1,0 +1,34 @@
+From 1fca45f284d78a8df5e86779aab92173f69557a0 Mon Sep 17 00:00:00 2001
+From: Dan Glastonbury <dan.glastonbury@gmail.com>
+Date: Mon, 6 Nov 2017 15:00:48 +1000
+Subject: remove-cubeb-build.patch
+
+MozReview-Commit-ID: bymdNMfAjE
+
+diff --git a/media/cubeb-rs/cubeb-api/libcubeb-sys/Cargo.toml b/media/cubeb-rs/cubeb-api/libcubeb-sys/Cargo.toml
+index 523c352..6ed4d34 100644
+--- a/media/cubeb-rs/cubeb-api/libcubeb-sys/Cargo.toml
++++ b/media/cubeb-rs/cubeb-api/libcubeb-sys/Cargo.toml
+@@ -6,17 +6,9 @@ repository = "https://github.com/djg/cubeb-rs"
+ license = "ISC"
+ description = "Native bindings to the cubeb library"
+ 
+-links = "cubeb"
+-build = "build.rs"
+-
+ [lib]
+ name = "libcubeb_sys"
+ path = "lib.rs"
+ 
+ [dependencies]
+-cubeb-core = { path = "../../cubeb-core" }
+-
+-[build-dependencies]
+-pkg-config = "0.3"
+-cmake = "0.1.2"
+-gcc = "0.3"
++cubeb-core = { path = "../../cubeb-core" }
+\ No newline at end of file
+-- 
+2.10.2
+

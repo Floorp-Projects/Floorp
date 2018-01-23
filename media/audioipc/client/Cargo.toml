@@ -1,12 +1,21 @@
 [package]
 name = "audioipc-client"
-version = "0.1.0"
-authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+version = "0.2.0"
+authors = [
+        "Matthew Gregan <kinetik@flim.org>",
+        "Dan Glastonbury <dan.glastonbury@gmail.com>"
+        ]
 description = "Cubeb Backend for talking to remote cubeb server."
 
 [dependencies]
 audioipc = { path="../audioipc" }
-cubeb-backend = { path="../../cubeb-rs/cubeb-backend" }
-cubeb-core = { path="../../cubeb-rs/cubeb-core" }
+cubeb-backend = { path = "../../cubeb-rs/cubeb-backend" }
+cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
+# rayon-core in Gecko uses futures 0.1.13
+futures = { version="=0.1.13", default-features=false, features=["use_std"] }
+# futures-cpupool 0.1.5 matches futures 0.1.13
+futures-cpupool = { version="=0.1.5", default-features=false }
 libc = "0.2"
 log = "^0.3.6"
+tokio-core = "0.1"
+tokio-uds = "0.1.7"

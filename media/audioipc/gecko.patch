@@ -1,0 +1,60 @@
+From 2c1d5189aedc7f90b603807a36a57254dc24471c Mon Sep 17 00:00:00 2001
+From: Dan Glastonbury <dglastonbury@mozilla.com>
+Date: Fri, 19 Jan 2018 11:56:58 +1000
+Subject: gecko: Change paths to vendored crates.
+
+
+diff --git a/media/audioipc/Cargo.toml b/media/audioipc/Cargo.toml
+index ede6064..d0a1979 100644
+--- a/media/audioipc/Cargo.toml
++++ b/media/audioipc/Cargo.toml
+@@ -1,2 +1,2 @@
+ [workspace]
+-members = ["audioipc", "client", "server", "ipctest"]
++members = ["audioipc", "client", "server"]
+diff --git a/audioipc/Cargo.toml b/audioipc/Cargo.toml
+index 669c6ff..308cb5c 100644
+--- a/media/audioipc/audioipc/Cargo.toml
++++ b/media/audioipc/audioipc/Cargo.toml
+@@ -8,7 +8,7 @@ authors = [
+ description = "Remote Cubeb IPC"
+ 
+ [dependencies]
+-cubeb-core = { git = "https://github.com/djg/cubeb-rs", version="^0.1" }
++cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
+ bincode = "0.8"
+ bytes = "0.4"
+ # rayon-core in Gecko uses futures 0.1.13
+diff --git a/client/Cargo.toml b/client/Cargo.toml
+index c81b19a..9e3f8a5 100644
+--- a/media/audioipc/client/Cargo.toml
++++ b/media/audioipc/client/Cargo.toml
+@@ -9,8 +9,8 @@ description = "Cubeb Backend for talking to remote cubeb server."
+ 
+ [dependencies]
+ audioipc = { path="../audioipc" }
+-cubeb-backend = { git="https://github.com/djg/cubeb-rs", version="^0.2" }
+-cubeb-core = { git="https://github.com/djg/cubeb-rs", version="^0.1" }
++cubeb-backend = { path = "../../cubeb-rs/cubeb-backend" }
++cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
+ # rayon-core in Gecko uses futures 0.1.13
+ futures = { version="=0.1.13", default-features=false, features=["use_std"] }
+ # futures-cpupool 0.1.5 matches futures 0.1.13
+diff --git a/server/Cargo.toml b/server/Cargo.toml
+index 5b79b83..01463be 100644
+--- a/media/audioipc/server/Cargo.toml
++++ b/media/audioipc/server/Cargo.toml
+@@ -9,8 +9,8 @@ description = "Remote cubeb server"
+ 
+ [dependencies]
+ audioipc = { path = "../audioipc" }
+-cubeb-core = { git = "https://github.com/djg/cubeb-rs", version="^0.1" }
+-cubeb = { git = "https://github.com/djg/cubeb-rs", version="^0.3.1" }
++cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
++cubeb = { path = "../../cubeb-rs/cubeb-api" }
+ bytes = "0.4"
+ lazycell = "^0.4"
+ libc = "0.2"
+-- 
+2.10.2
+

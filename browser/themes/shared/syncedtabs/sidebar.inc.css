@@ -216,7 +216,7 @@ body {
 .deck .syncIllustration,
 .deck .syncIllustrationIssue {
   height: 150px;
-  margin-top: 20px;
+  margin: 38px 8px;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -234,7 +234,7 @@ body {
   color: rgba(12, 12, 13, .5);
   padding: 0 11px;
   max-width: 15em;
-  margin: 1em auto;
+  margin: 0 auto;
 }
 
 .deck .button {

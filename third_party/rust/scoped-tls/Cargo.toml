@@ -1,0 +1,14 @@
+[package]
+name = "scoped-tls"
+version = "0.1.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/alexcrichton/scoped-tls"
+homepage = "https://github.com/alexcrichton/scoped-tls"
+documentation = "http://alexcrichton.com/scoped-tls"
+description = """
+Library implementation of the standard library's old `scoped_thread_local!`
+macro for providing scoped access to thread local storage (TLS) so any type can
+be stored into TLS.
+"""
