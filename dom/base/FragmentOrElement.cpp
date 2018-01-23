@@ -1157,9 +1157,9 @@ nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 }
 
 nsresult
-FragmentOrElement::InsertChildAt(nsIContent* aKid,
-                                uint32_t aIndex,
-                                bool aNotify)
+FragmentOrElement::InsertChildAt_Deprecated(nsIContent* aKid,
+                                            uint32_t aIndex,
+                                            bool aNotify)
 {
   NS_PRECONDITION(aKid, "null ptr");
 

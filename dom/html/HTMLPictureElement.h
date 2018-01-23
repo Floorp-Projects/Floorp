@@ -25,7 +25,7 @@ public:
                          bool aPreallocateChildren) const override;
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
   virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
-  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify) override;
+  virtual nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex, bool aNotify) override;
 
 protected:
   virtual ~HTMLPictureElement();

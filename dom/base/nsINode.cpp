@@ -2492,8 +2492,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     for (uint32_t i = 0; i < count; ++i, ++insPos) {
       // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child.
-      aError = InsertChildAt(fragChildren->ElementAt(i), insPos,
-                             !appending);
+      aError = InsertChildAt_Deprecated(fragChildren->ElementAt(i), insPos,
+                                        !appending);
       if (aError.Failed()) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
@@ -2535,7 +2535,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       mb.SetPrevSibling(GetChildAt_Deprecated(insPos - 1));
       mb.SetNextSibling(GetChildAt_Deprecated(insPos));
     }
-    aError = InsertChildAt(newContent, insPos, true);
+    aError = InsertChildAt_Deprecated(newContent, insPos, true);
     if (aError.Failed()) {
       return nullptr;
     }
