@@ -139,12 +139,20 @@ var gSyncPane = {
       return Services.strings.createBundle("chrome://browser/locale/accounts.properties");
     });
 
+    // Links for mobile devices before the user is logged in.
     let url = Services.prefs.getCharPref("identity.mobilepromo.android") + "sync-preferences";
     document.getElementById("fxaMobilePromo-android").setAttribute("href", url);
-    document.getElementById("fxaMobilePromo-android-hasFxaAccount").setAttribute("href", url);
     url = Services.prefs.getCharPref("identity.mobilepromo.ios") + "sync-preferences";
     document.getElementById("fxaMobilePromo-ios").setAttribute("href", url);
-    document.getElementById("fxaMobilePromo-ios-hasFxaAccount").setAttribute("href", url);
+
+    // Links for mobile devices shown after the user is logged in.
+    fxAccounts.promiseAccountsConnectDeviceURI(this._getEntryPoint()).then(connectURI => {
+      document.getElementById("mobilePromo-singledevice").setAttribute("href", connectURI);
+    });
+
+    fxAccounts.promiseAccountsManageDevicesURI(this._getEntryPoint()).then(manageURI => {
+      document.getElementById("mobilePromo-multidevice").setAttribute("href", manageURI);
+    });
 
     document.getElementById("tosPP-small-ToS").setAttribute("href", Weave.Svc.Prefs.get("fxa.termsURL"));
     document.getElementById("tosPP-small-PP").setAttribute("href", Weave.Svc.Prefs.get("fxa.privacyURL"));
@@ -321,6 +329,10 @@ var gSyncPane = {
     fxAccounts.promiseAccountsManageURI(this._getEntryPoint()).then(accountsManageURI => {
       document.getElementById("verifiedManage").setAttribute("href", accountsManageURI);
     });
+    // The mobile promo links - which one is shown depends on the number of devices.
+    let isMultiDevice = Weave.Service.clientsEngine.stats.numClients > 1;
+    document.getElementById("mobilePromo-singledevice").hidden = isMultiDevice;
+    document.getElementById("mobilePromo-multidevice").hidden = !isMultiDevice;
   },
 
   _getEntryPoint() {
