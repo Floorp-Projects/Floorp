@@ -937,7 +937,7 @@ public:
   // based on the RGB values.
   virtual already_AddRefed<SourceSurface> IntoLuminanceSource(LuminanceType aLuminanceType,
                                                               float aOpacity);
-  virtual IntSize GetSize() = 0;
+  virtual IntSize GetSize() const = 0;
 
   /**
    * If possible returns the bits to this DrawTarget for direct manipulation. While

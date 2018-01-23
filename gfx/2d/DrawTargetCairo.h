@@ -65,7 +65,7 @@ public:
   virtual DrawTargetType GetType() const override;
   virtual BackendType GetBackendType() const override { return BackendType::CAIRO; }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
-  virtual IntSize GetSize() override;
+  virtual IntSize GetSize() const override;
 
   virtual bool IsCurrentGroupOpaque() override;
 
