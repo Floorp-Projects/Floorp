@@ -26,7 +26,6 @@ public class WebViewProvider {
 
     public static View create(Context context, AttributeSet attrs) {
         final GeckoView geckoView = new GeckoWebView(context, attrs);
-
         return geckoView;
     }
 
@@ -61,6 +60,8 @@ public class WebViewProvider {
             geckoSession.setProgressListener(createProgressListener());
             geckoSession.setNavigationListener(createNavigationListener());
 
+            setSession(geckoSession);
+
             // TODO: set long press listener, call through to callback.onLinkLongPress()
         }
 
@@ -76,17 +77,17 @@ public class WebViewProvider {
 
         @Override
         public void goBack() {
-
+            geckoSession.goBack();
         }
 
         @Override
         public void goForward() {
-
+            geckoSession.goForward();
         }
 
         @Override
         public void reload() {
-
+            geckoSession.reload();
         }
 
         @Override
@@ -124,7 +125,7 @@ public class WebViewProvider {
 
         @Override
         public void setBlockingEnabled(boolean enabled) {
-//            getSettings().setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled);
+            getSettings().setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled);
         }
 
         private ContentListener createContentListener() {
