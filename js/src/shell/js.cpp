@@ -230,132 +230,209 @@ InstallCoverageSignalHandlers()
 }
 #endif
 
-class OffThreadState {
+// An off-thread parse or decode job.
+class js::shell::OffThreadJob {
     enum State {
-        IDLE,           /* ready to work; no token, no source */
-        COMPILING,      /* working; no token, have source */
-        DONE            /* compilation done: have token and source */
+        RUNNING,      // Working; no token.
+        DONE,         // Finished; have token.
+        CANCELLED     // Cancelled due to error.
     };
 
   public:
-    OffThreadState()
-      : monitor(mutexid::ShellOffThreadState),
-        state(IDLE),
-        runtime(nullptr),
-        token(),
-        source(nullptr)
-    { }
+    using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-    bool startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource);
+    OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source);
+    ~OffThreadJob();
 
-    bool startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&& newXdr);
-
-    void abandon(JSContext* cx);
-
+    void cancel();
     void markDone(void* newToken);
+    void* waitUntilDone(JSContext* cx);
 
-    void* waitUntilDone(JSContext* cx, ScriptKind kind);
+    char16_t* sourceChars() { return source.as<UniqueTwoByteChars>().get(); }
+    JS::TranscodeBuffer& xdrBuffer() { return source.as<JS::TranscodeBuffer>(); }
 
-    JS::TranscodeBuffer& xdrBuffer() { return xdr; }
+  public:
+    const int32_t id;
+    const ScriptKind kind;
 
   private:
-    js::Monitor monitor;
-    ScriptKind scriptKind;
+    js::Monitor& monitor;
     State state;
-    JSRuntime* runtime;
     void* token;
-    char16_t* source;
-    JS::TranscodeBuffer xdr;
+    Source source;
 };
-static OffThreadState* gOffThreadState;
 
-bool
-OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, ScopedJSFreePtr<char16_t>& newSource)
+static OffThreadJob*
+NewOffThreadJob(JSContext* cx, ScriptKind kind, OffThreadJob::Source&& source)
 {
-    AutoLockMonitor alm(monitor);
-    if (state != IDLE)
-        return false;
+    ShellContext* sc = GetShellContext(cx);
+    UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(sc, kind, Move(source)));
+    if (!job)
+        return nullptr;
 
-    MOZ_ASSERT(!token);
+    if (!sc->offThreadJobs.append(job.get())) {
+        JS_ReportErrorASCII(cx, "OOM adding off-thread job");
+        return nullptr;
+    }
 
-    source = newSource.forget();
-
-    scriptKind = kind;
-    runtime = cx->runtime();
-    state = COMPILING;
-    return true;
+    return job.release();
 }
 
-bool
-OffThreadState::startIfIdle(JSContext* cx, ScriptKind kind, JS::TranscodeBuffer&& newXdr)
+static OffThreadJob*
+GetSingleOffThreadJob(JSContext* cx, ScriptKind kind)
 {
-    AutoLockMonitor alm(monitor);
-    if (state != IDLE)
-        return false;
+    ShellContext* sc = GetShellContext(cx);
+    const auto& jobs = sc->offThreadJobs;
+    if (jobs.empty()) {
+        JS_ReportErrorASCII(cx, "No off-thread jobs are pending");
+        return nullptr;
+    }
 
-    MOZ_ASSERT(!token);
+    if (jobs.length() > 1) {
+        JS_ReportErrorASCII(cx, "Multiple off-thread jobs are pending: must specify job ID");
+        return nullptr;
+    }
 
-    xdr = mozilla::Move(newXdr);
+    OffThreadJob* job = jobs[0];
+    if (job->kind != kind) {
+        JS_ReportErrorASCII(cx, "Off-thread job is the wrong kind");
+        return nullptr;
+    }
 
-    scriptKind = kind;
-    runtime = cx->runtime();
-    state = COMPILING;
-    return true;
+    return job;
+}
+
+static OffThreadJob*
+LookupOffThreadJobByID(JSContext* cx, ScriptKind kind, int32_t id)
+{
+    if (id <= 0) {
+        JS_ReportErrorASCII(cx, "Bad off-thread job ID");
+        return nullptr;
+    }
+
+    ShellContext* sc = GetShellContext(cx);
+    const auto& jobs = sc->offThreadJobs;
+    if (jobs.empty()) {
+        JS_ReportErrorASCII(cx, "No off-thread jobs are pending");
+        return nullptr;
+    }
+
+    OffThreadJob* job = nullptr;
+    for (auto someJob : jobs) {
+        if (someJob->id == id) {
+            job = someJob;
+            break;
+        }
+    }
+
+    if (!job) {
+        JS_ReportErrorASCII(cx, "Off-thread job not found");
+        return nullptr;
+    }
+
+    if (job->kind != kind) {
+        JS_ReportErrorASCII(cx, "Off-thread job is the wrong kind");
+        return nullptr;
+    }
+
+    return job;
+}
+
+static OffThreadJob*
+LookupOffThreadJobForArgs(JSContext* cx, ScriptKind kind, const CallArgs& args, size_t arg)
+{
+    // If the optional ID argument isn't present, get the single pending job.
+    if (args.length() <= arg)
+        return GetSingleOffThreadJob(cx, kind);
+
+    // Lookup the job using the specified ID.
+    int32_t id = 0;
+    RootedValue value(cx, args[arg]);
+    if (!ToInt32(cx, value, &id))
+        return nullptr;
+
+    return LookupOffThreadJobByID(cx, kind, id);
+}
+
+static void
+DeleteOffThreadJob(JSContext* cx, OffThreadJob* job)
+{
+    ShellContext* sc = GetShellContext(cx);
+    for (size_t i = 0; i < sc->offThreadJobs.length(); i++) {
+        if (sc->offThreadJobs[i] == job) {
+            sc->offThreadJobs.erase(&sc->offThreadJobs[i]);
+            js_delete(job);
+            return;
+        }
+    }
+
+    MOZ_CRASH("Off-thread job not found");
+}
+
+static void
+CancelAllOffThreadJobs(JSContext* cx)
+{
+    // Parse jobs may be blocked waiting on GC.
+    gc::FinishGC(cx);
+
+    CancelOffThreadParses(cx->runtime());
+
+    ShellContext* sc = GetShellContext(cx);
+    while (!sc->offThreadJobs.empty())
+        js_delete(sc->offThreadJobs.popCopy());
+}
+
+mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
+
+OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
+  : id(gOffThreadJobSerial++),
+    kind(kind),
+    monitor(sc->offThreadMonitor),
+    state(RUNNING),
+    token(nullptr),
+    source(Move(source))
+{
+    MOZ_RELEASE_ASSERT(id > 0, "Off-thread job IDs exhausted");
+}
+
+OffThreadJob::~OffThreadJob()
+{
+    MOZ_ASSERT(state != RUNNING);
 }
 
 void
-OffThreadState::abandon(JSContext* cx)
+OffThreadJob::cancel()
 {
-    AutoLockMonitor alm(monitor);
-    MOZ_ASSERT(state == COMPILING);
+    MOZ_ASSERT(state == RUNNING);
     MOZ_ASSERT(!token);
-    MOZ_ASSERT(source || !xdr.empty());
 
-    if (source)
-        js_free(source);
-    source = nullptr;
-    xdr.clearAndFree();
-
-    state = IDLE;
+    state = CANCELLED;
 }
 
 void
-OffThreadState::markDone(void* newToken)
+OffThreadJob::markDone(void* newToken)
 {
     AutoLockMonitor alm(monitor);
-    MOZ_ASSERT(state == COMPILING);
+    MOZ_ASSERT(state == RUNNING);
     MOZ_ASSERT(!token);
-    MOZ_ASSERT(source || !xdr.empty());
     MOZ_ASSERT(newToken);
 
     token = newToken;
     state = DONE;
-    alm.notify();
+    alm.notifyAll();
 }
 
 void*
-OffThreadState::waitUntilDone(JSContext* cx, ScriptKind kind)
+OffThreadJob::waitUntilDone(JSContext* cx)
 {
     AutoLockMonitor alm(monitor);
-    if (state == IDLE || cx->runtime() != runtime || scriptKind != kind)
-        return nullptr;
+    MOZ_ASSERT(state != CANCELLED);
 
-    if (state == COMPILING) {
-        while (state != DONE)
-            alm.wait();
-    }
-
-    MOZ_ASSERT(source || !xdr.empty());
-    if (source)
-        js_free(source);
-    source = nullptr;
-    xdr.clearAndFree();
+    while (state != DONE)
+        alm.wait();
 
     MOZ_ASSERT(token);
-    void* holdToken = token;
-    token = nullptr;
-    state = IDLE;
-    return holdToken;
+    return token;
 }
 
 struct ShellCompartmentPrivate {
@@ -505,8 +582,14 @@ ShellContext::ShellContext(JSContext* cx)
     quitting(false),
     readLineBufPos(0),
     errFilePtr(nullptr),
-    outFilePtr(nullptr)
+    outFilePtr(nullptr),
+    offThreadMonitor(mutexid::ShellOffThreadState)
 {}
+
+ShellContext::~ShellContext()
+{
+    MOZ_ASSERT(offThreadJobs.empty());
+}
 
 ShellContext*
 js::shell::GetShellContext(JSContext* cx)
@@ -3597,6 +3680,7 @@ WorkerMain(void* arg)
         return;
 
     auto guard = mozilla::MakeScopeExit([&] {
+        CancelAllOffThreadJobs(cx);
         JS_DestroyContext(cx);
         js_delete(sc);
         if (input->siblingContext) {
@@ -4564,7 +4648,8 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
 static void
 OffThreadCompileScriptCallback(void* token, void* callbackData)
 {
-    gOffThreadState->markDone(token);
+    auto job = static_cast<OffThreadJob*>(callbackData);
+    job->markDone(token);
 }
 
 static bool
@@ -4619,21 +4704,19 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     size_t length = scriptContents->length();
-    const char16_t* chars = stableChars.twoByteRange().begin().get();
+    const char16_t* chars = stableChars.twoByteChars();
 
     // Make sure we own the string's chars, so that they are not freed before
     // the compilation is finished.
-    ScopedJSFreePtr<char16_t> ownedChars;
+    UniqueTwoByteChars ownedChars;
     if (stableChars.maybeGiveOwnershipToCaller()) {
-        ownedChars = const_cast<char16_t*>(chars);
+        ownedChars.reset(const_cast<char16_t*>(chars));
     } else {
-        char16_t* copy = cx->pod_malloc<char16_t>(length);
-        if (!copy)
+        ownedChars.reset(cx->pod_malloc<char16_t>(length));
+        if (!ownedChars)
             return false;
 
-        mozilla::PodCopy(copy, chars, length);
-        ownedChars = copy;
-        chars = copy;
+        mozilla::PodCopy(ownedChars.get(), chars, length);
     }
 
     if (!JS::CanCompileOffThread(cx, options, length)) {
@@ -4641,20 +4724,20 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!gOffThreadState->startIfIdle(cx, ScriptKind::Script, ownedChars)) {
-        JS_ReportErrorASCII(cx, "called offThreadCompileScript without calling runOffThreadScript"
-                            " to receive prior off-thread compilation");
+    OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::Script,
+                                        OffThreadJob::Source(Move(ownedChars)));
+    if (!job)
         return false;
-    }
 
-    if (!JS::CompileOffThread(cx, options, chars, length,
-                              OffThreadCompileScriptCallback, nullptr))
+    if (!JS::CompileOffThread(cx, options, job->sourceChars(), length,
+                              OffThreadCompileScriptCallback, job))
     {
-        gOffThreadState->abandon(cx);
+        job->cancel();
+        DeleteOffThreadJob(cx, job);
         return false;
     }
 
-    args.rval().setUndefined();
+    args.rval().setInt32(job->id);
     return true;
 }
 
@@ -4666,11 +4749,14 @@ runOffThreadScript(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    void* token = gOffThreadState->waitUntilDone(cx, ScriptKind::Script);
-    if (!token) {
-        JS_ReportErrorASCII(cx, "called runOffThreadScript when no compilation is pending");
+    OffThreadJob* job = LookupOffThreadJobForArgs(cx, ScriptKind::Script, args, 0);
+    if (!job)
         return false;
-    }
+
+    void* token = job->waitUntilDone(cx);
+    MOZ_ASSERT(token);
+
+    DeleteOffThreadJob(cx, job);
 
     RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
     if (!script)
@@ -4704,21 +4790,19 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     size_t length = scriptContents->length();
-    const char16_t* chars = stableChars.twoByteRange().begin().get();
+    const char16_t* chars = stableChars.twoByteChars();
 
     // Make sure we own the string's chars, so that they are not freed before
     // the compilation is finished.
-    ScopedJSFreePtr<char16_t> ownedChars;
+    UniqueTwoByteChars ownedChars;
     if (stableChars.maybeGiveOwnershipToCaller()) {
-        ownedChars = const_cast<char16_t*>(chars);
+        ownedChars.reset(const_cast<char16_t*>(chars));
     } else {
-        char16_t* copy = cx->pod_malloc<char16_t>(length);
-        if (!copy)
+        ownedChars.reset(cx->pod_malloc<char16_t>(length));
+        if (!ownedChars)
             return false;
 
-        mozilla::PodCopy(copy, chars, length);
-        ownedChars = copy;
-        chars = copy;
+        mozilla::PodCopy(ownedChars.get(), chars, length);
     }
 
     if (!JS::CanCompileOffThread(cx, options, length)) {
@@ -4726,20 +4810,20 @@ OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!gOffThreadState->startIfIdle(cx, ScriptKind::Module, ownedChars)) {
-        JS_ReportErrorASCII(cx, "called offThreadCompileModule without receiving prior off-thread "
-                            "compilation");
+    OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::Module,
+                                        OffThreadJob::Source(Move(ownedChars)));
+    if (!job)
         return false;
-    }
 
-    if (!JS::CompileOffThreadModule(cx, options, chars, length,
-                                    OffThreadCompileScriptCallback, nullptr))
+    if (!JS::CompileOffThreadModule(cx, options, job->sourceChars(), length,
+                                    OffThreadCompileScriptCallback, job))
     {
-        gOffThreadState->abandon(cx);
+        job->cancel();
+        DeleteOffThreadJob(cx, job);
         return false;
     }
 
-    args.rval().setUndefined();
+    args.rval().setInt32(job->id);
     return true;
 }
 
@@ -4751,11 +4835,14 @@ FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    void* token = gOffThreadState->waitUntilDone(cx, ScriptKind::Module);
-    if (!token) {
-        JS_ReportErrorASCII(cx, "called finishOffThreadModule when no compilation is pending");
+    OffThreadJob* job = LookupOffThreadJobForArgs(cx, ScriptKind::Module, args, 0);
+    if (!job)
         return false;
-    }
+
+    void* token = job->waitUntilDone(cx);
+    MOZ_ASSERT(token);
+
+    DeleteOffThreadJob(cx, job);
 
     RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
     if (!module)
@@ -4828,20 +4915,20 @@ OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!gOffThreadState->startIfIdle(cx, ScriptKind::DecodeScript, mozilla::Move(loadBuffer))) {
-        JS_ReportErrorASCII(cx, "called offThreadDecodeScript without calling "
-                            "runOffThreadDecodedScript to receive prior off-thread compilation");
+    OffThreadJob* job = NewOffThreadJob(cx, ScriptKind::DecodeScript,
+                                        OffThreadJob::Source(Move(loadBuffer)));
+    if (!job)
         return false;
-    }
 
-    if (!JS::DecodeOffThreadScript(cx, options, gOffThreadState->xdrBuffer(), 0,
-                                   OffThreadCompileScriptCallback, nullptr))
+    if (!JS::DecodeOffThreadScript(cx, options, job->xdrBuffer(), 0,
+                                   OffThreadCompileScriptCallback, job))
     {
-        gOffThreadState->abandon(cx);
+        job->cancel();
+        DeleteOffThreadJob(cx, job);
         return false;
     }
 
-    args.rval().setUndefined();
+    args.rval().setInt32(job->id);
     return true;
 }
 
@@ -4853,11 +4940,14 @@ runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp)
     if (OffThreadParsingMustWaitForGC(cx->runtime()))
         gc::FinishGC(cx);
 
-    void* token = gOffThreadState->waitUntilDone(cx, ScriptKind::DecodeScript);
-    if (!token) {
-        JS_ReportErrorASCII(cx, "called runOffThreadDecodedScript when no compilation is pending");
+    OffThreadJob* job = LookupOffThreadJobForArgs(cx, ScriptKind::DecodeScript, args, 0);
+    if (!job)
         return false;
-    }
+
+    void* token = job->waitUntilDone(cx);
+    MOZ_ASSERT(token);
+
+    DeleteOffThreadJob(cx, job);
 
     RootedScript script(cx, JS::FinishOffThreadScriptDecoder(cx, token));
     if (!script)
@@ -6858,8 +6948,9 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 
     JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
 "offThreadCompileScript(code[, options])",
-"  Compile |code| on a helper thread. To wait for the compilation to finish\n"
-"  and run the code, call |runOffThreadScript|. If present, |options| may\n"
+"  Compile |code| on a helper thread, returning a job ID.\n"
+"  To wait for the compilation to finish and run the code, call\n"
+"  |runOffThreadScript| passing the job ID. If present, |options| may\n"
 "  have properties saying how the code should be compiled:\n"
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
@@ -6871,36 +6962,39 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "         any DOM element.\n"
 "      elementAttributeName: if present and not undefined, the name of\n"
 "         property of 'element' that holds this code. This is what\n"
-"         Debugger.Source.prototype.elementAttributeName returns.\n"),
+"         Debugger.Source.prototype.elementAttributeName returns."),
 
     JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
-"runOffThreadScript()",
-"  Wait for off-thread compilation to complete. If an error occurred,\n"
+"runOffThreadScript([jobID])",
+"  Wait for an off-thread compilation job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
 "  throw the appropriate exception; otherwise, run the script and return\n"
 "  its value."),
 
     JS_FN_HELP("offThreadCompileModule", OffThreadCompileModule, 1, 0,
 "offThreadCompileModule(code)",
-"  Compile |code| on a helper thread. To wait for the compilation to finish\n"
-"  and get the module object, call |finishOffThreadModule|."),
+"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
+"  compilation to finish and and get the module record object call\n"
+"  |finishOffThreadModule| passing the job ID."),
 
     JS_FN_HELP("finishOffThreadModule", FinishOffThreadModule, 0, 0,
-"finishOffThreadModule()",
-"  Wait for off-thread compilation to complete. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the module object"),
+"finishOffThreadModule([jobID])",
+"  Wait for an off-thread compilation job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, return the module record object."),
 
     JS_FN_HELP("offThreadDecodeScript", OffThreadDecodeScript, 1, 0,
 "offThreadDecodeScript(cacheEntry[, options])",
-"  Decode |code| on a helper thread. To wait for the compilation to finish\n"
-"  and run the code, call |runOffThreadScript|. If present, |options| may\n"
-"  have properties saying how the code should be compiled.\n"
-"  (see also offThreadCompileScript)\n"),
+"  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
+"  decoding to finish and run the code, call |runOffThreadDecodeScript| passing\n"
+"  the job ID. If present, |options| may have properties saying how the code\n"
+"  should be compiled (see also offThreadCompileScript)."),
 
     JS_FN_HELP("runOffThreadDecodedScript", runOffThreadDecodedScript, 0, 0,
-"runOffThreadDecodedScript()",
-"  Wait for off-thread decoding to complete. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, run the script and return\n"
-"  its value."),
+"runOffThreadDecodedScript([jobID])",
+"  Wait for off-thread decoding to complete. The job ID can be ommitted if there\n"
+"  is only one job pending. If an error occurred, throw the appropriate\n"
+"  exception; otherwise, run the script and return its value."),
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
 "timeout([seconds], [func])",
@@ -9121,13 +9215,6 @@ main(int argc, char** argv, char** envp)
     });
     JS::InitConsumeStreamCallback(cx, ConsumeBufferSource);
 
-    gOffThreadState = js_new<OffThreadState>();
-    if (!gOffThreadState)
-        return 1;
-    auto deleteOffThreadState = MakeScopeExit([] {
-        js_delete(gOffThreadState);
-    });
-
     JS_SetNativeStackQuota(cx, gMaxStackSize);
 
     JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
@@ -9179,6 +9266,8 @@ main(int argc, char** argv, char** envp)
     KillWorkerThreads(cx);
 
     DestructSharedArrayBufferMailbox();
+
+    CancelAllOffThreadJobs(cx);
 
     JS_DestroyContext(cx);
     return result;

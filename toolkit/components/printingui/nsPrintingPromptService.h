@@ -31,22 +31,21 @@ class nsIDOMWindow;
 class nsIDialogParamBlock;
 #endif
 
-class nsPrintingPromptService
+class nsPrintingPromptService final
   : public nsIPrintingPromptService
   , public nsIWebProgressListener
 {
-
 public:
-  nsPrintingPromptService();
-
-  nsresult Init();
+  static already_AddRefed<nsPrintingPromptService> GetSingleton();
 
   NS_DECL_NSIPRINTINGPROMPTSERVICE
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_ISUPPORTS
 
 protected:
+  nsPrintingPromptService();
   virtual ~nsPrintingPromptService();
+  nsresult Init();
 
 private:
 #if !defined(XP_MACOSX)

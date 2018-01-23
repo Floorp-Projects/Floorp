@@ -30,6 +30,11 @@ const HACL_GEN_IMAGE = {
   path: "automation/taskcluster/docker-hacl"
 };
 
+const SAW_IMAGE = {
+  name: "saw",
+  path: "automation/taskcluster/docker-saw"
+};
+
 const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
     "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
@@ -988,6 +993,57 @@ async function scheduleTools() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/run_hacl.sh"
+    ]
+  }));
+
+  let task_saw = queue.scheduleTask(merge(base, {
+    symbol: "B",
+    group: "SAW",
+    name: "LLVM bitcode build (32 bit)",
+    image: SAW_IMAGE,
+    kind: "build",
+    env: {
+      AR: "llvm-ar-3.8",
+      CC: "clang-3.8",
+      CCC: "clang++-3.8"
+    },
+    artifacts: {
+      public: {
+        expires: 24 * 7,
+        type: "directory",
+        path: "/home/worker/artifacts"
+      }
+    },
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh --disable-tests --emit-llvm -m32"
+    ]
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_saw,
+    symbol: "bmul",
+    group: "SAW",
+    name: "bmul.saw",
+    image: SAW_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh bmul"
+    ]
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_saw,
+    symbol: "ChaCha20",
+    group: "SAW",
+    name: "chacha20.saw",
+    image: SAW_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh chacha20"
     ]
   }));
 

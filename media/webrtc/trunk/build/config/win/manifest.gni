@@ -1,0 +1,191 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# HOW MANIFESTS WORK IN THE GN BUILD
+#
+# Use the windows_manifest template to declare a manifest generation step.
+# This will combine all listed .manifest files and generate a resource file
+# referencing the resulting manifest. To link this manifest, just depend on
+# the manifest target from your executable or shared library.
+#
+# This will define an empty placeholder target on non-Windows platforms so
+# the manifest declarations and dependencies do not need to be inside of OS
+# conditionals.
+#
+# Manifests uses different resource IDs for EXE and DLL targets. You will need
+# to specify this in the manifest target declaration and only use that manifest
+# target from the correct type of binary target.
+#
+# A binary can depend on only one manifest target, but the manifest target
+# can depend on many individual .manifest files which will be merged. As a
+# result, only executables and shared libraries should depend on manifest
+# targets. If you want to add a manifest to a component, put the dependency
+# behind a "if (is_component_build)" conditional.
+#
+# Generally you will just want the defaults for the Chrome build. In this case
+# the binary should just depend on one of the targets in //build/win/. There
+# are also individual manifest files in that directory you can reference via
+# the *_manifest variables defined below to pick and choose only some defaults.
+# You might combine these with a custom manifest file to get specific behavior.
+
+# Reference this manifest as a source from windows_manifest targets to get
+# the default Chrome OS compatibility list.
+default_compatibility_manifest = "//build/win/compatibility.manifest"
+
+# Reference this manifest as a source from windows_manifest targets to get
+# the default Chrome common constrols compatibility.
+common_controls_manifest = "//build/win/common_controls.manifest"
+
+# Reference this manifest to request that Windows not perform any elevation
+# when running your program. Otherwise, it might do some autodetection and
+# request elevated privileges from the user. This is normally what you want.
+as_invoker_manifest = "//build/win/as_invoker.manifest"
+
+# An alternative to as_invoker_manifest when you want the application to always
+# elevate.
+require_administrator_manifest = "//build/win/require_administrator.manifest"
+
+# Construct a target to combine the given manifest files into a .rc file.
+#
+# Variables for the windows_manifest template:
+#
+#   sources: (required)
+#     List of source .manifest files to add.
+#
+#   type: "dll" or "exe" (required)
+#     Indicates the type of target that this manifest will be used for.
+#     DLLs and EXEs have different manifest resource IDs.
+#
+#   deps: (optional)
+#   visibility: (optional)
+#     Normal meaning.
+#
+# Example:
+#
+#   windows_manifest("doom_melon_manifest") {
+#     sources = [
+#       "doom_melon.manifest",   # Custom values in here.
+#       default_compatibility_manifest,  # Want the normal OS compat list.
+#     ]
+#     type = "exe"
+#   }
+#
+#   executable("doom_melon") {
+#     deps = [ ":doom_melon_manifest" ]
+#     ...
+#   }
+
+if (is_win) {
+  # This is the environment file that tool_wrapper.py will use for the current
+  # toolchain. It is placed in root_build_dir by the toolchain setup. This
+  # variable is the path relative to the root_build_dir which is what
+  # tool_wrapper.py expects as an argument.
+  _environment_file = "environment.$current_cpu"
+
+  template("windows_manifest") {
+    manifest_action_name = "${target_name}__gen_manifest"
+    rc_action_name = "${target_name}__gen_rc"
+    source_set_name = target_name
+
+    output_manifest = "$target_gen_dir/$source_set_name.manifest"
+    rcfile = "$output_manifest.rc"
+
+    # Make the final .manifest file.
+    action(manifest_action_name) {
+      visibility = [
+        ":$source_set_name",
+        ":$rc_action_name",
+      ]
+
+      script = "//build/toolchain/win/tool_wrapper.py"
+
+      assert(defined(invoker.sources),
+             "\"sources\" must be defined for a windows_manifest target")
+      inputs = invoker.sources
+
+      outputs = [
+        output_manifest,
+      ]
+
+      args = [
+        "manifest-wrapper",
+        _environment_file,
+        "mt.exe",
+        "-nologo",
+        "-manifest",
+      ]
+      args += rebase_path(invoker.sources, root_build_dir)
+      args += [ "-out:" + rebase_path(output_manifest, root_build_dir) ]
+
+      # Apply any dependencies from the invoker to this target, since those
+      # dependencies may have created the input manifest files.
+      forward_variables_from(invoker, [ "deps" ])
+    }
+
+    # Make the .rc file that references the final manifest file.
+    #
+    # This could easily be combined into one step, but this current separation
+    # of .manifest and .rc matches GYP and allows us to re-use tool_wrapper.py.
+    action(rc_action_name) {
+      visibility = [ ":$source_set_name" ]
+
+      script = "//build/toolchain/win/tool_wrapper.py"
+
+      outputs = [
+        rcfile,
+      ]
+
+      # EXEs have a resource ID of 1 for their manifest, DLLs use 2.
+      assert(defined(invoker.type),
+             "\"type\" must be defined for a windows_manifest")
+      if (invoker.type == "exe") {
+        manifest_resource_id = "1"
+      } else if (invoker.type == "dll") {
+        manifest_resource_id = "2"
+      } else {
+        assert(false, "Bad value of \"type\", Must be \"exe\" or \"dll\"")
+      }
+
+      args = [
+        "manifest-to-rc",
+        "$_environment_file",
+        rebase_path(output_manifest),
+        rebase_path(rcfile, root_build_dir),
+        manifest_resource_id,
+      ]
+
+      # Although generating this file doesn't technically depend on the
+      # generated manifest, this dependency causes the .rc timestamp to be
+      # updated every time the manifest is updated. Otherwise, updating the
+      # manifest will not cause a recompilation of the .rc file.
+      deps = [
+        ":$manifest_action_name",
+      ]
+    }
+
+    # This source set only exists to compile and link the resource file.
+    source_set(source_set_name) {
+      forward_variables_from(invoker, [ "visibility" ])
+      sources = [
+        rcfile,
+      ]
+      deps = [
+        ":$manifest_action_name",
+        ":$rc_action_name",
+      ]
+    }
+  }
+} else {
+  # Make a no-op group on non-Windows platforms so windows_manifest
+  # instantiations don't need to be inside windows blocks.
+  template("windows_manifest") {
+    group(target_name) {
+      # Prevent unused variable warnings on non-Windows platforms.
+      assert(invoker.type == "exe" || invoker.type == "dll")
+      assert(invoker.sources != "")
+      assert(!defined(invoker.deps) || invoker.deps != "")
+      assert(!defined(invoker.visibility) || invoker.visibility != "")
+    }
+  }
+}

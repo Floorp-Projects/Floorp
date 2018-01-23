@@ -2529,7 +2529,7 @@ GetCorrespondingNodeInDocument(const nsINode* aNode, nsIDocument* aDoc)
   nsTArray<int32_t> indexArray;
   const nsINode* child = aNode;
   while (const nsINode* parent = child->GetParentNode()) {
-    int32_t index = parent->IndexOf(child);
+    int32_t index = parent->ComputeIndexOf(child);
     MOZ_ASSERT(index >= 0);
     indexArray.AppendElement(index);
     child = parent;

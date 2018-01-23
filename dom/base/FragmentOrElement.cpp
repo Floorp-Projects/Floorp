@@ -554,7 +554,7 @@ int32_t
 nsAttrChildContentList::IndexOf(nsIContent* aContent)
 {
   if (mNode) {
-    return mNode->IndexOf(aContent);
+    return mNode->ComputeIndexOf(aContent);
   }
 
   return -1;
@@ -1157,9 +1157,9 @@ nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 }
 
 nsresult
-FragmentOrElement::InsertChildAt(nsIContent* aKid,
-                                uint32_t aIndex,
-                                bool aNotify)
+FragmentOrElement::InsertChildAt_Deprecated(nsIContent* aKid,
+                                            uint32_t aIndex,
+                                            bool aNotify)
 {
   NS_PRECONDITION(aKid, "null ptr");
 
@@ -1182,7 +1182,7 @@ FragmentOrElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
 {
   // Let's keep the node alive.
   nsCOMPtr<nsIContent> kungFuDeathGrip = aKid;
-  doRemoveChildAt(IndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
+  doRemoveChildAt(ComputeIndexOf(aKid), aNotify, aKid, mAttrsAndChildren);
 }
 
 void
@@ -2140,7 +2140,7 @@ FragmentOrElement::GetChildAt_Deprecated(uint32_t aIndex) const
 }
 
 int32_t
-FragmentOrElement::IndexOf(const nsINode* aPossibleChild) const
+FragmentOrElement::ComputeIndexOf(const nsINode* aPossibleChild) const
 {
   return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }

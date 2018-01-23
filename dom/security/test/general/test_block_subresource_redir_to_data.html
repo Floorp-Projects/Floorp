@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1428793: Block insecure redirects to data: URIs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script id="testScriptRedirectToData"></script>
+<script id="testModuleScriptRedirectToData" type="module"></script>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+const NUM_TESTS = 3;
+
+var testCounter = 0;
+function checkFinish() {
+  testCounter++;
+  if (testCounter === NUM_TESTS) {
+    SimpleTest.finish();
+  }
+}
+
+// --- test regular scripts
+let testScriptRedirectToData = document.getElementById("testScriptRedirectToData");
+testScriptRedirectToData.onerror = function() {
+  ok(true, "script that redirects to data: URI should not load");
+  checkFinish();
+}
+testScriptRedirectToData.onload = function() {
+  ok(false, "script that redirects to data: URI should not load");
+  checkFinish();
+}
+testScriptRedirectToData.src = "file_block_subresource_redir_to_data.sjs?script";
+
+// --- test workers
+let worker = new Worker("file_block_subresource_redir_to_data.sjs?worker");
+worker.onerror = function() {
+  // please note that workers need to be same origin, hence the data: URI
+  // redirect is blocked by worker code and not the content security manager!
+  ok(true, "worker script that redirects to data: URI should not load");
+  checkFinish();
+}
+worker.onmessage = function() {
+  ok(false, "worker script that redirects to data: URI should not load");
+  checkFinish();
+};
+worker.postMessage("dummy");
+
+// --- test script modules
+SpecialPowers.pushPrefEnv({set: [["dom.moduleScripts.enabled", true]]}, function() {
+  let testModuleScriptRedirectToData = document.getElementById("testModuleScriptRedirectToData");
+  testModuleScriptRedirectToData.onerror = function() {
+    ok(true, "module script that redirects to data: URI should not load");
+    checkFinish();
+  }
+  testModuleScriptRedirectToData.onload = function() {
+    ok(false, "module script that redirects to data: URI should not load");
+    checkFinish();
+  }
+  testModuleScriptRedirectToData.src = "file_block_subresource_redir_to_data.sjs?modulescript";
+});
+
+</script>
+</body>
+</html>

@@ -119,13 +119,12 @@ ssl_CheckConfigSanity(sslSocket *ss)
 SECStatus
 ssl_BeginClientHandshake(sslSocket *ss)
 {
-    sslSessionID *sid;
+    sslSessionID *sid = NULL;
     SECStatus rv;
 
     PORT_Assert(ss->opt.noLocks || ssl_Have1stHandshakeLock(ss));
 
     ss->sec.isServer = PR_FALSE;
-    ssl_ChooseSessionIDProcs(&ss->sec);
 
     rv = ssl_CheckConfigSanity(ss);
     if (rv != SECSuccess)
@@ -156,19 +155,22 @@ ssl_BeginClientHandshake(sslSocket *ss)
 
     SSL_TRC(3, ("%d: SSL[%d]: sending client-hello", SSL_GETPID(), ss->fd));
 
-    /* Try to find server in our session-id cache */
-    if (ss->opt.noCache) {
-        sid = NULL;
-    } else {
+    /* If there's an sid set from an external cache, use it. */
+    if (ss->sec.ci.sid && ss->sec.ci.sid->cached == in_external_cache) {
+        sid = ss->sec.ci.sid;
+        SSL_TRC(3, ("%d: SSL[%d]: using external token", SSL_GETPID(), ss->fd));
+    } else if (!ss->opt.noCache) {
+        /* Try to find server in our session-id cache */
         sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID,
                             ss->url);
     }
+
     if (sid) {
         if (sid->version >= ss->vrange.min && sid->version <= ss->vrange.max) {
             PORT_Assert(!ss->sec.localCert);
             ss->sec.localCert = CERT_DupCertificate(sid->localCert);
         } else {
-            ss->sec.uncache(sid);
+            ssl_UncacheSessionID(ss);
             ssl_FreeSID(sid);
             sid = NULL;
         }
@@ -218,7 +220,6 @@ ssl_BeginServerHandshake(sslSocket *ss)
 
     ss->sec.isServer = PR_TRUE;
     ss->ssl3.hs.ws = wait_client_hello;
-    ssl_ChooseSessionIDProcs(&ss->sec);
 
     rv = ssl_CheckConfigSanity(ss);
     if (rv != SECSuccess)

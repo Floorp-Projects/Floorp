@@ -5,12 +5,16 @@
 
 #include "nsPrintingPromptService.h"
 
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
 #include "nsIPrintDialogService.h"
 #include "nsPIDOMWindow.h"
+#include "nsXULAppAPI.h"
 
 // Printing Progress Includes
 #if !defined(XP_MACOSX)
@@ -23,9 +27,30 @@ static const char* kPrtPrvProgressDialogURL =
   "chrome://global/content/printPreviewProgress.xul";
 #endif
 
+using namespace mozilla;
+
 NS_IMPL_ISUPPORTS(nsPrintingPromptService,
                   nsIPrintingPromptService,
                   nsIWebProgressListener)
+
+
+StaticRefPtr<nsPrintingPromptService> sSingleton;
+
+/* static */ already_AddRefed<nsPrintingPromptService>
+nsPrintingPromptService::GetSingleton()
+{
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "The content process must use nsPrintingProxy");
+
+  if (!sSingleton) {
+    sSingleton = new nsPrintingPromptService();
+    sSingleton->Init();
+    ClearOnShutdown(&sSingleton);
+  }
+
+  return do_AddRef(sSingleton);
+}
+
 
 nsPrintingPromptService::nsPrintingPromptService() = default;
 
