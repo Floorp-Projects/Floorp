@@ -2975,6 +2975,11 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
+  // FIXME(emilio): In the servo case it should suffice to do something like:
+  //
+  // return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
+  //
+  // at least in the case the element is part of the flattened tree...
   AutoTArray<Element*, 10> elementsToCheck;
   // Style and layout work on the flattened tree, so this is what we need to
   // check in order to figure out whether we're in a display: none subtree.
@@ -3005,8 +3010,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
             element, CSSPseudoElementType::NotPseudo);
       }
     } else {
-      sc = nsComputedDOMStyle::GetStyleContextNoFlush(element,
-                                                      nullptr, aPresShell);
+      sc = nsComputedDOMStyle::GetStyleContextNoFlush(element, nullptr);
     }
     if (sc->StyleDisplay()->mDisplay == StyleDisplay::None) {
       return true;

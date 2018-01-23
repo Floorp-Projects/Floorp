@@ -1085,7 +1085,7 @@ Accessible::NativeAttributes()
 
   // CSS style based object attributes.
   nsAutoString value;
-  StyleInfo styleInfo(mContent->AsElement(), mDoc->PresShell());
+  StyleInfo styleInfo(mContent->AsElement());
 
   // Expose 'display' attribute.
   styleInfo.Display(value);

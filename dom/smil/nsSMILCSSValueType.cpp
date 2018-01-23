@@ -787,8 +787,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
   }
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr,
-                                        presContext->PresShell());
+    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr);
   if (!styleContext) {
     return;
   }

@@ -2727,12 +2727,8 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  RefPtr<nsStyleContext> styleContext;
-  nsIDocument* doc = element->GetComposedDoc();
-  if (doc && doc->GetShell()) {
-    styleContext =
-      nsComputedDOMStyle::GetStyleContext(element, nullptr, doc->GetShell());
-  }
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContext(element, nullptr);
   *aResult = v1.ComputeDistance(property, v2, styleContext);
   return NS_OK;
 }
@@ -2814,8 +2810,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
     case FLUSH_NONE:
       break;
     case FLUSH_STYLE: {
-      nsIDocument* doc = element->GetComposedDoc();
-      if (doc) {
+      if (nsIDocument* doc = element->GetComposedDoc()) {
         doc->FlushPendingNotifications(FlushType::Style);
       }
       break;
@@ -2831,8 +2826,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
 
   RefPtr<nsAtom> pseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(element,
-                                                         pseudo, shell);
+    nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(element, pseudo);
   if (!styleContext) {
     return NS_ERROR_FAILURE;
   }

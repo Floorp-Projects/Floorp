@@ -4254,8 +4254,7 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   }
   if (content && content->IsElement()) {
     elementStyle =
-      nsComputedDOMStyle::GetStyleContextNoFlush(content->AsElement(),
-                                                 nullptr, ps);
+      nsComputedDOMStyle::GetStyleContextNoFlush(content->AsElement(), nullptr);
   }
 
   if (!elementStyle) {

@@ -98,18 +98,16 @@ public:
 
   static already_AddRefed<nsStyleContext>
   GetStyleContext(mozilla::dom::Element* aElement, nsAtom* aPseudo,
-                  nsIPresShell* aPresShell,
                   StyleType aStyleType = eAll);
 
   static already_AddRefed<nsStyleContext>
   GetStyleContextNoFlush(mozilla::dom::Element* aElement,
                          nsAtom* aPseudo,
-                         nsIPresShell* aPresShell,
                          StyleType aStyleType = eAll)
   {
     return DoGetStyleContextNoFlush(aElement,
                                     aPseudo,
-                                    aPresShell,
+                                    aElement->OwnerDoc()->GetShell(),
                                     aStyleType,
                                     eWithAnimation);
   }
@@ -117,12 +115,11 @@ public:
   static already_AddRefed<nsStyleContext>
   GetUnanimatedStyleContextNoFlush(mozilla::dom::Element* aElement,
                                    nsAtom* aPseudo,
-                                   nsIPresShell* aPresShell,
                                    StyleType aStyleType = eAll)
   {
     return DoGetStyleContextNoFlush(aElement,
                                     aPseudo,
-                                    aPresShell,
+                                    aElement->OwnerDoc()->GetShell(),
                                     aStyleType,
                                     eWithoutAnimation);
   }

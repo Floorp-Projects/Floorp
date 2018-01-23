@@ -536,15 +536,14 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
   bool isXULorPluginElement = (IsXULElement() ||
                                IsHTMLElement(nsGkAtoms::object) ||
                                IsHTMLElement(nsGkAtoms::embed));
-  nsIPresShell* shell = aDocument->GetShell();
-  if (!shell || GetPrimaryFrame() || !isXULorPluginElement) {
+  if (!aDocument->GetShell() || GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
     return true;
   }
 
   // Get the computed -moz-binding directly from the style context
   RefPtr<nsStyleContext> sc =
-    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr, shell);
+    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr);
   NS_ENSURE_TRUE(sc, false);
 
   NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
@@ -559,14 +558,8 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
     return nullptr;
   }
 
-  nsIDocument* doc;
-  if (HasFlag(NODE_FORCE_XBL_BINDINGS)) {
-    doc = OwnerDoc();
-  }
-  else {
-    doc = GetComposedDoc();
-  }
-
+  nsIDocument* doc =
+    HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
   if (!doc) {
     // There's no baseclass that cares about this call so we just
     // return here.
@@ -1535,7 +1528,7 @@ Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
   auto IsDisplayGrid = [](Element* aElement) -> bool
   {
     RefPtr<nsStyleContext> styleContext =
-      nsComputedDOMStyle::GetStyleContext(aElement, nullptr, nullptr);
+      nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
     if (styleContext) {
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       return (display->mDisplay == StyleDisplay::Grid ||

@@ -180,7 +180,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     styleContext = aStyleContext;
   } else {
     styleContext =
-      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
+      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
   }
 
   if (!styleContext) {
@@ -253,7 +253,7 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
     styleContext = aStyleContext;
   } else {
     styleContext =
-      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
+      nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
   }
 
   if (!styleContext) {
@@ -276,7 +276,7 @@ SVGContentUtils::GetFontSize(Element *aElement)
     return 1.0f;
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
   if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
@@ -313,7 +313,7 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
     return 1.0f;
 
   RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr, nullptr);
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
   if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
