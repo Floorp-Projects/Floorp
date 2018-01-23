@@ -1363,13 +1363,17 @@ SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow)
 /* static */ guint32
 nsWindow::GetLastUserInputTime()
 {
-    // gdk_x11_display_get_user_time tracks button and key presses,
-    // DESKTOP_STARTUP_ID used to start the app, drop events from external
-    // drags, WM_DELETE_WINDOW delete events, but not usually mouse motion nor
+    // gdk_x11_display_get_user_time/gtk_get_current_event_time tracks
+    // button and key presses, DESKTOP_STARTUP_ID used to start the app,
+    // drop events from external drags,
+    // WM_DELETE_WINDOW delete events, but not usually mouse motion nor
     // button and key releases.  Therefore use the most recent of
     // gdk_x11_display_get_user_time and the last time that we have seen.
-    guint32 timestamp =
-            gdk_x11_display_get_user_time(gdk_display_get_default());
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    guint32 timestamp = GDK_IS_X11_DISPLAY(gdkDisplay) ?
+            gdk_x11_display_get_user_time(gdkDisplay) :
+            gtk_get_current_event_time();
+
     if (sLastUserInputTime != GDK_CURRENT_TIME &&
         TimestampIsNewerThan(sLastUserInputTime, timestamp)) {
         return sLastUserInputTime;
