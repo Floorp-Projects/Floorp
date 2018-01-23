@@ -611,12 +611,6 @@ interface nsINavBookmarksService : nsISupports
   long long getFolderIdForItem(in long long aItemId);
 
   /**
-   * Returns the list of bookmark ids that contain the given URI.
-   */
-  void getBookmarkIdsForURI(in nsIURI aURI, [optional] out unsigned long count,
-                            [array, retval, size_is(count)] out long long bookmarks);
-
-  /**
    * Associates the given keyword with the given bookmark.
    *
    * Use an empty keyword to clear the keyword associated with the URI.
