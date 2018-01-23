@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="multiple_masters">Multiple Masters</h1>
 <h2>Synopsis</h2>
@@ -112,7 +112,8 @@
 <tr><td><a href="#FT_MM_Var">FT_MM_Var</a></td><td><a href="#FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></td></tr>
 <tr><td><a href="#FT_Get_Multi_Master">FT_Get_Multi_Master</a></td><td><a href="#FT_Get_Var_Blend_Coordinates">FT_Get_Var_Blend_Coordinates</a></td></tr>
 <tr><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td><td><a href="#FT_VAR_AXIS_FLAG_XXX">FT_VAR_AXIS_FLAG_XXX</a></td></tr>
-<tr><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td><td><a href="#FT_Get_Var_Axis_Flags">FT_Get_Var_Axis_Flags</a></td></tr>
+<tr><td><a href="#FT_Done_MM_Var">FT_Done_MM_Var</a></td><td><a href="#FT_Get_Var_Axis_Flags">FT_Get_Var_Axis_Flags</a></td></tr>
+<tr><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td><td><a href="#FT_Set_Named_Instance">FT_Set_Named_Instance</a></td></tr>
 </table>
 
 
@@ -358,7 +359,31 @@
 <h4>output</h4>
 <table class="fields">
 <tr><td class="val" id="amaster">amaster</td><td class="desc">
-<p>The variation descriptor. Allocates a data structure, which the user must deallocate with &lsquo;free&rsquo; after use.</p>
+<p>The variation descriptor. Allocates a data structure, which the user must deallocate with a call to <a href="ft2-multiple_masters.html#FT_Done_MM_Var">FT_Done_MM_Var</a> after use.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+<p>FreeType error code. 0&nbsp;means success.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_Done_MM_Var">FT_Done_MM_Var</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Done_MM_Var</b>( <a href="ft2-base_interface.html#FT_Library">FT_Library</a>   library,
+                  <a href="ft2-multiple_masters.html#FT_MM_Var">FT_MM_Var</a>   *amaster );
+</pre>
+
+<p>Free the memory allocated by <a href="ft2-multiple_masters.html#FT_Get_MM_Var">FT_Get_MM_Var</a>.</p>
+
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="library">library</td><td class="desc">
+<p>A handle of the face's parent library object that was used in the call to <a href="ft2-multiple_masters.html#FT_Get_MM_Var">FT_Get_MM_Var</a> to create &lsquo;amaster&rsquo;.</p>
 </td></tr>
 </table>
 
@@ -402,7 +427,8 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 
 <h4>note</h4>
-<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
+<p>[Since 2.8.1] To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL.</p>
+<p>[Since 2.9] If &lsquo;num_coords&rsquo; is larger than zero, this function sets the <a href="ft2-base_interface.html#FT_FACE_FLAG_XXX">FT_FACE_FLAG_VARIATION</a> bit in <a href="ft2-base_interface.html#FT_Face">FT_Face</a>'s &lsquo;face_flags&rsquo; field (i.e., <a href="ft2-base_interface.html#FT_IS_VARIATION">FT_IS_VARIATION</a> will return true). If &lsquo;num_coords&rsquo; is zero, this bit flag gets unset.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -441,7 +467,8 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 
 <h4>note</h4>
-<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
+<p>[Since 2.8.1] To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL. [Since 2.9] &lsquo;Default values&rsquo; means the currently selected named instance (or the base font if no named instance is selected).</p>
+<p>[Since 2.9] If &lsquo;num_coords&rsquo; is larger than zero, this function sets the <a href="ft2-base_interface.html#FT_FACE_FLAG_XXX">FT_FACE_FLAG_VARIATION</a> bit in <a href="ft2-base_interface.html#FT_Face">FT_Face</a>'s &lsquo;face_flags&rsquo; field (i.e., <a href="ft2-base_interface.html#FT_IS_VARIATION">FT_IS_VARIATION</a> will return true). If &lsquo;num_coords&rsquo; is zero, this bit flag gets unset.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -478,6 +505,9 @@
 
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
+
+<h4>since</h4>
+<p>2.7.1</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -516,7 +546,8 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 
 <h4>note</h4>
-<p>To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL (new feature in FreeType version 2.8.1).</p>
+<p>[Since 2.8.1] To reset all axes to the default values, call the function with &lsquo;num_coords&rsquo; set to zero and &lsquo;coords&rsquo; set to NULL. [Since 2.9] &lsquo;Default values&rsquo; means the currently selected named instance (or the base font if no named instance is selected).</p>
+<p>[Since 2.9] If &lsquo;num_coords&rsquo; is larger than zero, this function sets the <a href="ft2-base_interface.html#FT_FACE_FLAG_XXX">FT_FACE_FLAG_VARIATION</a> bit in <a href="ft2-base_interface.html#FT_Face">FT_Face</a>'s &lsquo;face_flags&rsquo; field (i.e., <a href="ft2-base_interface.html#FT_IS_VARIATION">FT_IS_VARIATION</a> will return true). If &lsquo;num_coords&rsquo; is zero, this bit flag gets unset.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -554,6 +585,9 @@
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
 
+<h4>since</h4>
+<p>2.7.1</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
@@ -584,6 +618,9 @@
 
 <p>This is another name of <a href="ft2-multiple_masters.html#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a>.</p>
 
+<h4>since</h4>
+<p>2.7.1</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
@@ -602,6 +639,9 @@
 <p>The variation axis should not be exposed to user interfaces.</p>
 </td></tr>
 </table>
+
+<h4>since</h4>
+<p>2.8.1</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -638,6 +678,43 @@
 
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
+
+<h4>since</h4>
+<p>2.8.1</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_Set_Named_Instance">FT_Set_Named_Instance</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Set_Named_Instance</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face,
+                         <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>  instance_index );
+</pre>
+
+<p>Set or change the current named instance.</p>
+
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to the source face.</p>
+</td></tr>
+<tr><td class="val" id="instance_index">instance_index</td><td class="desc">
+<p>The index of the requested instance, starting with value 1. If set to value 0, FreeType switches to font access without a named instance.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+<p>FreeType error code. 0&nbsp;means success.</p>
+
+<h4>note</h4>
+<p>The function uses the value of &lsquo;instance_index&rsquo; to set bits 16-30 of the face's &lsquo;face_index&rsquo; field. It also resets any variation applied to the font, and the <a href="ft2-base_interface.html#FT_FACE_FLAG_XXX">FT_FACE_FLAG_VARIATION</a> bit of the face's &lsquo;face_flags&rsquo; field gets reset to zero (i.e., <a href="ft2-base_interface.html#FT_IS_VARIATION">FT_IS_VARIATION</a> will return false).</p>
+<p>For Adobe MM fonts (which don't have named instances) this function simply resets the current face to the default instance.</p>
+
+<h4>since</h4>
+<p>2.9</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

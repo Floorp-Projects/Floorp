@@ -16,7 +16,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -33,7 +33,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281MT.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29MT.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -50,7 +50,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281ST.lib" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29ST.lib" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -67,7 +67,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -84,7 +84,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281ST_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29ST_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -101,7 +101,7 @@
       <Tool Name="VCManagedResourceCompilerTool" />
       <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
       <Tool Name="VCPreLinkEventTool" />
-      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype281MT_D.lib" SuppressStartupBanner="true" />
+      <Tool Name="VCLibrarianTool" OutputFile="..\..\..\objs\win32\vc2005\freetype29MT_D.lib" SuppressStartupBanner="true" />
       <Tool Name="VCALinkTool" />
       <Tool Name="VCXDCMakeTool" />
       <Tool Name="VCBscMakeTool" />
@@ -344,7 +344,11 @@
         </FileConfiguration>
       </File>
       <Filter Name="FT_MODULES">
+        <File RelativePath="..\..\..\src\base\ftbdf.c">
+        </File>
         <File RelativePath="..\..\..\src\base\ftbbox.c">
+        </File>
+        <File RelativePath="..\..\..\src\base\ftcid.c">
         </File>
         <File RelativePath="..\..\..\src\base\ftfntfmt.c">
         </File>
