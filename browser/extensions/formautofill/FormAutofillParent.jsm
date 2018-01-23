@@ -443,7 +443,7 @@ FormAutofillParent.prototype = {
             return;
           }
 
-          target.ownerGlobal.openPreferences("panePrivacy",
+          target.ownerGlobal.openPreferences("privacy-address-autofill",
                                              {origin: "autofillDoorhanger"});
         };
       } else {
