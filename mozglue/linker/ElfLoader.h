@@ -219,6 +219,7 @@ protected:
   friend class ElfLoader;
   friend class CustomElf;
   friend class SEGVHandler;
+  friend int __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data);
   virtual BaseElf *AsBaseElf() { return nullptr; }
   virtual SystemElf *AsSystemElf() { return nullptr; }
 
