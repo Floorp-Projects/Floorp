@@ -146,7 +146,7 @@ with Files("tests/WebCryptoAPI/**"):
 with Files("tests/WebIDL/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/XMLHttpRequest/**"):
+with Files("tests/xhr/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/accelerometer/**"):
@@ -474,7 +474,7 @@ with Files("tests/presentation-api/**"):
 with Files("tests/proximity/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
-with Files("tests/quirks-mode/**"):
+with Files("tests/quirks/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/remote-playback/**"):
