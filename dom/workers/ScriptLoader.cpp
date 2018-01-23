@@ -29,6 +29,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsDocShellCID.h"
+#include "nsHostObjectProtocolHandler.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsIPipe.h"
@@ -1259,6 +1260,18 @@ private:
 
       if (chanLoadInfo) {
         mController = chanLoadInfo->GetController();
+      }
+
+      // If we are loading a blob URL we must inherit the controller
+      // from the parent.  This is a bit odd as the blob URL may have
+      // been created in a different context with a different controller.
+      // For now, though, this is what the spec says.  See:
+      //
+      // https://github.com/w3c/ServiceWorker/issues/1261
+      //
+      if (IsBlobURI(mWorkerPrivate->GetBaseURI())) {
+        MOZ_DIAGNOSTIC_ASSERT(mController.isNothing());
+        mController = mWorkerPrivate->GetParentController();
       }
     }
 
