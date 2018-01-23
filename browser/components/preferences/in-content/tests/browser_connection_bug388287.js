@@ -50,7 +50,7 @@ function test() {
       }
 
       dialog = await openAndLoadSubDialog(connectionURL);
-      dialogClosingPromise = BrowserTestUtils.waitForEvent(dialog.document.documentElement, "dialogclosing");
+      dialogClosingPromise = waitForEvent(dialog.document.documentElement, "dialogclosing");
 
       doc = dialog.document;
       proxyTypePref = dialog.Preferences.get("network.proxy.type");

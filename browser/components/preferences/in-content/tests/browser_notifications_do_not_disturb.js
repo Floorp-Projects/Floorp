@@ -33,12 +33,12 @@ add_task(async function() {
   ok(!checkbox.checked, "Checkbox should not be checked by default");
   ok(!alertService.manualDoNotDisturb, "Do not disturb should be off by default");
 
-  let checkboxChanged = BrowserTestUtils.waitForEvent(checkbox, "command");
+  let checkboxChanged = waitForEvent(checkbox, "command");
   checkbox.click();
   await checkboxChanged;
   ok(alertService.manualDoNotDisturb, "Do not disturb should be enabled when checked");
 
-  checkboxChanged = BrowserTestUtils.waitForEvent(checkbox, "command");
+  checkboxChanged = waitForEvent(checkbox, "command");
   checkbox.click();
   await checkboxChanged;
   ok(!alertService.manualDoNotDisturb, "Do not disturb should be disabled when unchecked");
