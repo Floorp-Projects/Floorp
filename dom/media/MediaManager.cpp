@@ -53,6 +53,7 @@
 #include "mozilla/media/MediaTaskUtils.h"
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
+#include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "Latency.h"
 #include "nsProxyRelease.h"
 #include "NullPrincipal.h"
@@ -226,8 +227,21 @@ FromCaptureState(CaptureState aState)
   return static_cast<uint16_t>(aState);
 }
 
-class SourceListener : public MediaStreamListener {
+/**
+ * SourceListener has threadsafe refcounting for use across the main, media and
+ * MSG threads. But it has a non-threadsafe SupportsWeakPtr for WeakPtr usage
+ * only from main thread, to ensure that garbage- and cycle-collected objects
+ * don't hold a reference to it during late shutdown.
+ *
+ * There's also a hard reference to the SourceListener through its
+ * SourceStreamListener and the MediaStreamGraph. MediaStreamGraph
+ * clears this on XPCOM_WILL_SHUTDOWN, before MediaManager enters shutdown.
+ */
+class SourceListener : public SupportsWeakPtr<SourceListener> {
 public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SourceListener)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(SourceListener)
+
   SourceListener();
 
   /**
@@ -313,11 +327,12 @@ public:
     return mVideoDeviceState ? mVideoDeviceState->mDevice.get() : nullptr;
   }
 
+  /**
+   * Called on MediaStreamGraph thread when MSG asks us for more data from
+   * input devices.
+   */
   void NotifyPull(MediaStreamGraph* aGraph,
-                  StreamTime aDesiredTime) override;
-
-  void NotifyEvent(MediaStreamGraph* aGraph,
-                   MediaStreamGraphEvent aEvent) override;
+                  StreamTime aDesiredTime);
 
   /**
    * Called on main thread after MediaStreamGraph notifies us that our
@@ -357,6 +372,69 @@ public:
 
 private:
   /**
+   * Wrapper class for the MediaStreamListener part of SourceListener.
+   *
+   * This is required since MediaStreamListener and SupportsWeakPtr
+   * both implement refcounting.
+   */
+  class SourceStreamListener : public MediaStreamListener {
+  public:
+    explicit SourceStreamListener(SourceListener* aSourceListener)
+      : mSourceListener(aSourceListener)
+    {
+    }
+
+    void NotifyPull(MediaStreamGraph* aGraph,
+                    StreamTime aDesiredTime) override
+    {
+      mSourceListener->NotifyPull(aGraph, aDesiredTime);
+    }
+
+    void NotifyEvent(MediaStreamGraph* aGraph,
+                     MediaStreamGraphEvent aEvent) override
+    {
+      nsCOMPtr<nsIEventTarget> target;
+
+      switch (aEvent) {
+        case MediaStreamGraphEvent::EVENT_FINISHED:
+          target = GetMainThreadEventTarget();
+          if (NS_WARN_IF(!target)) {
+            NS_ASSERTION(false, "Mainthread not available; running on current thread");
+            // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
+            MOZ_RELEASE_ASSERT(mSourceListener->mMainThreadCheck == GetCurrentVirtualThread());
+            mSourceListener->NotifyFinished();
+            return;
+          }
+          target->Dispatch(NewRunnableMethod("SourceListener::NotifyFinished",
+                                             mSourceListener,
+                                             &SourceListener::NotifyFinished),
+                           NS_DISPATCH_NORMAL);
+          break;
+        case MediaStreamGraphEvent::EVENT_REMOVED:
+          target = GetMainThreadEventTarget();
+          if (NS_WARN_IF(!target)) {
+            NS_ASSERTION(false, "Mainthread not available; running on current thread");
+            // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
+            MOZ_RELEASE_ASSERT(mSourceListener->mMainThreadCheck == GetCurrentVirtualThread());
+            mSourceListener->NotifyRemoved();
+            return;
+          }
+          target->Dispatch(NewRunnableMethod("SourceListener::NotifyRemoved",
+                                             mSourceListener,
+                                             &SourceListener::NotifyRemoved),
+                           NS_DISPATCH_NORMAL);
+          break;
+        default:
+          break;
+      }
+    }
+  private:
+    RefPtr<SourceListener> mSourceListener;
+  };
+
+  virtual ~SourceListener() = default;
+
+  /**
    * Returns a pointer to the device state for aTrackID.
    *
    * This is intended for internal use where we need to figure out which state
@@ -393,6 +471,7 @@ private:
   UniquePtr<DeviceState> mAudioDeviceState;
   UniquePtr<DeviceState> mVideoDeviceState;
   RefPtr<SourceMediaStream> mStream; // threadsafe refcnt
+  RefPtr<SourceStreamListener> mStreamListener; // threadsafe refcnt
 };
 
 /**
@@ -1136,12 +1215,16 @@ public:
       public:
         LocalTrackSource(nsIPrincipal* aPrincipal,
                          const nsString& aLabel,
-                         SourceListener* aListener,
+                         const RefPtr<SourceListener>& aListener,
                          const MediaSourceEnum aSource,
                          const TrackID aTrackID,
                          const PeerIdentity* aPeerIdentity)
-          : MediaStreamTrackSource(aPrincipal, aLabel), mListener(aListener),
-            mSource(aSource), mTrackID(aTrackID), mPeerIdentity(aPeerIdentity) {}
+          : MediaStreamTrackSource(aPrincipal, aLabel),
+            mListener(aListener.get()),
+            mSource(aSource),
+            mTrackID(aTrackID),
+            mPeerIdentity(aPeerIdentity)
+        {}
 
         MediaSourceEnum GetMediaSource() const override
         {
@@ -1203,7 +1286,12 @@ public:
       protected:
         ~LocalTrackSource() {}
 
-        RefPtr<SourceListener> mListener;
+        // This is a weak pointer to avoid having the SourceListener (which may
+        // have references to threads and threadpools) kept alive by DOM-objects
+        // that may have ref-cycles and thus are released very late during
+        // shutdown, even after xpcom-shutdown-threads. See bug 1351655 for what
+        // can happen.
+        WeakPtr<SourceListener> mListener;
         const MediaSourceEnum mSource;
         const TrackID mTrackID;
         const RefPtr<const PeerIdentity> mPeerIdentity;
@@ -3745,6 +3833,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
 
   mMainThreadCheck = GetCurrentVirtualThread();
   mStream = aStream;
+  mStreamListener = new SourceStreamListener(this);
   if (aAudioDevice) {
     mAudioDeviceState =
       MakeUnique<DeviceState>(
@@ -3761,7 +3850,7 @@ SourceListener::Activate(SourceMediaStream* aStream,
           Preferences::GetBool("media.getusermedia.camera.off_while_disabled.enabled", true));
   }
 
-  mStream->AddListener(this);
+  mStream->AddListener(mStreamListener);
 }
 
 void
@@ -3823,8 +3912,9 @@ SourceListener::Remove()
     // without a listener attached - that wouldn't produce data and would be
     // illegal to the graph.
     mStream->SetPullEnabled(false);
-    mStream->RemoveListener(this);
+    mStream->RemoveListener(mStreamListener);
   }
+  mStreamListener = nullptr;
 }
 
 void
@@ -4084,46 +4174,6 @@ SourceListener::NotifyPull(MediaStreamGraph* aGraph,
 }
 
 void
-SourceListener::NotifyEvent(MediaStreamGraph* aGraph,
-                            MediaStreamGraphEvent aEvent)
-{
-  nsCOMPtr<nsIEventTarget> target;
-
-  switch (aEvent) {
-    case MediaStreamGraphEvent::EVENT_FINISHED:
-      target = GetMainThreadEventTarget();
-      if (NS_WARN_IF(!target)) {
-        NS_ASSERTION(false, "Mainthread not available; running on current thread");
-        // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
-        NotifyFinished();
-        return;
-      }
-      target->Dispatch(NewRunnableMethod("SourceListener::NotifyFinished",
-                                         this,
-                                         &SourceListener::NotifyFinished),
-                       NS_DISPATCH_NORMAL);
-      break;
-    case MediaStreamGraphEvent::EVENT_REMOVED:
-      target = GetMainThreadEventTarget();
-      if (NS_WARN_IF(!target)) {
-        NS_ASSERTION(false, "Mainthread not available; running on current thread");
-        // Ensure this really *was* MainThread (NS_GetCurrentThread won't work)
-        MOZ_RELEASE_ASSERT(mMainThreadCheck == GetCurrentVirtualThread());
-        NotifyRemoved();
-        return;
-      }
-      target->Dispatch(NewRunnableMethod("SourceListener::NotifyRemoved",
-                                         this,
-                                         &SourceListener::NotifyRemoved),
-                       NS_DISPATCH_NORMAL);
-      break;
-    default:
-      break;
-  }
-}
-
-void
 SourceListener::NotifyFinished()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4151,6 +4201,7 @@ SourceListener::NotifyRemoved()
   }
 
   mWindowListener = nullptr;
+  mStreamListener = nullptr;
 }
 
 bool
