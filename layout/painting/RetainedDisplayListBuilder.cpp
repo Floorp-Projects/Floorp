@@ -664,6 +664,8 @@ HandlePreserve3D(nsIFrame* aFrame, nsRect& aOverflow)
   }
   if (last != aFrame) {
     aOverflow = last->GetVisualOverflowRectRelativeToParent();
+    CRR_LOG("HandlePreserve3D() Updated overflow rect to: %d %d %d %d\n",
+             aOverflow.x, aOverflow.y, aOverflow.width, aOverflow.height);
   }
 
   return aFrame;
@@ -678,31 +680,28 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
   nsIFrame* currentFrame = aFrame;
 
   while (currentFrame != aStopAtFrame) {
-    currentFrame = HandlePreserve3D(currentFrame, aOverflow);
+    CRR_LOG("currentFrame: %p (placeholder=%d), aOverflow: %d %d %d %d\n",
+             currentFrame, !aStopAtStackingContext,
+             aOverflow.x, aOverflow.y, aOverflow.width, aOverflow.height);
 
-    // Convert 'aOverflow' into the coordinate space of the nearest stacking context
-    // or display port ancestor and update 'currentFrame' to point to that frame.
-    nsIFrame* previousFrame = currentFrame;
-    aOverflow = nsLayoutUtils::TransformFrameRectToAncestor(currentFrame, aOverflow, aStopAtFrame,
-                                                           nullptr, nullptr,
-                                                           /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
-                                                           &currentFrame);
-    MOZ_ASSERT(currentFrame);
+    currentFrame = HandlePreserve3D(currentFrame, aOverflow);
 
     // If the current frame is an OOF frame, DisplayListBuildingData needs to be
     // set on all the ancestor stacking contexts of the  placeholder frame, up
     // to the containing block of the OOF frame. This is done to ensure that the
     // content that might be behind the OOF frame is built for merging.
-    nsIFrame* placeholder = previousFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
-                          ? previousFrame->GetPlaceholderFrame()
+    nsIFrame* placeholder = currentFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)
+                          ? currentFrame->GetPlaceholderFrame()
                           : nullptr;
 
     if (placeholder) {
+      // The rect aOverflow is in the coordinate space of the containing block.
+      // Convert it to a coordinate space of the placeholder frame.
       nsRect placeholderOverflow =
-        aOverflow + previousFrame->GetOffsetTo(placeholder);
+        aOverflow + currentFrame->GetOffsetTo(placeholder);
 
       CRR_LOG("Processing placeholder %p for OOF frame %p\n",
-              placeholder, previousFrame);
+              placeholder, currentFrame);
 
       CRR_LOG("OOF frame draw area: %d %d %d %d\n",
               placeholderOverflow.x, placeholderOverflow.y,
@@ -716,12 +715,20 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
       // TODO: It might be possible to write a more specific and efficient
       // function for this.
       nsIFrame* ancestor =
-        nsLayoutUtils::FindNearestCommonAncestorFrame(previousFrame->GetParent(),
+        nsLayoutUtils::FindNearestCommonAncestorFrame(currentFrame->GetParent(),
                                                       placeholder->GetParent());
 
       ProcessFrame(placeholder, aBuilder, &dummyAGR, placeholderOverflow,
                    ancestor, aOutFramesWithProps, false);
     }
+
+    // Convert 'aOverflow' into the coordinate space of the nearest stacking context
+    // or display port ancestor and update 'currentFrame' to point to that frame.
+    aOverflow = nsLayoutUtils::TransformFrameRectToAncestor(currentFrame, aOverflow, aStopAtFrame,
+                                                           nullptr, nullptr,
+                                                           /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
+                                                           &currentFrame);
+    MOZ_ASSERT(currentFrame);
 
     if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
