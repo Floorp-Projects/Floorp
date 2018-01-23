@@ -540,7 +540,7 @@ HTMLEditor::BeginningOfDocument()
       done = true;
     } else if (visType == WSType::br || visType == WSType::special) {
       selNode = visNode->GetParentNode();
-      selOffset = selNode ? selNode->IndexOf(visNode) : -1;
+      selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
       done = true;
     } else if (visType == WSType::otherBlock) {
       // By definition of WSRunObject, a block element terminates a
@@ -557,7 +557,7 @@ HTMLEditor::BeginningOfDocument()
         // makes sense if it is visible by itself, like a <hr>.  We want to
         // place the caret in front of that block.
         selNode = visNode->GetParentNode();
-        selOffset = selNode ? selNode->IndexOf(visNode) : -1;
+        selOffset = selNode ? selNode->ComputeIndexOf(visNode) : -1;
         done = true;
       } else {
         bool isEmptyBlock;
@@ -565,7 +565,7 @@ HTMLEditor::BeginningOfDocument()
             isEmptyBlock) {
           // Skip the empty block
           curNode = visNode->GetParentNode();
-          curOffset = curNode ? curNode->IndexOf(visNode) : -1;
+          curOffset = curNode ? curNode->ComputeIndexOf(visNode) : -1;
           curOffset++;
         } else {
           curNode = visNode;
@@ -1601,7 +1601,7 @@ HTMLEditor::SelectElement(nsIDOMElement* aElement)
     return NS_ERROR_FAILURE;
   }
 
-  int32_t offsetInParent = parent->IndexOf(element);
+  int32_t offsetInParent = parent->ComputeIndexOf(element);
 
   // Collapse selection to just before desired element,
   nsresult rv = selection->Collapse(parent, offsetInParent);

@@ -43,7 +43,7 @@ CompareTextTracks::TrackChildPosition(TextTrack* aTextTrack) const {
   if (!trackElement) {
     return -1;
   }
-  return mMediaElement->IndexOf(trackElement);
+  return mMediaElement->ComputeIndexOf(trackElement);
 }
 
 bool
@@ -527,7 +527,7 @@ private:
     if (aEvent->mTrack) {
       HTMLTrackElement* trackElement = aEvent->mTrack->GetTrackElement();
       if (trackElement) {
-        return mMediaElement->IndexOf(trackElement);
+        return mMediaElement->ComputeIndexOf(trackElement);
       }
     }
     return -1;

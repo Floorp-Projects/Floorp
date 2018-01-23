@@ -2314,7 +2314,7 @@ nsContentUtils::InProlog(nsINode *aNode)
   nsIDocument* doc = static_cast<nsIDocument*>(parent);
   nsIContent* root = doc->GetRootElement();
 
-  return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
+  return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
 }
 
 nsIDocument*
@@ -2659,7 +2659,7 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   nsIContent* parent = child->GetParent();
   while (parent) {
     aAncestorNodes->AppendElement(parent);
-    aAncestorOffsets->AppendElement(parent->IndexOf(child));
+    aAncestorOffsets->AppendElement(parent->ComputeIndexOf(child));
     child = parent;
     parent = parent->GetParent();
   }
@@ -2769,8 +2769,8 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
 {
   if (aParent1 == aParent2) {
     // XXX This is odd.  aOffset1 and/or aOffset2 may be -1, e.g., it's result
-    //     of nsINode::IndexOf(), but this compares such invalid offset with
-    //     valid offset.
+    //     of nsINode::ComputeIndexOf(), but this compares such invalid
+    //     offset with valid offset.
     return aOffset1 < aOffset2 ? -1 :
            aOffset1 > aOffset2 ? 1 :
            0;
@@ -2807,7 +2807,7 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
     nsINode* child1 = parents1.ElementAt(--pos1);
     nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
-      return parent->IndexOf(child1) < parent->IndexOf(child2) ? -1 : 1;
+      return parent->ComputeIndexOf(child1) < parent->ComputeIndexOf(child2) ? -1 : 1;
     }
     parent = child1;
   }
@@ -2823,13 +2823,13 @@ nsContentUtils::ComparePoints(nsINode* aParent1, int32_t aOffset1,
     nsINode* child2 = parents2.ElementAt(--pos2);
     // XXX aOffset1 may be -1 as mentioned above.  So, why does this return
     //     it's *before* of the valid DOM point?
-    return aOffset1 <= parent->IndexOf(child2) ? -1 : 1;
+    return aOffset1 <= parent->ComputeIndexOf(child2) ? -1 : 1;
   }
 
   nsINode* child1 = parents1.ElementAt(--pos1);
   // XXX aOffset2 may be -1 as mentioned above.  So, why does this return it's
   //     *after* of the valid DOM point?
-  return parent->IndexOf(child1) < aOffset2 ? -1 : 1;
+  return parent->ComputeIndexOf(child1) < aOffset2 ? -1 : 1;
 }
 
 /* static */
@@ -3144,7 +3144,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     nsINode* parent = aContent->GetParentNode();
     nsINode* content = aContent;
     while (parent) {
-      KeyAppendInt(parent->IndexOf(content), aKey);
+      KeyAppendInt(parent->ComputeIndexOf(content), aKey);
       content = parent;
       parent = content->GetParentNode();
     }

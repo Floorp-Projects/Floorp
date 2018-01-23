@@ -222,7 +222,7 @@ nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(const nsPoint
   ContentOffsets offsets;
   offsets.content = mContent->GetParent();
   if (offsets.content) {
-    offsets.offset = offsets.content->IndexOf(mContent);
+    offsets.offset = offsets.content->ComputeIndexOf(mContent);
     offsets.secondaryOffset = offsets.offset;
     offsets.associate = CARET_ASSOCIATE_AFTER;
   }

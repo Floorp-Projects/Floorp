@@ -3372,7 +3372,7 @@ nsFocusManager::GetNextTabbableMapArea(bool aForward,
     uint32_t count = mapContent->GetChildCount();
     // First see if the the start content is in this map
 
-    int32_t index = mapContent->IndexOf(aStartContent);
+    int32_t index = mapContent->ComputeIndexOf(aStartContent);
     int32_t tabIndex;
     if (index < 0 || (aStartContent->IsFocusable(&tabIndex) &&
                       tabIndex != aCurrentTabIndex)) {
