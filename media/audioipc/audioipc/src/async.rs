@@ -5,115 +5,26 @@
 
 //! Various async helpers modelled after futures-rs and tokio-io.
 
-use {RecvFd, SendFd};
+use {RecvMsg, SendMsg};
 use bytes::{Buf, BufMut};
-use mio_uds;
-use std::io as std_io;
-use std::os::unix::io::RawFd;
-use std::os::unix::net;
+use futures::{Async, Poll};
+use iovec::IoVec;
+use std::io;
+use tokio_io::{AsyncRead, AsyncWrite};
+use tokio_uds::UnixStream;
 
-/// A convenience macro for working with `io::Result<T>` from the
-/// `std::io::Read` and `std::io::Write` traits.
-///
-/// This macro takes `io::Result<T>` as input, and returns `T` as the output. If
-/// the input type is of the `Err` variant, then `Async::NotReady` is returned if
-/// it indicates `WouldBlock` or otherwise `Err` is returned.
-#[macro_export]
-macro_rules! try_nb {
-    ($e:expr) => (match $e {
-        Ok(t) => t,
-        Err(ref e) if e.kind() == ::std::io::ErrorKind::WouldBlock => {
-            return Ok(Async::NotReady)
-        }
-        Err(e) => return Err(e.into()),
-    })
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// Async support - Handle EWOULDBLOCK/EAGAIN from non-blocking I/O operations.
-
-/// Return type for async methods, indicates whether the operation was
-/// ready or not.
-///
-/// * `Ok(Async::Ready(t))` means that the operation has completed successfully.
-/// * `Ok(Async::NotReady)` means that the underlying system is not ready to handle operation.
-/// * `Err(e)` means that the operation has completed with the given error `e`.
-pub type AsyncResult<T, E> = Result<Async<T>, E>;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Async<T> {
-    /// Represents that a value is immediately ready.
-    Ready(T),
-    /// Represents that a value is not ready yet, but may be so later.
-    NotReady
-}
-
-impl<T> Async<T> {
-    pub fn is_ready(&self) -> bool {
-        match *self {
-            Async::Ready(_) => true,
-            Async::NotReady => false,
-        }
-    }
-
-    pub fn is_not_ready(&self) -> bool {
-        !self.is_ready()
-    }
-}
-
-/// Return type for an async attempt to send a value.
-///
-/// * `Ok(AsyncSend::Ready)` means that the operation has completed successfully.
-/// * `Ok(AsyncSend::NotReady(t))` means that the underlying system is not ready to handle
-///    send. returns the value that tried to be sent in `t`.
-/// * `Err(e)` means that operation has completed with the given error `e`.
-pub type AsyncSendResult<T, E> = Result<AsyncSend<T>, E>;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum AsyncSend<T> {
-    Ready,
-    NotReady(T)
-}
-
-pub trait AsyncRecvFd: RecvFd {
-    unsafe fn prepare_uninitialized_buffer(&self, bytes: &mut [u8]) -> bool {
-        for byte in bytes.iter_mut() {
-            *byte = 0;
-        }
-
-        true
-    }
-
+pub trait AsyncRecvMsg: AsyncRead {
     /// Pull some bytes from this source into the specified `Buf`, returning
     /// how many bytes were read.
     ///
     /// The `buf` provided will have bytes read into it and the internal cursor
     /// will be advanced if any bytes were read. Note that this method typically
     /// will not reallocate the buffer provided.
-    fn recv_buf_fd<B>(&mut self, buf: &mut B) -> AsyncResult<(usize, Option<RawFd>), std_io::Error>
+    fn recv_msg_buf<B>(&mut self, buf: &mut B, cmsg: &mut B) -> Poll<(usize, i32), io::Error>
     where
         Self: Sized,
-        B: BufMut,
-    {
-        if !buf.has_remaining_mut() {
-            return Ok(Async::Ready((0, None)));
-        }
-
-        unsafe {
-            let (n, fd) = {
-                let bytes = buf.bytes_mut();
-                self.prepare_uninitialized_buffer(bytes);
-                try_nb!(self.recv_fd(bytes))
-            };
-
-            buf.advance_mut(n);
-            Ok(Async::Ready((n, fd)))
-        }
-    }
+        B: BufMut;
 }
-
-impl AsyncRecvFd for net::UnixStream {}
-impl AsyncRecvFd for mio_uds::UnixStream {}
 
 /// A trait for writable objects which operated in an async fashion.
 ///
@@ -129,25 +40,135 @@ impl AsyncRecvFd for mio_uds::UnixStream {}
 ///   writable but may become writable in the future.
 /// * `Err(e)` for other errors are standard I/O errors coming from the
 ///   underlying object.
-pub trait AsyncSendFd: SendFd {
+pub trait AsyncSendMsg: AsyncWrite {
     /// Write a `Buf` into this value, returning how many bytes were written.
     ///
     /// Note that this method will advance the `buf` provided automatically by
     /// the number of bytes written.
-    fn send_buf_fd<B>(&mut self, buf: &mut B, fd: Option<RawFd>) -> AsyncResult<usize, std_io::Error>
+    fn send_msg_buf<B, C>(&mut self, buf: &mut B, cmsg: &C) -> Poll<usize, io::Error>
     where
         Self: Sized,
         B: Buf,
-    {
-        if !buf.has_remaining() {
-            return Ok(Async::Ready(0));
-        }
+        C: Buf;
+}
 
-        let n = try_nb!(self.send_fd(buf.bytes(), fd));
-        buf.advance(n);
-        Ok(Async::Ready(n))
+////////////////////////////////////////////////////////////////////////////////
+
+impl AsyncRecvMsg for UnixStream {
+    fn recv_msg_buf<B>(&mut self, buf: &mut B, cmsg: &mut B) -> Poll<(usize, i32), io::Error>
+    where
+        B: BufMut,
+    {
+        if let Async::NotReady = <UnixStream>::poll_read(self) {
+            return Ok(Async::NotReady);
+        }
+        let r = unsafe {
+            // The `IoVec` type can't have a 0-length size, so we create a bunch
+            // of dummy versions on the stack with 1 length which we'll quickly
+            // overwrite.
+            let b1: &mut [u8] = &mut [0];
+            let b2: &mut [u8] = &mut [0];
+            let b3: &mut [u8] = &mut [0];
+            let b4: &mut [u8] = &mut [0];
+            let b5: &mut [u8] = &mut [0];
+            let b6: &mut [u8] = &mut [0];
+            let b7: &mut [u8] = &mut [0];
+            let b8: &mut [u8] = &mut [0];
+            let b9: &mut [u8] = &mut [0];
+            let b10: &mut [u8] = &mut [0];
+            let b11: &mut [u8] = &mut [0];
+            let b12: &mut [u8] = &mut [0];
+            let b13: &mut [u8] = &mut [0];
+            let b14: &mut [u8] = &mut [0];
+            let b15: &mut [u8] = &mut [0];
+            let b16: &mut [u8] = &mut [0];
+            let mut bufs: [&mut IoVec; 16] = [
+                b1.into(),
+                b2.into(),
+                b3.into(),
+                b4.into(),
+                b5.into(),
+                b6.into(),
+                b7.into(),
+                b8.into(),
+                b9.into(),
+                b10.into(),
+                b11.into(),
+                b12.into(),
+                b13.into(),
+                b14.into(),
+                b15.into(),
+                b16.into(),
+            ];
+            let n = buf.bytes_vec_mut(&mut bufs);
+            self.recv_msg(&mut bufs[..n], cmsg.bytes_mut())
+        };
+
+        match r {
+            Ok((n, cmsg_len, flags)) => {
+                unsafe {
+                    buf.advance_mut(n);
+                }
+                unsafe {
+                    cmsg.advance_mut(cmsg_len);
+                }
+                Ok((n, flags).into())
+            },
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                self.need_read();
+                Ok(Async::NotReady)
+            },
+            Err(e) => Err(e),
+        }
     }
 }
 
-impl AsyncSendFd for net::UnixStream {}
-impl AsyncSendFd for mio_uds::UnixStream {}
+impl AsyncSendMsg for UnixStream {
+    fn send_msg_buf<B, C>(&mut self, buf: &mut B, cmsg: &C) -> Poll<usize, io::Error>
+    where
+        B: Buf,
+        C: Buf,
+    {
+        if let Async::NotReady = <UnixStream>::poll_write(self) {
+            return Ok(Async::NotReady);
+        }
+        let r = {
+            // The `IoVec` type can't have a zero-length size, so create a dummy
+            // version from a 1-length slice which we'll overwrite with the
+            // `bytes_vec` method.
+            static DUMMY: &[u8] = &[0];
+            let nom = <&IoVec>::from(DUMMY);
+            let mut bufs = [
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+                nom,
+            ];
+            let n = buf.bytes_vec(&mut bufs);
+            self.send_msg(&bufs[..n], cmsg.bytes())
+        };
+        match r {
+            Ok(n) => {
+                buf.advance(n);
+                Ok(Async::Ready(n))
+            },
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                self.need_write();
+                Ok(Async::NotReady)
+            },
+            Err(e) => Err(e),
+        }
+    }
+}

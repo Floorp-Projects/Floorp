@@ -620,7 +620,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
-  margin: 15px;
+  margin-bottom: 15px;
   text-align: center;
   text-shadow: none;
   max-width: 15em;
@@ -638,7 +638,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
   padding-bottom: 30px;
-  padding-top: 15px;
 }
 
 .PanelUI-remotetabs-button {
@@ -682,8 +681,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .fxaSyncIllustration,
 .fxaSyncIllustrationIssue {
+  /* If you change the margin here, the min-height of the synced tabs panel
+    (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
+    need adjusting (see bug 1248506) */
   width: 180px;
   height: var(--panel-ui-sync-illustration-height);
+  margin: 38px 0;
   -moz-context-properties: fill;
   fill: #cdcdcd;
 }
@@ -715,10 +718,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
   min-height: calc(var(--panel-ui-sync-illustration-height) +
+                   76px + /* margin of .fxaSyncIllustration */
                    20px + /* margin of .PanelUI-remotetabs-button */
                    16px + /* padding of .PanelUI-remotetabs-button */
-                   30px + /* margin of .PanelUI-remotetabs-instruction-label */
-                   30px + 15px + /* padding of .PanelUI-remotetabs-instruction-box */
+                   15px + /* margin of .PanelUI-remotetabs-instruction-label */
+                   30px + /* padding of .PanelUI-remotetabs-instruction-box */
                    11em);
 }
 
