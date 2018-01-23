@@ -2083,21 +2083,6 @@ nsNavBookmarks::GetBookmarkURI(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
-nsNavBookmarks::GetItemType(int64_t aItemId, uint16_t* _type)
-{
-  NS_ENSURE_ARG_MIN(aItemId, 1);
-  NS_ENSURE_ARG_POINTER(_type);
-
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aItemId, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_type = static_cast<uint16_t>(bookmark.type);
-  return NS_OK;
-}
-
-
 nsresult
 nsNavBookmarks::ResultNodeForContainer(int64_t aItemId,
                                        nsNavHistoryQueryOptions* aOptions,
