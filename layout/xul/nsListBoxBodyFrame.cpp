@@ -1156,7 +1156,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
     // We need to insert rows before the top frame
     nsIContent* topContent = mTopFrame->GetContent();
     nsIContent* topParent = topContent->GetParent();
-    int32_t contentIndex = topParent->IndexOf(topContent);
+    int32_t contentIndex = topParent->ComputeIndexOf(topContent);
     contentIndex -= aOffset;
     if (contentIndex < 0)
       return nullptr;
@@ -1217,7 +1217,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
     nsIContent* prevContent = aBox->GetContent();
     nsIContent* parentContent = prevContent->GetParent();
 
-    int32_t i = parentContent->IndexOf(prevContent);
+    int32_t i = parentContent->ComputeIndexOf(prevContent);
 
     uint32_t childCount = parentContent->GetChildCount();
     if (((uint32_t)i + aOffset + 1) < childCount) {

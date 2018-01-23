@@ -495,12 +495,6 @@ ConvertToSID(sidCacheEntry *from,
 
     PORT_Memcpy(to->u.ssl3.sessionID, from->sessionID, from->sessionIDLength);
 
-    /* the portions of the SID that are only restored on the client
-     * are set to invalid values on the server.
-     */
-    to->u.ssl3.clientWriteKey = NULL;
-    to->u.ssl3.serverWriteKey = NULL;
-
     to->urlSvrName = NULL;
 
     to->u.ssl3.masterModuleID = (SECMODModuleID)-1; /* invalid value */
@@ -735,9 +729,11 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
 /*
 ** Place a sid into the cache, if it isn't already there.
 */
-static void
-ServerSessionIDCache(sslSessionID *sid)
+void
+ssl_ServerCacheSessionID(sslSessionID *sid)
 {
+    PORT_Assert(sid);
+
     sidCacheEntry sce;
     PRUint32 now = 0;
     cacheDesc *cache = &globalCache;
@@ -800,8 +796,8 @@ ServerSessionIDCache(sslSessionID *sid)
 ** Although this is static, it is called from ssl via global function pointer
 **  ssl_sid_uncache.  This invalidates the referenced cache entry.
 */
-static void
-ServerSessionIDUncache(sslSessionID *sid)
+void
+ssl_ServerUncacheSessionID(sslSessionID *sid)
 {
     cacheDesc *cache = &globalCache;
     PRUint8 *sessionID;
@@ -1172,8 +1168,6 @@ ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
     }
 
     ssl_sid_lookup = ServerSessionIDLookup;
-    ssl_sid_cache = ServerSessionIDCache;
-    ssl_sid_uncache = ServerSessionIDUncache;
     return SECSuccess;
 }
 
@@ -1356,8 +1350,6 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     ssl_InitSessionCacheLocks(PR_FALSE);
 
     ssl_sid_lookup = ServerSessionIDLookup;
-    ssl_sid_cache = ServerSessionIDCache;
-    ssl_sid_uncache = ServerSessionIDUncache;
 
     if (!envString) {
         envString = PR_GetEnvSecure(envVarName);

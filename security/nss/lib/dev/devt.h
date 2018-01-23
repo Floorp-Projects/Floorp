@@ -81,6 +81,9 @@ struct NSSSlotStr {
     PZLock *lock;
     void *epv;
     PK11SlotInfo *pk11slot;
+    PZLock *isPresentLock;
+    PRCondVar *isPresentCondition;
+    PRBool inIsPresent;
 };
 
 struct nssSessionStr {

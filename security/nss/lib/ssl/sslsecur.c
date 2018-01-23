@@ -599,9 +599,6 @@ ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os)
     if (os->sec.peerCert && !ss->sec.peerCert)
         goto loser;
 
-    ss->sec.cache = os->sec.cache;
-    ss->sec.uncache = os->sec.uncache;
-
     return SECSuccess;
 
 loser:
@@ -1159,7 +1156,7 @@ SSL_InvalidateSession(PRFileDesc *fd)
         ssl_GetSSL3HandshakeLock(ss);
 
         if (ss->sec.ci.sid) {
-            ss->sec.uncache(ss->sec.ci.sid);
+            ssl_UncacheSessionID(ss);
             rv = SECSuccess;
         }
 

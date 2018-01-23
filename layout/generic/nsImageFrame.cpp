@@ -1922,7 +1922,7 @@ nsImageFrame::ShouldDisplaySelection()
           nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
           if (parentContent)
           {
-            int32_t thisOffset = parentContent->IndexOf(mContent);
+            int32_t thisOffset = parentContent->ComputeIndexOf(mContent);
             nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentContent);
             nsCOMPtr<nsIDOMNode> rangeNode;
             uint32_t rangeOffset;

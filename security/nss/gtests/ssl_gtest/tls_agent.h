@@ -165,6 +165,20 @@ class TlsAgent : public PollTarget {
   void DisableECDHEServerKeyReuse();
   bool GetPeerChainLength(size_t* count);
   void CheckCipherSuite(uint16_t cipher_suite);
+  void SetResumptionTokenCallback();
+  bool MaybeSetResumptionToken();
+  void SetResumptionToken(const std::vector<uint8_t>& resumption_token) {
+    resumption_token_ = resumption_token;
+  }
+  const std::vector<uint8_t>& GetResumptionToken() const {
+    return resumption_token_;
+  }
+  void GetTokenInfo(ScopedSSLResumptionTokenInfo& token) {
+    SECStatus rv = SSL_GetResumptionTokenInfo(
+        resumption_token_.data(), resumption_token_.size(), token.get(),
+        sizeof(SSLResumptionTokenInfo));
+    ASSERT_EQ(SECSuccess, rv);
+  }
 
   const std::string& name() const { return name_; }
 
@@ -393,6 +407,7 @@ class TlsAgent : public PollTarget {
   AuthCertificateCallbackFunction auth_certificate_callback_;
   SniCallbackFunction sni_callback_;
   bool skip_version_checks_;
+  std::vector<uint8_t> resumption_token_;
 };
 
 inline std::ostream& operator<<(std::ostream& stream,

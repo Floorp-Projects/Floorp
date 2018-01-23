@@ -178,7 +178,7 @@ public:
 
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
-    mOffset = mozilla::Some(mParent->IndexOf(mRef) + 1);
+    mOffset = mozilla::Some(mParent->ComputeIndexOf(mRef) + 1);
 
     return mOffset.value();
   }

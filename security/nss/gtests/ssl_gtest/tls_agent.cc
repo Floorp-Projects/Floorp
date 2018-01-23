@@ -73,7 +73,8 @@ TlsAgent::TlsAgent(const std::string& name, Role role,
       handshake_callback_(),
       auth_certificate_callback_(),
       sni_callback_(),
-      skip_version_checks_(false) {
+      skip_version_checks_(false),
+      resumption_token_() {
   memset(&info_, 0, sizeof(info_));
   memset(&csinfo_, 0, sizeof(csinfo_));
   SECStatus rv = SSL_VersionRangeGetDefault(variant_, &vrange_);
@@ -203,6 +204,29 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
   rv = SSL_HandshakeCallback(ssl_fd(), HandshakeCallback, this);
   EXPECT_EQ(SECSuccess, rv);
   if (rv != SECSuccess) return false;
+
+  return true;
+}
+
+bool TlsAgent::MaybeSetResumptionToken() {
+  if (!resumption_token_.empty()) {
+    SECStatus rv = SSL_SetResumptionToken(ssl_fd(), resumption_token_.data(),
+                                          resumption_token_.size());
+
+    // rv is SECFailure with error set to SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR
+    // if the resumption token was bad (expired/malformed/etc.).
+    if (expect_resumption_) {
+      // Only in case we expect resumption this has to be successful. We might
+      // not expect resumption due to some reason but the token is totally fine.
+      EXPECT_EQ(SECSuccess, rv);
+    }
+    if (rv != SECSuccess) {
+      EXPECT_EQ(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR, PORT_GetError());
+      resumption_token_.clear();
+      EXPECT_FALSE(expect_resumption_);
+      if (expect_resumption_) return false;
+    }
+  }
 
   return true;
 }
@@ -384,6 +408,26 @@ void TlsAgent::SetVersionRange(uint16_t minver, uint16_t maxver) {
     SECStatus rv = SSL_VersionRangeSet(ssl_fd(), &vrange_);
     EXPECT_EQ(SECSuccess, rv);
   }
+}
+
+SECStatus ResumptionTokenCallback(PRFileDesc* fd,
+                                  const PRUint8* resumptionToken,
+                                  unsigned int len, void* ctx) {
+  EXPECT_NE(nullptr, resumptionToken);
+  if (!resumptionToken) {
+    return SECFailure;
+  }
+
+  std::vector<uint8_t> new_token(resumptionToken, resumptionToken + len);
+  reinterpret_cast<TlsAgent*>(ctx)->SetResumptionToken(new_token);
+  return SECSuccess;
+}
+
+void TlsAgent::SetResumptionTokenCallback() {
+  EXPECT_TRUE(EnsureTlsSetup());
+  SECStatus rv =
+      SSL_SetResumptionTokenCallback(ssl_fd(), ResumptionTokenCallback, this);
+  EXPECT_EQ(SECSuccess, rv);
 }
 
 void TlsAgent::GetVersionRange(uint16_t* minver, uint16_t* maxver) {

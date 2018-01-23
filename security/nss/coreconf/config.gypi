@@ -105,6 +105,7 @@
     'sign_libs%': 1,
     'use_pprof%': 0,
     'ct_verif%': 0,
+    'emit_llvm%': 0,
     'nss_public_dist_dir%': '<(nss_dist_dir)/public',
     'nss_private_dist_dir%': '<(nss_dist_dir)/private',
     'only_dev_random%': 1,
@@ -430,6 +431,10 @@
               # The -L/usr/lib is redundant but innocuous: it's a default path.
               'LIBRARY_SEARCH_PATHS': ['/usr/lib <(sanitizer_flags)'],
             },
+          }],
+          [ 'emit_llvm==1', {
+            'cflags': ['-flto'],
+            'ldflags': ['-flto', '-fuse-ld=gold', '-Wl,-plugin-opt=save-temps'],
           }],
           [ 'OS=="android" and mozilla_client==0', {
             'defines': [
