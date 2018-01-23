@@ -12,22 +12,24 @@ import android.view.View;
 
 import org.mozilla.focus.session.Session;
 import org.mozilla.gecko.GeckoView;
-import org.mozilla.gecko.GeckoViewSettings;
+import org.mozilla.gecko.GeckoSession;
+import org.mozilla.gecko.GeckoSession.*;
+import org.mozilla.gecko.GeckoSessionSettings;
 
 /**
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
 public class WebViewProvider {
     public static void preload(final Context context) {
-        GeckoView.preload(context);
+        GeckoSession.preload(context);
     }
 
     public static View create(Context context, AttributeSet attrs) {
-        final GeckoViewSettings settings = new GeckoViewSettings();
-        settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
-        settings.setBoolean(GeckoViewSettings.USE_PRIVATE_MODE, true);
-        settings.setBoolean(GeckoViewSettings.USE_TRACKING_PROTECTION, true);
-        final GeckoView geckoView = new GeckoWebView(context, attrs, settings);
+        final GeckoSessionSettings settings = new GeckoSessionSettings();
+        settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+        settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
+        settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, true);
+        final GeckoView geckoView = new GeckoWebView(context, attrs);
 
         return geckoView;
     }
@@ -47,12 +49,12 @@ public class WebViewProvider {
         private boolean canGoForward;
         private boolean isSecure;
 
-        public GeckoWebView(Context context, AttributeSet attrs, GeckoViewSettings settings) {
-            super(context, attrs, settings);
+        public GeckoWebView(Context context, AttributeSet attrs) {
+            super(context, attrs);
 
-            setContentListener(createContentListener());
-            setProgressListener(createProgressListener());
-            setNavigationListener(createNavigationListener());
+            GeckoSession.setContentListener(createContentListener());
+            GeckoSession.setProgressListener(createProgressListener());
+            GeckoSession.setNavigationListener(createNavigationListener());
 
             // TODO: set long press listener, call through to callback.onLinkLongPress()
         }
@@ -86,7 +88,7 @@ public class WebViewProvider {
         @Override
         public void loadUrl(final String url) {
             currentUrl = url;
-            loadUri(currentUrl);
+            loadUrl(currentUrl);
         }
 
         @Override
@@ -102,11 +104,15 @@ public class WebViewProvider {
         private ContentListener createContentListener() {
             return new ContentListener() {
                 @Override
-                public void onTitleChange(GeckoView geckoView, String s) {
+                public void onTitleChange(GeckoSession session, String title) {
                 }
 
                 @Override
-                public void onFullScreen(GeckoView geckoView, boolean fullScreen) {
+                public void onFullScreen(GeckoSession session, boolean fullScreen) {
+                }
+
+                @Override
+                public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, String elementSrc) {
                 }
             };
         }
@@ -114,7 +120,7 @@ public class WebViewProvider {
         private ProgressListener createProgressListener() {
             return new ProgressListener() {
                 @Override
-                public void onPageStart(GeckoView geckoView, String url) {
+                public void onPageStart(GeckoSession session, String url) {
                     if (callback != null) {
                         callback.onPageStarted(url);
                         callback.onProgress(25);
@@ -123,7 +129,7 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public void onPageStop(GeckoView geckoView, boolean success) {
+                public void onPageStop(GeckoSession session, boolean success) {
                     if (callback != null) {
                         if (success) {
                             callback.onProgress(100);
@@ -133,27 +139,41 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public void onSecurityChange(GeckoView geckoView, int status) {
+                public void onSecurityChange(GeckoSession session,
+                                             GeckoSession.ProgressListener.SecurityInformation securityInfo) {
                     // TODO: Split current onPageFinished() callback into two: page finished + security changed
-                    isSecure = status == ProgressListener.STATE_IS_SECURE;
+                    isSecure = securityInfo.isSecure;
                 }
             };
         }
 
         private NavigationListener createNavigationListener() {
             return new NavigationListener() {
-                public void onLocationChange(GeckoView view, String url) {
+                public void onLocationChange(GeckoSession session, String url) {
+                    currentUrl = url;
                     if (callback != null) {
                         callback.onURLChanged(url);
                     }
                 }
 
-                public void onCanGoBack(GeckoView view, boolean canGoBack) {
+                public void onCanGoBack(GeckoSession session, boolean canGoBack) {
                     GeckoWebView.this.canGoBack =  canGoBack;
                 }
 
-                public void onCanGoForward(GeckoView view, boolean canGoForward) {
+                public void onCanGoForward(GeckoSession session, boolean canGoForward) {
                     GeckoWebView.this.canGoForward = canGoForward;
+                }
+
+                @Override
+                public boolean onLoadUri(GeckoSession session, String uri, GeckoSession.NavigationListener.TargetWindow where) {
+                    // If this is trying to load in a new tab, just load it in the current one
+                    if (where == TargetWindow.NEW) {
+                        loadUrl(uri);
+                        return true;
+                    }
+
+                    // Otherwise allow the load to continue normally
+                    return false;
                 }
             };
         }
