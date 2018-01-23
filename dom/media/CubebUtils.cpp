@@ -50,8 +50,9 @@
 #define MASK_3F1        (AudioConfig::ChannelLayout::L3F1_MAP)
 #define MASK_3F1_LFE    (AudioConfig::ChannelLayout::L3F1_LFE_MAP)
 #define MASK_2F2        (AudioConfig::ChannelLayout::L2F2_MAP)
-#define MASK_QUAD       (AudioConfig::ChannelLayout::LQUAD_MAP)
 #define MASK_2F2_LFE    (AudioConfig::ChannelLayout::L2F2_LFE_MAP)
+#define MASK_QUAD       (AudioConfig::ChannelLayout::LQUAD_MAP)
+#define MASK_QUAD_LFE   (AudioConfig::ChannelLayout::LQUAD_MAP_LFE)
 #define MASK_3F2        (AudioConfig::ChannelLayout::L3F2_MAP)
 #define MASK_3F2_LFE    (AudioConfig::ChannelLayout::L3F2_LFE_MAP)
 #define MASK_3F3R_LFE   (AudioConfig::ChannelLayout::L3F3R_LFE_MAP)
@@ -183,8 +184,10 @@ const layoutInfo kLayoutInfos[CUBEB_LAYOUT_MAX] = {
   { "2f1 lfe",        4, MASK_2F1_LFE },    // CUBEB_LAYOUT_2F1_LFE
   { "3f1",            4, MASK_3F1 },        // CUBEB_LAYOUT_3F1
   { "3f1 lfe",        5, MASK_3F1_LFE },    // CUBEB_LAYOUT_3F1_LFE
-  { "2f2",            4, MASK_2F2_LFE },    // CUBEB_LAYOUT_2F2
+  { "2f2",            4, MASK_2F2 },        // CUBEB_LAYOUT_2F2
   { "2f2 lfe",        5, MASK_2F2_LFE },    // CUBEB_LAYOUT_2F2_LFE
+  { "quad",           4, MASK_QUAD },       // CUBEB_LAYOUT_QUAD
+  { "quad lfe",       5, MASK_QUAD_LFE },   // CUBEB_LAYOUT_QUAD_LFE
   { "3f2",            5, MASK_3F2 },        // CUBEB_LAYOUT_3F2
   { "3f2 lfe",        6, MASK_3F2_LFE },    // CUBEB_LAYOUT_3F2_LFE
   { "3f3r lfe",       7, MASK_3F3R_LFE },   // CUBEB_LAYOUT_3F3R_LFE
@@ -655,6 +658,8 @@ cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap)
     case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
     case MASK_2F2: return CUBEB_LAYOUT_2F2;
     case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
+    case MASK_QUAD: return CUBEB_LAYOUT_QUAD;
+    case MASK_QUAD_LFE: return CUBEB_LAYOUT_QUAD_LFE;
     case MASK_3F2: return CUBEB_LAYOUT_3F2;
     case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
     case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
