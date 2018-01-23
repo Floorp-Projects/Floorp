@@ -17,8 +17,8 @@ async function setup() {
   // handle things for us if the test actually hangs.
   requestLongerTimeout(100);
 
+  // Generate output so mozprocess knows we're still alive for the long session.
   SimpleTest.requestCompleteLog();
-  //Generate output so mozprocess knows we're still alive for the long session
 
   info("installing extension temporarily");
   let chromeURL = Services.io.newURI(EXTENSION_DIR);
