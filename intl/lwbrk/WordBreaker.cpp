@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/intl/WordBreaker.h"
+#include "mozilla/Preferences.h"
 
 using mozilla::intl::WordBreaker;
 using mozilla::intl::WordBreakClass;
@@ -47,13 +48,18 @@ bool WordBreaker::BreakInBetween(
 /* static */ WordBreakClass
 WordBreaker::GetClass(char16_t c)
 {
+  // The pref is cached on first call; changes will require a browser restart.
+  static bool sStopAtUnderscore =
+    Preferences::GetBool("layout.word_select.stop_at_underscore", false);
+
   // begin of the hack
 
   if (IS_ALPHABETICAL_SCRIPT(c))  {
 	  if(IS_ASCII(c))  {
 		  if(ASCII_IS_SPACE(c)) {
 			  return kWbClassSpace;
-		  } else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c) || c == '_') {
+		  } else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c) ||
+		            (c == '_' && !sStopAtUnderscore)) {
 			  return kWbClassAlphaLetter;
 		  } else {
 			  return kWbClassPunct;

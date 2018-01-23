@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013-2017 by                                                 */
+/*  Copyright 2013-2018 by                                                 */
 /*  Google, Inc.                                                           */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
@@ -81,6 +81,7 @@
 
     typedef unsigned short  v82 __attribute__(( vector_size( 16 ) ));
 
+
     if ( row_info->rowbytes > 15 )
     {
       /* process blocks of 16 bytes in one rush, which gives a nice speed-up */
@@ -102,7 +103,7 @@
         v82  m0 = { 1, 0, 3, 2, 5, 4, 7, 6 };
 
 
-        memcpy( &s, base, 16 );               /* RGBA RGBA RGBA RGBA */
+        ft_memcpy( &s, base, 16 );            /* RGBA RGBA RGBA RGBA */
         s0 = s & n0xFF;                       /*  R B  R B  R B  R B */
         s1 = s >> n8;                         /*  G A  G A  G A  G A */
 
@@ -118,7 +119,7 @@
         s1  = ( s1 + ( s1 >> n8 ) ) >> n8;
 
         s = s0 | ( s1 << n8 );
-        memcpy( base, &s, 16 );
+        ft_memcpy( base, &s, 16 );
       }
     }
 #endif /* use `vector_size' */
@@ -236,7 +237,7 @@
       return;
     }
 
-    memcpy( data, stream->cursor, length );
+    ft_memcpy( data, stream->cursor, length );
 
     FT_FRAME_EXIT();
   }

@@ -608,7 +608,7 @@ public:
                 nsIDocShellLoadInfo* aLoadInfo,
                 bool aForceNoOpener,
                 nsPIDOMWindowOuter **_retval) override;
-  nsIDOMNavigator* GetNavigator() override;
+  mozilla::dom::Navigator* GetNavigator() override;
 
 #if defined(MOZ_WIDGET_ANDROID)
   int16_t Orientation(mozilla::dom::CallerType aCallerType) const;
@@ -686,7 +686,7 @@ public:
                       const nsAString& aOptions,
                       nsISupports* aExtraArgument,
                       nsPIDOMWindowOuter** _retval) override;
-  nsresult UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
+  void UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason) override;
 
   already_AddRefed<nsPIDOMWindowOuter>
   GetContentInternal(mozilla::ErrorResult& aError,

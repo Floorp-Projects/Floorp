@@ -1,9 +1,9 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+"https://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.8.1 API Reference</title>
+<title>FreeType-2.9 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.8.1 API Reference</h1>
+<h1>FreeType-2.9 API Reference</h1>
 
 <h1 id="basic_types">Basic Data Types</h1>
 <h2>Synopsis</h2>
@@ -661,7 +661,7 @@
 <h3 id="FT_Generic_Finalizer">FT_Generic_Finalizer</h3>
 <p>Defined in FT_TYPES_H (freetype/fttypes.h).</p>
 <pre>
-  <span class="keyword">typedef</span> <span class="keyword">void</span>  (*<b>FT_Generic_Finalizer</b>)(<span class="keyword">void</span>*  object);
+  <span class="keyword">typedef</span> <span class="keyword">void</span>  (*<b>FT_Generic_Finalizer</b>)( <span class="keyword">void</span>*  object );
 </pre>
 
 <p>Describe a function used to destroy the &lsquo;client&rsquo; data of any FreeType object. See the description of the <a href="ft2-basic_types.html#FT_Generic">FT_Generic</a> type for details of usage.</p>
@@ -781,7 +781,7 @@
 <p>An 8-bit bitmap, representing RGB or BGR decimated glyph images used for display on rotated LCD displays; the bitmap is three times taller than the original glyph image. See also <a href="ft2-base_interface.html#FT_Render_Mode">FT_RENDER_MODE_LCD_V</a>.</p>
 </td></tr>
 <tr><td class="val" id="FT_PIXEL_MODE_BGRA">FT_PIXEL_MODE_BGRA</td><td class="desc">
-<p>An image with four 8-bit channels per pixel, representing a color image (such as emoticons) with alpha channel. For each pixel, the format is BGRA, which means, the blue channel comes first in memory. The color channels are pre-multiplied and in the sRGB colorspace. For example, full red at half-translucent opacity will be represented as &lsquo;00,00,80,80&rsquo;, not &lsquo;00,00,FF,80&rsquo;. See also <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_COLOR</a>.</p>
+<p>[Since 2.5] An image with four 8-bit channels per pixel, representing a color image (such as emoticons) with alpha channel. For each pixel, the format is BGRA, which means, the blue channel comes first in memory. The color channels are pre-multiplied and in the sRGB colorspace. For example, full red at half-translucent opacity will be represented as &lsquo;00,00,80,80&rsquo;, not &lsquo;00,00,FF,80&rsquo;. See also <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_COLOR</a>.</p>
 </td></tr>
 </table>
 
@@ -827,7 +827,7 @@
 <p>The glyph image is a bitmap, and can be described as an <a href="ft2-basic_types.html#FT_Bitmap">FT_Bitmap</a>. You generally need to access the &lsquo;bitmap&rsquo; field of the <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a> structure to read it.</p>
 </td></tr>
 <tr><td class="val" id="FT_GLYPH_FORMAT_OUTLINE">FT_GLYPH_FORMAT_OUTLINE</td><td class="desc">
-<p>The glyph image is a vectorial outline made of line segments and Bézier arcs; it can be described as an <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>; you generally want to access the &lsquo;outline&rsquo; field of the <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a> structure to read it.</p>
+<p>The glyph image is a vectorial outline made of line segments and Bezier arcs; it can be described as an <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>; you generally want to access the &lsquo;outline&rsquo; field of the <a href="ft2-base_interface.html#FT_GlyphSlotRec">FT_GlyphSlotRec</a> structure to read it.</p>
 </td></tr>
 <tr><td class="val" id="FT_GLYPH_FORMAT_PLOTTER">FT_GLYPH_FORMAT_PLOTTER</td><td class="desc">
 <p>The glyph image is a vectorial path with no inside and outside contours. Some Type&nbsp;1 fonts, like those in the Hershey family, contain glyphs in this format. These are described as <a href="ft2-outline_processing.html#FT_Outline">FT_Outline</a>, but FreeType isn't currently capable of rendering them correctly.</p>

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "policies": {
+      "$ref": "policies.json"
+    }
+  },
+  "required": ["policies"]
+}
