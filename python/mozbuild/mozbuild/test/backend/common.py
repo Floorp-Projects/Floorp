@@ -188,14 +188,6 @@ CONFIGS = defaultdict(lambda: {
             'OS_TARGET': 'Darwin',
         },
     },
-    'program-paths': {
-        'defines': {},
-        'non_global_defines': [],
-        'substs': {
-            'COMPILE_ENVIRONMENT': '1',
-            'BIN_SUFFIX': '.prog',
-        },
-    },
 })
 
 
