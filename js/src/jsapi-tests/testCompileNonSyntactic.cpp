@@ -2,22 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gc/GCInternals.h"
 #include "jsapi-tests/tests.h"
+
+#include "gc/GCInternals.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
 
 
+using namespace JS;
+using js::AutoLockMonitor;
+
 struct OffThreadTask {
     OffThreadTask()
-      : monitor(mutexid::TestMutex),
+      : monitor(js::mutexid::TestMutex),
         token(nullptr)
     {}
 
     void* waitUntilDone(JSContext* cx)
     {
         if (OffThreadParsingMustWaitForGC(cx->runtime()))
-            gc::FinishGC(cx);
+            js::gc::FinishGC(cx);
 
         AutoLockMonitor alm(monitor);
         while (!token) {
