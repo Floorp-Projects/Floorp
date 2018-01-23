@@ -26,14 +26,19 @@ class ScopedGfxFeatureReporter
 {
 public:
   explicit ScopedGfxFeatureReporter(const char *aFeature, bool aForce = false)
-    : mFeature(aFeature), mStatusChar('-')
+    : mFeature(aFeature), mStatusChar('-'), mStatusNumber(0)
   {
-    WriteAppNote(aForce ? '!' : '?');
+    WriteAppNote(aForce ? '!' : '?', 0);
   }
   ~ScopedGfxFeatureReporter() {
-    WriteAppNote(mStatusChar);
+    WriteAppNote(mStatusChar, mStatusNumber);
   }
   void SetSuccessful() { mStatusChar = '+'; }
+  void SetSuccessful(int32_t aNumber)
+  {
+    mStatusChar = '+';
+    mStatusNumber = aNumber;
+  }
 
   static void AppNote(const nsACString& aMessage);
 
@@ -42,9 +47,10 @@ public:
 protected:
   const char *mFeature;
   char mStatusChar;
+  int32_t mStatusNumber;
 
 private:
-  void WriteAppNote(char statusChar);
+  void WriteAppNote(char statusChar, int32_t statusNumber);
 };
 
 } // end namespace mozilla
