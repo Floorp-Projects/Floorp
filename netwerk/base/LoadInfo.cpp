@@ -352,6 +352,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aPrincipalToInherit,
                    nsIPrincipal* aSandboxedLoadingPrincipal,
                    nsIURI* aResultPrincipalURI,
+                   const Maybe<ClientInfo>& aClientInfo,
+                   const Maybe<ClientInfo>& aReservedClientInfo,
+                   const Maybe<ClientInfo>& aInitialClientInfo,
                    const Maybe<ServiceWorkerDescriptor>& aController,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
@@ -384,6 +387,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mPrincipalToInherit(aPrincipalToInherit)
   , mResultPrincipalURI(aResultPrincipalURI)
+  , mClientInfo(aClientInfo)
+  , mReservedClientInfo(aReservedClientInfo)
+  , mInitialClientInfo(aInitialClientInfo)
   , mController(aController)
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
