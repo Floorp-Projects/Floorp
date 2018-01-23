@@ -122,7 +122,6 @@ function isKeyIn(key, ...keys) {
  *              from `element` to the new input.
  *      defaults to false
  *    {Object} cssProperties: An instance of CSSProperties.
- *    {Object} cssVariables: A Map object containing all CSS variables.
  *    {Number} defaultIncrement: The value by which the input is incremented
  *      or decremented by default (0.1 for properties like opacity and 1 by default)
  */
@@ -225,7 +224,6 @@ function InplaceEditor(options, event) {
   this.doc = doc;
   this.elt.inplaceEditor = this;
   this.cssProperties = options.cssProperties;
-  this.cssVariables = options.cssVariables || new Map();
   this.change = options.change;
   this.done = options.done;
   this.contextMenu = options.contextMenu;
@@ -1335,16 +1333,8 @@ InplaceEditor.prototype = {
           startCheckQuery = "";
         }
 
-        // Check if the query to be completed is a CSS variable.
-        let varMatch = /^var\(([^\s]+$)/.exec(startCheckQuery);
-
-        if (varMatch && varMatch.length == 2) {
-          startCheckQuery = varMatch[1];
-          list = this._getCSSVariableNames();
-        } else {
-          list = ["!important",
-                  ...this._getCSSValuesForPropertyName(this.property.name)];
-        }
+        list = ["!important",
+                ...this._getCSSValuesForPropertyName(this.property.name)];
 
         if (query == "") {
           // Do not suggest '!important' without any manually typed character.
@@ -1499,15 +1489,6 @@ InplaceEditor.prototype = {
    */
   _getCSSValuesForPropertyName: function (propertyName) {
     return this.cssProperties.getValues(propertyName);
-  },
-
-  /**
-   * Returns the list of all CSS variables to use for the autocompletion.
-   *
-   * @return {Array} array of CSS variable names (Strings)
-   */
-  _getCSSVariableNames: function () {
-    return Array.from(this.cssVariables.keys()).sort();
   },
 };
 
