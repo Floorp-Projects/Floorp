@@ -50,7 +50,6 @@ TransportSecurityInfo::TransportSecurityInfo()
 
 TransportSecurityInfo::~TransportSecurityInfo()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
 
@@ -1041,13 +1040,12 @@ TransportSecurityInfo::GetFailedCertChain(nsIX509CertList** _result)
 nsresult
 TransportSecurityInfo::SetFailedCertChain(UniqueCERTCertList certList)
 {
-  nsNSSShutDownPreventionLock lock;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // nsNSSCertList takes ownership of certList
-  mFailedCertChain = new nsNSSCertList(Move(certList), lock);
+  mFailedCertChain = new nsNSSCertList(Move(certList));
 
   return NS_OK;
 }

@@ -405,8 +405,6 @@ WebCryptoTask::Run()
 {
   // Run heavy crypto operations on the thread pool, off the original thread.
   if (!IsOnOriginalThread()) {
-    nsNSSShutDownPreventionLock locker;
-
     if (isAlreadyShutDown()) {
       mRv = NS_ERROR_NOT_AVAILABLE;
     } else {
@@ -1769,8 +1767,6 @@ private:
 
   virtual nsresult DoCrypto() override
   {
-    nsNSSShutDownPreventionLock locker;
-
     // Import the key data itself
     UniqueSECKEYPublicKey pubKey;
     UniqueSECKEYPrivateKey privKey;
@@ -1779,9 +1775,9 @@ private:
          !mJwk.mD.WasPassed())) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData);
       } else {
-        pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+        pubKey = CryptoKey::PublicKeyFromJwk(mJwk);
       }
 
       if (!pubKey) {
@@ -1798,9 +1794,9 @@ private:
          mJwk.mD.WasPassed())) {
       // Private key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8)) {
-        privKey = CryptoKey::PrivateKeyFromPkcs8(mKeyData, locker);
+        privKey = CryptoKey::PrivateKeyFromPkcs8(mKeyData);
       } else {
-        privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
+        privKey = CryptoKey::PrivateKeyFromJwk(mJwk);
       }
 
       if (!privKey) {
@@ -1921,10 +1917,9 @@ private:
     UniqueSECKEYPublicKey pubKey;
     UniqueSECKEYPrivateKey privKey;
 
-    nsNSSShutDownPreventionLock locker;
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) && mJwk.mD.WasPassed()) {
       // Private key import
-      privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
+      privKey = CryptoKey::PrivateKeyFromJwk(mJwk);
       if (!privKey) {
         return NS_ERROR_DOM_DATA_ERR;
       }
@@ -1940,11 +1935,11 @@ private:
                 !mJwk.mD.WasPassed())) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-        pubKey = CryptoKey::PublicECKeyFromRaw(mKeyData, mNamedCurve, locker);
+        pubKey = CryptoKey::PublicECKeyFromRaw(mKeyData, mNamedCurve);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-        pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+        pubKey = CryptoKey::PublicKeyFromJwk(mJwk);
       } else {
         MOZ_ASSERT(false);
       }
@@ -2073,15 +2068,13 @@ private:
     // Import the key data itself
     UniqueSECKEYPublicKey pubKey;
 
-    nsNSSShutDownPreventionLock locker;
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
         mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-        pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator,
-                                               locker);
+        pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData);
       } else {
         MOZ_ASSERT(false);
       }
@@ -2158,12 +2151,9 @@ private:
 
   virtual nsresult DoCrypto() override
   {
-    nsNSSShutDownPreventionLock locker;
-
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
       if (mPublicKey && mPublicKey->keyType == dhKey) {
-        nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey.get(), mResult,
-                                                  locker);
+        nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey.get(), mResult);
         if (NS_FAILED(rv)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
@@ -2171,8 +2161,7 @@ private:
       }
 
       if (mPublicKey && mPublicKey->keyType == ecKey) {
-        nsresult rv = CryptoKey::PublicECKeyToRaw(mPublicKey.get(), mResult,
-                                                  locker);
+        nsresult rv = CryptoKey::PublicECKeyToRaw(mPublicKey.get(), mResult);
         if (NS_FAILED(rv)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
@@ -2192,7 +2181,7 @@ private:
 
       switch (mPrivateKey->keyType) {
         case rsaKey: {
-          nsresult rv = CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+          nsresult rv = CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult);
           if (NS_FAILED(rv)) {
             return NS_ERROR_DOM_OPERATION_ERR;
           }
@@ -2206,7 +2195,7 @@ private:
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
-      return CryptoKey::PublicKeyToSpki(mPublicKey.get(), mResult, locker);
+      return CryptoKey::PublicKeyToSpki(mPublicKey.get(), mResult);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       if (mKeyType == CryptoKey::SECRET) {
         nsString k;
@@ -2221,7 +2210,7 @@ private:
           return NS_ERROR_DOM_UNKNOWN_ERR;
         }
 
-        nsresult rv = CryptoKey::PublicKeyToJwk(mPublicKey.get(), mJwk, locker);
+        nsresult rv = CryptoKey::PublicKeyToJwk(mPublicKey.get(), mJwk);
         if (NS_FAILED(rv)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
@@ -2230,8 +2219,7 @@ private:
           return NS_ERROR_DOM_UNKNOWN_ERR;
         }
 
-        nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey.get(), mJwk,
-                                                 locker);
+        nsresult rv = CryptoKey::PrivateKeyToJwk(mPrivateKey.get(), mJwk);
         if (NS_FAILED(rv)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
@@ -3738,7 +3726,6 @@ WebCryptoTask::~WebCryptoTask()
 {
   MOZ_ASSERT(mReleasedNSSResources);
 
-  nsNSSShutDownPreventionLock lock;
   if (!isAlreadyShutDown()) {
     shutdown(ShutdownCalledFrom::Object);
   }

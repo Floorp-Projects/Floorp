@@ -25,7 +25,6 @@ PKCS11ModuleDB::PKCS11ModuleDB()
 
 PKCS11ModuleDB::~PKCS11ModuleDB()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -36,7 +35,6 @@ PKCS11ModuleDB::~PKCS11ModuleDB()
 NS_IMETHODIMP
 PKCS11ModuleDB::DeleteModule(const nsAString& aModuleName)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -91,7 +89,6 @@ PKCS11ModuleDB::AddModule(const nsAString& aModuleName,
                           int32_t aCryptoMechanismFlags,
                           int32_t aCipherFlags)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -155,7 +152,6 @@ PKCS11ModuleDB::FindModuleByName(const nsACString& name,
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -180,7 +176,6 @@ PKCS11ModuleDB::ListModules(nsISimpleEnumerator** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -224,7 +219,6 @@ PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
 {
   NS_ENSURE_ARG_POINTER(aCanToggleFIPS);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -237,7 +231,6 @@ PKCS11ModuleDB::GetCanToggleFIPS(bool* aCanToggleFIPS)
 NS_IMETHODIMP
 PKCS11ModuleDB::ToggleFIPSMode()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -269,7 +262,6 @@ PKCS11ModuleDB::GetIsFIPSEnabled(bool* aIsFIPSEnabled)
 {
   NS_ENSURE_ARG_POINTER(aIsFIPSEnabled);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

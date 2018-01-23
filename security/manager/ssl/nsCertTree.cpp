@@ -608,7 +608,6 @@ nsCertTree::GetCertsByType(uint32_t           aType,
                            nsCertCompareFunc  aCertCmpFn,
                            void              *aCertCmpFnArg)
 {
-  nsNSSShutDownPreventionLock locker;
   nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
   UniqueCERTCertList certList(PK11_ListCerts(PK11CertListUnique, cxt));
   return GetCertsByTypeFromCertList(certList.get(), aType, aCertCmpFn,
@@ -622,18 +621,10 @@ nsCertTree::GetCertsByTypeFromCache(nsIX509CertList   *aCache,
                                     void              *aCertCmpFnArg)
 {
   NS_ENSURE_ARG_POINTER(aCache);
-  // GetRawCertList checks for NSS shutdown since we can't do it ourselves here
-  // easily. We still have to acquire a shutdown prevention lock to prevent NSS
-  // shutting down after GetRawCertList has returned. While cumbersome, this is
-  // at least mostly correct. The rest of this implementation doesn't even go
-  // this far in attempting to check for or prevent NSS shutdown at the
-  // appropriate times. If this were reimplemented at a higher level using
-  // more encapsulated types that handled NSS shutdown themselves, we wouldn't
-  // be having these kinds of problems.
-  nsNSSShutDownPreventionLock locker;
   CERTCertList* certList = aCache->GetRawCertList();
-  if (!certList)
+  if (!certList) {
     return NS_ERROR_FAILURE;
+  }
   return GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg);
 }
 

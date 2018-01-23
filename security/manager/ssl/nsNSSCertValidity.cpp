@@ -22,7 +22,6 @@ nsX509CertValidity::nsX509CertValidity(const mozilla::UniqueCERTCertificate& cer
     return;
   }
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -34,7 +33,6 @@ nsX509CertValidity::nsX509CertValidity(const mozilla::UniqueCERTCertificate& cer
 
 nsX509CertValidity::~nsX509CertValidity()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }

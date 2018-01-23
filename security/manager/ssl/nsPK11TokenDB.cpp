@@ -27,18 +27,17 @@ nsPK11Token::nsPK11Token(PK11SlotInfo* slot)
 {
   MOZ_ASSERT(slot);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return;
 
   mSlot.reset(PK11_ReferenceSlot(slot));
   mSeries = PK11_GetSlotSeries(slot);
 
-  Unused << refreshTokenInfo(locker);
+  Unused << refreshTokenInfo();
 }
 
 nsresult
-nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/)
+nsPK11Token::refreshTokenInfo()
 {
   mTokenName = PK11_GetTokenName(mSlot.get());
 
@@ -85,7 +84,6 @@ nsPK11Token::refreshTokenInfo(const nsNSSShutDownPreventionLock& /*proofOfLock*/
 
 nsPK11Token::~nsPK11Token()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -109,14 +107,13 @@ nsresult
 nsPK11Token::GetAttributeHelper(const nsACString& attribute,
                         /*out*/ nsACString& xpcomOutParam)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Handle removals/insertions.
   if (PK11_GetSlotSeries(mSlot.get()) != mSeries) {
-    nsresult rv = refreshTokenInfo(locker);
+    nsresult rv = refreshTokenInfo();
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -167,7 +164,6 @@ nsPK11Token::IsLoggedIn(bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -179,7 +175,6 @@ nsPK11Token::IsLoggedIn(bool* _retval)
 NS_IMETHODIMP
 nsPK11Token::Login(bool force)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -191,7 +186,7 @@ nsPK11Token::Login(bool force)
     rv = this->LogoutSimple();
     if (NS_FAILED(rv)) return rv;
   }
-  rv = setPassword(mSlot.get(), mUIContext, locker);
+  rv = setPassword(mSlot.get(), mUIContext);
   if (NS_FAILED(rv)) return rv;
 
   return MapSECStatus(PK11_Authenticate(mSlot.get(), true, mUIContext));
@@ -200,7 +195,6 @@ nsPK11Token::Login(bool force)
 NS_IMETHODIMP
 nsPK11Token::LogoutSimple()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -230,7 +224,6 @@ nsPK11Token::LogoutAndDropAuthenticatedResources()
 NS_IMETHODIMP
 nsPK11Token::Reset()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -242,7 +235,6 @@ nsPK11Token::GetNeedsUserInit(bool* aNeedsUserInit)
 {
   NS_ENSURE_ARG_POINTER(aNeedsUserInit);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -255,7 +247,6 @@ nsPK11Token::CheckPassword(const nsACString& password, bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -277,7 +268,6 @@ nsPK11Token::CheckPassword(const nsACString& password, bool* _retval)
 NS_IMETHODIMP
 nsPK11Token::InitPassword(const nsACString& initialPassword)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -302,7 +292,6 @@ NS_IMETHODIMP
 nsPK11Token::ChangePassword(const nsACString& oldPassword,
                             const nsACString& newPassword)
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -321,7 +310,6 @@ nsPK11Token::GetHasPassword(bool* hasPassword)
 {
   NS_ENSURE_ARG_POINTER(hasPassword);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -338,7 +326,6 @@ nsPK11Token::NeedsLogin(bool* _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -357,7 +344,6 @@ nsPK11TokenDB::nsPK11TokenDB()
 
 nsPK11TokenDB::~nsPK11TokenDB()
 {
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
   }
@@ -370,7 +356,6 @@ nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -392,7 +377,6 @@ nsPK11TokenDB::FindTokenByName(const nsACString& tokenName,
 {
   NS_ENSURE_ARG_POINTER(_retval);
 
-  nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }

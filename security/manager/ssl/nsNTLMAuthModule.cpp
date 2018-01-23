@@ -986,10 +986,7 @@ nsNTLMAuthModule::InitTest()
     prefObserved = true;
   }
 
-  nsNSSShutDownPreventionLock locker;
-  //
   // disable NTLM authentication when FIPS mode is enabled.
-  //
   return PK11_IsFIPS() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
 
@@ -1027,12 +1024,11 @@ nsNTLMAuthModule::GetNextToken(const void *inToken,
                                uint32_t   *outTokenLen)
 {
   nsresult rv;
-  nsNSSShutDownPreventionLock locker;
-  //
+
   // disable NTLM authentication when FIPS mode is enabled.
-  //
-  if (PK11_IsFIPS())
+  if (PK11_IsFIPS()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   if (mNTLMNegotiateSent) {
     // if inToken is non-null, and we have sent the NTLMSSP_NEGOTIATE (type 1),
