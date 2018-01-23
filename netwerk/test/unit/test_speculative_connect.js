@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 var CC = Components.Constructor;
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
@@ -330,6 +332,11 @@ function next_test() {
 function run_test() {
     ios = Cc["@mozilla.org/network/io-service;1"]
         .getService(Ci.nsIIOService);
+
+    Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+    });
 
     do_test_pending();
     next_test();
