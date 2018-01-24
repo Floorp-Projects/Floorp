@@ -7199,6 +7199,14 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
   }
 }
 
+PerformanceStorage*
+WorkerPrivate::GetPerformanceStorage()
+{
+  AssertIsOnMainThread();
+  // TODO
+  return nullptr;
+}
+
 NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)
 
 template <class Derived>

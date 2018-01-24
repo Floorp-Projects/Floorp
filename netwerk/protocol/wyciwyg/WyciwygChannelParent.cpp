@@ -117,6 +117,7 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
                                            triggeringPrincipal,
                                            aSecurityFlags,
                                            aContentPolicyType,
+                                           nullptr,   // PerformanceStorage
                                            nullptr,   // loadGroup
                                            nullptr,   // aCallbacks
                                            nsIRequest::LOAD_NORMAL,

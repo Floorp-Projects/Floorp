@@ -31,6 +31,7 @@
 #include "nsHttpChannel.h"
 
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -325,13 +326,17 @@ NS_IMPL_ISUPPORTS(FetchDriver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
                   nsIThreadRetargetableStreamListener)
 
-FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
-                         nsILoadGroup* aLoadGroup, nsIEventTarget* aMainThreadEventTarget,
+FetchDriver::FetchDriver(InternalRequest* aRequest,
+                         nsIPrincipal* aPrincipal,
+                         nsILoadGroup* aLoadGroup,
+                         nsIEventTarget* aMainThreadEventTarget,
+                         PerformanceStorage* aPerformanceStorage,
                          bool aIsTrackingFetch)
   : mPrincipal(aPrincipal)
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mMainThreadEventTarget(aMainThreadEventTarget)
+  , mPerformanceStorage(aPerformanceStorage)
   , mNeedToObserveOnDataAvailable(false)
   , mIsTrackingFetch(aIsTrackingFetch)
 #ifdef DEBUG
@@ -516,6 +521,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
                        mDocument,
                        secFlags,
                        mRequest->ContentPolicyType(),
+                       nullptr, /* aPerformanceStorage */
                        mLoadGroup,
                        nullptr, /* aCallbacks */
                        loadFlags,
@@ -528,6 +534,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
                        mController,
                        secFlags,
                        mRequest->ContentPolicyType(),
+                       mPerformanceStorage,
                        mLoadGroup,
                        nullptr, /* aCallbacks */
                        loadFlags,
@@ -538,6 +545,7 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
                        mPrincipal,
                        secFlags,
                        mRequest->ContentPolicyType(),
+                       mPerformanceStorage,
                        mLoadGroup,
                        nullptr, /* aCallbacks */
                        loadFlags,

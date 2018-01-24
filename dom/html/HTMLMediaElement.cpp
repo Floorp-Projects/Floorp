@@ -1218,6 +1218,7 @@ public:
                                            triggeringPrincipal,
                                            securityFlags,
                                            contentPolicyType,
+                                           nullptr,   // aPerformanceStorage
                                            loadGroup,
                                            nullptr,   // aCallbacks
                                            nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |

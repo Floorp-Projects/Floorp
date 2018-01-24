@@ -152,7 +152,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
 
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelInternal(getter_AddRefs(chan), uri, loadInfo,
-                             nullptr, nullptr,
+                             nullptr, nullptr, nullptr,
                              nsIRequest::LOAD_NORMAL, ios);
 
   if (NS_FAILED(rv))

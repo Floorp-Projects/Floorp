@@ -18,6 +18,7 @@ EXPORTS.mozilla.dom += [
     'PerformanceObserverEntryList.h',
     'PerformanceResourceTiming.h',
     'PerformanceService.h',
+    'PerformanceStorage.h',
     'PerformanceTiming.h',
 ]
 

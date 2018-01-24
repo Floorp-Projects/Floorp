@@ -109,6 +109,7 @@ SendPing(void* aClosure, nsIContent* aContent, nsIURI* aURI,
                   ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
                   : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                 nsIContentPolicy::TYPE_PING,
+                nullptr,   // PerformanceStorage
                 nullptr, // aLoadGroup
                 nullptr, // aCallbacks
                 nsIRequest::LOAD_NORMAL, // aLoadFlags,
