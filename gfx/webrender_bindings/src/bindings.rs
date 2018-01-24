@@ -28,8 +28,31 @@ use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
 
-/// cbindgen:field-names=[mNamespace, mHandle]
-type WrExternalImageBufferType = ExternalImageType;
+#[repr(C)]
+pub enum WrExternalImageBufferType {
+    TextureHandle = 0,
+    TextureRectHandle = 1,
+    TextureArrayHandle = 2,
+    TextureExternalHandle = 3,
+    ExternalBuffer = 4,
+}
+
+impl WrExternalImageBufferType {
+    fn to_wr(self) -> ExternalImageType {
+        match self {
+            WrExternalImageBufferType::TextureHandle =>
+                ExternalImageType::TextureHandle(TextureTarget::Default),
+            WrExternalImageBufferType::TextureRectHandle =>
+                ExternalImageType::TextureHandle(TextureTarget::Rect),
+            WrExternalImageBufferType::TextureArrayHandle =>
+                ExternalImageType::TextureHandle(TextureTarget::Array),
+            WrExternalImageBufferType::TextureExternalHandle =>
+                ExternalImageType::TextureHandle(TextureTarget::External),
+            WrExternalImageBufferType::ExternalBuffer =>
+                ExternalImageType::Buffer,
+        }
+    }
+}
 
 /// cbindgen:field-names=[mHandle]
 /// cbindgen:derive-lt=true
@@ -306,34 +329,19 @@ impl ExternalImageHandler for WrExternalImageHandler {
             channel_index: u8)
             -> ExternalImage {
         let image = (self.lock_func)(self.external_image_obj, id.into(), channel_index);
-
-        match image.image_type {
-            WrExternalImageType::NativeTexture => {
-                ExternalImage {
-                    u0: image.u0,
-                    v0: image.v0,
-                    u1: image.u1,
-                    v1: image.v1,
-                    source: ExternalImageSource::NativeTexture(image.handle),
-                }
-            },
-            WrExternalImageType::RawData => {
-                ExternalImage {
-                    u0: image.u0,
-                    v0: image.v0,
-                    u1: image.u1,
-                    v1: image.v1,
-                    source: ExternalImageSource::RawData(make_slice(image.buff, image.size)),
-                }
-            },
-            WrExternalImageType::Invalid => {
-                ExternalImage {
-                    u0: image.u0,
-                    v0: image.v0,
-                    u1: image.u1,
-                    v1: image.v1,
-                    source: ExternalImageSource::Invalid,
-                }
+        ExternalImage {
+            uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
+            //uv: UvRect::new(UvPoint::new(image.u0, image.v0), UvSize::new(image.u1, image.v1)),
+            /*
+            u0: image.u0,
+            v0: image.v0,
+            u1: image.u1,
+            v1: image.v1,
+            */
+            source: match image.image_type {
+                WrExternalImageType::NativeTexture => ExternalImageSource::NativeTexture(image.handle),
+                WrExternalImageType::RawData => ExternalImageSource::RawData(make_slice(image.buff, image.size)),
+                WrExternalImageType::Invalid => ExternalImageSource::Invalid,
             },
         }
     }
@@ -1010,7 +1018,7 @@ pub extern "C" fn wr_resource_updates_add_external_image(
             ExternalImageData {
                 id: external_image_id.into(),
                 channel_index: channel_index,
-                image_type: buffer_type,
+                image_type: buffer_type.to_wr(),
             }
         ),
         None
@@ -1048,7 +1056,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
             ExternalImageData {
                 id: external_image_id.into(),
                 channel_index,
-                image_type,
+                image_type: image_type.to_wr(),
             }
         ),
         None
