@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
-     "block_about_config": {
+    "block_about_config": {
       "description": "Blocks access to the about:config page.",
       "first_available": "60.0",
 
@@ -16,6 +16,94 @@
 
       "type": "boolean",
       "enum": [true]
+    },
+
+    "flash_plugin": {
+      "description": "Allow or deny flash plugin usage.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
+    },
+
+    "popups": {
+      "description": "Allow or deny popup usage.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
+    },
+
+    "install_addons": {
+      "description": "Allow or deny popup websites to install webextensions.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
+    },
+
+    "cookies": {
+      "description": "Allow or deny websites to set cookies.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        },
+
+        "block": {
+          "type": "array",
+          "items": {
+            "type": "origin"
+          }
+        }
+      }
     }
   }
 }
