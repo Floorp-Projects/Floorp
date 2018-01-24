@@ -597,29 +597,30 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
  * Will normally make the process exit on failure.
 */
 bool
-SetContentProcessSandbox(int aBrokerFd, bool aFileProcess,
-                         std::vector<int>& aSyscallWhitelist)
+SetContentProcessSandbox(ContentProcessSandboxParams&& aParams)
 {
+  int brokerFd = aParams.mBrokerFd;
+  aParams.mBrokerFd = -1;
+
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForContent)) {
-    if (aBrokerFd >= 0) {
-      close(aBrokerFd);
+    if (brokerFd >= 0) {
+      close(brokerFd);
     }
     return false;
   }
 
-  auto procType = aFileProcess
+  auto procType = aParams.mFileProcess
     ? SandboxReport::ProcType::FILE
     : SandboxReport::ProcType::CONTENT;
   gSandboxReporterClient = new SandboxReporterClient(procType);
 
   // This needs to live until the process exits.
   static SandboxBrokerClient* sBroker;
-  if (aBrokerFd >= 0) {
-    sBroker = new SandboxBrokerClient(aBrokerFd);
+  if (brokerFd >= 0) {
+    sBroker = new SandboxBrokerClient(brokerFd);
   }
 
-  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker,
-                                                   aSyscallWhitelist));
+  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker, Move(aParams)));
   return true;
 }
 #endif // MOZ_CONTENT_SANDBOX
