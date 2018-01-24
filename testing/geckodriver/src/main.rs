@@ -123,6 +123,10 @@ fn app<'a, 'b>() -> App<'a, 'b> {
             .long("connect-existing")
             .requires("marionette_port")
             .help("Connect to an existing Firefox instance"))
+        .arg(Arg::with_name("jsdebugger")
+            .long("jsdebugger")
+            .takes_value(false)
+            .help("Attach browser toolbox debugger for Firefox"))
         .arg(Arg::with_name("verbosity")
             .short("v")
             .multiple(true)
@@ -190,9 +194,10 @@ fn run() -> ProgramResult {
 
     let settings = MarionetteSettings {
         port: marionette_port,
-        binary: binary,
+        binary,
+        log_level,
         connect_existing: matches.is_present("connect_existing"),
-        log_level: log_level,
+        jsdebugger: matches.is_present("jsdebugger"),
     };
     let handler = MarionetteHandler::new(settings);
     let listening = webdriver::server::start(addr, handler, &extension_routes()[..])
