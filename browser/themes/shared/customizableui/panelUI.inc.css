@@ -1121,6 +1121,8 @@ menuitem.panel-subview-footer@menuStateActive@,
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #appMenu-fxa-avatar,

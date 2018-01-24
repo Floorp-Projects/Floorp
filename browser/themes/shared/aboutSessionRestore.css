@@ -81,6 +81,8 @@ treechildren::-moz-tree-image(noicon) {
 
 treechildren::-moz-tree-image(noicon) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 treechildren::-moz-tree-image(container, noicon) {
   list-style-image: url("chrome://browser/skin/aboutSessionRestore-window-icon.png");
