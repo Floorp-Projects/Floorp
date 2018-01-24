@@ -129,6 +129,9 @@ class Theme {
         case "frame":
           this.lwtStyles.accentcolor = cssColor;
           break;
+        case "frame_inactive":
+          this.lwtStyles.accentcolorInactive = cssColor;
+          break;
         case "textcolor":
         case "background_tab_text":
           this.lwtStyles.textcolor = cssColor;
@@ -274,6 +277,7 @@ class Theme {
     let lwtStyles = {
       headerURL: "",
       accentcolor: "",
+      accentcolorInactive: "",
       additionalBackgrounds: "",
       backgroundsAlignment: "",
       backgroundsTiling: "",

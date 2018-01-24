@@ -14,6 +14,7 @@ ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
 const kCSSVarsMap = new Map([
+  ["--lwt-accent-color-inactive", "accentcolorInactive"],
   ["--lwt-background-alignment", "backgroundsAlignment"],
   ["--lwt-background-tiling", "backgroundsTiling"],
   ["--lwt-tab-text", "tab_text"],
