@@ -28,6 +28,7 @@ idl_deps_dir := .deps
 
 dist_idl_dir := $(DIST)/idl
 dist_include_dir := $(DIST)/include
+dist_xpcrs_dir := $(DIST)/xpcrs
 process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 
 # TODO we should use py_action, but that would require extra directories to be
@@ -36,7 +37,7 @@ process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 	$(REPORT_BUILD)
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
-		$(dist_idl_dir) $(dist_include_dir) $(@D) $(libxul_sdk_includes) \
+		$(dist_idl_dir) $(dist_include_dir) $(dist_xpcrs_dir) $(@D) $(libxul_sdk_includes) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 # When some IDL is added or removed, if the actual IDL file was already, or
 # still is, in the tree, simple dependencies can't detect that the XPT needs
@@ -76,7 +77,7 @@ ifdef COMPILE_ENVIRONMENT
 xpidl:: $(xpt_files) $(chrome_manifests) $(interfaces_manifests)
 endif
 
-$(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir))
+$(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(dist_xpcrs_dir))
 
 -include $(depends_files)
 

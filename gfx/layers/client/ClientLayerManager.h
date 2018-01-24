@@ -313,6 +313,8 @@ private:
                               void* aCallbackData,
                               EndTransactionFlags);
 
+  void FlushAsyncPaints();
+
   LayerRefArray mKeepAlive;
 
   nsIWidget* mWidget;

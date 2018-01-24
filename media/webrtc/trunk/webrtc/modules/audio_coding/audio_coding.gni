@@ -21,8 +21,8 @@ if (!build_with_mozilla) {
   } else {
     audio_codec_defines += [ "WEBRTC_CODEC_ISAC" ]
   }
+  audio_codec_defines += [ "WEBRTC_CODEC_G722" ]
 }
-audio_codec_defines += [ "WEBRTC_CODEC_G722" ]
 if (!build_with_mozilla && !build_with_chromium) {
   audio_codec_defines += [ "WEBRTC_CODEC_RED" ]
 }

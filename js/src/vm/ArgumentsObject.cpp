@@ -8,6 +8,7 @@
 
 #include "mozilla/PodOperations.h"
 
+#include "gc/FreeOp.h"
 #include "jit/JitFrames.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"

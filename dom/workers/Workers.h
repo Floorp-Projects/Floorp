@@ -244,6 +244,8 @@ struct WorkerLoadInfo
   nsString mServiceWorkerCacheName;
   Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
 
+  Maybe<ServiceWorkerDescriptor> mParentController;
+
   ChannelInfo mChannelInfo;
   nsLoadFlags mLoadFlags;
 

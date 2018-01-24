@@ -39,6 +39,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "GeckoProfiler.h"
+#include "VTuneProfiler.h"
 #include "GeckoProfilerReporter.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
@@ -2182,6 +2183,8 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
 
   MOZ_RELEASE_ASSERT(!FindLiveThreadInfo(aLock));
 
+  VTUNE_REGISTER_THREAD(aName);
+
   if (!TLSInfo::Init(aLock)) {
     return;
   }
@@ -2296,6 +2299,8 @@ void
 profiler_init(void* aStackTop)
 {
   LOG("profiler_init");
+
+  VTUNE_INIT();
 
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
@@ -2444,6 +2449,8 @@ void
 profiler_shutdown()
 {
   LOG("profiler_shutdown");
+
+  VTUNE_SHUTDOWN();
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -3329,6 +3336,8 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  VTUNE_TRACING(aMarkerName, aKind);
+
   // This function is hot enough that we use RacyFeatures, notActivePS.
   if (!RacyFeatures::IsActiveWithoutPrivacy()) {
     return;
@@ -3343,6 +3352,8 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
                  TracingKind aKind, UniqueProfilerBacktrace aCause)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  VTUNE_TRACING(aMarkerName, aKind);
 
   // This function is hot enough that we use RacyFeatures, notActivePS.
   if (!RacyFeatures::IsActiveWithoutPrivacy()) {

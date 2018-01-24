@@ -275,7 +275,7 @@ HttpChannelParentListener::OnRedirectResult(bool succeeded)
 
 NS_IMETHODIMP
 HttpChannelParentListener::ShouldPrepareForIntercept(nsIURI* aURI,
-                                                     bool aIsNonSubresourceRequest,
+                                                     nsIChannel* aChannel,
                                                      bool* aShouldIntercept)
 {
   *aShouldIntercept = mShouldIntercept;

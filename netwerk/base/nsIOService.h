@@ -141,6 +141,18 @@ private:
                          nsCString *aScheme, nsIProxyInfo **outPI);
 
     nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
+                                                    nsIURI* aProxyURI,
+                                                    uint32_t aProxyFlags,
+                                                    nsIDOMNode* aLoadingNode,
+                                                    nsIPrincipal* aLoadingPrincipal,
+                                                    nsIPrincipal* aTriggeringPrincipal,
+                                                    const mozilla::Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
+                                                    const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
+                                                    uint32_t aSecurityFlags,
+                                                    uint32_t aContentPolicyType,
+                                                    nsIChannel** result);
+
+    nsresult NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                      nsIURI* aProxyURI,
                                                      uint32_t aProxyFlags,
                                                      nsILoadInfo* aLoadInfo,

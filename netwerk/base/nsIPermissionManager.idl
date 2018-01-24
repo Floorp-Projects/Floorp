@@ -66,10 +66,14 @@ interface nsIPermissionManager : nsISupports
    * (never expire), expire at the end of the session, or expire at a specified
    * time. Permissions that expire at the end of a session may also have a
    * specified expiration time.
+   *
+   * EXPIRE_POLICY is a special expiration status. It is set when the permission
+   * is set by reading an enterprise policy. These permissions cannot be overridden.
    */
   const uint32_t EXPIRE_NEVER = 0;
   const uint32_t EXPIRE_SESSION = 1;
   const uint32_t EXPIRE_TIME = 2;
+  const uint32_t EXPIRE_POLICY = 3;
 
   /**
    * Add permission information for a given URI and permission type. This

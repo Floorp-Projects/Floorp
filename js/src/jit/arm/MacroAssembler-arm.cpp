@@ -3040,21 +3040,21 @@ MacroAssemblerARMCompat::testGCThing(Condition cond, const BaseIndex& address)
 
 // Unboxing code.
 void
-MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register dest)
+MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand& operand, Register dest, JSValueType)
 {
     if (operand.payloadReg() != dest)
         ma_mov(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerARMCompat::unboxNonDouble(const Address& src, Register dest)
+MacroAssemblerARMCompat::unboxNonDouble(const Address& src, Register dest, JSValueType)
 {
     ScratchRegisterScope scratch(asMasm());
     ma_ldr(ToPayload(src), dest, scratch);
 }
 
 void
-MacroAssemblerARMCompat::unboxNonDouble(const BaseIndex& src, Register dest)
+MacroAssemblerARMCompat::unboxNonDouble(const BaseIndex& src, Register dest, JSValueType)
 {
     ScratchRegisterScope scratch(asMasm());
     SecondScratchRegisterScope scratch2(asMasm());
@@ -3079,7 +3079,7 @@ MacroAssemblerARMCompat::unboxDouble(const Address& src, FloatRegister dest)
 }
 
 void
-MacroAssemblerARMCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerARMCompat::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type)
 {
     if (dest.isFloat()) {
         Label notInt32, end;

@@ -327,6 +327,7 @@ class CommonBackend(BuildBackend):
 
     def consume_finished(self):
         if len(self._idl_manager.idls):
+            self._write_rust_xpidl_summary(self._idl_manager)
             self._handle_idl_manager(self._idl_manager)
             self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
 
@@ -556,3 +557,23 @@ class CommonBackend(BuildBackend):
                     m.replace('%', mozpath.basename(jarinfo.name) + '/'))
                 self.consume_object(ChromeManifestEntry(
                     jar_context, '%s.manifest' % jarinfo.name, entry))
+
+    def _write_rust_xpidl_summary(self, manager):
+        """Write out a rust file which includes the generated xpcom rust modules"""
+        topobjdir = self.environment.topobjdir
+
+        include_tmpl = "include!(concat!(env!(\"MOZ_TOPOBJDIR\"), \"/dist/xpcrs/%s/%s.rs\"))"
+
+        with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'rt', 'all.rs')) as fh:
+            fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
+            for idl in manager.idls.values():
+                fh.write(include_tmpl % ("rt", idl['root']))
+                fh.write(";\n")
+
+        with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'bt', 'all.rs')) as fh:
+            fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
+            fh.write("&[\n")
+            for idl in manager.idls.values():
+                fh.write(include_tmpl % ("bt", idl['root']))
+                fh.write(",\n")
+            fh.write("]\n")
