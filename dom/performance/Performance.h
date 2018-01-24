@@ -100,10 +100,14 @@ public:
 
   virtual nsITimedChannel* GetChannel() const = 0;
 
+  virtual TimeStamp CreationTimeStamp() const = 0;
+
   void MemoryPressure();
 
   size_t SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  void InsertResourceEntry(PerformanceEntry* aEntry);
 
 protected:
   Performance();
@@ -112,7 +116,6 @@ protected:
   virtual ~Performance();
 
   virtual void InsertUserEntry(PerformanceEntry* aEntry);
-  void InsertResourceEntry(PerformanceEntry* aEntry);
 
   void ClearUserEntries(const Optional<nsAString>& aEntryName,
                         const nsAString& aEntryType);
@@ -121,8 +124,6 @@ protected:
                                                ErrorResult& aRv);
 
   virtual void DispatchBufferFullEvent() = 0;
-
-  virtual TimeStamp CreationTimeStamp() const = 0;
 
   virtual DOMHighResTimeStamp CreationTime() const = 0;
 
@@ -135,11 +136,6 @@ protected:
   GetPerformanceTimingFromString(const nsAString& aTimingName)
   {
     return 0;
-  }
-
-  bool IsResourceEntryLimitReached() const
-  {
-    return mResourceEntries.Length() >= mResourceTimingBufferSize;
   }
 
   void LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const;

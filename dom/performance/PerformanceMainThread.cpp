@@ -118,64 +118,24 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Check if resource timing is prefed off.
-  if (!nsContentUtils::IsResourceTimingEnabled()) {
+  nsAutoString initiatorType;
+  nsAutoString entryName;
+
+  UniquePtr<PerformanceTimingData> performanceTimingData(
+    PerformanceTimingData::Create(timedChannel, channel, 0, initiatorType,
+                                  entryName));
+  if (!performanceTimingData) {
     return;
   }
 
-  // Don't add the entry if the buffer is full
-  if (IsResourceEntryLimitReached()) {
-    return;
-  }
+  // The PerformanceResourceTiming object will use the PerformanceTimingData
+  // object to get all the required timings.
+  RefPtr<PerformanceResourceTiming> performanceEntry =
+    new PerformanceResourceTiming(Move(performanceTimingData), this,
+                                  entryName);
 
-  if (channel && timedChannel) {
-    nsAutoCString name;
-    nsAutoString initiatorType;
-    nsCOMPtr<nsIURI> originalURI;
-
-    timedChannel->GetInitiatorType(initiatorType);
-
-    // According to the spec, "The name attribute must return the resolved URL
-    // of the requested resource. This attribute must not change even if the
-    // fetch redirected to a different URL."
-    channel->GetOriginalURI(getter_AddRefs(originalURI));
-    originalURI->GetSpec(name);
-    NS_ConvertUTF8toUTF16 entryName(name);
-
-    bool reportTiming = true;
-    timedChannel->GetReportResourceTiming(&reportTiming);
-
-    if (!reportTiming) {
-#ifdef DEBUG_jwatt
-      NS_WARNING(
-        nsPrintfCString("Not reporting CORS resource: %s", name.get()).get());
-#endif
-      return;
-    }
-
-    // The nsITimedChannel argument will be used to gather all the timings.
-    // The nsIHttpChannel argument will be used to check if any cross-origin
-    // redirects occurred.
-    // The last argument is the "zero time" (offset). Since we don't want
-    // any offset for the resource timing, this will be set to "0" - the
-    // resource timing returns a relative timing (no offset).
-    UniquePtr<PerformanceTimingData> performanceTimingData(
-        new PerformanceTimingData(timedChannel, channel, 0));
-
-    // The PerformanceResourceTiming object will use the PerformanceTiming
-    // object to get all the required timings.
-    RefPtr<PerformanceResourceTiming> performanceEntry =
-      new PerformanceResourceTiming(Move(performanceTimingData), this,
-                                    entryName);
-
-    // If the initiator type had no valid value, then set it to the default
-    // ("other") value.
-    if (initiatorType.IsEmpty()) {
-      initiatorType = NS_LITERAL_STRING("other");
-    }
-    performanceEntry->SetInitiatorType(initiatorType);
-    InsertResourceEntry(performanceEntry);
-  }
+  performanceEntry->SetInitiatorType(initiatorType);
+  InsertResourceEntry(performanceEntry);
 }
 
 // To be removed once bug 1124165 lands
