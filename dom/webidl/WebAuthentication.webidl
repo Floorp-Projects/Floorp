@@ -54,6 +54,7 @@ dictionary MakePublicKeyCredentialOptions {
     unsigned long                                timeout;
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     AuthenticatorSelectionCriteria               authenticatorSelection;
+    AttestationConveyancePreference              attestation = "none";
     // Extensions are not supported yet.
     // AuthenticationExtensions                  extensions; // Add in Bug 1406458
 };
@@ -81,6 +82,12 @@ dictionary AuthenticatorSelectionCriteria {
 enum AuthenticatorAttachment {
     "platform",       // Platform attachment
     "cross-platform"  // Cross-platform attachment
+};
+
+enum AttestationConveyancePreference {
+    "none",
+    "indirect",
+    "direct"
 };
 
 enum UserVerificationRequirement {

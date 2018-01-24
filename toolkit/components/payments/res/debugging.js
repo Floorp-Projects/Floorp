@@ -109,8 +109,38 @@ let REQUEST_2 = {
   },
 };
 
+let ADDRESSES_1 = {
+  "48bnds6854t": {
+    "address-level1": "MI",
+    "address-level2": "Some City",
+    "country": "US",
+    "guid": "48bnds6854t",
+    "name": "Mr. Foo",
+    "postal-code": "90210",
+    "street-address": "123 Sesame Street,\nApt 40",
+    "tel": "+1 519 555-5555",
+  },
+  "68gjdh354j": {
+    "address-level1": "CA",
+    "address-level2": "Mountain View",
+    "country": "US",
+    "guid": "68gjdh354j",
+    "name": "Mrs. Bar",
+    "postal-code": "94041",
+    "street-address": "P.O. Box 123",
+    "tel": "+1 650 555-5555",
+  },
+};
 
 let buttonActions = {
+  delete1Address() {
+    let savedAddresses = Object.assign({}, requestStore.getState().savedAddresses);
+    delete savedAddresses[Object.keys(savedAddresses)[0]];
+    requestStore.setState({
+      savedAddresses,
+    });
+  },
+
   logState() {
     let state = requestStore.getState();
     // eslint-disable-next-line no-console
@@ -120,6 +150,10 @@ let buttonActions = {
 
   refresh() {
     window.parent.location.reload(true);
+  },
+
+  setAddresses1() {
+    requestStore.setState({savedAddresses: ADDRESSES_1});
   },
 
   setRequest1() {

@@ -7,8 +7,8 @@ address-option {
   grid-row-gap: 5px;
   grid-column-gap: 10px;
   grid-template-areas:
-    "recipient  "
-    "addressLine";
+    "name          "
+    "street-address";
 
   border-bottom: 1px solid #ddd;
   background: #fff;
@@ -20,31 +20,31 @@ address-option {
 
 rich-select[open] > .rich-select-popup-box > address-option {
   grid-template-areas:
-    "recipient   recipient"
-    "addressLine addressLine"
-    "email       phone      ";
+    "name           name          "
+    "street-address street-address"
+    "email          tel           ";
 }
 
-address-option > .recipient {
-  grid-area: recipient;
+address-option > .name {
+  grid-area: name;
 }
 
-address-option > .addressLine {
-  grid-area: addressLine;
+address-option > .street-address {
+  grid-area: street-address;
 }
 
 address-option > .email {
   grid-area: email;
 }
 
-address-option > .phone {
-  grid-area: phone;
+address-option > .tel {
+  grid-area: tel;
 }
 
-address-option > .recipient,
-address-option > .addressLine,
+address-option > .name,
+address-option > .street-address,
 address-option > .email,
-address-option > .phone {
+address-option > .tel {
   white-space: nowrap;
 }
 
@@ -53,6 +53,6 @@ address-option > .phone {
 }
 
 rich-select > .rich-select-selected-clone > .email,
-rich-select > .rich-select-selected-clone > .phone {
+rich-select > .rich-select-selected-clone > .tel {
   display: none;
 }
