@@ -163,6 +163,7 @@
 #include "nsIObserverService.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIParser.h"
+#include "nsIParserUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginHost.h"
 #include "nsIRemoteBrowser.h"
@@ -203,6 +204,7 @@
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
+#include "nsTreeSanitizer.h"
 #include "nsUnicodeProperties.h"
 #include "nsURLHelper.h"
 #include "nsViewManager.h"
@@ -5060,6 +5062,7 @@ already_AddRefed<DocumentFragment>
 nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,
                                          bool aPreventScriptExecution,
+                                         SanitizeFragments aSanitize,
                                          ErrorResult& aRv)
 {
   if (!aContextNode) {
@@ -5095,14 +5098,16 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                               contextAsContent->GetNameSpaceID(),
                               (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),
-                              aPreventScriptExecution);
+                              aPreventScriptExecution,
+                              aSanitize);
     } else {
       aRv = ParseFragmentHTML(aFragment, frag,
                               nsGkAtoms::body,
                               kNameSpaceID_XHTML,
                               (document->GetCompatibilityMode() ==
                                eCompatibility_NavQuirks),
-                              aPreventScriptExecution);
+                              aPreventScriptExecution,
+                              aSanitize);
     }
 
     return frag.forget();
@@ -5166,7 +5171,8 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 
   nsCOMPtr<nsIDOMDocumentFragment> frag;
   aRv = ParseFragmentXML(aFragment, document, tagStack,
-                         aPreventScriptExecution, getter_AddRefs(frag));
+                         aPreventScriptExecution, getter_AddRefs(frag),
+                         aSanitize);
   return frag.forget().downcast<DocumentFragment>();
 }
 
@@ -5193,7 +5199,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
                                   nsAtom* aContextLocalName,
                                   int32_t aContextNamespace,
                                   bool aQuirks,
-                                  bool aPreventScriptExecution)
+                                  bool aPreventScriptExecution,
+                                  SanitizeFragments aSanitize)
 {
   AutoTimelineMarker m(aTargetNode->OwnerDoc()->GetDocShell(), "Parse HTML");
 
@@ -5207,13 +5214,39 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
     NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
     // Now sHTMLFragmentParser owns the object
   }
+
+  nsIContent* target = aTargetNode;
+
+  // If this is a chrome-privileged document, create a fragment first, and
+  // sanitize it before insertion.
+  RefPtr<DocumentFragment> fragment;
+  if (aSanitize != NeverSanitize && !aTargetNode->OwnerDoc()->AllowUnsafeHTML()) {
+    fragment = new DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
+    target = fragment;
+  }
+
   nsresult rv =
     sHTMLFragmentParser->ParseFragment(aSourceBuffer,
-                                       aTargetNode,
+                                       target,
                                        aContextLocalName,
                                        aContextNamespace,
                                        aQuirks,
                                        aPreventScriptExecution);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (fragment) {
+    // Don't fire mutation events for nodes removed by the sanitizer.
+    nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
+
+    nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
+                              nsIParserUtils::SanitizerAllowComments);
+    sanitizer.Sanitize(fragment);
+
+    ErrorResult error;
+    aTargetNode->AppendChild(*fragment, error);
+    rv = error.StealNSResult();
+  }
+
   return rv;
 }
 
@@ -5248,7 +5281,8 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
                                  nsIDocument* aDocument,
                                  nsTArray<nsString>& aTagStack,
                                  bool aPreventScriptExecution,
-                                 nsIDOMDocumentFragment** aReturn)
+                                 nsIDOMDocumentFragment** aReturn,
+                                 SanitizeFragments aSanitize)
 {
   AutoTimelineMarker m(aDocument->GetDocShell(), "Parse XML");
 
@@ -5287,6 +5321,20 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   rv = sXMLFragmentSink->FinishFragmentParsing(aReturn);
 
   sXMLFragmentParser->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If this is a chrome-privileged document, sanitize the fragment before
+  // returning.
+  if (aSanitize != NeverSanitize && !aDocument->AllowUnsafeHTML()) {
+    // Don't fire mutation events for nodes removed by the sanitizer.
+    nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
+
+    RefPtr<DocumentFragment> fragment = static_cast<DocumentFragment*>(*aReturn);
+
+    nsTreeSanitizer sanitizer(nsIParserUtils::SanitizerAllowStyle |
+                              nsIParserUtils::SanitizerAllowComments);
+    sanitizer.Sanitize(fragment);
+  }
 
   return rv;
 }

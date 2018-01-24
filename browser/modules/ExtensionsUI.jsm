@@ -429,10 +429,10 @@ this.ExtensionsUI = {
             let doc = this.browser.ownerDocument;
         // eslint-disable-next-line no-unsanitized/property
             doc.getElementById("addon-installed-notification-header")
-               .innerHTML = msg1;
+               .unsafeSetInnerHTML(msg1);
             // eslint-disable-next-line no-unsanitized/property
             doc.getElementById("addon-installed-notification-message")
-               .innerHTML = msg2;
+               .unsafeSetInnerHTML(msg2);
           } else if (topic == "dismissed") {
             resolve();
           }
