@@ -375,7 +375,18 @@ class MachCommands(MachCommandBase):
 
 
 @CommandProvider
-class TaskClusterImagesProvider(object):
+class TaskClusterImagesProvider(MachCommandBase):
+    def _ensure_sztd(self):
+        try:
+            import zstd
+            # There are two zstd libraries that exist in the wild, ensure we
+            # have the right one.
+            zstd.ZstdCompressor
+            zstd.ZstdDecompressor
+        except (ImportError, AttributeError):
+            self._activate_virtualenv()
+            self.virtualenv_manager.install_pip_package('zstandard==0.8.1')
+
     @Command('taskcluster-load-image', category="ci",
              description="Load a pre-built Docker image")
     @CommandArgument('--task-id',
@@ -390,6 +401,7 @@ class TaskClusterImagesProvider(object):
                           "contents of the tree (as built for mozilla-central"
                           "or mozilla-inbound)")
     def load_image(self, image_name, task_id, tag):
+        self._ensure_sztd()
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
         if not image_name and not task_id:
             print("Specify either IMAGE-NAME or TASK-ID")

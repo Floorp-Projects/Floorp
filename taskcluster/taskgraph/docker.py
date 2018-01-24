@@ -19,6 +19,7 @@ from taskgraph.util import docker
 from taskgraph.util.taskcluster import (
     find_task_id,
     get_artifact_url,
+    get_session,
 )
 from taskgraph.util.cached_tasks import cached_index_path
 from . import GECKO
@@ -113,6 +114,29 @@ def build_image(name, args=None):
         print('*' * 50)
 
 
+# The zstandard library doesn't expose a file-like interface for its
+# decompressor, but an iterator. Support for a file-like interface is due in
+# next release. In the meanwhile, we use this proxy class to turn the iterator
+# into a file-like.
+class IteratorReader(object):
+    def __init__(self, iterator):
+        self._iterator = iterator
+        self._buf = b''
+
+    def read(self, size):
+        result = b''
+        while len(result) < size:
+            wanted = min(size - len(result), len(self._buf))
+            if not self._buf:
+                try:
+                    self._buf = memoryview(next(self._iterator))
+                except StopIteration:
+                    break
+            result += self._buf[:wanted].tobytes()
+            self._buf = self._buf[wanted:]
+        return result
+
+
 def load_image(url, imageName=None, imageTag=None):
     """
     Load docker image from URL as imageName:tag, if no imageName or tag is given
@@ -120,6 +144,8 @@ def load_image(url, imageName=None, imageTag=None):
 
     Returns an object with properties 'image', 'tag' and 'layer'.
     """
+    import zstd
+
     # If imageName is given and we don't have an imageTag
     # we parse out the imageTag from imageName, or default it to 'latest'
     # if no imageName and no imageTag is given, 'repositories' won't be rewritten
@@ -129,13 +155,19 @@ def load_image(url, imageName=None, imageTag=None):
         else:
             imageTag = 'latest'
 
-    curl, zstd, docker = None, None, None
+    docker = None
     image, tag, layer = None, None, None
     try:
-        # Setup piping: curl | zstd | tarin
-        curl = Popen(['curl', '-#', '--fail', '-L', '--retry', '8', url], stdout=PIPE)
-        zstd = Popen(['zstd', '-d'], stdin=curl.stdout, stdout=PIPE)
-        tarin = tarfile.open(mode='r|', fileobj=zstd.stdout)
+        print("Downloading from {}".format(url))
+        # get_session() gets us a requests.Session set to retry several times.
+        req = get_session().get(url, stream=True)
+        req.raise_for_status()
+        decompressed_reader = IteratorReader(zstd.ZstdDecompressor().read_from(req.raw))
+        tarin = tarfile.open(
+            mode='r|',
+            fileobj=decompressed_reader,
+            bufsize=zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
+
         # Seutp piping: tarout | docker
         docker = Popen(['docker', 'load'], stdin=PIPE)
         tarout = tarfile.open(mode='w|', fileobj=docker.stdin, format=tarfile.GNU_FORMAT)
@@ -175,20 +207,6 @@ def load_image(url, imageName=None, imageTag=None):
             reader.close()
         tarout.close()
     finally:
-        def trykill(proc):
-            try:
-                proc.kill()
-            except:
-                pass
-
-        # Check that all subprocesses finished correctly
-        if curl and curl.wait() != 0:
-            trykill(zstd)
-            trykill(docker)
-            raise Exception('failed to download from url: {}'.format(url))
-        if zstd and zstd.wait() != 0:
-            trykill(docker)
-            raise Exception('zstd decompression failed')
         if docker:
             docker.stdin.close()
         if docker and docker.wait() != 0:
