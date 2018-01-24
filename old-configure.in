@@ -4381,7 +4381,7 @@ dnl Mac bundle identifier (based on MOZ_APP_DISPLAYNAME)
 # If the MOZ_MACBUNDLE_ID is defined in the configure.sh, use it
 # Otherwise, use MOZ_APP_DISPLAYNAME
 if test -z "$MOZ_MACBUNDLE_ID"; then
-   MOZ_MACBUNDLE_ID=`echo $MOZ_APP_DISPLAYNAME | tr '[A-Z]' '[a-z]'`
+   MOZ_MACBUNDLE_ID=`echo $MOZ_APP_DISPLAYNAME | tr 'A-Z' 'a-z' | tr -d '[[:blank:]]'`
 fi
 MOZ_MACBUNDLE_ID=${MOZ_DISTRIBUTION_ID}.${MOZ_MACBUNDLE_ID}
 if test "$MOZ_DEBUG"; then

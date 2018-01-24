@@ -40,6 +40,10 @@ namespace mozilla {
 
 class OriginAttributes;
 
+namespace ipc {
+class PrincipalInfo;
+} // namespace ipc
+
 namespace dom {
 
 class ServiceWorkerRegistrar;
@@ -142,12 +146,7 @@ public:
                                      nsIPrincipal* aPrincipal);
 
   void
-  DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
-                     nsIDocument* aDoc,
-                     nsIInterceptedChannel* aChannel,
-                     bool aIsReload,
-                     bool aIsSubresourceLoad,
-                     ErrorResult& aRv);
+  DispatchFetchEvent(nsIInterceptedChannel* aChannel, ErrorResult& aRv);
 
   void
   Update(nsIPrincipal* aPrincipal,
@@ -187,6 +186,10 @@ public:
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
+
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetRegistration(const mozilla::ipc::PrincipalInfo& aPrincipal,
+                  const nsACString& aScope) const;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   CreateNewRegistration(const nsCString& aScope,
@@ -396,6 +399,10 @@ private:
   // loading.
   static nsresult
   PrincipalToScopeKey(nsIPrincipal* aPrincipal, nsACString& aKey);
+
+  static nsresult
+  PrincipalInfoToScopeKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                          nsACString& aKey);
 
   static void
   AddScopeAndRegistration(const nsACString& aScope,

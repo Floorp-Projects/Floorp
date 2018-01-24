@@ -109,7 +109,7 @@ CompositorManagerChild::CreateContentCompositorBridge(uint32_t aNamespace)
   PCompositorBridgeChild* pbridge =
     sInstance->SendPCompositorBridgeConstructor(options);
   if (NS_WARN_IF(!pbridge)) {
-    return true;
+    return false;
   }
 
   auto bridge = static_cast<CompositorBridgeChild*>(pbridge);

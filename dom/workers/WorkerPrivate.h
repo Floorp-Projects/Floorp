@@ -573,6 +573,12 @@ public:
     return mLoadInfo.mServiceWorkerDescriptor.ref().SetState(aState);
   }
 
+  const Maybe<ServiceWorkerDescriptor>&
+  GetParentController() const
+  {
+    return mLoadInfo.mParentController;
+  }
+
   const ChannelInfo&
   GetChannelInfo() const
   {

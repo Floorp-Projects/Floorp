@@ -135,13 +135,9 @@ PerformanceMonitoring::start()
 bool
 PerformanceMonitoring::commit()
 {
+#if defined(MOZ_HAVE_RDTSC)
     // Maximal initialization size, in elements for the vector of groups.
     static const size_t MAX_GROUPS_INIT_CAPACITY = 1024;
-
-#if !defined(MOZ_HAVE_RDTSC)
-    // The AutoStopwatch is only executed if `MOZ_HAVE_RDTSC`.
-    return false;
-#endif // !defined(MOZ_HAVE_RDTSC)
 
     if (!isMonitoringJank_) {
         // Either we have not started monitoring or monitoring has
@@ -175,6 +171,10 @@ PerformanceMonitoring::commit()
     // twice in succession).
     reset();
     return success;
+#else
+    // The AutoStopwatch is only executed if `MOZ_HAVE_RDTSC`.
+    return false;
+#endif // defined(MOZ_HAVE_RDTSC)
 }
 
 uint64_t

@@ -28,13 +28,8 @@ rtc_static_library("primitives") {
 
   deps = [
     "../..:webrtc_common",
+    "../../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
   ]
-
-  if (!build_with_mozilla) {
-    deps += [
-      "../../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
-    ]
-  }
 }
 
 if (rtc_include_tests) {
@@ -180,23 +175,6 @@ rtc_static_library("desktop_capture") {
     "window_capturer_win.cc",
   ]
 
-  if (build_with_mozilla) {
-    defines = [ "MULTI_MONITOR_SCREENSHARE" ]
-    sources += [
-      "desktop_device_info.cc",
-      "desktop_device_info.h",
-      "app_capturer_win.cc",
-      "win/desktop_device_info_win.cc",
-      "win/win_shared.cc",
-    ]
-
-    if (is_mac) {
-      sources += [
-        "app_capturer_mac.mm",
-      ]
-    }
-  }
-
   if (use_x11) {
     sources += [
       "mouse_cursor_monitor_x11.cc",
@@ -209,18 +187,6 @@ rtc_static_library("desktop_capture") {
       "x11/x_server_pixel_buffer.cc",
       "x11/x_server_pixel_buffer.h",
     ]
-
-    if (build_with_mozilla) {
-      sources += [
-        "app_capturer_x11.cc",
-        "app_capturer_x11.h",
-        "x11/desktop_device_info_x11.cc",
-        "x11/desktop_device_info_x11.h",
-        "x11/shared_x_util.cc",
-        "x11/shared_x_util.h",
-      ]
-    }
-
     configs += [ "//build/config/linux:x11" ]
   }
 
@@ -238,12 +204,6 @@ rtc_static_library("desktop_capture") {
       "IOKit.framework",
       "OpenGL.framework",
     ]
-
-    if (build_with_mozilla) {
-      sources += [
-        "mac/desktop_device_info_mac.mm",
-      ]
-    }
   }
 
   if (is_win) {
@@ -256,27 +216,13 @@ rtc_static_library("desktop_capture") {
   deps = [
     ":primitives",
     "../..:webrtc_common",
+    "../../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
     "../../system_wrappers",
+    "//third_party/libyuv",
   ]
-
-  if (!build_with_mozilla) {
-    deps += [
-      "../../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
-    ]
-  }
-
-  if (rtc_build_libyuv) {
-    deps += [ "$rtc_libyuv_dir" ]
-  } else {
-    include_dirs = [ "$rtc_libyuv_dir/include" ]
-  }
 
   if (use_desktop_capture_differ_sse2) {
     deps += [ ":desktop_capture_differ_sse2" ]
-  }
-
-  if (build_with_mozilla) {
-    deps += ["../../base:rtc_base_approved"]
   }
 }
 

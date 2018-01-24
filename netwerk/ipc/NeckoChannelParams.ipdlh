@@ -9,7 +9,9 @@ include protocol PHttpChannel;
 include protocol PFTPChannel;
 include protocol PChildToParentStream;
 include BlobTypes;
+include ClientIPCTypes;
 include URIParams;
+include IPCServiceWorkerDescriptor;
 include IPCStream;
 include PBackgroundSharedTypes;
 
@@ -57,6 +59,7 @@ struct LoadInfoArgs
   bool                        enforceSecurity;
   bool                        initialSecurityCheckDone;
   bool                        isInThirdPartyContext;
+  bool                        isDocshellReload;
   OriginAttributes            originAttributes;
   RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;
   RedirectHistoryEntryInfo[]  redirectChain;
@@ -67,6 +70,29 @@ struct LoadInfoArgs
    */
   PrincipalInfo[]             ancestorPrincipals;
   uint64_t[]                  ancestorOuterWindowIDs;
+
+  /**
+   * ClientInfo structure representing the window or worker that triggered
+   * this network request.  May be void_t if its a system internal request.
+   */
+  OptionalIPCClientInfo       clientInfo;
+
+  /**
+   * Non-subresource requests will result in the creation of a window or
+   * worker client.  The reserved and initial ClientInfo values represent
+   * this resulting client.  An initial ClientInfo represents an initial
+   * about:blank window that will be re-used while a reserved ClientInfo
+   * represents a to-be-newly-created window/worker.
+   */
+  OptionalIPCClientInfo       reservedClientInfo;
+  OptionalIPCClientInfo       initialClientInfo;
+
+  /**
+   * Subresource loads may have a controller set based on their owning
+   * window/worker client.  We must send this across IPC to support
+   * performing interception in the parent.
+   */
+  OptionalIPCServiceWorkerDescriptor controller;
 
   nsCString[]                 corsUnsafeHeaders;
   bool                        forcePreflight;

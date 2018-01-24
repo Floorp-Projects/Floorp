@@ -30,7 +30,8 @@ function test_policy(test) {
     uri: test.url,
     loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     triggeringPrincipal: triggeringPrincipal,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
   });
 
   chan.QueryInterface(Components.interfaces.nsIHttpChannel);

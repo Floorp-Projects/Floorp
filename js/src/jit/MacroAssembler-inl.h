@@ -34,36 +34,6 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
-// Frame manipulation functions.
-
-uint32_t
-MacroAssembler::framePushed() const
-{
-    return framePushed_;
-}
-
-void
-MacroAssembler::setFramePushed(uint32_t framePushed)
-{
-    framePushed_ = framePushed;
-}
-
-void
-MacroAssembler::adjustFrame(int32_t value)
-{
-    MOZ_ASSERT_IF(value < 0, framePushed_ >= uint32_t(-value));
-    setFramePushed(framePushed_ + value);
-}
-
-void
-MacroAssembler::implicitPop(uint32_t bytes)
-{
-    MOZ_ASSERT(bytes % sizeof(intptr_t) == 0);
-    MOZ_ASSERT(bytes <= INT32_MAX);
-    adjustFrame(-int32_t(bytes));
-}
-
-// ===============================================================
 // Stack manipulation functions.
 
 CodeOffset
@@ -841,9 +811,9 @@ MacroAssembler::storeCallInt32Result(Register reg)
 }
 
 void
-MacroAssembler::storeCallResultValue(AnyRegister dest)
+MacroAssembler::storeCallResultValue(AnyRegister dest, JSValueType type)
 {
-    unboxValue(JSReturnOperand, dest);
+    unboxValue(JSReturnOperand, dest, type);
 }
 
 void
@@ -852,7 +822,7 @@ MacroAssembler::storeCallResultValue(TypedOrValueRegister dest)
     if (dest.hasValue())
         storeCallResultValue(dest.valueReg());
     else
-        storeCallResultValue(dest.typedReg());
+        storeCallResultValue(dest.typedReg(), ValueTypeFromMIRType(dest.type()));
 }
 
 } // namespace jit

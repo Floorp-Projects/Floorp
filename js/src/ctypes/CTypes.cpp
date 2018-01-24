@@ -40,6 +40,7 @@
 
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
+#include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
@@ -3208,9 +3209,10 @@ template<class CharType>
 static size_t
 strnlen(const CharType* begin, size_t max)
 {
-  for (const CharType* s = begin; s != begin + max; ++s)
-    if (*s == 0)
-      return s - begin;
+  for (size_t i = 0; i < max; i++) {
+    if (begin[i] == '\0')
+      return i;
+  }
 
   return max;
 }

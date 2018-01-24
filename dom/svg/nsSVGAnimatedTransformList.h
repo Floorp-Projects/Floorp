@@ -60,9 +60,11 @@ public:
     return mBaseVal;
   }
 
-  nsresult SetBaseValue(const SVGTransformList& aValue);
+  nsresult SetBaseValue(const SVGTransformList& aValue,
+                        nsSVGElement* aSVGElement);
 
-  nsresult SetBaseValueString(const nsAString& aValue);
+  nsresult SetBaseValueString(const nsAString& aValue,
+                              nsSVGElement* aSVGElement);
 
   void ClearBaseValue();
 

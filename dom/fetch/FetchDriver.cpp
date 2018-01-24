@@ -520,6 +520,18 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
                        nullptr, /* aCallbacks */
                        loadFlags,
                        ios);
+  } else if (mClientInfo.isSome()) {
+    rv = NS_NewChannel(getter_AddRefs(chan),
+                       uri,
+                       mPrincipal,
+                       mClientInfo.ref(),
+                       mController,
+                       secFlags,
+                       mRequest->ContentPolicyType(),
+                       mLoadGroup,
+                       nullptr, /* aCallbacks */
+                       loadFlags,
+                       ios);
   } else {
     rv = NS_NewChannel(getter_AddRefs(chan),
                        uri,
@@ -610,6 +622,12 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = internalChan->SetIntegrityMetadata(mRequest->GetIntegrity());
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    // Set the initiator type
+    nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChan));
+    if (timedChannel) {
+      timedChannel->SetInitiatorType(NS_LITERAL_STRING("fetch"));
+    }
   }
 
   // Step 5. Proxy authentication will be handled by Necko.
@@ -1327,6 +1345,20 @@ FetchDriver::SetDocument(nsIDocument* aDocument)
   // Cannot set document after Fetch() has been called.
   MOZ_ASSERT(!mFetchCalled);
   mDocument = aDocument;
+}
+
+void
+FetchDriver::SetClientInfo(const ClientInfo& aClientInfo)
+{
+  MOZ_ASSERT(!mFetchCalled);
+  mClientInfo.emplace(aClientInfo);
+}
+
+void
+FetchDriver::SetController(const Maybe<ServiceWorkerDescriptor>& aController)
+{
+  MOZ_ASSERT(!mFetchCalled);
+  mController = aController;
 }
 
 void

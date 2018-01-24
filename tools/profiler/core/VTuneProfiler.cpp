@@ -4,6 +4,11 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef XP_WIN
+#undef UNICODE
+#undef _UNICODE
+#endif
+
 #include "VTuneProfiler.h"
 #include "mozilla/Bootstrap.h"
 #include <memory>
@@ -18,8 +23,8 @@ VTuneProfiler::Initialize()
   // This is just a 'dirty trick' to find out if the ittnotify DLL was found.
   // If it wasn't this function always returns 0, otherwise it returns incrementing
   // numbers, if the library was found this wastes 2 events but that should be okay.
-  __itt_event testEvent = __itt_event_createA("Test event", strlen("Test event"));
-  testEvent = __itt_event_createA("Test event 2", strlen("Test event 2"));
+  __itt_event testEvent = __itt_event_create("Test event", strlen("Test event"));
+  testEvent = __itt_event_create("Test event 2", strlen("Test event 2"));
 
   if (testEvent) {
     mInstance = new VTuneProfiler();
@@ -46,7 +51,7 @@ VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind)
   if (iter != mStrings.end()) {
     event = iter->second;
   } else {
-    event = __itt_event_createA(aName, str.length());
+    event = __itt_event_create(aName, str.length());
     mStrings.insert({ str, event });
   }
 
@@ -66,21 +71,21 @@ VTuneProfiler::RegisterThreadInternal(const char* aName)
     // Process main thread.
     switch (XRE_GetProcessType()) {
       case GeckoProcessType::GeckoProcessType_Default:
-        __itt_thread_set_nameA("Main Process");
+        __itt_thread_set_name("Main Process");
         break;
       case GeckoProcessType::GeckoProcessType_Content:
-        __itt_thread_set_nameA("Content Process");
+        __itt_thread_set_name("Content Process");
         break;
       case GeckoProcessType::GeckoProcessType_GMPlugin:
-        __itt_thread_set_nameA("Plugin Process");
+        __itt_thread_set_name("Plugin Process");
         break;
       case GeckoProcessType::GeckoProcessType_GPU:
-        __itt_thread_set_nameA("GPU Process");
+        __itt_thread_set_name("GPU Process");
         break;
       default:
-        __itt_thread_set_nameA("Unknown Process");
+        __itt_thread_set_name("Unknown Process");
     }
     return;
   }
-  __itt_thread_set_nameA(aName);
+  __itt_thread_set_name(aName);
 }

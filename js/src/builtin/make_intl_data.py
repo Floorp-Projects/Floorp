@@ -907,7 +907,7 @@ def updateTzdata(topsrcdir, args):
     if not os.path.isdir(icuTzDir):
         raise RuntimeError("not a directory: %s" % icuTzDir)
 
-    dateTimeFormatTestDir = os.path.join(topsrcdir, "js/src/tests/Intl/DateTimeFormat")
+    dateTimeFormatTestDir = os.path.join(topsrcdir, "js/src/tests/non262/Intl/DateTimeFormat")
     if not os.path.isdir(dateTimeFormatTestDir):
         raise RuntimeError("not a directory: %s" % dateTimeFormatTestDir)
 

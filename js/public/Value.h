@@ -49,9 +49,9 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
 {
     JSVAL_TYPE_DOUBLE              = 0x00,
     JSVAL_TYPE_INT32               = 0x01,
-    JSVAL_TYPE_UNDEFINED           = 0x02,
-    JSVAL_TYPE_NULL                = 0x03,
-    JSVAL_TYPE_BOOLEAN             = 0x04,
+    JSVAL_TYPE_BOOLEAN             = 0x02,
+    JSVAL_TYPE_UNDEFINED           = 0x03,
+    JSVAL_TYPE_NULL                = 0x04,
     JSVAL_TYPE_MAGIC               = 0x05,
     JSVAL_TYPE_STRING              = 0x06,
     JSVAL_TYPE_SYMBOL              = 0x07,
@@ -143,7 +143,9 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
 
 #elif defined(JS_PUNBOX64)
 
-#define JSVAL_PAYLOAD_MASK           0x00007FFFFFFFFFFFLL
+// This should only be used in toGCThing, see the 'Spectre mitigations' comment.
+#define JSVAL_PAYLOAD_MASK_GCTHING   0x00007FFFFFFFFFFFLL
+
 #define JSVAL_TAG_MASK               0xFFFF800000000000LL
 #define JSVAL_TYPE_TO_TAG(type)      ((JSValueTag)(JSVAL_TAG_MAX_DOUBLE | (type)))
 #define JSVAL_TYPE_TO_SHIFTED_TAG(type) (((uint64_t)JSVAL_TYPE_TO_TAG(type)) << JSVAL_TAG_SHIFT)
@@ -153,8 +155,14 @@ static_assert(sizeof(JSValueShiftedTag) == sizeof(uint64_t),
 #define JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET             JSVAL_TAG_STRING
 
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET    JSVAL_SHIFTED_TAG_OBJECT
-#define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET       JSVAL_SHIFTED_TAG_UNDEFINED
+#define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET       JSVAL_SHIFTED_TAG_BOOLEAN
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET      JSVAL_SHIFTED_TAG_STRING
+
+// JSVAL_TYPE_OBJECT and JSVAL_TYPE_NULL differ by one bit. We can use this to
+// implement toObjectOrNull more efficiently.
+#define JSVAL_OBJECT_OR_NULL_BIT   (uint64_t(0x8) << JSVAL_TAG_SHIFT)
+static_assert((JSVAL_SHIFTED_TAG_NULL ^ JSVAL_SHIFTED_TAG_OBJECT) == JSVAL_OBJECT_OR_NULL_BIT,
+              "JSVAL_OBJECT_OR_NULL_BIT must be consistent with object and null tags");
 
 #endif /* JS_PUNBOX64 */
 
@@ -287,11 +295,19 @@ CanonicalizeNaN(double d)
  *   Value::setObject takes a JSObject&. (Conversely, Value::toObject returns a
  *   JSObject&.)  A convenience member Value::setObjectOrNull is provided.
  *
- * - JSVAL_VOID is the same as the singleton value of the Undefined type.
- *
  * - Note that JS::Value is 8 bytes on 32 and 64-bit architectures. Thus, on
  *   32-bit user code should avoid copying jsval/JS::Value as much as possible,
  *   preferring to pass by const Value&.
+ *
+ * Spectre mitigations
+ * ===================
+ * To mitigate Spectre attacks, we do the following:
+ *
+ * - On 64-bit platforms, when unboxing a Value, we XOR the bits with the
+ *   expected type tag (instead of masking the payload bits). This guarantees
+ *   that toString, toObject, toSymbol will return an invalid pointer (because
+ *   some high bits will be set) when called on a Value with a different type
+ *   tag.
  */
 class MOZ_NON_PARAM alignas(8) Value
 {
@@ -628,7 +644,7 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return data.s.payload.str;
 #elif defined(JS_PUNBOX64)
-        return reinterpret_cast<JSString*>(data.asBits & JSVAL_PAYLOAD_MASK);
+        return reinterpret_cast<JSString*>(data.asBits ^ JSVAL_SHIFTED_TAG_STRING);
 #endif
     }
 
@@ -637,7 +653,7 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return data.s.payload.sym;
 #elif defined(JS_PUNBOX64)
-        return reinterpret_cast<JS::Symbol*>(data.asBits & JSVAL_PAYLOAD_MASK);
+        return reinterpret_cast<JS::Symbol*>(data.asBits ^ JSVAL_SHIFTED_TAG_SYMBOL);
 #endif
     }
 
@@ -646,7 +662,10 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return *data.s.payload.obj;
 #elif defined(JS_PUNBOX64)
-        return *toObjectOrNull();
+        uint64_t ptrBits = data.asBits ^ JSVAL_SHIFTED_TAG_OBJECT;
+        MOZ_ASSERT(ptrBits);
+        MOZ_ASSERT((ptrBits & 0x7) == 0);
+        return *reinterpret_cast<JSObject*>(ptrBits);
 #endif
     }
 
@@ -655,7 +674,9 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return data.s.payload.obj;
 #elif defined(JS_PUNBOX64)
-        uint64_t ptrBits = data.asBits & JSVAL_PAYLOAD_MASK;
+        // Note: the 'Spectre mitigations' comment at the top of this class
+        // explains why we use XOR here and in other to* methods.
+        uint64_t ptrBits = (data.asBits ^ JSVAL_SHIFTED_TAG_OBJECT) & ~JSVAL_OBJECT_OR_NULL_BIT;
         MOZ_ASSERT((ptrBits & 0x7) == 0);
         return reinterpret_cast<JSObject*>(ptrBits);
 #endif
@@ -666,7 +687,7 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return data.s.payload.cell;
 #elif defined(JS_PUNBOX64)
-        uint64_t ptrBits = data.asBits & JSVAL_PAYLOAD_MASK;
+        uint64_t ptrBits = data.asBits & JSVAL_PAYLOAD_MASK_GCTHING;
         MOZ_ASSERT((ptrBits & 0x7) == 0);
         return reinterpret_cast<js::gc::Cell*>(ptrBits);
 #endif
@@ -681,7 +702,7 @@ class MOZ_NON_PARAM alignas(8) Value
 #if defined(JS_NUNBOX32)
         return bool(data.s.payload.boo);
 #elif defined(JS_PUNBOX64)
-        return bool(data.asBits & JSVAL_PAYLOAD_MASK);
+        return bool(int32_t(data.asBits));
 #endif
     }
 

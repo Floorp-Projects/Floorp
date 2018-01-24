@@ -1095,6 +1095,11 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
                                           const Range<wr::ImageKey>& aImageKeys,
                                           const wr::ExternalImageId& aExtID)
 {
+  if (!gfx::gfxVars::UseWebRenderANGLE()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
+    return;
+  }
+
   MOZ_ASSERT(mHandle);
   auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
                                               : &wr::ResourceUpdateQueue::UpdateExternalImage;
@@ -1341,6 +1346,11 @@ DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResourc
                                                const Range<wr::ImageKey>& aImageKeys,
                                                const wr::ExternalImageId& aExtID)
 {
+  if (!gfx::gfxVars::UseWebRenderANGLE()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called without ANGLE");
+    return;
+  }
+
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
   MOZ_ASSERT(mSize.width % 2 == 0);

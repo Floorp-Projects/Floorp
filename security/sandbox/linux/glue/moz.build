@@ -8,13 +8,19 @@ SOURCES += [
     '../../chromium/base/strings/safe_sprintf.cc',
     '../SandboxLogging.cpp',
     'SandboxCrash.cpp',
+    'SandboxPrefBridge.cpp',
 ]
 
 # Avoid Chromium logging dependency, because this is going into
 # libxul.  See also the comment in SandboxLogging.h.
 SOURCES['../../chromium/base/strings/safe_sprintf.cc'].flags += ['-DNDEBUG']
 
+# Need this for mozilla::ipc::FileDescriptor etc.
+include('/ipc/chromium/chromium-config.mozbuild')
+
 LOCAL_INCLUDES += [
+    # Need this for safe_sprintf.h used by SandboxLogging.h,
+    # but it has to be after ipc/chromium/src.
     '/security/sandbox/chromium',
     '/security/sandbox/linux',
 ]

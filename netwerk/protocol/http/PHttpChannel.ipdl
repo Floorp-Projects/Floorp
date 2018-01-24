@@ -11,6 +11,7 @@ include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
 include NeckoChannelParams;
+include IPCServiceWorkerDescriptor;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
@@ -108,7 +109,8 @@ child:
                        int16_t             redirectCount,
                        uint32_t            cacheKey,
                        nsCString           altDataType,
-                       int64_t             altDataLength);
+                       int64_t             altDataLength,
+                       OptionalIPCServiceWorkerDescriptor controller);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.

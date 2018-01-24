@@ -1880,7 +1880,7 @@ MacroAssemblerCompat::ensureDouble(const ValueOperand& source, FloatRegister des
 }
 
 void
-MacroAssemblerCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerCompat::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type)
 {
     if (dest.isFloat()) {
         Label notInt32, end;
@@ -1891,7 +1891,7 @@ MacroAssemblerCompat::unboxValue(const ValueOperand& src, AnyRegister dest)
         unboxDouble(src, dest.fpu());
         bind(&end);
     } else {
-        unboxNonDouble(src, dest.gpr());
+        unboxNonDouble(src, dest.gpr(), type);
     }
 }
 

@@ -8867,8 +8867,18 @@ nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
     return false;
   }
   nsContentPolicyType type = loadInfo->InternalContentPolicyType();
-  return type == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-         type == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
+  return IsNonSubresourceInternalPolicyType(type);
+}
+
+// static
+bool
+nsContentUtils::IsNonSubresourceInternalPolicyType(nsContentPolicyType aType)
+{
+  return aType == nsIContentPolicy::TYPE_DOCUMENT ||
+         aType == nsIContentPolicy::TYPE_INTERNAL_IFRAME ||
+         aType == nsIContentPolicy::TYPE_INTERNAL_FRAME ||
+         aType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+         aType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
 }
 
 // static, public
@@ -8877,7 +8887,8 @@ nsContentUtils::StorageAllowedForWindow(nsPIDOMWindowInner* aWindow)
 {
   if (nsIDocument* document = aWindow->GetExtantDoc()) {
     nsCOMPtr<nsIPrincipal> principal = document->NodePrincipal();
-    return InternalStorageAllowedForPrincipal(principal, aWindow, nullptr);
+    return InternalStorageAllowedForPrincipal(principal, aWindow, nullptr,
+                                              nullptr);
   }
 
   return StorageAccess::eDeny;
@@ -8891,7 +8902,8 @@ nsContentUtils::StorageAllowedForDocument(nsIDocument* aDoc)
 
   if (nsPIDOMWindowInner* inner = aDoc->GetInnerWindow()) {
     nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
-    return InternalStorageAllowedForPrincipal(principal, inner, nullptr);
+    return InternalStorageAllowedForPrincipal(principal, inner, nullptr,
+                                              nullptr);
   }
 
   return StorageAccess::eDeny;
@@ -8907,14 +8919,33 @@ nsContentUtils::StorageAllowedForNewWindow(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aURI);
   // parent may be nullptr
 
-  return InternalStorageAllowedForPrincipal(aPrincipal, aParent, aURI);
+  return InternalStorageAllowedForPrincipal(aPrincipal, aParent, aURI, nullptr);
+}
+
+// static, public
+nsContentUtils::StorageAccess
+nsContentUtils::StorageAllowedForChannel(nsIChannel* aChannel)
+{
+  MOZ_DIAGNOSTIC_ASSERT(sSecurityManager);
+  MOZ_DIAGNOSTIC_ASSERT(aChannel);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  Unused << sSecurityManager->GetChannelResultPrincipal(aChannel,
+                                                        getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, nsContentUtils::StorageAccess::eDeny);
+
+  nsContentUtils::StorageAccess result =
+    InternalStorageAllowedForPrincipal(principal, nullptr, nullptr, aChannel);
+
+  return result;
 }
 
 // static, public
 nsContentUtils::StorageAccess
 nsContentUtils::StorageAllowedForPrincipal(nsIPrincipal* aPrincipal)
 {
-  return InternalStorageAllowedForPrincipal(aPrincipal, nullptr, nullptr);
+  return InternalStorageAllowedForPrincipal(aPrincipal, nullptr, nullptr,
+                                            nullptr);
 }
 
 // static, private
@@ -8974,7 +9005,8 @@ nsContentUtils::GetCookieBehaviorForPrincipal(nsIPrincipal* aPrincipal,
 nsContentUtils::StorageAccess
 nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                    nsPIDOMWindowInner* aWindow,
-                                                   nsIURI* aURI)
+                                                   nsIURI* aURI,
+                                                   nsIChannel* aChannel)
 {
   MOZ_ASSERT(aPrincipal);
 
@@ -9061,16 +9093,40 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     return StorageAccess::eDeny;
   }
 
-  // In the absense of a window, we assume that we are first-party.
-  if (aWindow && (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
-                  behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN)) {
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID);
-    MOZ_ASSERT(thirdPartyUtil);
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN ||
+      behavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN) {
 
-    bool thirdPartyWindow = false;
-    if (NS_SUCCEEDED(thirdPartyUtil->IsThirdPartyWindow(
-          aWindow->GetOuterWindow(), aURI, &thirdPartyWindow)) && thirdPartyWindow) {
+    // In the absence of a window or channel, we assume that we are first-party.
+    bool thirdParty = false;
+
+    MOZ_ASSERT(!aWindow || !aChannel,
+               "A window and channel should not both be provided.");
+
+    if (aWindow) {
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID);
+      MOZ_ASSERT(thirdPartyUtil);
+
+      Unused << thirdPartyUtil->IsThirdPartyWindow(aWindow->GetOuterWindow(),
+                                                   aURI,
+                                                   &thirdParty);
+    }
+
+    if (aChannel) {
+      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID);
+      MOZ_ASSERT(thirdPartyUtil);
+
+      // Note, we must call IsThirdPartyChannel() here and not just try to
+      // use nsILoadInfo.isThirdPartyContext.  That nsILoadInfo property only
+      // indicates if the parent loading window is third party or not.  We
+      // want to check the channel URI against the loading principal as well.
+      Unused << thirdPartyUtil->IsThirdPartyChannel(aChannel,
+                                                    nullptr,
+                                                    &thirdParty);
+    }
+
+    if (thirdParty) {
       // XXX For non-cookie forms of storage, we handle BEHAVIOR_LIMIT_FOREIGN by
       // simply rejecting the request to use the storage. In the future, if we
       // change the meaning of BEHAVIOR_LIMIT_FOREIGN to be one which makes sense
