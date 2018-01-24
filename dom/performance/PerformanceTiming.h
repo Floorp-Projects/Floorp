@@ -20,9 +20,21 @@ class nsITimedChannel;
 namespace mozilla {
 namespace dom {
 
+class PerformanceTiming;
+
 class PerformanceTimingData final
 {
+  friend class PerformanceTiming;
+
 public:
+  // This can return null.
+  static PerformanceTimingData*
+  Create(nsITimedChannel* aChannel,
+         nsIHttpChannel* aHttpChannel,
+         DOMHighResTimeStamp aZeroTime,
+         nsAString& aInitiatorType,
+         nsAString& aEntryName);
+
   PerformanceTimingData(nsITimedChannel* aChannel,
                         nsIHttpChannel* aHttpChannel,
                         DOMHighResTimeStamp aZeroTime);
@@ -106,8 +118,7 @@ public:
     MOZ_ASSERT(aPerformance);
     MOZ_ASSERT(!aStamp.IsNull());
 
-    TimeDuration duration =
-        aStamp - aPerformance->GetDOMTiming()->GetNavigationStartTimeStamp();
+    TimeDuration duration = aStamp - aPerformance->CreationTimeStamp();
     return duration.ToMilliseconds() + mZeroTime;
   }
 

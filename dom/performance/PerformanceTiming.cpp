@@ -20,6 +20,58 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceTiming, mPerformance)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PerformanceTiming, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PerformanceTiming, Release)
 
+/* static */ PerformanceTimingData*
+PerformanceTimingData::Create(nsITimedChannel* aTimedChannel,
+                              nsIHttpChannel* aChannel,
+                              DOMHighResTimeStamp aZeroTime,
+                              nsAString& aInitiatorType,
+                              nsAString& aEntryName)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Check if resource timing is prefed off.
+  if (!nsContentUtils::IsResourceTimingEnabled()) {
+    return nullptr;
+  }
+
+  if (!aChannel || !aTimedChannel) {
+    return nullptr;
+  }
+
+  bool reportTiming = true;
+  aTimedChannel->GetReportResourceTiming(&reportTiming);
+
+  if (!reportTiming) {
+    return nullptr;
+  }
+
+  aTimedChannel->GetInitiatorType(aInitiatorType);
+
+  // If the initiator type had no valid value, then set it to the default
+  // ("other") value.
+  if (aInitiatorType.IsEmpty()) {
+    aInitiatorType = NS_LITERAL_STRING("other");
+  }
+
+  // According to the spec, "The name attribute must return the resolved URL
+  // of the requested resource. This attribute must not change even if the
+  // fetch redirected to a different URL."
+  nsCOMPtr<nsIURI> originalURI;
+  aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+
+  nsAutoCString name;
+  originalURI->GetSpec(name);
+  aEntryName = NS_ConvertUTF8toUTF16(name);
+
+  // The nsITimedChannel argument will be used to gather all the timings.
+  // The nsIHttpChannel argument will be used to check if any cross-origin
+  // redirects occurred.
+  // The last argument is the "zero time" (offset). Since we don't want
+  // any offset for the resource timing, this will be set to "0" - the
+  // resource timing returns a relative timing (no offset).
+  return new PerformanceTimingData(aTimedChannel, aChannel, 0);
+}
+
 PerformanceTiming::PerformanceTiming(Performance* aPerformance,
                                      nsITimedChannel* aChannel,
                                      nsIHttpChannel* aHttpChannel,
