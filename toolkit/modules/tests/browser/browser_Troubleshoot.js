@@ -357,8 +357,14 @@ const SNAPSHOT_SCHEMA = {
         directWriteVersion: {
           type: "string",
         },
+        usesTiling: {
+          type: "boolean",
+        },
         offMainThreadPaintEnabled: {
           type: "boolean",
+        },
+        offMainThreadPaintWorkerCount: {
+          type: "number",
         },
         clearTypeParameters: {
           type: "string",
