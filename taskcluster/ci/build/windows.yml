@@ -653,7 +653,7 @@ win32-mingw32/debug:
         max-run-time: 7200
     run:
         using: mozharness
-        actions: [build, check-test]
+        actions: [build]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/releng_base_firefox.py
