@@ -126,17 +126,6 @@ nsNSSCertificate::nsNSSCertificate()
 
 nsNSSCertificate::~nsNSSCertificate()
 {
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void nsNSSCertificate::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void nsNSSCertificate::destructorSafeDestroyNSSReference()
-{
   if (mPermDelete) {
     if (mCertType == nsNSSCertificate::USER_CERT) {
       nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
@@ -148,8 +137,6 @@ void nsNSSCertificate::destructorSafeDestroyNSSReference()
       SEC_DeletePermCertificate(mCert.get());
     }
   }
-
-  mCert = nullptr;
 }
 
 nsresult
@@ -998,22 +985,6 @@ nsNSSCertList::nsNSSCertList()
   mCertList = UniqueCERTCertList(CERT_NewCertList());
 }
 
-nsNSSCertList::~nsNSSCertList()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void nsNSSCertList::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void nsNSSCertList::destructorSafeDestroyNSSReference()
-{
-  mCertList = nullptr;
-}
-
 nsNSSCertList*
 nsNSSCertList::GetCertList()
 {
@@ -1311,22 +1282,6 @@ nsNSSCertListEnumerator::nsNSSCertListEnumerator(
 {
   MOZ_ASSERT(certList);
   mCertList = nsNSSCertList::DupCertList(certList);
-}
-
-nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void nsNSSCertListEnumerator::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void nsNSSCertListEnumerator::destructorSafeDestroyNSSReference()
-{
-  mCertList = nullptr;
 }
 
 NS_IMETHODIMP

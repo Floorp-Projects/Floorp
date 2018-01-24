@@ -52,11 +52,6 @@ public:
   nsresult Init();
 
   /**
-   * Used by nsNSSShutDownList to manage nsNSSShutDownObjects.
-   */
-  void virtualDestroyNSSReference() override;
-
-  /**
    * Number of worker threads that are currently running.
    */
   static uint32_t sThreadCount;
@@ -73,11 +68,6 @@ public:
 
 protected:
   virtual ~BackgroundFileSaver();
-
-  /**
-   * Helper function for managing NSS objects (mDigestContext).
-   */
-  void destructorSafeDestroyNSSReference();
 
   /**
    * Thread that constructed this object.
@@ -397,11 +387,8 @@ public:
   // Constructor. Neither parameter may be null. The caller owns both.
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
-  // We don't own any NSS objects here, so no need to clean up
-  void virtualDestroyNSSReference() override { }
-
 private:
-  ~DigestOutputStream();
+  ~DigestOutputStream() {}
 
   // Calls to write are passed to this stream.
   nsCOMPtr<nsIOutputStream> mOutputStream;

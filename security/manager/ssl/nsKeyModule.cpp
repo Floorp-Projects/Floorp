@@ -17,24 +17,6 @@ nsKeyObject::nsKeyObject()
 {
 }
 
-nsKeyObject::~nsKeyObject()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsKeyObject::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsKeyObject::destructorSafeDestroyNSSReference()
-{
-  mSymKey = nullptr;
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // nsIKeyObject
 
@@ -80,15 +62,6 @@ nsKeyObject::GetType(int16_t *_retval)
 // nsIKeyObjectFactory
 
 NS_IMPL_ISUPPORTS(nsKeyObjectFactory, nsIKeyObjectFactory)
-
-nsKeyObjectFactory::nsKeyObjectFactory()
-{
-}
-
-nsKeyObjectFactory::~nsKeyObjectFactory()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
 
 NS_IMETHODIMP
 nsKeyObjectFactory::KeyFromString(int16_t aAlgorithm, const nsACString& aKey,

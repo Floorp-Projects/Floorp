@@ -42,26 +42,14 @@ public:
   {
   }
 
-  // nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
 private:
-  ~ContentSignatureVerifier();
+  ~ContentSignatureVerifier() {}
 
   nsresult UpdateInternal(const nsACString& aData);
   nsresult DownloadCertChain();
   nsresult CreateContextInternal(const nsACString& aData,
                                  const nsACString& aCertChain,
                                  const nsACString& aName);
-
-  void destructorSafeDestroyNSSReference()
-  {
-    mCx = nullptr;
-    mKey = nullptr;
-  }
 
   nsresult ParseContentSignatureHeader(const nsACString& aContentSignatureHeader);
 

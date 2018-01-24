@@ -28,13 +28,10 @@ public:
   nsCryptoHash();
 
 private:
-  ~nsCryptoHash();
+  ~nsCryptoHash() {}
 
   mozilla::UniqueHASHContext mHashContext;
   bool mInitialized;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
 class nsCryptoHMAC : public nsICryptoHMAC, public nsNSSShutDownObject
@@ -46,11 +43,8 @@ public:
   nsCryptoHMAC();
 
 private:
-  ~nsCryptoHMAC();
+  ~nsCryptoHMAC() {}
   mozilla::UniquePK11Context mHMACContext;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
 #endif // nsCryptoHash_h

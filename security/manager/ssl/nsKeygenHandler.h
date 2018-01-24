@@ -56,11 +56,8 @@ public:
                             nsAString& keyTypeValue,
                             nsAString& keyParamsValue);
 
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
-
 protected:
-  virtual ~nsKeygenFormProcessor();
+  virtual ~nsKeygenFormProcessor() {}
 
   nsresult GetPublicKey(const nsAString& aValue, const nsAString& aChallenge,
                         const nsString& akeyType, nsAString& aOutPublicKey,

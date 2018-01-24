@@ -24,10 +24,7 @@ class nsPKCS12Blob : public nsNSSShutDownObject
 {
 public:
   nsPKCS12Blob();
-  virtual ~nsPKCS12Blob();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~nsPKCS12Blob() {}
 
   // PKCS#12 Import
   nsresult ImportFromFile(nsIFile *file);

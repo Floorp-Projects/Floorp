@@ -39,12 +39,6 @@ nsPKCS12Blob::nsPKCS12Blob()
   mUIContext = new PipUIContext();
 }
 
-// destructor
-nsPKCS12Blob::~nsPKCS12Blob()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 // nsPKCS12Blob::ImportFromFile
 //
 // Given a file handle, read a PKCS#12 blob from that file, decode it, and

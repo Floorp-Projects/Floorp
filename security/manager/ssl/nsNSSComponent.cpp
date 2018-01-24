@@ -983,11 +983,9 @@ public:
     MOZ_ASSERT(nssComponent);
   }
 
-  ~LoadLoadableRootsTask();
+  ~LoadLoadableRootsTask() = default;
 
   nsresult Dispatch();
-
-  void virtualDestroyNSSReference() override {} // nothing to release
 
 private:
   NS_IMETHOD Run() override;
@@ -995,11 +993,6 @@ private:
   RefPtr<nsNSSComponent> mNSSComponent;
   nsCOMPtr<nsIThread> mThread;
 };
-
-LoadLoadableRootsTask::~LoadLoadableRootsTask()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
 
 nsresult
 LoadLoadableRootsTask::Dispatch()

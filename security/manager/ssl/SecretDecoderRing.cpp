@@ -60,15 +60,6 @@ void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
   NS_DispatchToMainThread(runnable);
 }
 
-SecretDecoderRing::SecretDecoderRing()
-{
-}
-
-SecretDecoderRing::~SecretDecoderRing()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 nsresult
 SecretDecoderRing::Encrypt(const nsACString& data, /*out*/ nsACString& result)
 {

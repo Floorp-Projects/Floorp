@@ -59,21 +59,12 @@ public:
 private:
   ~KeyPair() override
   {
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
-  {
-    SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = nullptr;
-    SECKEY_DestroyPublicKey(mPublicKey);
-    mPublicKey = nullptr;
+    if (mPrivateKey) {
+      SECKEY_DestroyPrivateKey(mPrivateKey);
+    }
+    if (mPublicKey) {
+      SECKEY_DestroyPublicKey(mPublicKey);
+    }
   }
 
   SECKEYPrivateKey * mPrivateKey;
@@ -96,17 +87,6 @@ public:
 
 private:
   ~KeyGenRunnable() override
-  {
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
   {
   }
 
@@ -131,19 +111,9 @@ public:
 private:
   ~SignRunnable() override
   {
-    destructorSafeDestroyNSSReference();
-    shutdown(ShutdownCalledFrom::Object);
-  }
-
-  void virtualDestroyNSSReference() override
-  {
-    destructorSafeDestroyNSSReference();
-  }
-
-  void destructorSafeDestroyNSSReference()
-  {
-    SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = nullptr;
+    if (mPrivateKey) {
+      SECKEY_DestroyPrivateKey(mPrivateKey);
+    }
   }
 
   const nsCString mTextToSign; // in

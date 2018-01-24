@@ -29,15 +29,12 @@ public:
   NS_DECL_NSIKEYOBJECT
 
 private:
-  ~nsKeyObject();
+  ~nsKeyObject() {}
 
   // Disallow copy constructor
   nsKeyObject(nsKeyObject&);
 
   UniquePK11SymKey mSymKey;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
 
@@ -45,19 +42,16 @@ class nsKeyObjectFactory final : public nsIKeyObjectFactory
                                , public nsNSSShutDownObject
 {
 public:
-  nsKeyObjectFactory();
+  nsKeyObjectFactory() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIKEYOBJECTFACTORY
 
 private:
-  ~nsKeyObjectFactory();
+  ~nsKeyObjectFactory() {}
 
   // Disallow copy constructor
   nsKeyObjectFactory(nsKeyObjectFactory&);
-
-  // No NSS resources to release.
-  virtual void virtualDestroyNSSReference() override {}
 };
 
 #endif // nsKeyModule_h

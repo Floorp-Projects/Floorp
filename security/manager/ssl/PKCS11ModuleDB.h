@@ -21,16 +21,13 @@ class PKCS11ModuleDB : public nsIPKCS11ModuleDB
                      , public nsNSSShutDownObject
 {
 public:
-  PKCS11ModuleDB();
+  PKCS11ModuleDB() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPKCS11MODULEDB
 
 protected:
-  virtual ~PKCS11ModuleDB();
-
-private:
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~PKCS11ModuleDB() {}
 };
 
 void GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,

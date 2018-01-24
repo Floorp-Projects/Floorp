@@ -371,10 +371,9 @@ WebCryptoTask::DispatchWithPromise(Promise* aResultPromise)
   mEarlyRv = BeforeCrypto();
   MAYBE_EARLY_FAIL(mEarlyRv)
 
-  // Skip NSS if we're already done, or launch a CryptoTask
+  // Skip dispatch if we're already done. Otherwise launch a CryptoTask
   if (mEarlyComplete) {
     CallCallback(mEarlyRv);
-    Skip();
     return;
   }
 
@@ -413,12 +412,6 @@ WebCryptoTask::Run()
   }
 
   // We're now back on the calling thread.
-
-  // Release NSS resources now, before calling CallCallback, so that
-  // WebCryptoTasks have consistent behavior regardless of whether NSS is shut
-  // down between CalculateResult being called and CallCallback being called.
-  virtualDestroyNSSReference();
-
   CallCallback(mRv);
 
   // Stop holding the worker thread alive now that the async work has
@@ -2135,12 +2128,6 @@ protected:
   JsonWebKey mJwk;
 
 private:
-  virtual void ReleaseNSSResources() override
-  {
-    mPrivateKey = nullptr;
-    mPublicKey = nullptr;
-  }
-
   virtual nsresult DoCrypto() override
   {
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
@@ -2546,13 +2533,6 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
   }
 }
 
-void
-GenerateAsymmetricKeyTask::ReleaseNSSResources()
-{
-  mPublicKey = nullptr;
-  mPrivateKey = nullptr;
-}
-
 nsresult
 GenerateAsymmetricKeyTask::DoCrypto()
 {
@@ -2915,7 +2895,6 @@ public:
                 const ObjectOrString& aDerivedKeyType, bool aExtractable,
                 const Sequence<nsString>& aKeyUsages)
     : DeriveBitsTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType)
-    , mResolved(false)
   {
     if (NS_FAILED(this->mEarlyRv)) {
       return;
@@ -2928,20 +2907,15 @@ public:
 
 protected:
   RefPtr<ImportSymmetricKeyTask> mTask;
-  bool mResolved;
 
 private:
   virtual void Resolve() override {
     mTask->SetRawKeyData(this->mResult);
     mTask->DispatchWithPromise(this->mResultPromise);
-    mResolved = true;
   }
 
   virtual void Cleanup() override
   {
-    if (mTask && !mResolved) {
-      mTask->Skip();
-    }
     mTask = nullptr;
   }
 };
@@ -3163,7 +3137,6 @@ public:
               CryptoKey& aWrappingKey,
               const ObjectOrString& aWrapAlgorithm)
     : ExportKeyTask(aFormat, aKey)
-    , mResolved(false)
   {
     if (NS_FAILED(mEarlyRv)) {
       return;
@@ -3174,7 +3147,6 @@ public:
 
 private:
   RefPtr<KeyEncryptTask> mTask;
-  bool mResolved;
 
   virtual nsresult AfterCrypto() override {
     // If wrapping JWK, stringify the JSON
@@ -3197,14 +3169,10 @@ private:
   {
     mTask->SetData(mResult);
     mTask->DispatchWithPromise(mResultPromise);
-    mResolved = true;
   }
 
   virtual void Cleanup() override
   {
-    if (mTask && !mResolved) {
-      mTask->Skip();
-    }
     mTask = nullptr;
   }
 };
@@ -3220,25 +3188,19 @@ public:
                 ImportKeyTask* aTask)
     : KeyEncryptTask(aCx, aUnwrapAlgorithm, aUnwrappingKey, aWrappedKey, false)
     , mTask(aTask)
-    , mResolved(false)
   {}
 
 private:
   RefPtr<ImportKeyTask> mTask;
-  bool mResolved;
 
   virtual void Resolve() override
   {
     mTask->SetKeyDataMaybeParseJWK(KeyEncryptTask::mResult);
     mTask->DispatchWithPromise(KeyEncryptTask::mResultPromise);
-    mResolved = true;
   }
 
   virtual void Cleanup() override
   {
-    if (mTask && !mResolved) {
-      mTask->Skip();
-    }
     mTask = nullptr;
   }
 };
@@ -3709,17 +3671,12 @@ WebCryptoTask::WebCryptoTask()
   , mEarlyRv(NS_OK)
   , mEarlyComplete(false)
   , mOriginalEventTarget(nullptr)
-  , mReleasedNSSResources(false)
   , mRv(NS_ERROR_NOT_INITIALIZED)
 {
 }
 
 WebCryptoTask::~WebCryptoTask()
 {
-  MOZ_ASSERT(mReleasedNSSResources);
-
-  shutdown(ShutdownCalledFrom::Object);
-
   if (mWorkerHolder) {
     NS_ProxyRelease(
       "WebCryptoTask::mWorkerHolder",

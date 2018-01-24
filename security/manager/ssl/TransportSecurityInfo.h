@@ -39,7 +39,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo
                             , public nsNSSShutDownObject
 {
 protected:
-  virtual ~TransportSecurityInfo();
+  virtual ~TransportSecurityInfo() {}
 public:
   TransportSecurityInfo();
 
@@ -108,9 +108,6 @@ private:
 
   /* Peer cert chain for failed connections (for error reporting) */
   nsCOMPtr<nsIX509CertList> mFailedCertChain;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
 class RememberCertErrorsTable

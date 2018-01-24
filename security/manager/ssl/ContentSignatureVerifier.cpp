@@ -42,12 +42,6 @@ static LazyLogModule gCSVerifierPRLog("ContentSignatureVerifier");
 // Content-Signature prefix
 const nsLiteralCString kPREFIX = NS_LITERAL_CSTRING("Content-Signature:\x00");
 
-ContentSignatureVerifier::~ContentSignatureVerifier()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 ContentSignatureVerifier::VerifyContentSignature(
   const nsACString& aData, const nsACString& aCSHeader,

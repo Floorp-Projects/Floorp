@@ -27,11 +27,6 @@ nsX509CertValidity::nsX509CertValidity(const mozilla::UniqueCERTCertificate& cer
   }
 }
 
-nsX509CertValidity::~nsX509CertValidity()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 nsX509CertValidity::GetNotBefore(PRTime* aNotBefore)
 {

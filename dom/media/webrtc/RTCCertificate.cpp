@@ -306,12 +306,6 @@ RTCCertificate::RTCCertificate(nsIGlobalObject* aGlobal,
 {
 }
 
-RTCCertificate::~RTCCertificate()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 // This creates some interesting lifecycle consequences, since the DtlsIdentity
 // holds NSS objects, but does not implement nsNSSShutDownObject.
 
@@ -339,19 +333,6 @@ JSObject*
 RTCCertificate::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return RTCCertificateBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-RTCCertificate::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-RTCCertificate::destructorSafeDestroyNSSReference()
-{
-  mPrivateKey.reset();
-  mCertificate.reset();
 }
 
 bool

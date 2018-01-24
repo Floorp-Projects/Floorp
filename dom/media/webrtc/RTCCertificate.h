@@ -63,16 +63,12 @@ public:
   RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
   const UniqueCERTCertificate& Certificate() const { return mCertificate; }
 
-  // For nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
-
   // Structured clone methods
   bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const;
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
 private:
-  ~RTCCertificate();
+  ~RTCCertificate() {}
   void operator=(const RTCCertificate&) = delete;
   RTCCertificate(const RTCCertificate&) = delete;
 

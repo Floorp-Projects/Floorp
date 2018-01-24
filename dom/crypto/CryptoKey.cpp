@@ -160,12 +160,6 @@ CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
 {
 }
 
-CryptoKey::~CryptoKey()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 JSObject*
 CryptoKey::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
@@ -492,17 +486,6 @@ CryptoKey::GetPublicKey() const
     return nullptr;
   }
   return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(mPublicKey.get()));
-}
-
-void CryptoKey::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void CryptoKey::destructorSafeDestroyNSSReference()
-{
-  mPrivateKey = nullptr;
-  mPublicKey = nullptr;
 }
 
 
