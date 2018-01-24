@@ -498,7 +498,11 @@ exports.setContents = function(elem, contents) {
     return;
   }
 
-  if ('innerHTML' in elem) {
+  if ('unsafeSetInnerHTML' in elem) {
+    // FIXME: Stop relying on unsanitized HTML.
+    elem.unsafeSetInnerHTML(contents);
+  }
+  else if ('innerHTML' in elem) {
     elem.innerHTML = contents;
   }
   else {

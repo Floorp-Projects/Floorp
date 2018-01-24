@@ -36,8 +36,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570192
     addLoadEvent(function() {
       try {
         var content = document.getElementById("content");
-        content.innerHTML = '<textbox newlines="pasteintact" ' +
-          'xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
+        content.unsafeSetInnerHTML('<textbox newlines="pasteintact" ' +
+          'xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>');
         var textbox = content.firstChild;
         ok(textbox, "created the textbox");
         ok(!textbox.editor, "do we have an editor?");
