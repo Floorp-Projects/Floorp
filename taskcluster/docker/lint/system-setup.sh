@@ -4,7 +4,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 set -ve
 
-test `whoami` == 'root'
+test "$(whoami)" == 'root'
 
 mkdir -p /setup
 cd /setup
@@ -23,7 +23,7 @@ apt_packages+=('wget')
 apt_packages+=('xz-utils')
 
 apt-get update
-apt-get install -y ${apt_packages[@]}
+apt-get install -y "${apt_packages[@]}"
 
 # Without this we get spurious "LC_ALL: cannot change locale (en_US.UTF-8)" errors,
 # and python scripts raise UnicodeEncodeError when trying to print unicode characters.
@@ -40,6 +40,7 @@ tooltool_fetch() {
 }
 
 cd /build
+# shellcheck disable=SC1091
 . install-mercurial.sh
 
 ###
@@ -47,7 +48,7 @@ cd /build
 ###
 
 # install node
-
+# shellcheck disable=SC1091
 . install-node.sh
 
 ###

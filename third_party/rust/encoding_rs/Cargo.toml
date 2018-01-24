@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_rs"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
@@ -24,6 +24,9 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/hsivonen/encoding_rs"
 [profile.release]
 lto = true
+[dependencies.cfg-if]
+version = "0.1.0"
+
 [dependencies.serde]
 version = "1.0"
 optional = true
@@ -31,20 +34,17 @@ optional = true
 [dependencies.simd]
 version = "0.2.0"
 optional = true
+[dev-dependencies.bincode]
+version = "0.8"
 
-[dependencies.cfg-if]
-version = "0.1.0"
 [dev-dependencies.serde_derive]
 version = "1.0"
 
 [dev-dependencies.serde_json]
 version = "1.0"
 
-[dev-dependencies.bincode]
-version = "0.8"
-
 [features]
-simd-accel = ["simd"]
 no-static-ideograph-encoder-tables = []
+simd-accel = ["simd"]
 [badges.travis-ci]
 repository = "hsivonen/encoding_rs"

@@ -12,7 +12,7 @@ use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex, PictureType};
 use internal_types::{FastHashMap, RenderPassIndex, SourceTexture};
 use picture::ContentOrigin;
-use prim_store::{PrimitiveIndex};
+use prim_store::{PrimitiveIndex, ImageCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
 use resource_cache::CacheItem;
@@ -263,6 +263,24 @@ impl BlurTask {
     }
 }
 
+// Where the source data for a blit task can be found.
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+pub enum BlitSource {
+    Image {
+        key: ImageCacheKey,
+    },
+    RenderTask {
+        task_id: RenderTaskId,
+    },
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+pub struct BlitTask {
+    pub source: BlitSource,
+}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct RenderTaskData {
@@ -278,6 +296,7 @@ pub enum RenderTaskKind {
     HorizontalBlur(BlurTask),
     Readback(DeviceIntRect),
     Scaling(RenderTargetKind),
+    Blit(BlitTask),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -337,6 +356,32 @@ impl RenderTask {
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, screen_rect.size),
             kind: RenderTaskKind::Readback(screen_rect),
+            clear_mode: ClearMode::Transparent,
+            pass_index: None,
+        }
+    }
+
+    pub fn new_blit(
+        size: DeviceIntSize,
+        source: BlitSource,
+    ) -> Self {
+        let mut children = Vec::new();
+
+        // If this blit uses a render task as a source,
+        // ensure it's added as a child task. This will
+        // ensure it gets allocated in the correct pass
+        // and made available as an input when this task
+        // executes.
+        if let BlitSource::RenderTask { task_id } = source {
+            children.push(task_id);
+        }
+
+        RenderTask {
+            children,
+            location: RenderTaskLocation::Dynamic(None, size),
+            kind: RenderTaskKind::Blit(BlitTask {
+                source,
+            }),
             clear_mode: ClearMode::Transparent,
             pass_index: None,
         }
@@ -511,7 +556,8 @@ impl RenderTask {
                 )
             }
             RenderTaskKind::Readback(..) |
-            RenderTaskKind::Scaling(..) => {
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Blit(..) => {
                 (
                     [0.0; 3],
                     [0.0; 4],
@@ -598,6 +644,10 @@ impl RenderTask {
             RenderTaskKind::Picture(ref task_info) => {
                 task_info.target_kind
             }
+
+            RenderTaskKind::Blit(..) => {
+                RenderTargetKind::Color
+            }
         }
     }
 
@@ -613,7 +663,8 @@ impl RenderTask {
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) |
-            RenderTaskKind::Scaling(..) => false,
+            RenderTaskKind::Scaling(..) |
+            RenderTaskKind::Blit(..) => false,
 
             RenderTaskKind::CacheMask(..) => true,
         }
@@ -646,6 +697,10 @@ impl RenderTask {
                 pt.new_level("Scaling".to_owned());
                 pt.add_item(format!("kind: {:?}", kind));
             }
+            RenderTaskKind::Blit(ref task) => {
+                pt.new_level("Blit".to_owned());
+                pt.add_item(format!("source: {:?}", task.source));
+            }
         }
 
         pt.add_item(format!("clear to: {:?}", self.clear_mode));
@@ -664,6 +719,7 @@ impl RenderTask {
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub enum RenderTaskCacheKeyKind {
     BoxShadow(BoxShadowCacheKey),
+    Image(ImageCacheKey),
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
@@ -722,7 +778,7 @@ impl RenderTaskCache {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         mut f: F,
-    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3]) {
+    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3], bool) {
         // Get the texture cache handle for this cache key,
         // or create one.
         let cache_entry = self.entries
@@ -735,8 +791,14 @@ impl RenderTaskCache {
         if texture_cache.request(&mut cache_entry.handle, gpu_cache) {
             // Invoke user closure to get render task chain
             // to draw this into the texture cache.
-            let (render_task_id, user_data) = f(render_tasks);
+            let (render_task_id, user_data, is_opaque) = f(render_tasks);
             let render_task = &mut render_tasks[render_task_id];
+
+            // Select the right texture page to allocate from.
+            let image_format = match render_task.target_kind() {
+                RenderTargetKind::Color => ImageFormat::BGRA8,
+                RenderTargetKind::Alpha => ImageFormat::R8,
+            };
 
             // Find out what size to alloc in the texture cache.
             let size = match render_task.location {
@@ -753,8 +815,8 @@ impl RenderTaskCache {
             let descriptor = ImageDescriptor::new(
                 size.width as u32,
                 size.height as u32,
-                ImageFormat::R8,
-                false,
+                image_format,
+                is_opaque,
             );
 
             // Allocate space in the texture cache, but don't supply

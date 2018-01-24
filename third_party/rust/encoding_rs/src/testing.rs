@@ -22,13 +22,20 @@ pub fn decode(encoding: &'static Encoding, bytes: &[u8], expect: &str) {
         }
         vec.extend_from_slice(bytes);
         string.push_str(expect);
-        decode_without_padding(encoding, &vec[..], &string[..]);
+        decode_without_padding_impl(encoding, &vec[..], &string[..], i);
     }
 }
 
 pub fn decode_without_padding(encoding: &'static Encoding, bytes: &[u8], expect: &str) {
-    decode_to_utf8(encoding, bytes, expect);
-    decode_to_utf16(encoding, bytes, &utf16_from_utf8(expect)[..]);
+    decode_without_padding_impl(encoding, bytes, expect, 0);
+}
+
+fn decode_without_padding_impl(encoding: &'static Encoding,
+                               bytes: &[u8],
+                               expect: &str,
+                               padding: usize) {
+    decode_to_utf8_impl(encoding, bytes, expect, padding);
+    decode_to_utf16_impl(encoding, bytes, &utf16_from_utf8(expect)[..], padding);
     decode_to_string(encoding, bytes, expect);
 }
 
@@ -56,40 +63,116 @@ pub fn encode_without_padding(encoding: &'static Encoding, string: &str, expect:
 }
 
 pub fn decode_to_utf16(encoding: &'static Encoding, bytes: &[u8], expect: &[u16]) {
+    decode_to_utf16_impl(encoding, bytes, expect, 0);
+}
+
+pub fn decode_to_utf16_impl(encoding: &'static Encoding,
+                            bytes: &[u8],
+                            expect: &[u16],
+                            padding: usize) {
+    for i in padding..bytes.len() {
+        let (head, tail) = bytes.split_at(i);
+        decode_to_utf16_with_boundary(encoding, head, tail, expect);
+    }
+}
+
+pub fn decode_to_utf16_with_boundary(encoding: &'static Encoding,
+                                     head: &[u8],
+                                     tail: &[u8],
+                                     expect: &[u16]) {
     let mut decoder = encoding.new_decoder();
-    let mut dest: Vec<u16> =
-        Vec::with_capacity(decoder.max_utf16_buffer_length(bytes.len()).unwrap());
+    let mut dest: Vec<u16> = Vec::with_capacity(
+        decoder
+            .max_utf16_buffer_length(head.len() + tail.len())
+            .unwrap()
+    );
     let capacity = dest.capacity();
     dest.resize(capacity, 0u16);
-    let (complete, read, written, _) = decoder.decode_to_utf16(bytes, &mut dest, true);
-    match complete {
-        CoderResult::InputEmpty => {}
-        CoderResult::OutputFull => {
-            unreachable!();
+    let mut total_read = 0;
+    let mut total_written = 0;
+    {
+        let (complete, read, written, _) = decoder.decode_to_utf16(head, &mut dest, false);
+        match complete {
+            CoderResult::InputEmpty => {}
+            CoderResult::OutputFull => {
+                unreachable!();
+            }
         }
+        total_read += read;
+        total_written += written;
     }
-    assert_eq!(read, bytes.len());
-    assert_eq!(written, expect.len());
-    dest.truncate(written);
+    {
+        let (complete, read, written, _) =
+            decoder.decode_to_utf16(tail, &mut dest[total_written..], true);
+        match complete {
+            CoderResult::InputEmpty => {}
+            CoderResult::OutputFull => {
+                unreachable!();
+            }
+        }
+        total_read += read;
+        total_written += written;
+    }
+    assert_eq!(total_read, head.len() + tail.len());
+    assert_eq!(total_written, expect.len());
+    dest.truncate(total_written);
     assert_eq!(&dest[..], expect);
 }
 
 pub fn decode_to_utf8(encoding: &'static Encoding, bytes: &[u8], expect: &str) {
+    decode_to_utf8_impl(encoding, bytes, expect, 0);
+}
+
+pub fn decode_to_utf8_impl(encoding: &'static Encoding,
+                           bytes: &[u8],
+                           expect: &str,
+                           padding: usize) {
+    for i in padding..bytes.len() {
+        let (head, tail) = bytes.split_at(i);
+        decode_to_utf8_with_boundary(encoding, head, tail, expect);
+    }
+}
+
+pub fn decode_to_utf8_with_boundary(encoding: &'static Encoding,
+                                    head: &[u8],
+                                    tail: &[u8],
+                                    expect: &str) {
     let mut decoder = encoding.new_decoder();
-    let mut dest: Vec<u8> =
-        Vec::with_capacity(decoder.max_utf8_buffer_length(bytes.len()).unwrap());
+    let mut dest: Vec<u8> = Vec::with_capacity(
+        decoder
+            .max_utf8_buffer_length(head.len() + tail.len())
+            .unwrap()
+    );
     let capacity = dest.capacity();
     dest.resize(capacity, 0u8);
-    let (complete, read, written, _) = decoder.decode_to_utf8(bytes, &mut dest, true);
-    match complete {
-        CoderResult::InputEmpty => {}
-        CoderResult::OutputFull => {
-            unreachable!();
+    let mut total_read = 0;
+    let mut total_written = 0;
+    {
+        let (complete, read, written, _) = decoder.decode_to_utf8(head, &mut dest, false);
+        match complete {
+            CoderResult::InputEmpty => {}
+            CoderResult::OutputFull => {
+                unreachable!();
+            }
         }
+        total_read += read;
+        total_written += written;
     }
-    assert_eq!(read, bytes.len());
-    assert_eq!(written, expect.len());
-    dest.truncate(written);
+    {
+        let (complete, read, written, _) =
+            decoder.decode_to_utf8(tail, &mut dest[total_written..], true);
+        match complete {
+            CoderResult::InputEmpty => {}
+            CoderResult::OutputFull => {
+                unreachable!();
+            }
+        }
+        total_read += read;
+        total_written += written;
+    }
+    assert_eq!(total_read, head.len() + tail.len());
+    assert_eq!(total_written, expect.len());
+    dest.truncate(total_written);
     assert_eq!(&dest[..], expect.as_bytes());
 }
 

@@ -1565,6 +1565,7 @@ pulse_register_device_collection_changed(cubeb * context,
   pa_operation * o;
   o = WRAP(pa_context_subscribe)(context->context, mask, subscribe_success, context);
   if (o == NULL) {
+    WRAP(pa_threaded_mainloop_unlock)(context->mainloop);
     LOG("Context subscribe failed");
     return CUBEB_ERROR;
   }

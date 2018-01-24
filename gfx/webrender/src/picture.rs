@@ -585,7 +585,7 @@ impl PicturePrimitive {
                         //           the brush_picture shader is updated to draw
                         //           segments, since the scale factor will not
                         //           be used at all then during drawing.
-                        (root_task_id, [scale_factor, 0.0, 0.0])
+                        (root_task_id, [scale_factor, 0.0, 0.0], false)
                     }
                 );
 

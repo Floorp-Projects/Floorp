@@ -179,9 +179,11 @@ let runWorkerTest = async function(data) {
         if (e.data.type == "status") {
           ok(e.data.status, e.data.msg);
         } else if (e.data.type == "finish") {
+          worker.terminate();
           resolve();
         } else {
           ok(false, "Unknown message type");
+          worker.terminate();
           resolve();
         }
       };

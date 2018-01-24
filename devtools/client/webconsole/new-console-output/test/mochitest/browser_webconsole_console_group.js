@@ -13,23 +13,8 @@ const { INDENT_WIDTH } = require("devtools/client/webconsole/new-console-output/
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
-
   const store = hud.ui.newConsoleOutput.getStore();
-  // Adding logging each time the store is modified in order to check
-  // the store state in case of failure.
-  store.subscribe(() => {
-    const messages = [...store.getState().messages.messagesById]
-      .reduce(function (res, [id, message]) {
-        res.push({
-          id,
-          type: message.type,
-          parameters: message.parameters,
-          messageText: message.messageText
-        });
-        return res;
-      }, []);
-    info("messages : " + JSON.stringify(messages));
-  });
+  logAllStoreChanges(hud);
 
   const onMessagesLogged = waitForMessage(hud, "log-6");
   ContentTask.spawn(gBrowser.selectedBrowser, null, function () {

@@ -8,7 +8,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "cargo-clippy", allow(doc_markdown, inline_always, new_ret_no_self))]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.7.1")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.7.2")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -16,6 +16,10 @@
 //! addition to converting to and from UTF-8, that the performance and
 //! streamability goals are browser-oriented, and that FFI-friendliness is a
 //! goal.
+//!
+//! Additionally, the `mem` module provides functions that are useful for
+//! applications that need to be able to deal with legacy in-memory
+//! representations of Unicode.
 //!
 //! # Availability
 //!
@@ -491,7 +495,7 @@
 //! </tbody>
 //! </table>
 
-#![cfg_attr(feature = "simd-accel", feature(cfg_target_feature, platform_intrinsics))]
+#![cfg_attr(feature = "simd-accel", feature(cfg_target_feature, platform_intrinsics, core_intrinsics))]
 
 #[macro_use]
 extern crate cfg_if;
@@ -538,6 +542,8 @@ mod ascii;
 mod handles;
 mod data;
 mod variant;
+
+pub mod mem;
 
 use variant::*;
 use utf_8::utf8_valid_up_to;
@@ -2030,20 +2036,20 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [&WINDOWS_1252_INIT,
 /// # Streaming vs. Non-Streaming
 ///
 /// When you have the entire input in a single buffer, you can use the
-/// methods [`decode()`][1], [`decode_with_bom_removal()`][2],
-/// [`decode_without_bom_handling()`][3],
-/// [`decode_without_bom_handling_and_without_replacement()`][4] and
-/// [`encode()`][5]. (These methods are available to Rust callers only and are
+/// methods [`decode()`][3], [`decode_with_bom_removal()`][3],
+/// [`decode_without_bom_handling()`][5],
+/// [`decode_without_bom_handling_and_without_replacement()`][6] and
+/// [`encode()`][7]. (These methods are available to Rust callers only and are
 /// not available in the C API.) Unlike the rest of the API available to Rust,
 /// these methods perform heap allocations. You should the `Decoder` and
 /// `Encoder` objects when your input is split into multiple buffers or when
 /// you want to control the allocation of the output buffers.
 ///
-/// [1]: #method.decode
-/// [2]: #method.decode_with_bom_removal
-/// [3]: #method.decode_without_bom_handling
-/// [4]: #method.decode_without_bom_handling_and_without_replacement
-/// [5]: #method.encode
+/// [3]: #method.decode
+/// [4]: #method.decode_with_bom_removal
+/// [5]: #method.decode_without_bom_handling
+/// [6]: #method.decode_without_bom_handling_and_without_replacement
+/// [7]: #method.encode
 ///
 /// # Instances
 ///
@@ -2222,6 +2228,7 @@ impl Encoding {
     /// unsafe fallback for labels that `for_label()` maps to `Some(REPLACEMENT)`.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn for_label_no_replacement(label: &[u8]) -> Option<&'static Encoding> {
         match Encoding::for_label(label) {
             None => None,
@@ -2246,6 +2253,7 @@ impl Encoding {
     /// or UTF-16BE BOM or `None` otherwise.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn for_bom(buffer: &[u8]) -> Option<(&'static Encoding, usize)> {
         if buffer.starts_with(b"\xEF\xBB\xBF") {
             Some((UTF_8, 3))
@@ -2264,6 +2272,7 @@ impl Encoding {
     /// `document.characterSet` property.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn name(&'static self) -> &'static str {
         self.name
     }
@@ -2272,6 +2281,7 @@ impl Encoding {
     /// `char`. (Only true if the output encoding is UTF-8.)
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn can_encode_everything(&'static self) -> bool {
         self.output_encoding() == UTF_8
     }
@@ -2280,12 +2290,14 @@ impl Encoding {
     /// U+0000...U+007F and vice versa.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn is_ascii_compatible(&'static self) -> bool {
         !(self == REPLACEMENT || self == UTF_16BE || self == UTF_16LE || self == ISO_2022_JP)
     }
 
     /// Checks whether the bytes 0x00...0x7F map mostly to the characters
     /// U+0000...U+007F and vice versa.
+    #[inline]
     fn is_potentially_borrowable(&'static self) -> bool {
         !(self == REPLACEMENT || self == UTF_16BE || self == UTF_16LE)
     }
@@ -2294,6 +2306,7 @@ impl Encoding {
     /// UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn output_encoding(&'static self) -> &'static Encoding {
         if self == REPLACEMENT || self == UTF_16BE || self == UTF_16LE {
             UTF_8
@@ -2336,6 +2349,7 @@ impl Encoding {
     /// `usize`.
     ///
     /// Available to Rust only.
+    #[inline]
     pub fn decode<'a>(&'static self, bytes: &'a [u8]) -> (Cow<'a, str>, &'static Encoding, bool) {
         let (encoding, without_bom) = match Encoding::for_bom(bytes) {
             Some((encoding, bom_length)) => (encoding, &bytes[bom_length..]),
@@ -2378,6 +2392,7 @@ impl Encoding {
     /// `usize`.
     ///
     /// Available to Rust only.
+    #[inline]
     pub fn decode_with_bom_removal<'a>(&'static self, bytes: &'a [u8]) -> (Cow<'a, str>, bool) {
         let without_bom = if self == UTF_8 && bytes.starts_with(b"\xEF\xBB\xBF") {
             &bytes[3..]
@@ -2689,6 +2704,7 @@ impl Encoding {
     /// for UTF-8, UTF-16LE or UTF-16BE instead of this encoding.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn new_decoder(&'static self) -> Decoder {
         Decoder::new(self, self.new_variant_decoder(), BomHandling::Sniff)
     }
@@ -2702,6 +2718,7 @@ impl Encoding {
     /// encoding.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn new_decoder_with_bom_removal(&'static self) -> Decoder {
         Decoder::new(self, self.new_variant_decoder(), BomHandling::Remove)
     }
@@ -2717,6 +2734,7 @@ impl Encoding {
     /// instead of this method to cause the BOM to be removed.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn new_decoder_without_bom_handling(&'static self) -> Decoder {
         Decoder::new(self, self.new_variant_decoder(), BomHandling::Off)
     }
@@ -2724,6 +2742,7 @@ impl Encoding {
     /// Instantiates a new encoder for the output encoding of this encoding.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn new_encoder(&'static self) -> Encoder {
         let enc = self.output_encoding();
         enc.variant.new_encoder(enc)
@@ -2767,6 +2786,7 @@ impl Encoding {
 }
 
 impl PartialEq for Encoding {
+    #[inline]
     fn eq(&self, other: &Encoding) -> bool {
         (self as *const Encoding) == (other as *const Encoding)
     }
@@ -2775,12 +2795,14 @@ impl PartialEq for Encoding {
 impl Eq for Encoding {}
 
 impl Hash for Encoding {
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         (self as *const Encoding).hash(state);
     }
 }
 
 impl std::fmt::Debug for Encoding {
+    #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Encoding {{ {} }}", self.name)
     }
@@ -2788,6 +2810,7 @@ impl std::fmt::Debug for Encoding {
 
 #[cfg(feature = "serde")]
 impl Serialize for Encoding {
+    #[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
@@ -3054,6 +3077,7 @@ impl Decoder {
     /// of the decoder.
     ///
     /// Available via the C wrapper.
+    #[inline]
     pub fn encoding(&self) -> &'static Encoding {
         self.encoding
     }
@@ -3769,12 +3793,14 @@ impl Encoder {
     }
 
     /// The `Encoding` this `Encoder` is for.
+    #[inline]
     pub fn encoding(&self) -> &'static Encoding {
         self.encoding
     }
 
     /// Returns `true` if this is an ISO-2022-JP encoder that's not in the
     /// ASCII state and `false` otherwise.
+    #[inline]
     pub fn has_pending_state(&self) -> bool {
         self.variant.has_pending_state()
     }
@@ -4109,6 +4135,16 @@ fn write_ncr(unmappable: char, dst: &mut [u8]) -> usize {
 #[inline(always)]
 fn in_range16(i: u16, start: u16, end: u16) -> bool {
     i.wrapping_sub(start) < (end - start)
+}
+
+#[inline(always)]
+fn in_range32(i: u32, start: u32, end: u32) -> bool {
+    i.wrapping_sub(start) < (end - start)
+}
+
+#[inline(always)]
+fn in_inclusive_range8(i: u8, start: u8, end: u8) -> bool {
+    i.wrapping_sub(start) <= (end - start)
 }
 
 #[inline(always)]

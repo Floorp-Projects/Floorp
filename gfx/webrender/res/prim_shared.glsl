@@ -695,7 +695,7 @@ GlyphResource fetch_glyph_resource(int address) {
 }
 
 struct ImageResource {
-    vec4 uv_rect;
+    RectWithEndpoint uv_rect;
     float layer;
     vec3 user_data;
 };
@@ -703,12 +703,14 @@ struct ImageResource {
 ImageResource fetch_image_resource(int address) {
     //Note: number of blocks has to match `renderer::BLOCKS_PER_UV_RECT`
     vec4 data[2] = fetch_from_resource_cache_2(address);
-    return ImageResource(data[0], data[1].x, data[1].yzw);
+    RectWithEndpoint uv_rect = RectWithEndpoint(data[0].xy, data[0].zw);
+    return ImageResource(uv_rect, data[1].x, data[1].yzw);
 }
 
 ImageResource fetch_image_resource_direct(ivec2 address) {
     vec4 data[2] = fetch_from_resource_cache_2_direct(address);
-    return ImageResource(data[0], data[1].x, data[1].yzw);
+    RectWithEndpoint uv_rect = RectWithEndpoint(data[0].xy, data[0].zw);
+    return ImageResource(uv_rect, data[1].x, data[1].yzw);
 }
 
 struct TextRun {
@@ -725,12 +727,11 @@ TextRun fetch_text_run(int address) {
 struct Image {
     vec4 stretch_size_and_tile_spacing;  // Size of the actual image and amount of space between
                                          //     tiled instances of this image.
-    vec4 sub_rect;                          // If negative, ignored.
 };
 
 Image fetch_image(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Image(data[0], data[1]);
+    vec4 data = fetch_from_resource_cache_1(address);
+    return Image(data);
 }
 
 void write_clip(vec2 global_pos, ClipArea area) {

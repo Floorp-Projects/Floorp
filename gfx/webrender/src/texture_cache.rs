@@ -405,9 +405,21 @@ impl TextureCache {
                     .get_opt(handle)
                     .expect("BUG: was dropped from cache or not updated!");
                 debug_assert_eq!(entry.last_access, self.frame_id);
+                let (layer_index, origin) = match entry.kind {
+                    EntryKind::Standalone { .. } => {
+                        (0, DeviceUintPoint::zero())
+                    }
+                    EntryKind::Cache {
+                        layer_index,
+                        origin,
+                        ..
+                    } => (layer_index, origin),
+                };
                 CacheItem {
                     uv_rect_handle: entry.uv_rect_handle,
                     texture_id: SourceTexture::TextureCache(entry.texture_id),
+                    uv_rect: DeviceUintRect::new(origin, entry.size),
+                    texture_layer: layer_index as i32,
                 }
             }
             None => panic!("BUG: handle not requested earlier in frame"),
@@ -1051,13 +1063,10 @@ impl TextureUpdate {
                 panic!("The vector image should have been rasterized.");
             }
             ImageData::External(ext_image) => match ext_image.image_type {
-                ExternalImageType::Texture2DHandle |
-                ExternalImageType::Texture2DArrayHandle |
-                ExternalImageType::TextureRectHandle |
-                ExternalImageType::TextureExternalHandle => {
+                ExternalImageType::TextureHandle(_) => {
                     panic!("External texture handle should not go through texture_cache.");
                 }
-                ExternalImageType::ExternalBuffer => TextureUpdateSource::External {
+                ExternalImageType::Buffer => TextureUpdateSource::External {
                     id: ext_image.id,
                     channel_index: ext_image.channel_index,
                 },

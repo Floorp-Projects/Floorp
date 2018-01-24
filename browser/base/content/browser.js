@@ -7517,8 +7517,15 @@ var gIdentityHandler = {
                              (Services.prefs.getBoolPref("security.insecure_connection_icon.pbmode.enabled") &&
                              PrivateBrowsingUtils.isWindowPrivate(window));
         let className = warnOnInsecure ? "notSecure" : "unknownIdentity";
-
         this._identityBox.className = className;
+
+        let warnTextOnInsecure = Services.prefs.getBoolPref("security.insecure_connection_text.enabled") ||
+                                 (Services.prefs.getBoolPref("security.insecure_connection_text.pbmode.enabled") &&
+                                 PrivateBrowsingUtils.isWindowPrivate(window));
+        if (warnTextOnInsecure) {
+          icon_label = gNavigatorBundle.getString("identity.notSecure.label");
+          this._identityBox.classList.add("notSecureText");
+        }
       }
       if (this._hasInsecureLoginForms) {
         // Insecure login forms can only be present on "unknown identity"
