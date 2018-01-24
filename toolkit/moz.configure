@@ -1188,3 +1188,13 @@ with only_when(has_elfhack):
 
     set_config('USE_ELF_HACK',
                depends_if('--enable-elf-hack')(lambda _: True))
+
+
+@depends(check_build_environment)
+def idl_roots(build_env):
+    return namespace(ipdl_root=os.path.join(build_env.topobjdir, 'ipc', 'ipdl'),
+                     webidl_root=os.path.join(build_env.topobjdir,
+                                              'dom', 'bindings'))
+
+set_config('WEBIDL_ROOT', idl_roots.webidl_root)
+set_config('IPDL_ROOT', idl_roots.ipdl_root)
