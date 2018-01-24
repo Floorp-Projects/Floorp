@@ -8,7 +8,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
-import sys
 import subprocess
 import tarfile
 import tempfile
@@ -132,7 +131,6 @@ def load_image(url, imageName=None, imageTag=None):
 
     curl, zstd, docker = None, None, None
     image, tag, layer = None, None, None
-    error = None
     try:
         # Setup piping: curl | zstd | tarin
         curl = Popen(['curl', '-#', '--fail', '-L', '--retry', '8', url], stdout=PIPE)
@@ -176,8 +174,6 @@ def load_image(url, imageName=None, imageTag=None):
             tarout.addfile(member, reader)
             reader.close()
         tarout.close()
-    except Exception:
-        error = sys.exc_info()[0]
     finally:
         def trykill(proc):
             try:
@@ -197,8 +193,6 @@ def load_image(url, imageName=None, imageTag=None):
             docker.stdin.close()
         if docker and docker.wait() != 0:
             raise Exception('loading into docker failed')
-        if error:
-            raise error
 
     # Check that we found a repositories file
     if not image or not tag or not layer:
