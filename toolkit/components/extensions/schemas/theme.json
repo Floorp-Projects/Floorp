@@ -89,6 +89,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "tab_loading": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "tab_text": {
                 "$ref": "ThemeColor",
                 "optional": true
