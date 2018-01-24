@@ -649,21 +649,26 @@ function prompt(aBrowser, aRequest) {
               bundle.getString("getUserMedia.shareScreen.learnMoreLabel");
             let baseURL =
               Services.urlFormatter.formatURLPref("app.support.baseURL");
-            let learnMore =
-              "<label class='text-link' href='" + baseURL + "screenshare-safety'>" +
-              learnMoreText + "</label>";
+
+            let learnMore = chromeWin.document.createElement("label");
+            learnMore.className = "text-link";
+            learnMore.setAttribute("href", baseURL + "screenshare-safety");
+            learnMore.textContent = learnMoreText;
 
             if (type == "screen") {
               string = bundle.getFormattedString("getUserMedia.shareScreenWarning.message",
-                                                 [learnMore]);
+                                                 ["<>"]);
             } else {
               let brand =
                 doc.getElementById("bundle_brand").getString("brandShortName");
               string = bundle.getFormattedString("getUserMedia.shareFirefoxWarning.message",
-                                                 [brand, learnMore]);
+                                                 [brand, "<>"]);
             }
-            // eslint-disable-next-line no-unsanitized/property
-            warning.innerHTML = string;
+
+            let [pre, post] = string.split("<>");
+            warning.textContent = pre;
+            warning.appendChild(learnMore);
+            warning.appendChild(chromeWin.document.createTextNode(post));
           }
 
           let perms = Services.perms;

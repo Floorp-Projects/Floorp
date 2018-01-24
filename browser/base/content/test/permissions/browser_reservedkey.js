@@ -10,7 +10,7 @@ add_task(async function test_reserved_shortcuts() {
                 </keyset>`;
 
   let container = document.createElement("box");
-  container.innerHTML = keyset;
+  container.unsafeSetInnerHTML(keyset);
   document.documentElement.appendChild(container);
   /* eslint-enable no-unsanitized/property */
 
