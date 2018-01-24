@@ -16,6 +16,7 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 const paymentUISrv = Cc["@mozilla.org/dom/payments/payment-ui-service;1"]
                      .getService().wrappedJSObject;
+const {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
 const {PaymentTestUtils: PTU} = Cu.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
 function getPaymentRequests() {
@@ -160,7 +161,11 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
 }
 
 add_task(async function setup_head() {
+  await profileStorage.initialize();
+
   SimpleTest.registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
+    profileStorage.addresses._nukeAllRecords();
+    profileStorage.creditCards._nukeAllRecords();
   });
 });
