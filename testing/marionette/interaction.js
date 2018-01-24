@@ -270,7 +270,7 @@ interaction.selectOption = function(el) {
   event.mouseover(containerEl);
   event.mousemove(containerEl);
   event.mousedown(containerEl);
-  event.focus(containerEl);
+  containerEl.focus();
 
   if (!el.disabled) {
     // Clicking <option> in <select> should not be deselected if selected.
@@ -340,10 +340,10 @@ function clearContentEditableElement(el) {
   if (el.innerHTML === "") {
     return;
   }
-  event.focus(el);
+  el.focus();
   el.innerHTML = "";
   event.change(el);
-  event.blur(el);
+  el.blur();
 }
 
 function clearResettableElement(el) {
@@ -366,10 +366,10 @@ function clearResettableElement(el) {
     return;
   }
 
-  event.focus(el);
+  el.focus();
   el.value = "";
   event.change(el);
-  event.blur(el);
+  el.blur();
 }
 
 /**
@@ -491,7 +491,7 @@ interaction.uploadFile = async function(el, path) {
   event.mouseover(el);
   event.mousemove(el);
   event.mousedown(el);
-  event.focus(el);
+  el.focus();
   event.mouseup(el);
   event.click(el);
 
