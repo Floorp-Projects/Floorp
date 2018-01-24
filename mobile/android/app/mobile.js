@@ -905,3 +905,6 @@ pref("javascript.options.native_regexp", false);
 pref("media.navigator.permission.device", true);
 
 pref("media.videocontrols.lock-video-orientation", true);
+
+// Allow system add-on updates
+pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/SystemAddons/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
