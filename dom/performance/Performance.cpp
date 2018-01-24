@@ -438,6 +438,7 @@ Performance::InsertResourceEntry(PerformanceEntry* aEntry)
     return;
   }
 
+  // Don't add the entry if the buffer is full
   if (mResourceEntries.Length() >= mResourceTimingBufferSize) {
     return;
   }
