@@ -24,6 +24,7 @@ import mozpack.path as mozpath
 from .context import FinalTargetValue
 
 from collections import defaultdict, OrderedDict
+import itertools
 
 from ..util import (
     group_unified_files,
@@ -306,29 +307,47 @@ class WebIDLCollection(ContextDerived):
     def generated_events_stems(self):
         return [mozpath.splitext(b)[0] for b in self.generated_events_basenames()]
 
-class IPDLFile(ContextDerived):
-    """Describes an individual .ipdl source file."""
 
-    __slots__ = (
-        'basename',
-    )
+class IPDLCollection(ContextDerived):
+    """Collects IPDL files during the build."""
 
-    def __init__(self, context, path):
+    def __init__(self, context):
         ContextDerived.__init__(self, context)
+        self.sources = set()
+        self.preprocessed_sources = set()
 
-        self.basename = path
+    def all_sources(self):
+        return self.sources | self.preprocessed_sources
 
-class PreprocessedIPDLFile(ContextDerived):
-    """Describes an individual .ipdl source file that requires preprocessing."""
+    def all_regular_sources(self):
+        return self.sources
 
-    __slots__ = (
-        'basename',
-    )
+    def all_preprocessed_sources(self):
+        return self.preprocessed_sources
 
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
+    def all_generated_sources(self):
+        sorted_ipdl_sources = list(sorted(self.all_sources()))
 
-        self.basename = path
+        def files_from(ipdl):
+            base = mozpath.basename(ipdl)
+            root, ext = mozpath.splitext(base)
+
+            # Both .ipdl and .ipdlh become .cpp files
+            files = ['%s.cpp' % root]
+            if ext == '.ipdl':
+                # .ipdl also becomes Child/Parent.cpp files
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
+
+        return list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+
+    @property
+    def unified_source_mapping(self):
+        return list(group_unified_files(self.all_generated_sources(),
+                                        unified_prefix='UnifiedProtocols',
+                                        unified_suffix='cpp',
+                                        files_per_unified_file=16))
 
 
 class LinkageWrongKindError(Exception):
