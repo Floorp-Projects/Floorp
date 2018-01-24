@@ -9,6 +9,7 @@
 #include "nsFileChannel.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
+#include "nsIURIMutator.h"
 
 #include "nsNetUtil.h"
 
@@ -166,23 +167,22 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
                               nsIURI *baseURI,
                               nsIURI **result)
 {
-    nsCOMPtr<nsIStandardURL> url = new nsStandardURL(true);
-    if (!url)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsIURI> url = new nsStandardURL(true);
 
-    const nsACString *specPtr = &spec;
-
+    nsAutoCString buf(spec);
 #if defined(XP_WIN)
-    nsAutoCString buf;
-    if (net_NormalizeFileURL(spec, buf))
-        specPtr = &buf;
+    buf.Truncate();
+    if (!net_NormalizeFileURL(spec, buf)) {
+        buf = spec;
+    }
 #endif
 
-    nsresult rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                            *specPtr, charset, baseURI);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(url, result);
+    return NS_MutateURI(url)
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                                           buf, charset, baseURI,
+                                           nullptr)
+             .Finalize(result);
 }
 
 NS_IMETHODIMP

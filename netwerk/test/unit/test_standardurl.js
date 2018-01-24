@@ -1,9 +1,5 @@
 "use strict";
 
-const StandardURL = Components.Constructor("@mozilla.org/network/standard-url;1",
-                                           "nsIStandardURL",
-                                           "init");
-const nsIStandardURL = Components.interfaces.nsIStandardURL;
 const gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 function symmetricEquality(expect, a, b)
@@ -31,9 +27,11 @@ function symmetricEquality(expect, a, b)
 }
 
 function stringToURL(str) {
-  return (new StandardURL(nsIStandardURL.URLTYPE_AUTHORITY, 80,
-			 str, "UTF-8", null))
-         .QueryInterface(Components.interfaces.nsIURL);
+  return Cc["@mozilla.org/network/standard-url-mutator;1"]
+         .createInstance(Ci.nsIStandardURLMutator)
+         .init(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 80, str, "UTF-8", null)
+         .finalize()
+         .QueryInterface(Ci.nsIURL);
 }
 
 function pairToURLs(pair) {
