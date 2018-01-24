@@ -184,7 +184,7 @@ ResultCode TargetProcess::TransferVariable(const char* name, void* address,
   if (NULL == module)
     return SBOX_ERROR_GENERIC;
 
-  child_var = ::GetProcAddress(module, name);
+  child_var = reinterpret_cast<void*>(::GetProcAddress(module, name));
   ::FreeLibrary(module);
 
   if (NULL == child_var)

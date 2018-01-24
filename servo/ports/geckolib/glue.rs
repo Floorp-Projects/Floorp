@@ -6,7 +6,7 @@ use cssparser::{ParseErrorKind, Parser, ParserInput};
 use cssparser::ToCss as ParserToCss;
 use env_logger::LogBuilder;
 use malloc_size_of::MallocSizeOfOps;
-use selectors::{Element, NthIndexCache};
+use selectors::NthIndexCache;
 use selectors::matching::{MatchingContext, MatchingMode, matches_selector};
 use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
 use smallvec::SmallVec;
@@ -122,7 +122,7 @@ use style::gecko_properties;
 use style::invalidation::element::restyle_hints;
 use style::media_queries::{Device, MediaList, parse_media_query_list};
 use style::parser::{Parse, ParserContext, self};
-use style::properties::{CascadeFlags, ComputedValues, DeclarationSource, Importance};
+use style::properties::{ComputedValues, DeclarationSource, Importance};
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclaration, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
@@ -155,7 +155,7 @@ use style::values::distance::ComputeSquaredDistance;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
-use style_traits::{ParsingMode, StyleParseErrorKind, ToCss};
+use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::StylesheetLoader;
 
@@ -731,7 +731,7 @@ pub extern "C" fn Servo_Shorthand_AnimationValues_Serialize(shorthand_property: 
         values.iter().map(|v| AnimationValue::as_arc(unsafe { &&*v.mRawPtr }).uncompute()).collect();
 
     let mut string = String::new();
-    let rv = shorthand.longhands_to_css(declarations.iter(), &mut string);
+    let rv = shorthand.longhands_to_css(declarations.iter(), &mut CssWriter::new(&mut string));
     if rv.is_ok() {
         let buffer = unsafe { buffer.as_mut().unwrap() };
         buffer.assign_utf8(&string);
@@ -1826,7 +1826,7 @@ pub extern "C" fn Servo_Keyframe_GetKeyText(
     result: *mut nsAString
 ) {
     read_locked_arc(keyframe, |keyframe: &Keyframe| {
-        keyframe.selector.to_css(unsafe { result.as_mut().unwrap() }).unwrap()
+        keyframe.selector.to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap()
     })
 }
 
@@ -1966,7 +1966,7 @@ pub extern "C" fn Servo_PageRule_SetStyle(rule: RawServoPageRuleBorrowed,
 pub extern "C" fn Servo_SupportsRule_GetConditionText(rule: RawServoSupportsRuleBorrowed,
                                                       result: *mut nsAString) {
     read_locked_arc(rule, |rule: &SupportsRule| {
-        rule.condition.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        rule.condition.to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
     })
 }
 
@@ -1974,7 +1974,7 @@ pub extern "C" fn Servo_SupportsRule_GetConditionText(rule: RawServoSupportsRule
 pub extern "C" fn Servo_DocumentRule_GetConditionText(rule: RawServoDocumentRuleBorrowed,
                                                       result: *mut nsAString) {
     read_locked_arc(rule, |rule: &DocumentRule| {
-        rule.condition.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        rule.condition.to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
     })
 }
 
@@ -1982,7 +1982,7 @@ pub extern "C" fn Servo_DocumentRule_GetConditionText(rule: RawServoDocumentRule
 pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(rule: RawServoFontFeatureValuesRuleBorrowed,
                                                             result: *mut nsAString) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.font_family_to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        rule.font_family_to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
     })
 }
 
@@ -1990,7 +1990,7 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(rule: RawServoFontFe
 pub extern "C" fn Servo_FontFeatureValuesRule_GetValueText(rule: RawServoFontFeatureValuesRuleBorrowed,
                                                            result: *mut nsAString) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.value_to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        rule.value_to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
     })
 }
 
@@ -2039,12 +2039,10 @@ pub extern "C" fn Servo_ComputedValues_GetForAnonymousBox(parent_style_or_null: 
         page_decls,
     );
 
-    let cascade_flags = CascadeFlags::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
-    data.stylist.precomputed_values_for_pseudo_with_rule_node(
+    data.stylist.precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
         &guards,
         &pseudo,
         parent_style_or_null.map(|x| &*x),
-        cascade_flags,
         &metrics,
         rule_node
     ).into()
@@ -2220,7 +2218,7 @@ fn get_pseudo_style(
         PseudoElementCascadeType::Eager => {
             match *pseudo {
                 PseudoElement::FirstLetter => {
-                    styles.pseudos.get(&pseudo).and_then(|pseudo_styles| {
+                    styles.pseudos.get(&pseudo).map(|pseudo_styles| {
                         // inherited_styles can be None when doing lazy resolution
                         // (e.g. for computed style) or when probing.  In that case
                         // we just inherit from our element, which is what Gecko
@@ -2231,15 +2229,14 @@ fn get_pseudo_style(
                         let guards = StylesheetGuards::same(guard);
                         let metrics = get_metrics_provider_for_product();
                         let inputs = CascadeInputs::new_from_style(pseudo_styles);
-                        doc_data.stylist
-                            .compute_pseudo_element_style_with_inputs(
-                                &inputs,
-                                pseudo,
-                                &guards,
-                                Some(inherited_styles),
-                                &metrics,
-                                CascadeFlags::empty(),
-                            )
+                        doc_data.stylist.compute_pseudo_element_style_with_inputs(
+                            inputs,
+                            pseudo,
+                            &guards,
+                            Some(inherited_styles),
+                            &metrics,
+                            Some(element),
+                        )
                     })
                 },
                 _ => {
@@ -2698,7 +2695,7 @@ pub extern "C" fn Servo_SerializeFontValueForCanvas(
         };
 
         let mut string = String::new();
-        let rv = longhands.to_css_for_canvas(&mut string);
+        let rv = longhands.to_css_for_canvas(&mut CssWriter::new(&mut string));
         debug_assert!(rv.is_ok());
 
         let buffer = unsafe { buffer.as_mut().unwrap() };
@@ -2925,7 +2922,7 @@ pub extern "C" fn Servo_DeclarationBlock_HasCSSWideKeyword(
 #[no_mangle]
 pub extern "C" fn Servo_MediaList_GetText(list: RawServoMediaListBorrowed, result: *mut nsAString) {
     read_locked_arc(list, |list: &MediaList| {
-        list.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+        list.to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
     })
 }
 
@@ -2981,7 +2978,7 @@ pub extern "C" fn Servo_MediaList_GetMediumAt(
 ) -> bool {
     read_locked_arc(list, |list: &MediaList| {
         if let Some(media_query) = list.media_queries.get(index as usize) {
-            media_query.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+            media_query.to_css(&mut CssWriter::new(unsafe { result.as_mut().unwrap() })).unwrap();
             true
         } else {
             false
@@ -3633,28 +3630,17 @@ pub extern "C" fn Servo_ReparentStyle(
     let pseudo = style_to_reparent.pseudo();
     let element = element.map(GeckoElement);
 
-    let mut cascade_flags = CascadeFlags::empty();
-    if style_to_reparent.is_anon_box() {
-        cascade_flags.insert(CascadeFlags::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP);
-    }
-    if let Some(element) = element {
-        if element.is_link() {
-            cascade_flags.insert(CascadeFlags::IS_LINK);
-            if element.is_visited_link() && doc_data.visited_styles_enabled() {
-                cascade_flags.insert(CascadeFlags::IS_VISITED_LINK);
-            }
-        };
-    }
-
-    doc_data.stylist.compute_style_with_inputs(
-        &inputs,
+    doc_data.stylist.cascade_style_and_visited(
+        element,
         pseudo.as_ref(),
+        inputs,
         &StylesheetGuards::same(&guard),
         Some(parent_style),
         Some(parent_style_ignoring_first_line),
         Some(layout_parent_style),
         &metrics,
-        cascade_flags,
+        /* rule_cache = */ None,
+        &mut RuleCacheConditions::default(),
     ).into()
 }
 
@@ -4297,7 +4283,7 @@ pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(
 
     let declarations = Locked::<PropertyDeclarationBlock>::as_arc(&declarations);
 
-    doc_data.stylist.compute_for_declarations(
+    doc_data.stylist.compute_for_declarations::<GeckoElement>(
         &guards,
         parent_style,
         declarations.clone_arc(),
@@ -4394,7 +4380,7 @@ pub extern "C" fn Servo_GetCustomPropertyValue(
         None => return false,
     };
 
-    computed_value.to_css(unsafe { value.as_mut().unwrap() }).unwrap();
+    computed_value.to_css(&mut CssWriter::new(unsafe { value.as_mut().unwrap() })).unwrap();
     true
 }
 

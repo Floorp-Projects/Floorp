@@ -95,6 +95,33 @@ class MozIntl {
     }
     return MozDateTimeFormat;
   }
+
+  get NumberFormat() {
+    class MozNumberFormat extends Intl.NumberFormat {
+      constructor(locales, options, ...args) {
+        super(getLocales(locales), options, ...args);
+      }
+    }
+    return MozNumberFormat;
+  }
+
+  get Collator() {
+    class MozCollator extends Intl.Collator {
+      constructor(locales, options, ...args) {
+        super(getLocales(locales), options, ...args);
+      }
+    }
+    return MozCollator;
+  }
+
+  get PluralRules() {
+    class MozPluralRules extends Intl.PluralRules {
+      constructor(locales, options, ...args) {
+        super(getLocales(locales), options, ...args);
+      }
+    }
+    return MozPluralRules;
+  }
 }
 
 MozIntl.prototype.classID = Components.ID("{35ec195a-e8d0-4300-83af-c8a2cc84b4a3}");

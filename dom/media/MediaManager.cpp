@@ -30,6 +30,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
@@ -2234,6 +2235,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
   bool privileged = isChrome ||
       Preferences::GetBool("media.navigator.permission.disabled", false);
   bool isHTTPS = false;
+  bool isHandlingUserInput = EventStateManager::IsHandlingUserInput();;
   docURI->SchemeIs("https", &isHTTPS);
   nsCString host;
   nsresult rv = docURI->GetHost(host);
@@ -2526,8 +2528,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                                    audioType, fake);
   RefPtr<MediaManager> self = this;
   p->Then([self, onSuccess, onFailure, windowID, c, windowListener,
-           sourceListener, askPermission, prefs, isHTTPS, callID, principalInfo,
-           isChrome, resistFingerprinting](SourceSet*& aDevices) mutable {
+           sourceListener, askPermission, prefs, isHTTPS, isHandlingUserInput,
+           callID, principalInfo, isChrome, resistFingerprinting](SourceSet*& aDevices) mutable {
     // grab result
     auto devices = MakeRefPtr<Refcountable<UniquePtr<SourceSet>>>(aDevices);
 
@@ -2541,7 +2543,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
 
     p2->Then([self, onSuccess, onFailure, windowID, c,
               windowListener, sourceListener, askPermission, prefs, isHTTPS,
-              callID, principalInfo, isChrome, devices, resistFingerprinting
+              isHandlingUserInput, callID, principalInfo, isChrome, devices,
+              resistFingerprinting
              ](const char*& badConstraint) mutable {
 
       // Ensure that the captured 'this' pointer and our windowID are still good.
@@ -2614,7 +2617,7 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                              callID.BeginReading());
       } else {
         RefPtr<GetUserMediaRequest> req =
-            new GetUserMediaRequest(window, callID, c, isHTTPS);
+            new GetUserMediaRequest(window, callID, c, isHTTPS, isHandlingUserInput);
         if (!Preferences::GetBool("media.navigator.permission.force") && array->Length() > 1) {
           // there is at least 1 pending gUM request
           // For the scarySources test case, always send the request
