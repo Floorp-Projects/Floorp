@@ -15,6 +15,8 @@ curl --location --retry 10 --retry-delay 10 -o "$ARTIFACTS_DIR/manifest.json" \
     "$PARENT_TASK_ARTIFACTS_URL_PREFIX/manifest.json"
 
 cat "$ARTIFACTS_DIR/manifest.json"
+# EXTRA_BALROG_SUBMITTER_PARAMS is optional
+# shellcheck disable=SC2086
 python /home/worker/bin/funsize-balrog-submitter.py \
     --artifacts-url-prefix "$PARENT_TASK_ARTIFACTS_URL_PREFIX" \
     --manifest "$ARTIFACTS_DIR/manifest.json" \
