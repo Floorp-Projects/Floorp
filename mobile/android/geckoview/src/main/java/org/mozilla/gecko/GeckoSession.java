@@ -316,6 +316,11 @@ public class GeckoSession extends LayerSession
             // read from any parcels.
             asBinder().attachInterface(null, Window.class.getName());
 
+            // Reset our queue, so we don't end up with queued calls on a disposed object.
+            synchronized (this) {
+                mNativeQueue.reset(State.INITIAL);
+            }
+
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 nativeDisposeNative();
             } else {
@@ -342,7 +347,7 @@ public class GeckoSession extends LayerSession
                 // then return the old queue to its initial state if applicable,
                 // because the old queue is no longer the active queue.
                 nativeQueue.setState(mNativeQueue.getState());
-                mNativeQueue.checkAndSetState(State.READY, State.INITIAL);
+                mNativeQueue.reset(State.INITIAL);
                 mNativeQueue = nativeQueue;
             }
         }
