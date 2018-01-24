@@ -51,17 +51,13 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 var localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
-  // Backward compatibility: don't use localized digits
-  let locale = Intl.NumberFormat().resolvedOptions().locale +
-               "-u-nu-latn";
-  let key = locale + "_" + fractionDigits;
-  if (!localeNumberFormatCache.has(key)) {
-    localeNumberFormatCache.set(key,
-      Intl.NumberFormat(locale,
+  if (!localeNumberFormatCache.has(fractionDigits)) {
+    localeNumberFormatCache.set(fractionDigits,
+      new Services.intl.NumberFormat(undefined,
                         { maximumFractionDigits: fractionDigits,
                           minimumFractionDigits: fractionDigits }));
   }
-  return localeNumberFormatCache.get(key);
+  return localeNumberFormatCache.get(fractionDigits);
 }
 
 const kDownloadProperties =
