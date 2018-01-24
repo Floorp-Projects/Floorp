@@ -1,0 +1,78 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1516720544 21600
+#      Tue Jan 23 09:15:44 2018 -0600
+# Node ID 2b4556cb7407c196522e52cfd286ee88c3bb6e72
+# Parent  60aa47b111918d4e30f7e363359d1dcc3a3f277d
+Bug 1432295 Cast GetProcAddress to (void*) r?bobowen
+
+error: invalid conversion from 'FARPROC {aka int (__attribute__((__stdcall__)) *)()}' to 'void*' [-fpermissive]
+
+According to http://stackoverflow.com/questions/13958081/, msvc does the fixup
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/resolver.cc b/security/sandbox/chromium/sandbox/win/src/resolver.cc
+--- a/security/sandbox/chromium/sandbox/win/src/resolver.cc
++++ b/security/sandbox/chromium/sandbox/win/src/resolver.cc
+@@ -48,17 +48,17 @@ NTSTATUS ResolverThunk::ResolveIntercept
+   DCHECK_NT(address);
+   if (!interceptor_module)
+     return STATUS_INVALID_PARAMETER;
+ 
+   base::win::PEImage pe(interceptor_module);
+   if (!pe.VerifyMagic())
+     return STATUS_INVALID_IMAGE_FORMAT;
+ 
+-  *address = pe.GetProcAddress(interceptor_name);
++  *address = reinterpret_cast<void*>(pe.GetProcAddress(interceptor_name));
+ 
+   if (!(*address))
+     return STATUS_PROCEDURE_NOT_FOUND;
+ 
+   return STATUS_SUCCESS;
+ }
+ 
+ }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/service_resolver.cc b/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
+--- a/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
++++ b/security/sandbox/chromium/sandbox/win/src/service_resolver.cc
+@@ -24,17 +24,17 @@ NTSTATUS ServiceResolverThunk::ResolveIn
+ // just a simple GetProcAddress.
+ NTSTATUS ServiceResolverThunk::ResolveTarget(const void* module,
+                                              const char* function_name,
+                                              void** address) {
+   if (NULL == module)
+     return STATUS_UNSUCCESSFUL;
+ 
+   base::win::PEImage module_image(module);
+-  *address = module_image.GetProcAddress(function_name);
++  *address = (void*)module_image.GetProcAddress(function_name);
+ 
+   if (NULL == *address) {
+     NOTREACHED_NT();
+     return STATUS_UNSUCCESSFUL;
+   }
+ 
+   return STATUS_SUCCESS;
+ }
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_process.cc b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_process.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_process.cc
+@@ -179,17 +179,17 @@ ResultCode TargetProcess::TransferVariab
+ 
+   void* child_var = address;
+ 
+ #if SANDBOX_EXPORTS
+   HMODULE module = ::LoadLibrary(exe_name_.get());
+   if (NULL == module)
+     return SBOX_ERROR_GENERIC;
+ 
+-  child_var = ::GetProcAddress(module, name);
++  child_var = (void*)::GetProcAddress(module, name);
+   ::FreeLibrary(module);
+ 
+   if (NULL == child_var)
+     return SBOX_ERROR_GENERIC;
+ 
+   size_t offset = reinterpret_cast<char*>(child_var) -
+                   reinterpret_cast<char*>(module);
+   child_var = reinterpret_cast<char*>(MainModule()) + offset;

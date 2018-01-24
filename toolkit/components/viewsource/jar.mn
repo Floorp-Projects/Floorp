@@ -3,10 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+#ifndef ANDROID
   content/global/viewSource.css             (content/viewSource.css)
   content/global/viewSource.js              (content/viewSource.js)
 * content/global/viewSource.xul             (content/viewSource.xul)
   content/global/viewPartialSource.js       (content/viewPartialSource.js)
 * content/global/viewPartialSource.xul      (content/viewPartialSource.xul)
+#endif
   content/global/viewSourceUtils.js         (content/viewSourceUtils.js)
   content/global/viewSource-content.js      (content/viewSource-content.js)

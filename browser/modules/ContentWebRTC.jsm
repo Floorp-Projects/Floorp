@@ -135,6 +135,7 @@ function handleGUMStop(aSubject, aTopic, aData) {
 function handleGUMRequest(aSubject, aTopic, aData) {
   let constraints = aSubject.getConstraints();
   let secure = aSubject.isSecure;
+  let isHandlingUserInput = aSubject.isHandlingUserInput;
   let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
   contentWindow.navigator.mozGetUserMediaDevices(
@@ -146,7 +147,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
         return;
 
       prompt(contentWindow, aSubject.windowID, aSubject.callID,
-             constraints, devices, secure);
+             constraints, devices, secure, isHandlingUserInput);
     },
     function(error) {
       // bug 827146 -- In the future, the UI should catch NotFoundError
@@ -157,7 +158,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
     aSubject.callID);
 }
 
-function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSecure) {
+function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSecure, aIsHandlingUserInput) {
   let audioDevices = [];
   let videoDevices = [];
   let devices = [];
@@ -213,12 +214,18 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
   }
   aContentWindow.pendingGetUserMediaRequests.set(aCallID, devices);
 
+  // Record third party origins for telemetry.
+  let isThirdPartyOrigin =
+    aContentWindow.document.location.origin != aContentWindow.top.document.location.origin;
+
   let request = {
     callID: aCallID,
     windowID: aWindowID,
     origin: aContentWindow.origin,
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
+    isHandlingUserInput: aIsHandlingUserInput,
+    isThirdPartyOrigin,
     requestTypes,
     sharingScreen,
     sharingAudio,

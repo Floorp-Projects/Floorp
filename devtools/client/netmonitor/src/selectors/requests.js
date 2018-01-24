@@ -68,7 +68,7 @@ const getSortedRequests = createSelector(
   state => state.requests,
   getSortFn,
   ({ requests }, sortFn) => {
-    let arr = requests.valueSeq().sort(sortFn);
+    let arr = [...requests.values()].sort(sortFn);
     arr.get = index => arr[index];
     arr.isEmpty = () => this.length == 0;
     arr.size = arr.length;
@@ -81,7 +81,7 @@ const getDisplayedRequests = createSelector(
   getFilterFn,
   getSortFn,
   ({ requests }, filterFn, sortFn) => {
-    let arr = requests.valueSeq().filter(filterFn).sort(sortFn);
+    let arr = [...requests.values()].filter(filterFn).sort(sortFn);
     arr.get = index => arr[index];
     arr.isEmpty = () => this.length == 0;
     arr.size = arr.length;
@@ -92,7 +92,7 @@ const getDisplayedRequests = createSelector(
 const getTypeFilteredRequests = createSelector(
   state => state.requests,
   getTypeFilterFn,
-  ({ requests }, filterFn) => requests.valueSeq().filter(filterFn)
+  ({ requests }, filterFn) => [...requests.values()].filter(filterFn)
 );
 
 const getDisplayedRequestsSummary = createSelector(

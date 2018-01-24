@@ -42,4 +42,7 @@ interface mozIMozIntl : nsISupports
   jsval getLocaleInfo([optional] in jsval locales);
 
   readonly attribute jsval DateTimeFormat;
+  readonly attribute jsval NumberFormat;
+  readonly attribute jsval Collator;
+  readonly attribute jsval PluralRules;
 };

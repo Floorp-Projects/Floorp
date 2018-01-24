@@ -288,24 +288,6 @@ MainPreferencesPropertyList.prototype = {
       });
     }
   },
-
-  // Workaround for nsIBrowserProfileMigrator.sourceHomePageURL until
-  // it's replaced with an async method.
-  _readSync: function MPPL__readSync() {
-    if ("_dict" in this)
-      return this._dict;
-
-    let inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                      createInstance(Ci.nsIFileInputStream);
-    inputStream.init(this._file, -1, -1, 0);
-    let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].
-                       createInstance(Ci.nsIBinaryInputStream);
-    binaryStream.setInputStream(inputStream);
-    let bytes = binaryStream.readByteArray(inputStream.available());
-    this._dict = PropertyListUtils._readFromArrayBufferSync(
-      new Uint8Array(bytes).buffer);
-    return this._dict;
-  },
 };
 
 function SearchStrings(aMainPreferencesPropertyListInstance) {
@@ -402,16 +384,14 @@ Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyL
   },
 });
 
-Object.defineProperty(SafariProfileMigrator.prototype, "sourceHomePageURL", {
-  get: function get_sourceHomePageURL() {
-    if (this.mainPreferencesPropertyList) {
-      let dict = this.mainPreferencesPropertyList._readSync();
-      if (dict.has("HomePage"))
-        return dict.get("HomePage");
-    }
-    return "";
-  },
-});
+SafariProfileMigrator.prototype.getSourceHomePageURL = async function SM_getSourceHomePageURL() {
+  if (this.mainPreferencesPropertyList) {
+    let dict = await new Promise(resolve => this.mainPreferencesPropertyList.read(resolve));
+    if (dict.has("HomePage"))
+      return dict.get("HomePage");
+  }
+  return "";
+};
 
 SafariProfileMigrator.prototype.classDescription = "Safari Profile Migrator";
 SafariProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=safari";

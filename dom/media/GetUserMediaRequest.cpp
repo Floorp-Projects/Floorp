@@ -16,12 +16,14 @@ GetUserMediaRequest::GetUserMediaRequest(
     nsPIDOMWindowInner* aInnerWindow,
     const nsAString& aCallID,
     const MediaStreamConstraints& aConstraints,
-    bool aIsSecure)
+    bool aIsSecure,
+    bool aIsHandlingUserInput)
   : mInnerWindowID(aInnerWindow->WindowID())
   , mOuterWindowID(aInnerWindow->GetOuterWindow()->WindowID())
   , mCallID(aCallID)
   , mConstraints(new MediaStreamConstraints(aConstraints))
   , mIsSecure(aIsSecure)
+  , mIsHandlingUserInput(aIsHandlingUserInput)
 {
 }
 
@@ -84,6 +86,11 @@ uint64_t GetUserMediaRequest::InnerWindowID()
 bool GetUserMediaRequest::IsSecure()
 {
   return mIsSecure;
+}
+
+bool GetUserMediaRequest::IsHandlingUserInput() const
+{
+  return mIsHandlingUserInput;
 }
 
 void

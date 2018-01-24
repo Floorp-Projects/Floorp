@@ -16,6 +16,8 @@
 // Placement new and delete to be used from ntdll interception code.
 void* __cdecl operator new(size_t size, sandbox::AllocationType type,
                            void* near_to = NULL);
+void* __cdecl operator new[](size_t size, sandbox::AllocationType type,
+			     void* near_to = NULL);
 void __cdecl operator delete(void* memory, sandbox::AllocationType type);
 // Add operator delete that matches the placement form of the operator new
 // above. This is required by compiler to generate code to call operator delete

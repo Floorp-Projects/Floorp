@@ -335,7 +335,7 @@ class StatisticsPanel extends Component {
 
 module.exports = connect(
   (state) => ({
-    requests: state.requests.requests.valueSeq(),
+    requests: [...state.requests.requests.values()],
   }),
   (dispatch, props) => ({
     closeStatistics: () => dispatch(Actions.openStatistics(props.connector, false)),

@@ -143,8 +143,8 @@ add_task(async function test_importIntoEmptyDB() {
     await promiseSetPassword(login);
   }
 
-  let migrator = MigrationUtils.getMigrator("chrome");
-  Assert.ok(migrator.sourceExists, "Sanity check the source exists");
+  let migrator = await MigrationUtils.getMigrator("chrome");
+  Assert.ok(await migrator.isSourceAvailable(), "Sanity check the source exists");
 
   let logins = Services.logins.getAllLogins({});
   Assert.equal(logins.length, 0, "There are no logins initially");
@@ -164,8 +164,8 @@ add_task(async function test_importIntoEmptyDB() {
 
 // Test that existing logins for the same primary key don't get overwritten
 add_task(async function test_importExistingLogins() {
-  let migrator = MigrationUtils.getMigrator("chrome");
-  Assert.ok(migrator.sourceExists, "Sanity check the source exists");
+  let migrator = await MigrationUtils.getMigrator("chrome");
+  Assert.ok(await migrator.isSourceAvailable(), "Sanity check the source exists");
 
   Services.logins.removeAllLogins();
   let logins = Services.logins.getAllLogins({});
