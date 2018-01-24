@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Localization } = Components.utils.import("resource://gre/modules/Localization.jsm", {});
+const { Localization } = ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
 
 add_task(function test_methods_presence() {
   equal(typeof Localization.prototype.formatValues, "function");
@@ -11,7 +11,7 @@ add_task(function test_methods_presence() {
 
 add_task(async function test_methods_calling() {
   const { L10nRegistry, FileSource } =
-    Components.utils.import("resource://gre/modules/L10nRegistry.jsm", {});
+    ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
   const LocaleService =
     Components.classes["@mozilla.org/intl/localeservice;1"].getService(
       Components.interfaces.mozILocaleService);

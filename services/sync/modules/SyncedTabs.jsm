@@ -9,11 +9,11 @@ this.EXPORTED_SYMBOLS = ["SyncedTabs"];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 // The Sync XPCOM service
 XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
@@ -22,8 +22,8 @@ XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
            .wrappedJSObject;
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
 
 // from MDN...
 function escapeRegExp(string) {

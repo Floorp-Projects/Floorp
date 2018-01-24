@@ -6,16 +6,16 @@ this.EXPORTED_SYMBOLS = ["FxAccountsConfig"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-common/rest.js");
-Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-common/rest.js");
+ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-                                  "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(this, "fxAccounts",
+                               "resource://gre/modules/FxAccounts.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "EnsureFxAccountsWebChannel",
-                                  "resource://gre/modules/FxAccountsWebChannel.jsm");
+ChromeUtils.defineModuleGetter(this, "EnsureFxAccountsWebChannel",
+                               "resource://gre/modules/FxAccountsWebChannel.jsm");
 
 const CONFIG_PREFS = [
   "identity.fxaccounts.auth.uri",

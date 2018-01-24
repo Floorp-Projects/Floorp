@@ -3,7 +3,7 @@
 */
 "use strict";
 
-Cu.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://services-sync/main.js");
 
 Services.prefs.setCharPref("services.sync.username", "someone@somewhere.com");
 Services.prefs.setCharPref("services.sync.registerEngines", "");

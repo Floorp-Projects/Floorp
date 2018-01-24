@@ -20,7 +20,7 @@
     {
       waitForWorkerFinish();
 
-      Components.utils.import("chrome://mochitests/content/chrome/dom/url/tests/test_bug883784.jsm");
+      ChromeUtils.import("chrome://mochitests/content/chrome/dom/url/tests/test_bug883784.jsm");
       Test.start(ok, is, finish);
     }
 

@@ -8,13 +8,13 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 var Experiments;
 try {
-  Experiments = Cu.import("resource:///modules/experiments/Experiments.jsm").Experiments;
+  Experiments = ChromeUtils.import("resource:///modules/experiments/Experiments.jsm").Experiments;
 } catch (e) {
 }
 
@@ -182,7 +182,7 @@ var dataProviders = {
     };
 
     if (AppConstants.MOZ_UPDATER)
-      data.updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
+      data.updateChannel = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
 
     // eslint-disable-next-line mozilla/use-default-preference-values
     try {
@@ -692,7 +692,7 @@ var dataProviders = {
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   dataProviders.crashes = function crashes(done) {
-    let CrashReports = Cu.import("resource://gre/modules/CrashReports.jsm").CrashReports;
+    let CrashReports = ChromeUtils.import("resource://gre/modules/CrashReports.jsm").CrashReports;
     let reports = CrashReports.getReports();
     let now = new Date();
     let reportsNew = reports.filter(report => (now - report.date < Troubleshoot.kMaxCrashAge));

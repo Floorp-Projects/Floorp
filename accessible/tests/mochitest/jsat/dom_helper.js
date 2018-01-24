@@ -5,7 +5,7 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Geometry.jsm");
+ChromeUtils.import("resource://gre/modules/Geometry.jsm");
 
 var win = getMainChromeWindow(window);
 

@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://gre/modules/OSCrypto.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/OSCrypto.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PROFILE = {
   id: "Default",

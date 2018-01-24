@@ -4,8 +4,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function TooltipTextProvider() {}
 
@@ -81,7 +81,7 @@ TooltipTextProvider.prototype = {
             let xmoreStr = bundle.GetStringFromName("AndNMoreFiles");
             let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
             let tmp = {};
-            Cu.import("resource://gre/modules/PluralForm.jsm", tmp);
+            ChromeUtils.import("resource://gre/modules/PluralForm.jsm", tmp);
             let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("#1", xmoreNum);
             titleText += "\n" + andXMoreStr;
           }

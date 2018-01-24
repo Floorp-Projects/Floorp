@@ -13,7 +13,7 @@ Login Manager test: forms and logins without a username.
 runChecksAfterCommonInit(() => startTest());
 runInParent(() => {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 
   // pwlogin1 uses a unique formSubmitURL, to check forms where no other logins

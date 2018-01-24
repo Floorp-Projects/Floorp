@@ -16,7 +16,7 @@ Debugger.Script.prototype.global should return innerize globals, not WindowProxi
 <script>
 "use strict";
 
-Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
 window.onload = function () {

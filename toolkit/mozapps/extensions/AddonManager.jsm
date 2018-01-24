@@ -22,7 +22,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
   }
 }
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const MOZ_COMPATIBILITY_NIGHTLY = !["aurora", "beta", "release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
@@ -74,9 +74,9 @@ const WEBAPI_TEST_INSTALL_HOSTS = [
 
 const URI_XPINSTALL_DIALOG = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
@@ -87,7 +87,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   let certUtils = {};
-  Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
+  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", certUtils);
   return certUtils;
 });
 
@@ -113,7 +113,7 @@ const DEFAULT_PROVIDERS = [
   "resource://gre/modules/LightweightThemeManager.jsm"
 ];
 
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 // Configure a logger at the parent 'addons' level to format
 // messages for all the modules under addons.*
 const PARENT_LOGGER_ID = "addons";
@@ -859,7 +859,7 @@ var AddonManagerInternal = {
         for (let url of DEFAULT_PROVIDERS) {
           try {
             let scope = {};
-            Components.utils.import(url, scope);
+            ChromeUtils.import(url, scope);
             // Sanity check - make sure the provider exports a symbol that
             // has a 'startup' method
             let syms = Object.keys(scope);
@@ -885,7 +885,7 @@ var AddonManagerInternal = {
         let url = catman.getCategoryEntry(CATEGORY_PROVIDER_MODULE, entry);
 
         try {
-          Components.utils.import(url, {});
+          ChromeUtils.import(url, {});
           logger.debug(`Loaded provider scope for ${url}`);
         } catch (e) {
           AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
@@ -915,7 +915,7 @@ var AddonManagerInternal = {
 
       // Support for remote about:plugins. Note that this module isn't loaded
       // at the top because Services.appinfo is defined late in tests.
-      let { RemotePages } = Cu.import("resource://gre/modules/RemotePageManager.jsm", {});
+      let { RemotePages } = ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm", {});
 
       gPluginPageListener = new RemotePages("about:plugins");
       gPluginPageListener.addMessageListener("RequestPlugins", this.requestPlugins);
@@ -1369,7 +1369,7 @@ var AddonManagerInternal = {
 
       if (this.updateEnabled) {
         let scope = {};
-        Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
+        ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
         scope.LightweightThemeManager.updateCurrentTheme();
 
         let allAddons = await this.getAllAddons();
@@ -1430,7 +1430,7 @@ var AddonManagerInternal = {
           appDisabled: false
         }, url);
 
-        Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
+        ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
         let update = null;
         try {
           let foundUpdates = await new Promise((resolve, reject) => {
@@ -3802,7 +3802,7 @@ this.AddonManager = {
 this.AddonManager.init();
 
 // load the timestamps module into AddonManagerInternal
-Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);
+ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", AddonManagerInternal);
 Object.freeze(AddonManagerInternal);
 Object.freeze(AddonManagerPrivate);
 Object.freeze(AddonManager);

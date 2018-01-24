@@ -25,10 +25,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=963835
 
 SimpleTest.waitForExplicitFinish();
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/FxAccounts.jsm");
-Components.utils.import("resource://gre/modules/FxAccountsClient.jsm");
-Components.utils.import("resource://services-common/hawkclient.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
+ChromeUtils.import("resource://services-common/hawkclient.js");
 
 const TEST_SERVER =
   "http://mochi.test:8888/chrome/services/fxaccounts/tests/mochitest/file_invalidEmailCase.sjs?path=";

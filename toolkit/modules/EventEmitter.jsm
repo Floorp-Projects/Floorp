@@ -6,11 +6,11 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/Console.jsm");
+ChromeUtils.defineModuleGetter(this, "console",
+                               "resource://gre/modules/Console.jsm");
 
 this.EXPORTED_SYMBOLS = ["EventEmitter"];
 

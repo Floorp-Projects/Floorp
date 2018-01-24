@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource:///modules/SitePermissions.jsm", this);
+ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
 function newURI(url) {
   return Services.io.newURI(url);

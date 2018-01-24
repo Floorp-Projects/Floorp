@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-Cu.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
+ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 /**
  * Please note that this is really a Telemetry test, not an

@@ -38,7 +38,7 @@
         done();
       }
 
-      Components.utils.import("chrome://mochitests/content/chrome/dom/workers/test/WorkerTest.jsm");
+      ChromeUtils.import("chrome://mochitests/content/chrome/dom/workers/test/WorkerTest.jsm");
 
       worker = WorkerTest.go(window.location.href, messageCallback,
                              errorCallback);

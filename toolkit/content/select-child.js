@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SelectContentHelper",
-                                  "resource://gre/modules/SelectContentHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "SelectContentHelper",
+                               "resource://gre/modules/SelectContentHelper.jsm");
 
 addEventListener("mozshowdropdown", event => {
   if (!event.isTrusted)

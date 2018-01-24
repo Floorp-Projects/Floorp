@@ -13,7 +13,7 @@ const CB_FAIL = {};
 
 const REASON_ERROR = Ci.mozIStorageStatementCallback.REASON_ERROR;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /*
  * Helpers for various async operations.

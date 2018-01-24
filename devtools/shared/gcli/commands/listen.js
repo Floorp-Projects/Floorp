@@ -8,7 +8,7 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const l10n = require("gcli/l10n");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsLoader",
+ChromeUtils.defineModuleGetter(this, "DevToolsLoader",
   "resource://devtools/shared/Loader.jsm");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]

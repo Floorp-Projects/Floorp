@@ -14,7 +14,7 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const beBOM="%FE%FF";
 const leBOM="%FF%FE";

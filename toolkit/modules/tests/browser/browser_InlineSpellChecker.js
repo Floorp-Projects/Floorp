@@ -2,7 +2,7 @@ var InlineSpellChecker;
 
 function test() {
   let tempScope = {};
-  Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", tempScope);
+  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", tempScope);
   InlineSpellChecker = tempScope.InlineSpellChecker;
 
   ok(InlineSpellChecker, "InlineSpellChecker class exists");

@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const hangUITimeoutPref = "dom.ipc.plugins.hangUITimeoutSecs";
 const hangUIMinDisplayPref = "dom.ipc.plugins.hangUIMinDisplaySecs";

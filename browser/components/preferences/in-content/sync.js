@@ -4,17 +4,17 @@
 
 /* import-globals-from preferences.js */
 
-Components.utils.import("resource://services-sync/main.js");
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
-  return Components.utils.import("resource://gre/modules/FxAccountsCommon.js", {});
+  return ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", {});
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+ChromeUtils.defineModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UIState",
+ChromeUtils.defineModuleGetter(this, "UIState",
   "resource://services-sync/UIState.jsm");
 
 const FXA_PAGE_LOGGED_OUT = 0;

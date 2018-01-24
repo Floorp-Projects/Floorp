@@ -7,10 +7,10 @@
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const BYTES_PER_MEBIBYTE = 1048576;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
 
 this.EXPORTED_SYMBOLS = [ "PlacesDBUtils" ];
 

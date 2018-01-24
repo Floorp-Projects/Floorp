@@ -5,12 +5,12 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-utils.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
 
 // Import the android BrowserActions module.
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserActions",
-                                  "resource://gre/modules/BrowserActions.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserActions",
+                               "resource://gre/modules/BrowserActions.jsm");
 
 // WeakMap[Extension -> BrowserAction]
 let browserActionMap = new WeakMap();

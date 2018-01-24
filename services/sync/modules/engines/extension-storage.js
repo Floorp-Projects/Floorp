@@ -8,12 +8,12 @@ this.EXPORTED_SYMBOLS = ["ExtensionStorageEngine"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
-XPCOMUtils.defineLazyModuleGetter(this, "extensionStorageSync",
-                                  "resource://gre/modules/ExtensionStorageSync.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-sync/constants.js");
+ChromeUtils.import("resource://services-sync/engines.js");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.defineModuleGetter(this, "extensionStorageSync",
+                               "resource://gre/modules/ExtensionStorageSync.jsm");
 
 /**
  * The Engine that manages syncing for the web extension "storage"
