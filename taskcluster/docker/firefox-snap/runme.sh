@@ -3,14 +3,14 @@
 set -xe
 
 # Required env variables
-test $VERSION
-test $BUILD_NUMBER
-test $CANDIDATES_DIR
-test $L10N_CHANGESETS
+test "$VERSION"
+test "$BUILD_NUMBER"
+test "$CANDIDATES_DIR"
+test "$L10N_CHANGESETS"
 
 # Optional env variables
-: WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
-: ARTIFACTS_DIR                 ${ARTIFACTS_DIR:=/home/worker/artifacts}
+: WORKSPACE                     "${WORKSPACE:=/home/worker/workspace}"
+: ARTIFACTS_DIR                 "${ARTIFACTS_DIR:=/home/worker/artifacts}"
 
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -48,20 +48,20 @@ done
 
 # Generate snapcraft manifest
 sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > ${WORKSPACE}/snapcraft.yaml
-cd ${WORKSPACE}
+cd "${WORKSPACE}"
 snapcraft
 
-mv *.snap "$TARGET_FULL_PATH"
+mv -- *.snap "$TARGET_FULL_PATH"
 
-cd $ARTIFACTS_DIR
+cd "$ARTIFACTS_DIR"
 
 # Generate checksums file
 size=$(stat --printf="%s" "$TARGET_FULL_PATH")
 sha=$(sha512sum "$TARGET_FULL_PATH" | awk '{print $1}')
-echo "$sha sha512 $size $TARGET" > $TARGET.checksums
+echo "$sha sha512 $size $TARGET" > "$TARGET.checksums"
 
 echo "Generating signing manifest"
-hash=$(sha512sum $TARGET.checksums | awk '{print $1}')
+hash=$(sha512sum "$TARGET.checksums" | awk '{print $1}')
 
 cat << EOF > signing_manifest.json
 [{"file_to_sign": "$TARGET.checksums", "hash": "$hash"}]
@@ -69,7 +69,7 @@ EOF
 
 # For posterity
 find . -ls
-cat $TARGET.checksums
+cat "$TARGET.checksums"
 cat signing_manifest.json
 
 

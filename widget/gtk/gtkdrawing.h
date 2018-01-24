@@ -84,6 +84,13 @@ typedef struct {
   GtkBorder borderAndPadding;
 } ToggleGTKMetrics;
 
+typedef struct {
+  bool initialized;
+  MozGtkSize minSizeWithBorderMargin;
+  gint iconXPosition;
+  gint iconYPosition;
+} ToolbarButtonGTKMetrics;
+
 typedef enum {
   MOZ_GTK_STEPPER_DOWN        = 1 << 0,
   MOZ_GTK_STEPPER_BOTTOM      = 1 << 1,
@@ -551,5 +558,11 @@ gint moz_gtk_splitter_get_metrics(gint orientation, gint* size);
  */
 gint
 moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
+
+
+/**
+ * Get ToolbarButtonGTKMetrics for recent theme.
+ */
+const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics();
 
 #endif

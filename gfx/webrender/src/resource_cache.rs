@@ -15,7 +15,7 @@ use api::{TileOffset, TileSize};
 use api::{NativeFontHandle};
 use app_units::Au;
 #[cfg(feature = "capture")]
-use capture::{ExternalCaptureImage};
+use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use device::TextureFilter;
 use frame::FrameId;
 use glyph_cache::GlyphCache;
@@ -55,17 +55,32 @@ pub struct GlyphFetchResult {
 // storing the coordinates as texel values
 // we don't need to go through and update
 // various CPU-side structures.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CacheItem {
     pub texture_id: SourceTexture,
     pub uv_rect_handle: GpuCacheHandle,
+    pub uv_rect: DeviceUintRect,
+    pub texture_layer: i32,
+}
+
+impl CacheItem {
+    pub fn invalid() -> Self {
+        CacheItem {
+            texture_id: SourceTexture::Invalid,
+            uv_rect_handle: GpuCacheHandle::new(),
+            uv_rect: DeviceUintRect::zero(),
+            texture_layer: 0,
+        }
+    }
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct ImageProperties {
     pub descriptor: ImageDescriptor,
     pub external_image: Option<ExternalImageData>,
     pub tiling: Option<TileSize>,
+    pub epoch: Epoch,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -285,7 +300,7 @@ impl ResourceCache {
             ImageData::External(info) => {
                 // External handles already represent existing textures so it does
                 // not make sense to tile them into smaller ones.
-                info.image_type == ExternalImageType::ExternalBuffer && size_check
+                info.image_type == ExternalImageType::Buffer && size_check
             }
         }
     }
@@ -301,7 +316,7 @@ impl ResourceCache {
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
         f: F,
-    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3]) {
+    ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, [f32; 3], bool) {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
@@ -747,16 +762,11 @@ impl ResourceCache {
 
         image_template.map(|image_template| {
             let external_image = match image_template.data {
-                ImageData::External(ext_image) => {
-                    match ext_image.image_type {
-                        ExternalImageType::Texture2DHandle |
-                        ExternalImageType::Texture2DArrayHandle |
-                        ExternalImageType::TextureRectHandle |
-                        ExternalImageType::TextureExternalHandle => Some(ext_image),
-                        // external buffer uses resource_cache.
-                        ExternalImageType::ExternalBuffer => None,
-                    }
-                }
+                ImageData::External(ext_image) => match ext_image.image_type {
+                    ExternalImageType::TextureHandle(_) => Some(ext_image),
+                    // external buffer uses resource_cache.
+                    ExternalImageType::Buffer => None,
+                },
                 // raw and blob image are all using resource_cache.
                 ImageData::Raw(..) | ImageData::Blob(..) => None,
             };
@@ -765,6 +775,7 @@ impl ResourceCache {
                 descriptor: image_template.descriptor,
                 external_image,
                 tiling: image_template.tiling,
+                epoch: image_template.epoch,
             }
         })
     }
@@ -990,6 +1001,7 @@ enum PlainFontTemplate {
 struct PlainImageTemplate {
     data: String,
     descriptor: ImageDescriptor,
+    epoch: Epoch,
     tiling: Option<TileSize>,
 }
 
@@ -1026,6 +1038,8 @@ impl ResourceCache {
     pub fn save_capture(
         &mut self, root: &PathBuf
     ) -> (PlainResources, Vec<ExternalCaptureImage>) {
+        #[cfg(feature = "png")]
+        use device::ReadPixelsFormat;
         use std::fs;
         use std::io::Write;
 
@@ -1045,6 +1059,10 @@ impl ResourceCache {
         let path_blobs = root.join("blobs");
         if !path_blobs.is_dir() {
             fs::create_dir(&path_blobs).unwrap();
+        }
+        let path_externals = root.join("externals");
+        if !path_externals.is_dir() {
+            fs::create_dir(&path_externals).unwrap();
         }
 
         info!("\tfont templates");
@@ -1071,6 +1089,7 @@ impl ResourceCache {
         info!("\timage templates");
         let mut image_paths = FastHashMap::default();
         let mut other_paths = FastHashMap::default();
+        let mut num_blobs = 0;
         let mut external_images = Vec::new();
         for (&key, template) in res.image_templates.images.iter() {
             let desc = &template.descriptor;
@@ -1082,8 +1101,13 @@ impl ResourceCache {
                         Entry::Vacant(e) => e,
                     };
 
-                    //TODO: option to save as PNG:
-                    // https://github.com/servo/webrender/issues/2234
+                    #[cfg(feature = "png")]
+                    CaptureConfig::save_png(
+                        root.join(format!("images/{}.png", image_id)),
+                        (desc.width, desc.height),
+                        ReadPixelsFormat::Standard(desc.format),
+                        &arc,
+                    );
                     let file_name = format!("{}.raw", image_id);
                     let short_path = format!("images/{}", file_name);
                     fs::File::create(path_images.join(file_name))
@@ -1100,7 +1124,6 @@ impl ResourceCache {
                         // https://github.com/servo/webrender/issues/2236
                         tile: None,
                     };
-
                     let renderer = self.blob_image_renderer.as_mut().unwrap();
                     renderer.request(
                         &self.resources,
@@ -1116,8 +1139,17 @@ impl ResourceCache {
                     let result = renderer.resolve(request)
                         .expect("Blob resolve failed");
                     assert_eq!((result.width, result.height), (desc.width, desc.height));
+                    assert_eq!(result.data.len(), desc.compute_total_size() as usize);
 
-                    let file_name = format!("{}.raw", other_paths.len() + 1);
+                    num_blobs += 1;
+                    #[cfg(feature = "png")]
+                    CaptureConfig::save_png(
+                        root.join(format!("blobs/{}.png", num_blobs)),
+                        (desc.width, desc.height),
+                        ReadPixelsFormat::Standard(desc.format),
+                        &result.data,
+                    );
+                    let file_name = format!("{}.raw", num_blobs);
                     let short_path = format!("blobs/{}", file_name);
                     let full_path = path_blobs.clone().join(&file_name);
                     fs::File::create(full_path)
@@ -1127,7 +1159,7 @@ impl ResourceCache {
                     other_paths.insert(key, short_path);
                 }
                 ImageData::External(ref ext) => {
-                    let short_path = format!("blobs/{}.raw", other_paths.len() + 1);
+                    let short_path = format!("externals/{}", external_images.len() + 1);
                     other_paths.insert(key, short_path.clone());
                     external_images.push(ExternalCaptureImage {
                         short_path,
@@ -1166,6 +1198,7 @@ impl ResourceCache {
                         },
                         descriptor: template.descriptor.clone(),
                         tiling: template.tiling,
+                        epoch: template.epoch,
                     })
                 })
                 .collect(),
@@ -1243,7 +1276,7 @@ impl ResourceCache {
         resources: PlainResources,
         caches: Option<PlainCacheOwn>,
         root: &PathBuf,
-    ) {
+    ) -> Vec<PlainExternalImage> {
         use std::fs::File;
         use std::io::Read;
 
@@ -1348,29 +1381,46 @@ impl ResourceCache {
         }
 
         info!("\timage templates...");
+        let mut external_images = Vec::new();
         for (key, template) in resources.image_templates {
-            let arc = match raw_map.entry(template.data) {
-                Entry::Occupied(e) => {
-                    e.get().clone()
+            let data = match CaptureConfig::deserialize::<PlainExternalImage, _>(root, &template.data) {
+                Some(plain) => {
+                    let ext_data = ExternalImageData {
+                        id: plain.id,
+                        channel_index: plain.channel_index,
+                        image_type: ExternalImageType::Buffer,
+                    };
+                    external_images.push(plain);
+                    ImageData::External(ext_data)
                 }
-                Entry::Vacant(e) => {
-                    let mut buffer = Vec::new();
-                    File::open(root.join(e.key()))
-                        .expect(&format!("Unable to open {}", e.key()))
-                        .read_to_end(&mut buffer)
-                        .unwrap();
-                    e.insert(Arc::new(buffer))
-                        .clone()
+                None => {
+                    let arc = match raw_map.entry(template.data) {
+                        Entry::Occupied(e) => {
+                            e.get().clone()
+                        }
+                        Entry::Vacant(e) => {
+                            let mut buffer = Vec::new();
+                            File::open(root.join(e.key()))
+                                .expect(&format!("Unable to open {}", e.key()))
+                                .read_to_end(&mut buffer)
+                                .unwrap();
+                            e.insert(Arc::new(buffer))
+                                .clone()
+                        }
+                    };
+                    ImageData::Raw(arc)
                 }
             };
 
             res.image_templates.images.insert(key, ImageResource {
-                data: ImageData::Raw(arc),
+                data,
                 descriptor: template.descriptor,
                 tiling: template.tiling,
-                epoch: Epoch(0),
+                epoch: template.epoch,
                 dirty_rect: None,
             });
         }
+
+        external_images
     }
 }

@@ -517,10 +517,12 @@ const assertExtensionRecord = async function(fxaService, post, extension, key) {
 const defaultExtensionId = "{13bdde76-4dc7-11e6-9bdc-54ee758d6342}";
 const defaultExtension = {id: defaultExtensionId};
 
-const BORING_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+const kExtSync = "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b31";
+const KB_HASH = "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc800";
 const loggedInUser = {
   uid: "0123456789abcdef0123456789abcdef",
-  kB: BORING_KB,
+  kExtSync,
+  kExtKbHash: KB_HASH,
   oauthTokens: {
     "sync:addon-storage": {
       token: "some-access-token",
@@ -871,7 +873,7 @@ add_task(async function ensureCanSync_handles_flushes() {
 
 add_task(async function checkSyncKeyRing_reuploads_keys() {
   // Verify that when keys are present, they are reuploaded with the
-  // new kB when we call touchKeys().
+  // new kbHash when we call touchKeys().
   const extensionId = uuid();
   let extensionKey, extensionSalt;
   await withContextAndServer(async function(context, server) {
@@ -892,17 +894,18 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
       extensionSalt = body.salts[extensionId];
     });
 
-    // The user changes their password. This is their new kB, with
-    // the last f changed to an e.
-    const NOVEL_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee";
-    const newUser = Object.assign({}, loggedInUser, {kB: NOVEL_KB});
+    // The user changes their password. This is their new kbHash, with
+    // the last 0 changed to a 1.
+    const NEW_KB_HASH = "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc801";
+    const NEW_KEXT = "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b30";
+    const newUser = Object.assign({}, loggedInUser, {kExtKbHash: NEW_KB_HASH, kExtSync: NEW_KEXT});
     let postedKeys;
     await withSignedInUser(newUser, async function(extensionStorageSync, fxaService) {
       await extensionStorageSync.checkSyncKeyRing();
 
       let posts = server.getPosts();
       equal(posts.length, 2,
-            "when kB changes, checkSyncKeyRing should post the keyring reencrypted with the new kB");
+            "when kBHash changes, checkSyncKeyRing should post the keyring reencrypted with the new kBHash");
       postedKeys = posts[1];
       assertPostedUpdatedRecord(postedKeys, 765);
 
@@ -913,7 +916,7 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
                 `the posted keyring should have the same salt for ${extensionId} as the old one`);
     });
 
-    // Verify that with the old kB, we can't decrypt the record.
+    // Verify that with the old kBHash, we can't decrypt the record.
     await withSignedInUser(loggedInUser, async function(extensionStorageSync, fxaService) {
       let error;
       try {
@@ -921,31 +924,32 @@ add_task(async function checkSyncKeyRing_reuploads_keys() {
       } catch (e) {
         error = e;
       }
-      ok(error, "decrypting the keyring with the old kB should fail");
+      ok(error, "decrypting the keyring with the old kBHash should fail");
       ok(Utils.isHMACMismatch(error) || KeyRingEncryptionRemoteTransformer.isOutdatedKB(error),
-         "decrypting the keyring with the old kB should throw an HMAC mismatch");
+         "decrypting the keyring with the old kBHash should throw an HMAC mismatch");
     });
   });
 });
 
 add_task(async function checkSyncKeyRing_overwrites_on_conflict() {
   // If there is already a record on the server that was encrypted
-  // with a different kB, we wipe the server, clear sync state, and
+  // with a different kbHash, we wipe the server, clear sync state, and
   // overwrite it with our keys.
   const extensionId = uuid();
   let extensionKey;
   await withSyncContext(async function(context) {
     await withServer(async function(server) {
-      // The old device has this kB, which is very similar to the
-      // current kB but with the last f changed to an e.
-      const NOVEL_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdee";
-      const oldUser = Object.assign({}, loggedInUser, {kB: NOVEL_KB});
+      // The old device has this kbHash, which is very similar to the
+      // current kbHash but with the last 0 changed to a 1.
+      const NEW_KB_HASH = "2350cba8fced5a2fbae3b1f180baf860f78f6542bef7be709fda96cd3e3dc801";
+      const NEW_KEXT = "63f9057577c04bbbb9f0c3fd85b5d4032b60e13edc1f8dd309bf4305d66f2cc312dde16ce46021a496f713950d0a6c566ce181521a44726e7be97cf577b31b30";
+      const oldUser = Object.assign({}, loggedInUser, {kExtKbHash: NEW_KB_HASH, kExtSync: NEW_KEXT});
       server.installDeleteBucket();
       await withSignedInUser(oldUser, async function(extensionStorageSync, fxaService) {
         await server.installKeyRing(fxaService, {}, {}, 765);
       });
 
-      // Now we have this new user with a different kB.
+      // Now we have this new user with a different kbHash.
       await withSignedInUser(loggedInUser, async function(extensionStorageSync, fxaService) {
         await extensionStorageSync.cryptoCollection._clear();
 

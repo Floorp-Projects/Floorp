@@ -34,21 +34,21 @@ cfg_if! {
     }
 }
 
-const UTF8_NORMAL_TRAIL: u8 = 1 << 3;
+pub const UTF8_NORMAL_TRAIL: u8 = 1 << 3;
 
-const UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 4;
+pub const UTF8_THREE_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 4;
 
-const UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 5;
+pub const UTF8_THREE_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 5;
 
-const UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 6;
+pub const UTF8_FOUR_BYTE_SPECIAL_LOWER_BOUND_TRAIL: u8 = 1 << 6;
 
-const UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 7;
+pub const UTF8_FOUR_BYTE_SPECIAL_UPPER_BOUND_TRAIL: u8 = 1 << 7;
 
 // BEGIN GENERATED CODE. PLEASE DO NOT EDIT.
 // Instead, please regenerate using generate-encoding-data.py
 
 /// Bit is 1 if the trail is invalid.
-static UTF8_TRAIL_INVALID: [u8; 256] =
+pub static UTF8_TRAIL_INVALID: [u8; 256] =
     [248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
      248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
      248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248, 248,
@@ -433,16 +433,18 @@ pub struct Utf8Decoder {
 }
 
 impl Utf8Decoder {
+    pub fn new_inner() -> Utf8Decoder {
+        Utf8Decoder {
+            code_point: 0,
+            bytes_seen: 0,
+            bytes_needed: 0,
+            lower_boundary: 0x80u8,
+            upper_boundary: 0xBFu8,
+        }
+    }
+
     pub fn new() -> VariantDecoder {
-        VariantDecoder::Utf8(
-            Utf8Decoder {
-                code_point: 0,
-                bytes_seen: 0,
-                bytes_needed: 0,
-                lower_boundary: 0x80u8,
-                upper_boundary: 0xBFu8,
-            }
-        )
+        VariantDecoder::Utf8(Utf8Decoder::new_inner())
     }
 
     fn extra_from_state(&self) -> usize {

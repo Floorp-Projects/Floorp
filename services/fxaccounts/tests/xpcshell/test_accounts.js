@@ -218,8 +218,10 @@ add_task(async function test_get_signed_in_user_initially_unset() {
     uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
-    kA: "beef",
-    kB: "cafe",
+    kSync: "beef",
+    kXCS: "cafe",
+    kExtSync: "bacon",
+    kExtKbHash: "cheese",
     verified: true
   };
   let result = await account.getSignedInUser();
@@ -233,7 +235,10 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   result = await account.getSignedInUser();
   Assert.equal(result.email, credentials.email);
   Assert.equal(result.assertion, credentials.assertion);
-  Assert.equal(result.kB, credentials.kB);
+  Assert.equal(result.kSync, credentials.kSync);
+  Assert.equal(result.kXCS, credentials.kXCS);
+  Assert.equal(result.kExtSync, credentials.kExtSync);
+  Assert.equal(result.kExtKbHash, credentials.kExtKbHash);
 
   // Delete the memory cache and force the user
   // to be read and parsed from storage (e.g. disk via JSONStorage).
@@ -241,7 +246,10 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   result = await account.getSignedInUser();
   Assert.equal(result.email, credentials.email);
   Assert.equal(result.assertion, credentials.assertion);
-  Assert.equal(result.kB, credentials.kB);
+  Assert.equal(result.kSync, credentials.kSync);
+  Assert.equal(result.kXCS, credentials.kXCS);
+  Assert.equal(result.kExtSync, credentials.kExtSync);
+  Assert.equal(result.kExtKbHash, credentials.kExtKbHash);
 
   // sign out
   let localOnly = true;
@@ -261,8 +269,10 @@ add_task(async function test_set_signed_in_user_deletes_previous_device() {
     uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
-    kA: "beef",
-    kB: "cafe",
+    kSync: "beef",
+    kXCS: "cafe",
+    kExtSync: "bacon",
+    kExtKbHash: "cheese",
     verified: true
   };
   await account.setSignedInUser(credentials);
@@ -284,8 +294,10 @@ add_task(async function test_update_account_data() {
     uid: "1234@lcip.org",
     assertion: "foobar",
     sessionToken: "dead",
-    kA: "beef",
-    kB: "cafe",
+    kSync: "beef",
+    kXCS: "cafe",
+    kExtSync: "bacon",
+    kExtKbHash: "cheese",
     verified: true
   };
   await account.setSignedInUser(credentials);
@@ -643,8 +655,10 @@ add_test(function test_getKeys() {
   fxa.setSignedInUser(user).then(() => {
     fxa.getSignedInUser().then((user2) => {
       // Before getKeys, we have no keys
-      Assert.equal(!!user2.kA, false);
-      Assert.equal(!!user2.kB, false);
+      Assert.equal(!!user2.kSync, false);
+      Assert.equal(!!user2.kXCS, false);
+      Assert.equal(!!user2.kExtSync, false);
+      Assert.equal(!!user2.kExtKbHash, false);
       // And we still have a key-fetch token and unwrapBKey to use
       Assert.equal(!!user2.keyFetchToken, true);
       Assert.equal(!!user2.unwrapBKey, true);
@@ -654,8 +668,10 @@ add_test(function test_getKeys() {
           // Now we should have keys
           Assert.equal(fxa.internal.isUserEmailVerified(user3), true);
           Assert.equal(!!user3.verified, true);
-          Assert.equal(user3.kA, expandHex("11"));
-          Assert.equal(user3.kB, expandHex("66"));
+          Assert.notEqual(null, user3.kSync);
+          Assert.notEqual(null, user3.kXCS);
+          Assert.notEqual(null, user3.kExtSync);
+          Assert.notEqual(null, user3.kExtKbHash);
           Assert.equal(user3.keyFetchToken, undefined);
           Assert.equal(user3.unwrapBKey, undefined);
           run_next_test();
@@ -663,6 +679,28 @@ add_test(function test_getKeys() {
       });
     });
   });
+});
+
+add_task(async function test_getKeys_kb_migration() {
+  let fxa = new MockFxAccounts();
+  let user = getTestUser("eusebius");
+
+  user.verified = true;
+  // Set-up the deprecated set of keys.
+  user.kA = "e0245ab7f10e483470388e0a28f0a03379a3b417174fb2b42feab158b4ac2dbd";
+  user.kB = "eaf9570b7219a4187d3d6bf3cec2770c2e0719b7cc0dfbb38243d6f1881675e9";
+
+  await fxa.setSignedInUser(user);
+  await fxa.internal.getKeys();
+  let newUser = await fxa.getSignedInUser();
+  Assert.equal(newUser.kA, null);
+  Assert.equal(newUser.kB, null);
+  Assert.equal(newUser.kSync, "0d6fe59791b05fa489e463ea25502e3143f6b7a903aa152e95cd9c6eddbac5b4" +
+                              "dc68a19097ef65dbd147010ee45222444e66b8b3d7c8a441ebb7dd3dce015a9e");
+  Assert.equal(newUser.kXCS, "22a42fe289dced5715135913424cb23b");
+  Assert.equal(newUser.kExtSync, "baded53eb3587d7900e604e8a68d860abf9de30b5c955d3c4d5dba63f26fd882" +
+                                   "65cd85923f6e9dcd16aef3b82bc88039a89c59ecd9e88de09a7418c7d94f90c9");
+  Assert.equal(newUser.kExtKbHash, "25ed0ab3ae2f1e5365d923c9402d4255770dbe6ce79b09ed49f516985c0aa0c1");
 });
 
 add_task(async function test_getKeys_nonexistent_account() {
@@ -801,8 +839,10 @@ add_task(async function test_getAssertion_invalid_token() {
 
   let creds = {
     sessionToken: "sessionToken",
-    kA: expandHex("11"),
-    kB: expandHex("66"),
+    kSync: expandHex("11"),
+    kXCS: expandHex("66"),
+    kExtSync: expandHex("88"),
+    kExtKbHash: expandHex("22"),
     verified: true,
     email: "sonia@example.com",
   };
@@ -839,11 +879,13 @@ add_task(async function test_getAssertion() {
 
   let creds = {
     sessionToken: "sessionToken",
-    kA: expandHex("11"),
-    kB: expandHex("66"),
+    kSync: expandHex("11"),
+    kXCS: expandHex("66"),
+    kExtSync: expandHex("88"),
+    kExtKbHash: expandHex("22"),
     verified: true
   };
-  // By putting kA/kB/verified in "creds", we skip ahead
+  // By putting kSync/kXCS/kExtSync/kExtKbHash/verified in "creds", we skip ahead
   // to the "we're ready" stage.
   await fxa.setSignedInUser(creds);
 
@@ -1549,6 +1591,23 @@ add_task(async function test_checkVerificationStatusFailed() {
   user = await fxa.internal.getUserAccountData();
   Assert.equal(user.email, alice.email);
   Assert.equal(user.sessionToken, null);
+});
+
+add_test(function test_deriveKeys() {
+  let account = MakeFxAccounts();
+  let kBhex = "fd5c747806c07ce0b9d69dcfea144663e630b65ec4963596a22f24910d7dd15d";
+  let kB = CommonUtils.hexToBytes(kBhex);
+  const uid = "1ad7f502-4cc7-4ec1-a209-071fd2fae348";
+
+  const {kSync, kXCS, kExtSync, kExtKbHash} = account.internal._deriveKeys(uid, kB);
+
+  Assert.equal(kSync, "ad501a50561be52b008878b2e0d8a73357778a712255f7722f497b5d4df14b05" +
+                      "dc06afb836e1521e882f521eb34691d172337accdbf6e2a5b968b05a7bbb9885");
+  Assert.equal(kXCS, "6ae94683571c7a7c54dab4700aa3995f");
+  Assert.equal(kExtSync, "f5ccd9cfdefd9b1ac4d02c56964f59239d8dfa1ca326e63696982765c1352cdc" +
+                         "5d78a5a9c633a6d25edfea0a6c221a3480332a49fd866f311c2e3508ddd07395");
+  Assert.equal(kExtKbHash, "6192f1cc7dce95334455ba135fa1d8fca8f70e8f594ae318528de06f24ed0273");
+  run_next_test();
 });
 
 /*
