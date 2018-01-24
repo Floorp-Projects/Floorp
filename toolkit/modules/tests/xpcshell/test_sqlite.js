@@ -127,11 +127,11 @@ add_task(async function test_schema_version() {
   let db = await getDummyDatabase("schema_version");
 
   let version = await db.getSchemaVersion();
-  Assert.equal(version, 0);
+  Assert.strictEqual(version, 0);
 
   db.setSchemaVersion(14);
   version = await db.getSchemaVersion();
-  Assert.equal(version, 14);
+  Assert.strictEqual(version, 14);
 
   for (let v of [0.5, "foobar", NaN]) {
     let success;
@@ -147,7 +147,7 @@ add_task(async function test_schema_version() {
     Assert.ok(success);
 
     version = await db.getSchemaVersion();
-    Assert.equal(version, 14);
+    Assert.strictEqual(version, 14);
   }
 
   await db.execute("ATTACH :memory AS attached");
