@@ -22,6 +22,7 @@ import org.mozilla.gecko.GeckoSession;
 import org.mozilla.gecko.GeckoSessionSettings;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoView;
+import org.mozilla.gecko.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.gecko.util.GeckoBundle;
 
 public class GeckoViewActivity extends Activity {
@@ -72,7 +73,9 @@ public class GeckoViewActivity extends Activity {
         mGeckoView.setSession(mGeckoSession);
 
         mGeckoSession.setContentListener(new MyGeckoViewContent());
-        mGeckoSession.setProgressListener(new MyGeckoViewProgress());
+        final MyTrackingProtection tp = new MyTrackingProtection();
+        mGeckoSession.setTrackingProtectionDelegate(tp);
+        mGeckoSession.setProgressListener(new MyGeckoViewProgress(tp));
         mGeckoSession.setNavigationListener(new Navigation());
 
         final BasicGeckoViewPrompt prompt = new BasicGeckoViewPrompt(this);
@@ -85,6 +88,13 @@ public class GeckoViewActivity extends Activity {
 
         mGeckoView.getSettings().setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
                                             useMultiprocess);
+
+        mGeckoSession.enableTrackingProtection(
+              TrackingProtectionDelegate.CATEGORY_AD |
+              TrackingProtectionDelegate.CATEGORY_ANALYTIC |
+              TrackingProtectionDelegate.CATEGORY_SOCIAL
+        );
+
         loadSettings(getIntent());
         loadFromIntent(getIntent());
     }
@@ -188,11 +198,18 @@ public class GeckoViewActivity extends Activity {
     }
 
     private class MyGeckoViewProgress implements GeckoSession.ProgressListener {
+        private MyTrackingProtection mTp;
+
+        private MyGeckoViewProgress(final MyTrackingProtection tp) {
+            mTp = tp;
+        }
+
         @Override
         public void onPageStart(GeckoSession session, String url) {
             Log.i(LOGTAG, "Starting to load page at " + url);
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load start");
+            mTp.clearCounters();
         }
 
         @Override
@@ -200,6 +217,7 @@ public class GeckoViewActivity extends Activity {
             Log.i(LOGTAG, "Stopping page load " + (success ? "successfully" : "unsuccessfully"));
             Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
                   " - page load stop");
+            mTp.logCounters();
         }
 
         @Override
@@ -335,6 +353,33 @@ public class GeckoViewActivity extends Activity {
             }
             session.loadUri(uri);
             return true;
+        }
+    }
+
+    private class MyTrackingProtection implements GeckoSession.TrackingProtectionDelegate {
+        private int mBlockedAds = 0;
+        private int mBlockedAnalytics = 0;
+        private int mBlockedSocial = 0;
+
+        private void clearCounters() {
+            mBlockedAds = 0;
+            mBlockedAnalytics = 0;
+            mBlockedSocial = 0;
+        }
+
+        private void logCounters() {
+            Log.d(LOGTAG, "Trackers blocked: " + mBlockedAds + " ads, " +
+                  mBlockedAnalytics + " analytics, " +
+                  mBlockedSocial + " social");
+        }
+
+        @Override
+        public void onTrackerBlocked(final GeckoSession session, final String uri,
+                                     int categories) {
+            Log.d(LOGTAG, "onTrackerBlocked " + categories + " (" + uri + ")");
+            mBlockedAds += categories & TrackingProtectionDelegate.CATEGORY_AD;
+            mBlockedAnalytics += categories & TrackingProtectionDelegate.CATEGORY_ANALYTIC;
+            mBlockedSocial += categories & TrackingProtectionDelegate.CATEGORY_SOCIAL;
         }
     }
 }
