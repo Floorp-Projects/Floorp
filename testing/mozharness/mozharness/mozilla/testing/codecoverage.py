@@ -136,7 +136,7 @@ class CodeCoverageMixin(object):
             dirs = self.query_abs_dirs()
             jsdcov_dir = dirs['abs_blob_upload_dir']
             zipFile = os.path.join(jsdcov_dir, "jsdcov_artifacts.zip")
-            command = ["zip", "-r", zipFile, ".", "-i", "jscov*.json"]
+            command = ["zip", "-r", "-q", zipFile, ".", "-i", "jscov*.json"]
 
             self.info("Beginning compression of JSDCov artifacts...")
             self.run_command(command, cwd=jsdcov_dir)
@@ -165,7 +165,7 @@ class CodeCoverageMixin(object):
 
             # Package JSVM coverage data.
             file_path_jsvm = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-jsvm.zip')
-            self.run_command(['zip', '-r', file_path_jsvm, '.'], cwd=self.jsvm_dir)
+            self.run_command(['zip', '-r', '-q', file_path_jsvm, '.'], cwd=self.jsvm_dir)
 
             # GRCOV post-processing
             # Download the gcno fom the build machine.
@@ -197,7 +197,7 @@ class CodeCoverageMixin(object):
 
             # Zip the grcov output and upload it.
             self.run_command(
-                ['zip', os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip'), output_file_name],
+                ['zip', '-q', os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-grcov.zip'), output_file_name],
                 cwd=self.grcov_dir
             )
 
