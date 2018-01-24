@@ -295,23 +295,6 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   OpenBrowserWindow(aOptions);
 }
 
-/**
- * Asynchronously check a url is visited.
- *
- * @param aURI The URI.
- * @param aExpectedValue The expected value.
- * @return {Promise}
- * @resolves When the check has been added successfully.
- * @rejects JavaScript exception.
- */
-function promiseIsURIVisited(aURI, aExpectedValue) {
-  return new Promise(resolve => {
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-      resolve(aIsVisited);
-    });
-  });
-}
-
 function waitForCondition(condition, nextTest, errorMsg) {
   let tries = 0;
   let interval = setInterval(function() {

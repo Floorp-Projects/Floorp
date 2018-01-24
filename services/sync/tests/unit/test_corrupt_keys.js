@@ -131,11 +131,11 @@ add_task(async function test_locally_changed_keys() {
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
     // And look! We downloaded history!
-    Assert.ok(await promiseIsURIVisited("http://foo/bar?record-no--0"));
-    Assert.ok(await promiseIsURIVisited("http://foo/bar?record-no--1"));
-    Assert.ok(await promiseIsURIVisited("http://foo/bar?record-no--2"));
-    Assert.ok(await promiseIsURIVisited("http://foo/bar?record-no--3"));
-    Assert.ok(await promiseIsURIVisited("http://foo/bar?record-no--4"));
+    Assert.ok(await PlacesUtils.history.hasVisits("http://foo/bar?record-no--0"));
+    Assert.ok(await PlacesUtils.history.hasVisits("http://foo/bar?record-no--1"));
+    Assert.ok(await PlacesUtils.history.hasVisits("http://foo/bar?record-no--2"));
+    Assert.ok(await PlacesUtils.history.hasVisits("http://foo/bar?record-no--3"));
+    Assert.ok(await PlacesUtils.history.hasVisits("http://foo/bar?record-no--4"));
     Assert.equal(hmacErrorCount, 1);
 
     _("Busting some new server values.");
@@ -176,11 +176,11 @@ add_task(async function test_locally_changed_keys() {
     _("Server keys have been updated, and we skipped over 5 more HMAC errors without adjusting history.");
     Assert.ok(johndoe.modified("crypto") > old_key_time);
     Assert.equal(hmacErrorCount, 6);
-    Assert.equal(false, await promiseIsURIVisited("http://foo/bar?record-no--5"));
-    Assert.equal(false, await promiseIsURIVisited("http://foo/bar?record-no--6"));
-    Assert.equal(false, await promiseIsURIVisited("http://foo/bar?record-no--7"));
-    Assert.equal(false, await promiseIsURIVisited("http://foo/bar?record-no--8"));
-    Assert.equal(false, await promiseIsURIVisited("http://foo/bar?record-no--9"));
+    Assert.equal(false, await PlacesUtils.history.hasVisits("http://foo/bar?record-no--5"));
+    Assert.equal(false, await PlacesUtils.history.hasVisits("http://foo/bar?record-no--6"));
+    Assert.equal(false, await PlacesUtils.history.hasVisits("http://foo/bar?record-no--7"));
+    Assert.equal(false, await PlacesUtils.history.hasVisits("http://foo/bar?record-no--8"));
+    Assert.equal(false, await PlacesUtils.history.hasVisits("http://foo/bar?record-no--9"));
   } finally {
     Svc.Prefs.resetBranch("");
     await promiseStopServer(server);
@@ -192,19 +192,4 @@ function run_test() {
   validate_all_future_pings();
 
   run_next_test();
-}
-
-/**
- * Asynchronously check a url is visited.
- * @param url the url
- * @return {Promise}
- * @resolves When the check has been added successfully.
- * @rejects JavaScript exception.
- */
-function promiseIsURIVisited(url) {
-  return new Promise(resolve => {
-    PlacesUtils.asyncHistory.isURIVisited(CommonUtils.makeURI(url), function(aURI, aIsVisited) {
-      resolve(aIsVisited);
-    });
-  });
 }

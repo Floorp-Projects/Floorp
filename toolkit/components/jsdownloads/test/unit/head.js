@@ -181,27 +181,6 @@ function promiseWaitForVisit(aUrl) {
 }
 
 /**
- * Check browsing history to see whether the given URI has been visited.
- *
- * @param aUrl
- *        String containing the URI that will be visited.
- *
- * @return {Promise}
- * @resolves Boolean indicating whether the URI has been visited.
- * @rejects JavaScript exception.
- */
-function promiseIsURIVisited(aUrl) {
-  return new Promise(resolve => {
-
-    PlacesUtils.asyncHistory.isURIVisited(NetUtil.newURI(aUrl),
-      function(aURI, aIsVisited) {
-        resolve(aIsVisited);
-      });
-
-  });
-}
-
-/**
  * Creates a new Download object, setting a temporary file as the target.
  *
  * @param aSourceUrl
