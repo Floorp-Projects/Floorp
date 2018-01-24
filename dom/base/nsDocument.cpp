@@ -1483,6 +1483,7 @@ nsIDocument::nsIDocument()
     mAllowPaymentRequest(false),
     mEncodingMenuDisabled(false),
     mIsSVGGlyphsDocument(false),
+    mAllowUnsafeHTML(false),
     mIsScopedStyleEnabled(eScopedStyle_Unknown),
     mCompatMode(eCompatibility_FullStandards),
     mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
@@ -6186,6 +6187,13 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
   RefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(),
                                     EmptyString());
   return attribute.forget();
+}
+
+bool
+nsIDocument::AllowUnsafeHTML() const
+{
+  return (!nsContentUtils::IsSystemPrincipal(NodePrincipal()) ||
+          mAllowUnsafeHTML);
 }
 
 void

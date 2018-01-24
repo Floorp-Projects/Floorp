@@ -18,7 +18,7 @@ add_task(function* () {
 
   info("Create the test markup");
   let div = document.createElement("div");
-  div.innerHTML =
+  div.unsafeSetInnerHTML(
   `<div data-localization-bundle="devtools/client/locales/startup.properties">
      <div id="d0" data-localization="content=inspector.someInvalidKey"></div>
      <div id="d1" data-localization="content=inspector.label">Text will disappear</div>
@@ -32,7 +32,7 @@ add_task(function* () {
        <div id="d5" data-localization="content=toolbox.defaultTitle"></div>
      </div>
    </div>
-  `;
+  `);
 
   info("Use localization helper to localize the test markup");
   localizeMarkup(div);
