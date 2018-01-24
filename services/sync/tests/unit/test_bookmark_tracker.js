@@ -599,26 +599,27 @@ add_task(async function test_onItemChanged_changeBookmarkURI() {
     await stopTracking();
 
     _("Insert a bookmark");
-    let fx_id = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarks.bookmarksMenuFolder,
-      CommonUtils.makeURI("http://getfirefox.com"),
-      PlacesUtils.bookmarks.DEFAULT_INDEX,
-      "Get Firefox!");
-    let fx_guid = await engine._store.GUIDForId(fx_id);
-    _(`Firefox GUID: ${fx_guid}`);
+    let bm = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "http://getfirefox.com",
+      title: "Get Firefox!"
+    });
+    _(`Firefox GUID: ${bm.guid}`);
 
     _("Set a tracked annotation to make sure we only notify once");
+    let id = await PlacesUtils.promiseItemId(bm.guid);
     PlacesUtils.annotations.setItemAnnotation(
-      fx_id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
+      id, PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO, "A test description", 0,
       PlacesUtils.annotations.EXPIRE_NEVER);
 
     await startTracking();
 
     _("Change the bookmark's URI");
-    PlacesUtils.bookmarks.changeBookmarkURI(fx_id,
-      CommonUtils.makeURI("https://www.mozilla.org/firefox"));
-    await verifyTrackedItems([fx_guid]);
-    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    bm.url = "https://www.mozilla.org/firefox";
+    bm = await PlacesUtils.bookmarks.update(bm);
+
+    await verifyTrackedItems([bm.guid]);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();
