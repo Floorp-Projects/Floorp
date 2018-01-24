@@ -27,7 +27,7 @@ const {
 
 const FLEXBOX_LINES_PROPERTIES = {
   "edge": {
-    lineDash: [2, 2]
+    lineDash: [12, 10]
   },
   "item": {
     lineDash: [0, 0]
