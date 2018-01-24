@@ -1,0 +1,115 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1516825559 21600
+#      Wed Jan 24 14:25:59 2018 -0600
+# Node ID 3fc024ee4ac9f68acf3ad27cfbfdf1527f20438b
+# Parent  bba456aaff2bebb7dc4b695cfb8cb5d492a7c402
+Bug 1431797 Correct the capitalization of headers inside the chromium code so MinGW can compile r?bobowen
+
+diff --git a/security/sandbox/chromium/base/rand_util_win.cc b/security/sandbox/chromium/base/rand_util_win.cc
+--- a/security/sandbox/chromium/base/rand_util_win.cc
++++ b/security/sandbox/chromium/base/rand_util_win.cc
+@@ -7,17 +7,17 @@
+ #include <windows.h>
+ #include <stddef.h>
+ #include <stdint.h>
+ 
+ // #define needed to link in RtlGenRandom(), a.k.a. SystemFunction036.  See the
+ // "Community Additions" comment on MSDN here:
+ // http://msdn.microsoft.com/en-us/library/windows/desktop/aa387694.aspx
+ #define SystemFunction036 NTAPI SystemFunction036
+-#include <NTSecAPI.h>
++#include <ntsecapi.h>
+ #undef SystemFunction036
+ 
+ #include <algorithm>
+ #include <limits>
+ 
+ #include "base/logging.h"
+ 
+ namespace base {
+diff --git a/security/sandbox/chromium/base/win/pe_image.h b/security/sandbox/chromium/base/win/pe_image.h
+--- a/security/sandbox/chromium/base/win/pe_image.h
++++ b/security/sandbox/chromium/base/win/pe_image.h
+@@ -12,17 +12,17 @@
+ #define BASE_WIN_PE_IMAGE_H_
+ 
+ #include <windows.h>
+ 
+ #if defined(_WIN32_WINNT_WIN8)
+ // The Windows 8 SDK defines FACILITY_VISUALCPP in winerror.h.
+ #undef FACILITY_VISUALCPP
+ #endif
+-#include <DelayIMP.h>
++#include <delayimp.h>
+ 
+ namespace base {
+ namespace win {
+ 
+ // This class is a wrapper for the Portable Executable File Format (PE).
+ // Its main purpose is to provide an easy way to work with imports and exports
+ // from a file, mapped in memory as image.
+ class PEImage {
+diff --git a/security/sandbox/chromium/sandbox/win/src/acl.h b/security/sandbox/chromium/sandbox/win/src/acl.h
+--- a/security/sandbox/chromium/sandbox/win/src/acl.h
++++ b/security/sandbox/chromium/sandbox/win/src/acl.h
+@@ -1,16 +1,16 @@
+ // Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef SANDBOX_SRC_ACL_H_
+ #define SANDBOX_SRC_ACL_H_
+ 
+-#include <AccCtrl.h>
++#include <accctrl.h>
+ #include <windows.h>
+ 
+ #include <memory>
+ 
+ #include "base/memory/free_deleter.h"
+ #include "sandbox/win/src/sid.h"
+ 
+ namespace sandbox {
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+@@ -1,15 +1,15 @@
+ // Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #include "sandbox/win/src/broker_services.h"
+ 
+-#include <AclAPI.h>
++#include <aclapi.h>
+ #include <stddef.h>
+ 
+ #include <utility>
+ 
+ #include "base/logging.h"
+ #include "base/macros.h"
+ #include "base/memory/ptr_util.h"
+ #include "base/threading/platform_thread.h"
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_rand.cc
+@@ -5,17 +5,17 @@
+ #include "sandbox/win/src/sandbox_rand.h"
+ 
+ #include <windows.h>
+ 
+ // #define needed to link in RtlGenRandom(), a.k.a. SystemFunction036.  See the
+ // "Community Additions" comment on MSDN here:
+ // http://msdn.microsoft.com/en-us/library/windows/desktop/aa387694.aspx
+ #define SystemFunction036 NTAPI SystemFunction036
+-#include <NTSecAPI.h>
++#include <ntsecapi.h>
+ #undef SystemFunction036
+ 
+ namespace sandbox {
+ 
+ bool GetRandom(unsigned int* random_value) {
+   return RtlGenRandom(random_value, sizeof(unsigned int)) != FALSE;
+ }
+ 
