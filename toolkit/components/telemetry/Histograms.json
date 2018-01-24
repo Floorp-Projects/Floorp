@@ -7723,7 +7723,7 @@
   "TELEMETRY_TEST_EXPIRED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "4",
+    "expires_in_version": "4.0a1",
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },

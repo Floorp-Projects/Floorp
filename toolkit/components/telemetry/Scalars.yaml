@@ -1402,7 +1402,7 @@ telemetry.test:
     bug_numbers:
       - 1276190
     description: This is an expired testing scalar; not meant to be touched.
-    expires: "4"
+    expires: 4.0a1
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
@@ -1413,7 +1413,7 @@ telemetry.test:
     bug_numbers:
       - 1276190
     description: This is an unexpired testing scalar; not meant to be touched.
-    expires: "375"
+    expires: "375.0"
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
@@ -1474,7 +1474,7 @@ telemetry.test:
     bug_numbers:
       - 1277806
     description: This is an expired testing scalar; not meant to be touched.
-    expires: "4"
+    expires: 4.0a1
     kind: uint
     keyed: true
     notification_emails:
