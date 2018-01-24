@@ -1,5 +1,5 @@
 :root {
-  --toolbarbutton-icon-fill-attention: #0a84ff;
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, #0a84ff);
 }
 
 :root:-moz-lwtheme {
@@ -7,14 +7,14 @@
 }
 
 toolbar[brighttext] {
-  --toolbarbutton-icon-fill-attention: #45a1ff;
+  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, #45a1ff);
 }
 
 .toolbarbutton-animatable-box,
 .toolbarbutton-1 {
   color: inherit;
   -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
@@ -509,7 +509,7 @@ toolbar[brighttext] {
 .bookmark-item {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
