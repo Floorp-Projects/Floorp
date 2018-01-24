@@ -36,27 +36,27 @@ x { background: lime; height:7px; }
 document.body.style.display = "none";
 var align = [
    "start",
+   // "end",
+   // "center",
+   // "start",
+   // "end",
+   "start",
+   "start",
+   "start",
+   "start",
    "end",
    "center",
    "start",
-   "end",
-   "start",
-   "start",
-   "start",
-   "start",
-   "end",
+   // "end",
+   // "start",
+   // "safe end",
    "center",
-   "start",
-   "end",
-   "start",
-   "end safe",
+   // "center",
+   // "start",
+   // "safe end",
+   // "start",
    "center",
-   "center",
-   "start",
-   "end safe",
-   "start",
-   "center",
-   "end",
+   // "end",
 ];
 var rows = [ "0", "1", "2", "3", "8", "9" ];
 var heights = [ "auto", "0", "1", "5", "6" ];
@@ -87,17 +87,21 @@ for (var j = 0; j < align.length; ++j) {
               item.className = "gap";
             grid.appendChild(item);
           }
-          if (j < 5) { // The stretch tests.
+          // if (j < 5) { // The stretch tests.
+          if (j < 1) { // The stretch test.
             if (c == 1)
               grid.style.background = 'pink'
           }
-          if (j == 6 && rows[c] == 1) { // The 'end safe' tests.
+          // if (j == 6 && rows[c] == 1) { // The 'safe end' tests.
+          if (j == 2 && rows[c] == 1) { // The 'safe end' tests.
             if (heights[w] != 0) grid.style.alignContent = 'end';
           }
-          if (j == 7 && rows[c] == 1) { // The 'center safe' tests.
+          // if (j == 7 && rows[c] == 1) { // The 'safe center' tests.
+          if (j == 3 && rows[c] == 1) { // The 'safe center' tests.
             if (heights[w] != 0) grid.style.alignContent = 'center';
           }
-          if (j > 15) { // The space-around and space-evenly tests.
+          // if (j > 15) { // The space-around and space-evenly tests.
+          if (j > 7) { // The space-around and space-evenly tests.
             if (rows[c] == 1) {
               if (heights[w] == 0) {
                 if (grid.style.alignContent != 'end') {
