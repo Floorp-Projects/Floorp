@@ -69,7 +69,7 @@ add_task(async function test_date_container() {
 
   historyNode.containerOpen = false;
 
-  ok(!(await promiseIsURIVisited(TEST_URI)), "Visit has been removed");
+  ok(!(await PlacesUtils.history.hasVisits(TEST_URI)), "Visit has been removed");
 
   library.close();
 });

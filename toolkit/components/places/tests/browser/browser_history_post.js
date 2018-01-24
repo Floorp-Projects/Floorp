@@ -15,7 +15,7 @@ add_task(async function() {
       submit.click();
       await p;
     });
-    let visited = await promiseIsURIVisited(SJS_URI);
+    let visited = await PlacesUtils.history.hasVisits(SJS_URI);
     ok(!visited, "The POST page should not be added to history");
     ok(!(await PlacesTestUtils.isPageInDB(SJS_URI.spec)), "The page should not be in the database");
   });

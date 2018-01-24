@@ -150,15 +150,9 @@ function synthesizeClickOnSelectedTreeCell(aTree, aOptions) {
  * @resolves When the check has been added successfully.
  * @rejects JavaScript exception.
  */
-function promiseIsURIVisited(aURI) {
-  return new Promise(resolve => {
-
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-      resolve(aIsVisited);
-    });
-
-  });
-}
+ function promiseIsURIVisited(aURI) {
+   return PlacesUtils.history.hasVisits(aURI);
+ }
 
 /**
  * Makes the specified toolbar visible or invisible and returns a Promise object

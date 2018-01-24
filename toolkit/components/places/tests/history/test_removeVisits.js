@@ -44,8 +44,8 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
   }
   root.containerOpen = false;
 
-  info("asyncHistory.isURIVisited should return true.");
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  info("PlacesUtils.history.hasVisits should return true.");
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
 
   await PlacesTestUtils.promiseAsyncUpdates();
   info("Frecency should be positive.");
@@ -96,7 +96,7 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   root.containerOpen = false;
 
   info("asyncHistory.isURIVisited should return true.");
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
   info("Frecency should be positive.");
@@ -141,7 +141,7 @@ add_task(async function remove_visits_unbookmarked_uri() {
   root.containerOpen = false;
 
   info("asyncHistory.isURIVisited should return true.");
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
   info("Frecency should be positive.");
@@ -192,7 +192,7 @@ add_task(async function remove_visits_bookmarked_uri() {
   root.containerOpen = false;
 
   info("asyncHistory.isURIVisited should return true.");
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
   info("Frecency should be positive.");
@@ -233,7 +233,7 @@ add_task(async function remove_all_visits_unbookmarked_uri() {
   root.containerOpen = false;
 
   info("asyncHistory.isURIVisited should return false.");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
 
   await cleanup();
 });
@@ -277,7 +277,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   root.containerOpen = false;
 
   info("asyncHistory.isURIVisited should return false.");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
 
   info("URI should be bookmarked");
   Assert.ok(await PlacesUtils.bookmarks.fetch({url: TEST_URI}));
