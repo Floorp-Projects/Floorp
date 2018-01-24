@@ -737,9 +737,13 @@ GetSystemFontInfo(GtkStyleContext *aStyle,
         // |size| is in pango-points, so convert to pixels.
         size *= float(gfxPlatformGtk::GetFontScaleDPI()) / POINTS_PER_INCH_FLOAT;
     }
-    // |size| is now pixels but not scaled for the hidpi displays,
-    // this needs to be done in GetFontImpl where the aDevPixPerCSSPixel
-    // parameter is provided.
+
+    // Scale fonts up on HiDPI displays.
+    // This would be done automatically with cairo, but we manually manage
+    // the display scale for platform consistency.
+    size *= mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
+
+    // |size| is now pixels
 
     aFontStyle->size = size;
 
@@ -756,18 +760,18 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
     case eFont_PullDownMenu: // css3
       aFontName = mMenuFontName;
       aFontStyle = mMenuFontStyle;
-      break;
+      return true;
 
     case eFont_Field:        // css3
     case eFont_List:         // css3
       aFontName = mFieldFontName;
       aFontStyle = mFieldFontStyle;
-      break;
+      return true;
 
     case eFont_Button:       // css3
       aFontName = mButtonFontName;
       aFontStyle = mButtonFontStyle;
-      break;
+      return true;
 
     case eFont_Caption:      // css2
     case eFont_Icon:         // css2
@@ -785,11 +789,8 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
     default:
       aFontName = mDefaultFontName;
       aFontStyle = mDefaultFontStyle;
-      break;
+      return true;
   }
-  // Scale the font for the current monitor
-  aFontStyle.size *= aDevPixPerCSSPixel;
-  return true;
 }
 
 void
