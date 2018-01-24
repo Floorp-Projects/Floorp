@@ -105,6 +105,9 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 if '-flto' in CONFIG['OS_CXXFLAGS'] and CONFIG['CC_TYPE'] != 'clang':
     LDFLAGS += ['--param lto-partitions=1']
 
+if CONFIG['MOZ_ALSA']:
+    DEFINES['MOZ_ALSA'] = True
+
 DEFINES['NS_NO_XPCOM'] = True
 DisableStlWrapping()
 
