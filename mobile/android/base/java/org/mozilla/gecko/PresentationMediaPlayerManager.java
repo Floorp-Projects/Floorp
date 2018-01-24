@@ -20,13 +20,11 @@ import android.view.WindowManager;
 
 import org.mozilla.gecko.AppConstants.Versions;
 
-import org.mozilla.gecko.annotation.BuildFlag;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 /**
  * A MediaPlayerManager with API 17+ Presentation support.
  */
-@BuildFlag("MOZ_NATIVE_DEVICES")
 @TargetApi(17)
 public class PresentationMediaPlayerManager extends MediaPlayerManager {
 
