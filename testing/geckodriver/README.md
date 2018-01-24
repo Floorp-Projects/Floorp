@@ -21,7 +21,7 @@ the [Testing :: GeckoDriver] component.
 
 [WebDriver protocol]: http://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [Firefox remote protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette
-[change log]: https://github.com/mozilla/geckodriver/blob/master/CHANGES.md
+[change log]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
 [Releases]: https://github.com/mozilla/geckodriver/releases
 [supported platforms]: #supported-firefoxen
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/
