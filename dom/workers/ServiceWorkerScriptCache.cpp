@@ -730,10 +730,7 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service
   // worker.
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, aPrincipal, secFlags,
-                     contentPolicyType,
-                     nullptr, /* aPerformanceStorage */
-                     loadGroup,
-                     nullptr /* aCallbacks */,
+                     contentPolicyType, loadGroup, nullptr /* aCallbacks */,
                      mLoadFlags);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

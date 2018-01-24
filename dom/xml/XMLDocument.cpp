@@ -433,7 +433,6 @@ XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
                                   static_cast<nsIDocument*>(this),
                      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                      nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
-                     nullptr, // aPerformanceStorage
                      loadGroup,
                      req,
                      nsIRequest::LOAD_BACKGROUND);

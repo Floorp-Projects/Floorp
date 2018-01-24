@@ -806,7 +806,6 @@ NewImageChannel(nsIChannel** aResult,
                                               aTriggeringPrincipal,
                                               securityFlags,
                                               aPolicyType,
-                                              nullptr,   // PerformanceStorage
                                               nullptr,   // loadGroup
                                               callbacks,
                                               aLoadFlags);
@@ -838,7 +837,6 @@ NewImageChannel(nsIChannel** aResult,
                        nsContentUtils::GetSystemPrincipal(),
                        securityFlags,
                        aPolicyType,
-                       nullptr,   // PerformanceStorage
                        nullptr,   // loadGroup
                        callbacks,
                        aLoadFlags);

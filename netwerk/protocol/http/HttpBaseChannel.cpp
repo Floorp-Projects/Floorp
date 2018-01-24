@@ -42,7 +42,6 @@
 #include "nsIDocShell.h"
 #include "nsINetworkInterceptController.h"
 #include "mozilla/dom/Performance.h"
-#include "mozilla/dom/PerformanceStorage.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
@@ -4156,8 +4155,8 @@ IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
-mozilla::dom::PerformanceStorage*
-HttpBaseChannel::GetPerformanceStorage()
+mozilla::dom::Performance*
+HttpBaseChannel::GetPerformance()
 {
   // If performance timing is disabled, there is no need for the Performance
   // object anymore.
@@ -4173,12 +4172,6 @@ HttpBaseChannel::GetPerformanceStorage()
 
   if (!mLoadInfo) {
     return nullptr;
-  }
-
-  // If a custom performance storage is set, let's use it.
-  mozilla::dom::PerformanceStorage* performanceStorage = mLoadInfo->GetPerformanceStorage();
-  if (performanceStorage) {
-    return performanceStorage;
   }
 
   // We don't need to report the resource timing entry for a TYPE_DOCUMENT load.
@@ -4210,12 +4203,12 @@ HttpBaseChannel::GetPerformanceStorage()
     return nullptr;
   }
 
-  mozilla::dom::Performance* performance = innerWindow->GetPerformance();
-  if (!performance) {
+  mozilla::dom::Performance* docPerformance = innerWindow->GetPerformance();
+  if (!docPerformance) {
     return nullptr;
   }
 
-  return performance->AsPerformanceStorage();
+  return docPerformance;
 }
 
 NS_IMETHODIMP

@@ -297,7 +297,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // PerformanceStorage
                        nullptr,  // loadGroup
                        nullptr,  // aCallbacks
                        nsIRequest::INHIBIT_PERSISTENT_CACHING |

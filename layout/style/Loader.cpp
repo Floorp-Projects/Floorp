@@ -1510,7 +1510,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                                               aLoadData->mLoaderPrincipal,
                                               securityFlags,
                                               contentPolicyType,
-                                              nullptr, // Performancestorage
                                               loadGroup,
                                               nullptr,   // aCallbacks
                                               nsIChannel::LOAD_NORMAL |
@@ -1526,7 +1525,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
                        nsContentUtils::GetSystemPrincipal(),
                        securityFlags,
                        contentPolicyType,
-                       nullptr, // aPerformanceStorage
                        loadGroup,
                        nullptr,   // aCallbacks
                        nsIChannel::LOAD_NORMAL |
