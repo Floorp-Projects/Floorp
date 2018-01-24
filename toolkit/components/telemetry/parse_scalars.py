@@ -190,8 +190,11 @@ class ScalarType:
                                   '.\nSee: {}'.format(BASE_DOC_URL))
 
         # Validate the expiration version.
+        # Historical versions of Scalars.json may contain expiration versions
+        # using the deprecated format 'N.Na1'. Those scripts set
+        # self._strict_type_checks to false.
         expires = definition.get('expires')
-        if not utils.validate_expiration_version(expires):
+        if not utils.validate_expiration_version(expires) and self._strict_type_checks:
             raise ParserError('{} - invalid expires: {}.\nSee: {}#required-fields'
                               .format(self._name, expires, BASE_DOC_URL))
 
