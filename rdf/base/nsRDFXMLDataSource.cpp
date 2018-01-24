@@ -941,6 +941,7 @@ RDFXMLDataSourceImpl::Refresh(bool aBlocking)
                            nsContentUtils::GetSystemPrincipal(),
                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                            nsIContentPolicy::TYPE_OTHER,
+                           nullptr, // aPerformanceStorage
                            nullptr, // aLoadGroup
                            this);   // aCallbacks
         NS_ENSURE_SUCCESS(rv, rv);

@@ -24,6 +24,7 @@ namespace mozilla {
 namespace dom {
 class ClientInfo;
 class ClientSource;
+class PerformanceStorage;
 class ServiceWorkerDescriptor;
 } // namespace dom
 } // namespace mozilla
@@ -41,6 +42,7 @@ native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_MaybeClientInfoRef(const mozilla::Maybe<mozilla::dom::ClientInfo>);
 [ref] native const_ServiceWorkerDescriptorRef(const mozilla::dom::ServiceWorkerDescriptor);
 [ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
+[ptr] native PerformanceStoragePtr(mozilla::dom::PerformanceStorage);
 
 typedef unsigned long nsSecurityFlags;
 
@@ -924,4 +926,18 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, nostdcall, notxpcom]
   const_MaybeServiceWorkerDescriptorRef GetController();
+
+  /**
+   * Set a custom performance storage. This is meant to be executed only for
+   * workers. If a PerformanceStorage is not set, the loadingDocument->Window
+   * Performance object will be used instead.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetPerformanceStorage(in PerformanceStoragePtr aPerformanceStorage);
+
+  /**
+   * Get the PerformanceStorage.
+   */
+  [noscript, nostdcall, notxpcom]
+  PerformanceStoragePtr GetPerformanceStorage();
 };
