@@ -1068,6 +1068,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
+  RefPtr<PerformanceStorage> mPerformanceStorage;
+
   JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;

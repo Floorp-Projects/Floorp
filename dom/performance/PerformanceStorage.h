@@ -15,6 +15,8 @@ class nsITimedChannel;
 namespace mozilla {
 namespace dom {
 
+class PerformanceTimingData;
+
 class PerformanceStorage
 {
 public:
@@ -22,7 +24,6 @@ public:
 
   virtual void AddEntry(nsIHttpChannel* aChannel,
                         nsITimedChannel* aTimedChannel) = 0;
-
 
 protected:
   virtual ~PerformanceStorage() {}
