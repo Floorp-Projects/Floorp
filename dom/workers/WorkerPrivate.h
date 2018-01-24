@@ -68,6 +68,7 @@ class ClientSource;
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
+class PerformanceStorage;
 class PromiseNativeHandler;
 class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
@@ -1511,6 +1512,9 @@ public:
 
   void
   ExecutionReady();
+
+  PerformanceStorage*
+  GetPerformanceStorage();
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,

@@ -3173,6 +3173,7 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
                      nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                      nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                     nullptr, // aPerformanceStorage
                      nullptr,  // aLoadGroup
                      listenerPeer,
                      nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI |

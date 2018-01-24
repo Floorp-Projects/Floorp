@@ -32,6 +32,7 @@ namespace dom {
 
 class InternalRequest;
 class InternalResponse;
+class PerformanceStorage;
 
 /**
  * Provides callbacks to be called when response is available or on error.
@@ -109,6 +110,7 @@ public:
               nsIPrincipal* aPrincipal,
               nsILoadGroup* aLoadGroup,
               nsIEventTarget* aMainThreadEventTarget,
+              PerformanceStorage* aPerformanceStorage,
               bool aIsTrackingFetch);
 
   nsresult Fetch(AbortSignal* aSignal,
@@ -147,6 +149,10 @@ private:
   nsCOMPtr<nsIChannel> mChannel;
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+
+  // This is set only when Fetch is used in workers.
+  RefPtr<PerformanceStorage> mPerformanceStorage;
+
   SRIMetadata mSRIMetadata;
   nsCString mWorkerScript;
 

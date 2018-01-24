@@ -181,6 +181,7 @@ nsManifestCheck::Begin()
                        mLoadingPrincipal,
                        nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                        nsIContentPolicy::TYPE_OTHER,
+                       nullptr,   // PerformanceStorage
                        nullptr,   // loadGroup
                        nullptr,   // aCallbacks
                        nsIRequest::LOAD_BYPASS_CACHE);
@@ -378,6 +379,7 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
                        mLoadingPrincipal,
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
+                       nullptr,   // PerformanceStorage
                        nullptr,  // aLoadGroup
                        this,     // aCallbacks
                        flags);
