@@ -2,18 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+treechildren:-moz-tree-image {
+  -moz-context-properties: fill, fill-opacity;
+  fill: -moz-FieldText;
+  fill-opacity: 0.7;
+}
+
 treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
   padding-inline-end: 2px;
   margin: 0 2px;
   width: 16px;
   height: 16px;
-}
-
-treechildren:-moz-tree-image {
-  -moz-context-properties: fill, fill-opacity;
-  fill: -moz-FieldText;
-  fill-opacity: 0.7;
 }
 
 treechildren::-moz-tree-image(title, livemarkItem) {
