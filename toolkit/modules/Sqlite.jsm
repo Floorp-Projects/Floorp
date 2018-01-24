@@ -1179,7 +1179,7 @@ OpenedConnection.prototype = Object.freeze({
         if (result == null) {
           return 0;
         }
-        return JSON.stringify(result[0].getInt32(0));
+        return result[0].getInt32(0);
       }
     );
   },
