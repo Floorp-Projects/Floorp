@@ -34,31 +34,31 @@ x { background: lime; height:7px; }
 document.body.style.display = "none";
 var justify = [
    "start",
+   // "end",
+   // "center",
+   // "start",
+   // "end",
+   "start",
+   "start",
+   "start",
+   "start",
    "end",
    "center",
    "start",
-   "end",
-   "start",
-   "start",
-   "start",
-   "start",
-   "end",
+   // "end",
+   // "start",
+   // "end safe",
+   // "end",
    "center",
-   "start",
-   "end",
-   "start",
-   "end safe",
-   "end",
+   // "center",
+   // "end",
+   // "end safe",
+   // "start",
    "center",
-   "center",
-   "end",
-   "end safe",
-   "start",
-   "center",
-   "end",
-   "end safe",
-   "left",
-   "end",
+   // "end",
+   // "end safe",
+   // "left",
+   // "end",
 ];
 var cols = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ];
 var widths = [ "0", "1", "2", "3", "4", "5", "6" ];
@@ -81,17 +81,21 @@ for (var j = 0; j < justify.length; ++j) {
       for (var x = 0; x < cols[c]; ++x) {
         grid.appendChild(document.createElement('x'));
       }
-      if (j < 5) { // The stretch tests.
+      // if (j < 5) { // The stretch tests.
+      if (j < 1) { // The stretch test.
         if (c == 1)
           grid.style.background = 'pink'
       }
-      if (j == 6 && cols[c] == 1) { // The 'end safe' tests.
+      // if (j == 6 && cols[c] == 1) { // The 'safe end' tests.
+      if (j == 2 && cols[c] == 1) { // The 'safe end' tests.
         if (widths[w] != 0) grid.style.justifyContent = 'end';
       }
-      if (j == 7 && cols[c] == 1) { // The 'center safe' tests.
+      // if (j == 7 && cols[c] == 1) { // The 'safe center' tests.
+      if (j == 3 && cols[c] == 1) { // The 'safe center' tests.
         if (widths[w] != 0) grid.style.justifyContent = 'center';
       }
-      if (j > 15) { // The space-around and space-evenly tests.
+      // if (j > 15) { // The space-around and space-evenly tests.
+      if (j > 7) { // The space-around and space-evenly tests.
         if (cols[c] == 1) {
           if (widths[w] == 0) {
             if (grid.style.justifyContent != 'end') {

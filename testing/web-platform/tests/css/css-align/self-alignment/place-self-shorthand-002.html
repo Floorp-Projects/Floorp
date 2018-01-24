@@ -8,9 +8,9 @@
 <script src="../resources/alignment-parsing-utils.js"></script>
 <div id="log"></div>
 <script>
-    var values = ["auto", "normal", "stretch"].concat(selfPositionValues, baselineValues);
-    values.forEach(function(alignValue) {
-        values.forEach(function(justifyValue) {
+    var values = ["auto", "normal", "stretch"].concat(selfPositionValues);
+    baselineValues.concat(values).forEach(function(alignValue) {
+        values.concat(["left", "right"]).forEach(function(justifyValue) {
             test(function() {
                 checkPlaceShorhandLonghands("place-self", "align-self", "justify-self", alignValue, justifyValue);
             }, "Checking place-self: " + alignValue + " " + justifyValue);

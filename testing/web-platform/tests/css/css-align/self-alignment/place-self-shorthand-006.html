@@ -8,9 +8,9 @@
 <script src="../resources/alignment-parsing-utils.js"></script>
 <div id="log"></div>
 <script>
-    var values = ["auto", "normal", "stretch"].concat(selfPositionValues, baselineValues);
-    values.forEach(function(alignValue) {
-        [""].concat(values).forEach(function(justifyValue) {
+    var values = ["auto", "normal", "stretch"].concat(selfPositionValues);
+    values.concat(baselineValues).forEach(function(alignValue) {
+        ["left", "right"].concat(values).forEach(function(justifyValue) {
             var value = (alignValue + " " + justifyValue).trim();
             test(function() {
                 checkPlaceShorhand("place-self", alignValue, justifyValue)
