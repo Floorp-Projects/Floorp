@@ -47,6 +47,7 @@
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -460,7 +461,12 @@ nsDocShell::Init()
   rv = mContentListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mInterceptController = new ServiceWorkerInterceptController();
+  // If parent intercept is not enabled then we must forward to
+  // the network controller from docshell.  We also enable if we're
+  // in the parent process in order to support non-e10s configurations.
+  if (!ServiceWorkerParentInterceptEnabled() || XRE_IsParentProcess()) {
+    mInterceptController = new ServiceWorkerInterceptController();
+  }
 
   // We want to hold a strong ref to the loadgroup, so it better hold a weak
   // ref to us...  use an InterfaceRequestorProxy to do this.
@@ -523,7 +529,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocShell)
   NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
   NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageManager)
-  NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINetworkInterceptController,
+                                     mInterceptController)
   NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
 NS_INTERFACE_MAP_END_INHERITING(nsDocLoader)
 
