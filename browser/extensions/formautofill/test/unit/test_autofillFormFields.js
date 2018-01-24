@@ -5,8 +5,8 @@
 
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillHandler.jsm");
-let {MasterPassword} = Cu.import("resource://formautofill/MasterPassword.jsm", {});
+ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
+let {MasterPassword} = ChromeUtils.import("resource://formautofill/MasterPassword.jsm", {});
 
 const TESTCASES = [
   {

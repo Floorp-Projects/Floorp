@@ -3,7 +3,7 @@
 
 // Tests common Places telemetry probes by faking the telemetry service.
 
-Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 var histograms = {
   PLACES_PAGES_COUNT: val => Assert.equal(val, 1),

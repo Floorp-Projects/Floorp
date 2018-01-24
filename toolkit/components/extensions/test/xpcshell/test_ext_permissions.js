@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://gre/modules/ExtensionPermissions.jsm");
-Cu.import("resource://gre/modules/MessageChannel.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
+ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 
 const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
 
@@ -14,7 +14,7 @@ let extensionHandlers = new WeakSet();
 function frameScript() {
   /* globals content */
   const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-  Cu.import("resource://gre/modules/MessageChannel.jsm");
+  ChromeUtils.import("resource://gre/modules/MessageChannel.jsm");
 
   let handle;
   MessageChannel.addListener(this, "ExtensionTest:HandleUserInput", {

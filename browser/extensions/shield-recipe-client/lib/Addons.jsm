@@ -5,11 +5,11 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension", "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(
+ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "Extension", "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(
   this, "CleanupManager", "resource://shield-recipe-client/lib/CleanupManager.jsm"
 );
 

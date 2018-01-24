@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 const {
   // cookieBehavior constants.
@@ -153,7 +153,7 @@ add_task(async function test_localStorage_on_session_lifetimePolicy() {
     domStorageLength,
     domStorageStoredValue,
   } = await ContentTask.spawn(addonBrowser, {uuid, isRemoteBrowser}, (params) => {
-    const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
     let windowEnumerator = Services.ww.getWindowEnumerator();
 
     let bgPageWindow;

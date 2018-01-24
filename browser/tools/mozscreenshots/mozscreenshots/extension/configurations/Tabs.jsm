@@ -12,10 +12,10 @@ const CUST_TAB = "chrome://browser/skin/customize.svg";
 const PREFS_TAB = "chrome://browser/skin/settings.svg";
 const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20favicon</title>`;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://testing-common/TestUtils.jsm");
-Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 Cu.importGlobalProperties(["InspectorUtils"]);
 

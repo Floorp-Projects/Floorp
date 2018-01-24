@@ -8,18 +8,18 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = ["AddressesEngine", "CreditCardsEngine"];
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-sync/engines.js");
+ChromeUtils.import("resource://services-sync/record.js");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/constants.js");
+ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Log",
-                                  "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "profileStorage",
-                                  "resource://formautofill/ProfileStorage.jsm");
+ChromeUtils.defineModuleGetter(this, "Log",
+                               "resource://gre/modules/Log.jsm");
+ChromeUtils.defineModuleGetter(this, "profileStorage",
+                               "resource://formautofill/ProfileStorage.jsm");
 
 // A helper to sanitize address and creditcard records suitable for logging.
 function sanitizeStorageObject(ob) {

@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
-                                  "resource://gre/modules/ExtensionPreferencesManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
+                               "resource://gre/modules/ExtensionPreferencesManager.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
 
 const {
   createAppInfo,

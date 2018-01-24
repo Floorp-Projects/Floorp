@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-                                  "resource://gre/modules/DeferredTask.jsm");
+ChromeUtils.defineModuleGetter(this, "DeferredTask",
+                               "resource://gre/modules/DeferredTask.jsm");
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";

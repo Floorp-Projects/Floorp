@@ -1,7 +1,7 @@
 "use strict";
 
-const {SessionSaver} = Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
-const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+const {SessionSaver} = ChromeUtils.import("resource:///modules/sessionstore/SessionSaver.jsm", {});
+const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 /**
  * Test what happens if loading a URL that should clear the

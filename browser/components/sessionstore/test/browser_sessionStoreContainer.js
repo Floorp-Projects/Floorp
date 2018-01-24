@@ -103,7 +103,7 @@ add_task(async function test() {
   ];
 
   const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-  const { TabStateFlusher } = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+  const { TabStateFlusher } = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
   // Make sure userContext is enabled.
   await SpecialPowers.pushPrefEnv({

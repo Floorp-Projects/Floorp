@@ -12,12 +12,12 @@
           isDefaultCookieStoreId: false, isPrivateCookieStoreId:false,
           EventManager: false, InputEventManager: false */
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
+                               "resource://gre/modules/ContextualIdentityService.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
-Cu.import("resource://gre/modules/ExtensionCommon.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 global.EventEmitter = ExtensionUtils.EventEmitter;
 global.EventManager = ExtensionCommon.EventManager;

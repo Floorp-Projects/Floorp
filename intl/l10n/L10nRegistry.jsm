@@ -1,5 +1,5 @@
-const { Services } = Components.utils.import('resource://gre/modules/Services.jsm', {});
-const { MessageContext } = Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
+const { Services } = ChromeUtils.import('resource://gre/modules/Services.jsm', {});
+const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
 Components.utils.importGlobalProperties(["fetch"]); /* globals fetch */
 
 /**

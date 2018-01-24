@@ -4,8 +4,8 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const MANIFEST_HANDLER         = "manifests/handler";
 
@@ -44,7 +44,7 @@ add_task(async function test_setup() {
   Services.prefs.setCharPref(PREF_MANIFEST_URI, gManifestHandlerURI);
   Services.prefs.setIntPref(PREF_FETCHINTERVAL, 0);
 
-  let ExperimentsScope = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
+  let ExperimentsScope = ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", {});
   let Experiments = ExperimentsScope.Experiments;
 
   gPolicy = new Experiments.Policy();

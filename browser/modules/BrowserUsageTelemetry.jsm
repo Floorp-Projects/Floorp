@@ -14,11 +14,11 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;

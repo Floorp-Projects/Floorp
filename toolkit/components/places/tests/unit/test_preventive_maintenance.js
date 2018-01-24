@@ -11,7 +11,7 @@
   */
 
 // Include PlacesDBUtils module
-Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 // Get services and database connection
 var hs = PlacesUtils.history;

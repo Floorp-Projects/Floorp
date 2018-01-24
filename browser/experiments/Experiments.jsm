@@ -10,24 +10,24 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
-                                  "resource://gre/modules/TelemetryEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
-                                  "resource://gre/modules/TelemetryLog.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+                               "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
+                               "resource://gre/modules/TelemetryEnvironment.jsm");
+ChromeUtils.defineModuleGetter(this, "TelemetryLog",
+                               "resource://gre/modules/TelemetryLog.jsm");
+ChromeUtils.defineModuleGetter(this, "CommonUtils",
+                               "resource://services-common/utils.js");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
                                    "@mozilla.org/xre/app-info;1",

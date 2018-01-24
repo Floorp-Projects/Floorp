@@ -12,18 +12,18 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
 
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/action.js");
-Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/capture.js");
+ChromeUtils.import("chrome://marionette/content/accessibility.js");
+ChromeUtils.import("chrome://marionette/content/action.js");
+ChromeUtils.import("chrome://marionette/content/atom.js");
+ChromeUtils.import("chrome://marionette/content/capture.js");
 const {
   element,
   WebElement,
-} = Cu.import("chrome://marionette/content/element.js", {});
+} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 const {
   ElementNotInteractableError,
   InsecureCertificateError,
@@ -34,16 +34,16 @@ const {
   pprint,
   TimeoutError,
   UnknownError,
-} = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/evaluate.js");
-Cu.import("chrome://marionette/content/event.js");
-const {ContentEventObserverService} = Cu.import("chrome://marionette/content/dom.js", {});
-const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
-Cu.import("chrome://marionette/content/interaction.js");
-Cu.import("chrome://marionette/content/legacyaction.js");
-Cu.import("chrome://marionette/content/navigate.js");
-Cu.import("chrome://marionette/content/proxy.js");
-Cu.import("chrome://marionette/content/session.js");
+} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+ChromeUtils.import("chrome://marionette/content/evaluate.js");
+ChromeUtils.import("chrome://marionette/content/event.js");
+const {ContentEventObserverService} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
+const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+ChromeUtils.import("chrome://marionette/content/interaction.js");
+ChromeUtils.import("chrome://marionette/content/legacyaction.js");
+ChromeUtils.import("chrome://marionette/content/navigate.js");
+ChromeUtils.import("chrome://marionette/content/proxy.js");
+ChromeUtils.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 

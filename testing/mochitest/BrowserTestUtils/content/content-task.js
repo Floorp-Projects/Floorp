@@ -6,9 +6,9 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Task.jsm", this);
-Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
-const AssertCls = Cu.import("resource://testing-common/Assert.jsm", null).Assert;
+ChromeUtils.import("resource://gre/modules/Task.jsm", this);
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
+const AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 
 addMessageListener("content-task:spawn", function (msg) {
   let id = msg.data.id;

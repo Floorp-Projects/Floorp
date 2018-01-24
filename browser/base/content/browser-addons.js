@@ -608,7 +608,7 @@ var LightWeightThemeWebInstaller = {
 
   get _manager() {
     let temp = {};
-    Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+    ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
     delete this._manager;
     return this._manager = temp.LightweightThemeManager;
   },

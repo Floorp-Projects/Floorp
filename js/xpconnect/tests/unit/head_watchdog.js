@@ -10,7 +10,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://testing-common/PromiseTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 ///////////////////
 //

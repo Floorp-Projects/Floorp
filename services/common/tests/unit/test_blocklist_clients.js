@@ -1,13 +1,13 @@
 const { Constructor: CC } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Timer.jsm");
-const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
-const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

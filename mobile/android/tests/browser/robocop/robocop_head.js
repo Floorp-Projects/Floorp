@@ -698,7 +698,7 @@ var _Task;
 function add_task(func) {
   if (!_Task) {
     let ns = {};
-    _Task = Components.utils.import("resource://gre/modules/Task.jsm", ns).Task;
+    _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", ns).Task;
   }
 
   _gTests.push([true, func]);
@@ -767,10 +767,10 @@ function JavaBridge(obj) {
 
 JavaBridge.prototype = {
 
-  _Services: Components.utils.import(
+  _Services: ChromeUtils.import(
     "resource://gre/modules/Services.jsm", {}).Services,
 
-  _EventDispatcher: Components.utils.import(
+  _EventDispatcher: ChromeUtils.import(
     "resource://gre/modules/Messaging.jsm", {}).EventDispatcher.instance,
 
   _getArgs: function(args) {

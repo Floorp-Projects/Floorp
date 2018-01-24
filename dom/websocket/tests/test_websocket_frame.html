@@ -21,7 +21,7 @@ var webSocketOpenedCounter = 0;
 var webSocketMessageAvailableCounter = 0;
 var webSocketClosedCounter = 0;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var tests = [
   { payload: "Hello world!" },

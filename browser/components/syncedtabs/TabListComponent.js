@@ -6,16 +6,16 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let log = Cu.import("resource://gre/modules/Log.jsm", {})
+let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
+ChromeUtils.defineModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
+ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 this.EXPORTED_SYMBOLS = [

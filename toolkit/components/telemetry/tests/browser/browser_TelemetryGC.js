@@ -14,7 +14,7 @@
  *                                                                               *
  ********************************************************************************/
 
-const {GCTelemetry} = Cu.import("resource://gre/modules/GCTelemetry.jsm", {});
+const {GCTelemetry} = ChromeUtils.import("resource://gre/modules/GCTelemetry.jsm", {});
 
 function check(entries) {
   const FIELDS = ["random", "worst"];
@@ -111,7 +111,7 @@ add_task(async function test() {
   // These are available to frame scripts.
   /* global addMessageListener:false, removeMessageListener: false */
   function initScript() {
-    const {GCTelemetry} = Components.utils.import("resource://gre/modules/GCTelemetry.jsm", {});
+    const {GCTelemetry} = ChromeUtils.import("resource://gre/modules/GCTelemetry.jsm", {});
 
     /*
      * Don't shut down GC telemetry if it was already running before the test!

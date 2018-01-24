@@ -1,11 +1,11 @@
 "use strict";
 
-Cu.import("resource://services-common/blocklist-updater.js");
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://services-common/blocklist-updater.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
-const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const { OneCRLBlocklistClient } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
 let server;
 

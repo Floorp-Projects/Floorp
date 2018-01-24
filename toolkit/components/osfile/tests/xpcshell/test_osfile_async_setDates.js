@@ -2,7 +2,7 @@
 
 /* eslint-disable no-lone-blocks */
 
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A test to ensure that OS.File.setDates and OS.File.prototype.setDates are

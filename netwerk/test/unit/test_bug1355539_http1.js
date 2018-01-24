@@ -17,8 +17,8 @@
 // 4. When the server receive all 6 requests, check if the order in |responseQueue| is
 //    equal to |transactionQueue| by comparing the value of X-ID.
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;

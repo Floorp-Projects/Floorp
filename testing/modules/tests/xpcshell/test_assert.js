@@ -7,7 +7,7 @@
 
 function run_test() {
   let ns = {};
-  Components.utils.import("resource://testing-common/Assert.jsm", ns);
+  ChromeUtils.import("resource://testing-common/Assert.jsm", ns);
   let assert = new ns.Assert();
 
   function makeBlock(f, ...args) {
@@ -326,7 +326,7 @@ function run_test() {
 
 add_task(async function test_rejects() {
   let ns = {};
-  Components.utils.import("resource://testing-common/Assert.jsm", ns);
+  ChromeUtils.import("resource://testing-common/Assert.jsm", ns);
   let assert = new ns.Assert();
 
   // A helper function to test failures.

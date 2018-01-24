@@ -7,25 +7,25 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AboutPocket",
-                                  "chrome://pocket/content/AboutPocket.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
-                                  "resource://gre/modules/BrowserUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
-                                  "resource:///modules/PageActions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
-                                  "chrome://pocket/content/Pocket.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-                                  "resource://gre/modules/ReaderMode.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
-                                  "resource:///modules/RecentWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "AboutPocket",
+                               "chrome://pocket/content/AboutPocket.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+                               "resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PageActions",
+                               "resource:///modules/PageActions.jsm");
+ChromeUtils.defineModuleGetter(this, "Pocket",
+                               "chrome://pocket/content/Pocket.jsm");
+ChromeUtils.defineModuleGetter(this, "ReaderMode",
+                               "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(this, "RecentWindow",
+                               "resource:///modules/RecentWindow.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
@@ -448,8 +448,8 @@ var PocketOverlay = {
     this.updateWindow(window);
   },
   setWindowScripts(window) {
-    XPCOMUtils.defineLazyModuleGetter(window, "Pocket",
-                                      "chrome://pocket/content/Pocket.jsm");
+    ChromeUtils.defineModuleGetter(window, "Pocket",
+                                   "chrome://pocket/content/Pocket.jsm");
     // Can't use XPCOMUtils for these because the scripts try to define the variables
     // on window, and so the defineProperty inside defineLazyGetter fails.
     Object.defineProperty(window, "pktApi", pktUIGetter("pktApi", window));

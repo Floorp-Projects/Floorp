@@ -125,20 +125,20 @@ this.EXPORTED_SYMBOLS = ["profileStorage"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
-                                  "resource://gre/modules/JSONFile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
-                                  "resource://formautofill/FormAutofillNameUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
-                                  "resource://formautofill/MasterPassword.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumber",
-                                  "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
+ChromeUtils.defineModuleGetter(this, "JSONFile",
+                               "resource://gre/modules/JSONFile.jsm");
+ChromeUtils.defineModuleGetter(this, "FormAutofillNameUtils",
+                               "resource://formautofill/FormAutofillNameUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "MasterPassword",
+                               "resource://formautofill/MasterPassword.jsm");
+ChromeUtils.defineModuleGetter(this, "PhoneNumber",
+                               "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",

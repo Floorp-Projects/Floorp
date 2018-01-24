@@ -16,9 +16,9 @@ const initialTab = gBrowser.selectedTab;
 gBrowser.removeTab(initialTab);
 
 var tmp = {};
-Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
-Cu.import("resource:///modules/DirectoryLinksProvider.jsm", tmp);
-Cu.import("resource://testing-common/PlacesTestUtils.jsm", tmp);
+ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm", tmp);
+ChromeUtils.import("resource:///modules/DirectoryLinksProvider.jsm", tmp);
+ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm", tmp);
 Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tmp);
 var {NewTabUtils, Sanitizer, DirectoryLinksProvider, PlacesTestUtils} = tmp;
 

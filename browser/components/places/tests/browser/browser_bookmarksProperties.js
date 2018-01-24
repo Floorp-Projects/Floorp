@@ -34,7 +34,7 @@ const TEST_URL = "http://www.example.com/";
 const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xul";
 const DIALOG_URL_MINIMAL_UI = "chrome://browser/content/places/bookmarkProperties2.xul";
 
-Cu.import("resource:///modules/RecentWindow.jsm");
+ChromeUtils.import("resource:///modules/RecentWindow.jsm");
 var win = RecentWindow.getMostRecentBrowserWindow();
 
 function add_bookmark(url) {

@@ -3,8 +3,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
 
 const EXTENSION1_ID = "extension1@mozilla.com";
 const EXTENSION2_ID = "extension2@mozilla.com";

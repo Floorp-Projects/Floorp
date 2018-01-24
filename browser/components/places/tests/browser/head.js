@@ -1,8 +1,8 @@
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+ChromeUtils.defineModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
+ChromeUtils.defineModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
 // We need to cache these before test runs...

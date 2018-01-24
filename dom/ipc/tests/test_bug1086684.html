@@ -21,7 +21,7 @@
       "use strict";
 
       let { MockFilePicker } =
-        Components.utils.import("chrome://specialpowers/content/MockFilePicker.jsm", {});
+        ChromeUtils.import("chrome://specialpowers/content/MockFilePicker.jsm", {});
 
       function parentReady(message) {
         MockFilePicker.init(content);

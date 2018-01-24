@@ -4,7 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["OfflineAppCacheHelper"];
 
-Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
+ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;

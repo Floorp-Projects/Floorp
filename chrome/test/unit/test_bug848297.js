@@ -8,8 +8,8 @@ var MANIFESTS = [
 ];
 
 // Stub in the locale service so we can control what gets returned as the OS locale setting
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 registerManifests(MANIFESTS);
 

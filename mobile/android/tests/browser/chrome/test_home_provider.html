@@ -15,11 +15,11 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const { utils: Cu } = Components;
 
-  Cu.import("resource://gre/modules/HomeProvider.jsm");
-  Cu.import("resource://gre/modules/osfile.jsm");
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/Sqlite.jsm");
-  Cu.import("resource://gre/modules/Task.jsm");
+  ChromeUtils.import("resource://gre/modules/HomeProvider.jsm");
+  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+  ChromeUtils.import("resource://gre/modules/Task.jsm");
 
   const TEST_DATASET_ID = "test-dataset-id";
   const TEST_URL = "http://test.com";

@@ -4,7 +4,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.jsm",

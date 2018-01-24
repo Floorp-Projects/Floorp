@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/utils.js");
 
 const EMPTY = new Set();
 const A = new Set(["a"]);

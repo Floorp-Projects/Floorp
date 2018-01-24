@@ -5,9 +5,9 @@
 "use strict";
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://testing-common/ContentTaskUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm");
 
 this.EXPORTED_SYMBOLS = [ "NarrateTestUtils" ];
 

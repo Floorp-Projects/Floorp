@@ -16,10 +16,10 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
 // Load Services, for the BatteryManager API
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 // Values for the fake battery. See the documentation of Navigator.battery for the meaning of each field.

@@ -19,9 +19,9 @@ const ABOUT_NEWTAB_SEGREGATION_PREF = "privacy.usercontext.about_newtab_segregat
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/PageThumbs.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/PageThumbs.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2 telemetry values
 const TEL_CAPTURE_DONE_OK = 0;
@@ -40,8 +40,8 @@ XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_BAD_URI", TEL_CAPTURE_DONE_BAD
 XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_LOAD_FAILED", TEL_CAPTURE_DONE_LOAD_FAILED);
 XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION", TEL_CAPTURE_DONE_IMAGE_ZERO_DIMENSION);
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
+                               "resource://gre/modules/ContextualIdentityService.jsm");
 const global = this;
 
 const BackgroundPageThumbs = {

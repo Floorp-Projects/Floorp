@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let executableFile = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 executableFile.append("xpcshell.exe");

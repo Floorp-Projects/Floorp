@@ -6,13 +6,13 @@ this.EXPORTED_SYMBOLS = ["PasswordEngine", "LoginRec", "PasswordValidator"];
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/collection_validator.js");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-common/async.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://services-sync/record.js");
+ChromeUtils.import("resource://services-sync/constants.js");
+ChromeUtils.import("resource://services-sync/collection_validator.js");
+ChromeUtils.import("resource://services-sync/engines.js");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-common/async.js");
 
 const SYNCABLE_LOGIN_FIELDS = [
   // `nsILoginInfo` fields.

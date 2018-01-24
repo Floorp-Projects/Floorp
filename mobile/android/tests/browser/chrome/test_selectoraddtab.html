@@ -17,9 +17,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1216047
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/Messaging.jsm");
-  Cu.import("resource://gre/modules/Task.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+  ChromeUtils.import("resource://gre/modules/Task.jsm");
 
   // The chrome window
   let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");

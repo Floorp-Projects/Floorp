@@ -8,8 +8,8 @@ this.EXPORTED_SYMBOLS = ["ResetProfile"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const MOZ_APP_NAME = AppConstants.MOZ_APP_NAME;
 const MOZ_BUILD_APP = AppConstants.MOZ_BUILD_APP;

@@ -26,7 +26,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const {StreamUtils} =
-    Cu.import("chrome://marionette/content/stream-utils.js", {});
+    ChromeUtils.import("chrome://marionette/content/stream-utils.js", {});
 
 const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
     .createInstance(Ci.nsIScriptableUnicodeConverter);

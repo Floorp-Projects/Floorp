@@ -6,7 +6,7 @@
 // Tests that NetworkHelper.parseCertificateInfo parses certificate information
 // correctly.
 
-const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function () {

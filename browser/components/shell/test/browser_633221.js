@@ -1,4 +1,4 @@
-Components.utils.import("resource:///modules/ShellService.jsm");
+ChromeUtils.import("resource:///modules/ShellService.jsm");
 
 function test() {
   ShellService.setDefaultBrowser(true, false);

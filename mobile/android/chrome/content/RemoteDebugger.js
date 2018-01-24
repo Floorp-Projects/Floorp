@@ -6,7 +6,7 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
-  let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   let { DebuggerServer } = require("devtools/server/main");
   return DebuggerServer;
 });

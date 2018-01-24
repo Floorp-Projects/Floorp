@@ -1,5 +1,5 @@
 _("Make sure Utils.deepEquals correctly finds items that are deeply equal");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 function run_test() {
   let data = '[NaN, undefined, null, true, false, Infinity, 0, 1, "a", "b", {a: 1}, {a: "a"}, [{a: 1}], [{a: true}], {a: 1, b: 2}, [1, 2], [1, 2, 3]]';

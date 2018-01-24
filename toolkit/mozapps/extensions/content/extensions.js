@@ -13,30 +13,30 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-Cu.import("resource://gre/modules/DeferredTask.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/DownloadUtils.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
-Cu.import("resource://gre/modules/addons/AddonSettings.jsm");
+ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
-                                  "resource://gre/modules/ExtensionParent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Extension",
+                               "resource://gre/modules/Extension.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionParent",
+                               "resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
 
 
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "PluralForm",
+                               "resource://gre/modules/PluralForm.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
+ChromeUtils.defineModuleGetter(this, "Experiments",
   "resource:///modules/experiments/Experiments.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
@@ -67,7 +67,7 @@ const XMLURI_PARSE_ERROR = "http://www.mozilla.org/newlayout/xml/parsererror.xml
 var gViewDefault = "addons://discover/";
 
 XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
-  const {ExtensionParent} = Cu.import("resource://gre/modules/ExtensionParent.jsm", {});
+  const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
   return ExtensionParent.extensionStylesheets;
 });
 

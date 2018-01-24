@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
-                                  "resource://gre/modules/AppMenuNotifications.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
-                                  "resource://gre/modules/NewTabUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
-                                  "resource:///modules/ScrollbarSampler.jsm");
+ChromeUtils.defineModuleGetter(this, "AppMenuNotifications",
+                               "resource://gre/modules/AppMenuNotifications.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+                               "resource://gre/modules/NewTabUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ScrollbarSampler",
+                               "resource:///modules/ScrollbarSampler.jsm");
 
 /**
  * Maintains the state and dispatches events for the main menu panel.
