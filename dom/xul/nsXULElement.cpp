@@ -715,29 +715,6 @@ IsInVideoControls(nsXULElement* aElement)
   }
   return false;
 }
-
-/**
- * Returns true if aElement is an element created by the <binding
- * id="feedreaderUI"> binding or one of the bindings bound to such an element.
- * element in one of the binding for such an element. Only
- * subscribe.xhtml#feedSubscribeLine pulls in the feedreaderUI binding. This
- * binding creates lots of different types of XUL elements.
- */
-bool
-IsInFeedSubscribeLine(nsXULElement* aElement)
-{
-  nsIContent* bindingParent = aElement->GetBindingParent();
-  if (bindingParent) {
-    while (bindingParent->GetBindingParent()) {
-      bindingParent = bindingParent->GetBindingParent();
-    }
-    nsAtom* idAtom = bindingParent->GetID();
-    if (idAtom && idAtom->Equals(NS_LITERAL_STRING("feedSubscribeLine"))) {
-      return true;
-    }
-  }
-  return false;
-}
 #endif
 
 class XULInContentErrorReporter : public Runnable
@@ -806,7 +783,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
       // pulling in xul.css.
       // Note that add-ons may introduce bindings that cause this assertion to
       // fire.
-      NS_ASSERTION(IsInVideoControls(this) || IsInFeedSubscribeLine(this),
+      NS_ASSERTION(IsInVideoControls(this),
                    "Unexpected XUL element in non-XUL doc");
     }
   }
