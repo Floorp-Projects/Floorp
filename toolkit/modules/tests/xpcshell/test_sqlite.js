@@ -1,6 +1,6 @@
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 do_get_profile();
 
@@ -89,6 +89,24 @@ add_task(async function test_setup() {
 add_task(async function test_open_normal() {
   let c = await Sqlite.openConnection({path: "test_open_normal.sqlite"});
   await c.close();
+});
+
+add_task(async function test_open_normal_error() {
+  let currentDir = await OS.File.getCurrentDirectory();
+
+  let src = OS.Path.join(currentDir, "corrupt.sqlite");
+  Assert.ok((await OS.File.exists(src)), "Database file found");
+
+  // Ensure that our database doesn't already exist.
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "corrupt.sqlite");
+  Assert.ok(!(await OS.File.exists(path)), "Database file should not exist yet");
+
+  await OS.File.copy(src, path);
+
+  let openPromise = Sqlite.openConnection({path});
+  await Assert.rejects(openPromise, reason => {
+    return reason.status == Cr.NS_ERROR_FILE_CORRUPTED;
+  }, "Check error status");
 });
 
 add_task(async function test_open_unshared() {
