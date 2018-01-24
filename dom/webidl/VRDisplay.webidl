@@ -9,7 +9,6 @@ enum VREye {
 };
 
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRFieldOfView {
   readonly attribute double upDegrees;
@@ -50,7 +49,6 @@ dictionary VRLayer {
  * These are expected to be static per-device/per-user.
  */
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRDisplayCapabilities {
   /**
@@ -92,7 +90,6 @@ interface VRDisplayCapabilities {
  * that support room-scale experiences.
  */
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRStageParameters {
   /**
@@ -118,7 +115,6 @@ interface VRStageParameters {
 };
 
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRPose
 {
@@ -140,7 +136,6 @@ interface VRPose
 
 [Constructor,
  Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRFrameData {
   readonly attribute DOMHighResTimeStamp timestamp;
@@ -163,7 +158,6 @@ interface VRSubmitFrameResult {
 };
 
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VREyeParameters {
   /**
@@ -187,7 +181,6 @@ interface VREyeParameters {
 };
 
 [Pref="dom.vr.enabled",
- SecureContext,
  HeaderFile="mozilla/dom/VRDisplay.h"]
 interface VRDisplay : EventTarget {
   /**
