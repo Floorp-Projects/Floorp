@@ -18,7 +18,6 @@ config = {
         'run-tests',
     ],
     "tooltool_cache": "/builds/worker/tooltool_cache",
-    "download_tooltool": True,
     "tooltool_servers": ['http://relengapi/tooltool/'],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",

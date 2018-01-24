@@ -50,6 +50,8 @@ ADD topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 # %include taskcluster/scripts/tester/test-linux.sh
 ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /builds/worker/bin/test-linux.sh
 
+ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/worker/scripts/tooltool.py
+
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
 ENV           HOME          /builds/worker
