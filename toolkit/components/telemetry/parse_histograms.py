@@ -310,10 +310,15 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             ParserError('New histogram "%s" cannot have "default" %s value.' %
                         (name, field)).handle_later()
 
-        if expiration != "default" and not utils.validate_expiration_version(expiration):
-            ParserError(('Error for histogram {} - invalid {}: {}.'
-                        '\nSee: {}#expires-in-version')
-                        .format(name, field, expiration, HISTOGRAMS_DOC_URL)).handle_later()
+        # Historical editions of Histograms.json can have the deprecated
+        # expiration format 'N.Na1'. Fortunately, those scripts set
+        # self._strict_type_checks to false.
+        if expiration != "default" and \
+           not utils.validate_expiration_version(expiration) and \
+           self._strict_type_checks:
+             ParserError(('Error for histogram {} - invalid {}: {}.'
+                          '\nSee: {}#expires-in-version')
+                         .format(name, field, expiration, HISTOGRAMS_DOC_URL)).handle_later()
 
         expiration = utils.add_expiration_postfix(expiration)
 
