@@ -5,20 +5,11 @@
 from argparse import ArgumentParser
 import json
 import os
-import re
-import sys
 import urlparse
-from collections import defaultdict
 
-from mozpack.copier import FileRegistry
-from mozpack.files import PreprocessedFile
-from mozpack.manifests import InstallManifest
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
 from chrome_map import ChromeManifestHandler
-
-import buildconfig
-import mozpack.path as mozpath
 
 class LcovRecord(object):
     __slots__ = ("test_name",
@@ -79,39 +70,7 @@ class RecordRewriter(object):
     # Helper class for rewriting/spliting individual lcov records according
     # to what the preprocessor did.
     def __init__(self):
-        self.pp_info = {}
         self._ranges = None
-        self._line_comment_re = re.compile('^//@line (\d+) "(.+)"$')
-
-    def has_pp_info(self, src_path):
-        return src_path in self.pp_info
-
-    def populate_pp_info(self, fh, src_path):
-        # (start, end) -> (included_source, start)
-        section_info = dict()
-
-        this_section = None
-
-        def finish_section(pp_end):
-            pp_start, inc_source, inc_start = this_section
-            section_info[(pp_start, pp_end)] = inc_source, inc_start
-
-        for count, line in enumerate(fh):
-            # Regex are quite slow, so bail out early.
-            if not line.startswith('//@line'):
-                continue
-            m = re.match(self._line_comment_re, line)
-            if m:
-                if this_section:
-                    finish_section(count + 1)
-                inc_start, inc_source = m.groups()
-                pp_start = count + 2
-                this_section = pp_start, inc_source, int(inc_start)
-
-        if this_section:
-            finish_section(count + 2)
-
-        self.pp_info[src_path] = section_info
 
     def _get_range(self, line):
         for start, end in self._ranges:
@@ -196,10 +155,10 @@ class RecordRewriter(object):
 
         record.branches = rewritten_branches
 
-    def rewrite_record(self, record):
+    def rewrite_record(self, record, pp_info):
         # Rewrite the lines in the given record according to preprocessor info
         # and split to additional records when pp_info has included file info.
-        self._current_pp_info = self.pp_info[record.source_file]
+        self._current_pp_info = dict([(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
         self._ranges = sorted(self._current_pp_info.keys())
         self._additions = {}
         self._rewrite_lines(record)
@@ -250,7 +209,7 @@ class LcovFile(object):
 
     def iterate_records(self, rewrite_source=None):
         current_source_file = None
-        current_preprocessed = False
+        current_pp_info = None
         current_lines = []
         for lcov_path in self.lcov_paths:
             with open(lcov_path) as lcov_fh:
@@ -262,10 +221,10 @@ class LcovFile(object):
                     if line == 'end_of_record':
                         # We skip records that we couldn't rewrite, that is records for which
                         # rewrite_url returns None.
-                        if current_source_file != None:
-                            yield (current_source_file, current_preprocessed, current_lines)
+                        if current_source_file is not None:
+                            yield (current_source_file, current_pp_info, current_lines)
                         current_source_file = None
-                        current_preprocessed = False
+                        current_pp_info = None
                         current_lines = []
                         continue
 
@@ -274,11 +233,11 @@ class LcovFile(object):
 
                     if prefix == 'SF':
                         sf = line[(colon + 1):]
-                        res = rewrite_source(sf) if rewrite_source is not None else (sf, False)
+                        res = rewrite_source(sf) if rewrite_source is not None else (sf, None)
                         if res is None:
                             current_lines.append(line)
                         else:
-                            current_source_file, current_preprocessed = res
+                            current_source_file, current_pp_info = res
                             current_lines.append('SF:' + current_source_file)
                     else:
                         current_lines.append(line)
@@ -325,10 +284,10 @@ class LcovFile(object):
         return ret
 
     def print_file(self, fh, rewrite_source, rewrite_record):
-        for source_file, preprocessed, record_content in self.iterate_records(rewrite_source):
-            if preprocessed:
+        for source_file, pp_info, record_content in self.iterate_records(rewrite_source):
+            if pp_info is not None:
                 record = self.parse_record(record_content)
-                for r in rewrite_record(record):
+                for r in rewrite_record(record, pp_info):
                     fh.write(self.format_record(r))
                 fh.write(self.format_record(record))
             else:
@@ -433,7 +392,7 @@ class LcovFile(object):
         self.current_record.covered_line_count = covered_line_count
 
     def parse_LF(self, line_count):
-       self.current_record.line_count = line_count
+        self.current_record.line_count = line_count
 
 
 class UrlFinderError(Exception):
@@ -443,22 +402,21 @@ class UrlFinder(object):
     # Given a "chrome://" or "resource://" url, uses data from the UrlMapBackend
     # and install manifests to find a path to the source file and the corresponding
     # (potentially pre-processed) file in the objdir.
-    def __init__(self, appdir, gredir, extra_chrome_manifests):
-        # Normalized for "startswith" checks below.
-        self.topobjdir = mozpath.normpath(buildconfig.topobjdir)
-
+    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
         # Cached entries
         self._final_mapping = {}
 
-        info_file = os.path.join(self.topobjdir, 'chrome-map.json')
-
         try:
-            with open(info_file) as fh:
-                url_prefixes, overrides, install_info = json.load(fh)
+            with open(chrome_map_path) as fh:
+                url_prefixes, overrides, install_info, buildconfig = json.load(fh)
         except IOError:
             print("Error reading %s. Run |./mach build-backend -b ChromeMap| to "
-                  "populate the ChromeMap backend." % info_file)
+                  "populate the ChromeMap backend." % chrome_map_path)
             raise
+
+        self.topobjdir = buildconfig['topobjdir']
+        self.MOZ_APP_NAME = buildconfig['MOZ_APP_NAME']
+        self.OMNIJAR_NAME = buildconfig['OMNIJAR_NAME']
 
         # These are added dynamically in nsIResProtocolHandler, we might
         # need to get them at run time.
@@ -472,18 +430,22 @@ class UrlFinder(object):
 
         self._respath = None
 
-        mac_bundle_name = buildconfig.substs.get('MOZ_MACBUNDLE_NAME')
+        mac_bundle_name = buildconfig['MOZ_MACBUNDLE_NAME']
         if mac_bundle_name:
             self._respath = mozpath.join('dist',
                                          mac_bundle_name,
                                          'Contents',
                                          'Resources')
 
+        if not extra_chrome_manifests:
+            extra_path = os.path.join(self.topobjdir, '_tests', 'extra.manifest')
+            if os.path.isfile(extra_path):
+                extra_chrome_manifests = [extra_path]
+
         if extra_chrome_manifests:
             self._populate_chrome(extra_chrome_manifests)
 
         self._install_mapping = install_info
-        self._populate_install_manifest()
 
     def _populate_chrome(self, manifests):
         handler = ChromeManifestHandler()
@@ -493,23 +455,6 @@ class UrlFinder(object):
                 handler.handle_manifest_entry(e)
         self._url_overrides.update(handler.overrides)
         self._url_prefixes.update(handler.chrome_mapping)
-
-    def _load_manifest(self, path, root):
-        install_manifest = InstallManifest(path)
-        reg = FileRegistry()
-        install_manifest.populate_registry(reg)
-
-        for dest, src in reg:
-            if hasattr(src, 'path'):
-                if not os.path.isabs(dest):
-                    dest = root + dest
-                self._install_mapping[dest] = (src.path,
-                                               isinstance(src, PreprocessedFile))
-
-    def _populate_install_manifest(self):
-        mp = os.path.join(self.topobjdir, '_build_manifests', 'install',
-                          '_tests')
-        self._load_manifest(mp, root='_tests/')
 
     def _find_install_prefix(self, objdir_path):
 
@@ -557,27 +502,36 @@ class UrlFinder(object):
         return res
 
     def find_files(self, url):
-        # Returns a tuple of (source file, objdir file, preprocessed)
+        # Returns a tuple of (source file, pp_info)
         # for the given "resource:", "chrome:", or "file:" uri.
         term = url
         if term in self._url_overrides:
             term = self._url_overrides[term]
 
         if os.path.isabs(term) and term.startswith(self.topobjdir):
-            source_path, preprocessed = self._abs_objdir_install_info(term)
-            return source_path, term, preprocessed
+            source_path, pp_info = self._abs_objdir_install_info(term)
+            return source_path, pp_info
 
-        objdir_path = None
         for prefix, dests in self._url_prefixes.iteritems():
             if term.startswith(prefix):
                 for dest in dests:
                     if not dest.endswith('/'):
                         dest += '/'
-                    replaced = url.replace(prefix, dest)
+                    objdir_path = term.replace(prefix, dest)
 
-                    if os.path.isfile(mozpath.join(self.topobjdir, replaced)):
-                        objdir_path = replaced
-                        break
+                    while objdir_path.startswith('//'):
+                        # The mochitest harness produces some wonky file:// uris
+                        # that need to be fixed.
+                        objdir_path = objdir_path[1:]
+
+                    try:
+                        if os.path.isabs(objdir_path) and objdir_path.startswith(self.topobjdir):
+                            return self._abs_objdir_install_info(objdir_path)
+                        else:
+                            src_path, pp_info = self._install_info(objdir_path)
+                            return mozpath.normpath(src_path), pp_info
+                    except UrlFinderError:
+                        pass
 
                     if (dest.startswith('resource://') or
                         dest.startswith('chrome://')):
@@ -585,19 +539,7 @@ class UrlFinder(object):
                         if result:
                             return result
 
-        if not objdir_path:
-            raise UrlFinderError("No objdir path for %s" % term)
-        while objdir_path.startswith('//'):
-            # The mochitest harness produces some wonky file:// uris
-            # that need to be fixed.
-            objdir_path = objdir_path[1:]
-
-        if os.path.isabs(objdir_path) and objdir_path.startswith(self.topobjdir):
-            source_path, preprocessed = self._abs_objdir_install_info(objdir_path)
-            return source_path, term, preprocessed
-
-        src_path, preprocessed = self._install_info(objdir_path)
-        return mozpath.normpath(src_path), objdir_path, preprocessed
+        raise UrlFinderError("No objdir path for %s" % term)
 
     def rewrite_url(self, url):
         # This applies one-off rules and returns None for urls that we aren't
@@ -610,12 +552,14 @@ class UrlFinder(object):
         if url.endswith('> Function'):
             return None
         if ' -> ' in url:
-             url = url.split(' -> ')[1].rstrip()
+            url = url.split(' -> ')[1].rstrip()
+        if '?' in url:
+            url = url.split('?')[0]
 
         url_obj = urlparse.urlparse(url)
         if url_obj.scheme == 'jar':
-            app_name = buildconfig.substs.get('MOZ_APP_NAME')
-            omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
+            app_name = self.MOZ_APP_NAME
+            omnijar_name = self.OMNIJAR_NAME
 
             if app_name in url:
                 if omnijar_name in url:
@@ -627,7 +571,7 @@ class UrlFinder(object):
                 else:
                     # We don't know how to handle this jar: path, so return it to the
                     # caller to make it print a warning.
-                    return url_obj.path, None, False
+                    return url_obj.path, None
 
                 dir_parts = parts[0].rsplit(app_name + '/', 1)
                 url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist', 'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/')))
@@ -649,7 +593,7 @@ class UrlFinder(object):
                 # longer exists.
                 return None
             if not path.startswith(self.topobjdir):
-                return path, None, False
+                return path, None
             url = url_obj.path
         elif url_obj.scheme in ('http', 'https', 'javascript', 'data', 'about'):
             return None
@@ -661,14 +605,13 @@ class UrlFinder(object):
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(self, appdir, gredir, extra_chrome_manifests):
-        self.topobjdir = buildconfig.topobjdir
-        self.url_finder = UrlFinder(appdir, gredir, extra_chrome_manifests)
+    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
+        self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
     def rewrite_files(self, in_paths, output_file, output_suffix):
         unknowns = set()
-        found_valid = False
+        found_valid = [False]
 
         def rewrite_source(url):
             try:
@@ -682,16 +625,12 @@ class LcovFileRewriter(object):
                 unknowns.add(url)
                 return None
 
-            source_file, objdir_file, preprocessed = res
+            source_file, pp_info = res
             assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
-            if preprocessed and not self.pp_rewriter.has_pp_info(source_file):
-                obj_path = os.path.join(self.topobjdir, objdir_file)
-                with open(obj_path) as fh:
-                    self.pp_rewriter.populate_pp_info(fh, source_file)
 
-            found_valid = True
+            found_valid[0] = True
 
-            return source_file, preprocessed
+            return source_file, pp_info
 
         in_paths = [os.path.abspath(in_path) for in_path in in_paths]
 
@@ -705,7 +644,7 @@ class LcovFileRewriter(object):
                 with open(in_path + output_suffix, 'w+') as out_fh:
                     lcov_file.print_file(out_fh, rewrite_source, self.pp_rewriter.rewrite_record)
 
-        if not found_valid:
+        if not found_valid[0]:
             print("WARNING: No valid records found in %s" % in_path)
             return
 
@@ -715,6 +654,8 @@ def main():
                             "by spidermonkey's code coverage, re-maps file urls "
                             "back to source files and lines in preprocessed files "
                             "back to their original locations.")
+    parser.add_argument("--chrome-map-path", default="chrome-map.json",
+                        help="Path to the chrome-map.json file.")
     parser.add_argument("--app-dir", default="dist/bin/browser/",
                         help="Prefix of the appdir in use. This is used to map "
                              "urls starting with resource:///. It may differ by "
@@ -733,13 +674,8 @@ def main():
                         help="The set of files to process.")
 
     args = parser.parse_args()
-    if not args.extra_chrome_manifests:
-        extra_path = os.path.join(buildconfig.topobjdir, '_tests',
-                                  'extra.manifest')
-        if os.path.isfile(extra_path):
-            args.extra_chrome_manifests = [extra_path]
 
-    rewriter = LcovFileRewriter(args.app_dir, args.gre_dir,
+    rewriter = LcovFileRewriter(args.chrome_map_path, args.app_dir, args.gre_dir,
                                 args.extra_chrome_manifests)
 
     files = []

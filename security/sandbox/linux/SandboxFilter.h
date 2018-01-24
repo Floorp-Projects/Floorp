@@ -22,9 +22,10 @@ namespace mozilla {
 
 #ifdef MOZ_CONTENT_SANDBOX
 class SandboxBrokerClient;
+struct ContentProcessSandboxParams;
 
 UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker,
-                                                            const std::vector<int>& aSyscallWhitelist);
+                                                            ContentProcessSandboxParams&& aParams);
 #endif
 
 #ifdef MOZ_GMP_SANDBOX

@@ -221,6 +221,7 @@
 #endif
 
 #include "gc/FindSCCs.h"
+#include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
 #include "gc/Memory.h"

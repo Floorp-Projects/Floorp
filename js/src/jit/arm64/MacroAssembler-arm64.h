@@ -330,12 +330,15 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         push(scratch);
     }
     template <typename T>
-    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
+    void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes, JSValueType type) {
         switch (nbytes) {
           case 8: {
             vixl::UseScratchRegisterScope temps(this);
             const Register scratch = temps.AcquireX().asUnsized();
-            unboxNonDouble(value, scratch);
+            if (type == JSVAL_TYPE_OBJECT)
+                unboxObjectOrNull(value, scratch);
+            else
+                unboxNonDouble(value, scratch, type);
             storePtr(scratch, address);
             return;
           }
@@ -399,6 +402,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     Register extractObject(const ValueOperand& value, Register scratch) {
         unboxObject(value, scratch);
+        return scratch;
+    }
+    Register extractString(const ValueOperand& value, Register scratch) {
+        unboxString(value, scratch);
+        return scratch;
+    }
+    Register extractSymbol(const ValueOperand& value, Register scratch) {
+        unboxSymbol(value, scratch);
         return scratch;
     }
     Register extractInt32(const ValueOperand& value, Register scratch) {
@@ -1343,18 +1354,28 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void unboxMagic(const ValueOperand& src, Register dest) {
         move32(src.valueReg(), dest);
     }
-    // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
-    // instead if the source type is known.
-    void unboxNonDouble(const ValueOperand& src, Register dest) {
-        unboxNonDouble(src.valueReg(), dest);
-    }
-    void unboxNonDouble(Address src, Register dest) {
-        loadPtr(src, dest);
-        unboxNonDouble(dest, dest);
+    void unboxNonDouble(const ValueOperand& src, Register dest, JSValueType type) {
+        unboxNonDouble(src.valueReg(), dest, type);
     }
 
-    void unboxNonDouble(Register src, Register dest) {
-        And(ARMRegister(dest, 64), ARMRegister(src, 64), Operand((1ULL << JSVAL_TAG_SHIFT) - 1ULL));
+    template <typename T>
+    void unboxNonDouble(T src, Register dest, JSValueType type) {
+        MOZ_ASSERT(type != JSVAL_TYPE_DOUBLE);
+        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+            load32(src, dest);
+            return;
+        }
+        loadPtr(src, dest);
+        unboxNonDouble(dest, dest, type);
+    }
+
+    void unboxNonDouble(Register src, Register dest, JSValueType type) {
+        MOZ_ASSERT(type != JSVAL_TYPE_DOUBLE);
+        if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN) {
+            move32(src, dest);
+            return;
+        }
+        Eor(ARMRegister(dest, 64), ARMRegister(src, 64), Operand(JSVAL_TYPE_TO_SHIFTED_TAG(type)));
     }
 
     void unboxPrivate(const ValueOperand& src, Register dest) {
@@ -1366,33 +1387,45 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         eor(r, r, Operand(1));
     }
     void unboxObject(const ValueOperand& src, Register dest) {
-        unboxNonDouble(src.valueReg(), dest);
+        unboxNonDouble(src.valueReg(), dest, JSVAL_TYPE_OBJECT);
     }
     void unboxObject(Register src, Register dest) {
-        unboxNonDouble(src, dest);
+        unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
     }
     void unboxObject(const Address& src, Register dest) {
         loadPtr(src, dest);
-        unboxNonDouble(dest, dest);
+        unboxNonDouble(dest, dest, JSVAL_TYPE_OBJECT);
     }
     void unboxObject(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 64), src, vixl::LDR_x);
-        unboxNonDouble(dest, dest);
+        unboxNonDouble(dest, dest, JSVAL_TYPE_OBJECT);
     }
 
-    inline void unboxValue(const ValueOperand& src, AnyRegister dest);
+    template <typename T>
+    void unboxObjectOrNull(const T& src, Register dest) {
+        unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
+        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(~JSVAL_OBJECT_OR_NULL_BIT));
+    }
+
+    // See comment in MacroAssembler-x64.h.
+    void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
+        loadPtr(src, dest);
+        And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(JSVAL_PAYLOAD_MASK_GCTHING));
+    }
+
+    inline void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type);
 
     void unboxString(const ValueOperand& operand, Register dest) {
-        unboxNonDouble(operand, dest);
+        unboxNonDouble(operand, dest, JSVAL_TYPE_STRING);
     }
     void unboxString(const Address& src, Register dest) {
-        unboxNonDouble(src, dest);
+        unboxNonDouble(src, dest, JSVAL_TYPE_STRING);
     }
     void unboxSymbol(const ValueOperand& operand, Register dest) {
-        unboxNonDouble(operand, dest);
+        unboxNonDouble(operand, dest, JSVAL_TYPE_SYMBOL);
     }
     void unboxSymbol(const Address& src, Register dest) {
-        unboxNonDouble(src, dest);
+        unboxNonDouble(src, dest, JSVAL_TYPE_SYMBOL);
     }
     // These two functions use the low 32-bits of the full value register.
     void boolValueToDouble(const ValueOperand& operand, FloatRegister dest) {
@@ -1794,11 +1827,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             MOZ_ASSERT(scratch64.asUnsized() != address.base);
             Ldr(scratch64, toMemOperand(address));
             int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-        } else if (type == MIRType::Int32 || type == MIRType::Boolean) {
-            load32(address, dest.gpr());
+        } else if (type == MIRType::ObjectOrNull) {
+            unboxObjectOrNull(address, dest.gpr());
         } else {
-            loadPtr(address, dest.gpr());
-            unboxNonDouble(dest.gpr(), dest.gpr());
+            unboxNonDouble(address, dest.gpr(), ValueTypeFromMIRType(type));
         }
     }
 
@@ -1810,11 +1842,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             MOZ_ASSERT(scratch64.asUnsized() != address.index);
             doBaseIndex(scratch64, address, vixl::LDR_x);
             int32OrDouble(scratch64.asUnsized(), ARMFPRegister(dest.fpu(), 64));
-        }  else if (type == MIRType::Int32 || type == MIRType::Boolean) {
-            load32(address, dest.gpr());
+        } else if (type == MIRType::ObjectOrNull) {
+            unboxObjectOrNull(address, dest.gpr());
         } else {
-            loadPtr(address, dest.gpr());
-            unboxNonDouble(dest.gpr(), dest.gpr());
+            unboxNonDouble(address, dest.gpr(), ValueTypeFromMIRType(type));
         }
     }
 
@@ -2033,7 +2064,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void movePayload(Register src, Register dest) {
         // Bfxil cannot be used with the zero register as a source.
         if (src == rzr)
-            And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(~int64_t(JSVAL_PAYLOAD_MASK)));
+            And(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(JSVAL_TAG_MASK));
         else
             Bfxil(ARMRegister(dest, 64), ARMRegister(src, 64), 0, JSVAL_TAG_SHIFT);
     }

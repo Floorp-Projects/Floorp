@@ -19,24 +19,6 @@ interface nsIHTMLInlineTableEditor : nsISupports
   attribute boolean inlineTableEditingEnabled;
 
   /**
-   * Shows inline table editing UI around a table cell
-   * @param aCell [IN] a DOM Element being a table cell, td or th
-   */
-  void showInlineTableEditingUI(in nsIDOMElement aCell);
-
-  /**
-   * Hide all inline table editing UI
-   */
-  void hideInlineTableEditingUI();
-
-  /**
-   * Modifies the table containing the selection according to the
-   * activation of an inline table editing UI element
-   * @param aUIAnonymousElement [IN] the inline table editing UI element
-   */
-  void doInlineTableEditingAction(in nsIDOMElement aUIAnonymousElement);
-
-  /**
    * Refresh already visible inline table editing UI
    */
   void refreshInlineTableEditingUI();

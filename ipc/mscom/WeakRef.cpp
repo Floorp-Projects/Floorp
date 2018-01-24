@@ -101,24 +101,6 @@ WeakReferenceSupport::WeakReferenceSupport(Flags aFlags)
   , mFlags(aFlags)
 {
   mSharedRef = new detail::SharedRef(this);
-  ::InitializeCS(mCSForQI);
-}
-
-WeakReferenceSupport::~WeakReferenceSupport()
-{
-  ::DeleteCriticalSection(&mCSForQI);
-}
-
-void
-WeakReferenceSupport::Lock()
-{
-  ::EnterCriticalSection(&mCSForQI);
-}
-
-void
-WeakReferenceSupport::Unlock()
-{
-  ::LeaveCriticalSection(&mCSForQI);
 }
 
 HRESULT
@@ -136,8 +118,7 @@ WeakReferenceSupport::QueryInterface(REFIID riid, void** ppv)
   if (riid == IID_IUnknown || riid == IID_IWeakReferenceSource) {
     punk = static_cast<IUnknown*>(this);
   } else {
-    AutoCriticalSection lock(&mCSForQI);
-    HRESULT hr = ThreadSafeQueryInterface(riid, getter_AddRefs(punk));
+    HRESULT hr = WeakRefQueryInterface(riid, getter_AddRefs(punk));
     if (FAILED(hr)) {
       return hr;
     }

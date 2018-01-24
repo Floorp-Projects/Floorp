@@ -41,6 +41,7 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
+// Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ICONTENT_IID \
 { 0x8e1bab9d, 0x8815, 0x4d2c, \
   { 0xa2, 0x4d, 0x7a, 0xba, 0x52, 0x39, 0xdc, 0x22 } }

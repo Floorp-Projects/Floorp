@@ -574,6 +574,7 @@ dependencies = [
  "gkrust-shared 0.1.0",
  "mp4parse-gtest 0.1.0",
  "nsstring-gtest 0.1.0",
+ "xpcom-gtest 0.1.0",
 ]
 
 [[package]]
@@ -599,6 +600,7 @@ dependencies = [
  "syn 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "u2fhid 0.1.0",
  "webrender_bindings 0.1.0",
+ "xpcom 0.1.0",
 ]
 
 [[package]]
@@ -1617,6 +1619,34 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "xpcom"
+version = "0.1.0"
+dependencies = [
+ "libc 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "xpcom_macros 0.1.0",
+]
+
+[[package]]
+name = "xpcom-gtest"
+version = "0.1.0"
+dependencies = [
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
+ "xpcom 0.1.0",
+]
+
+[[package]]
+name = "xpcom_macros"
+version = "0.1.0"
+dependencies = [
+ "lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [metadata]

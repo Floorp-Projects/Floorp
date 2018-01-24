@@ -73,6 +73,10 @@ def get_normalized_signatures(signature, fileAnnot=None):
         archs = all_shared_architecture_names
         signature = re.sub(r'\s+PER_SHARED_ARCH', '', signature)
 
+    elif 'OOL_IN_HEADER' in signature:
+        assert archs == ['generic']
+        signature = re.sub(r'\s+OOL_IN_HEADER', '', signature)
+
     else:
         # No signature annotation, the list of architectures remains unchanged.
         pass
@@ -114,6 +118,11 @@ def get_file_annotation(filename):
     elif filename.endswith('-inl.h'):
         inline = True
         filename = filename[:-len('-inl.h')]
+    elif filename.endswith('.h'):
+        # This allows the definitions block in MacroAssembler.h to be
+        # style-checked.
+        inline = True
+        filename = filename[:-len('.h')]
     else:
         raise Exception('unknown file name', origFilename)
 
@@ -184,9 +193,9 @@ def get_macroassembler_declaration(filename):
     signatures = []
     with open(filename) as f:
         for line in f:
-            if '//{{{ check_macroassembler_style' in line:
+            if '//{{{ check_macroassembler_decl_style' in line:
                 style_section = True
-            elif '//}}} check_macroassembler_style' in line:
+            elif '//}}} check_macroassembler_decl_style' in line:
                 style_section = False
             if not style_section:
                 continue
@@ -226,6 +235,9 @@ def generate_file_content(signatures):
         if len(archs.symmetric_difference(architecture_independent)) == 0:
             output.append(s + ';\n')
             if s.startswith('inline'):
+                # TODO, bug 1432600: This is mistaken for OOL_IN_HEADER
+                # functions.  (Such annotation is already removed by the time
+                # this function sees the signature here.)
                 output.append('    is defined in MacroAssembler-inl.h\n')
             else:
                 output.append('    is defined in MacroAssembler.cpp\n')
@@ -265,8 +277,7 @@ def check_style():
 
             if filename.endswith('MacroAssembler.h'):
                 decls = append_signatures(decls, get_macroassembler_declaration(filename))
-            else:
-                defs = append_signatures(defs, get_macroassembler_definitions(filename))
+            defs = append_signatures(defs, get_macroassembler_definitions(filename))
 
     # Compare declarations and definitions output.
     difflines = difflib.unified_diff(generate_file_content(decls),

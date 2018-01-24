@@ -2907,6 +2907,8 @@ public:
 
   static bool IsNonSubresourceRequest(nsIChannel* aChannel);
 
+  static bool IsNonSubresourceInternalPolicyType(nsContentPolicyType aType);
+
   // The order of these entries matters, as we use std::min for total ordering
   // of permissions. Private Browsing is considered to be more limiting
   // then session scoping
@@ -2952,6 +2954,13 @@ public:
   static StorageAccess StorageAllowedForNewWindow(nsIPrincipal* aPrincipal,
                                                   nsIURI* aURI,
                                                   nsPIDOMWindowInner* aParent);
+
+  /*
+   * Checks if storage should be allowed for the given channel.  The check will
+   * be based on the channel result principal and, depending on preferences and
+   * permissions, mozIThirdPartyUtil.isThirdPartyChannel().
+   */
+  static StorageAccess StorageAllowedForChannel(nsIChannel* aChannel);
 
   /*
    * Checks if storage for the given principal is permitted by the user's
@@ -3331,14 +3340,17 @@ private:
    * preferences. If aWindow is non-null, its principal must be passed as
    * aPrincipal, and the third-party iframe and sandboxing status of the window
    * are also checked.  If aURI is non-null, then it is used as the comparison
-   * against aWindow to determine if this is a third-party load.
+   * against aWindow to determine if this is a third-party load.  We also
+   * allow a channel instead of the window reference when determining 3rd party
+   * status.
    *
    * Used in the implementation of StorageAllowedForWindow and
    * StorageAllowedForPrincipal.
    */
   static StorageAccess InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
                                                           nsPIDOMWindowInner* aWindow,
-                                                          nsIURI* aURI);
+                                                          nsIURI* aURI,
+                                                          nsIChannel* aChannel);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(nsIContent* aContent1,

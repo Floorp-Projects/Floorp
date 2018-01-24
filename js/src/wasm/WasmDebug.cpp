@@ -21,6 +21,7 @@
 #include "mozilla/BinarySearch.h"
 
 #include "ds/Sort.h"
+#include "gc/FreeOp.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
 #include "vm/Debugger.h"

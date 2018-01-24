@@ -617,6 +617,37 @@ static const nsRoleMapEntry sWAIRoleMaps[] =
     eLandmark,
     kNoReqStates
   },
+  { // graphics-document
+    &nsGkAtoms::graphicsDocument,
+    roles::DOCUMENT,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates,
+    eReadonlyUntilEditable
+  },
+  { // graphics-object
+    &nsGkAtoms::graphicsObject,
+    roles::GROUPING,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
+  { // graphics-symbol
+    &nsGkAtoms::graphicsSymbol,
+    roles::GRAPHIC,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    kGenericAccType,
+    kNoReqStates
+  },
   { // grid
     &nsGkAtoms::grid,
     roles::TABLE,

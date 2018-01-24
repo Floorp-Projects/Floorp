@@ -32,13 +32,16 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "mozilla/dom/BodyExtractor.h"
+#include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -220,6 +223,9 @@ public:
     mIsAnon = aAnon || aSystem;
     mIsSystem = aSystem;
   }
+
+  void SetClientInfoAndController(const ClientInfo& aClientInfo,
+                                  const Maybe<ServiceWorkerDescriptor>& aController);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -689,6 +695,9 @@ protected:
 
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
+
+  Maybe<ClientInfo> mClientInfo;
+  Maybe<ServiceWorkerDescriptor> mController;
 
   State mState;
 

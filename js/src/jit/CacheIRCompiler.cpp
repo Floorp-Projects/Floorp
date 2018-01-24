@@ -143,7 +143,7 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
         availableRegs_.add(val);
         Register reg = val.scratchReg();
         availableRegs_.take(reg);
-        masm.unboxObject(val, reg);
+        masm.unboxNonDouble(val, reg, typedId.type());
         loc.setPayloadReg(reg, typedId.type());
         currentOpRegs_.add(reg);
         return reg;
@@ -160,14 +160,14 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
         // unbox it and then remove it from the stack, else we just unbox.
         Register reg = allocateRegister(masm);
         if (loc.valueStack() == stackPushed_) {
-            masm.unboxObject(Address(masm.getStackPointer(), 0), reg);
+            masm.unboxNonDouble(Address(masm.getStackPointer(), 0), reg, typedId.type());
             masm.addToStackPtr(Imm32(sizeof(js::Value)));
             MOZ_ASSERT(stackPushed_ >= sizeof(js::Value));
             stackPushed_ -= sizeof(js::Value);
         } else {
             MOZ_ASSERT(loc.valueStack() < stackPushed_);
-            masm.unboxObject(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()),
-                             reg);
+            masm.unboxNonDouble(Address(masm.getStackPointer(), stackPushed_ - loc.valueStack()),
+                                reg, typedId.type());
         }
         loc.setPayloadReg(reg, typedId.type());
         return reg;
@@ -176,7 +176,7 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
       case OperandLocation::BaselineFrame: {
         Register reg = allocateRegister(masm);
         Address addr = addressOf(masm, loc.baselineFrameSlot());
-        masm.unboxNonDouble(addr, reg);
+        masm.unboxNonDouble(addr, reg, typedId.type());
         loc.setPayloadReg(reg, typedId.type());
         return reg;
       };
@@ -742,7 +742,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
             switch (cur.kind()) {
               case OperandLocation::ValueReg:
                 MOZ_ASSERT(dest.payloadType() != JSVAL_TYPE_DOUBLE);
-                masm.unboxNonDouble(cur.valueReg(), dest.payloadReg());
+                masm.unboxNonDouble(cur.valueReg(), dest.payloadReg(), dest.payloadType());
                 continue;
               case OperandLocation::PayloadReg:
                 MOZ_ASSERT(cur.payloadType() == dest.payloadType());
@@ -758,7 +758,7 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
                 MOZ_ASSERT(cur.valueStack() <= stackPushed_);
                 MOZ_ASSERT(dest.payloadType() != JSVAL_TYPE_DOUBLE);
                 masm.unboxNonDouble(Address(masm.getStackPointer(), stackPushed_ - cur.valueStack()),
-                                    dest.payloadReg());
+                                    dest.payloadReg(), dest.payloadType());
                 continue;
               case OperandLocation::Constant:
               case OperandLocation::BaselineFrame:

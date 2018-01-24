@@ -213,28 +213,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // Bug 1312678: radeonsi/Intel with DRI when using WebGL
   policy->AddDir(rdwr, "/dev/dri");
 
-#ifdef MOZ_ALSA
-  // Bug 1309098: ALSA support
-  policy->AddDir(rdwr, "/dev/snd");
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-  if (const auto userDir = g_get_user_runtime_dir()) {
-    // Bug 1321134: DConf's single bit of shared memory
-    // The leaf filename is "user" by default, but is configurable.
-    nsPrintfCString shmPath("%s/dconf/", userDir);
-    policy->AddPrefix(rdwrcr, shmPath.get());
-    policy->AddAncestors(shmPath.get());
-#ifdef MOZ_PULSEAUDIO
-    // PulseAudio, if it can't get server info from X11, will break
-    // unless it can open this directory (or create it, but in our use
-    // case we know it already exists).  See bug 1335329.
-    nsPrintfCString pulsePath("%s/pulse", userDir);
-    policy->AddPath(rdonly, pulsePath.get());
-#endif // MOZ_PULSEAUDIO
-  }
-#endif // MOZ_WIDGET_GTK
-
   // Read permissions
   policy->AddPath(rdonly, "/dev/urandom");
   policy->AddPath(rdonly, "/proc/cpuinfo");
@@ -247,9 +225,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/usr/lib32");
   policy->AddDir(rdonly, "/usr/lib64");
   policy->AddDir(rdonly, "/etc");
-#ifdef MOZ_PULSEAUDIO
-  policy->AddPath(rdonly, "/var/lib/dbus/machine-id");
-#endif
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
   policy->AddDir(rdonly, "/usr/tmp");
@@ -265,13 +240,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 
   // Bug 1385715: NVIDIA PRIME support
   policy->AddPath(rdonly, "/proc/modules");
-
-#ifdef MOZ_PULSEAUDIO
-  // See bug 1384986 comment #1.
-  if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
-    policy->AddPath(rdonly, xauth);
-  }
-#endif
 
   // Allow access to XDG_CONFIG_PATH and XDG_CONFIG_DIRS
   if (const auto xdgConfigPath = PR_GetEnv("XDG_CONFIG_PATH")) {
@@ -429,6 +397,8 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   UniquePtr<SandboxBroker::Policy>
     policy(new SandboxBroker::Policy(*mCommonContentPolicy));
 
+  const int level = GetEffectiveContentSandboxLevel();
+
   // Read any extra paths that will get write permissions,
   // configured by the user or distro
   AddDynamicPathList(policy.get(),
@@ -444,7 +414,7 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   // file:// processes also get global read permissions
   // This requires accessing user preferences so we can only do it now.
   // Our constructor is initialized before user preferences are read in.
-  if (GetEffectiveContentSandboxLevel() <= 2 || aFileProcess) {
+  if (level <= 2 || aFileProcess) {
     policy->AddDir(rdonly, "/");
     // Any other read-only rules will be removed as redundant by
     // Policy::FixRecursivePermissions, so there's no need to
@@ -496,6 +466,47 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
           }
         }
       }
+  }
+
+  bool allowPulse = false;
+  bool allowAlsa = false;
+  if (level < 4) {
+#ifdef MOZ_PULSEAUDIO
+    allowPulse = true;
+#endif
+#ifdef MOZ_ALSA
+    allowAlsa = true;
+#endif
+  }
+
+  if (allowAlsa) {
+    // Bug 1309098: ALSA support
+    policy->AddDir(rdwr, "/dev/snd");
+  }
+
+#ifdef MOZ_WIDGET_GTK
+  if (const auto userDir = g_get_user_runtime_dir()) {
+    // Bug 1321134: DConf's single bit of shared memory
+    // The leaf filename is "user" by default, but is configurable.
+    nsPrintfCString shmPath("%s/dconf/", userDir);
+    policy->AddPrefix(rdwrcr, shmPath.get());
+    policy->AddAncestors(shmPath.get());
+    if (allowPulse) {
+      // PulseAudio, if it can't get server info from X11, will break
+      // unless it can open this directory (or create it, but in our use
+      // case we know it already exists).  See bug 1335329.
+      nsPrintfCString pulsePath("%s/pulse", userDir);
+      policy->AddPath(rdonly, pulsePath.get());
+    }
+  }
+#endif // MOZ_WIDGET_GTK
+
+  if (allowPulse) {
+    // See bug 1384986 comment #1.
+    if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
+      policy->AddPath(rdonly, xauth);
+    }
+    policy->AddPath(rdonly, "/var/lib/dbus/machine-id");
   }
 
   // Return the common policy.

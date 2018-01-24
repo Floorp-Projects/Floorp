@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "domstubs.idl"
 
 /**
  * nsIDOMWindowUtils is intended for infrequently-used methods related
@@ -27,7 +28,6 @@ struct nsRect;
 [ref] native nsConstRect(const nsRect);
 native nscolor(nscolor);
 [ptr] native gfxContext(gfxContext);
-typedef unsigned long long nsViewID;
 
 interface nsIArray;
 interface nsICycleCollectorListener;

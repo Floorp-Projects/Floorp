@@ -31,6 +31,19 @@ Interface members const/method/attribute conform to the following pattern:
 """
 
 
+# XXX(nika): Fix the IDL files which do this so we can remove this list?
+def rustBlacklistedForward(s):
+    """These types are foward declared as interfaces, but never actually defined
+    in IDL files. We don't want to generate references to them in rust for that
+    reason."""
+    blacklisted = [
+        "nsIFrame",
+        "nsIObjectFrame",
+        "nsSubDocumentFrame",
+    ]
+    return s in blacklisted
+
+
 def attlistToIDL(attlist):
     if len(attlist) == 0:
         return ''
@@ -102,23 +115,28 @@ class Builtin(object):
     kind = 'builtin'
     location = BuiltinLocation
 
-    def __init__(self, name, nativename, signed=False, maybeConst=False):
+    def __init__(self, name, nativename, rustname, signed=False, maybeConst=False):
         self.name = name
         self.nativename = nativename
+        self.rustname = rustname
         self.signed = signed
         self.maybeConst = maybeConst
 
     def isScriptable(self):
         return True
 
+    def isPointer(self):
+        """Check if this type is a pointer type - this will control how pointers act"""
+        return self.nativename.endswith('*')
+
     def nativeType(self, calltype, shared=False, const=False):
         if const:
             print >>sys.stderr, IDLError("[const] doesn't make sense on builtin types.", self.location, warning=True)
             const = 'const '
-        elif calltype == 'in' and self.nativename.endswith('*'):
+        elif calltype == 'in' and self.isPointer():
             const = 'const '
         elif shared:
-            if not self.nativename.endswith('*'):
+            if not self.isPointer():
                 raise IDLError("[shared] not applicable to non-pointer types.", self.location)
             const = 'const '
         else:
@@ -126,22 +144,32 @@ class Builtin(object):
         return "%s%s %s" % (const, self.nativename,
                             calltype != 'in' and '*' or '')
 
+    def rustType(self, calltype, shared=False, const=False):
+        # We want to rewrite any *mut pointers to *const pointers if constness
+        # was requested.
+        const = const or (calltype == 'in' and self.isPointer()) or shared
+        rustname = self.rustname
+        if const and self.isPointer():
+            rustname = self.rustname.replace("*mut", "*const")
+
+        return "%s%s" % (calltype != 'in' and '*mut ' or '', rustname)
+
 builtinNames = [
-    Builtin('boolean', 'bool'),
-    Builtin('void', 'void'),
-    Builtin('octet', 'uint8_t'),
-    Builtin('short', 'int16_t', True, True),
-    Builtin('long', 'int32_t', True, True),
-    Builtin('long long', 'int64_t', True, False),
-    Builtin('unsigned short', 'uint16_t', False, True),
-    Builtin('unsigned long', 'uint32_t', False, True),
-    Builtin('unsigned long long', 'uint64_t', False, False),
-    Builtin('float', 'float', True, False),
-    Builtin('double', 'double', True, False),
-    Builtin('char', 'char', True, False),
-    Builtin('string', 'char *', False, False),
-    Builtin('wchar', 'char16_t', False, False),
-    Builtin('wstring', 'char16_t *', False, False),
+    Builtin('boolean', 'bool', 'bool'),
+    Builtin('void', 'void', 'libc::c_void'),
+    Builtin('octet', 'uint8_t', 'libc::uint8_t'),
+    Builtin('short', 'int16_t', 'libc::int16_t', True, True),
+    Builtin('long', 'int32_t', 'libc::int32_t', True, True),
+    Builtin('long long', 'int64_t', 'libc::int64_t', True, False),
+    Builtin('unsigned short', 'uint16_t', 'libc::uint16_t', False, True),
+    Builtin('unsigned long', 'uint32_t', 'libc::uint32_t', False, True),
+    Builtin('unsigned long long', 'uint64_t', 'libc::uint64_t', False, False),
+    Builtin('float', 'float', 'libc::c_float', True, False),
+    Builtin('double', 'double', 'libc::c_double', True, False),
+    Builtin('char', 'char', 'libc::c_char', True, False),
+    Builtin('string', 'char *', '*const libc::c_char', False, False),
+    Builtin('wchar', 'char16_t', 'libc::int16_t', False, False),
+    Builtin('wstring', 'char16_t *', '*const libc::int16_t', False, False),
 ]
 
 builtinMap = {}
@@ -229,6 +257,15 @@ class NameMap(object):
             return self[id]
         except KeyError:
             raise IDLError("Name '%s' not found", location)
+
+
+class RustNoncompat(Exception):
+    """Thie exception is raised when a particular type or function cannot be safely exposed to rust code"""
+    def __init__(self, reason):
+        self.reason = reason
+
+    def __str__(self):
+        return self.reason
 
 
 class IDLError(Exception):
@@ -355,6 +392,10 @@ class Typedef(object):
         return "%s %s" % (self.name,
                           calltype != 'in' and '*' or '')
 
+    def rustType(self, calltype):
+        return "%s%s" % (calltype != 'in' and '*mut ' or '',
+                         self.name)
+
     def __str__(self):
         return "typedef %s %s\n" % (self.type, self.name)
 
@@ -391,6 +432,12 @@ class Forward(object):
         return "%s %s" % (self.name,
                           calltype != 'in' and '* *' or '*')
 
+    def rustType(self, calltype):
+        if rustBlacklistedForward(self.name):
+            raise RustNoncompat("forward declaration %s is unsupported" % self.name)
+        return "%s*const %s" % (calltype != 'in' and '*mut ' or '',
+                                self.name)
+
     def __str__(self):
         return "forward-declared %s\n" % self.name
 
@@ -409,6 +456,19 @@ class Native(object):
         'astring': 'nsAString',
         'jsval': 'JS::Value'
         }
+
+    # Mappings from C++ native name types to rust native names. Types which
+    # aren't listed here are incompatible with rust code.
+    rust_nativenames = {
+        'void': "libc::c_void",
+        'char': "u8",
+        'char16_t': "u16",
+        'nsID': "nsID",
+        'nsIID': "nsIID",
+        'nsCID': "nsCID",
+        'nsAString': "::nsstring::nsAString",
+        'nsACString': "::nsstring::nsACString",
+    }
 
     def __init__(self, name, nativename, attlist, location):
         self.name = name
@@ -476,6 +536,29 @@ class Native(object):
         else:
             m = calltype != 'in' and '*' or ''
         return "%s%s %s" % (const and 'const ' or '', self.nativename, m)
+
+    def rustType(self, calltype, const=False, shared=False):
+        if shared:
+            if calltype != 'out':
+                raise IDLError("[shared] only applies to out parameters.")
+            const = True
+
+        if self.specialtype is not None and calltype == 'in':
+            const = True
+
+        if self.nativename not in self.rust_nativenames:
+            raise RustNoncompat("native type %s is unsupported" % self.nativename)
+        name = self.rust_nativenames[self.nativename]
+
+        if self.isRef(calltype):
+            m = const and '&' or '&mut '
+        elif self.isPtr(calltype):
+            m = (const and '*const ' or '*mut ')
+            if self.modifier == 'ptr' and calltype != 'in':
+                m += '*mut '
+        else:
+            m = calltype != 'in' and '*mut ' or ''
+        return "%s%s" % (m, name)
 
     def __str__(self):
         return "native %s(%s)\n" % (self.name, self.nativename)
@@ -554,6 +637,10 @@ class Interface(object):
         return "%s%s %s" % (const and 'const ' or '',
                             self.name,
                             calltype != 'in' and '* *' or '*')
+
+    def rustType(self, calltype):
+        return "%s*const %s" % (calltype != 'in' and '*mut ' or '',
+                                self.name)
 
     def __str__(self):
         l = ["interface %s\n" % self.name]
@@ -1002,6 +1089,20 @@ class Param(object):
         except TypeError, e:
             raise IDLError("Unexpected parameter attribute", self.location)
 
+    def rustType(self):
+        kwargs = {}
+        if self.shared:
+            kwargs['shared'] = True
+        if self.const:
+            kwargs['const'] = True
+
+        try:
+            return self.realtype.rustType(self.paramtype, **kwargs)
+        except IDLError, e:
+            raise IDLError(e.message, self.location)
+        except TypeError, e:
+            raise IDLError("Unexpected parameter attribute", self.location)
+
     def toIDL(self):
         return "%s%s %s %s" % (paramAttlistToIDL(self.attlist),
                                self.paramtype,
@@ -1019,6 +1120,10 @@ class Array(object):
     def nativeType(self, calltype, const=False):
         return "%s%s*" % (const and 'const ' or '',
                           self.type.nativeType(calltype))
+
+    def rustType(self, calltype, const=False):
+        return "%s %s" % (const and '*const' or '*mut',
+                          self.type.rustType(calltype))
 
 
 class IDLParser(object):
