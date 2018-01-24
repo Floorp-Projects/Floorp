@@ -29,6 +29,7 @@ EXPORTS.mozilla += [
     'EventNameList.h',
     'EventStateManager.h',
     'EventStates.h',
+    'IMEContentObserver.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
     'JSEventHandler.h',
