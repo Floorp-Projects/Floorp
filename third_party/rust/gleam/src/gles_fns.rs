@@ -621,6 +621,17 @@ impl Gl for GlesFns {
         }
     }
 
+    #[allow(unused_variables)]
+    fn get_tex_image_into_buffer(&self,
+                                 target: GLenum,
+                                 level: GLint,
+                                 format: GLenum,
+                                 ty: GLenum,
+                                 output: &mut [u8]) {
+        panic!("not supported");
+    }
+
+
     fn get_integer_v(&self, name: GLenum) -> GLint {
         let mut result = 0;
         unsafe {
