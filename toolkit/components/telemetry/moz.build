@@ -97,7 +97,6 @@ EXTRA_JS_MODULES += [
     'TelemetryStorage.jsm',
     'TelemetryTimestamps.jsm',
     'TelemetryUtils.jsm',
-    'ThirdPartyCookieProbe.jsm',
     'UITelemetry.jsm',
     'UpdatePing.jsm',
 ]
