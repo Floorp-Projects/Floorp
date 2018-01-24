@@ -19,7 +19,6 @@
 #include "mozilla/dom/HTMLInputElementBinding.h"
 #include "mozilla/dom/Nullable.h"
 
-class nsTextInputListener;
 class nsTextControlFrame;
 class nsTextInputSelectionImpl;
 class nsAnonDivObserver;
@@ -31,6 +30,7 @@ class nsFrame;
 namespace mozilla {
 
 class ErrorResult;
+class TextInputListener;
 
 namespace dom {
 class HTMLInputElement;
@@ -435,7 +435,7 @@ private:
   RefPtr<RestoreSelectionState> mRestoringSelection;
   RefPtr<mozilla::TextEditor> mTextEditor;
   nsTextControlFrame* mBoundFrame;
-  RefPtr<nsTextInputListener> mTextListener;
+  RefPtr<mozilla::TextInputListener> mTextListener;
   mozilla::Maybe<nsString> mValue;
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is
