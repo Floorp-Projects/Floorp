@@ -3156,7 +3156,6 @@ nsNavHistoryFolderResultNode::FillChildren()
 
   // Actually get the folder children from the bookmark service.
   nsresult rv = bookmarks->QueryFolderChildren(mTargetFolderItemId,
-                                               mOriginalOptions,
                                                mOptions,
                                                &mChildren);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3247,8 +3246,7 @@ nsNavHistoryFolderResultNode::FillChildrenAsync()
   nsNavBookmarks* bmSvc = nsNavBookmarks::GetBookmarksService();
   NS_ENSURE_TRUE(bmSvc, NS_ERROR_OUT_OF_MEMORY);
   nsresult rv =
-    bmSvc->QueryFolderChildrenAsync(this, mTargetFolderItemId,
-                                    getter_AddRefs(mAsyncPendingStmt));
+    bmSvc->QueryFolderChildrenAsync(this, getter_AddRefs(mAsyncPendingStmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Register with the result for updates.  All updates during async execution
@@ -3280,8 +3278,7 @@ nsNavHistoryFolderResultNode::HandleResult(mozIStorageResultSet* aResultSet)
   // Consume all the currently available rows of the result set.
   nsCOMPtr<mozIStorageRow> row;
   while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
-    nsresult rv = bmSvc->ProcessFolderNodeRow(row, mOriginalOptions,
-                                              mOptions, &mChildren,
+    nsresult rv = bmSvc->ProcessFolderNodeRow(row, mOptions, &mChildren,
                                               mAsyncBookmarkIndex);
     if (NS_FAILED(rv)) {
       CancelAsyncOpen(false);
@@ -3577,7 +3574,9 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   else if (aItemType == nsINavBookmarksService::TYPE_FOLDER) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
+    rv = bookmarks->ResultNodeForContainer(aItemId,
+                                           new nsNavHistoryQueryOptions(),
+                                           getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else if (aItemType == nsINavBookmarksService::TYPE_SEPARATOR) {
