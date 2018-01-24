@@ -13,16 +13,13 @@ import sys
 class WrongNumberOfArgumentsException(Exception):
   pass
 
-def EscapePath(path):
-  """Returns a path with spaces escaped."""
-  return path.replace(" ", "\\ ")
-
 def ListFilesForPath(path):
   """Returns a list of all the files under a given path."""
   output = []
-  # Ignore revision control metadata directories.
-  if (os.path.basename(path).startswith('.git') or
-      os.path.basename(path).startswith('.svn')):
+  # Ignore dotfiles and dot directories.
+  # TODO(rohitrao): This will fail to exclude cases where the initial argument
+  # is a relative path that starts with a dot.
+  if os.path.basename(path).startswith('.'):
     return output
 
   # Files get returned without modification.
@@ -40,10 +37,13 @@ def ListFilesForPath(path):
 def CalcInputs(inputs):
   """Computes the full list of input files for a set of command-line arguments.
   """
-  # |inputs| is a list of paths, which may be directories.
+  # |inputs| is a list of strings, each of which may contain muliple paths
+  # separated by spaces.
   output = []
   for input in inputs:
-    output.extend(ListFilesForPath(input))
+    tokens = input.split()
+    for token in tokens:
+      output.extend(ListFilesForPath(token))
   return output
 
 def CopyFiles(relative_filenames, output_basedir):
@@ -77,15 +77,14 @@ def DoMain(argv):
     raise WrongNumberOfArgumentsException('<input_files> required.')
 
   files_to_copy = CalcInputs(arglist)
-  escaped_files = [EscapePath(x) for x in CalcInputs(arglist)]
   if options.list_inputs:
-    return '\n'.join(escaped_files)
+    return '\n'.join(files_to_copy)
 
   if not options.output_dir:
     raise WrongNumberOfArgumentsException('-o required.')
 
   if options.list_outputs:
-    outputs = [os.path.join(options.output_dir, x) for x in escaped_files]
+    outputs = [os.path.join(options.output_dir, x) for x in files_to_copy]
     return '\n'.join(outputs)
 
   CopyFiles(files_to_copy, options.output_dir)
