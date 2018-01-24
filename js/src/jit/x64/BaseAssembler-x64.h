@@ -166,6 +166,12 @@ class BaseAssemblerX64 : public BaseAssembler
         m_formatter.oneByteOp64(OP_XOR_GvEv, offset, base, dst);
     }
 
+    void xorq_mr(int32_t offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("xorq       " MEM_obs ", %s", ADDR_obs(offset, base, index, scale), GPReg64Name(dst));
+        m_formatter.oneByteOp64(OP_XOR_GvEv, offset, base, index, scale, dst);
+    }
+
     void xorq_mr(const void* addr, RegisterID dst)
     {
         spew("xorq       %p, %s", addr, GPReg64Name(dst));
