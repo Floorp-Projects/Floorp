@@ -2741,6 +2741,10 @@ HttpChannelChild::ContinueAsyncOpen()
   EnsureRequestContextID();
   openArgs.requestContextID() = mRequestContextID;
 
+  openArgs.corsMode() = mCorsMode;
+  openArgs.redirectMode() = mRedirectMode;
+  openArgs.fetchCacheMode() = mFetchCacheMode;
+
   openArgs.channelId() = mChannelId;
 
   openArgs.contentWindowId() = contentWindowId;
