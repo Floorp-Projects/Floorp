@@ -605,7 +605,7 @@ class UrlFinder(object):
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(self, chrome_map_path, appdir, gredir, extra_chrome_manifests):
+    def __init__(self, chrome_map_path, appdir='dist/bin/browser/', gredir='dist/bin/', extra_chrome_manifests=[]):
         self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
