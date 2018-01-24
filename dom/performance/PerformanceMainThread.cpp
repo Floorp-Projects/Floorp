@@ -159,14 +159,14 @@ PerformanceMainThread::AddEntry(nsIHttpChannel* channel,
     // The last argument is the "zero time" (offset). Since we don't want
     // any offset for the resource timing, this will be set to "0" - the
     // resource timing returns a relative timing (no offset).
-    RefPtr<PerformanceTiming> performanceTiming =
-        new PerformanceTiming(this, timedChannel, channel,
-            0);
+    UniquePtr<PerformanceTimingData> performanceTimingData(
+        new PerformanceTimingData(timedChannel, channel, 0));
 
     // The PerformanceResourceTiming object will use the PerformanceTiming
     // object to get all the required timings.
     RefPtr<PerformanceResourceTiming> performanceEntry =
-      new PerformanceResourceTiming(performanceTiming, this, entryName, channel);
+      new PerformanceResourceTiming(Move(performanceTimingData), this,
+                                    entryName);
 
     // If the initiator type had no valid value, then set it to the default
     // ("other") value.
@@ -326,10 +326,9 @@ PerformanceMainThread::EnsureDocEntry()
 {
   if (!mDocEntry && nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    RefPtr<PerformanceTiming> timing =
-      new PerformanceTiming(this, mChannel, nullptr, 0);
-    mDocEntry = new PerformanceNavigationTiming(timing, this,
-                                                httpChannel);
+    UniquePtr<PerformanceTimingData> timing(
+      new PerformanceTimingData(mChannel, nullptr, 0));
+    mDocEntry = new PerformanceNavigationTiming(Move(timing), this);
   }
 }
 
