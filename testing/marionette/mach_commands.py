@@ -70,20 +70,14 @@ def run_marionette(tests, binary=None, topsrcdir=None, **kwargs):
 
 
 @CommandProvider
-class MachCommands(MachCommandBase):
-
-    """Deprecated in favour of ./mach marionette <subcommand>."""
-
+class MarionetteTest(MachCommandBase):
     @Command("marionette-test",
              category="testing",
              description="Remote control protocol to Gecko, used for functional UI tests and browser automation.",
              conditions=[is_firefox_or_android],
              parser=create_parser_tests,
              )
-    def run_marionette_test(self, tests, **kwargs):
-        print("warning: ./mach marionette-test is deprecated; "
-              "please use ./mach marionette test", file=sys.stderr)
-
+    def marionette_test(self, tests, **kwargs):
         if "test_objects" in kwargs:
             tests = []
             for obj in kwargs["test_objects"]:
