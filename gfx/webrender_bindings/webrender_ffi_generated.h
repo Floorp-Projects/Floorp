@@ -53,16 +53,6 @@ enum class ExtendMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class ExternalImageType : uint32_t {
-  Texture2DHandle = 0,
-  Texture2DArrayHandle = 1,
-  TextureRectHandle = 2,
-  TextureExternalHandle = 3,
-  ExternalBuffer = 4,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
 #if !(defined(XP_MACOSX) || defined(XP_WIN))
 enum class FontHinting : uint8_t {
   None = 0,
@@ -200,6 +190,16 @@ enum class TransformStyle : uint32_t {
 enum class WrAnimationType : uint32_t {
   Transform = 0,
   Opacity = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class WrExternalImageBufferType {
+  TextureHandle = 0,
+  TextureRectHandle = 1,
+  TextureArrayHandle = 2,
+  TextureExternalHandle = 3,
+  ExternalBuffer = 4,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -842,8 +842,6 @@ struct WrImageDescriptor {
            is_opaque == aOther.is_opaque;
   }
 };
-
-using WrExternalImageBufferType = ExternalImageType;
 
 // Represents RGBA screen colors with one byte per channel.
 //

@@ -24,9 +24,9 @@
 //! address in the GPU cache of a given resource slot
 //! for this frame.
 
-use api::{LayerRect, PremultipliedColorF};
+use api::{PremultipliedColorF, TexelRect};
 use device::FrameId;
-use internal_types::UvRect;
+use euclid::TypedRect;
 use profiler::GpuCacheProfileCounters;
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use std::{mem, u16, u32};
@@ -58,50 +58,49 @@ struct CacheLocation {
 #[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct GpuBlockData {
-    pub data: [f32; 4],
+    data: [f32; 4],
 }
 
 impl GpuBlockData {
-    pub fn empty() -> Self {
-        GpuBlockData { data: [0.0; 4] }
-    }
+    pub const EMPTY: Self = GpuBlockData { data: [0.0; 4] };
 }
 
 /// Conversion helpers for GpuBlockData
-impl Into<GpuBlockData> for PremultipliedColorF {
-    fn into(self) -> GpuBlockData {
+impl From<PremultipliedColorF> for GpuBlockData {
+    fn from(c: PremultipliedColorF) -> Self {
         GpuBlockData {
-            data: [self.r, self.g, self.b, self.a],
+            data: [c.r, c.g, c.b, c.a],
         }
     }
 }
 
-impl Into<GpuBlockData> for [f32; 4] {
-    fn into(self) -> GpuBlockData {
-        GpuBlockData { data: self }
+impl From<[f32; 4]> for GpuBlockData {
+    fn from(data: [f32; 4]) -> Self {
+        GpuBlockData { data }
     }
 }
 
-impl Into<GpuBlockData> for LayerRect {
-    fn into(self) -> GpuBlockData {
+impl<P> From<TypedRect<f32, P>> for GpuBlockData {
+    fn from(r: TypedRect<f32, P>) -> Self {
         GpuBlockData {
             data: [
-                self.origin.x,
-                self.origin.y,
-                self.size.width,
-                self.size.height,
+                r.origin.x,
+                r.origin.y,
+                r.size.width,
+                r.size.height,
             ],
         }
     }
 }
 
-impl Into<GpuBlockData> for UvRect {
-    fn into(self) -> GpuBlockData {
+impl From<TexelRect> for GpuBlockData {
+    fn from(tr: TexelRect) -> Self {
         GpuBlockData {
-            data: [self.uv0.x, self.uv0.y, self.uv1.x, self.uv1.y],
+            data: [tr.uv0.x, tr.uv0.y, tr.uv1.x, tr.uv1.y],
         }
     }
 }
+
 
 // Any data type that can be stored in the GPU cache should
 // implement this trait.
@@ -222,6 +221,7 @@ pub enum GpuCacheUpdate {
     },
 }
 
+#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct GpuCacheUpdateList {
     // The current height of the texture. The render thread
     // should resize the texture if required.

@@ -10,7 +10,7 @@ function _contentHeroHandler() {
     function callback(entries, observer) {
       entries.forEach(entry => {
         sendAsyncMessage("PageLoader:LoadEvent",
-                         {"time": content.window.performance.now(),
+                         {"time": Date.now(), // eslint-disable-line
                           "name": "tphero"});
         obs.disconnect();
       });

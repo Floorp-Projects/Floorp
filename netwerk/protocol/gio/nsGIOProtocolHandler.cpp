@@ -20,6 +20,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsIAuthPrompt.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
@@ -1026,18 +1027,12 @@ nsGIOProtocolHandler::NewURI(const nsACString &aSpec,
     }
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIStandardURL> url =
-      do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, -1, flatSpec,
-                 aOriginCharset, aBaseURI);
-  if (NS_SUCCEEDED(rv))
-    rv = CallQueryInterface(url, aResult);
-  return rv;
-
+  return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                         nsIStandardURL::URLTYPE_STANDARD, -1,
+                                         flatSpec, aOriginCharset, aBaseURI,
+                                         nullptr)
+           .Finalize(aResult);
 }
 
 NS_IMETHODIMP

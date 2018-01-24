@@ -57,8 +57,10 @@ function setSignedInUser(data) {
       uid: "1234@lcip.org",
       assertion: "foobar",
       sessionToken: "dead",
-      kA: "beef",
-      kB: "cafe",
+      kSync: "beef",
+      kXCS: "cafe",
+      kExtSync: "bacon",
+      kExtKbHash: "cheese",
       verified: true
     };
   }
