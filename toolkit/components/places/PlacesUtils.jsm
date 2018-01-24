@@ -424,6 +424,27 @@ this.PlacesUtils = {
   },
 
   /**
+   * Parses matchBuckets strings (for example, "suggestion:4,general:Infinity")
+   * like those used in the browser.urlbar.matchBuckets preference.
+   *
+   * @param   str
+   *          A matchBuckets string.
+   * @returns An array of the form: [
+   *            [bucketName_0, bucketPriority_0],
+   *            [bucketName_1, bucketPriority_1],
+   *            ...
+   *            [bucketName_n, bucketPriority_n]
+   *          ]
+   */
+  convertMatchBucketsStringToArray(str) {
+    return str.split(",")
+              .map(v => {
+                let bucket = v.split(":");
+                return [ bucket[0].trim().toLowerCase(), Number(bucket[1]) ];
+              });
+  },
+
+  /**
    * Determines whether or not a ResultNode is a Bookmark folder.
    * @param   aNode
    *          A result node

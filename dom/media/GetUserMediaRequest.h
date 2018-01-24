@@ -23,7 +23,8 @@ public:
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
                       const MediaStreamConstraints& aConstraints,
-                      bool aIsSecure);
+                      bool aIsSecure,
+                      bool aIsHandlingUserInput);
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aRawId,
                       const nsAString& aMediaSource);
@@ -37,6 +38,7 @@ public:
   uint64_t WindowID();
   uint64_t InnerWindowID();
   bool IsSecure();
+  bool IsHandlingUserInput() const;
   void GetCallID(nsString& retval);
   void GetRawID(nsString& retval);
   void GetMediaSource(nsString& retval);
@@ -51,6 +53,7 @@ private:
   const nsString mMediaSource;
   nsAutoPtr<MediaStreamConstraints> mConstraints;
   bool mIsSecure;
+  bool mIsHandlingUserInput;
 };
 
 } // namespace dom
