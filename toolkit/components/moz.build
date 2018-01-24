@@ -70,6 +70,7 @@ DIRS += [
     'url-classifier',
     'urlformatter',
     'viewconfig',
+    'viewsource',
     'windowcreator',
     'windowwatcher',
     'workerloader',
@@ -77,7 +78,7 @@ DIRS += [
 ]
 
 if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
-    DIRS += ['narrate', 'viewsource'];
+    DIRS += ['narrate'];
 
     if CONFIG['NS_PRINTING']:
         DIRS += ['printing']

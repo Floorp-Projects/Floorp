@@ -10,13 +10,15 @@
 
 requestLongerTimeout(2);
 
-const TEST_URI_WARNING = "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning0.html";
+const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
+                  "new-console-output/test/mochitest/";
+const TEST_URI_WARNING = `${TEST_PATH}test-ineffective-iframe-sandbox-warning0.html`;
 const TEST_URI_NOWARNING = [
-  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning1.html",
-  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning2.html",
-  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning3.html",
-  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning4.html",
-  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning5.html"
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning1.html`,
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning2.html`,
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning3.html`,
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning4.html`,
+  `${TEST_PATH}test-ineffective-iframe-sandbox-warning5.html`
 ];
 
 const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +
@@ -24,60 +26,26 @@ const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +
   "its sandboxing.";
 const SENTINEL_MSG = "testing ineffective sandboxing message";
 
-add_task(function* () {
-  yield testYesWarning();
+add_task(async function () {
+  await testWarningMessageVisibility(TEST_URI_WARNING, true);
 
-  for (let id = 0; id < TEST_URI_NOWARNING.length; id++) {
-    yield testNoWarning(id);
+  for (const testUri of TEST_URI_NOWARNING) {
+    await testWarningMessageVisibility(testUri, false);
   }
 });
 
-function* testYesWarning() {
-  yield loadTab(TEST_URI_WARNING);
-  let hud = yield openConsole();
+async function testWarningMessageVisibility(uri, visible) {
+  const hud = await openNewTabAndConsole(uri, true);
 
-  ContentTask.spawn(gBrowser.selectedBrowser, SENTINEL_MSG, function* (msg) {
+  const sentinel = SENTINEL_MSG + Date.now();
+  const onSentinelMessage = waitForMessage(hud, sentinel);
+
+  ContentTask.spawn(gBrowser.selectedBrowser, sentinel, function (msg) {
     content.console.log(msg);
   });
+  await onSentinelMessage;
 
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [
-      {
-        name: "Ineffective iframe sandboxing warning displayed successfully",
-        text: INEFFECTIVE_IFRAME_SANDBOXING_MSG,
-        category: CATEGORY_SECURITY,
-        severity: SEVERITY_WARNING
-      },
-      {
-        text: SENTINEL_MSG,
-        severity: SEVERITY_LOG
-      }
-    ]
-  });
-
-  let msgs = hud.outputNode.querySelectorAll(".message[category=security]");
-  is(msgs.length, 1, "one security message");
-}
-
-function* testNoWarning(id) {
-  yield loadTab(TEST_URI_NOWARNING[id]);
-  let hud = yield openConsole();
-
-  ContentTask.spawn(gBrowser.selectedBrowser, SENTINEL_MSG, function* (msg) {
-    content.console.log(msg);
-  });
-
-  yield waitForMessages({
-    webconsole: hud,
-    messages: [
-      {
-        text: SENTINEL_MSG,
-        severity: SEVERITY_LOG
-      }
-    ]
-  });
-
-  let msgs = hud.outputNode.querySelectorAll(".message[category=security]");
-  is(msgs.length, 0, "no security messages (case " + id + ")");
+  const warning = findMessage(hud, INEFFECTIVE_IFRAME_SANDBOXING_MSG, ".message.warn");
+  is(!!warning, visible,
+    `The warning message is${visible ? "": " not"} visible on ${uri}`);
 }

@@ -380,6 +380,7 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
 
   const auto& selection = aOptions.mAuthenticatorSelection;
   const auto& attachment = selection.mAuthenticatorAttachment;
+  const AttestationConveyancePreference& attestation = aOptions.mAttestation;
 
   // Does the RP require attachment == "platform"?
   bool requirePlatformAttachment =
@@ -388,6 +389,15 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
   // Does the RP require user verification?
   bool requireUserVerification =
     selection.mUserVerification == UserVerificationRequirement::Required;
+
+  // Does the RP desire direct attestation? Indirect attestation is not
+  // implemented, and thus is equivilent to None.
+  bool requestDirectAttestation =
+    attestation == AttestationConveyancePreference::Direct;
+
+  // In Bug 1430150, if requestDirectAttestation is true, we will need to prompt
+  // the user for permission to proceed. For now, we ignore it.
+  Unused << requestDirectAttestation;
 
   // Create and forward authenticator selection criteria.
   WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,

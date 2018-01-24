@@ -76,13 +76,13 @@ This field lists the number of failed pings per ping send failure type.
 
 The recorded failure types are:
 
-* "eOK"
-* "eRequest"
-* "eUnreachable"
-* "eChannelOpen"
-* "eRedirect"
-* "abort"
-* "timeout"
+* "eOK" - No error.
+* "eRequest" - There was some error in the request before we started to service it.
+* "eUnreachable" - The remote server was unreachable.
+* "eChannelOpen" - The connection failed when we tried to open the channel.
+* "eRedirect" - The connection failed when being redirected.
+* "abort" - What XMLHttpRequest means by "abort" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/abort>`_)
+* "timeout" - What XMLHttpRequest means by "timeout" (see `MDN <https://developer.mozilla.org/en-US/docs/Web/Events/timeout>`_)
 
 This field is optional.
 

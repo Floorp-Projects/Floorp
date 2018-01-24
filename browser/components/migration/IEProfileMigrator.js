@@ -378,32 +378,30 @@ IEProfileMigrator.prototype.getLastUsedDate = function IE_getLastUsedDate() {
   });
 };
 
-Object.defineProperty(IEProfileMigrator.prototype, "sourceHomePageURL", {
-  get: function IE_get_sourceHomePageURL() {
-    let defaultStartPage = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                                      kMainKey, "Default_Page_URL");
-    let startPage = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                               kMainKey, "Start Page");
-    // If the user didn't customize the Start Page, he is still on the default
-    // page, that may be considered the equivalent of our about:home.  There's
-    // no reason to retain it, since it is heavily targeted to IE.
-    let homepage = startPage != defaultStartPage ? startPage : "";
+IEProfileMigrator.prototype.getSourceHomePageURL = function IE_getSourceHomePageURL() {
+  let defaultStartPage = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                                    kMainKey, "Default_Page_URL");
+  let startPage = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                             kMainKey, "Start Page");
+  // If the user didn't customize the Start Page, he is still on the default
+  // page, that may be considered the equivalent of our about:home.  There's
+  // no reason to retain it, since it is heavily targeted to IE.
+  let homepage = startPage != defaultStartPage ? startPage : "";
 
-    // IE7+ supports secondary home pages located in a REG_MULTI_SZ key.  These
-    // are in addition to the Start Page, and no empty entries are possible,
-    // thus a Start Page is always defined if any of these exists, though it
-    // may be the default one.
-    let secondaryPages = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                                    kMainKey, "Secondary Start Pages");
-    if (secondaryPages) {
-      if (homepage)
-        secondaryPages.unshift(homepage);
-      homepage = secondaryPages.join("|");
-    }
+  // IE7+ supports secondary home pages located in a REG_MULTI_SZ key.  These
+  // are in addition to the Start Page, and no empty entries are possible,
+  // thus a Start Page is always defined if any of these exists, though it
+  // may be the default one.
+  let secondaryPages = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                                  kMainKey, "Secondary Start Pages");
+  if (secondaryPages) {
+    if (homepage)
+      secondaryPages.unshift(homepage);
+    homepage = secondaryPages.join("|");
+  }
 
-    return homepage;
-  },
-});
+  return homepage;
+};
 
 IEProfileMigrator.prototype.classDescription = "IE Profile Migrator";
 IEProfileMigrator.prototype.contractID = "@mozilla.org/profile/migrator;1?app=browser&type=ie";

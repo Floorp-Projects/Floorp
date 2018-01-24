@@ -1305,17 +1305,11 @@ public:
   /**
    * Set an extra offset for testing async scrolling.
    */
-  void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
-  {
-    mTestAsyncScrollOffset = aPoint;
-  }
+  void SetTestAsyncScrollOffset(const CSSPoint& aPoint);
   /**
    * Set an extra offset for testing async scrolling.
    */
-  void SetTestAsyncZoom(const LayerToParentLayerScale& aZoom)
-  {
-    mTestAsyncZoom = aZoom;
-  }
+  void SetTestAsyncZoom(const LayerToParentLayerScale& aZoom);
 
   void MarkAsyncTransformAppliedToContent()
   {

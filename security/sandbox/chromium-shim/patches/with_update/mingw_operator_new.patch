@@ -1,0 +1,57 @@
+# HG changeset patch
+# User Tom Ritter <tom@mozilla.com>
+# Date 1489000606 0
+#      Wed Mar 08 19:16:46 2017 +0000
+# Node ID 522c35c24e2a46d97430b5f15e7703bc1c33784c
+# Parent  a99512c712f6580537e3133e5fd1adc091583e95
+Bug 1230910 Declare operator new [](size_t, sandbox::AllocationType, void*)
+
+MozReview-Commit-ID: GCKj5Ao2Y2n
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.cc
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.cc
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.cc
+@@ -649,16 +649,21 @@ void* operator new(size_t size, sandbox:
+ 
+   // TODO: Returning NULL from operator new has undefined behavior, but
+   // the Allocate() functions called above can return NULL. Consider checking
+   // for NULL here and crashing or throwing.
+ 
+   return result;
+ }
+ 
++void* operator new [](size_t size, sandbox::AllocationType type,
++		      void* near_to) {
++  return operator new(size, type, near_to);
++}
++
+ void operator delete(void* memory, sandbox::AllocationType type) {
+   if (type == sandbox::NT_ALLOC) {
+     // Use default flags.
+     VERIFY(sandbox::g_nt.RtlFreeHeap(sandbox::g_heap, 0, memory));
+   } else if (type == sandbox::NT_PAGE) {
+     void* base = memory;
+     SIZE_T size = 0;
+     VERIFY_SUCCESS(sandbox::g_nt.FreeVirtualMemory(NtCurrentProcess, &base,
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_nt_util.h
+@@ -11,16 +11,18 @@
+ 
+ #include "base/macros.h"
+ #include "sandbox/win/src/nt_internals.h"
+ #include "sandbox/win/src/sandbox_nt_types.h"
+ 
+ // Placement new and delete to be used from ntdll interception code.
+ void* __cdecl operator new(size_t size, sandbox::AllocationType type,
+                            void* near_to = NULL);
++void* __cdecl operator new[](size_t size, sandbox::AllocationType type,
++			     void* near_to = NULL);
+ void __cdecl operator delete(void* memory, sandbox::AllocationType type);
+ // Add operator delete that matches the placement form of the operator new
+ // above. This is required by compiler to generate code to call operator delete
+ // in case the object's constructor throws an exception.
+ // See http://msdn.microsoft.com/en-us/library/cxdxz3x6.aspx
+ void __cdecl operator delete(void* memory, sandbox::AllocationType type,
+                              void* near_to);
+ 
