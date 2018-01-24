@@ -25,6 +25,7 @@ config = {
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket",
     "exes": {
         'adb': '%(abs_work_dir)s/android-sdk-linux/platform-tools/adb',
+        'tooltool.py': ['python', '/builds/worker/scripts/tooltool.py'],
     },
     "env": {
         "DISPLAY": ":0.0",
