@@ -42,13 +42,6 @@ HTMLEditor::GetInlineTableEditingEnabled(bool* aIsEnabled)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::ShowInlineTableEditingUI(nsIDOMElement* aCell)
-{
-  nsCOMPtr<Element> cell = do_QueryInterface(aCell);
-  return ShowInlineTableEditingUI(cell);
-}
-
 nsresult
 HTMLEditor::ShowInlineTableEditingUI(Element* aCell)
 {
@@ -101,7 +94,7 @@ HTMLEditor::ShowInlineTableEditingUI(Element* aCell)
   return RefreshInlineTableEditingUI();
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::HideInlineTableEditingUI()
 {
   mInlineEditedCell = nullptr;
@@ -129,62 +122,55 @@ HTMLEditor::HideInlineTableEditingUI()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
+nsresult
+HTMLEditor::DoInlineTableEditingAction(Element& aElement)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-  bool anonElement = false;
-  if (aElement &&
-      NS_SUCCEEDED(aElement->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)) &&
-      anonElement) {
-    nsAutoString anonclass;
-    nsresult rv =
-      aElement->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString anonclass;
+  aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass, anonclass);
 
-    if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
-      return NS_OK;
+  if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable"))) {
+    return NS_OK;
+  }
 
-    RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
-    int32_t rowCount, colCount;
-    rv = GetTableSize(tableElement, &rowCount, &colCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
+  int32_t rowCount, colCount;
+  nsresult rv = GetTableSize(tableElement, &rowCount, &colCount);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    bool hideUI = false;
-    bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
+  bool hideUI = false;
+  bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
-    if (anonclass.EqualsLiteral("mozTableAddColumnBefore"))
-      InsertTableColumn(1, false);
-    else if (anonclass.EqualsLiteral("mozTableAddColumnAfter"))
-      InsertTableColumn(1, true);
-    else if (anonclass.EqualsLiteral("mozTableAddRowBefore"))
-      InsertTableRow(1, false);
-    else if (anonclass.EqualsLiteral("mozTableAddRowAfter"))
-      InsertTableRow(1, true);
-    else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
-      DeleteTableColumn(1);
+  if (anonclass.EqualsLiteral("mozTableAddColumnBefore")) {
+    InsertTableColumn(1, false);
+  } else if (anonclass.EqualsLiteral("mozTableAddColumnAfter")) {
+    InsertTableColumn(1, true);
+  } else if (anonclass.EqualsLiteral("mozTableAddRowBefore")) {
+    InsertTableRow(1, false);
+  } else if (anonclass.EqualsLiteral("mozTableAddRowAfter")) {
+    InsertTableRow(1, true);
+  } else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
+    DeleteTableColumn(1);
 #ifndef DISABLE_TABLE_DELETION
-      hideUI = (colCount == 1);
+    hideUI = (colCount == 1);
 #endif
-    }
-    else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
-      DeleteTableRow(1);
+  } else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
+    DeleteTableRow(1);
 #ifndef DISABLE_TABLE_DELETION
-      hideUI = (rowCount == 1);
+    hideUI = (rowCount == 1);
 #endif
-    }
-    else
-      return NS_OK;
+  } else {
+    return NS_OK;
+  }
 
-    // InsertTableRow might causes reframe
-    if (Destroyed()) {
-      return NS_OK;
-    }
+  // InsertTableRow might causes reframe
+  if (Destroyed()) {
+    return NS_OK;
+  }
 
-    if (hideUI) {
-      HideInlineTableEditingUI();
-      if (hideResizersWithInlineTableUI)
-        HideResizers();
+  if (hideUI) {
+    HideInlineTableEditingUI();
+    if (hideResizersWithInlineTableUI) {
+      HideResizers();
     }
   }
 

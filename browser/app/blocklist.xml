@@ -1504,6 +1504,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="9dfeee42-e6a8-49e0-8979-0648f7368239" id="/^({fce89242-66d3-4946-9ed0-e66078f172fc})|({0c4df994-4f4a-4646-ae5d-8936be8a4188})|({6cee30bc-a27c-43ea-ac72-302862db62b2})|({e08ebf0b-431d-4ed1-88bb-02e5db8b9443})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i520" id="/^({7316e43a-3ebd-4bb4-95c1-9caf6756c97f}|{0cc09160-108c-4759-bab1-5c12c216e005}|{ef03e721-f564-4333-a331-d4062cee6f2b}|{465fcfbb-47a4-4866-a5d5-d12f9a77da00}|{7557724b-30a9-42a4-98eb-77fcb0fd1be3}|{b7c7d4b0-7a84-4b73-a7ef-48ef59a52c3b})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>

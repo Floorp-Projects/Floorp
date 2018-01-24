@@ -57,14 +57,6 @@ typedef unsigned long nsSecurityFlags;
 interface nsILoadInfo : nsISupports
 {
   /**
-   * *** DEPRECATED ***
-   * No LoadInfo created within Gecko should contain this security flag.
-   * Please use any of the five security flags defined underneath.
-   * We only keep this security flag to provide backwards compatibilty.
-   */
-  const unsigned long SEC_NORMAL = 0;
-
-  /**
    * The following five flags determine the security mode and hence what kind of
    * security checks should be performed throughout the lifetime of the channel.
    *
@@ -461,6 +453,15 @@ interface nsILoadInfo : nsISupports
    * Returns true if SEC_LOAD_ERROR_PAGE is set.
    */
   [infallible] readonly attribute boolean loadErrorPage;
+
+  /**
+   * Returns true if this is a non-subresource request that was triggered
+   * by docshell with the LOAD_CMD_RELOAD flag set.  Note, this is more
+   * specific than looking at the load flags which indicate whether to
+   * bypass the http cache.  The load flags can be set for other reasons,
+   * so they can't be used to infer this value.
+   */
+  [infallible] attribute boolean isDocshellReload;
 
   /**
    * The external contentPolicyType of the channel, used for security checks

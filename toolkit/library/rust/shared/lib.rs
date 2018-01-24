@@ -8,6 +8,7 @@ extern crate geckoservo;
 extern crate mp4parse_capi;
 extern crate nsstring;
 extern crate nserror;
+extern crate xpcom;
 extern crate rust_url_capi;
 extern crate netwerk_helper;
 #[cfg(feature = "quantum_render")]

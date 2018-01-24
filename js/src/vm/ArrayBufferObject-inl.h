@@ -43,6 +43,12 @@ AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf)
     return buf->as<SharedArrayBufferObject>().byteLength();
 }
 
+inline uint32_t
+ArrayBufferObjectMaybeShared::byteLength()
+{
+    return AnyArrayBufferByteLength(this);
+}
+
 inline bool
 AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf)
 {
@@ -52,11 +58,23 @@ AnyArrayBufferIsPreparedForAsmJS(const ArrayBufferObjectMaybeShared* buf)
 }
 
 inline bool
+ArrayBufferObjectMaybeShared::isPreparedForAsmJS() const
+{
+    return AnyArrayBufferIsPreparedForAsmJS(this);
+}
+
+inline bool
 AnyArrayBufferIsWasm(const ArrayBufferObjectMaybeShared* buf)
 {
     if (buf->is<ArrayBufferObject>())
         return buf->as<ArrayBufferObject>().isWasm();
     return buf->as<SharedArrayBufferObject>().isWasm();
+}
+
+inline bool
+ArrayBufferObjectMaybeShared::isWasm() const
+{
+    return AnyArrayBufferIsWasm(this);
 }
 
 inline ArrayBufferObjectMaybeShared&

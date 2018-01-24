@@ -27,6 +27,7 @@
 #include "jsutil.h"
 #include "jswrapper.h"
 
+#include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "vm/ErrorObject.h"

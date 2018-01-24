@@ -4,9 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Build mozglue as a shared lib on Windows, OSX and Android.
+# Build mozglue as a shared lib on Windows, OSX and Android. But not for
+# embedders!
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
-if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
+if CONFIG['JS_STANDALONE'] and not CONFIG['MOZ_MEMORY']:
+    Library('mozglue')
+elif CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
     SharedLibrary('mozglue')
 else:
     Library('mozglue')

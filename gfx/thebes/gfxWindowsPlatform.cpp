@@ -494,6 +494,20 @@ gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
   return defaultBackend;
 }
 
+mozilla::gfx::BackendType
+gfxWindowsPlatform::GetPreferredCanvasBackend()
+{
+  mozilla::gfx::BackendType backend = gfxPlatform::GetPreferredCanvasBackend();
+
+  if (backend == BackendType::DIRECT2D1_1 &&
+      gfx::gfxVars::UseWebRender() &&
+      !gfx::gfxVars::UseWebRenderANGLE()) {
+    // We can't have D2D without ANGLE when WebRender is enabled, so fallback to Skia.
+    return BackendType::SKIA;
+  }
+  return backend;
+}
+
 gfxPlatformFontList*
 gfxWindowsPlatform::CreatePlatformFontList()
 {

@@ -11,6 +11,7 @@
 #include "jsobj.h"
 
 #include "builtin/DataViewObject.h"
+#include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"

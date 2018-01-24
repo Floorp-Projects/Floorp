@@ -49,12 +49,6 @@ menulist[disabled="true"]:hover:active {
   color: GrayText;
 }
 
-.menulist-description {
-  font-style: italic;
-  color: GrayText;
-  margin-inline-start: 1ex !important;
-}
-
 /* ::::: editable menulists ::::: */
 
 menulist[editable="true"] {

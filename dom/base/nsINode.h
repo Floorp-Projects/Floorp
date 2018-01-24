@@ -279,6 +279,7 @@ private:
 #define DOM_USER_DATA         1
 
 // IID for the nsINode interface
+// Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_INODE_IID \
 { 0x70ba4547, 0x7699, 0x44fc, \
   { 0xb3, 0x20, 0x52, 0xdb, 0xe3, 0xd1, 0xf9, 0x0a } }

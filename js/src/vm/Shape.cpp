@@ -17,6 +17,7 @@
 #include "jshashutil.h"
 #include "jsobj.h"
 
+#include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "js/HashTable.h"
 

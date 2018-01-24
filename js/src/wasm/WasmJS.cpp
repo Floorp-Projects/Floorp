@@ -25,6 +25,7 @@
 #include "jsprf.h"
 
 #include "builtin/Promise.h"
+#include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
 #include "jit/JitOptions.h"
 #include "vm/Interpreter.h"
@@ -38,6 +39,7 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/ArrayBufferObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

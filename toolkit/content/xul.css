@@ -890,10 +890,6 @@ menulist[editable="true"] {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
 }
 
-menulist[type="description"] {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-description");
-}
-
 menulist > menupopup > menuitem {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-noaccel");
 }

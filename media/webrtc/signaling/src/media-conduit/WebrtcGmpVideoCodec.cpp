@@ -316,15 +316,17 @@ WebrtcGmpVideoEncoder::Encode(const webrtc::VideoFrame& aInputImage,
                               const std::vector<webrtc::FrameType>* aFrameTypes)
 {
   MOZ_ASSERT(aInputImage.width() >= 0 && aInputImage.height() >= 0);
-  // Would be really nice to avoid this sync dispatch, but it would require a
-  // copy of the frame, since it doesn't appear to actually have a refcount.
-  // Passing 'this' is safe since this is synchronous.
-  mozilla::SyncRunnable::DispatchToThread(mGMPThread,
-      WrapRunnable(this,
-                   &WebrtcGmpVideoEncoder::Encode_g,
-                   &aInputImage,
-                   aCodecSpecificInfo,
-                   aFrameTypes));
+  if (!aFrameTypes) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  // It is safe to copy aInputImage here because the frame buffer is held by
+  // a refptr.
+  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::Encode_g,
+                                      RefPtr<WebrtcGmpVideoEncoder>(this),
+                                      aInputImage,
+                                      *aFrameTypes),
+                       NS_DISPATCH_NORMAL);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -358,40 +360,41 @@ WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
   }
 }
 
-int32_t
-WebrtcGmpVideoEncoder::Encode_g(const webrtc::VideoFrame* aInputImage,
-                                const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                                const std::vector<webrtc::FrameType>* aFrameTypes)
+void
+WebrtcGmpVideoEncoder::Encode_g(RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
+                                webrtc::VideoFrame aInputImage,
+                                std::vector<webrtc::FrameType> aFrameTypes)
 {
-  if (!mGMP) {
+  if (!aEncoder->mGMP) {
     // destroyed via Terminate(), failed to init, or just not initted yet
     LOGD(("GMP Encode: not initted yet"));
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    return;
   }
-  MOZ_ASSERT(mHost);
+  MOZ_ASSERT(aEncoder->mHost);
 
-  if (static_cast<uint32_t>(aInputImage->width()) != mCodecParams.mWidth ||
-      static_cast<uint32_t>(aInputImage->height()) != mCodecParams.mHeight) {
+  if (static_cast<uint32_t>(aInputImage.width()) != aEncoder->mCodecParams.mWidth ||
+      static_cast<uint32_t>(aInputImage.height()) != aEncoder->mCodecParams.mHeight) {
     LOGD(("GMP Encode: resolution change from %ux%u to %dx%d",
-          mCodecParams.mWidth, mCodecParams.mHeight, aInputImage->width(), aInputImage->height()));
+          aEncoder->mCodecParams.mWidth, aEncoder->mCodecParams.mHeight, aInputImage.width(), aInputImage.height()));
 
-    RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
-    RegetEncoderForResolutionChange(aInputImage->width(),
-                                    aInputImage->height(),
-                                    initDone);
-    if (!mGMP) {
+    RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(aEncoder->mPCHandle));
+    aEncoder->RegetEncoderForResolutionChange(aInputImage.width(),
+                                              aInputImage.height(),
+                                              initDone);
+    if (!aEncoder->mGMP) {
       // We needed to go async to re-get the encoder. Bail.
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return;
     }
   }
 
   GMPVideoFrame* ftmp = nullptr;
-  GMPErr err = mHost->CreateFrame(kGMPI420VideoFrame, &ftmp);
+  GMPErr err = aEncoder->mHost->CreateFrame(kGMPI420VideoFrame, &ftmp);
   if (err != GMPNoErr) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    LOGD(("GMP Encode: failed to create frame on host"));
+    return;
   }
   GMPUniquePtr<GMPVideoi420Frame> frame(static_cast<GMPVideoi420Frame*>(ftmp));
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> input_image = aInputImage->video_frame_buffer();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> input_image = aInputImage.video_frame_buffer();
   // check for overflow of stride * height
   CheckedInt32 ysize = CheckedInt32(input_image->StrideY()) * input_image->height();
   MOZ_RELEASE_ASSERT(ysize.isValid());
@@ -409,9 +412,10 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::VideoFrame* aInputImage,
                            input_image->StrideU(),
                            input_image->StrideV());
   if (err != GMPNoErr) {
-    return err;
+    LOGD(("GMP Encode: failed to create frame"));
+    return;
   }
-  frame->SetTimestamp((aInputImage->timestamp() * 1000ll)/90); // note: rounds down!
+  frame->SetTimestamp((aInputImage.timestamp() * 1000ll)/90); // note: rounds down!
   //frame->SetDuration(1000000ll/30); // XXX base duration on measured current FPS - or don't bother
 
   // Bug XXXXXX: Set codecSpecific info
@@ -422,24 +426,23 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::VideoFrame* aInputImage,
   codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
   nsTArray<GMPVideoFrameType> gmp_frame_types;
-  for (auto it = aFrameTypes->begin(); it != aFrameTypes->end(); ++it) {
+  for (auto it = aFrameTypes.begin(); it != aFrameTypes.end(); ++it) {
     GMPVideoFrameType ft;
 
     int32_t ret = WebrtcFrameTypeToGmpFrameType(*it, &ft);
     if (ret != WEBRTC_VIDEO_CODEC_OK) {
-      return ret;
+      LOGD(("GMP Encode: failed to map webrtc frame type to gmp frame type"));
+      return;
     }
 
     gmp_frame_types.AppendElement(ft);
   }
 
-  LOGD(("GMP Encode: %llu", (aInputImage->timestamp() * 1000ll)/90));
-  err = mGMP->Encode(Move(frame), codecSpecificInfo, gmp_frame_types);
+  LOGD(("GMP Encode: %llu", (aInputImage.timestamp() * 1000ll)/90));
+  err = aEncoder->mGMP->Encode(Move(frame), codecSpecificInfo, gmp_frame_types);
   if (err != GMPNoErr) {
-    return err;
+    LOGD(("GMP Encode: failed to encode frame"));
   }
-
-  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t

@@ -467,6 +467,13 @@ public:
    */
   nsresult OnMouseMove(nsIDOMMouseEvent* aMouseEvent);
 
+  /**
+   * Modifies the table containing the selection according to the
+   * activation of an inline table editing UI element
+   * @param aUIAnonymousElement [IN] the inline table editing UI element
+   */
+  nsresult DoInlineTableEditingAction(Element& aUIAnonymousElement);
+
 protected:
   class BlobReader final : public nsIEditorBlobListener
   {
@@ -1139,7 +1146,16 @@ protected:
   ManualNACPtr mRemoveRowButton;
   ManualNACPtr mAddRowAfterButton;
 
+  /**
+   * Shows inline table editing UI around a table cell
+   * @param aCell [IN] a DOM Element being a table cell, td or th
+   */
   nsresult ShowInlineTableEditingUI(Element* aCell);
+
+  /**
+   * Hide all inline table editing UI
+   */
+  nsresult HideInlineTableEditingUI();
 
   void AddMouseClickListener(Element* aElement);
   void RemoveMouseClickListener(Element* aElement);

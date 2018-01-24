@@ -1115,7 +1115,7 @@ MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
 }
 
 void
-MacroAssemblerX86::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerX86::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType)
 {
     if (dest.isFloat()) {
         Label notInt32, end;

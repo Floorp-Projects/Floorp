@@ -46,6 +46,7 @@
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -458,6 +459,8 @@ nsDocShell::Init()
   mContentListener = new nsDSURIContentListener(this);
   rv = mContentListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mInterceptController = new ServiceWorkerInterceptController();
 
   // We want to hold a strong ref to the loadgroup, so it better hold a weak
   // ref to us...  use an InterfaceRequestorProxy to do this.
@@ -10668,6 +10671,11 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     return rv;
   }
 
+  // Document loads should set the reload flag on the channel so that it
+  // can be exposed on the service worker FetchEvent.
+  rv = loadInfo->SetIsDocshellReload(mLoadType & LOAD_CMD_RELOAD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                aURI,
@@ -14246,83 +14254,17 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
 }
 
 NS_IMETHODIMP
-nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceRequest,
+nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, nsIChannel* aChannel,
                                       bool* aShouldIntercept)
 {
-  *aShouldIntercept = false;
-
-  // For subresource requests we base our decision solely on the client's
-  // controller value.  Any settings that would have blocked service worker
-  // access should have been set before the initial navigation created the
-  // window.
-  if (!aIsNonSubresourceRequest) {
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    if (!doc) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    ErrorResult rv;
-    *aShouldIntercept = doc->GetController().isSome();
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
-
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
-
-  // For navigations, first check to see if we are allowed to control a
-  // window with the given URL.
-  if (!ServiceWorkerAllowedToControlWindow(principal, aURI)) {
-    return NS_OK;
-  }
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    return NS_OK;
-  }
-
-  // We're allowed to control a window, so check with the ServiceWorkerManager
-  // for a matching service worker.
-  *aShouldIntercept = swm->IsAvailable(principal, aURI);
-  return NS_OK;
+  return mInterceptController->ShouldPrepareForIntercept(aURI, aChannel,
+                                                         aShouldIntercept);
 }
 
 NS_IMETHODIMP
 nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    aChannel->CancelInterception(NS_ERROR_INTERCEPTION_FAILED);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> doc;
-
-  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
-  if (isSubresourceLoad) {
-    doc = GetDocument();
-    if (!doc) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-  }
-
-  bool isReload = mLoadType & LOAD_CMD_RELOAD;
-
-  ErrorResult error;
-  swm->DispatchFetchEvent(mOriginAttributes, doc, aChannel, isReload,
-                          isSubresourceLoad, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  return NS_OK;
+  return mInterceptController->ChannelIntercepted(aChannel);
 }
 
 bool

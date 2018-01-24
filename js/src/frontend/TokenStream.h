@@ -790,6 +790,9 @@ class TokenStreamCharsBase
 
     const CharBuffer& getTokenbuf() const { return tokenbuf; }
 
+    MOZ_MUST_USE bool copyTokenbufTo(JSContext* cx,
+                                     UniquePtr<char16_t[], JS::FreePolicy>* destination);
+
     // This is the low-level interface to the JS source code buffer.  It just
     // gets raw chars, basically.  TokenStreams functions are layered on top
     // and do some extra stuff like converting all EOL sequences to '\n',
@@ -987,9 +990,6 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         return AnyCharsAccess::anyChars(this);
     }
 
-    MOZ_MUST_USE bool copyTokenbufTo(JSContext* cx,
-                                     UniquePtr<char16_t[], JS::FreePolicy>* destination);
-
     MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
         if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
             return false;
@@ -1072,7 +1072,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   private:
     using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
     using CharsSharedBase::atomizeChars;
-    using CharsBase::copyTokenbufTo;
+    using CharsSharedBase::copyTokenbufTo;
     using CharsBase::isMultiUnitCodepoint;
     using CharsSharedBase::tokenbuf;
     using CharsSharedBase::userbuf;
