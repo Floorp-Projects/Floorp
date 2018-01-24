@@ -6527,7 +6527,8 @@ struct BCBlockDirSeg
                                BCPixelSize aInlineSegBSize,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
-                               const nsPoint& aPt);
+                               const nsPoint& aPt,
+                               Maybe<BCBorderParameters>* aBevelBorders);
   void AdvanceOffsetB();
   void IncludeCurrentBorder(BCPaintBorderIterator& aIter);
 
@@ -6581,7 +6582,8 @@ struct BCInlineDirSeg
   void CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                wr::DisplayListBuilder& aBuilder,
                                const layers::StackingContextHelper& aSc,
-                               const nsPoint& aPt);
+                               const nsPoint& aPt,
+                               Maybe<BCBorderParameters>* aBevelBorders);
 
   nscoord            mOffsetI;       // i-offset with respect to the table edge
   nscoord            mOffsetB;       // b-offset with respect to the table edge
@@ -6628,6 +6630,7 @@ struct BCCreateWebRenderCommandsData
   wr::DisplayListBuilder& mBuilder;
   const layers::StackingContextHelper& mSc;
   const nsPoint& mOffsetToReferenceFrame;
+  Maybe<BCBorderParameters> mBevelBorders[4];
 };
 
 struct BCPaintBorderAction
@@ -6645,6 +6648,16 @@ struct BCPaintBorderAction
     , mCreateWebRenderCommandsData(aBuilder, aSc, aOffsetToReferenceFrame)
   {
     mMode = Mode::CREATE_WEBRENDER_COMMANDS;
+  }
+
+  ~BCPaintBorderAction()
+  {
+    // mCreateWebRenderCommandsData is in a union which means the destructor
+    // wouldn't be called when BCPaintBorderAction get destroyed. So call the
+    // destructor here explicitly.
+    if (mMode == Mode::CREATE_WEBRENDER_COMMANDS) {
+      mCreateWebRenderCommandsData.~BCCreateWebRenderCommandsData();
+    }
   }
 
   enum class Mode {
@@ -7459,17 +7472,45 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                        BCPixelSize aInlineSegBSize,
                                        wr::DisplayListBuilder& aBuilder,
                                        const layers::StackingContextHelper& aSc,
-                                       const nsPoint& aOffset)
+                                       const nsPoint& aOffset,
+                                       Maybe<BCBorderParameters>* aBevelBorders)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter, aInlineSegBSize);
   if (param.isNothing()) {
     return;
   }
 
-  //TODO: Currently, we don't support border with m{Start,End}Bevel{Side,Offset} attributes.
+  if (param->mStartBevelOffset != 0 || param->mEndBevelOffset != 0) {
+    // If both bevel offsets are non zero, the parameters of two bevels should
+    // be the same. So we choose start bevel side here.
+    mozilla::Side bevelSide = param->mStartBevelOffset != 0 ? param->mStartBevelSide : param->mEndBevelSide;
+
+    // The left border is going to be beveled on its right edge because that's
+    // the edge that intersects other borders (in this case the top and bottom borders).
+    // Correspondingly, if the bevel side is "right" that means we are operating on
+    // the left border, and so store the parameters for that entry in aBevelBorders.
+    // Same goes for the other directions.
+    switch (bevelSide) {
+      case eSideTop:
+        aBevelBorders[eSideBottom] = param;
+        break;
+      case eSideBottom:
+        aBevelBorders[eSideTop] = param;
+        break;
+      case eSideLeft:
+        aBevelBorders[eSideRight] = param;
+        break;
+      case eSideRight:
+        aBevelBorders[eSideLeft] = param;
+        break;
+    }
+
+    return;
+  }
 
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffset,
                                                                                param->mAppUnitsPerDevPixel));
+
   wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
@@ -7720,14 +7761,35 @@ void
 BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                         wr::DisplayListBuilder& aBuilder,
                                         const layers::StackingContextHelper& aSc,
-                                        const nsPoint& aPt)
+                                        const nsPoint& aPt,
+                                        Maybe<BCBorderParameters>* aBevelBorders)
 {
   Maybe<BCBorderParameters> param = BuildBorderParameters(aIter);
   if (param.isNothing()) {
     return;
   }
 
-  //TODO: Currently, we don't support border with m{Start,End}Bevel{Side,Offset} attributes.
+  if (param->mStartBevelOffset != 0 || param->mEndBevelOffset != 0) {
+    mozilla::Side bevelSide = param->mStartBevelOffset != 0 ? param->mStartBevelSide : param->mEndBevelSide;
+
+    // See detailed comment on equivalent code in BCBlockDirSeg::CreateWebRenderCommands.
+    switch (bevelSide) {
+      case eSideTop:
+        aBevelBorders[eSideBottom] = param;
+        break;
+      case eSideBottom:
+        aBevelBorders[eSideTop] = param;
+        break;
+      case eSideLeft:
+        aBevelBorders[eSideRight] = param;
+        break;
+      case eSideRight:
+        aBevelBorders[eSideLeft] = param;
+        break;
+    }
+
+    return;
+  }
 
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aPt,
                                                                                param->mAppUnitsPerDevPixel));
@@ -7849,7 +7911,8 @@ BCPaintBorderIterator::AccumulateOrDoActionInlineDirSegment(BCPaintBorderAction&
           mInlineSeg.CreateWebRenderCommands(*this,
                                              aAction.mCreateWebRenderCommandsData.mBuilder,
                                              aAction.mCreateWebRenderCommandsData.mSc,
-                                             aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
+                                             aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame,
+                                             aAction.mCreateWebRenderCommandsData.mBevelBorders);
         }
       }
       mInlineSeg.AdvanceOffsetI();
@@ -7901,7 +7964,8 @@ BCPaintBorderIterator::AccumulateOrDoActionBlockDirSegment(BCPaintBorderAction& 
                                               inlineSegBSize,
                                               aAction.mCreateWebRenderCommandsData.mBuilder,
                                               aAction.mCreateWebRenderCommandsData.mSc,
-                                              aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame);
+                                              aAction.mCreateWebRenderCommandsData.mOffsetToReferenceFrame,
+                                              aAction.mCreateWebRenderCommandsData.mBevelBorders);
         }
       }
       blockDirSeg.AdvanceOffsetB();
@@ -7981,6 +8045,54 @@ nsTableFrame::CreateWebRenderCommandsForBCBorders(wr::DisplayListBuilder& aBuild
   // We always draw whole table border for webrender. Passing the table rect as
   // dirty rect.
   IterateBCBorders(action, GetRect());
+
+  LayoutDeviceRect allBorderRect;
+  wr::BorderSide wrSide[4];
+  wr::BorderWidths wrWidths;
+  wr::BorderRadius borderRadii = wr::EmptyBorderRadius();
+  bool backfaceIsVisible = false;
+  NS_FOR_CSS_SIDES(side) {
+    auto param = action.mCreateWebRenderCommandsData.mBevelBorders[side];
+    LayoutDeviceRect borderRect;
+    nscolor borderColor = NS_RGBA(0, 0, 0, 255);
+    uint8_t borderStyle = NS_STYLE_BORDER_STYLE_NONE;
+    if (param.isSome()) {
+      borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffsetToReferenceFrame,
+                                                                  param->mAppUnitsPerDevPixel));
+      borderColor = param->mBorderColor;
+      borderStyle = param->mBorderStyle;
+      backfaceIsVisible |= param->mBackfaceIsVisible;
+    }
+
+    wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
+    allBorderRect = allBorderRect.Union(borderRect);
+    wrSide[side] = wr::ToBorderSide(ToDeviceColor(borderColor), borderStyle);
+    switch (side) {
+      case eSideTop:
+        wrWidths.top = transformedRect.size.height;
+        break;
+      case eSideBottom:
+        wrWidths.bottom = transformedRect.size.height;
+        break;
+      case eSideLeft:
+        wrWidths.left = transformedRect.size.width;
+        break;
+      case eSideRight:
+        wrWidths.right = transformedRect.size.width;
+        break;
+    }
+  }
+
+  if (!allBorderRect.IsEmpty()) {
+    Range<const wr::BorderSide> wrsides(wrSide, 4);
+    wr::LayoutRect allTransformedRect = aSc.ToRelativeLayoutRect(allBorderRect);
+    aBuilder.PushBorder(allTransformedRect,
+                        allTransformedRect,
+                        backfaceIsVisible,
+                        wrWidths,
+                        wrsides,
+                        borderRadii);
+  }
 }
 
 bool
