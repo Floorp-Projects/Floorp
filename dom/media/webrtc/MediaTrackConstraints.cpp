@@ -4,12 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaTrackConstraints.h"
-#include "nsIScriptError.h"
-#include "mozilla/dom/MediaStreamTrackBinding.h"
 
 #include <limits>
 #include <algorithm>
 #include <iterator>
+
+#include "MediaEngineSource.h"
+#include "MediaManager.h"
+#include "nsIScriptError.h"
+#include "mozilla/dom/MediaStreamTrackBinding.h"
 
 namespace mozilla {
 
@@ -394,7 +397,23 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
 // First, all devices have a minimum distance based on their deviceId.
 // If you have no other constraints, use this one. Reused by all device types.
 
-uint32_t
+/* static */ bool
+MediaConstraintsHelper::SomeSettingsFit(const NormalizedConstraints &aConstraints,
+                                        const nsTArray<RefPtr<MediaDevice>>& aDevices)
+{
+  nsTArray<const NormalizedConstraintSet*> sets;
+  sets.AppendElement(&aConstraints);
+
+  MOZ_ASSERT(!aDevices.IsEmpty());
+  for (auto& device : aDevices) {
+    if (device->GetBestFitnessDistance(sets, false) != UINT32_MAX) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* static */ uint32_t
 MediaConstraintsHelper::GetMinimumFitnessDistance(
     const NormalizedConstraintSet &aConstraints,
     const nsString& aDeviceId)
@@ -455,43 +474,132 @@ MediaConstraintsHelper::FitnessDistance(
   return 0;
 }
 
-template<class MediaEngineSourceType>
-const char*
+/* static */ const char*
+MediaConstraintsHelper::SelectSettings(
+    const NormalizedConstraints& aConstraints,
+    nsTArray<RefPtr<MediaDevice>>& aDevices,
+    bool aIsChrome)
+{
+  auto& c = aConstraints;
+
+  // First apply top-level constraints.
+
+  // Stack constraintSets that pass, starting with the required one, because the
+  // whole stack must be re-satisfied each time a capability-set is ruled out
+  // (this avoids storing state or pushing algorithm into the lower-level code).
+  nsTArray<RefPtr<MediaDevice>> unsatisfactory;
+  nsTArray<const NormalizedConstraintSet*> aggregateConstraints;
+  aggregateConstraints.AppendElement(&c);
+
+  std::multimap<uint32_t, RefPtr<MediaDevice>> ordered;
+
+  for (uint32_t i = 0; i < aDevices.Length();) {
+    uint32_t distance =
+      aDevices[i]->GetBestFitnessDistance(aggregateConstraints, aIsChrome);
+    if (distance == UINT32_MAX) {
+      unsatisfactory.AppendElement(Move(aDevices[i]));
+      aDevices.RemoveElementAt(i);
+    } else {
+      ordered.insert(std::make_pair(distance, aDevices[i]));
+      ++i;
+    }
+  }
+  if (aDevices.IsEmpty()) {
+    return FindBadConstraint(c, unsatisfactory);
+  }
+
+  // Order devices by shortest distance
+  for (auto& ordinal : ordered) {
+    aDevices.RemoveElement(ordinal.second);
+    aDevices.AppendElement(ordinal.second);
+  }
+
+  // Then apply advanced constraints.
+
+  for (int i = 0; i < int(c.mAdvanced.size()); i++) {
+    aggregateConstraints.AppendElement(&c.mAdvanced[i]);
+    nsTArray<RefPtr<MediaDevice>> rejects;
+    for (uint32_t j = 0; j < aDevices.Length();) {
+      uint32_t distance = aDevices[j]->GetBestFitnessDistance(aggregateConstraints,
+                                                              aIsChrome);
+      if (distance == UINT32_MAX) {
+        rejects.AppendElement(Move(aDevices[j]));
+        aDevices.RemoveElementAt(j);
+      } else {
+        ++j;
+      }
+    }
+    if (aDevices.IsEmpty()) {
+      aDevices.AppendElements(Move(rejects));
+      aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
+    }
+  }
+  return nullptr;
+}
+
+/* static */ const char*
 MediaConstraintsHelper::FindBadConstraint(
     const NormalizedConstraints& aConstraints,
-    const MediaEngineSourceType& aMediaEngineSource,
+    const nsTArray<RefPtr<MediaDevice>>& aDevices)
+{
+  // The spec says to report a constraint that satisfies NONE
+  // of the sources. Unfortunately, this is a bit laborious to find out, and
+  // requires updating as new constraints are added!
+  auto& c = aConstraints;
+  dom::MediaTrackConstraints empty;
+
+  if (aDevices.IsEmpty() ||
+      !SomeSettingsFit(NormalizedConstraints(empty), aDevices)) {
+    return "";
+  }
+  {
+    NormalizedConstraints fresh(empty);
+    fresh.mDeviceId = c.mDeviceId;
+    if (!SomeSettingsFit(fresh, aDevices)) {
+      return "deviceId";
+    }
+  }
+  {
+    NormalizedConstraints fresh(empty);
+    fresh.mWidth = c.mWidth;
+    if (!SomeSettingsFit(fresh, aDevices)) {
+      return "width";
+    }
+  }
+  {
+    NormalizedConstraints fresh(empty);
+    fresh.mHeight = c.mHeight;
+    if (!SomeSettingsFit(fresh, aDevices)) {
+      return "height";
+    }
+  }
+  {
+    NormalizedConstraints fresh(empty);
+    fresh.mFrameRate = c.mFrameRate;
+    if (!SomeSettingsFit(fresh, aDevices)) {
+      return "frameRate";
+    }
+  }
+  {
+    NormalizedConstraints fresh(empty);
+    fresh.mFacingMode = c.mFacingMode;
+    if (!SomeSettingsFit(fresh, aDevices)) {
+      return "facingMode";
+    }
+  }
+  return "";
+}
+
+/* static */ const char*
+MediaConstraintsHelper::FindBadConstraint(
+    const NormalizedConstraints& aConstraints,
+    const RefPtr<MediaEngineSource>& aMediaEngineSource,
     const nsString& aDeviceId)
 {
-  class MockDevice
-  {
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MockDevice);
-
-    explicit MockDevice(const MediaEngineSourceType* aMediaEngineSource,
-                        const nsString& aDeviceId)
-    : mMediaEngineSource(aMediaEngineSource),
-      // The following dud code exists to avoid 'unused typedef' error on linux.
-      mDeviceId(MockDevice::HasThreadSafeRefCnt::value ? aDeviceId : nsString()) {}
-
-    uint32_t GetBestFitnessDistance(
-        const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-        bool aIsChrome)
-    {
-      return mMediaEngineSource->GetBestFitnessDistance(aConstraintSets,
-                                                        mDeviceId);
-    }
-
-  private:
-    ~MockDevice() {}
-
-    const MediaEngineSourceType* mMediaEngineSource;
-    nsString mDeviceId;
-  };
-
-  Unused << typename MockDevice::HasThreadSafeRefCnt();
-
-  nsTArray<RefPtr<MockDevice>> devices;
-  devices.AppendElement(new MockDevice(&aMediaEngineSource, aDeviceId));
+  AutoTArray<RefPtr<MediaDevice>, 1> devices;
+  devices.AppendElement(MakeRefPtr<MediaDevice>(aMediaEngineSource,
+                                                aMediaEngineSource->GetName(),
+                                                aDeviceId));
   return FindBadConstraint(aConstraints, devices);
 }
 

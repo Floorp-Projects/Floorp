@@ -692,21 +692,6 @@ CamerasChild::SetFakeDeviceChangeEvents()
   return 0;
 }
 
-mozilla::ipc::IPCResult
-CamerasChild::RecvFrameSizeChange(const CaptureEngine& capEngine,
-                                  const int& capId,
-                                  const int& w, const int& h)
-{
-  LOG((__PRETTY_FUNCTION__));
-  MutexAutoLock lock(mCallbackMutex);
-  if (Callback(capEngine, capId)) {
-    Callback(capEngine, capId)->FrameSizeChange(w, h);
-  } else {
-    LOG(("Frame size change with dead callback"));
-  }
-  return IPC_OK();
-}
-
 void
 CamerasChild::ActorDestroy(ActorDestroyReason aWhy)
 {

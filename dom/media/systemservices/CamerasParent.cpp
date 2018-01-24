@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CamerasParent.h"
-#include "MediaEngine.h"
+#include "MediaEngineSource.h"
 #include "MediaUtils.h"
 #include "VideoFrameUtils.h"
 
