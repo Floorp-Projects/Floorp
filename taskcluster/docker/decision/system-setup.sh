@@ -2,7 +2,7 @@
 
 set -v -e
 
-test `whoami` == 'root'
+test "$(whoami)" == 'root'
 
 apt-get update
 apt-get install -y --force-yes --no-install-recommends \
@@ -11,7 +11,7 @@ apt-get install -y --force-yes --no-install-recommends \
     sudo
 
 BUILD=/root/build
-mkdir $BUILD
+mkdir "$BUILD"
 
 tooltool_fetch() {
     cat >manifest.tt
@@ -20,10 +20,11 @@ tooltool_fetch() {
 }
 
 cd $BUILD
+# shellcheck disable=SC1091
 . /tmp/install-mercurial.sh
 
 cd /
 rm -rf $BUILD
 apt-get clean
 apt-get autoclean
-rm $0
+rm "$0"
