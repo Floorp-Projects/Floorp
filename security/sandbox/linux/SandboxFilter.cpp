@@ -797,11 +797,12 @@ public:
 #endif
       return Allow();
 
-#ifdef MOZ_ALSA
-    case __NR_ioctl:
-      return Allow();
-#else
     case __NR_ioctl: {
+#ifdef MOZ_ALSA
+      if (BelowLevel(4)) {
+        return Allow();
+      }
+#endif
       static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
       static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
       // On some older architectures (but not x86 or ARM), ioctls are
@@ -828,7 +829,6 @@ public:
         .ElseIf(shifted_type != kTtyIoctls, Allow())
         .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
     }
-#endif // !MOZ_ALSA
 
     CASES_FOR_fcntl: {
       Arg<int> cmd(1);
