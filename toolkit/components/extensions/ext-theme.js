@@ -150,6 +150,8 @@ class Theme {
         case "toolbar_top_separator":
         case "toolbar_bottom_separator":
         case "toolbar_vertical_separator":
+        case "icons":
+        case "icons_attention":
           this.lwtStyles[color] = cssColor;
           break;
       }
