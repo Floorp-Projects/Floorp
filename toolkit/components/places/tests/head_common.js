@@ -792,24 +792,6 @@ NavHistoryResultObserver.prototype = {
   ])
 };
 
-/**
- * Asynchronously check a url is visited.
- *
- * @param aURI The URI.
- * @return {Promise}
- * @resolves When the check has been added successfully.
- * @rejects JavaScript exception.
- */
-function promiseIsURIVisited(aURI) {
-  return new Promise(resolve => {
-
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-      resolve(aIsVisited);
-    });
-
-  });
-}
-
 function checkBookmarkObject(info) {
   do_check_valid_places_guid(info.guid);
   do_check_valid_places_guid(info.parentGuid);
