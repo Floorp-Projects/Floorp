@@ -27,6 +27,7 @@ const UnsolicitedNotifications = {
   "logMessage": "logMessage",
   "networkEvent": "networkEvent",
   "networkEventUpdate": "networkEventUpdate",
+  "documentEvent": "documentEvent",
   "newGlobal": "newGlobal",
   "newScript": "newScript",
   "tabDetached": "tabDetached",
