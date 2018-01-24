@@ -2627,57 +2627,6 @@ ServiceWorkerManager::GetClientRegistration(const ClientInfo& aClientInfo,
   return NS_OK;
 }
 
-/*
- * The .controller is for the registration associated with the document when
- * the document was loaded.
- */
-NS_IMETHODIMP
-ServiceWorkerManager::GetDocumentController(nsPIDOMWindowInner* aWindow,
-                                            nsISupports** aServiceWorker)
-{
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  Maybe<ServiceWorkerDescriptor> controller = aWindow->GetController();
-  if (controller.isNothing()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  if (NS_WARN_IF(!principal)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  nsAutoCString scopeKey;
-  nsresult rv = PrincipalToScopeKey(principal, scopeKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(scopeKey, controller.ref().Scope());
-  if (NS_WARN_IF(!registration)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  RefPtr<ServiceWorkerInfo> active = registration->GetActive();
-  if (NS_WARN_IF(!active) ||
-      NS_WARN_IF(active->Descriptor().Id() != controller.ref().Id())) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  RefPtr<ServiceWorker> serviceWorker = active->GetOrCreateInstance(aWindow);
-  serviceWorker.forget(aServiceWorker);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 ServiceWorkerManager::GetInstalling(nsPIDOMWindowInner* aWindow,
                                     const nsAString& aScope,
