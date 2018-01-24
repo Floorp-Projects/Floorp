@@ -9,11 +9,7 @@ import json
 import os
 import re
 import requests_unixsocket
-import shutil
-import subprocess
 import sys
-import tarfile
-import tempfile
 import urllib
 import urlparse
 import yaml
@@ -259,40 +255,6 @@ def stream_context_tar(topsrcdir, context_dir, out_file, prefix, args=None):
     writer = HashingWriter(out_file)
     create_tar_gz_from_files(writer, archive_files, '%s.tar.gz' % prefix)
     return writer.hexdigest()
-
-
-def build_from_context(docker_bin, context_path, prefix, tag=None):
-    """Build a Docker image from a context archive.
-
-    Given the path to a `docker` binary, a image build tar.gz (produced with
-    ``create_context_tar()``, a prefix in that context containing files, and
-    an optional ``tag`` for the produced image, build that Docker image.
-    """
-    d = tempfile.mkdtemp()
-    try:
-        with tarfile.open(context_path, 'r:gz') as tf:
-            tf.extractall(d)
-
-        # If we wanted to do post-processing of the Dockerfile, this is
-        # where we'd do it.
-
-        args = [
-            docker_bin,
-            'build',
-            # Use --no-cache so we always get the latest package updates.
-            '--no-cache',
-        ]
-
-        if tag:
-            args.extend(['-t', tag])
-
-        args.append('.')
-
-        res = subprocess.call(args, cwd=os.path.join(d, prefix))
-        if res:
-            raise Exception('error building image')
-    finally:
-        shutil.rmtree(d)
 
 
 @memoize
