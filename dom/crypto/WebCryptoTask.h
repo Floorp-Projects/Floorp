@@ -13,7 +13,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "nsIGlobalObject.h"
-#include "nsNSSShutDown.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,8 +56,7 @@ if (NS_FAILED(rv)) { \
   return; \
 }
 
-class WebCryptoTask : public CancelableRunnable,
-                      public nsNSSShutDownObject
+class WebCryptoTask : public CancelableRunnable
 {
 public:
   virtual void DispatchWithPromise(Promise* aResultPromise);

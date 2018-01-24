@@ -29,7 +29,6 @@ class nsSSLStatus final
   : public nsISSLStatus
   , public nsISerializable
   , public nsIClassInfo
-  , public nsNSSShutDownObject
 {
 protected:
   virtual ~nsSSLStatus() {}

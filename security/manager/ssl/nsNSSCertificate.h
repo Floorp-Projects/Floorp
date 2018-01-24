@@ -18,7 +18,6 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509CertList.h"
-#include "nsNSSShutDown.h"
 #include "nsStringFwd.h"
 
 namespace mozilla { namespace pkix { class DERArray; } }
@@ -26,10 +25,9 @@ namespace mozilla { namespace pkix { class DERArray; } }
 class nsINSSComponent;
 class nsIASN1Sequence;
 
-class nsNSSCertificate final : public nsIX509Cert,
-                               public nsISerializable,
-                               public nsIClassInfo,
-                               public nsNSSShutDownObject
+class nsNSSCertificate final : public nsIX509Cert
+                             , public nsISerializable
+                             , public nsIClassInfo
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -72,9 +70,8 @@ SECStatus ConstructCERTCertListFromReversedDERArray(
 typedef const std::function<nsresult(nsCOMPtr<nsIX509Cert>& aCert,
                 bool aHasMore, /* out */ bool& aContinue)> ForEachCertOperation;
 
-class nsNSSCertList: public nsIX509CertList,
-                     public nsISerializable,
-                     public nsNSSShutDownObject
+class nsNSSCertList : public nsIX509CertList
+                    , public nsISerializable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -118,8 +115,7 @@ private:
    void operator=(const nsNSSCertList&) = delete;
 };
 
-class nsNSSCertListEnumerator: public nsISimpleEnumerator,
-                               public nsNSSShutDownObject
+class nsNSSCertListEnumerator : public nsISimpleEnumerator
 {
 public:
    NS_DECL_THREADSAFE_ISUPPORTS

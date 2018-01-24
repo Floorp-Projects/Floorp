@@ -9,7 +9,6 @@
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsNSSShutDown.h"
 #include "pk11func.h"
 
 //

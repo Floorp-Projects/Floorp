@@ -7,7 +7,6 @@
 #include "nsIIdentityCryptoService.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsNSSShutDown.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
@@ -47,7 +46,7 @@ HexEncode(const SECItem * it, nsACString & result)
 #define DSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("DS160"))
 #define RSA_KEY_TYPE_STRING (NS_LITERAL_CSTRING("RS256"))
 
-class KeyPair : public nsIIdentityKeyPair, public nsNSSShutDownObject
+class KeyPair : public nsIIdentityKeyPair
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -57,7 +56,7 @@ public:
           nsIEventTarget* aOperationThread);
 
 private:
-  ~KeyPair() override
+  virtual ~KeyPair()
   {
     if (mPrivateKey) {
       SECKEY_DestroyPrivateKey(mPrivateKey);
@@ -77,7 +76,7 @@ private:
 
 NS_IMPL_ISUPPORTS(KeyPair, nsIIdentityKeyPair)
 
-class KeyGenRunnable : public Runnable, public nsNSSShutDownObject
+class KeyGenRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE
@@ -86,10 +85,6 @@ public:
                  nsIEventTarget* aOperationThread);
 
 private:
-  ~KeyGenRunnable() override
-  {
-  }
-
   const KeyType mKeyType; // in
   nsMainThreadPtrHandle<nsIIdentityKeyGenCallback> mCallback; // in
   nsresult mRv; // out
@@ -100,7 +95,7 @@ private:
   void operator=(const KeyGenRunnable &) = delete;
 };
 
-class SignRunnable : public Runnable, public nsNSSShutDownObject
+class SignRunnable : public Runnable
 {
 public:
   NS_DECL_NSIRUNNABLE

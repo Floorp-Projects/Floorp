@@ -90,8 +90,6 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
 
-class nsNSSShutDownList;
-
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsINSSComponent
                            , public nsIObserver

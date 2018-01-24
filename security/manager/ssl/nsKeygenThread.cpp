@@ -13,7 +13,6 @@
 #include "PSMRunnable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsNSSShutDown.h"
 #include "nsThreadUtils.h"
 #include "pk11func.h"
 

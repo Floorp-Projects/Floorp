@@ -19,7 +19,6 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIBackgroundFileSaver.h"
 #include "nsIStreamListener.h"
-#include "nsNSSShutDown.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 
@@ -35,8 +34,7 @@ class DigestOutputStream;
 ////////////////////////////////////////////////////////////////////////////////
 //// BackgroundFileSaver
 
-class BackgroundFileSaver : public nsIBackgroundFileSaver,
-                            public nsNSSShutDownObject
+class BackgroundFileSaver : public nsIBackgroundFileSaver
 {
 public:
   NS_DECL_NSIBACKGROUNDFILESAVER
@@ -378,8 +376,7 @@ private:
 // A wrapper around nsIOutputStream, so that we can compute hashes on the
 // stream without copying and without polluting pristine NSS code with XPCOM
 // interfaces.
-class DigestOutputStream : public nsNSSShutDownObject,
-                           public nsIOutputStream
+class DigestOutputStream : public nsIOutputStream
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -388,7 +385,7 @@ public:
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
 private:
-  ~DigestOutputStream() {}
+  virtual ~DigestOutputStream() {}
 
   // Calls to write are passed to this stream.
   nsCOMPtr<nsIOutputStream> mOutputStream;

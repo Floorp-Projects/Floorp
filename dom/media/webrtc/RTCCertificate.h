@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
-#include "nsNSSShutDown.h"
 #include "prtime.h"
 #include "sslt.h"
 #include "ScopedNSSTypes.h"
@@ -29,10 +28,8 @@ namespace dom {
 
 class ObjectOrString;
 
-class RTCCertificate final
-    : public nsISupports,
-      public nsWrapperCache,
-      public nsNSSShutDownObject
+class RTCCertificate final : public nsISupports
+                           , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

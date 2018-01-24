@@ -12,13 +12,11 @@
 #include "nsIPK11TokenDB.h"
 #include "nsISupports.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "pk11func.h"
 #include "ScopedNSSTypes.h"
 
-class nsPK11Token : public nsIPK11Token,
-                    public nsNSSShutDownObject
+class nsPK11Token : public nsIPK11Token
 {
 public:
   NS_DECL_ISUPPORTS
@@ -47,7 +45,6 @@ private:
 };
 
 class nsPK11TokenDB : public nsIPK11TokenDB
-                    , public nsNSSShutDownObject
 {
 public:
   NS_DECL_ISUPPORTS

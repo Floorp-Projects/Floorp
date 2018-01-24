@@ -729,7 +729,6 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
 }
 
 class PK11PasswordPromptRunnable : public SyncRunnableBase
-                                 , public nsNSSShutDownObject
 {
 public:
   PK11PasswordPromptRunnable(PK11SlotInfo* slot,
