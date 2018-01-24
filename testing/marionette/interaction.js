@@ -342,6 +342,7 @@ function clearContentEditableElement(el) {
   }
   event.focus(el);
   el.innerHTML = "";
+  event.change(el);
   event.blur(el);
 }
 
@@ -367,6 +368,7 @@ function clearResettableElement(el) {
 
   event.focus(el);
   el.value = "";
+  event.change(el);
   event.blur(el);
 }
 
