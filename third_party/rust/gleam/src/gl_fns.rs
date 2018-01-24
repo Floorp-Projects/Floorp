@@ -597,6 +597,21 @@ impl Gl for GlFns {
         }
     }
 
+    fn get_tex_image_into_buffer(&self,
+                                 target: GLenum,
+                                 level: GLint,
+                                 format: GLenum,
+                                 ty: GLenum,
+                                 output: &mut [u8]) {
+        unsafe {
+            self.ffi_gl_.GetTexImage(target,
+                                     level,
+                                     format,
+                                     ty,
+                                     output.as_mut_ptr() as *mut _);
+        }
+    }
+
     fn get_integer_v(&self, name: GLenum) -> GLint {
         let mut result = 0;
         unsafe {

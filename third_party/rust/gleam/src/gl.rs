@@ -253,6 +253,12 @@ pub trait Gl {
                             format: GLenum,
                             ty: GLenum,
                             offset: usize);
+    fn get_tex_image_into_buffer(&self,
+                                 target: GLenum,
+                                 level: GLint,
+                                 format: GLenum,
+                                 ty: GLenum,
+                                 output: &mut [u8]);
     fn get_integer_v(&self, name: GLenum) -> GLint;
     fn get_integer_64v(&self, name: GLenum) -> GLint64;
     fn get_integer_iv(&self, name: GLenum, index: GLuint) -> GLint;
