@@ -61,6 +61,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "JSONFile", "resource://gre/modules/JSON
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LogManager", "resource://shield-recipe-client/lib/LogManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment", "resource://gre/modules/TelemetryEnvironment.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEvents", "resource://shield-recipe-client/lib/TelemetryEvents.jsm");
 
 this.EXPORTED_SYMBOLS = ["PreferenceExperiments"];
 
@@ -186,7 +187,10 @@ this.PreferenceExperiments = {
       if (getPref(UserPreferences, experiment.preferenceName, experiment.preferenceType) !== experiment.preferenceValue) {
         // if not, stop the experiment, and skip the remaining steps
         log.info(`Stopping experiment "${experiment.name}" because its value changed`);
-        await this.stop(experiment.name, false);
+        await this.stop(experiment.name, {
+          didResetValue: false,
+          reason: "user-preference-changed-sideload",
+        });
         continue;
       }
 
@@ -351,6 +355,7 @@ this.PreferenceExperiments = {
     store.saveSoon();
 
     TelemetryEnvironment.setExperimentActive(name, branch, {type: EXPERIMENT_TYPE_PREFIX + experimentType});
+    TelemetryEvents.sendEvent("enroll", "preference_study", name, {experimentType, branch});
     await this.saveStartupPrefs();
   },
 
@@ -377,8 +382,10 @@ this.PreferenceExperiments = {
       observer() {
         const newValue = getPref(UserPreferences, preferenceName, preferenceType);
         if (newValue !== preferenceValue) {
-          PreferenceExperiments.stop(experimentName, false)
-                               .catch(Cu.reportError);
+          PreferenceExperiments.stop(experimentName, {
+            didResetValue: false,
+            reason: "user-preference-changed",
+          }).catch(Cu.reportError);
         }
       },
     };
@@ -448,14 +455,22 @@ this.PreferenceExperiments = {
    * Stop an active experiment, deactivate preference watchers, and optionally
    * reset the associated preference to its previous value.
    * @param {string} experimentName
-   * @param {boolean} [resetValue=true]
-   *   If true, reset the preference to its original value.
+   * @param {Object} options
+   * @param {boolean} [options.resetValue = true]
+   *   If true, reset the preference to its original value prior to
+   *   the experiment. Optional, defauls to true.
+   * @param {String} [options.reason = "unknown"]
+   *   Reason that the experiment is ending. Optional, defaults to
+   *   "unknown".
    * @rejects {Error}
    *   If there is no stored experiment with the given name, or if the
    *   experiment has already expired.
    */
-  async stop(experimentName, resetValue = true) {
+  async stop(experimentName, {resetValue = true, reason = "unknown"} = {}) {
     log.debug(`PreferenceExperiments.stop(${experimentName})`);
+    if (reason === "unknown") {
+      log.warn(`experiment ${experimentName} ending for unknown reason`);
+    }
 
     const store = await ensureStorage();
     if (!(experimentName in store.data)) {
@@ -496,6 +511,10 @@ this.PreferenceExperiments = {
     store.saveSoon();
 
     TelemetryEnvironment.setExperimentInactive(experimentName, experiment.branch);
+    TelemetryEvents.sendEvent("unenroll", "preference_study", experimentName, {
+      didResetValue: resetValue ? "true" : "false",
+      reason,
+    });
     await this.saveStartupPrefs();
   },
 
