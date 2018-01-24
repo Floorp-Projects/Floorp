@@ -475,16 +475,16 @@ function* verifyRequestItemTarget(document, requestList, requestItem, method,
   is(target.querySelector(".requests-list-scheme").getAttribute("title"),
     scheme, "The tooltip scheme is correct.");
 
-  is(target.querySelector(".requests-list-duration").textContent,
+  is(target.querySelector(".requests-list-duration-time").textContent,
     duration, "The displayed duration is correct.");
 
-  is(target.querySelector(".requests-list-duration").getAttribute("title"),
+  is(target.querySelector(".requests-list-duration-time").getAttribute("title"),
     duration, "The tooltip duration is correct.");
 
-  is(target.querySelector(".requests-list-latency").textContent,
+  is(target.querySelector(".requests-list-latency-time").textContent,
     latency, "The displayed latency is correct.");
 
-  is(target.querySelector(".requests-list-latency").getAttribute("title"),
+  is(target.querySelector(".requests-list-latency-time").getAttribute("title"),
     latency, "The tooltip latency is correct.");
 
   if (status !== undefined) {
