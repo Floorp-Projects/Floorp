@@ -82,6 +82,10 @@ private:
 
   // Handle to the channel wrapper if this channel has been intercepted.
   nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;
+
+  // This will be populated with a real network controller if parent-side
+  // interception is enabled.
+  nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParentListener,
