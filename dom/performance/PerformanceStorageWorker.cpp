@@ -60,6 +60,16 @@ public:
     mStorage->ShutdownOnWorker();
     return WorkerRunnable::Cancel();
   }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {}
 };
 
 // Here we use control runnable because this code must be executed also when in
@@ -88,6 +98,16 @@ public:
     mStorage->ShutdownOnWorker();
     return WorkerRunnable::Cancel();
   }
+
+  bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    return true;
+  }
+
+  void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {}
 
 private:
   RefPtr<PerformanceStorageWorker> mStorage;
