@@ -1873,7 +1873,7 @@ class MacroAssembler : public MacroAssemblerSpecific
             moveDouble(ReturnDoubleReg, reg);
     }
 
-    inline void storeCallResultValue(AnyRegister dest);
+    inline void storeCallResultValue(AnyRegister dest, JSValueType type);
 
     void storeCallResultValue(ValueOperand dest) {
 #if defined(JS_NUNBOX32)
@@ -1997,16 +1997,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     void storeUnboxedProperty(T address, JSValueType type,
                               const ConstantOrRegister& value, Label* failure);
-
-    template <typename T>
-    Register extractString(const T& source, Register scratch) {
-        return extractObject(source, scratch);
-    }
-
-    template <typename T>
-    Register extractSymbol(const T& source, Register scratch) {
-        return extractObject(source, scratch);
-    }
 
     void debugAssertIsObject(const ValueOperand& val);
 
