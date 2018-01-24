@@ -201,8 +201,7 @@ geckodriver supports a number of [capabilities]:
 Firefox capabilities
 ====================
 
-geckodriver also supports capabilities with the `moz:` prefix, which can
-be used to define Firefox-specific capabilities.
+geckodriver has a few capabilities that are specific to Firefox.
 
 moz:firefoxOptions
 ------------------
