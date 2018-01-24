@@ -189,8 +189,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceObserverEntryList",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PerformanceResourceTiming",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "ProgressEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PushEvent",

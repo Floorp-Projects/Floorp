@@ -36,7 +36,7 @@ PerformanceNavigation::WrapObject(JSContext *cx,
 uint16_t
 PerformanceNavigation::RedirectCount() const
 {
-  return GetPerformanceTiming()->Data()->GetRedirectCount();
+  return GetPerformanceTiming()->GetRedirectCount();
 }
 
 } // dom namespace

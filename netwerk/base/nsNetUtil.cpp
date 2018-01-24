@@ -83,7 +83,6 @@
 using namespace mozilla;
 using namespace mozilla::net;
 using mozilla::dom::ClientInfo;
-using mozilla::dom::PerformanceStorage;
 using mozilla::dom::ServiceWorkerDescriptor;
 
 #define DEFAULT_RP 3
@@ -165,7 +164,6 @@ nsresult
 NS_NewChannelInternal(nsIChannel           **outChannel,
                       nsIURI                *aUri,
                       nsILoadInfo           *aLoadInfo,
-                      PerformanceStorage    *aPerformanceStorage /* = nullptr */,
                       nsILoadGroup          *aLoadGroup /* = nullptr */,
                       nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                       nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -209,14 +207,6 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
   if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
     rv = channel->SetLoadFlags(aLoadFlags);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (aPerformanceStorage) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    loadInfo->SetPerformanceStorage(aPerformanceStorage);
   }
 
   channel.forget(outChannel);
@@ -279,7 +269,6 @@ NS_NewChannel(nsIChannel           **outChannel,
               nsIPrincipal          *aLoadingPrincipal,
               nsSecurityFlags        aSecurityFlags,
               nsContentPolicyType    aContentPolicyType,
-              PerformanceStorage    *aPerformanceStorage /* nullptr */,
               nsILoadGroup          *aLoadGroup /* = nullptr */,
               nsIInterfaceRequestor *aCallbacks /* = nullptr */,
               nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -294,7 +283,6 @@ NS_NewChannel(nsIChannel           **outChannel,
                                Maybe<ServiceWorkerDescriptor>(),
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -309,7 +297,6 @@ NS_NewChannel(nsIChannel           **outChannel,
               const Maybe<ServiceWorkerDescriptor>& aController,
               nsSecurityFlags        aSecurityFlags,
               nsContentPolicyType    aContentPolicyType,
-              PerformanceStorage    *aPerformanceStorage /* nullptr */,
               nsILoadGroup          *aLoadGroup /* = nullptr */,
               nsIInterfaceRequestor *aCallbacks /* = nullptr */,
               nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -331,7 +318,6 @@ NS_NewChannel(nsIChannel           **outChannel,
                                aController,
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -348,7 +334,6 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
                       const Maybe<ServiceWorkerDescriptor>& aController,
                       nsSecurityFlags        aSecurityFlags,
                       nsContentPolicyType    aContentPolicyType,
-                      PerformanceStorage    *aPerformanceStorage /* nullptr */,
                       nsILoadGroup          *aLoadGroup /* = nullptr */,
                       nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                       nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -400,14 +385,6 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aPerformanceStorage) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    loadInfo->SetPerformanceStorage(aPerformanceStorage);
-  }
-
   channel.forget(outChannel);
   return NS_OK;
 }
@@ -419,7 +396,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsIPrincipal          *aTriggeringPrincipal,
                                      nsSecurityFlags        aSecurityFlags,
                                      nsContentPolicyType    aContentPolicyType,
-                                     PerformanceStorage    *aPerformanceStorage /* = nullptr */,
                                      nsILoadGroup          *aLoadGroup /* = nullptr */,
                                      nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                                      nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -436,7 +412,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                Maybe<ServiceWorkerDescriptor>(),
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -451,7 +426,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsIPrincipal          *aTriggeringPrincipal,
                                      nsSecurityFlags        aSecurityFlags,
                                      nsContentPolicyType    aContentPolicyType,
-                                     PerformanceStorage    *aPerformanceStorage /* = nullptr */,
                                      nsILoadGroup          *aLoadGroup /* = nullptr */,
                                      nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                                      nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -467,7 +441,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                Maybe<ServiceWorkerDescriptor>(),
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -484,7 +457,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      const Maybe<ServiceWorkerDescriptor>& aController,
                                      nsSecurityFlags        aSecurityFlags,
                                      nsContentPolicyType    aContentPolicyType,
-                                     PerformanceStorage    *aPerformanceStorage /* = nullptr */,
                                      nsILoadGroup          *aLoadGroup /* = nullptr */,
                                      nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                                      nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -506,7 +478,6 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                aController,
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -519,7 +490,6 @@ NS_NewChannel(nsIChannel           **outChannel,
               nsINode               *aLoadingNode,
               nsSecurityFlags        aSecurityFlags,
               nsContentPolicyType    aContentPolicyType,
-              PerformanceStorage    *aPerformanceStorage /* = nullptr */,
               nsILoadGroup          *aLoadGroup /* = nullptr */,
               nsIInterfaceRequestor *aCallbacks /* = nullptr */,
               nsLoadFlags            aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -535,7 +505,6 @@ NS_NewChannel(nsIChannel           **outChannel,
                                Maybe<ServiceWorkerDescriptor>(),
                                aSecurityFlags,
                                aContentPolicyType,
-                               aPerformanceStorage,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -1067,7 +1036,6 @@ NS_NewStreamLoaderInternal(nsIStreamLoader        **outStream,
                                        Maybe<ServiceWorkerDescriptor>(),
                                        aSecurityFlags,
                                        aContentPolicyType,
-                                       nullptr, // PerformanceStorage
                                        aLoadGroup,
                                        aCallbacks,
                                        aLoadFlags);

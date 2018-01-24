@@ -1156,7 +1156,6 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
                      doc,
                      securityFlags,
                      nsIContentPolicy::TYPE_BEACON,
-                     nullptr, // aPerformanceStorage
                      nullptr, // aLoadGroup
                      nullptr, // aCallbacks
                      loadFlags);

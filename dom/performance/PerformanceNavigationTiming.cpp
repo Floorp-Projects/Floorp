@@ -24,55 +24,55 @@ PerformanceNavigationTiming::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aG
 DOMHighResTimeStamp
 PerformanceNavigationTiming::UnloadEventStart() const
 {
-  return mPerformance->GetDOMTiming()->GetUnloadEventStartHighRes();
+  return mTiming->GetDOMTiming()->GetUnloadEventStartHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::UnloadEventEnd() const
 {
-  return mPerformance->GetDOMTiming()->GetUnloadEventEndHighRes();
+  return mTiming->GetDOMTiming()->GetUnloadEventEndHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::DomInteractive() const
 {
-  return mPerformance->GetDOMTiming()->GetDomInteractiveHighRes();
+  return mTiming->GetDOMTiming()->GetDomInteractiveHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::DomContentLoadedEventStart() const
 {
-  return mPerformance->GetDOMTiming()->GetDomContentLoadedEventStartHighRes();
+  return mTiming->GetDOMTiming()->GetDomContentLoadedEventStartHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::DomContentLoadedEventEnd() const
 {
-  return mPerformance->GetDOMTiming()->GetDomContentLoadedEventEndHighRes();
+  return mTiming->GetDOMTiming()->GetDomContentLoadedEventEndHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::DomComplete() const
 {
-  return mPerformance->GetDOMTiming()->GetDomCompleteHighRes();
+  return mTiming->GetDOMTiming()->GetDomCompleteHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::LoadEventStart() const
 {
-  return mPerformance->GetDOMTiming()->GetLoadEventStartHighRes();
+  return mTiming->GetDOMTiming()->GetLoadEventStartHighRes();
 }
 
 DOMHighResTimeStamp
 PerformanceNavigationTiming::LoadEventEnd() const
 {
-  return mPerformance->GetDOMTiming()->GetLoadEventEndHighRes();
+  return mTiming->GetDOMTiming()->GetLoadEventEndHighRes();
 }
 
 NavigationType
 PerformanceNavigationTiming::Type() const
 {
-  switch(mPerformance->GetDOMTiming()->GetType()) {
+  switch(mTiming->GetDOMTiming()->GetType()) {
     case nsDOMNavigationTiming::TYPE_NAVIGATE:
       return NavigationType::Navigate;
       break;
@@ -92,5 +92,5 @@ PerformanceNavigationTiming::Type() const
 uint16_t
 PerformanceNavigationTiming::RedirectCount() const
 {
-  return mTimingData->GetRedirectCount();
+  return mTiming->GetRedirectCount();
 }

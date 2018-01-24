@@ -467,7 +467,6 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // aPerformanceStorage
                        nullptr,  // aLoadGroup
                        nullptr,  // aCallbacks
                        nsIRequest::LOAD_NORMAL,
@@ -518,7 +517,6 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // PerformanceStorage
                        nullptr,  // aLoadGroup
                        nullptr,  // aCallbacks
                        nsIRequest::LOAD_NORMAL,
