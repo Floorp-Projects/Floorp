@@ -526,7 +526,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo,
-                             nullptr, nullptr, aLoadFlags, ios);
+                             nullptr, nullptr, nullptr, aLoadFlags, ios);
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }

@@ -1449,6 +1449,7 @@ Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
                               nsContentUtils::GetSystemPrincipal(),
                               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                               nsIContentPolicy::TYPE_OTHER,
+                              nullptr, /* aPerformanceStorage */
                               nullptr, /* aLoadGroup */
                               nullptr, /* aCallbacks */
                               nsIRequest::LOAD_BACKGROUND);

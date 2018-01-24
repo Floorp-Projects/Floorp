@@ -58,6 +58,7 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsINode *aSourceNode)
                                     sourceDoc,
                                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                                     nsIContentPolicy::TYPE_OTHER,
+                                    nullptr, // aPerformanceStorage
                                     loadGroup,
                                     nullptr, // aCallbacks
                                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER);

@@ -1364,6 +1364,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
+                       nullptr,  // aPerformanceStorage
                        nullptr,  // aLoadGroup
                        static_cast<nsIInterfaceRequestor*>(this),
                        loadFlags);

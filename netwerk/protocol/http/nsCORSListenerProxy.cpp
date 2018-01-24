@@ -1494,6 +1494,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   rv = NS_NewChannelInternal(getter_AddRefs(preflightChannel),
                              uri,
                              loadInfo,
+                             nullptr, // PerformanceStorage
                              loadGroup,
                              nullptr,   // aCallbacks
                              loadFlags);

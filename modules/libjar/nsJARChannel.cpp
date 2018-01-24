@@ -816,6 +816,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                    mJarBaseURI,
                                    mLoadInfo,
+                                   nullptr, // PerformanceStorage
                                    mLoadGroup,
                                    mCallbacks,
                                    loadFlags);

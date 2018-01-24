@@ -152,6 +152,7 @@ nsPrefetchNode::OpenChannel()
                                         Maybe<ServiceWorkerDescriptor>(),
                                         securityFlags,
                                         mPolicyType,
+                                        nullptr,   // aPerformanceStorage
                                         loadGroup, // aLoadGroup
                                         this,      // aCallbacks
                                         nsIRequest::LOAD_BACKGROUND |
