@@ -66,6 +66,7 @@ const {
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 const {ContentEventObserverService} = Cu.import("chrome://marionette/content/dom.js", {});
+const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
 Cu.import("chrome://marionette/content/interaction.js");
 Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/navigate.js");
@@ -74,15 +75,13 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let outerWindowID = null;
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
-// code can send dblclick event, also resetClick and cancelTimer
-// after dblclick has happened.
+// code can send dblclick event
 addEventListener("click", event.DoubleClickTracker.setClick);
 addEventListener("dblclick", event.DoubleClickTracker.resetClick);
-addEventListener("dblclick", event.DoubleClickTracker.cancelTimer);
+addEventListener("unload", event.DoubleClickTracker.resetClick);
 
 const seenEls = new element.Store();
 const SUPPORTED_STRATEGIES = new Set([
@@ -188,7 +187,7 @@ const loadListener = {
       // command can return immediately if the page load is already done.
       let readyState = content.document.readyState;
       let documentURI = content.document.documentURI;
-      logger.debug(`Check readyState "${readyState} for "${documentURI}"`);
+      logger.debug(truncate`Check readyState ${readyState} for ${documentURI}`);
       // If the page load has already finished, don't setup listeners and
       // timers but return immediatelly.
       if (this.handleReadyState(readyState, documentURI)) {
@@ -242,7 +241,7 @@ const loadListener = {
     }
 
     let location = event.target.documentURI || event.target.location.href;
-    logger.debug(`Received DOM event "${event.type}" for "${location}"`);
+    logger.debug(truncate`Received DOM event ${event.type} for ${location}`);
 
     switch (event.type) {
       case "beforeunload":
@@ -381,7 +380,7 @@ const loadListener = {
     const curWinID = win.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
 
-    logger.debug(`Received observer notification "${topic}" for "${winID}"`);
+    logger.debug(`Received observer notification ${topic} for ${winID}`);
 
     switch (topic) {
       // In the case when the currently selected frame is closed,
@@ -475,7 +474,7 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  outerWindowID = winUtil.outerWindowID;
+  let {outerWindowID} = winUtil;
   logger.debug(`Register listener.js for window ${outerWindowID}`);
 
   sandboxes.clear();
@@ -487,10 +486,12 @@ function registerSelf() {
   action.inputStateMap = new Map();
   action.inputsToCancel = [];
 
-  // register will have the ID and a boolean describing if this is the
-  // main process or not
-  let register = sendSyncMessage("Marionette:Register", {outerWindowID});
-  if (register[0].outerWindowID === outerWindowID) {
+  let reply = sendSyncMessage("Marionette:Register", {outerWindowID});
+  if (reply.length == 0) {
+    logger.error("No reply from Marionette:Register");
+  }
+
+  if (reply[0].outerWindowID === outerWindowID) {
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
@@ -585,6 +586,7 @@ function startListeners() {
   addMessageListener("Marionette:reftestWait", reftestWaitFn);
   addMessageListener("Marionette:releaseActions", releaseActionsFn);
   addMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
+  addMessageListener("Marionette:Session:Delete", deleteSession);
   addMessageListener("Marionette:singleTap", singleTapFn);
   addMessageListener("Marionette:switchToFrame", switchToFrame);
   addMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
@@ -622,13 +624,16 @@ function deregister() {
   removeMessageListener("Marionette:refresh", refresh);
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
   removeMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
+  removeMessageListener("Marionette:Session:Delete", deleteSession);
   removeMessageListener("Marionette:singleTap", singleTapFn);
   removeMessageListener("Marionette:switchToFrame", switchToFrame);
   removeMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
   removeMessageListener("Marionette:switchToShadowRoot", switchToShadowRootFn);
   removeMessageListener("Marionette:takeScreenshot", takeScreenshotFn);
   removeMessageListener("Marionette:waitForPageLoaded", waitForPageLoaded);
+}
 
+function deleteSession() {
   seenEls.clear();
   // reset container frame to the top-most frame
   curContainer = {frame: content, shadowRoot: null};
@@ -1651,7 +1656,7 @@ async function reftestWait(url, remote) {
   let reftestWait = false;
 
   if (document.location.href !== url || document.readyState != "complete") {
-    logger.debug(`Waiting for page load of ${url}`);
+    logger.debug(truncate`Waiting for page load of ${url}`);
     await new Promise(resolve => {
       let maybeResolve = event => {
         if (event.target === curContainer.frame.document &amp;&amp;
@@ -1736,7 +1741,7 @@ registerSelf();
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jan 24 2018 20:37:55 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
