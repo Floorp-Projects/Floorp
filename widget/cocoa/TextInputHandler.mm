@@ -2472,8 +2472,7 @@ TextInputHandler::HandleCommand(Command aCommand)
   // Otherwise, we should adjust Control, Option and Command state since
   // editor may behave differently if some of them are active.
   bool dispatchFakeKeyPress =
-    !(currentKeyEvent && currentKeyEvent->IsProperKeyEvent(aCommand) &&
-      currentKeyEvent->CanDispatchKeyPressEvent());
+    !(currentKeyEvent && currentKeyEvent->IsProperKeyEvent(aCommand));
 
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
   if (!dispatchFakeKeyPress) {
@@ -2482,6 +2481,15 @@ TextInputHandler::HandleCommand(Command aCommand)
     currentKeyEvent->InitKeyEvent(this, keypressEvent);
   } else {
     // Otherwise, we should dispatch "fake" keypress event.
+    // However, for making it possible to compute edit commands, we need to
+    // set current native key event to the fake keyboard event even if it's
+    // not same as what we expect since the native keyboard event caused
+    // this command.
+    NSEvent* keyEvent =
+      currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
+    keypressEvent.mNativeKeyEvent = keyEvent;
+    NS_WARNING_ASSERTION(keypressEvent.mNativeKeyEvent,
+      "Without native key event, NativeKeyBindings cannot compute aCommand");
     switch (aCommand) {
       case CommandInsertLineBreak:
       case CommandInsertParagraph: {
@@ -2493,8 +2501,6 @@ TextInputHandler::HandleCommand(Command aCommand)
         // line in HTML editor with default paragraph separator when
         // Enter, Shift+Enter or Option+Enter.  So, we should not change
         // Shift+Enter meaning when there was composition string or not.
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_RETURN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Enter;
@@ -2511,8 +2517,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       case CommandDeleteCharBackward:
       case CommandDeleteToBeginningOfLine:
       case CommandDeleteWordBackward: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_BACK;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Backspace;
@@ -2528,8 +2532,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       }
       case CommandDeleteCharForward:
       case CommandDeleteWordForward: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_DELETE;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Delete;
@@ -2547,8 +2549,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       case CommandSelectWordNext:
       case CommandEndLine:
       case CommandSelectEndLine: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_RIGHT;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowRight;
@@ -2576,8 +2576,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       case CommandSelectWordPrevious:
       case CommandBeginLine:
       case CommandSelectBeginLine: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_LEFT;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowLeft;
@@ -2603,8 +2601,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       case CommandSelectLinePrevious:
       case CommandMoveTop:
       case CommandSelectTop: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_UP;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowUp;
@@ -2625,8 +2621,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       case CommandSelectLineNext:
       case CommandMoveBottom:
       case CommandSelectBottom: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_DOWN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_ArrowDown;
@@ -2645,8 +2639,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       }
       case CommandScrollPageUp:
       case CommandSelectPageUp: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_PAGE_UP;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageUp;
@@ -2660,8 +2652,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       }
       case CommandScrollPageDown:
       case CommandSelectPageDown: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_PAGE_DOWN;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_PageDown;
@@ -2675,8 +2665,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       }
       case CommandScrollBottom:
       case CommandScrollTop: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         if (aCommand == CommandScrollBottom) {
           keypressEvent.mKeyCode = NS_VK_END;
@@ -2692,8 +2680,6 @@ TextInputHandler::HandleCommand(Command aCommand)
       }
       case CommandCancelOperation:
       case CommandComplete: {
-        NSEvent* keyEvent =
-          currentKeyEvent ? currentKeyEvent->mKeyEvent : nullptr;
         nsCocoaUtils::InitInputEvent(keypressEvent, keyEvent);
         keypressEvent.mKeyCode = NS_VK_ESCAPE;
         keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_Escape;
