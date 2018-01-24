@@ -1717,6 +1717,7 @@ HttpChannelChild::SetupRedirect(nsIURI* uri,
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                              uri,
                              redirectLoadInfo,
+                             nullptr, // PerformanceStorage
                              nullptr, // aLoadGroup
                              nullptr, // aCallbacks
                              nsIRequest::LOAD_NORMAL,

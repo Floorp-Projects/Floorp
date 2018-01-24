@@ -212,6 +212,7 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                              redirectURI,
                              redirectLoadInfo,
+                             nullptr, // PerformanceStorage
                              nullptr, // aLoadGroup
                              nullptr, // aCallbacks
                              mLoadFlags,
@@ -665,6 +666,7 @@ InterceptedHttpChannel::ResetInterception(void)
   nsresult rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                                       mURI,
                                       redirectLoadInfo,
+                                      nullptr, // PerformanceStorage
                                       nullptr, // aLoadGroup
                                       nullptr, // aCallbacks
                                       mLoadFlags);
