@@ -4800,8 +4800,9 @@ BaselineCompiler::emit_JSOP_RESUME()
 
     // Store the arguments object if there is one.
     Label noArgsObj;
-    masm.unboxObject(Address(genObj, GeneratorObject::offsetOfArgsObjSlot()), scratch2);
-    masm.branchTestPtr(Assembler::Zero, scratch2, scratch2, &noArgsObj);
+    Address argsObjSlot(genObj, GeneratorObject::offsetOfArgsObjSlot());
+    masm.branchTestUndefined(Assembler::Equal, argsObjSlot, &noArgsObj);
+    masm.unboxObject(argsObjSlot, scratch2);
     {
         masm.storePtr(scratch2, frame.addressOfArgsObj());
         masm.or32(Imm32(BaselineFrame::HAS_ARGS_OBJ), frame.addressOfFlags());

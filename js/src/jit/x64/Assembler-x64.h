@@ -823,6 +823,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::MEM_REG_DISP:
             masm.xorq_mr(src.disp(), src.base(), dest.encoding());
             break;
+          case Operand::MEM_SCALE:
+            masm.xorq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
+            break;
           case Operand::MEM_ADDRESS32:
             masm.xorq_mr(src.address(), dest.encoding());
             break;

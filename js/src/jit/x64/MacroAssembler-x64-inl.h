@@ -890,7 +890,7 @@ MacroAssemblerX64::incrementInt32Value(const Address& addr)
 }
 
 void
-MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
+MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType type)
 {
     if (dest.isFloat()) {
         Label notInt32, end;
@@ -901,7 +901,7 @@ MacroAssemblerX64::unboxValue(const ValueOperand& src, AnyRegister dest)
         unboxDouble(src, dest.fpu());
         bind(&end);
     } else {
-        unboxNonDouble(src, dest.gpr());
+        unboxNonDouble(src, dest.gpr(), type);
     }
 }
 
