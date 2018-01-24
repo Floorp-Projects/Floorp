@@ -44,7 +44,7 @@
 #include "mozilla/widget/AudioSession.h"
 #include <windows.h>
 #if defined(MOZ_SANDBOX)
-#include "SandboxBroker.h"
+#include "sandboxBroker.h"
 #endif
 #endif
 
