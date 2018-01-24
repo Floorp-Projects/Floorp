@@ -90,6 +90,7 @@ geckodriver supports a number of [capabilities]:
   <td>Boolean initially set to false,
    indicating the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
+  <td>
  </tr>
 
  <tr>
@@ -104,6 +105,7 @@ geckodriver supports a number of [capabilities]:
    waiting for the <code>complete</code> ready state;
    or "<code>none</code>",
    which will return immediately after starting navigation.
+  <td>
  </tr>
 
  <tr>
