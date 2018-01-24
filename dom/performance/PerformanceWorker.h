@@ -68,7 +68,7 @@ protected:
 
   void DispatchBufferFullEvent() override
   {
-    MOZ_CRASH("This should not be called on workers.");
+    // Nothing to do here. See bug 1432758.
   }
 
 private:
