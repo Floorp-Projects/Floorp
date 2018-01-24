@@ -37,6 +37,9 @@
 
 namespace mozilla {
 
+typedef ContentEventHandler::NodePosition NodePosition;
+typedef ContentEventHandler::NodePositionBefore NodePositionBefore;
+
 using namespace widget;
 
 LazyLogModule sIMECOLog("IMEContentObserver");
@@ -188,7 +191,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
  NS_INTERFACE_MAP_ENTRY(nsIReflowObserver)
  NS_INTERFACE_MAP_ENTRY(nsIScrollObserver)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
- NS_INTERFACE_MAP_ENTRY(nsIEditorObserver)
  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
 NS_INTERFACE_MAP_END
 
@@ -470,7 +472,7 @@ IMEContentObserver::ObserveEditableNode()
 
   mIsObserving = true;
   if (mEditorBase) {
-    mEditorBase->AddEditorObserver(this);
+    mEditorBase->SetIMEContentObserver(this);
   }
 
   if (!WasInitializedWithPlugin()) {
@@ -547,7 +549,7 @@ IMEContentObserver::UnregisterObservers()
   mIsObserving = false;
 
   if (mEditorBase) {
-    mEditorBase->RemoveEditorObserver(this);
+    mEditorBase->SetIMEContentObserver(nullptr);
   }
 
   if (mSelection) {
@@ -1406,8 +1408,8 @@ IMEContentObserver::UnsuppressNotifyingIME()
   FlushMergeableNotifications();
 }
 
-NS_IMETHODIMP
-IMEContentObserver::EditAction()
+void
+IMEContentObserver::OnEditActionHandled()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("0x%p IMEContentObserver::EditAction()", this));
@@ -1415,10 +1417,9 @@ IMEContentObserver::EditAction()
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
   FlushMergeableNotifications();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 IMEContentObserver::BeforeEditAction()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
@@ -1426,10 +1427,9 @@ IMEContentObserver::BeforeEditAction()
 
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 IMEContentObserver::CancelEditAction()
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
@@ -1438,7 +1438,6 @@ IMEContentObserver::CancelEditAction()
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
   FlushMergeableNotifications();
-  return NS_OK;
 }
 
 void
