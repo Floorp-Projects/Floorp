@@ -23,6 +23,10 @@
   background-repeat: var(--lwt-background-tiling) !important;
 }
 
+:root:-moz-lwtheme:-moz-window-inactive {
+  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color)) !important;
+}
+
 #main-window:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
   min-width: 335px;
