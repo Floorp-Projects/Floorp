@@ -383,6 +383,10 @@ void
 internal_ClearHistogramById(HistogramID histogramId, ProcessID processId, SessionType sessionType)
 {
   size_t index = internal_HistogramStorageIndex(histogramId, processId, sessionType);
+  if (gHistogramStorage[index] == gExpiredHistogram) {
+    // We keep gExpiredHistogram until TelemetryHistogram::DeInitializeGlobalState
+    return;
+  }
   delete gHistogramStorage[index];
   gHistogramStorage[index] = nullptr;
 }
