@@ -18,8 +18,6 @@
         <radio id="searchBarShownRadio" value="true" label="&searchBar.shown.label;"/>
         <image class="searchBarImage searchBarShownImage" role="presentation"/>
       </radiogroup>
-      <checkbox id="showSearchSuggestionsFirstCheckbox"
-                label="&showSearchSuggestionsAboveHistory.label;"/>
     </groupbox>
 
     <!-- Default Search Engine -->
@@ -48,6 +46,8 @@
         <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions2.label;"
                   accesskey="&showURLBarSuggestions2.accesskey;"
                   preference="browser.urlbar.suggest.searches"/>
+        <checkbox id="showSearchSuggestionsFirstCheckbox"
+                  label="&showSearchSuggestionsAboveHistory.label;"/>
         <hbox id="urlBarSuggestionPermanentPBLabel"
               align="center" class="indent">
           <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
