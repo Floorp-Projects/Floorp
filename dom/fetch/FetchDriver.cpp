@@ -622,6 +622,12 @@ FetchDriver::HttpFetch(const nsACString& aPreferredAlternativeDataType)
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = internalChan->SetIntegrityMetadata(mRequest->GetIntegrity());
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    // Set the initiator type
+    nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChan));
+    if (timedChannel) {
+      timedChannel->SetInitiatorType(NS_LITERAL_STRING("fetch"));
+    }
   }
 
   // Step 5. Proxy authentication will be handled by Necko.
