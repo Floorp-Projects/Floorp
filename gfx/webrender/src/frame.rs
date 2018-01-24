@@ -419,8 +419,8 @@ impl<'a> FlattenContext<'a> {
                         self.builder.add_image(
                             clip_and_scroll,
                             &prim_info,
-                            &info.stretch_size,
-                            &info.tile_spacing,
+                            info.stretch_size,
+                            info.tile_spacing,
                             None,
                             info.image_key,
                             info.image_rendering,
@@ -934,8 +934,8 @@ impl<'a> FlattenContext<'a> {
             self.builder.add_image(
                 clip_and_scroll,
                 &prim_info,
-                &stretched_size,
-                &info.tile_spacing,
+                stretched_size,
+                info.tile_spacing,
                 None,
                 info.image_key,
                 info.image_rendering,
@@ -1101,6 +1101,8 @@ impl FrameContext {
         RenderedDocument::new(self.pipeline_epoch_map.clone(), nodes_bouncing_back, frame)
     }
 
+    //TODO: this can probably be simplified if `build()` is called directly by RB.
+    // The only things it needs from the frame context is the CST and frame ID.
     pub fn build_rendered_document(
         &mut self,
         frame_builder: &mut FrameBuilder,
