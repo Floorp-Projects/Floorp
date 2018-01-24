@@ -21,7 +21,7 @@ struct ImageGenerator {
 }
 
 impl ImageGenerator {
-    fn new() -> ImageGenerator {
+    fn new() -> Self {
         ImageGenerator {
             next_pattern: 0,
             patterns: [
@@ -63,10 +63,7 @@ impl webrender::ExternalImageHandler for ImageGenerator {
     fn lock(&mut self, _key: ExternalImageId, channel_index: u8) -> webrender::ExternalImage {
         self.generate_image(channel_index as u32);
         webrender::ExternalImage {
-            u0: 0.0,
-            v0: 0.0,
-            u1: 1.0,
-            v1: 1.0,
+            uv: TexelRect::new(0.0, 0.0, 1.0, 1.0),
             source: webrender::ExternalImageSource::RawData(&self.current_image),
         }
     }
@@ -245,7 +242,7 @@ impl Example for App {
                         let image_data = ExternalImageData {
                             id: ExternalImageId(0),
                             channel_index: size as u8,
-                            image_type: ExternalImageType::ExternalBuffer,
+                            image_type: ExternalImageType::Buffer,
                         };
 
                         updates.add_image(
@@ -290,7 +287,7 @@ impl Example for App {
     fn get_image_handlers(
         &mut self,
         _gl: &gl::Gl,
-    ) -> (Option<Box<webrender::ExternalImageHandler>>, 
+    ) -> (Option<Box<webrender::ExternalImageHandler>>,
           Option<Box<webrender::OutputImageHandler>>) {
         (Some(Box::new(ImageGenerator::new())), None)
     }

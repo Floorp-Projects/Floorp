@@ -158,6 +158,8 @@ extern crate ws;
 extern crate image;
 #[cfg(feature = "debugger")]
 extern crate base64;
+#[cfg(all(feature = "capture", feature = "png"))]
+extern crate png;
 
 pub extern crate webrender_api;
 

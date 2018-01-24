@@ -51,10 +51,7 @@ impl webrender::OutputImageHandler for OutputHandler {
 impl webrender::ExternalImageHandler for ExternalHandler {
     fn lock(&mut self, _key: ExternalImageId, _channel_index: u8) -> webrender::ExternalImage {
         webrender::ExternalImage {
-            u0: 0.0,
-            v0: 0.0,
-            u1: 1.0,
-            v1: 1.0,
+            uv: TexelRect::new(0.0, 0.0, 1.0, 1.0),
             source: webrender::ExternalImageSource::NativeTexture(self.texture_id),
         }
     }
@@ -77,7 +74,7 @@ impl App {
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(0),
                 channel_index: 0,
-                image_type: ExternalImageType::Texture2DHandle,
+                image_type: ExternalImageType::TextureHandle(TextureTarget::Default),
             }),
             None,
         );
