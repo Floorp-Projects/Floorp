@@ -1801,12 +1801,6 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 {
   AssertIsOnMainThread();
 
-  // XXXcatalinb: We need to have a separate load group that's linked to
-  // an existing tab child to pass security checks on b2g.
-  // This should be fixed in bug 1125961, but for now we enforce updating
-  // the overriden load group when intercepting a fetch.
-  MOZ_ASSERT_IF(aWhy == FetchEvent, aLoadGroup);
-
   // Defaults to no new worker created, but if there is one, we'll set the value
   // to true at the end of this function.
   if (aNewWorkerCreated) {
@@ -1814,6 +1808,14 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
 
   if (mWorkerPrivate) {
+    // If we have a load group here then use it to update the service worker
+    // load group.  This was added when we needed the load group's tab child
+    // to pass some security checks.  Those security checks are gone, though,
+    // and we could possibly remove this now.  For now we just do it
+    // opportunistically.  When the service worker is running in a separate
+    // process from the client that initiated the intercepted channel, then
+    // the load group will be nullptr.  UpdateOverrideLoadGroup ignores nullptr
+    // load groups.
     mWorkerPrivate->UpdateOverridenLoadGroup(aLoadGroup);
     RenewKeepAliveToken(aWhy);
 
