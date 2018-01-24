@@ -600,7 +600,7 @@ the built executable with `./mach geckodriver -- --other --flags`.
 
 [Rust]: https://www.rust-lang.org/
 [Mozilla]: https://www.mozilla.org/en-US/
-[webdriver crate]: https://github.com/mozilla/webdriver-rust
+[webdriver crate]: https://crates.io/crates/webdriver
 [commands]: https://docs.rs/webdriver/0.25.0/webdriver/command/index.html
 [responses]: https://docs.rs/webdriver/0.25.0/webdriver/response/index.html
 [errors]: https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html
