@@ -12,18 +12,16 @@
 #include "nsCOMPtr.h"
 #include "DOMMediaStream.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/Mutex.h"
 
 #include "VideoUtils.h"
 #include "MediaEngine.h"
+#include "MediaEnginePrefs.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
 #include "StreamTracks.h"
-#ifdef MOZ_WEBRTC
-#include "MediaEngineCameraVideoSource.h"
-#endif
+#include "MediaEngineSource.h"
 #include "MediaStreamGraph.h"
-#include "MediaTrackConstraints.h"
 #include "SineWaveGenerator.h"
 
 namespace mozilla {
@@ -37,194 +35,168 @@ class MediaEngineDefault;
 /**
  * The default implementation of the MediaEngine interface.
  */
-class MediaEngineDefaultVideoSource : public nsITimerCallback,
-                                      public nsINamed,
-#ifdef MOZ_WEBRTC
-                                      public MediaEngineCameraVideoSource
-#else
-                                      public MediaEngineVideoSource
-#endif
+class MediaEngineDefaultVideoSource : public MediaEngineSource
 {
 public:
   MediaEngineDefaultVideoSource();
 
-  void GetName(nsAString&) const override;
-  void GetUUID(nsACString&) const override;
+  bool IsAvailable() const override
+  {
+    AssertIsOnOwningThread();
+    return mState == kReleased;
+  }
+  nsString GetName() const override;
+  nsCString GetUUID() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
-                    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                    const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
+  nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
+                       const dom::MediaTrackConstraints& aConstraints,
+                       const MediaEnginePrefs& aPrefs,
+                       const nsString& aDeviceId,
+                       const char** aOutBadConstraint) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(AllocationHandle* aHandle,
-                   const dom::MediaTrackConstraints& aConstraints,
-                   const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId,
-                   const char** aOutBadConstraint) override;
-  void NotifyPull(MediaStreamGraph* aGraph,
-                  SourceMediaStream *aSource,
-                  TrackID aId,
-                  StreamTime aDesiredTime,
-                  const PrincipalHandle& aPrincipalHandle) override;
+  nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
+  void Pull(const RefPtr<const AllocationHandle>& aHandle,
+            const RefPtr<SourceMediaStream>& aStream,
+            TrackID aTrackID,
+            StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipalHandle) override;
+
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
-  bool IsFake() override {
+  bool IsFake() const override
+  {
     return true;
   }
 
-  dom::MediaSourceEnum GetMediaSource() const override {
+  dom::MediaSourceEnum GetMediaSource() const override
+  {
     return dom::MediaSourceEnum::Camera;
   }
-
-  nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  void Shutdown() override {
-    Stop(mSource, mTrackID);
-    MonitorAutoLock lock(mMonitor);
-    mImageContainer = nullptr;
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
 
 protected:
   ~MediaEngineDefaultVideoSource();
 
-  friend class MediaEngineDefault;
+  /**
+   * Called by mTimer when it's time to generate a new frame.
+   */
+  void GenerateFrame();
 
-  RefPtr<SourceMediaStream> mSource;
-  TrackID mTrackID;
   nsCOMPtr<nsITimer> mTimer;
 
-#ifndef MOZ_WEBRTC
-  // mMonitor protects mImage/mImageContainer access/changes, and
-  // transitions of mState from kStarted to kStopped (which are combined
-  // with EndTrack() and image changes).
-  Monitor mMonitor;
-  RefPtr<layers::Image> mImage;
   RefPtr<layers::ImageContainer> mImageContainer;
-#endif
+
+  // mMutex protects mState, mImage, mStream, mTrackID
+  Mutex mMutex;
+
+  // Current state of this source.
+  // Set under mMutex on the owning thread. Accessed under one of the two.
+  MediaEngineSourceState mState = kReleased;
+  RefPtr<layers::Image> mImage;
+  RefPtr<SourceMediaStream> mStream;
+  TrackID mTrackID = TRACK_NONE;
 
   MediaEnginePrefs mOpts;
-  int mCb;
-  int mCr;
+  int mCb = 16;
+  int mCr = 16;
 };
 
 class SineWaveGenerator;
 
-class MediaEngineDefaultAudioSource : public MediaEngineAudioSource
+class MediaEngineDefaultAudioSource : public MediaEngineSource
 {
 public:
   MediaEngineDefaultAudioSource();
 
-  void GetName(nsAString&) const override;
-  void GetUUID(nsACString&) const override;
+  bool IsAvailable() const override
+  {
+    AssertIsOnOwningThread();
+    return mState == kReleased;
+  }
+  nsString GetName() const override;
+  nsCString GetUUID() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
-                    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                    const ipc::PrincipalInfo& aPrincipalInfo,
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
-  nsresult Deallocate(AllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
+  nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
+                       const dom::MediaTrackConstraints& aConstraints,
+                       const MediaEnginePrefs& aPrefs,
+                       const nsString& aDeviceId,
+                       const char** aOutBadConstraint) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
-  nsresult Restart(AllocationHandle* aHandle,
-                   const dom::MediaTrackConstraints& aConstraints,
-                   const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId,
-                   const char** aOutBadConstraint) override;
+  nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
   void inline AppendToSegment(AudioSegment& aSegment,
                               TrackTicks aSamples,
                               const PrincipalHandle& aPrincipalHandle);
-  void NotifyPull(MediaStreamGraph* aGraph,
-                  SourceMediaStream *aSource,
-                  TrackID aId,
-                  StreamTime aDesiredTime,
-                  const PrincipalHandle& aPrincipalHandle) override;
+  void Pull(const RefPtr<const AllocationHandle>& aHandle,
+            const RefPtr<SourceMediaStream>& aStream,
+            TrackID aTrackID,
+            StreamTime aDesiredTime,
+            const PrincipalHandle& aPrincipalHandle) override;
 
-  void NotifyOutputData(MediaStreamGraph* aGraph,
-                        AudioDataValue* aBuffer, size_t aFrames,
-                        TrackRate aRate, uint32_t aChannels) override
-  {}
-  void NotifyInputData(MediaStreamGraph* aGraph,
-                       const AudioDataValue* aBuffer, size_t aFrames,
-                       TrackRate aRate, uint32_t aChannels) override
-  {}
-  void DeviceChanged() override
-  {}
-  bool IsFake() override {
+  bool IsFake() const override
+  {
     return true;
   }
 
-  dom::MediaSourceEnum GetMediaSource() const override {
-    return dom::MediaSourceEnum::Microphone;
-  }
-
-  nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override
+  dom::MediaSourceEnum GetMediaSource() const override
   {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return dom::MediaSourceEnum::Microphone;
   }
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
 
 protected:
   ~MediaEngineDefaultAudioSource();
 
-  TrackID mTrackID;
+  // mMutex protects mState, mStream, mTrackID
+  Mutex mMutex;
 
-  TrackTicks mLastNotify; // Accessed in ::Start(), then on NotifyPull (from MSG thread)
-  uint32_t mFreq; // ditto
+  // Current state of this source.
+  // Set under mMutex on the owning thread. Accessed under one of the two.
+  MediaEngineSourceState mState = kReleased;
+  RefPtr<SourceMediaStream> mStream;
+  TrackID mTrackID = TRACK_NONE;
 
-  // Created on Start, then accessed from NotifyPull (MSG thread)
+  // Accessed in ::Start(), then on Pull (from MSG thread)
+  TrackTicks mLastNotify = 0;
+  uint32_t mFreq = 1000; // ditto
+
+  // Created on Start, then accessed from Pull (MSG thread)
   nsAutoPtr<SineWaveGenerator> mSineGenerator;
 };
 
 
 class MediaEngineDefault : public MediaEngine
 {
-  typedef MediaEngine Super;
 public:
-  explicit MediaEngineDefault() : mMutex("mozilla::MediaEngineDefault") {}
+  MediaEngineDefault() = default;
 
-  void EnumerateVideoDevices(dom::MediaSourceEnum,
-                             nsTArray<RefPtr<MediaEngineVideoSource> >*) override;
-  void EnumerateAudioDevices(dom::MediaSourceEnum,
-                             nsTArray<RefPtr<MediaEngineAudioSource> >*) override;
-  void Shutdown() override {
-    MutexAutoLock lock(mMutex);
-
-    for (auto& source : mVSources) {
-      source->Shutdown();
-    }
-    for (auto& source : mASources) {
-      source->Shutdown();
-    }
-    mVSources.Clear();
-    mASources.Clear();
-  };
+  void EnumerateDevices(dom::MediaSourceEnum,
+                        nsTArray<RefPtr<MediaEngineSource>>*) override;
+  void Shutdown() override;
 
 private:
-  ~MediaEngineDefault() {}
+  ~MediaEngineDefault() = default;
 
-  Mutex mMutex;
-  // protected with mMutex:
-  nsTArray<RefPtr<MediaEngineVideoSource> > mVSources;
-  nsTArray<RefPtr<MediaEngineAudioSource> > mASources;
+  nsTArray<RefPtr<MediaEngineDefaultVideoSource>> mVSources;
+  nsTArray<RefPtr<MediaEngineDefaultAudioSource>> mASources;
 };
 
 } // namespace mozilla

@@ -55,7 +55,6 @@ async protocol PCameras
   manager PBackground;
 
 child:
-  async FrameSizeChange(CaptureEngine capEngine, int cap_id, int w, int h);
   // transfers ownership of |buffer| from parent to child
   async DeliverFrame(CaptureEngine capEngine, int streamId,
                      Shmem buffer, VideoFrameProperties props);

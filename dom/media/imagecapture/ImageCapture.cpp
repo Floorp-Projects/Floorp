@@ -14,7 +14,7 @@
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "nsIDocument.h"
 #include "CaptureTask.h"
-#include "MediaEngine.h"
+#include "MediaEngineSource.h"
 
 namespace mozilla {
 
