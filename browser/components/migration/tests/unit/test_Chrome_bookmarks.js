@@ -72,9 +72,9 @@ add_task(async function() {
 
   await OS.File.writeAtomic(target.path, JSON.stringify(bookmarksData), {encoding: "utf-8"});
 
-  let migrator = MigrationUtils.getMigrator("chrome");
+  let migrator = await MigrationUtils.getMigrator("chrome");
   // Sanity check for the source.
-  Assert.ok(migrator.sourceExists);
+  Assert.ok(await migrator.isSourceAvailable());
 
   let itemsSeen = {bookmarks: 0, folders: 0};
   let bmObserver = {

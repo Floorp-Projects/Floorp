@@ -1,9 +1,9 @@
 "use strict";
 
 add_task(async function() {
-  let migrator = MigrationUtils.getMigrator("ie");
+  let migrator = await MigrationUtils.getMigrator("ie");
   // Sanity check for the source.
-  Assert.ok(migrator.sourceExists);
+  Assert.ok(await migrator.isSourceAvailable());
 
   // Wait for the imported bookmarks.  Check that "From Internet Explorer"
   // folders are created in the menu and on the toolbar.

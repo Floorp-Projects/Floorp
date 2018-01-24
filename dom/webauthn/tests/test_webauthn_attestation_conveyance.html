@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>W3C Web Authentication - Attestation Conveyance</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <script type="text/javascript" src="cbor/cbor.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>W3C Web Authentication - Attestation Conveyance</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1428916">Mozilla Bug 1428916</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1416056">Mozilla Bug 1416056</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    function getAttestationCertFromAttestationBuffer(aAttestationBuffer) {
+      return webAuthnDecodeCBORAttestation(aAttestationBuffer)
+      .then((aAttestationObj) => {
+        let attestationCertDER = aAttestationObj.attStmt.x5c[0];
+        let certDERBuffer = attestationCertDER.slice(0, attestationCertDER.byteLength).buffer;
+        let certAsn1 = org.pkijs.fromBER(certDERBuffer);
+        return new org.pkijs.simpl.CERT({ schema: certAsn1.result });
+      });
+    }
+
+    function verifyAnonymizedCertificate(aResult) {
+      // TODO: Update this logic with Bug 1430150.
+      // Until then, all certificates are direct.
+      return verifyDirectCertificate(aResult);
+    }
+
+    function verifyDirectCertificate(aResult) {
+      return getAttestationCertFromAttestationBuffer(aResult.response.attestationObject)
+      .then((attestationCert) => {
+        let subject = attestationCert.subject.types_and_values[0].value.value_block.value;
+        is(subject, "Firefox U2F Soft Token", "Subject name matches the direct Soft Token")
+      });
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectTypeError(aResult) {
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError, got " + aResult);
+    }
+
+    add_task(() => {
+      // Enable the softtoken.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", true],
+        ["security.webauth.webauthn_enable_usbtoken", false],
+      ]});
+    });
+
+    // Start a new MakeCredential() request.
+    function requestMakeCredential(attestation) {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+        attestation,
+      };
+
+      return navigator.credentials.create({publicKey});
+    }
+
+    // Test success cases for make credential.
+    add_task(async () => {
+      // No selection criteria should be equal to none, which means anonymized
+      await requestMakeCredential()
+        .then(verifyAnonymizedCertificate)
+        .catch(arrivingHereIsBad);
+
+      // Request no attestation.
+      await requestMakeCredential("none")
+        .then(verifyAnonymizedCertificate)
+        .catch(arrivingHereIsBad);
+
+      // Request indirect attestation, which is the same as none.
+      await requestMakeCredential("indirect")
+        .then(verifyAnonymizedCertificate)
+        .catch(arrivingHereIsBad);
+
+      // Request direct attestation, which should prompt for user intervention,
+      // once 1430150 lands.
+      await requestMakeCredential("direct")
+        .then(verifyDirectCertificate)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test failure cases for make credential.
+    add_task(async () => {
+      // Request a platform authenticator.
+      await requestMakeCredential("unknown")
+        .then(arrivingHereIsBad)
+        .catch(expectTypeError);
+    });
+  </script>
+
+</body>
+</html>

@@ -3,9 +3,9 @@
 add_task(async function() {
   registerFakePath("ULibDir", do_get_file("Library/"));
 
-  let migrator = MigrationUtils.getMigrator("safari");
+  let migrator = await MigrationUtils.getMigrator("safari");
   // Sanity check for the source.
-  Assert.ok(migrator.sourceExists);
+  Assert.ok(await migrator.isSourceAvailable());
 
   // Wait for the imported bookmarks.  Check that "From Safari"
   // folders are created on the toolbar.

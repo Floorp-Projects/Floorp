@@ -48,6 +48,10 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     return this.popupBox.querySelector(":scope > [selected]");
   }
 
+  namedItem(name) {
+    return this.popupBox.querySelector(`:scope > [name="${CSS.escape(name)}"]`);
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "blur": {

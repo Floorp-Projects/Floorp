@@ -35,8 +35,8 @@ let requestStore = new PaymentsStore({
       shippingType: "shipping",
     },
   },
-  savedAddresses: [],
-  savedBasicCards: [],
+  savedAddresses: {},
+  savedBasicCards: {},
 });
 
 
