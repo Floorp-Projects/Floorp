@@ -657,10 +657,16 @@ class TestRecursiveMakeBackend(BackendTester):
 
     def test_ipdl_sources(self):
         """Test that PREPROCESSED_IPDL_SOURCES and IPDL_SOURCES are written to ipdlsrcs.mk correctly."""
-        env = self._consume('ipdl_sources', RecursiveMakeBackend)
+        env = self._get_environment('ipdl_sources')
 
-        manifest_path = mozpath.join(env.topobjdir,
-            'ipc', 'ipdl', 'ipdlsrcs.mk')
+        # Make substs writable so we can set the value of IPDL_ROOT to reflect
+        # the correct objdir.
+        env.substs = dict(env.substs)
+        env.substs['IPDL_ROOT'] = env.topobjdir
+
+        self._consume('ipdl_sources', RecursiveMakeBackend, env)
+
+        manifest_path = mozpath.join(env.topobjdir, 'ipdlsrcs.mk')
         lines = [l.strip() for l in open(manifest_path, 'rt').readlines()]
 
         # Handle Windows paths correctly
@@ -669,7 +675,7 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = [
             "ALL_IPDLSRCS := bar1.ipdl foo1.ipdl %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),
             "CPPSRCS := UnifiedProtocols0.cpp",
-            "IPDLDIRS := %s/ipc/ipdl %s/bar %s/foo" % (env.topobjdir, topsrcdir, topsrcdir),
+            "IPDLDIRS := %s %s/bar %s/foo" % (env.topobjdir, topsrcdir, topsrcdir),
         ]
 
         found = [str for str in lines if str.startswith(('ALL_IPDLSRCS',

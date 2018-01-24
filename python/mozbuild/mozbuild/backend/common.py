@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import itertools
 import json
 import os
 
@@ -24,12 +23,11 @@ from mozbuild.frontend.data import (
     ChromeManifestEntry,
     ConfigFileSubstitution,
     Exports,
-    IPDLFile,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     GeneratedSources,
     GnProjectData,
-    PreprocessedIPDLFile,
+    IPDLCollection,
     SharedLibrary,
     UnifiedSources,
     XPIDLFile,
@@ -94,22 +92,6 @@ class BinariesCollection(object):
         self.shared_libraries = []
         self.programs = []
 
-class IPDLCollection(object):
-    """Collects IPDL files during the build."""
-
-    def __init__(self):
-        self.sources = set()
-        self.preprocessed_sources = set()
-
-    def all_sources(self):
-        return self.sources | self.preprocessed_sources
-
-    def all_regular_sources(self):
-        return self.sources
-
-    def all_preprocessed_sources(self):
-        return self.preprocessed_sources
-
 class CommonBackend(BuildBackend):
     """Holds logic common to all build backends."""
 
@@ -117,7 +99,6 @@ class CommonBackend(BuildBackend):
         self._idl_manager = XPIDLManager(self.environment)
         self._binaries = BinariesCollection()
         self._configs = set()
-        self._ipdls = IPDLCollection()
         self._generated_sources = set()
 
     def consume_object(self, obj):
@@ -140,19 +121,16 @@ class CommonBackend(BuildBackend):
         elif isinstance(obj, WebIDLCollection):
             self._handle_webidl_collection(obj)
 
-        elif isinstance(obj, PreprocessedIPDLFile):
-            if self.environment.is_artifact_build:
-                return True
-
-            self._ipdls.preprocessed_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-
-        elif isinstance(obj, IPDLFile):
-            # IPDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._ipdls.sources.add(mozpath.join(obj.srcdir, obj.basename))
+        elif isinstance(obj, IPDLCollection):
+            self._handle_generated_sources(mozpath.join(obj.objdir, f)
+                                           for f in obj.all_generated_sources())
+            self._write_unified_files(obj.unified_source_mapping, obj.objdir,
+                                      poison_windows_h=False)
+            self._handle_ipdl_sources(obj.objdir,
+                                      list(sorted(obj.all_sources())),
+                                      list(sorted(obj.all_preprocessed_sources())),
+                                      list(sorted(obj.all_regular_sources())),
+                                      obj.unified_source_mapping)
 
         elif isinstance(obj, UnifiedSources):
             # Unified sources aren't relevant to artifact builds.
@@ -197,34 +175,6 @@ class CommonBackend(BuildBackend):
             self._handle_idl_manager(self._idl_manager)
             self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
 
-        sorted_ipdl_sources = list(sorted(self._ipdls.all_sources()))
-        sorted_nonstatic_ipdl_sources = list(sorted(self._ipdls.all_preprocessed_sources()))
-        sorted_static_ipdl_sources = list(sorted(self._ipdls.all_regular_sources()))
-
-        def files_from(ipdl):
-            base = mozpath.basename(ipdl)
-            root, ext = mozpath.splitext(base)
-
-            # Both .ipdl and .ipdlh become .cpp files
-            files = ['%s.cpp' % root]
-            if ext == '.ipdl':
-                # .ipdl also becomes Child/Parent.cpp files
-                files.extend(['%sChild.cpp' % root,
-                              '%sParent.cpp' % root])
-            return files
-
-        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
-
-        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
-        self._handle_generated_sources(mozpath.join(ipdl_dir, f) for f in ipdl_cppsrcs)
-        unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
-                                                          unified_prefix='UnifiedProtocols',
-                                                          unified_suffix='cpp',
-                                                          files_per_unified_file=16))
-
-        self._write_unified_files(unified_source_mapping, ipdl_dir, poison_windows_h=False)
-        self._handle_ipdl_sources(ipdl_dir, sorted_ipdl_sources, sorted_nonstatic_ipdl_sources,
-                                  sorted_static_ipdl_sources, unified_source_mapping)
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
