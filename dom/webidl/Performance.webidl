@@ -42,7 +42,7 @@ partial interface Performance {
 };
 
 // http://www.w3.org/TR/resource-timing/#extensions-performance-interface
-[Exposed=(Window,Worker)]
+[Exposed=Window]
 partial interface Performance {
   void clearResourceTimings();
   void setResourceTimingBufferSize(unsigned long maxSize);

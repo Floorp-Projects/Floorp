@@ -10,7 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=(Window,Worker)]
 interface PerformanceResourceTiming : PerformanceEntry
 {
   readonly attribute DOMString initiatorType;

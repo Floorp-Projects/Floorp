@@ -256,7 +256,6 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
                              nsContentUtils::GetSystemPrincipal(),
                              nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                              nsIContentPolicy::TYPE_SCRIPT,
-                             nullptr, // aPerformanceStorage
                              nullptr, // aLoadGroup
                              nullptr, // aCallbacks
                              nsIRequest::LOAD_NORMAL,

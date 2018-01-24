@@ -41,7 +41,6 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
-#include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
@@ -202,8 +201,7 @@ public:
   void Construct(nsIPrincipal* aPrincipal,
                  nsIGlobalObject* aGlobalObject,
                  nsIURI* aBaseURI = nullptr,
-                 nsILoadGroup* aLoadGroup = nullptr,
-                 PerformanceStorage* aPerformanceStorage = nullptr)
+                 nsILoadGroup* aLoadGroup = nullptr)
   {
     MOZ_ASSERT(aPrincipal);
     nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobalObject);
@@ -216,7 +214,6 @@ public:
     BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
     mLoadGroup = aLoadGroup;
-    mPerformanceStorage = aPerformanceStorage;
   }
 
   void InitParameters(bool aAnon, bool aSystem);
@@ -590,8 +587,6 @@ protected:
   nsCOMPtr<nsIDocument> mResponseXML;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
-
-  RefPtr<PerformanceStorage> mPerformanceStorage;
 
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor

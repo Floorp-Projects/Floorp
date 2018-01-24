@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ClientSource.h"
-#include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozIThirdPartyUtil.h"
@@ -334,7 +333,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   // mReservedClientInfo must be handled specially during redirect
   // mInitialClientInfo must be handled specially during redirect
   , mController(rhs.mController)
-  , mPerformanceStorage(rhs.mPerformanceStorage)
   , mLoadingContext(rhs.mLoadingContext)
   , mContextForTopLevelLoad(rhs.mContextForTopLevelLoad)
   , mSecurityFlags(rhs.mSecurityFlags)
@@ -1246,18 +1244,6 @@ const Maybe<ServiceWorkerDescriptor>&
 LoadInfo::GetController()
 {
   return mController;
-}
-
-void
-LoadInfo::SetPerformanceStorage(PerformanceStorage* aPerformanceStorage)
-{
-  mPerformanceStorage = aPerformanceStorage;
-}
-
-PerformanceStorage*
-LoadInfo::GetPerformanceStorage()
-{
-  return mPerformanceStorage;
 }
 
 } // namespace net

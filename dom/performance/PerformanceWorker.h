@@ -21,12 +21,6 @@ class PerformanceWorker final : public Performance
 public:
   explicit PerformanceWorker(workers::WorkerPrivate* aWorkerPrivate);
 
-  PerformanceStorage* AsPerformanceStorage() override
-  {
-    MOZ_CRASH("This should not be called on workers.");
-    return nullptr;
-  }
-
   virtual PerformanceTiming* Timing() override
   {
     MOZ_CRASH("This should not be called on workers.");
@@ -37,6 +31,12 @@ public:
   {
     MOZ_CRASH("This should not be called on workers.");
     return nullptr;
+  }
+
+  virtual void AddEntry(nsIHttpChannel* channel,
+                        nsITimedChannel* timedChannel) override
+  {
+    MOZ_CRASH("This should not be called on workers.");
   }
 
   TimeStamp CreationTimeStamp() const override;
@@ -68,7 +68,7 @@ protected:
 
   void DispatchBufferFullEvent() override
   {
-    // Nothing to do here. See bug 1432758.
+    MOZ_CRASH("This should not be called on workers.");
   }
 
 private:

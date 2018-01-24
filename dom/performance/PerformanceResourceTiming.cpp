@@ -11,7 +11,7 @@ using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PerformanceResourceTiming,
                                    PerformanceEntry,
-                                   mPerformance)
+                                   mTiming)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceResourceTiming,
                                                PerformanceEntry)
@@ -23,14 +23,45 @@ NS_INTERFACE_MAP_END_INHERITING(PerformanceEntry)
 NS_IMPL_ADDREF_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 NS_IMPL_RELEASE_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 
-PerformanceResourceTiming::PerformanceResourceTiming(UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
+PerformanceResourceTiming::PerformanceResourceTiming(PerformanceTiming* aPerformanceTiming,
                                                      Performance* aPerformance,
-                                                     const nsAString& aName)
-  : PerformanceEntry(aPerformance->GetParentObject(), aName, NS_LITERAL_STRING("resource"))
-  , mTimingData(Move(aPerformanceTiming))
-  , mPerformance(aPerformance)
+                                                     const nsAString& aName,
+                                                     nsIHttpChannel* aChannel)
+: PerformanceEntry(aPerformance->GetParentObject(), aName, NS_LITERAL_STRING("resource")),
+  mTiming(aPerformanceTiming),
+  mEncodedBodySize(0),
+  mTransferSize(0),
+  mDecodedBodySize(0)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
+  SetPropertiesFromChannel(aChannel);
+}
+
+void
+PerformanceResourceTiming::SetPropertiesFromChannel(nsIHttpChannel* aChannel)
+{
+  if (!aChannel) {
+    return;
+  }
+
+  nsAutoCString protocol;
+  Unused << aChannel->GetProtocolVersion(protocol);
+  SetNextHopProtocol(NS_ConvertUTF8toUTF16(protocol));
+
+  uint64_t encodedBodySize = 0;
+  Unused << aChannel->GetEncodedBodySize(&encodedBodySize);
+  SetEncodedBodySize(encodedBodySize);
+
+  uint64_t transferSize = 0;
+  Unused << aChannel->GetTransferSize(&transferSize);
+  SetTransferSize(transferSize);
+
+  uint64_t decodedBodySize = 0;
+  Unused << aChannel->GetDecodedBodySize(&decodedBodySize);
+  if (decodedBodySize == 0) {
+    decodedBodySize = encodedBodySize;
+  }
+  SetDecodedBodySize(decodedBodySize);
 }
 
 PerformanceResourceTiming::~PerformanceResourceTiming()
@@ -47,14 +78,13 @@ PerformanceResourceTiming::StartTime() const
   // Ignore zero values.  The RedirectStart and WorkerStart values
   // can come from earlier redirected channels prior to the AsyncOpen
   // time being recorded.
-  DOMHighResTimeStamp redirect =
-    mTimingData->RedirectStartHighRes(mPerformance);
+  DOMHighResTimeStamp redirect = mTiming->RedirectStartHighRes();
   redirect = redirect ? redirect : DBL_MAX;
 
-  DOMHighResTimeStamp worker = mTimingData->WorkerStartHighRes(mPerformance);
+  DOMHighResTimeStamp worker = mTiming->WorkerStartHighRes();
   worker = worker ? worker : DBL_MAX;
 
-  DOMHighResTimeStamp asyncOpen = mTimingData->AsyncOpenHighRes(mPerformance);
+  DOMHighResTimeStamp asyncOpen = mTiming->AsyncOpenHighRes();
 
   return std::min(asyncOpen, std::min(redirect, worker));
 }
@@ -76,7 +106,5 @@ PerformanceResourceTiming::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSize
 {
   return PerformanceEntry::SizeOfExcludingThis(aMallocSizeOf) +
          mInitiatorType.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         (mTimingData
-            ? mTimingData->NextHopProtocol().SizeOfExcludingThisIfUnshared(aMallocSizeOf)
-            : 0);
+         mNextHopProtocol.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }

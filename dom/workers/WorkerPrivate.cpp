@@ -64,7 +64,6 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/Performance.h"
-#include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -7198,18 +7197,6 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
     aString.Append("|");
     aString.Append(holder->Name());
   }
-}
-
-PerformanceStorage*
-WorkerPrivate::GetPerformanceStorage()
-{
-  AssertIsOnMainThread();
-
-  if (!mPerformanceStorage) {
-    mPerformanceStorage = PerformanceStorageWorker::Create(this);
-  }
-
-  return mPerformanceStorage;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)
