@@ -67,6 +67,8 @@ config = {
         "modules/*",
         "mozbase/*",
         "tools/*",
+        "mozpack/*",
+        "mozbuild/*",
     ],
     "specific_tests_zip_dirs": {
         "mochitest": ["mochitest/*"],

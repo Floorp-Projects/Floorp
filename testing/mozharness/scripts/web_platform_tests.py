@@ -277,7 +277,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
                           "mozbase/*",
                           "marionette/*",
                           "tools/*",
-                          "web-platform/*"],
+                          "web-platform/*",
+                          "mozpack/*",
+                          "mozbuild/*"],
             suite_categories=["web-platform"])
 
     def _install_fonts(self):
