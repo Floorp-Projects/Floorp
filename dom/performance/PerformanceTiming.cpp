@@ -207,16 +207,24 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
     aChannel->GetAllRedirectsPassTimingAllowCheck(&redirectsPassCheck);
     mReportCrossOriginRedirect = mTimingAllowed && redirectsPassCheck;
 
-    nsAutoCString protocol;
-    Unused << aHttpChannel->GetProtocolVersion(protocol);
-    mNextHopProtocol = NS_ConvertUTF8toUTF16(protocol);
+    SetPropertiesFromHttpChannel(aHttpChannel);
+  }
+}
 
-    Unused << aHttpChannel->GetEncodedBodySize(&mEncodedBodySize);
-    Unused << aHttpChannel->GetTransferSize(&mTransferSize);
-    Unused << aHttpChannel->GetDecodedBodySize(&mDecodedBodySize);
-    if (mDecodedBodySize == 0) {
-      mDecodedBodySize = mEncodedBodySize;
-    }
+void
+PerformanceTimingData::SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel)
+{
+  MOZ_ASSERT(aHttpChannel);
+
+  nsAutoCString protocol;
+  Unused << aHttpChannel->GetProtocolVersion(protocol);
+  mNextHopProtocol = NS_ConvertUTF8toUTF16(protocol);
+
+  Unused << aHttpChannel->GetEncodedBodySize(&mEncodedBodySize);
+  Unused << aHttpChannel->GetTransferSize(&mTransferSize);
+  Unused << aHttpChannel->GetDecodedBodySize(&mDecodedBodySize);
+  if (mDecodedBodySize == 0) {
+    mDecodedBodySize = mEncodedBodySize;
   }
 }
 

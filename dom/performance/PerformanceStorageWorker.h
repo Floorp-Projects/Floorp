@@ -37,7 +37,7 @@ public:
   void AddEntryOnWorker(UniquePtr<PerformanceProxyData>&& aData);
 
 private:
-  PerformanceStorageWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit PerformanceStorageWorker(workers::WorkerPrivate* aWorkerPrivate);
   ~PerformanceStorageWorker();
 
   Mutex mMutex;
