@@ -5,12 +5,17 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import hashlib
+import json
 import os
 import re
+import requests_unixsocket
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
+import urllib
+import urlparse
 import yaml
 
 from mozbuild.util import memoize
@@ -22,6 +27,91 @@ from .. import GECKO
 
 
 IMAGE_DIR = os.path.join(GECKO, 'taskcluster', 'docker')
+
+
+def docker_url(path, **kwargs):
+    docker_socket = os.environ.get('DOCKER_SOCKET', '/var/run/docker.sock')
+    return urlparse.urlunparse((
+        'http+unix',
+        urllib.quote(docker_socket, safe=''),
+        path,
+        '',
+        urllib.urlencode(kwargs),
+        ''))
+
+
+def post_to_docker(tar, api_path, **kwargs):
+    """POSTs a tar file to a given docker API path.
+
+    The tar argument can be anything that can be passed to requests.post()
+    as data (e.g. iterator or file object).
+    The extra keyword arguments are passed as arguments to the docker API.
+    """
+    req = requests_unixsocket.Session().post(
+        docker_url(api_path, **kwargs),
+        data=tar,
+        stream=True,
+        headers={'Content-Type': 'application/x-tar'},
+    )
+    if req.status_code != 200:
+        message = req.json().get('message')
+        if not message:
+            message = 'docker API returned HTTP code {}'.format(
+                req.status_code)
+        raise Exception(message)
+    status_line = {}
+
+    buf = b''
+    for content in req.iter_content(chunk_size=None):
+        if not content:
+            continue
+        # Sometimes, a chunk of content is not a complete json, so we cumulate
+        # with leftovers from previous iterations.
+        buf += content
+        try:
+            data = json.loads(buf)
+        except Exception:
+            continue
+        buf = b''
+        # data is sometimes an empty dict.
+        if not data:
+            continue
+        # Mimick how docker itself presents the output. This code was tested
+        # with API version 1.18 and 1.26.
+        if 'status' in data:
+            if 'id' in data:
+                if sys.stderr.isatty():
+                    total_lines = len(status_line)
+                    line = status_line.setdefault(data['id'], total_lines)
+                    n = total_lines - line
+                    if n > 0:
+                        # Move the cursor up n lines.
+                        sys.stderr.write('\033[{}A'.format(n))
+                    # Clear line and move the cursor to the beginning of it.
+                    sys.stderr.write('\033[2K\r')
+                    sys.stderr.write('{}: {} {}\n'.format(
+                        data['id'], data['status'], data.get('progress', '')))
+                    if n > 1:
+                        # Move the cursor down n - 1 lines, which, considering
+                        # the carriage return on the last write, gets us back
+                        # where we started.
+                        sys.stderr.write('\033[{}B'.format(n - 1))
+                else:
+                    status = status_line.get(data['id'])
+                    # Only print status changes.
+                    if status != data['status']:
+                        sys.stderr.write('{}: {}\n'.format(data['id'], data['status']))
+                        status_line[data['id']] = data['status']
+            else:
+                status_line = {}
+                sys.stderr.write('{}\n'.format(data['status']))
+        elif 'stream' in data:
+            sys.stderr.write(data['stream'])
+        elif 'error' in data:
+            raise Exception(data['error'])
+        else:
+            raise NotImplementedError(repr(data))
+        sys.stderr.flush()
 
 
 def docker_image(name, by_tag=False):

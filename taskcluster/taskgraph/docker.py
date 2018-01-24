@@ -12,7 +12,6 @@ import subprocess
 import tarfile
 import tempfile
 import which
-from subprocess import Popen, PIPE
 from io import BytesIO
 
 from taskgraph.util import docker
@@ -155,9 +154,11 @@ def load_image(url, imageName=None, imageTag=None):
         else:
             imageTag = 'latest'
 
-    docker = None
-    image, tag, layer = None, None, None
-    try:
+    info = {}
+
+    def download_and_modify_image():
+        # This function downloads and edits the downloaded tar file on the fly.
+        # It emits chunked buffers of the editted tar file, as a generator.
         print("Downloading from {}".format(url))
         # get_session() gets us a requests.Session set to retry several times.
         req = get_session().get(url, stream=True)
@@ -168,21 +169,17 @@ def load_image(url, imageName=None, imageTag=None):
             fileobj=decompressed_reader,
             bufsize=zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
 
-        # Seutp piping: tarout | docker
-        docker = Popen(['docker', 'load'], stdin=PIPE)
-        tarout = tarfile.open(mode='w|', fileobj=docker.stdin, format=tarfile.GNU_FORMAT)
-
-        # Read from tarin and write to tarout
+        # Stream through each member of the downloaded tar file individually.
         for member in tarin:
-            # Write non-file members directly (don't use extractfile on links)
+            # Non-file members only need a tar header. Emit one.
             if not member.isfile():
-                tarout.addfile(member)
+                yield member.tobuf(tarfile.GNU_FORMAT)
                 continue
 
-            # Open reader for the member
+            # Open stream reader for the member
             reader = tarin.extractfile(member)
 
-            # If member is repository, we parse and possibly rewrite the image tags
+            # If member is `repositories`, we parse and possibly rewrite the image tags
             if member.name == 'repositories':
                 # Read and parse repositories
                 repos = json.loads(reader.read())
@@ -191,29 +188,37 @@ def load_image(url, imageName=None, imageTag=None):
                 # If there is more than one image or tag, we can't handle it here
                 if len(repos.keys()) > 1:
                     raise Exception('file contains more than one image')
-                image = repos.keys()[0]
+                info['image'] = image = repos.keys()[0]
                 if len(repos[image].keys()) > 1:
                     raise Exception('file contains more than one tag')
-                tag = repos[image].keys()[0]
-                layer = repos[image][tag]
+                info['tag'] = tag = repos[image].keys()[0]
+                info['layer'] = layer = repos[image][tag]
 
                 # Rewrite the repositories file
                 data = json.dumps({imageName or image: {imageTag or tag: layer}})
                 reader = BytesIO(data)
                 member.size = len(data)
 
-            # Add member and reader
-            tarout.addfile(member, reader)
+            # Emit the tar header for this member.
+            yield member.tobuf(tarfile.GNU_FORMAT)
+            # Then emit its content.
+            remaining = member.size
+            while remaining:
+                length = min(remaining, zstd.DECOMPRESSION_RECOMMENDED_OUTPUT_SIZE)
+                buf = reader.read(length)
+                remaining -= len(buf)
+                yield buf
+            # Pad to fill a 512 bytes block, per tar format.
+            remainder = member.size % 512
+            if remainder:
+                yield '\0' * (512 - remainder)
+
             reader.close()
-        tarout.close()
-    finally:
-        if docker:
-            docker.stdin.close()
-        if docker and docker.wait() != 0:
-            raise Exception('loading into docker failed')
+
+    docker.post_to_docker(download_and_modify_image(), '/images/load', quiet=0)
 
     # Check that we found a repositories file
-    if not image or not tag or not layer:
+    if not info.get('image') or not info.get('tag') or not info.get('layer'):
         raise Exception('No repositories file found!')
 
-    return {'image': image, 'tag': tag, 'layer': layer}
+    return info
