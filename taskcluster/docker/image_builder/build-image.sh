@@ -46,14 +46,14 @@ curl -s --fail \
   | jq -jr '(.status + .progress, .error | select(. != null) + "\n"), .stream | select(. != null)'
 
 # Exit non-zero if there is error entries in the log
-if cat /tmp/docker-build.log | jq -se 'add | .error' > /dev/null; then
-  raise_error "Image build failed: `cat /tmp/docker-build.log | jq -rse 'add | .error'`";
+if result=$(jq -se 'add | .error' /tmp/docker-build.log); then
+  raise_error "Image build failed: ${result}";
 fi
 
 # Sanity check that image was built successfully
-if ! cat /tmp/docker-build.log | tail -n 1 | jq -r '.stream' | grep '^Successfully built' > /dev/null; then
+if ! tail -n 1 /tmp/docker-build.log | jq -r '.stream' | grep '^Successfully built' > /dev/null; then
   echo 'docker-build.log for debugging:';
-  cat /tmp/docker-build.log | tail -n 50;
+  tail -n 50 /tmp/docker-build.log;
   raise_error "Image build log didn't with 'Successfully built'";
 fi
 
@@ -63,6 +63,6 @@ fi
 #
 # The script will retry up to 10 times.
 /usr/local/bin/download-and-compress \
-    http+unix://%2Fvar%2Frun%2Fdocker.sock/images/${IMAGE_NAME}:${HASH}/get \
+    "http+unix://%2Fvar%2Frun%2Fdocker.sock/images/${IMAGE_NAME}:${HASH}/get "\
     /builds/worker/workspace/image.tar.zst.tmp \
     /builds/worker/workspace/artifacts/image.tar.zst
