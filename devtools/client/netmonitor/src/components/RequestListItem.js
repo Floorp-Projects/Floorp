@@ -20,19 +20,15 @@ const { RESPONSE_HEADERS } = require("../constants");
   RequestListColumnContentSize,
   RequestListColumnCookies,
   RequestListColumnDomain,
-  RequestListColumnDuration,
-  RequestListColumnEndTime,
   RequestListColumnFile,
-  RequestListColumnLatency,
   RequestListColumnMethod,
   RequestListColumnProtocol,
   RequestListColumnRemoteIP,
   RequestListColumnResponseHeader,
-  RequestListColumnResponseTime,
   RequestListColumnScheme,
   RequestListColumnSetCookies,
-  RequestListColumnStartTime,
   RequestListColumnStatus,
+  RequestListColumnTime,
   RequestListColumnTransferredSize,
   RequestListColumnType,
   RequestListColumnWaterfall
@@ -50,17 +46,8 @@ loader.lazyGetter(this, "RequestListColumnCookies", function () {
 loader.lazyGetter(this, "RequestListColumnDomain", function () {
   return createFactory(require("./RequestListColumnDomain"));
 });
-loader.lazyGetter(this, "RequestListColumnDuration", function () {
-  return createFactory(require("./RequestListColumnDuration"));
-});
-loader.lazyGetter(this, "RequestListColumnEndTime", function () {
-  return createFactory(require("./RequestListColumnEndTime"));
-});
 loader.lazyGetter(this, "RequestListColumnFile", function () {
   return createFactory(require("./RequestListColumnFile"));
-});
-loader.lazyGetter(this, "RequestListColumnLatency", function () {
-  return createFactory(require("./RequestListColumnLatency"));
 });
 loader.lazyGetter(this, "RequestListColumnMethod", function () {
   return createFactory(require("./RequestListColumnMethod"));
@@ -74,17 +61,14 @@ loader.lazyGetter(this, "RequestListColumnRemoteIP", function () {
 loader.lazyGetter(this, "RequestListColumnResponseHeader", function () {
   return createFactory(require("./RequestListColumnResponseHeader"));
 });
-loader.lazyGetter(this, "RequestListColumnResponseTime", function () {
-  return createFactory(require("./RequestListColumnResponseTime"));
+loader.lazyGetter(this, "RequestListColumnTime", function () {
+  return createFactory(require("./RequestListColumnTime"));
 });
 loader.lazyGetter(this, "RequestListColumnScheme", function () {
   return createFactory(require("./RequestListColumnScheme"));
 });
 loader.lazyGetter(this, "RequestListColumnSetCookies", function () {
   return createFactory(require("./RequestListColumnSetCookies"));
-});
-loader.lazyGetter(this, "RequestListColumnStartTime", function () {
-  return createFactory(require("./RequestListColumnStartTime"));
 });
 loader.lazyGetter(this, "RequestListColumnStatus", function () {
   return createFactory(require("./RequestListColumnStatus"));
@@ -234,23 +218,50 @@ class RequestListItem extends Component {
         columns.file && RequestListColumnFile({ item }),
         columns.protocol && RequestListColumnProtocol({ item }),
         columns.scheme && RequestListColumnScheme({ item }),
-        columns.domain && RequestListColumnDomain({ item,
-                                                    onSecurityIconMouseDown }),
+        columns.domain && RequestListColumnDomain({
+          item,
+          onSecurityIconMouseDown
+        }),
         columns.remoteip && RequestListColumnRemoteIP({ item }),
-        columns.cause && RequestListColumnCause({ item, onCauseBadgeMouseDown }),
+        columns.cause && RequestListColumnCause({
+          item,
+          onCauseBadgeMouseDown
+        }),
         columns.type && RequestListColumnType({ item }),
         columns.cookies && RequestListColumnCookies({ connector, item }),
         columns.setCookies && RequestListColumnSetCookies({ connector, item }),
         columns.transferred && RequestListColumnTransferredSize({ item }),
         columns.contentSize && RequestListColumnContentSize({ item }),
-        columns.startTime &&
-          RequestListColumnStartTime({ item, firstRequestStartedMillis }),
-        columns.endTime &&
-          RequestListColumnEndTime({ item, firstRequestStartedMillis }),
-        columns.responseTime &&
-          RequestListColumnResponseTime({ item, firstRequestStartedMillis }),
-        columns.duration && RequestListColumnDuration({ item }),
-        columns.latency && RequestListColumnLatency({ item }),
+        columns.startTime && RequestListColumnTime({
+          connector,
+          item,
+          firstRequestStartedMillis,
+          type: "start",
+        }),
+        columns.endTime && RequestListColumnTime({
+          connector,
+          item,
+          firstRequestStartedMillis,
+          type: "end",
+        }),
+        columns.responseTime && RequestListColumnTime({
+          connector,
+          item,
+          firstRequestStartedMillis,
+          type: "response",
+        }),
+        columns.duration && RequestListColumnTime({
+          connector,
+          item,
+          firstRequestStartedMillis,
+          type: "duration",
+        }),
+        columns.latency && RequestListColumnTime({
+          connector,
+          item,
+          firstRequestStartedMillis,
+          type: "latency",
+        }),
         ...RESPONSE_HEADERS.filter(header => columns[header]).map(
           header => RequestListColumnResponseHeader({ item, header }),
         ),
