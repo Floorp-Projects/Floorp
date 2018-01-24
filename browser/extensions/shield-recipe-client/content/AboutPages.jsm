@@ -165,7 +165,7 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
           this.sendStudyList(message.target);
           break;
         case "Shield:RemoveStudy":
-          this.removeStudy(message.data);
+          this.removeStudy(message.data.recipeId, message.data.reason);
           break;
         case "Shield:OpenDataPreferences":
           this.openDataPreferences();
@@ -195,8 +195,8 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * Disable an active study and remove its add-on.
      * @param {String} studyName
      */
-    async removeStudy(recipeId) {
-      await AddonStudies.stop(recipeId);
+    async removeStudy(recipeId, reason) {
+      await AddonStudies.stop(recipeId, reason);
 
       // Update any open tabs with the new study list now that it has changed.
       Services.mm.broadcastAsyncMessage("Shield:ReceiveStudyList", {
