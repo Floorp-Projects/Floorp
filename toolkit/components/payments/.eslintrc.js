@@ -48,7 +48,6 @@ module.exports = {
     }],
     "padded-blocks": ["error", "never"],
     radix: "error",
-    semi: ["error", "always"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
     "valid-jsdoc": ["error", {
