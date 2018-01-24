@@ -202,7 +202,7 @@ To test this locally, add lines like:
 export MOZ_ANDROID_MMA=1
 ac_add_options --with-leanplum-sdk-keyfile=/path/to/leanplum-sdk-developer.token
 
-MOZ_ANDROID_MMA depends on MOZ_ANDROID_GOOGLE_PLAY_SERVICES and MOZ_ANDROID_GCM.
+MOZ_ANDROID_MMA depends on MOZ_NATIVE_DEVICES and MOZ_ANDROID_GCM.
 Since Leanplum requires Google Play Services library, those flags are a proxy for it, and enable respectively.
 
 We want to enable MOZ_ANDROID_MMA in Nightly, but only for
