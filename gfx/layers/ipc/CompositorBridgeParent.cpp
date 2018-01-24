@@ -1288,12 +1288,19 @@ bool
 CompositorBridgeParent::SetTestSampleTime(const uint64_t& aId,
                                           const TimeStamp& aTime)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
   if (aTime.IsNull()) {
     return false;
   }
 
   mIsTesting = true;
   mTestTime = aTime;
+
+  if (mWrBridge) {
+    mWrBridge->FlushRendering(/*aIsSync*/ false);
+    return true;
+  }
 
   bool testComposite = mCompositionManager &&
                        mCompositorScheduler->NeedsComposite();

@@ -22,6 +22,7 @@
   <script src="components/rich-select.js"></script>
   <script src="components/rich-option.js"></script>
   <script src="components/address-option.js"></script>
+  <script src="containers/address-picker.js"></script>
   <script src="containers/payment-dialog.js"></script>
 
   <script src="paymentRequest.js"></script>
@@ -33,6 +34,11 @@
       <h2 class="label"></h2>
       <currency-amount></currency-amount>
     </div>
+
+    <div><label>Shipping Address</label></div>
+    <address-picker>
+    </address-picker>
+
     <div id="controls-container">
       <button id="cancel">Cancel</button>
       <button id="pay">Pay</button>
@@ -41,51 +47,6 @@
 </head>
 <body>
   <iframe id="debugging-console" hidden="hidden" src="debugging.html"></iframe>
-
-  <rich-select>
-    <address-option email="emzembrano92@example.com"
-                    recipient="Emily Zembrano"
-                    addressLine="717 Hyde Street #6"
-                    city="San Francisco"
-                    region="CA"
-                    phone="415 203 0845"
-                    postalCode="94109"
-                    country="USA"></address-option>
-    <address-option email="jenz9382@example.com"
-                    recipient="Jennifer Zembrano"
-                    addressLine="42 Fairydust Lane"
-                    city="Lala Land"
-                    region="HI"
-                    phone="415 439 2827"
-                    postalCode="98765"
-                    country="USA"></address-option>
-    <address-option email="johnz9382@example.com"
-                    recipient="John Zembrano"
-                    addressLine="42 Fairydust Lane"
-                    city="Lala Land"
-                    missinginformation="true"
-                    region="HI"
-                    phone="415 439 2827"
-                    postalCode="98765"
-                    country="USA"></address-option>
-    <address-option email="adbrwodne@example.com"
-                    recipient="Andrew Browne"
-                    addressLine="42 Fairydust Lane"
-                    city="Lala Land"
-                    region="HI"
-                    phone="517 410 0845"
-                    postalCode="98765"
-                    country="USA"></address-option>
-    <address-option email="johnz9382@example.com"
-                    recipient="Jacob Humphrey"
-                    addressLine="1855 Pinecrest Rd"
-                    city="East Lansing"
-                    region="MI"
-                    phone="517 439 2827"
-                    postalCode="48823"
-                    country="USA"></address-option>
-  </rich-select>
-
   <payment-dialog></payment-dialog>
 </body>
 </html>

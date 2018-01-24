@@ -4416,6 +4416,20 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics()
   }
 }
 
+void
+AsyncPanZoomController::SetTestAsyncScrollOffset(const CSSPoint& aPoint)
+{
+  mTestAsyncScrollOffset = aPoint;
+  ScheduleComposite();
+}
+
+void
+AsyncPanZoomController::SetTestAsyncZoom(const LayerToParentLayerScale& aZoom)
+{
+  mTestAsyncZoom = aZoom;
+  ScheduleComposite();
+}
+
 Maybe<CSSPoint> AsyncPanZoomController::FindSnapPointNear(
     const CSSPoint& aDestination, nsIScrollableFrame::ScrollUnit aUnit) {
   mRecursiveMutex.AssertCurrentThreadIn();

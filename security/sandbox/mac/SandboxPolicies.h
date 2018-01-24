@@ -66,6 +66,26 @@ static const char contentSandboxRules[] = R"(
     (deny default)
     (deny default (with no-log)))
   (debug deny)
+  ; These are not included in (deny default)
+  (deny process-info*)
+  ; This isn't available in some older macOS releases.
+  (if (defined? 'nvram*)
+    (deny nvram*))
+  ; The next two properties both require macOS 10.10+
+  (if (defined? 'iokit-get-properties)
+    (deny iokit-get-properties))
+  (if (defined? 'file-map-executable)
+    (deny file-map-executable))
+
+  (if (defined? 'file-map-executable)
+    (allow file-map-executable file-read*
+      (subpath "/System")
+      (subpath "/usr/lib")
+      (subpath appdir-path))
+    (allow file-read*
+        (subpath "/System")
+        (subpath "/usr/lib")
+        (subpath appdir-path)))
 
   ; Allow read access to standard system paths.
   (allow file-read*
@@ -73,8 +93,6 @@ static const char contentSandboxRules[] = R"(
       (require-any
         (subpath "/Library/Filesystems/NetFSPlugins")
         (subpath "/Library/GPUBundles")
-        (subpath "/System")
-        (subpath "/usr/lib")
         (subpath "/usr/share"))))
 
   ; Top-level directory metadata access (bug 1404298)
@@ -99,6 +117,9 @@ static const char contentSandboxRules[] = R"(
     file-write-data
     file-ioctl
     (literal "/dev/dtracehelper"))
+
+  ; Needed for things like getpriority()/setpriority()
+  (allow process-info-pidinfo process-info-setcontrol (target self))
 
   ; macOS 10.9 does not support the |sysctl-name| predicate, so unfortunately
   ; we need to allow all sysctl-reads there.
@@ -187,6 +208,20 @@ static const char contentSandboxRules[] = R"(
      (iokit-user-client-class "IOHIDParamUserClient")
      (iokit-user-client-class "IOAudioEngineUserClient"))
 
+  ; Only supported on macOS 10.10+
+  (if (defined? 'iokit-get-properties)
+    (allow iokit-get-properties
+      (iokit-property "board-id")
+      (iokit-property "IODVDBundleName")
+      (iokit-property "IOGLBundleName")
+      (iokit-property "IOGVACodec")
+      (iokit-property "IOGVAHEVCDecode")
+      (iokit-property "IOGVAHEVCEncode")
+      (iokit-property "IOPCITunnelled")
+      (iokit-property "IOVARendererID")
+      (iokit-property "MetalPluginName")
+      (iokit-property "MetalPluginClassName")))
+
 ; depending on systems, the 1st, 2nd or both rules are necessary
   (allow user-preference-read (preference-domain "com.apple.HIToolbox"))
   (allow file-read-data (literal "/Library/Preferences/com.apple.HIToolbox.plist"))
@@ -213,19 +248,28 @@ static const char contentSandboxRules[] = R"(
       (home-subpath "/Library/Application Support/Adobe/CoreSync/plugins/livetype")
       (home-subpath "/Library/Application Support/FontAgent")
 
-      (subpath appdir-path)
-
       (literal appPath)
       (literal appBinaryPath))
 
-  (when testingReadPath1
-    (allow file-read* (subpath testingReadPath1)))
-  (when testingReadPath2
-    (allow file-read* (subpath testingReadPath2)))
-  (when testingReadPath3
-    (allow file-read* (subpath testingReadPath3)))
-  (when testingReadPath4
-    (allow file-read* (subpath testingReadPath4)))
+  (if (defined? 'file-map-executable)
+    (begin
+      (when testingReadPath1
+        (allow file-read* file-map-executable (subpath testingReadPath1)))
+      (when testingReadPath2
+        (allow file-read* file-map-executable (subpath testingReadPath2)))
+      (when testingReadPath3
+        (allow file-read* file-map-executable (subpath testingReadPath3)))
+      (when testingReadPath4
+        (allow file-read* file-map-executable (subpath testingReadPath4))))
+    (begin
+      (when testingReadPath1
+        (allow file-read* (subpath testingReadPath1)))
+      (when testingReadPath2
+        (allow file-read* (subpath testingReadPath2)))
+      (when testingReadPath3
+        (allow file-read* (subpath testingReadPath3)))
+      (when testingReadPath4
+        (allow file-read* (subpath testingReadPath4)))))
 
   (allow file-read-metadata (home-subpath "/Library"))
 

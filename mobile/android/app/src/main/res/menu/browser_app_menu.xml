@@ -86,6 +86,9 @@
             <item android:id="@+id/set_as_homepage"
                   android:title="@string/contextmenu_set_as_homepage"/>
 
+            <item android:id="@+id/view_page_source"
+                  android:title="@string/view_page_source"/>
+
         </menu>
 
     </item>

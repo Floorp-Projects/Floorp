@@ -42,8 +42,6 @@ add_task(async function test_show_manualAbort_dialog() {
     // abort the payment request manually
     let frame = await getPaymentFrame(win);
     ok(frame, "Got payment frame");
-    await dialogReadyPromise;
-    info("dialog ready");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -67,8 +65,7 @@ add_task(async function test_show_completePayment() {
 
     let frame = await getPaymentFrame(win);
     ok(frame, "Got payment frame");
-    await dialogReadyPromise;
-    info("dialog ready, clicking pay");
+    info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
 
     // Add a handler to complete the payment above.

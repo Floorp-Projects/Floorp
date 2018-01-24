@@ -26,31 +26,31 @@ Test the rich-select component
     <rich-select id="select1">
       <address-option id="option1"
                       email="emzembrano92@email.com"
-                      recipient="Emily Zembrano"
-                      addressLine="717 Hyde Street #6"
-                      city="San Francisco"
-                      region="CA"
-                      phone="415 203 0845"
-                      postalCode="94109"
+                      name="Emily Zembrano"
+                      street-address="717 Hyde Street #6"
+                      address-level2="San Francisco"
+                      address-level1="CA"
+                      tel="415 203 0845"
+                      postal-code="94109"
                       country="USA"></address-option>
       <address-option id="option2"
                       email="jenz9382@email.com"
-                      recipient="Jennifer Zembrano"
-                      addressLine="42 Fairydust Lane"
-                      city="Lala Land"
-                      region="HI"
-                      phone="415 439 2827"
-                      postalCode="98765"
+                      name="Jennifer Zembrano"
+                      street-address="42 Fairydust Lane"
+                      address-level2="Lala Land"
+                      address-level1="HI"
+                      tel="415 439 2827"
+                      postal-code="98765"
                       country="USA"></address-option>
       <address-option id="option3"
                       email="johnz9382@email.com"
-                      recipient="John Zembrano"
-                      addressLine="42 Fairydust Lane"
-                      city="Lala Land"
+                      name="John Zembrano"
+                      street-address="42 Fairydust Lane"
+                      address-level2="Lala Land"
                       missinginformation="true"
-                      region="HI"
-                      phone="415 439 2827"
-                      postalCode="98765"
+                      address-level1="HI"
+                      tel="415 439 2827"
+                      postal-code="98765"
                       country="USA"></address-option>
     </rich-select>
 
@@ -102,12 +102,12 @@ function dispatchKeyDown(key, keyCode) {
   select1.dispatchEvent(new KeyboardEvent("keydown", {key, keyCode}));
 }
 
-add_task(async function test_addressLine_combines_address_city_region_postalCode_country() {
+add_task(async function test_streetAddress_combines_street_level2_level1_postalCode_country() {
   ok(option1, "option1 exists");
-  let addressLine = option1.querySelector(".addressLine");
+  let streetAddress = option1.querySelector(".street-address");
   /* eslint-disable max-len */
-  is(addressLine.textContent,
-     `${option1.addressLine} ${option1.city} ${option1.region} ${option1.postalCode} ${option1.country}`);
+  is(streetAddress.textContent,
+     `${option1.streetAddress} ${option1.addressLevel2} ${option1.addressLevel1} ${option1.postalCode} ${option1.country}`);
   /* eslint-enable max-len */
 });
 
@@ -125,8 +125,8 @@ add_task(async function test_no_option_selected_first_displayed() {
   is_visible(selectedClone, "The selected clone should be visible at all times");
   is(selectedClone.getAttribute("email"), option1.getAttribute("email"),
      "The selected clone email should be equivalent to the selected option 1");
-  is(selectedClone.getAttribute("recipient"), option1.getAttribute("recipient"),
-     "The selected clone recipient should be equivalent to the selected option 1");
+  is(selectedClone.getAttribute("name"), option1.getAttribute("name"),
+     "The selected clone name should be equivalent to the selected option 1");
 });
 
 add_task(async function test_clicking_on_select_shows_all_options() {
@@ -157,8 +157,8 @@ add_task(async function test_clicking_on_select_shows_all_options() {
   is_visible(selectedClone, "The selected clone should be visible at all times");
   is(selectedClone.getAttribute("email"), option2.getAttribute("email"),
      "The selected clone email should be equivalent to the selected option 2");
-  is(selectedClone.getAttribute("recipient"), option2.getAttribute("recipient"),
-     "The selected clone recipient should be equivalent to the selected option 2");
+  is(selectedClone.getAttribute("name"), option2.getAttribute("name"),
+     "The selected clone name should be equivalent to the selected option 2");
 });
 
 add_task(async function test_changing_option_selected_affects_other_options() {

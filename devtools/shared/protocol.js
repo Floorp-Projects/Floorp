@@ -1154,23 +1154,6 @@ var generateRequestHandlers = function (actorSpec, actorProto) {
 };
 
 /**
- * THIS METHOD IS DEPRECATED, AND PRESERVED ONLY FOR ADD-ONS. IT SHOULD NOT BE
- * USED INSIDE THE TREE.
- *
- * Create an actor class for the given actor prototype.
- *
- * @param object actorProto
- *    The actor prototype.  Must have a 'typeName' property,
- *    should have method definitions, can have event definitions.
- */
-exports.ActorClass = function (actorProto) {
-  return ActorClassWithSpec(generateActorSpec(actorProto), actorProto);
-};
-
-/**
- * THIS METHOD IS DEPRECATED, AND PRESERVED ONLY FOR ADD-ONS. IT SHOULD NOT BE
- * USED INSIDE THE TREE.
- *
  * Create an actor class for the given actor specification and prototype.
  *
  * @param object actorSpec
@@ -1402,10 +1385,6 @@ exports.custom = function (fn, options = {}) {
   return fn;
 };
 
-function prototypeOf(obj) {
-  return typeof (obj) === "function" ? obj.prototype : obj;
-}
-
 /**
  * Generates request methods as described by the given actor specification on
  * the given front prototype. Returns the front prototype.
@@ -1515,19 +1494,6 @@ var generateRequestMethods = function (actorSpec, frontProto) {
   frontProto._actorSpec = actorSpec;
 
   return frontProto;
-};
-
-/**
- * Create a front class for the given actor class and front prototype.
- *
- * @param ActorClass actorType
- *    The actor class you're creating a front for.
- * @param object frontProto
- *    The front prototype.  Must have a 'typeName' property,
- *    should have method definitions, can have event definitions.
- */
-exports.FrontClass = function (actorType, frontProto) {
-  return FrontClassWithSpec(prototypeOf(actorType)._actorSpec, frontProto);
 };
 
 /**
