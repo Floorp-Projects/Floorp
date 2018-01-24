@@ -29,11 +29,10 @@ public:
   // so that timestamps are relative to startTime, as opposed to the
   // performance.timing object for which timestamps are absolute and has a
   // zeroTime initialized to navigationStart
-  explicit PerformanceNavigationTiming(PerformanceTiming* aPerformanceTiming,
-                                       Performance* aPerformance,
-                                       nsIHttpChannel* aChannel)
-    : PerformanceResourceTiming(aPerformanceTiming, aPerformance,
-                                NS_LITERAL_STRING("document"), aChannel) {
+  PerformanceNavigationTiming(UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
+                              Performance* aPerformance)
+    : PerformanceResourceTiming(Move(aPerformanceTiming), aPerformance,
+                                NS_LITERAL_STRING("document")) {
       SetEntryType(NS_LITERAL_STRING("navigation"));
       SetInitiatorType(NS_LITERAL_STRING("navigation"));
     }
