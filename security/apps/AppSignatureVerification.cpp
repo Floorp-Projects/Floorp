@@ -1416,10 +1416,6 @@ private:
                              getter_AddRefs(mSignerCert));
   }
 
-  // nsNSSCertificate implements nsNSSShutdownObject, so there's nothing that
-  // needs to be released
-  virtual void ReleaseNSSResources() override { }
-
   virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignerCert);

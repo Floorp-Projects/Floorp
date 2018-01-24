@@ -78,24 +78,6 @@ nsPK11Token::refreshTokenInfo()
   return NS_OK;
 }
 
-nsPK11Token::~nsPK11Token()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsPK11Token::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsPK11Token::destructorSafeDestroyNSSReference()
-{
-  mSlot = nullptr;
-}
-
 nsresult
 nsPK11Token::GetAttributeHelper(const nsACString& attribute,
                         /*out*/ nsACString& xpcomOutParam)
@@ -287,15 +269,6 @@ nsPK11Token::NeedsLogin(bool* _retval)
 /*=========================================================*/
 
 NS_IMPL_ISUPPORTS(nsPK11TokenDB, nsIPK11TokenDB)
-
-nsPK11TokenDB::nsPK11TokenDB()
-{
-}
-
-nsPK11TokenDB::~nsPK11TokenDB()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
 
 NS_IMETHODIMP
 nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token** _retval)

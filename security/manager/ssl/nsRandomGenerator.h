@@ -23,8 +23,7 @@ public:
   NS_DECL_NSIRANDOMGENERATOR
 
 private:
-  ~nsRandomGenerator();
-  virtual void virtualDestroyNSSReference() override {}
+  ~nsRandomGenerator() {}
 };
 
 #endif // nsRandomGenerator_h

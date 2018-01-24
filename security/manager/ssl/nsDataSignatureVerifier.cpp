@@ -29,11 +29,6 @@ const SEC_ASN1Template CERT_SignatureDataTemplate[] =
     { 0, }
 };
 
-nsDataSignatureVerifier::~nsDataSignatureVerifier()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 NS_IMETHODIMP
 nsDataSignatureVerifier::VerifyData(const nsACString& aData,
                                     const nsACString& aSignature,

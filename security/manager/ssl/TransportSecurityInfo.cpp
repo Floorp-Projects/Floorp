@@ -48,16 +48,6 @@ TransportSecurityInfo::TransportSecurityInfo()
 {
 }
 
-TransportSecurityInfo::~TransportSecurityInfo()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-TransportSecurityInfo::virtualDestroyNSSReference()
-{
-}
-
 NS_IMPL_ISUPPORTS(TransportSecurityInfo,
                   nsITransportSecurityInfo,
                   nsIInterfaceRequestor,

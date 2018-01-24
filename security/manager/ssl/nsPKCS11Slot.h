@@ -25,7 +25,7 @@ public:
   explicit nsPKCS11Slot(PK11SlotInfo* slot);
 
 protected:
-  virtual ~nsPKCS11Slot();
+  virtual ~nsPKCS11Slot() {}
 
 private:
   mozilla::UniquePK11SlotInfo mSlot;
@@ -35,8 +35,6 @@ private:
   nsCString mSlotFWVersion;
   int mSeries;
 
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
   nsresult refreshSlotInfo();
   nsresult GetAttributeHelper(const nsACString& attribute,
                       /*out*/ nsACString& xpcomOutParam);
@@ -52,13 +50,10 @@ public:
   explicit nsPKCS11Module(SECMODModule* module);
 
 protected:
-  virtual ~nsPKCS11Module();
+  virtual ~nsPKCS11Module() {}
 
 private:
   mozilla::UniqueSECMODModule mModule;
-
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
 };
 
 #endif // nsPKCS11Slot_h

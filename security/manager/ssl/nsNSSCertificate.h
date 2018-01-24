@@ -56,8 +56,6 @@ private:
   nsresult CreateASN1Struct(nsIASN1Object** aRetVal);
   nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence);
   nsresult GetSortableDate(PRTime aTime, nsAString& _aSortableDate);
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
@@ -112,9 +110,7 @@ public:
                            /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
 
 private:
-   virtual ~nsNSSCertList();
-   virtual void virtualDestroyNSSReference() override;
-   void destructorSafeDestroyNSSReference();
+   virtual ~nsNSSCertList() {}
 
    mozilla::UniqueCERTCertList mCertList;
 
@@ -131,9 +127,7 @@ public:
 
    explicit nsNSSCertListEnumerator(const mozilla::UniqueCERTCertList& certList);
 private:
-   virtual ~nsNSSCertListEnumerator();
-   virtual void virtualDestroyNSSReference() override;
-   void destructorSafeDestroyNSSReference();
+   virtual ~nsNSSCertListEnumerator() {}
 
    mozilla::UniqueCERTCertList mCertList;
 

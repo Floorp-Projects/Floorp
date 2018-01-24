@@ -41,12 +41,8 @@ public:
 
   virtual void Cancel() override;
 
-  // For nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
-
 private:
-  ~U2FSoftTokenManager();
+  ~U2FSoftTokenManager() {}
   nsresult Init();
 
   nsresult IsRegistered(const nsTArray<uint8_t>& aKeyHandle,

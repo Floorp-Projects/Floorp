@@ -13,19 +13,8 @@
 class nsNSSShutDownObject
 {
 public:
-  enum class ShutdownCalledFrom {
-    List,
-    Object,
-  };
-
   nsNSSShutDownObject() {}
-
   virtual ~nsNSSShutDownObject() {}
-
-  void shutdown(ShutdownCalledFrom) {}
-
-protected:
-  virtual void virtualDestroyNSSReference() = 0;
 };
 
 #endif // nsNSSShutDown_h
