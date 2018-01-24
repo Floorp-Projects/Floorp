@@ -3652,6 +3652,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mSpecifiedRotate(aSource.mSpecifiedRotate)
   , mSpecifiedTranslate(aSource.mSpecifiedTranslate)
   , mSpecifiedScale(aSource.mSpecifiedScale)
+  , mCombinedTransform(aSource.mCombinedTransform)
   , mTransformOrigin{ aSource.mTransformOrigin[0],
                       aSource.mTransformOrigin[1],
                       aSource.mTransformOrigin[2] }
@@ -3715,6 +3716,8 @@ nsStyleDisplay::~nsStyleDisplay()
                                 mSpecifiedTranslate);
   ReleaseSharedListOnMainThread("nsStyleDisplay::mSpecifiedScale",
                                 mSpecifiedScale);
+  ReleaseSharedListOnMainThread("nsStyleDisplay::mCombinedTransform",
+                                mCombinedTransform);
 
   MOZ_COUNT_DTOR(nsStyleDisplay);
 }
@@ -3731,6 +3734,8 @@ nsStyleDisplay::FinishStyle(nsPresContext* aPresContext)
       shapeImage->ResolveImage(aPresContext);
     }
   }
+
+  GenerateCombinedTransform();
 }
 
 static inline nsChangeHint
@@ -4000,6 +4005,57 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   return hint;
 }
 
+void
+nsStyleDisplay::GenerateCombinedTransform()
+{
+  mCombinedTransform = nullptr;
+
+  // Follow the order defined in the spec to append transform functions.
+  // https://drafts.csswg.org/css-transforms-2/#ctm
+  AutoTArray<nsCSSValueSharedList*, 4> shareLists;
+  if (mSpecifiedTranslate) {
+    shareLists.AppendElement(mSpecifiedTranslate.get());
+  }
+  if (mSpecifiedRotate) {
+    shareLists.AppendElement(mSpecifiedRotate.get());
+  }
+  if (mSpecifiedScale) {
+    shareLists.AppendElement(mSpecifiedScale.get());
+  }
+  if (mSpecifiedTransform) {
+    shareLists.AppendElement(mSpecifiedTransform.get());
+  }
+
+  if (shareLists.Length() == 0) {
+    return;
+  }
+
+  if (shareLists.Length() == 1) {
+    mCombinedTransform = shareLists[0];
+    return;
+  }
+
+  // In common, we may have 3 transform functions(for rotate, translate and
+  // scale) in mSpecifiedTransform, one rotate function in mSpecifiedRotate,
+  // one translate function in mSpecifiedTranslate, and one scale function in
+  // mSpecifiedScale. So 6 slots are enough for the most cases.
+  AutoTArray<nsCSSValueList*, 6> valueLists;
+  for (auto list: shareLists) {
+    if (list) {
+      valueLists.AppendElement(list->mHead->Clone());
+    }
+  }
+
+  // Check we have at least one list or else valueLists.Length() - 1 below will
+  // underflow.
+  MOZ_ASSERT(valueLists.Length());
+
+  for (uint32_t i = 0; i < valueLists.Length() - 1; i++) {
+    valueLists[i]->mNext = valueLists[i + 1];
+  }
+
+  mCombinedTransform = new nsCSSValueSharedList(valueLists[0]);
+}
 // --------------------
 // nsStyleVisibility
 //
