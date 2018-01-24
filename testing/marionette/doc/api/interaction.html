@@ -109,6 +109,179 @@
     
 
     
+    <h4 class="name" id=".clearElement"><span class="type-signature">(static) </span>clearElement<span class="signature">(el)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Clears the form control or the editable element, if required.</p>
+<p>Before clearing the element, it will attempt to scroll it into
+view if it is not already in the viewport.  An error is raised
+if the element cannot be brought into view.</p>
+<p>If the element is a submittable form control and it is empty
+(it has no value or it has no files associated with it, in the
+case it is a <code>&lt;input type=file&gt;</code> element) or
+it is an editing host and its <code>innerHTML</code> content IDL
+attribute is empty, this function acts as a no-op.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>el</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Element to clear.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line312">line 312</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If element is disabled, read-only, non-editable, not a submittable
+    element or not an editing host, or cannot be scrolled into view.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">InvalidElementStateError</span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id=".clickElement"><span class="type-signature">(static) </span>clickElement<span class="signature">(el, strict<span class="signature-attributes">opt</span>, specCompat<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
@@ -569,7 +742,7 @@ is unloaded.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line351">line 351</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line386">line 386</a>
     </li></ul></dd>
     
 
@@ -729,7 +902,7 @@ state exists, move the caret to the end of the input field.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line385">line 385</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line420">line 420</a>
     </li></ul></dd>
     
 
@@ -923,7 +1096,7 @@ state exists, move the caret to the end of the input field.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line573">line 573</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line608">line 608</a>
     </li></ul></dd>
     
 
@@ -1083,7 +1256,7 @@ state exists, move the caret to the end of the input field.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line593">line 593</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line628">line 628</a>
     </li></ul></dd>
     
 
@@ -1302,7 +1475,7 @@ and radio button states, and option elements.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line633">line 633</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line668">line 668</a>
     </li></ul></dd>
     
 
@@ -1492,7 +1665,7 @@ and as such the container has to be checked instead.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line410">line 410</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line445">line 445</a>
     </li></ul></dd>
     
 
@@ -1982,7 +2155,7 @@ time considered to be good enough.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line499">line 499</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line534">line 534</a>
     </li></ul></dd>
     
 
@@ -2140,7 +2313,7 @@ time considered to be good enough.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line472">line 472</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line507">line 507</a>
     </li></ul></dd>
     
 
@@ -2328,7 +2501,7 @@ file list.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line435">line 435</a>
+        <a href="interaction.js.html">interaction.js</a>, <a href="interaction.js.html#line470">line 470</a>
     </li></ul></dd>
     
 
@@ -2407,7 +2580,7 @@ file list.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jan 24 2018 20:37:55 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

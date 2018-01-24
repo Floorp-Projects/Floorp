@@ -164,7 +164,7 @@ or a key name begins with &quot;VK_&quot;, or a character.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line471">line 471</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line472">line 472</a>
     </li></ul></dd>
     
 
@@ -255,7 +255,7 @@ case) and the digits 0-9.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line172">line 172</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line173">line 173</a>
     </li></ul></dd>
     
 
@@ -344,7 +344,7 @@ handled at this point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line197">line 197</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line198">line 198</a>
     </li></ul></dd>
     
 
@@ -549,7 +549,7 @@ handled at this point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1354">line 1354</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1355">line 1355</a>
     </li></ul></dd>
     
 
@@ -761,7 +761,7 @@ handled at this point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line102">line 102</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -1002,7 +1002,7 @@ handled at this point.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1335">line 1335</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1336">line 1336</a>
     </li></ul></dd>
     
 
@@ -1090,7 +1090,7 @@ case) and the digits 0-9.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line184">line 184</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line185">line 185</a>
     </li></ul></dd>
     
 
@@ -1273,7 +1273,7 @@ case) and the digits 0-9.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1029">line 1029</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1030">line 1030</a>
     </li></ul></dd>
     
 
@@ -1488,7 +1488,7 @@ by the user, typically the focused element.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line520">line 520</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line521">line 521</a>
     </li></ul></dd>
     
 
@@ -1824,7 +1824,7 @@ exclamation mark, such as &quot;!select&quot;.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1000">line 1000</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1001">line 1001</a>
     </li></ul></dd>
     
 
@@ -2102,7 +2102,7 @@ fired. Otherwise, a mousedown followed by a mouse up is performed.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line251">line 251</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line252">line 252</a>
     </li></ul></dd>
     
 
@@ -2189,7 +2189,7 @@ target.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line349">line 349</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line350">line 350</a>
     </li></ul></dd>
     
 
@@ -2558,7 +2558,7 @@ a click on a disabled element doesn't fire certain events for instance.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line961">line 961</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line962">line 962</a>
     </li></ul></dd>
     
 
@@ -2705,7 +2705,7 @@ a click on a disabled element doesn't fire certain events for instance.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1126">line 1126</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1127">line 1127</a>
     </li></ul></dd>
     
 
@@ -2973,7 +2973,7 @@ a click on a disabled element doesn't fire certain events for instance.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1149">line 1149</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1150">line 1150</a>
     </li></ul></dd>
     
 
@@ -3186,7 +3186,7 @@ doesn't support wide caret, therefore, you should always set 0 now.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1074">line 1074</a>
+        <a href="event.js.html">event.js</a>, <a href="event.js.html#line1075">line 1075</a>
     </li></ul></dd>
     
 
@@ -3236,7 +3236,7 @@ doesn't support wide caret, therefore, you should always set 0 now.</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Jan 15 2018 14:01:22 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jan 24 2018 20:37:55 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
