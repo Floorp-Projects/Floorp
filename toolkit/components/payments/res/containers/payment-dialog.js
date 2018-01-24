@@ -54,7 +54,14 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     });
   }
 
-  setLoadingState(state) {
+  /**
+   * Set some state from the privileged parent process.
+   * Other elements that need to set state should use their own `this.requestStore.setState`
+   * method provided by the `PaymentStateSubscriberMixin`.
+   *
+   * @param {object} state - See `PaymentsStore.setState`
+   */
+  setStateFromParent(state) {
     this.requestStore.setState(state);
   }
 
