@@ -39,6 +39,9 @@ public:
                         nsIHttpChannel* aHttpChannel,
                         DOMHighResTimeStamp aZeroTime);
 
+  void
+  SetPropertiesFromHttpChannel(nsIHttpChannel* aHttpChannel);
+
   bool IsInitialized() const
   {
     return mInitialized;

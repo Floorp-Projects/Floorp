@@ -285,9 +285,14 @@ void
 PerformanceMainThread::EnsureDocEntry()
 {
   if (!mDocEntry && nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     UniquePtr<PerformanceTimingData> timing(
       new PerformanceTimingData(mChannel, nullptr, 0));
+
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+    if (httpChannel) {
+      timing->SetPropertiesFromHttpChannel(httpChannel);
+    }
+
     mDocEntry = new PerformanceNavigationTiming(Move(timing), this);
   }
 }
