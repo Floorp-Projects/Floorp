@@ -5,7 +5,7 @@
 #ifndef SANDBOX_SRC_ACL_H_
 #define SANDBOX_SRC_ACL_H_
 
-#include <AccCtrl.h>
+#include <accctrl.h>
 #include <windows.h>
 
 #include <memory>

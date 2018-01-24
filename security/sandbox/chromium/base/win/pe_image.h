@@ -17,7 +17,7 @@
 // The Windows 8 SDK defines FACILITY_VISUALCPP in winerror.h.
 #undef FACILITY_VISUALCPP
 #endif
-#include <DelayIMP.h>
+#include <delayimp.h>
 
 namespace base {
 namespace win {

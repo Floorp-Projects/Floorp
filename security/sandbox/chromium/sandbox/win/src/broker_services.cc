@@ -4,7 +4,7 @@
 
 #include "sandbox/win/src/broker_services.h"
 
-#include <AclAPI.h>
+#include <aclapi.h>
 #include <stddef.h>
 
 #include <utility>
