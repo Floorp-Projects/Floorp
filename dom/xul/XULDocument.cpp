@@ -2446,6 +2446,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
                            nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
                            nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                            nsIContentPolicy::TYPE_OTHER,
+                           nullptr, // PerformanceStorage
                            group);
 
         if (NS_SUCCEEDED(rv)) {
