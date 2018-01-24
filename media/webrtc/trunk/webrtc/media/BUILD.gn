@@ -10,17 +10,10 @@ import("//build/config/linux/pkg_config.gni")
 import("../build/webrtc.gni")
 
 group("media") {
-  public_deps = []
-  if (!build_with_mozilla) {
-    public_deps += [
-      ":rtc_media",
-      ":rtc_media_base",
-    ]
-  } else {
-    public_deps += [
-      ":mozilla_rtc_media",
-    ]
-  }
+  public_deps = [
+    ":rtc_media",
+    ":rtc_media_base",
+  ]
 }
 
 config("rtc_media_defines_config") {
@@ -45,22 +38,6 @@ if (is_linux && rtc_use_gtk) {
       "gobject-2.0",
       "gthread-2.0",
       "gtk+-2.0",
-    ]
-  }
-}
-
-if (build_with_mozilla) {
-  rtc_static_library("mozilla_rtc_media") {
-    defines = []
-    libs = []
-    deps = []
-    sources = [
-      "base/videoadapter.cc",
-      "base/videoadapter.h",
-      "base/videobroadcaster.cc",
-      "base/videobroadcaster.h",
-      "base/videosourcebase.cc",
-      "base/videosourcebase.h",
     ]
   }
 }
@@ -125,13 +102,8 @@ rtc_static_library("rtc_media_base") {
   deps += [
     "..:webrtc_common",
     "../base:rtc_base_approved",
+    "../p2p",
   ]
-
-  if (!build_with_mozilla) {
-    deps += [
-      "../p2p",
-    ]
-  }
 }
 
 rtc_static_library("rtc_media") {
