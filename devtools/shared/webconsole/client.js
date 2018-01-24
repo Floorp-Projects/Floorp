@@ -33,11 +33,13 @@ function WebConsoleClient(debuggerClient, response) {
   this.onNetworkEvent = this._onNetworkEvent.bind(this);
   this.onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
   this.onInspectObject = this._onInspectObject.bind(this);
+  this.onDocEvent = this._onDocEvent.bind(this);
 
   this._client.addListener("evaluationResult", this.onEvaluationResult);
   this._client.addListener("networkEvent", this.onNetworkEvent);
   this._client.addListener("networkEventUpdate", this.onNetworkEventUpdate);
   this._client.addListener("inspectObject", this.onInspectObject);
+  this._client.addListener("documentEvent", this.onDocEvent);
   EventEmitter.decorate(this);
 }
 
@@ -185,6 +187,20 @@ WebConsoleClient.prototype = {
    */
   _onInspectObject: function (type, packet) {
     this.emit("inspectObject", packet);
+  },
+
+  /**
+   * The "docEvent" message type handler. We just re-emit it so that
+   * the tools can listen for them on the console client.
+   *
+   * @private
+   * @param string type
+   *        Message type.
+   * @param object packet
+   *        The message received from the server.
+   */
+  _onDocEvent: function (type, packet) {
+    this.emit("documentEvent", packet);
   },
 
   /**
@@ -676,6 +692,7 @@ WebConsoleClient.prototype = {
     this._client.removeListener("networkEventUpdate",
                                 this.onNetworkEventUpdate);
     this._client.removeListener("inspectObject", this.onInspectObject);
+    this._client.removeListener("documentEvent", this.onDocEvent);
     this.stopListeners(null, onResponse);
     this._longStrings = null;
     this._client = null;

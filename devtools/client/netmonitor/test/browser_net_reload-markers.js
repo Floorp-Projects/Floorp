@@ -23,9 +23,9 @@ add_task(function* () {
 
   ok(true, "Reloading finished");
 
-  is(markers[0].name, "document::DOMContentLoaded",
+  is(markers[0].name, "dom-interactive",
     "The first received marker is correct.");
-  is(markers[1].name, "document::Load",
+  is(markers[1].name, "dom-complete",
     "The second received marker is correct.");
 
   return teardown(monitor);

@@ -5,9 +5,11 @@
 "use strict";
 
 const Services = require("Services");
-const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const { ACTIVITY_TYPE, EVENTS } = require("../constants");
 const FirefoxDataProvider = require("./firefox-data-provider");
+
+// To be removed once FF60 is deprecated
+loader.lazyRequireGetter(this, "TimelineFront", "devtools/shared/fronts/timeline", true);
 
 class FirefoxConnector {
   constructor() {
@@ -18,6 +20,7 @@ class FirefoxConnector {
     this.navigate = this.navigate.bind(this);
     this.displayCachedEvents = this.displayCachedEvents.bind(this);
     this.onDocLoadingMarker = this.onDocLoadingMarker.bind(this);
+    this.onDocEvent = this.onDocEvent.bind(this);
     this.sendHTTPRequest = this.sendHTTPRequest.bind(this);
     this.setPreferences = this.setPreferences.bind(this);
     this.triggerActivity = this.triggerActivity.bind(this);
@@ -44,7 +47,7 @@ class FirefoxConnector {
       actions: this.actions,
     });
 
-    this.addListeners();
+    await this.addListeners();
 
     // Listener for `will-navigate` event is (un)registered outside
     // of the `addListeners` and `removeListeners` methods since
@@ -54,64 +57,71 @@ class FirefoxConnector {
     this.tabTarget.on("will-navigate", this.willNavigate);
     this.tabTarget.on("navigate", this.navigate);
 
-    // Don't start up waiting for timeline markers if the server isn't
-    // recent enough to emit the markers we're interested in.
-    if (this.tabTarget.getTrait("documentLoadingMarkers")) {
-      this.timelineFront = new TimelineFront(this.tabTarget.client, this.tabTarget.form);
-      this.timelineFront.on("doc-loading", this.onDocLoadingMarker);
-      await this.timelineFront.start({ withDocLoadingEvents: true });
-    }
-
     this.displayCachedEvents();
   }
 
   async disconnect() {
     this.actions.batchReset();
 
-    this.removeListeners();
+    await this.removeListeners();
 
     if (this.tabTarget) {
-      // Unregister `will-navigate` needs to be done before `this.timelineFront.destroy()`
-      // since this.tabTarget might be nullified after timelineFront.destroy().
       this.tabTarget.off("will-navigate");
-      // The timeline front wasn't initialized and started if the server wasn't
-      // recent enough to emit the markers we were interested in.
-      if (this.tabTarget.getTrait("documentLoadingMarkers") && this.timelineFront) {
-        this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
-        await this.timelineFront.destroy();
-      }
       this.tabTarget = null;
     }
 
     this.webConsoleClient = null;
-    this.timelineFront = null;
     this.dataProvider = null;
     this.panel = null;
   }
 
-  pause() {
-    this.removeListeners();
+  async pause() {
+    await this.removeListeners();
   }
 
-  resume() {
-    this.addListeners();
+  async resume() {
+    await this.addListeners();
   }
 
-  addListeners() {
+  async addListeners() {
     this.tabTarget.on("close", this.disconnect);
     this.webConsoleClient.on("networkEvent",
       this.dataProvider.onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate",
       this.dataProvider.onNetworkEventUpdate);
+    this.webConsoleClient.on("documentEvent", this.onDocEvent);
+
+    // With FF60+ console actor supports listening to document events like
+    // DOMContentLoaded and load. We used to query Timeline actor, but it was too CPU
+    // intensive.
+    let { startedListeners } = await this.webConsoleClient.startListeners(
+      ["DocumentEvents"]);
+    // Allows to know if we are on FF60 and support these events.
+    let supportsDocEvents = startedListeners.includes("DocumentEvents");
+
+    // Don't start up waiting for timeline markers if the server isn't
+    // recent enough (<FF45) to emit the markers we're interested in.
+    if (!supportsDocEvents && !this.timelineFront &&
+        this.tabTarget.getTrait("documentLoadingMarkers")) {
+      this.timelineFront = new TimelineFront(this.tabTarget.client, this.tabTarget.form);
+      this.timelineFront.on("doc-loading", this.onDocLoadingMarker);
+      await this.timelineFront.start({ withDocLoadingEvents: true });
+    }
   }
 
-  removeListeners() {
+  async removeListeners() {
     if (this.tabTarget) {
       this.tabTarget.off("close");
+    }
+    if (this.timelineFront) {
+      this.timelineFront.off("doc-loading", this.onDocLoadingMarker);
+      await this.timelineFront.destroy();
+      this.timelineFront = null;
     }
     if (this.webConsoleClient) {
       this.webConsoleClient.off("networkEvent");
       this.webConsoleClient.off("networkEventUpdate");
+      this.webConsoleClient.off("docEvent");
     }
   }
 
@@ -176,11 +186,32 @@ class FirefoxConnector {
   /**
    * The "DOMContentLoaded" and "Load" events sent by the timeline actor.
    *
+   * To be removed once FF60 is deprecated.
+   *
    * @param {object} marker
    */
   onDocLoadingMarker(marker) {
-    window.emit(EVENTS.TIMELINE_EVENT, marker);
-    this.actions.addTimingMarker(marker);
+    // Translate marker into event similar to newer "docEvent" event sent by the console
+    // actor
+    let event = {
+      name: marker.name == "document::DOMContentLoaded" ?
+            "dom-interactive" : "dom-complete",
+      time: marker.unixTime / 1000
+    };
+    window.emit(EVENTS.TIMELINE_EVENT, event);
+    this.actions.addTimingMarker(event);
+  }
+
+  /**
+   * The "DOMContentLoaded" and "Load" events sent by the console actor.
+   *
+   * Only used by FF60+.
+   *
+   * @param {object} marker
+   */
+  onDocEvent(type, event) {
+    window.emit(EVENTS.TIMELINE_EVENT, event);
+    this.actions.addTimingMarker(event);
   }
 
   /**
