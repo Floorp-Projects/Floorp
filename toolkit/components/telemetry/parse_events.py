@@ -206,9 +206,6 @@ class EventData:
                               % (self.identifier))
 
         # Finish setup.
-        # Historical versions of Events.yaml may contain expiration versions
-        # using the deprecated format 'N.Na1'. Those scripts set
-        # self._strict_type_checks to false.
         expiry_version = definition.get('expiry_version', 'never')
         if not utils.validate_expiration_version(expiry_version) and self._strict_type_checks:
             raise ParserError('{}: invalid expiry_version: {}.'

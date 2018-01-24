@@ -139,7 +139,7 @@ Required. This field is a list of e-mail addresses that should be notified when 
 
 ``expires_in_version``
 ----------------------
-Required. The version number in which the histogram expires; e.g. a value of `"30"` will mean that the histogram stops recording from Firefox 30 on. A version number of type ``"N"`` is automatically converted to ``"N.0a1"`` in order to expire the histogram also in the development channels. For histograms that never expire the value ``"never"`` can be used as in the example above. Accumulating data into an expired histogram is effectively a non-op and will not record anything.
+Required. The version number in which the histogram expires; e.g. a value of `"30"` will mean that the histogram stops recording from Firefox 30 on. A version number of type ``"N"`` and ``"N.0"`` is automatically converted to ``"N.0a1"`` in order to expire the histogram also in the development channels. For histograms that never expire the value ``"never"`` can be used as in the example above. Accumulating data into an expired histogram is effectively a non-op and will not record anything.
 
 ``kind``
 --------
