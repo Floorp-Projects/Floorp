@@ -6757,7 +6757,7 @@ nsDisplayBlendMode::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
 {
   nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc, aBuilder, filters, LayoutDeviceRect(), nullptr,
-                           0, nullptr, nullptr, nullptr,
+                           nullptr, nullptr, nullptr, nullptr,
                            nsCSSRendering::GetGFXBlendMode(mBlendMode));
 
   return nsDisplayWrapList::CreateWebRenderCommands(aBuilder,aResources, sc,
@@ -9176,7 +9176,7 @@ nsDisplayPerspective::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& a
                            filters,
                            LayoutDeviceRect(),
                            nullptr,
-                           0,
+                           nullptr,
                            nullptr,
                            &transformForSC,
                            &perspectiveMatrix,
@@ -9950,7 +9950,7 @@ nsDisplayFilter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
 
   float opacity = mFrame->StyleEffects()->mOpacity;
   StackingContextHelper sc(aSc, aBuilder, wrFilters, LayoutDeviceRect(), nullptr,
-                           0, opacity != 1.0f && mHandleOpacity ? &opacity : nullptr);
+                           nullptr, opacity != 1.0f && mHandleOpacity ? &opacity : nullptr);
 
   nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aResources, sc, aManager, aDisplayListBuilder);
   return true;

@@ -84,7 +84,7 @@ def main():
 
 
 if __name__ == '__main__':
-  if sys.platform == 'darwin' or os.environ.get('MOZ_AUTOMATION') != '1':
+  if sys.platform == 'darwin' and os.environ.get('MOZ_AUTOMATION') != '1':
     print main()
   else:
     # Mozilla builds cross-compile on Linux or install an SDK from tooltool, so

@@ -13930,5 +13930,33 @@
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1426270],
     "alert_emails": ["nnethercote@mozilla.com"]
+  },
+  "PERMISSION_REQUEST_ORIGIN_SCHEME": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["jhofmann@mozilla.com"],
+    "bug_numbers": [1286118],
+    "expires_in_version": "64",
+    "kind": "enumerated",
+    "n_values": 10,
+    "keyed": true,
+    "description": "Permission requests (showing a permission prompt) by origin scheme (0=other,1=http,2=https)."
+  },
+  "PERMISSION_REQUEST_THIRD_PARTY_ORIGIN": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["jhofmann@mozilla.com"],
+    "bug_numbers": [1286118],
+    "expires_in_version": "64",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "Permission requests (showing a permission prompt) by whether they come from a third party origin."
+  },
+  "PERMISSION_REQUEST_HANDLING_USER_INPUT": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["jhofmann@mozilla.com"],
+    "bug_numbers": [1286118],
+    "expires_in_version": "64",
+    "kind": "boolean",
+    "keyed": true,
+    "description": "Permission requests (showing a permission prompt) by whether they were requested from code handling a user input event."
   }
 }

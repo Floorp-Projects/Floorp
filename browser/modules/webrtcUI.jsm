@@ -845,6 +845,29 @@ function prompt(aBrowser, aRequest) {
                    anchorId, mainAction, secondaryActions,
                    options);
   notification.callID = aRequest.callID;
+
+  let schemeHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_ORIGIN_SCHEME");
+  let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_THIRD_PARTY_ORIGIN");
+  let userInputHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_HANDLING_USER_INPUT");
+
+  let docURI = aRequest.documentURI;
+  let scheme = 0;
+  if (docURI.startsWith("https")) {
+    scheme = 2;
+  } else if (docURI.startsWith("http")) {
+    scheme = 1;
+  }
+
+  for (let requestType of requestTypes) {
+    if (requestType == "AudioCapture") {
+      requestType = "Microphone";
+    }
+    requestType = requestType.toLowerCase();
+
+    schemeHistogram.add(requestType, scheme);
+    thirdPartyHistogram.add(requestType, aRequest.isThirdPartyOrigin);
+    userInputHistogram.add(requestType, aRequest.isHandlingUserInput);
+  }
 }
 
 function removePrompt(aBrowser, aCallId) {

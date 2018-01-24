@@ -547,7 +547,7 @@ function showEnableExtensionMessage(settingName) {
   let addonIcon = icon("chrome://mozapps/skin/extensions/extensionGeneric-16.svg");
   let toolbarIcon = icon("chrome://browser/skin/menu.svg");
   let message = document.getElementById("bundlePreferences")
-                        .getString("extensionControlled.enable2");
+                        .getString("extensionControlled.enable");
   let frag = BrowserUtils.getLocalizedFragment(document, message, addonIcon, toolbarIcon);
   elements.description.innerHTML = "";
   elements.description.appendChild(frag);

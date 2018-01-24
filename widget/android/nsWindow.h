@@ -193,8 +193,10 @@ private:
     // keep it last in the list, so its destructor is called first.
     mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
+#ifdef MOZ_NATIVE_DEVICES
     // Class that implements native PresentationMediaPlayerManager calls.
     class PMPMSupport;
+#endif
 
     mozilla::Atomic<bool, mozilla::ReleaseAcquire> mContentDocumentDisplayed;
 

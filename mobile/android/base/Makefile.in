@@ -52,12 +52,15 @@ JAVA_CLASSPATH += \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
     $(NULL)
 
-# If native devices are enabled, add Google Play Services and some of the v7
-# compat libraries.
-ifdef MOZ_NATIVE_DEVICES
+ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
     JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(NULL)
+endif
+
+ifdef MOZ_NATIVE_DEVICES
+    JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
@@ -80,7 +83,7 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
 # which take care of the Play Services requirements in JAVA_CLASSPATH.
 # Based on the import of
 # `com.google.android.gms.ads.identifier.AdvertisingIdClient` in
@@ -107,6 +110,13 @@ java_bundled_libs := \
     $(ANDROID_PALETTE_V7_AAR_LIB) \
     $(NULL)
 
+ifdef MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+    java_bundled_libs += \
+        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(NULL)
+endif
+
 ifdef MOZ_NATIVE_DEVICES
     java_bundled_libs += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
@@ -133,7 +143,7 @@ ifdef MOZ_INSTALL_TRACKING
         $(NULL)
 endif
 
-# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_NATIVE_DEVICES,
+# MOZ_ANDROID_MMA requires MOZ_ANDROID_GCM and MOZ_ANDROID_GOOGLE_PLAY_SERVICES,
 # which take care of the Play Services requirements in
 # java_bundled_libs.  See the note above.
 
@@ -557,6 +567,7 @@ endif
 # @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
 # list to support @BuildFlag(MOZ_FOO).
 BINDING_BUILD_FLAGS = \
+  MOZ_NATIVE_DEVICES \
   $(NULL)
 
 # Preprocess a JNI binding file using the build flags defined above.

@@ -107,6 +107,7 @@
   <string name="share_image_failed">&share_image_failed;</string>
   <string name="save_as_pdf">&save_as_pdf;</string>
   <string name="print">&print;</string>
+  <string name="view_page_source">&view_page_source;</string>
   <string name="find_in_page">&find_in_page;</string>
   <string name="desktop_mode">&desktop_mode;</string>
   <string name="page">&page;</string>

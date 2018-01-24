@@ -88,9 +88,8 @@ var gSearchPane = {
     }
     // The pref has a value.  If the first bucket in the pref is search
     // suggestions, then check the checkbox.
-    let bucketPair = pref.value.split(",")[0];
-    let bucketName = bucketPair.split(":")[0];
-    checkbox.checked = bucketName == "suggestion";
+    let buckets = PlacesUtils.convertMatchBucketsStringToArray(pref.value);
+    checkbox.checked = buckets[0] && buckets[0][0] == "suggestion";
   },
 
   _syncToShowSearchSuggestionsFirstPref(checked, pref) {
