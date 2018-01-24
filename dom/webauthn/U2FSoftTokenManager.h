@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "ScopedNSSTypes.h"
-#include "nsNSSShutDown.h"
 
 /*
  * U2FSoftTokenManager is a software implementation of a secure token manager
@@ -19,8 +18,7 @@
 namespace mozilla {
 namespace dom {
 
-class U2FSoftTokenManager final : public U2FTokenTransport,
-                                  public nsNSSShutDownObject
+class U2FSoftTokenManager final : public U2FTokenTransport
 {
 public:
   explicit U2FSoftTokenManager(uint32_t aCounter);

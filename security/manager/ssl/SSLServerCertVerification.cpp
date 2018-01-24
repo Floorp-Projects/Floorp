@@ -125,7 +125,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
-#include "nsNSSShutDown.h"
 #include "nsSSLStatus.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"

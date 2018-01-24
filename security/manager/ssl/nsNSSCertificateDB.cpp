@@ -30,7 +30,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
 #include "nsPKCS12Blob.h"
 #include "nsPromiseFlatString.h"
 #include "nsProxyRelease.h"

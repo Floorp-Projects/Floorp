@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsThreadUtils.h"
-#include "nsNSSShutDown.h"
 
 namespace mozilla {
 
@@ -22,8 +21,7 @@ namespace mozilla {
  *   (2) Override CallCallback() for the on-the-main-thread call of the
  *       callback.
  */
-class CryptoTask : public Runnable,
-                   public nsNSSShutDownObject
+class CryptoTask : public Runnable
 {
 public:
   template <size_t LEN>

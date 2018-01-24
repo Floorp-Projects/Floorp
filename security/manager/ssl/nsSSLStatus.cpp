@@ -11,7 +11,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSShutDown.h"
 #include "ssl.h"
 
 NS_IMETHODIMP
