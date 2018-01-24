@@ -20,6 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
   /** Test for Bug 683852 **/
   SimpleTest.waitForExplicitFinish();
 
+  const NS_HTML = "http://www.w3.org/1999/xhtml";
+
   function startTest() {
     is(document.contains(document), true, "Document should contain itself!");
 
@@ -48,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
     document.documentElement.appendChild(pi);
     document.contains(pi, true, "Document should contain processing instruction");
 
-    var df = document.createRange().createContextualFragment("<div>foo</div>");
+    var df = document.createRange().createContextualFragment(`<div xmlns="${NS_HTML}">foo</div>`);
     is(df.contains(df.firstChild), true, "Document fragment should contain its child");
     is(df.contains(df.firstChild.firstChild), true,
        "Document fragment should contain its descendant");

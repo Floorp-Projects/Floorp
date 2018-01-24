@@ -234,13 +234,23 @@ var green = (function () {
   return getComputedStyle(temp).backgroundColor;
 })();
 
+// Injected HTML will automatically be sanitized when we're in a chrome
+// document unless we use `unsafeSetInnerHTML`. That function doesn't
+// exist in non-chrome documents, so add a stub to allow the same code
+// to run in both.
+if (!Element.prototype.unsafeSetInnerHTML) {
+  Element.prototype.unsafeSetInnerHTML = html => {
+    this.innerHTML = html;
+  };
+}
+
 // __testCSS(resisting)__.
 // Creates a series of divs and CSS using media queries to set their
 // background color. If all media queries match as expected, then
 // all divs should have a green background color.
 var testCSS = function (resisting) {
-  document.getElementById("display").innerHTML = generateHtmlLines(resisting);
-  document.getElementById("test-css").innerHTML = generateCSSLines(resisting);
+  document.getElementById("display").unsafeSetInnerHTML(generateHtmlLines(resisting));
+  document.getElementById("test-css").unsafeSetInnerHTML(generateCSSLines(resisting));
   let cssTestDivs = document.querySelectorAll(".spoof,.suppress");
   for (let div of cssTestDivs) {
     let color = window.getComputedStyle(div).backgroundColor;
@@ -284,7 +294,7 @@ var testMediaQueriesInPictureElements = async function(resisting) {
       lines += "</picture><br/>\n";
     }
   }
-  document.getElementById("pictures").innerHTML = lines;
+  document.getElementById("pictures").unsafeSetInnerHTML(lines);
   var testImages = document.getElementsByClassName("testImage");
   await sleep(0);
   for (let testImage of testImages) {
