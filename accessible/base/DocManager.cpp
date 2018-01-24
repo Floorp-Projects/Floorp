@@ -470,10 +470,13 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
 DocAccessible*
 DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 {
-  // Ignore hiding, resource documents and documents without docshell.
+  // Ignore hidden documents, resource documents, static clone
+  // (printing) documents and documents without a docshell.
   if (!aDocument->IsVisibleConsideringAncestors() ||
-      aDocument->IsResourceDoc() || !aDocument->IsActive())
+      aDocument->IsResourceDoc() || aDocument->IsStaticDocument() ||
+      !aDocument->IsActive()) {
     return nullptr;
+  }
 
   // Ignore documents without presshell and not having root frame.
   nsIPresShell* presShell = aDocument->GetShell();
