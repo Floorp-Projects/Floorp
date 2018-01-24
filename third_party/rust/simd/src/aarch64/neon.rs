@@ -630,7 +630,7 @@ impl Aarch64I8x16 for i8x16 {
 #[doc(hidden)]
 pub mod common {
     use super::super::super::*;
-    use std::mem;
+    use core::mem;
 
     #[inline]
     pub fn f32x4_sqrt(x: f32x4) -> f32x4 {

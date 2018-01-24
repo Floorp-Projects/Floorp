@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF};
-use api::{LayerPoint, LayerRect};
-use api::{LayerPrimitiveInfo, LayerSize, NormalBorder, RepeatMode};
+use api::{LayerPoint, LayerRect, LayerPrimitiveInfo, LayerSize};
+use api::{NormalBorder, RepeatMode, TexelRect};
 use clip::ClipSource;
 use ellipse::Ellipse;
 use frame_builder::FrameBuilder;
 use gpu_cache::GpuDataRequest;
 use prim_store::{BorderPrimitiveCpu, BrushSegment, BrushSegmentDescriptor};
-use prim_store::{BrushClipMaskKind, EdgeAaSegmentMask, PrimitiveContainer, TexelRect};
+use prim_store::{BrushClipMaskKind, EdgeAaSegmentMask, PrimitiveContainer};
 use util::{lerp, pack_as_float};
 
 #[repr(u8)]

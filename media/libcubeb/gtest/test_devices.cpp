@@ -15,6 +15,17 @@
 #include "cubeb/cubeb.h"
 #include "common.h"
 
+long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
+{
+  // noop, unused
+  return 0;
+}
+
+void state_cb_duplex(cubeb_stream * stream, void * /*user*/, cubeb_state state)
+{
+  // noop, unused
+}
+
 static void
 print_device_info(cubeb_device_info * info, FILE * f)
 {
@@ -164,4 +175,32 @@ TEST(cubeb, enumerate_devices)
   fprintf(stdout, "Found %zu output devices\n", collection.count);
   print_device_collection(&collection, stdout);
   cubeb_device_collection_destroy(ctx, &collection);
+
+  uint32_t count_before_creating_duplex_stream;
+  r = cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection);
+  ASSERT_EQ(r, CUBEB_OK) << "Error enumerating devices " << r;
+  count_before_creating_duplex_stream = collection.count;
+  cubeb_device_collection_destroy(ctx, &collection);
+
+  cubeb_stream * stream;
+  cubeb_stream_params input_params;
+  cubeb_stream_params output_params;
+
+  input_params.format = output_params.format = CUBEB_SAMPLE_FLOAT32NE;
+  input_params.rate = output_params.rate = 48000;
+  input_params.channels = output_params.channels = 1;
+  input_params.layout = output_params.layout = CUBEB_LAYOUT_MONO;
+
+  r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
+                        NULL, &input_params, NULL, &output_params,
+                        1024, data_cb_duplex, state_cb_duplex, nullptr);
+
+  ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
+
+  r = cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection);
+  ASSERT_EQ(r, CUBEB_OK) << "Error enumerating devices " << r;
+  ASSERT_EQ(count_before_creating_duplex_stream, collection.count);
+  cubeb_device_collection_destroy(ctx, &collection);
+
+  cubeb_stream_destroy(stream);
 }

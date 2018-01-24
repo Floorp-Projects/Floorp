@@ -138,10 +138,9 @@ PageThumbsProtocol::ParseProtocolURL(nsIURI* aURI, nsString& aParsedURL)
     return NS_ERROR_MALFORMED_URI;
   }
 
-  URLParams params;
-  params.ParseInput(Substring(path, queryBegins + 1));
-
-  params.Get(NS_LITERAL_STRING("url"), aParsedURL);
+  URLParams::Extract(Substring(path, queryBegins + 1),
+                     NS_LITERAL_STRING("url"),
+                     aParsedURL);
 
   // If there's no URL as part of the query params, there will be no thumbnail
   if (aParsedURL.IsVoid()) {

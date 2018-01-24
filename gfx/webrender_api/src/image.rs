@@ -13,12 +13,10 @@ use std::sync::Arc;
 pub struct ImageKey(pub IdNamespace, pub u32);
 
 impl ImageKey {
-    pub fn new(namespace: IdNamespace, key: u32) -> ImageKey {
-        ImageKey(namespace, key)
-    }
+    pub const DUMMY: Self = ImageKey(IdNamespace(0), 0);
 
-    pub fn dummy() -> ImageKey {
-        ImageKey(IdNamespace(0), 0)
+    pub fn new(namespace: IdNamespace, key: u32) -> Self {
+        ImageKey(namespace, key)
     }
 }
 
@@ -29,14 +27,19 @@ impl ImageKey {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExternalImageId(pub u64);
 
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
+pub enum TextureTarget {
+    Default = 0,
+    Array = 1,
+    Rect = 2,
+    External = 3,
+}
+
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum ExternalImageType {
-    Texture2DHandle,       // gl TEXTURE_2D handle
-    Texture2DArrayHandle,  // gl TEXTURE_2D_ARRAY handle
-    TextureRectHandle,     // gl TEXTURE_RECT handle
-    TextureExternalHandle, // gl TEXTURE_EXTERNAL handle
-    ExternalBuffer,
+    TextureHandle(TextureTarget),
+    Buffer,
 }
 
 #[repr(C)]
@@ -93,6 +96,10 @@ impl ImageDescriptor {
         self.stride
             .unwrap_or(self.width * self.format.bytes_per_pixel())
     }
+
+    pub fn compute_total_size(&self) -> u32 {
+        self.compute_stride() * self.height
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -103,15 +110,15 @@ pub enum ImageData {
 }
 
 impl ImageData {
-    pub fn new(bytes: Vec<u8>) -> ImageData {
+    pub fn new(bytes: Vec<u8>) -> Self {
         ImageData::Raw(Arc::new(bytes))
     }
 
-    pub fn new_shared(bytes: Arc<Vec<u8>>) -> ImageData {
+    pub fn new_shared(bytes: Arc<Vec<u8>>) -> Self {
         ImageData::Raw(bytes)
     }
 
-    pub fn new_blob_image(commands: Vec<u8>) -> ImageData {
+    pub fn new_blob_image(commands: Vec<u8>) -> Self {
         ImageData::Blob(commands)
     }
 
@@ -125,16 +132,13 @@ impl ImageData {
 
     #[inline]
     pub fn uses_texture_cache(&self) -> bool {
-        match self {
-            &ImageData::External(ext_data) => match ext_data.image_type {
-                ExternalImageType::Texture2DHandle => false,
-                ExternalImageType::Texture2DArrayHandle => false,
-                ExternalImageType::TextureRectHandle => false,
-                ExternalImageType::TextureExternalHandle => false,
-                ExternalImageType::ExternalBuffer => true,
+        match *self {
+            ImageData::External(ref ext_data) => match ext_data.image_type {
+                ExternalImageType::TextureHandle(_) => false,
+                ExternalImageType::Buffer => true,
             },
-            &ImageData::Blob(_) => true,
-            &ImageData::Raw(_) => true,
+            ImageData::Blob(_) => true,
+            ImageData::Raw(_) => true,
         }
     }
 }

@@ -9,28 +9,40 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-const StandardURL = Components.Constructor("@mozilla.org/network/standard-url;1",
-                                           "nsIStandardURL",
-                                           "init");
 function run_test()
 {
+    let mutator = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                    .createInstance(Ci.nsIURIMutator);
+    Assert.ok(mutator, "Mutator constructor works");
+
+    let url = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                .createInstance(Ci.nsIStandardURLMutator)
+                .init(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 65535,
+                      "http://localhost", "UTF-8", null)
+                .finalize();
+
     // Bug 1301621 makes invalid ports throw
     Assert.throws(() => {
-        new StandardURL(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 65536,
-                "http://localhost", "UTF-8", null)
+        url = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                .createInstance(Ci.nsIStandardURLMutator)
+                .init(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 65536,
+                      "http://localhost", "UTF-8", null)
+                .finalize();
     }, "invalid port during creation");
-    let url = new StandardURL(Ci.nsIStandardURL.URLTYPE_AUTHORITY, 65535,
-                              "http://localhost", "UTF-8", null)
-                .QueryInterface(Ci.nsIStandardURL)
 
     Assert.throws(() => {
-        url.setDefaultPort(65536);
+        url = url.mutate()
+                 .QueryInterface(Ci.nsIStandardURLMutator)
+                 .setDefaultPort(65536)
+                 .finalize();
     }, "invalid port in setDefaultPort");
     Assert.throws(() => {
-        url.port = 65536;
+        url = url.mutate()
+                 .setPort(65536)
+                 .finalize();
     }, "invalid port in port setter");
 
-    Assert.equal(url.QueryInterface(Ci.nsIURI).port, -1);
+    Assert.equal(url.port, -1);
     do_test_finished();
 }
 

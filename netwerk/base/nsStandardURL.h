@@ -313,19 +313,98 @@ public:
 #endif
 
 public:
-    class Mutator
+
+    // We make this implementation a template so that we can avoid writing
+    // the same code for SubstitutingURL (which extends nsStandardURL)
+    template<class T>
+    class TemplatedMutator
         : public nsIURIMutator
-        , public BaseURIMutator<nsStandardURL>
+        , public BaseURIMutator<T>
+        , public nsIStandardURLMutator
+    {
+        NS_FORWARD_SAFE_NSIURISETTERS_RET(BaseURIMutator<T>::mURI)
+
+        MOZ_MUST_USE NS_IMETHOD
+        Deserialize(const mozilla::ipc::URIParams& aParams) override
+        {
+            return BaseURIMutator<T>::InitFromIPCParams(aParams);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Read(nsIObjectInputStream* aStream) override
+        {
+            return BaseURIMutator<T>::InitFromInputStream(aStream);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Finalize(nsIURI** aURI) override
+        {
+            BaseURIMutator<T>::mURI.forget(aURI);
+            return NS_OK;
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        SetSpec(const nsACString& aSpec, nsIURIMutator** aMutator) override
+        {
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return BaseURIMutator<T>::InitFromSpec(aSpec);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Init(uint32_t aURLType, int32_t aDefaultPort,
+             const nsACString& aSpec, const char* aCharset, nsIURI* aBaseURI,
+             nsIURIMutator** aMutator) override
+        {
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            RefPtr<T> uri;
+            if (BaseURIMutator<T>::mURI) {
+                // We don't need a new URI object if we already have one
+                BaseURIMutator<T>::mURI.swap(uri);
+            } else {
+                uri = new T();
+            }
+            nsresult rv = uri->Init(aURLType, aDefaultPort, aSpec, aCharset, aBaseURI);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            BaseURIMutator<T>::mURI = uri;
+            return NS_OK;
+        }
+
+        MOZ_MUST_USE NS_IMETHODIMP
+        SetDefaultPort(int32_t aNewDefaultPort, nsIURIMutator** aMutator) override
+        {
+            if (!BaseURIMutator<T>::mURI) {
+                return NS_ERROR_NULL_POINTER;
+            }
+            if (aMutator) {
+                nsCOMPtr<nsIURIMutator> mutator = this;
+                mutator.forget(aMutator);
+            }
+            return BaseURIMutator<T>::mURI->SetDefaultPort(aNewDefaultPort);
+        }
+
+        explicit TemplatedMutator() { }
+    private:
+        virtual ~TemplatedMutator() { }
+
+        friend T;
+    };
+
+    class Mutator
+        : public TemplatedMutator<nsStandardURL>
     {
         NS_DECL_ISUPPORTS
-        NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
-        NS_DEFINE_NSIMUTATOR_COMMON
-
-        explicit Mutator() { }
+    public:
+        explicit Mutator() = default;
     private:
-        virtual ~Mutator() { }
-
-        friend class nsStandardURL;
+        virtual ~Mutator() = default;
     };
 };
 

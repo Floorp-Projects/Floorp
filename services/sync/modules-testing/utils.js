@@ -117,9 +117,11 @@ this.makeIdentityConfig = function(overrides) {
     fxaccount: {
       user: {
         assertion: "assertion",
-        email: "email",
-        kA: "kA",
-        kB: "kB",
+        email: "foo",
+        kSync: "a".repeat(128),
+        kXCS: "a".repeat(32),
+        kExtSync: "a".repeat(128),
+        kExtKbHash: "a".repeat(32),
         sessionToken: "sessionToken",
         uid: "a".repeat(32),
         verified: true,
