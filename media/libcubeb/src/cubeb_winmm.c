@@ -402,6 +402,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 
   XASSERT(context);
   XASSERT(stream);
+  XASSERT(output_stream_params);
 
   if (input_stream_params) {
     /* Capture support not yet implemented. */
