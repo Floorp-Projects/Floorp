@@ -94,21 +94,14 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
                          nsIURL** url)
 {
     *url = nullptr;
-
-    nsCOMPtr<nsIStandardURL> stdURL(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
-    if (!stdURL) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     // Flatten the concatenation, just in case.  See bug 128288
     nsAutoCString spec(NS_BOGUS_ENTRY_SCHEME + entryFilename);
-    nsresult rv = stdURL->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                               spec, charset, nullptr);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    return CallQueryInterface(stdURL, url);
+    return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                                           spec, charset, nullptr,
+                                           nullptr)
+             .Finalize(url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

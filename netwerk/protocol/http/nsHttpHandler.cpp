@@ -136,16 +136,12 @@ NewURI(const nsACString &aSpec,
        int32_t aDefaultPort,
        nsIURI **aURI)
 {
-    RefPtr<nsStandardURL> url = new nsStandardURL();
-
-    nsresult rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
-                            aDefaultPort, aSpec, aCharset, aBaseURI);
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    url.forget(aURI);
-    return NS_OK;
+    return NS_MutateURI(new nsStandardURL::Mutator())
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_AUTHORITY,
+                                           aDefaultPort, nsCString(aSpec), aCharset, aBaseURI,
+                                           nullptr)
+             .Finalize(aURI);
 }
 
 #ifdef ANDROID

@@ -171,14 +171,13 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
     if (spec.FindCharInSet(CRLF) >= 0 || spec.FindChar('\0') >= 0)
         return NS_ERROR_MALFORMED_URI;
 
-    nsresult rv;
-    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 21, aSpec, aCharset, aBaseURI);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(url, result);
+    nsCOMPtr<nsIURI> url;
+    return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+             .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                           nsIStandardURL::URLTYPE_AUTHORITY, 21,
+                                           nsCString(aSpec), aCharset, aBaseURI,
+                                           nullptr)
+             .Finalize(result);
 }
 
 NS_IMETHODIMP
