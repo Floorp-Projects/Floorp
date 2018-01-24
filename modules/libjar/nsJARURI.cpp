@@ -292,14 +292,18 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
 
         mJARFile = otherJAR->mJARFile;
 
-        nsCOMPtr<nsIStandardURL> entry(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
-        if (!entry)
-            return NS_ERROR_OUT_OF_MEMORY;
+        nsCOMPtr<nsIURI> entry;
 
-        rv = entry->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
-                         aSpec, mCharsetHint.get(), otherJAR->mJAREntry);
-        if (NS_FAILED(rv))
+        rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+               .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                             nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                                             nsCString(aSpec), mCharsetHint.get(),
+                                             otherJAR->mJAREntry,
+                                             nullptr)
+               .Finalize(entry);
+        if (NS_FAILED(rv)) {
             return rv;
+        }
 
         mJAREntry = do_QueryInterface(entry);
         if (!mJAREntry)
