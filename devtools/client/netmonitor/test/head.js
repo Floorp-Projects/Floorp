@@ -5,7 +5,7 @@
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, testFilterButtons, loadCommonFrameScript,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
-   testColumnsAlignment */
+   testColumnsAlignment, hideColumn, showColumn */
 
 "use strict";
 
@@ -704,6 +704,36 @@ function testColumnsAlignment(headers, requestList) {
        "Headers for columns number " + i + " are aligned."
     );
   }
+}
+
+function* hideColumn(monitor, column) {
+  let { document, parent } = monitor.panelWin;
+
+  info(`Clicking context-menu item for ${column}`);
+  EventUtils.sendMouseEvent({ type: "contextmenu" },
+    document.querySelector(".devtools-toolbar.requests-list-headers"));
+
+  let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
+  parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
+  yield onHeaderRemoved;
+
+  ok(!document.querySelector(`#requests-list-${column}-button`),
+     `Column ${column} should be hidden`);
+}
+
+function* showColumn(monitor, column) {
+  let { document, parent } = monitor.panelWin;
+
+  info(`Clicking context-menu item for ${column}`);
+  EventUtils.sendMouseEvent({ type: "contextmenu" },
+    document.querySelector(".devtools-toolbar.requests-list-headers"));
+
+  let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
+  parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
+  yield onHeaderAdded;
+
+  ok(document.querySelector(`#requests-list-${column}-button`),
+     `Column ${column} should be visible`);
 }
 
 /**
