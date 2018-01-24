@@ -8,11 +8,13 @@
 #define mozilla_dom_PerformanceMainThread_h
 
 #include "Performance.h"
+#include "PerformanceStorage.h"
 
 namespace mozilla {
 namespace dom {
 
 class PerformanceMainThread final : public Performance
+                                  , public PerformanceStorage
 {
 public:
   PerformanceMainThread(nsPIDOMWindowInner* aWindow,
@@ -22,6 +24,11 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PerformanceMainThread,
                                                          Performance)
+
+  PerformanceStorage* AsPerformanceStorage() override
+  {
+    return this;
+  }
 
   virtual PerformanceTiming* Timing() override;
 

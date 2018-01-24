@@ -13,7 +13,6 @@
 #include "nsDOMNavigationTiming.h"
 
 class nsITimedChannel;
-class nsIHttpChannel;
 
 namespace mozilla {
 
@@ -25,6 +24,7 @@ class PerformanceEntry;
 class PerformanceNavigation;
 class PerformanceObserver;
 class PerformanceService;
+class PerformanceStorage;
 class PerformanceTiming;
 
 namespace workers {
@@ -61,8 +61,7 @@ public:
                                 const Optional<nsAString>& aEntryType,
                                 nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
-  virtual void AddEntry(nsIHttpChannel* channel,
-                        nsITimedChannel* timedChannel) = 0;
+  virtual PerformanceStorage* AsPerformanceStorage() = 0;
 
   void ClearResourceTimings();
 

@@ -62,7 +62,7 @@ class nsIPrincipal;
 namespace mozilla {
 
 namespace dom {
-class Performance;
+class PerformanceStorage;
 }
 
 class LogCollector;
@@ -425,7 +425,7 @@ protected:
   // was fired.
   void NotifySetCookie(char const *aCookie);
 
-  mozilla::dom::Performance* GetPerformance();
+  mozilla::dom::PerformanceStorage* GetPerformanceStorage();
   nsIURI* GetReferringPage();
   nsPIDOMWindowInner* GetInnerDOMWindow();
 
