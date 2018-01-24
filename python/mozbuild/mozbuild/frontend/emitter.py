@@ -38,12 +38,9 @@ from .data import (
     Exports,
     FinalTargetFiles,
     FinalTargetPreprocessedFiles,
-    GeneratedEventWebIDLFile,
     GeneratedFile,
     GeneratedSources,
-    GeneratedWebIDLFile,
     GnProjectData,
-    ExampleWebIDLInterface,
     ExternalStaticLibrary,
     ExternalSharedLibrary,
     HostDefines,
@@ -64,8 +61,7 @@ from .data import (
     ObjdirPreprocessedFiles,
     PerSourceFlag,
     PreprocessedIPDLFile,
-    PreprocessedTestWebIDLFile,
-    PreprocessedWebIDLFile,
+    WebIDLCollection,
     Program,
     RustLibrary,
     HostRustLibrary,
@@ -76,11 +72,9 @@ from .data import (
     Sources,
     StaticLibrary,
     TestHarnessFiles,
-    TestWebIDLFile,
     TestManifest,
     UnifiedSources,
     VariablePassthru,
-    WebIDLFile,
     XPIDLFile,
 )
 from mozpack.chrome.manifest import (
@@ -144,6 +138,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self._static_linking_shared = set()
         self._crate_verified_local = set()
         self._crate_directories = dict()
+        self._webidls = defaultdict(set)
 
         # Keep track of external paths (third party build systems), starting
         # from what we run a subconfigure in. We'll eliminate some directories
@@ -293,6 +288,24 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for obj in self._binaries.values():
             yield obj
+
+        webidl_root = self.config.substs.get('WEBIDL_ROOT')
+        if webidl_root:
+            idlcollection = WebIDLCollection(contexts[webidl_root])
+            webidl_attrs = [
+                ('GENERATED_EVENTS_WEBIDL_FILES', idlcollection.generated_events_sources),
+                ('GENERATED_WEBIDL_FILES', idlcollection.generated_sources),
+                ('PREPROCESSED_TEST_WEBIDL_FILES', idlcollection.preprocessed_test_sources),
+                ('PREPROCESSED_WEBIDL_FILES', idlcollection.preprocessed_sources),
+                ('TEST_WEBIDL_FILES', idlcollection.test_sources),
+                ('WEBIDL_FILES', idlcollection.sources),
+                ('WEBIDL_EXAMPLE_INTERFACES', idlcollection.example_interfaces),
+            ]
+            for var, src_set in webidl_attrs:
+                src_set |= self._webidls[var]
+
+            yield idlcollection
+
 
     LIBRARY_NAME_VAR = {
         'host': 'HOST_LIBRARY_NAME',
@@ -1105,19 +1118,27 @@ class TreeMetadataEmitter(LoggingMixin):
                     flags.resolve_flags(defines_var, defines_from_obj)
 
         simple_lists = [
-            ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
-            ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
             ('IPDL_SOURCES', IPDLFile),
             ('PREPROCESSED_IPDL_SOURCES', PreprocessedIPDLFile),
-            ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
-            ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
-            ('TEST_WEBIDL_FILES', TestWebIDLFile),
-            ('WEBIDL_FILES', WebIDLFile),
-            ('WEBIDL_EXAMPLE_INTERFACES', ExampleWebIDLInterface),
         ]
         for context_var, klass in simple_lists:
             for name in context.get(context_var, []):
                 yield klass(context, name)
+
+        webidl_vars = (
+            'GENERATED_EVENTS_WEBIDL_FILES',
+            'GENERATED_WEBIDL_FILES',
+            'PREPROCESSED_TEST_WEBIDL_FILES',
+            'PREPROCESSED_WEBIDL_FILES',
+            'TEST_WEBIDL_FILES',
+            'WEBIDL_FILES',
+        )
+        for context_var in webidl_vars:
+            for name in context.get(context_var, []):
+                self._webidls[context_var].add(mozpath.join(context.srcdir, name))
+        # WEBIDL_EXAMPLE_INTERFACES do not correspond to files.
+        for name in context.get('WEBIDL_EXAMPLE_INTERFACES', []):
+            self._webidls['WEBIDL_EXAMPLE_INTERFACES'].add(name)
 
         local_includes = []
         for local_include in context.get('LOCAL_INCLUDES', []):
