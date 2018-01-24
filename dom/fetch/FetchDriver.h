@@ -118,6 +118,12 @@ public:
   SetDocument(nsIDocument* aDocument);
 
   void
+  SetClientInfo(const ClientInfo& aClientInfo);
+
+  void
+  SetController(const Maybe<ServiceWorkerDescriptor>& aController);
+
+  void
   SetWorkerScript(const nsACString& aWorkerScirpt)
   {
     MOZ_ASSERT(!aWorkerScirpt.IsEmpty());
@@ -136,6 +142,8 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
+  Maybe<ClientInfo> mClientInfo;
+  Maybe<ServiceWorkerDescriptor> mController;
   nsCOMPtr<nsIChannel> mChannel;
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;

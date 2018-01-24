@@ -17,6 +17,8 @@ from io import BytesIO
 
 from buildconfig import topsrcdir
 from xpidl.header import print_header
+from xpidl.rust import print_rust_bindings
+from xpidl.rust_macros import print_rust_macros_bindings
 from xpidl.typelib import write_typelib
 from xpidl.xpidl import IDLParser
 from xpt import xpt_link
@@ -26,7 +28,8 @@ from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 
-def process(input_dir, inc_paths, cache_dir, header_dir, xpt_dir, deps_dir, module, stems):
+def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
+            xpt_dir, deps_dir, module, stems):
     p = IDLParser(outputdir=cache_dir)
 
     xpts = {}
@@ -45,6 +48,8 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpt_dir, deps_dir, modu
         idl.resolve([input_dir] + inc_paths, p)
 
         header_path = os.path.join(header_dir, '%s.h' % stem)
+        rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
+        rs_bt_path = os.path.join(xpcrs_dir, 'bt', '%s.rs' % stem)
 
         xpt = BytesIO()
         write_typelib(idl, xpt, path)
@@ -55,6 +60,12 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpt_dir, deps_dir, modu
 
         with FileAvoidWrite(header_path) as fh:
             print_header(idl, fh, path)
+
+        with FileAvoidWrite(rs_rt_path) as fh:
+            print_rust_bindings(idl, fh, path)
+
+        with FileAvoidWrite(rs_bt_path) as fh:
+            print_rust_macros_bindings(idl, fh, path)
 
     # TODO use FileAvoidWrite once it supports binary mode.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
@@ -77,6 +88,8 @@ def main(argv):
         help='Directory in which to find source .idl files.')
     parser.add_argument('headerdir',
         help='Directory in which to write header files.')
+    parser.add_argument('xpcrsdir',
+        help='Directory in which to write rust xpcom binding files.')
     parser.add_argument('xptdir',
         help='Directory in which to write xpt file.')
     parser.add_argument('module',
@@ -88,7 +101,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
     process(args.inputdir, args.incpath, args.cache_dir, args.headerdir,
-        args.xptdir, args.depsdir, args.module, args.idls)
+        args.xpcrsdir, args.xptdir, args.depsdir, args.module, args.idls)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

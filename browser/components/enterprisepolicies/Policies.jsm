@@ -40,7 +40,31 @@ this.Policies = {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);
     }
-  }
+  },
+
+  "flash_plugin": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("plugin:flash", param.allow, param.block);
+    }
+  },
+
+  "popups": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("popup", param.allow, param.block);
+    }
+  },
+
+  "install_addons": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("install", param.allow, param.block);
+    }
+  },
+
+  "cookies": {
+    onBeforeUIStartup(manager, param) {
+      addAllowDenyPermissions("cookie", param.allow, param.block);
+    }
+  },
 };
 
 /*
@@ -77,4 +101,23 @@ function setAndLockPref(prefName, prefValue) {
   }
 
   Services.prefs.lockPref(prefName);
+}
+
+function addAllowDenyPermissions(permissionName, allowList, blockList) {
+  allowList = allowList || [];
+  blockList = blockList || [];
+
+  for (let origin of allowList) {
+    Services.perms.add(origin,
+                       permissionName,
+                       Ci.nsIPermissionManager.ALLOW_ACTION,
+                       Ci.nsIPermissionManager.EXPIRE_POLICY);
+  }
+
+  for (let origin of blockList) {
+    Services.perms.add(origin,
+                       permissionName,
+                       Ci.nsIPermissionManager.DENY_ACTION,
+                       Ci.nsIPermissionManager.EXPIRE_POLICY);
+  }
 }

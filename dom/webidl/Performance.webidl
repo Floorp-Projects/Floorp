@@ -14,7 +14,7 @@ typedef double DOMHighResTimeStamp;
 typedef sequence <PerformanceEntry> PerformanceEntryList;
 
 [Exposed=(Window,Worker)]
-interface Performance {
+interface Performance : EventTarget {
   [DependsOn=DeviceState, Affects=Nothing]
   DOMHighResTimeStamp now();
 

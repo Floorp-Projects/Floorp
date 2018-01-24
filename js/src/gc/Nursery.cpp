@@ -23,6 +23,7 @@
 #if defined(DEBUG)
 #include "vm/EnvironmentObject.h"
 #endif
+#include "gc/FreeOp.h"
 #include "vm/JSONPrinter.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"

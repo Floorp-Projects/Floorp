@@ -12,23 +12,29 @@
 <body>
 <p id="display"></p>
 <div id="content">
-<iframe sandbox="allow-scripts allow-same-origin"></iframe>
+<iframe id="normal-frame"></iframe>
+<iframe sandbox="allow-scripts" id="sandbox-frame"></iframe>
 </div>
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-  var iframe;
+  var normalFrame;
+  var sandboxFrame;
   function runTest() {
-    iframe = document.querySelector("iframe");
-    iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/register.html";
+    normalFrame = document.getElementById("normal-frame");
+    sandboxFrame = document.getElementById("sandbox-frame");
+    normalFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/index.html";
+        normalFrame.src = "about:blank";
+        sandboxFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/index.html";
       } else if (e.data.status == "done") {
-        iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/unregister.html";
+        sandboxFrame.src = "about:blank";
+        normalFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
+        normalFrame.src = "about:blank";
         window.onmessage = null;
         ok(true, "Test finished successfully");
         SimpleTest.finish();

@@ -11,6 +11,7 @@
 #include "jsobj.h"
 
 #include "ds/OrderedHashTable.h"
+#include "gc/FreeOp.h"
 #include "js/Utility.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

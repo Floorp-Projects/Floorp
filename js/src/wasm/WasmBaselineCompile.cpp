@@ -207,11 +207,6 @@ static const Register RabaldrScratchI32 = ebx;
 #endif
 
 #ifdef JS_CODEGEN_ARM
-// We need a temp for funcPtrCall.  It can't be any of the
-// WasmTableCall registers, an argument register, or a scratch
-// register, and probably should not be ReturnReg.
-static const Register FuncPtrCallTemp = CallTempReg1;
-
 // We use our own scratch register, because the macro assembler uses
 // the regular scratch register(s) pretty liberally.  We could
 // work around that in several cases but the mess does not seem

@@ -267,10 +267,13 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (mCanGoBack) {
+        final boolean fullScreen = ActivityUtils.isFullScreen(this);
+        if (fullScreen) {
+            mGeckoSession.exitFullScreen();
+        } else if (mCanGoBack) {
             mGeckoSession.goBack();
         } else {
-            finish();
+            super.onBackPressed();
         }
     }
 

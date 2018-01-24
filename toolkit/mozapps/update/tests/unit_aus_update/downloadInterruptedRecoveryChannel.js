@@ -10,6 +10,12 @@ function run_test() {
 
   debugDump("testing recovery of mar download after pause and resume");
 
+  // This test assumes speculative connections enabled.
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
+  });
+
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver({slowDownload: true});
   setUpdateURL(gURLData + gHTTPHandlerPath);

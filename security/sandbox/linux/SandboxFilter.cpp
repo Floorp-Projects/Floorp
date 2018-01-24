@@ -7,6 +7,7 @@
 #include "SandboxFilter.h"
 #include "SandboxFilterUtil.h"
 
+#include "Sandbox.h" // for ContentProcessSandboxParams
 #include "SandboxBrokerClient.h"
 #include "SandboxInfo.h"
 #include "SandboxInternal.h"
@@ -14,6 +15,7 @@
 #ifdef MOZ_GMP_SANDBOX
 #include "SandboxOpenedFiles.h"
 #endif
+#include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
@@ -373,7 +375,17 @@ public:
 class ContentSandboxPolicy : public SandboxPolicyCommon {
 private:
   SandboxBrokerClient* mBroker;
-  std::vector<int> mSyscallWhitelist;
+  ContentProcessSandboxParams mParams;
+
+  bool BelowLevel(int aLevel) const {
+    return mParams.mLevel < aLevel;
+  }
+  ResultExpr AllowBelowLevel(int aLevel, ResultExpr aOrElse) const {
+    return BelowLevel(aLevel) ? Allow() : Move(aOrElse);
+  }
+  ResultExpr AllowBelowLevel(int aLevel) const {
+    return AllowBelowLevel(aLevel, InvalidSyscall());
+  }
 
   // Trap handlers for filesystem brokering.
   // (The amount of code duplication here could be improved....)
@@ -578,11 +590,14 @@ private:
   }
 
 public:
-  explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker,
-                                const std::vector<int>& aSyscallWhitelist)
-    : mBroker(aBroker),
-      mSyscallWhitelist(aSyscallWhitelist) {}
+  ContentSandboxPolicy(SandboxBrokerClient* aBroker,
+                       ContentProcessSandboxParams&& aParams)
+    : mBroker(aBroker)
+    , mParams(Move(aParams))
+    { }
+
   ~ContentSandboxPolicy() override = default;
+
   Maybe<ResultExpr> EvaluateSocketCall(int aCall) const override {
     switch(aCall) {
     case SYS_RECVFROM:
@@ -610,10 +625,15 @@ public:
     case SYS_SOCKET:
       return Some(Error(EACCES));
 #else // #ifdef DESKTOP
+    case SYS_SOCKET: // DANGEROUS
+      // Some things try to get a socket but can work without one,
+      // like sctp_userspace_get_mtu_from_ifn in WebRTC, so this is
+      // silently disallowed.
+      return Some(AllowBelowLevel(4, Error(EACCES)));
+    case SYS_CONNECT: // DANGEROUS
+      return Some(AllowBelowLevel(4));
     case SYS_RECV:
     case SYS_SEND:
-    case SYS_SOCKET: // DANGEROUS
-    case SYS_CONNECT: // DANGEROUS
     case SYS_GETSOCKOPT:
     case SYS_SETSOCKOPT:
     case SYS_GETSOCKNAME:
@@ -650,16 +670,20 @@ public:
 
 #ifdef MOZ_PULSEAUDIO
   ResultExpr PrctlPolicy() const override {
-    Arg<int> op(0);
-    return If(op == PR_GET_NAME, Allow())
-      .Else(SandboxPolicyCommon::PrctlPolicy());
+    if (BelowLevel(4)) {
+      Arg<int> op(0);
+      return If(op == PR_GET_NAME, Allow())
+             .Else(SandboxPolicyCommon::PrctlPolicy());
+    }
+    return SandboxPolicyCommon::PrctlPolicy();
   }
 #endif
 
   ResultExpr EvaluateSyscall(int sysno) const override {
     // Straight allow for anything that got overriden via prefs
-    if (std::find(mSyscallWhitelist.begin(), mSyscallWhitelist.end(), sysno)
-        != mSyscallWhitelist.end()) {
+    const auto& whitelist = mParams.mSyscallWhitelist;
+    if (std::find(whitelist.begin(), whitelist.end(), sysno)
+        != whitelist.end()) {
       if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
         SANDBOX_LOG_ERROR("Allowing syscall nr %d via whitelist", sysno);
       }
@@ -737,9 +761,12 @@ public:
     case __NR_getcwd:
       return Error(ENOENT);
 
+#ifdef MOZ_PULSEAUDIO
+    CASES_FOR_fchown:
+    case __NR_fchmod:
+      return AllowBelowLevel(4);
+#endif
     CASES_FOR_fstatfs: // fontconfig, pulseaudio, GIO (see also statfs)
-    CASES_FOR_fchown: // pulseaudio
-    case __NR_fchmod: // pulseaudio
     case __NR_flock: // graphics
       return Allow();
 
@@ -770,11 +797,12 @@ public:
 #endif
       return Allow();
 
-#ifdef MOZ_ALSA
-    case __NR_ioctl:
-      return Allow();
-#else
     case __NR_ioctl: {
+#ifdef MOZ_ALSA
+      if (BelowLevel(4)) {
+        return Allow();
+      }
+#endif
       static const unsigned long kTypeMask = _IOC_TYPEMASK << _IOC_TYPESHIFT;
       static const unsigned long kTtyIoctls = TIOCSTI & kTypeMask;
       // On some older architectures (but not x86 or ARM), ioctls are
@@ -801,7 +829,6 @@ public:
         .ElseIf(shifted_type != kTtyIoctls, Allow())
         .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
     }
-#endif // !MOZ_ALSA
 
     CASES_FOR_fcntl: {
       Arg<int> cmd(1);
@@ -910,15 +937,18 @@ public:
       // really do anything one way or the other, now that file
       // accesses are brokered to another process.
     case __NR_umask:
-      return Allow();
+      return AllowBelowLevel(4);
 
     case __NR_kill: {
-      Arg<int> sig(1);
-      // PulseAudio uses kill(pid, 0) to check if purported owners of
-      // shared memory files are still alive; see bug 1397753 for more
-      // details.
-      return If(sig == 0, Error(EPERM))
-        .Else(InvalidSyscall());
+      if (BelowLevel(4)) {
+        Arg<int> sig(1);
+        // PulseAudio uses kill(pid, 0) to check if purported owners of
+        // shared memory files are still alive; see bug 1397753 for more
+        // details.
+        return If(sig == 0, Error(EPERM))
+               .Else(InvalidSyscall());
+      }
+      return InvalidSyscall();
     }
 
     case __NR_wait4:
@@ -1003,9 +1033,9 @@ public:
 
 UniquePtr<sandbox::bpf_dsl::Policy>
 GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker,
-                        const std::vector<int>& aSyscallWhitelist)
+                        ContentProcessSandboxParams&& aParams)
 {
-  return MakeUnique<ContentSandboxPolicy>(aMaybeBroker, aSyscallWhitelist);
+  return MakeUnique<ContentSandboxPolicy>(aMaybeBroker, Move(aParams));
 }
 #endif // MOZ_CONTENT_SANDBOX
 

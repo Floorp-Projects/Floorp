@@ -16,6 +16,7 @@
 #include "jscompartment.h"
 
 #include "gc/Allocator.h"
+#include "gc/FreeOp.h"
 #include "gc/Marking.h"
 
 namespace js {

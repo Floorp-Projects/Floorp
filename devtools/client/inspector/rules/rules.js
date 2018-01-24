@@ -26,6 +26,7 @@ const {
   VIEW_NODE_LOCATION_TYPE,
   VIEW_NODE_SHAPE_POINT_TYPE,
   VIEW_NODE_VARIABLE_TYPE,
+  VIEW_NODE_FONT_TYPE,
 } = require("devtools/client/inspector/shared/node-types");
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
@@ -321,6 +322,17 @@ CssRuleView.prototype = {
       value = {
         property: getPropertyNameAndValue(node).name,
         value: node.textContent,
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        pseudoElement: prop.rule.pseudoElement,
+        sheetHref: prop.rule.domRule.href,
+        textProperty: prop
+      };
+    } else if (classes.contains("ruleview-font-family") && prop) {
+      type = VIEW_NODE_FONT_TYPE;
+      value = {
+        property: getPropertyNameAndValue(node).name,
+        value: getPropertyNameAndValue(node).value,
         enabled: prop.enabled,
         overridden: prop.overridden,
         pseudoElement: prop.rule.pseudoElement,

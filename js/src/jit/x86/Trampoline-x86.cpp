@@ -24,6 +24,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
+#include "jit/SharedICHelpers-inl.h"
 
 using mozilla::IsPowerOfTwo;
 

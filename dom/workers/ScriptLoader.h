@@ -38,6 +38,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIDocument* aParentDoc,
                                nsILoadGroup* aLoadGroup,
                                const nsAString& aScriptURL,
+                               const Maybe<ClientInfo>& aClientInfo,
                                nsContentPolicyType aContentPolicyType,
                                bool aDefaultURIEncoding,
                                nsIChannel** aChannel);

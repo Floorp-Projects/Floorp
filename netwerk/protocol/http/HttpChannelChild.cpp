@@ -434,7 +434,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                     const NetAddr& aPeerAddr,
                     const uint32_t& aCacheKey,
                     const nsCString& altDataType,
-                    const int64_t& altDataLen)
+                    const int64_t& altDataLen,
+                    Maybe<ServiceWorkerDescriptor>&& aController)
   : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
@@ -452,6 +453,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   , mCacheKey(aCacheKey)
   , mAltDataType(altDataType)
   , mAltDataLen(altDataLen)
+  , mController(Move(aController))
   {}
 
   void Run() override
@@ -462,7 +464,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                            mCacheEntryId, mCacheFetchCount,
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
-                           mCacheKey, mAltDataType, mAltDataLen);
+                           mCacheKey, mAltDataType, mAltDataLen,
+                           mController);
   }
 
  private:
@@ -482,6 +485,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   uint32_t mCacheKey;
   nsCString mAltDataType;
   int64_t mAltDataLen;
+  Maybe<ServiceWorkerDescriptor> mController;
 };
 
 mozilla::ipc::IPCResult
@@ -501,7 +505,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const int16_t& redirectCount,
                                      const uint32_t& cacheKey,
                                      const nsCString& altDataType,
-                                     const int64_t& altDataLen)
+                                     const int64_t& altDataLen,
+                                     const OptionalIPCServiceWorkerDescriptor& aController)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -513,6 +518,11 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
 
 
   mRedirectCount = redirectCount;
+  Maybe<ServiceWorkerDescriptor> controller;
+  if (aController.type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
+    controller.emplace(ServiceWorkerDescriptor(
+      aController.get_IPCServiceWorkerDescriptor()));
+  }
 
   mEventQ->RunOrEnqueue(new StartRequestEvent(this, channelStatus, responseHead,
                                               useResponseHead, requestHeaders,
@@ -521,7 +531,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               cacheExpirationTime, cachedCharset,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
-                                              altDataType, altDataLen));
+                                              altDataType, altDataLen,
+                                              Move(controller)));
 
   {
     // Child's mEventQ is to control the execution order of the IPC messages
@@ -561,7 +572,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const NetAddr& peerAddr,
                                  const uint32_t& cacheKey,
                                  const nsCString& altDataType,
-                                 const int64_t& altDataLen)
+                                 const int64_t& altDataLen,
+                                 const Maybe<ServiceWorkerDescriptor>& aController)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -595,6 +607,26 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
 
   mAvailableCachedAltDataType = altDataType;
   mAltDataLength = altDataLen;
+
+  const Maybe<ServiceWorkerDescriptor>& prevController =
+    mLoadInfo->GetController();
+
+  // If we got a service worker controller from the parent, then note
+  // it on the LoadInfo.  This may indicate that a non-subresource request
+  // was intercepted and the resulting window/worker should be controlled.
+  if (aController.isSome() && prevController.isNothing()) {
+    mLoadInfo->SetController(aController.ref());
+  }
+
+  // If we did not set a controller, then verify it was either because:
+  //  1. Neither the parent or child know about a controlling service worker.
+  //  2. The parent and child both have the same controlling service worker.
+  else {
+    MOZ_DIAGNOSTIC_ASSERT((prevController.isNothing() && aController.isNothing()) ||
+                          (prevController.ref().Id() == aController.ref().Id() &&
+                           prevController.ref().Scope() == aController.ref().Scope() &&
+                           prevController.ref().PrincipalInfo() == aController.ref().PrincipalInfo()));
+  }
 
   mAfterOnStartRequestBegun = true;
 

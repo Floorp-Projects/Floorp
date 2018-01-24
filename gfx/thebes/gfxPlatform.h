@@ -305,7 +305,7 @@ public:
       return mContentBackend;
     }
 
-    mozilla::gfx::BackendType GetPreferredCanvasBackend() {
+    virtual mozilla::gfx::BackendType GetPreferredCanvasBackend() {
       return mPreferredCanvasBackend;
     }
     mozilla::gfx::BackendType GetFallbackCanvasBackend() {

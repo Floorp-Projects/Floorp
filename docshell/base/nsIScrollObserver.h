@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 #include "Units.h"
 
+// Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ISCROLLOBSERVER_IID \
   { 0xaa5026eb, 0x2f88, 0x4026, \
     { 0xa4, 0x6b, 0xf4, 0x59, 0x6b, 0x4e, 0xdf, 0x00 } }
