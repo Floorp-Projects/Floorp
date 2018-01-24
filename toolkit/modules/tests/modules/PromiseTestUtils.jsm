@@ -14,11 +14,11 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://testing-common/Assert.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://testing-common/Assert.jsm", this);
 
 // Keep "JSMPromise" separate so "Promise" still refers to DOM Promises.
-let JSMPromise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+let JSMPromise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 this.PromiseTestUtils = {
   /**

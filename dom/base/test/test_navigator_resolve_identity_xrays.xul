@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=985827
 
   SimpleTest.waitForExplicitFinish();
 
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   addLoadEvent(function() {
     var iframe = document.getElementById("t");

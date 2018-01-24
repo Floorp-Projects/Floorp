@@ -6,8 +6,8 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Deprecated.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/Deprecated.jsm", this);
 
 // Using this named functions to test deprecation and the properly logged
 // callstacks.

@@ -11,7 +11,7 @@ load(_HTTPD_JS_PATH.path);
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to

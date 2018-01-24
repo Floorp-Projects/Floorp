@@ -6,9 +6,9 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Integration.jsm", this);
-Cu.import("resource:///modules/PermissionUI.jsm", this);
-Cu.import("resource:///modules/SitePermissions.jsm", this);
+ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
+ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
+ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
 // Tests that GeolocationPermissionPrompt works as expected
 add_task(async function test_geo_permission_prompt() {

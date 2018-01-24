@@ -5,9 +5,9 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.defineModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
 
 this.EXPORTED_SYMBOLS = ["CleanupManager"];
 

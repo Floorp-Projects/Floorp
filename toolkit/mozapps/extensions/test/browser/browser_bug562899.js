@@ -6,7 +6,7 @@
 // the last selected is displayed
 
 var tempScope = {};
-Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
+ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
 var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 var gManagerWindow;

@@ -20,8 +20,8 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // LoginHelper
 
@@ -44,7 +44,7 @@ this.LoginHelper = {
     };
 
     // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-    let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
+    let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
     let consoleOptions = {
       maxLogLevel: getMaxLogLevel(),
       prefix: aLogPrefix,
@@ -657,7 +657,7 @@ this.LoginHelper = {
   },
 
   removeLegacySignonFiles() {
-    const {Constants, Path, File} = Cu.import("resource://gre/modules/osfile.jsm").OS;
+    const {Constants, Path, File} = ChromeUtils.import("resource://gre/modules/osfile.jsm").OS;
 
     const profileDir = Constants.Path.profileDir;
     const defaultSignonFilePrefs = new Map([

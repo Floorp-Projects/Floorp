@@ -7,7 +7,7 @@
  * development), English, is working for the PluralForm javascript module.
  */
 
-Components.utils.import("resource://gre/modules/PluralForm.jsm");
+ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
 
 function run_test()
 {

@@ -6,7 +6,7 @@
 
 /* import-globals-from viewSource.js */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function onLoadViewPartialSource() {
   // check the view_source.wrap_long_lines pref

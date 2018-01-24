@@ -6,7 +6,7 @@
 // Tests exports from Timer.jsm
 
 var imported = {};
-Components.utils.import("resource://gre/modules/Timer.jsm", imported);
+ChromeUtils.import("resource://gre/modules/Timer.jsm", imported);
 
 add_task(async function test_setTimeout() {
   let timeout1 = imported.setTimeout(() => do_throw("Should not be called"), 100);

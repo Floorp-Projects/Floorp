@@ -2,10 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
+ChromeUtils.defineModuleGetter(this, "gDevTools",
+                               "resource://devtools/client/framework/gDevTools.jsm");
+ChromeUtils.defineModuleGetter(this, "devtools",
+                               "resource://devtools/shared/Loader.jsm");
 
 add_task(async function test_devtools_panels_elements_onSelectionChanged() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");

@@ -23,8 +23,8 @@
  *
  */
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // the topic we observe to use the API.  http-on-opening-request might also
 // work for some purposes.

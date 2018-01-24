@@ -1,6 +1,6 @@
-Cu.import("resource://gre/modules/ObjectUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
 Cu.importGlobalProperties(["URLSearchParams"]);
 
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
@@ -2893,7 +2893,7 @@ add_task(async function test_ensureMobileQuery() {
 
   let PlacesUIUtils;
   try {
-    PlacesUIUtils = Cu.import("resource:///modules/PlacesUIUtils.jsm", {}).PlacesUIUtils;
+    PlacesUIUtils = ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm", {}).PlacesUIUtils;
     PlacesUIUtils.maybeRebuildLeftPane();
   } catch (ex) {
     info("Can't build left pane roots; skipping test");

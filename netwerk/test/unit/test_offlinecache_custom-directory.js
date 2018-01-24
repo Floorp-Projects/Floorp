@@ -9,9 +9,9 @@
  * 3. checks presence of index.sql and files in the expected location
  */
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import('resource://gre/modules/Services.jsm');
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 
 var httpServer = null;

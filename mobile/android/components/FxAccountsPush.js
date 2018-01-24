@@ -5,20 +5,20 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 const {
   PushCrypto,
   getCryptoParams,
-} = Cu.import("resource://gre/modules/PushCrypto.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "PushService",
   "@mozilla.org/push/Service;1", "nsIPushService");
 XPCOMUtils.defineLazyGetter(this, "_decoder", () => new TextDecoder());
 
 const FXA_PUSH_SCOPE = "chrome://fxa-push";
-const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccountsPush");
+const Log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccountsPush");
 
 function FxAccountsPush() {
   Services.obs.addObserver(this, "FxAccountsPush:ReceivedPushMessageToDecode");

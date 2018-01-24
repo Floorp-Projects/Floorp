@@ -3,17 +3,17 @@
 this.EXPORTED_SYMBOLS = ["NewTabWebChannel"];
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
-                                  "resource:///modules/NewTabPrefsProvider.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabRemoteResources",
-                                  "resource:///modules/NewTabRemoteResources.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
-                                  "resource://gre/modules/WebChannel.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabPrefsProvider",
+                               "resource:///modules/NewTabPrefsProvider.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabRemoteResources",
+                               "resource:///modules/NewTabRemoteResources.jsm");
+ChromeUtils.defineModuleGetter(this, "WebChannel",
+                               "resource://gre/modules/WebChannel.jsm");
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
+  const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
   return EventEmitter;
 });
 

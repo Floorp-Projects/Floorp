@@ -8,8 +8,8 @@ var Cc = Components.classes;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/LoadContextInfo.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 // Import common head.
 /* import-globals-from ../../../../../toolkit/components/places/tests/head_common.js */
@@ -22,7 +22,7 @@ if (commonFile) {
 // Put any other stuff relative to this test folder below.
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUIUtils", function() {
-  Cu.import("resource:///modules/PlacesUIUtils.jsm");
+  ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
   return PlacesUIUtils;
 });
 
@@ -30,7 +30,7 @@ const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 
 // Needed by some test that relies on having an app registered.
-Cu.import("resource://testing-common/AppInfo.jsm", this);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "PlacesTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",

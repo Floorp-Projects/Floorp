@@ -1,6 +1,6 @@
 const {utils: Cu} = Components;
 
-const {Context} = Cu.import("chrome://marionette/content/browser.js", {});
+const {Context} = ChromeUtils.import("chrome://marionette/content/browser.js", {});
 
 add_test(function test_Context() {
   ok(Context.hasOwnProperty("Chrome"));

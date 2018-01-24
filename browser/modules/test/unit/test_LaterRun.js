@@ -5,11 +5,11 @@ const kPagePrefRoot = "browser.laterrun.pages.";
 const kSessionCountPref = "browser.laterrun.bookkeeping.sessionCount";
 const kProfileCreationTime = "browser.laterrun.bookkeeping.profileCreationTime";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource:///modules/LaterRun.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource:///modules/LaterRun.jsm");
 
 Services.prefs.setBoolPref(kEnabledPref, true);
-Components.utils.import("resource://testing-common/AppInfo.jsm");
+ChromeUtils.import("resource://testing-common/AppInfo.jsm");
 updateAppInfo();
 
 add_task(async function test_page_applies() {

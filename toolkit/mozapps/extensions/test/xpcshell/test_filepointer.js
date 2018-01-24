@@ -45,7 +45,7 @@ profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 const sourceDir = gProfD.clone();
 sourceDir.append("source");
 
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver;
 
 function writePointer(aId, aName) {

@@ -2,8 +2,8 @@
 
 do_get_profile();
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://modules/AddonManager.jsm");
 
 function waitForPrefChange(pref) {
   return new Promise(resolve => {

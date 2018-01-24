@@ -1,10 +1,10 @@
 "use strict";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 // For the following 5 lines of codes, we redirect the
 // path of the "ppapi.js" in addon to the exact file path.
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 let resHandler = Services.io.getProtocolHandler("resource")
                          .QueryInterface(Components.interfaces.nsISubstitutingProtocolHandler);
 let dataURI = NetUtil.newURI(do_get_file("."));

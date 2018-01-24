@@ -3,7 +3,7 @@
  */
 
 var tempScope = {};
-Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm", tempScope);
+ChromeUtils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm", tempScope);
 var AddonUpdateChecker = tempScope.AddonUpdateChecker;
 
 const updaterdf = RELATIVE_DIR + "browser_updatessl.rdf";

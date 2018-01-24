@@ -4,7 +4,7 @@
 
 const {utils: Cu} = Components;
 
-const {pprint, truncate} = Cu.import("chrome://marionette/content/format.js", {});
+const {pprint, truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 
 const MAX_STRING_LENGTH = 250;
 const HALF = "x".repeat(MAX_STRING_LENGTH / 2);

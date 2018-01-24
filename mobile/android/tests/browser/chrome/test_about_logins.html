@@ -18,8 +18,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const { interfaces: Ci, utils: Cu } = Components;
 
-  Cu.import("resource://gre/modules/AppConstants.jsm");
-  Cu.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   const LOGIN_FIELDS = {
     hostname: "http://example.org/tests/robocop/robocop_blank_01.html",

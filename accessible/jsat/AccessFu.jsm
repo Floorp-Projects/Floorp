@@ -10,11 +10,11 @@ const {utils: Cu, interfaces: Ci} = Components;
 
 this.EXPORTED_SYMBOLS = ["AccessFu"]; // jshint ignore:line
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/accessibility/Utils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
 
 if (Utils.MozBuildApp === "mobile/android") {
-  Cu.import("resource://gre/modules/Messaging.jsm");
+  ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 }
 
 const ACCESSFU_DISABLE = 0; // jshint ignore:line
@@ -79,9 +79,9 @@ this.AccessFu = { // jshint ignore:line
     }
     this._enabled = true;
 
-    Cu.import("resource://gre/modules/accessibility/Utils.jsm");
-    Cu.import("resource://gre/modules/accessibility/PointerAdapter.jsm");
-    Cu.import("resource://gre/modules/accessibility/Presentation.jsm");
+    ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
+    ChromeUtils.import("resource://gre/modules/accessibility/PointerAdapter.jsm");
+    ChromeUtils.import("resource://gre/modules/accessibility/Presentation.jsm");
 
     for (let mm of Utils.AllMessageManagers) {
       this._addMessageListeners(mm);
@@ -519,7 +519,7 @@ var Output = {
   },
 
   start: function start() {
-    Cu.import("resource://gre/modules/Geometry.jsm");
+    ChromeUtils.import("resource://gre/modules/Geometry.jsm");
   },
 
   stop: function stop() {

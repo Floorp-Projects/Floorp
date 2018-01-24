@@ -37,16 +37,16 @@ var _XPCSHELL_PROCESS;
 // modules.
 _register_modules_protocol_handler();
 
-var _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
-var _PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
-var _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
+var _Promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", {}).Promise;
+var _PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
+var _Task = ChromeUtils.import("resource://gre/modules/Task.jsm", {}).Task;
 
-let _NetUtil = Components.utils.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
+let _NetUtil = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {}).NetUtil;
 
 Components.utils.importGlobalProperties(["XMLHttpRequest"]);
 
 // Support a common assertion library, Assert.jsm.
-var AssertCls = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+var AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 // Pass a custom report function for xpcshell-test style reporting.
 var Assert = new AssertCls(function(err, message, stack) {
   if (err) {
@@ -66,7 +66,7 @@ var _dumpLog = function(raw_msg) {
   dump("\n" + JSON.stringify(raw_msg) + "\n");
 };
 
-var _LoggerClass = Components.utils.import("resource://testing-common/StructuredLog.jsm", null).StructuredLogger;
+var _LoggerClass = ChromeUtils.import("resource://testing-common/StructuredLog.jsm", null).StructuredLogger;
 var _testLogger = new _LoggerClass("xpcshell/head.js", _dumpLog, [_add_params]);
 
 // Disable automatic network detection, so tests work correctly when
@@ -396,7 +396,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
 
   let require;
   try {
-    ({ require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {}));
+    ({ require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}));
   } catch (e) {
     throw new Error("resource://devtools appears to be inaccessible from the " +
                     "xpcshell environment.\n" +
@@ -516,7 +516,7 @@ function _execute_test() {
 
   let coverageCollector = null;
   if (typeof _JSCOV_DIR === "string") {
-    let _CoverageCollector = Components.utils.import("resource://testing-common/CoverageUtils.jsm", {}).CoverageCollector;
+    let _CoverageCollector = ChromeUtils.import("resource://testing-common/CoverageUtils.jsm", {}).CoverageCollector;
     coverageCollector = new _CoverageCollector(_JSCOV_DIR);
   }
 
