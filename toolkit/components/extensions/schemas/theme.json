@@ -77,6 +77,10 @@
                 "$ref": "ThemeColor",
                 "optional": true
               },
+              "frame_inactive": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
               "textcolor": {
                 "$ref": "ThemeColor",
                 "optional": true
