@@ -173,6 +173,9 @@ struct HttpChannelOpenArgs
   bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
   nsCString                   contentTypeHint;
+  uint32_t                    corsMode;
+  uint32_t                    redirectMode;
+  uint32_t                    fetchCacheMode;
   uint64_t                    channelId;
   uint64_t                    contentWindowId;
   nsCString                   preferredAlternativeType;
