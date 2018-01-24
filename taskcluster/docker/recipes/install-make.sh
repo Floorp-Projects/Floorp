@@ -16,12 +16,13 @@ tooltool_fetch <<'EOF'
   }
 ]
 EOF
-cd make-4.0
-./configure
-make
-make install
+(
+  cd make-4.0 || exit
+  ./configure
+  make
+  make install
 # The build system will find `gmake` ahead of `make`, so make sure it finds
 # the version we just installed.
-ln -s /usr/local/bin/make /usr/local/bin/gmake
-cd ..
+  ln -s /usr/local/bin/make /usr/local/bin/gmake
+)
 rm -rf make-4.0
