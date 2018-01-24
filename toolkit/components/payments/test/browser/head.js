@@ -162,8 +162,7 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
 
 add_task(async function setup_head() {
   await profileStorage.initialize();
-
-  SimpleTest.registerCleanupFunction(function cleanup() {
+  registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
     profileStorage.addresses._nukeAllRecords();
     profileStorage.creditCards._nukeAllRecords();
