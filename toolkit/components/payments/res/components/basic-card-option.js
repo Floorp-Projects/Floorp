@@ -14,6 +14,7 @@ class BasicCardOption extends ObservedPropertiesMixin(RichOption) {
   static get observedAttributes() {
     return RichOption.observedAttributes.concat([
       "expiration",
+      "guid",
       "number",
       "owner",
       "type",
