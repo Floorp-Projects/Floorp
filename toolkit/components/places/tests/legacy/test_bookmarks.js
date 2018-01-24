@@ -425,27 +425,11 @@ add_task(async function test_bookmarks() {
   dateAdded -= 1000;
   bs.setItemDateAdded(newId10, dateAdded);
 
-  bs.changeBookmarkURI(newId10, uri("http://foo11.com/"));
-
-  // check that lastModified is set after we change the bookmark uri
-  lastModified2 = bs.getItemLastModified(newId10);
-  info("test changeBookmarkURI");
-  info("dateAdded = " + dateAdded);
-  info("lastModified = " + lastModified);
-  info("lastModified2 = " + lastModified2);
-  Assert.ok(is_time_ordered(lastModified, lastModified2));
-  Assert.ok(is_time_ordered(dateAdded, lastModified2));
-
-  Assert.equal(bookmarksObserver._itemChangedId, newId10);
-  Assert.equal(bookmarksObserver._itemChangedProperty, "uri");
-  Assert.equal(bookmarksObserver._itemChangedValue, "http://foo11.com/");
-  Assert.equal(bookmarksObserver._itemChangedOldValue, "http://foo10.com/");
-
   // test getBookmarkURI
-  let newId11 = bs.insertBookmark(testRoot, uri("http://foo11.com/"),
+  let newId11 = bs.insertBookmark(testRoot, uri("http://foo10.com/"),
                                   bs.DEFAULT_INDEX, "");
   let bmURI = bs.getBookmarkURI(newId11);
-  Assert.equal("http://foo11.com/", bmURI.spec);
+  Assert.equal("http://foo10.com/", bmURI.spec);
 
   // test getBookmarkURI with non-bookmark items
   try {
@@ -454,7 +438,7 @@ add_task(async function test_bookmarks() {
   } catch (ex) {}
 
   // test getItemIndex
-  let newId12 = bs.insertBookmark(testRoot, uri("http://foo11.com/"), 1, "");
+  let newId12 = bs.insertBookmark(testRoot, uri("http://foo10.com/"), 1, "");
   let bmIndex = bs.getItemIndex(newId12);
   Assert.equal(1, bmIndex);
 
