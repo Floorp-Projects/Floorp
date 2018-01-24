@@ -1,0 +1,51 @@
+{
+  "policies": {
+    "popups": {
+      "allow": [
+        "https://www.allow.com",
+        "https://www.pre-existing-deny.com"
+      ],
+
+      "block": [
+        "https://www.deny.com",
+        "https://www.pre-existing-allow.com"
+      ]
+    },
+
+    "cookies": {
+      "allow": [
+        "https://www.allow.com",
+        "https://www.pre-existing-deny.com"
+      ],
+
+      "block": [
+        "https://www.deny.com",
+        "https://www.pre-existing-allow.com"
+      ]
+    },
+
+    "install_addons": {
+      "allow": [
+        "https://www.allow.com",
+        "https://www.pre-existing-deny.com"
+      ],
+
+      "block": [
+        "https://www.deny.com",
+        "https://www.pre-existing-allow.com"
+      ]
+    },
+
+    "flash_plugin": {
+      "allow": [
+        "https://www.allow.com",
+        "https://www.pre-existing-deny.com"
+      ],
+
+      "block": [
+        "https://www.deny.com",
+        "https://www.pre-existing-allow.com"
+      ]
+    }
+  }
+}
