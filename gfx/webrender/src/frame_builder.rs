@@ -6,11 +6,11 @@ use api::{AlphaType, BorderDetails, BorderDisplayItem, BuiltDisplayList, ClipAnd
 use api::{ColorF, ColorU, DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect};
 use api::{DeviceUintSize, DocumentLayer, ExtendMode, FontRenderMode, GlyphInstance, GlyphOptions};
 use api::{GradientStop, HitTestFlags, HitTestItem, HitTestResult, ImageKey, ImageRendering};
-use api::{ItemRange, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
+use api::{Epoch, ItemRange, ItemTag, LayerPoint, LayerPrimitiveInfo, LayerRect, LayerSize};
 use api::{LayerTransform, LayerVector2D, LayoutTransform, LayoutVector2D, LineOrientation};
 use api::{LineStyle, LocalClip, PipelineId, PremultipliedColorF, PropertyBinding, RepeatMode};
-use api::{ScrollSensitivity, Shadow, TileOffset, TransformStyle, WorldPoint, YuvColorSpace};
-use api::YuvData;
+use api::{ScrollSensitivity, Shadow, TexelRect, TileOffset, TransformStyle, WorldPoint};
+use api::{DeviceIntRect, DeviceIntSize, YuvColorSpace, YuvData};
 use app_units::Au;
 use border::ImageBorderSegment;
 use clip::{ClipRegion, ClipSource, ClipSources, ClipStore, Contains};
@@ -23,8 +23,8 @@ use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeData, PictureType};
 use internal_types::{FastHashMap, FastHashSet, RenderPassIndex};
 use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive, PictureSurface};
-use prim_store::{BrushKind, BrushPrimitive, TexelRect, YuvImagePrimitiveCpu};
-use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, PrimitiveKind};
+use prim_store::{BrushKind, BrushPrimitive, ImageCacheKey, YuvImagePrimitiveCpu};
+use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, ImageSource, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex, SpecificPrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
 use prim_store::{BrushSegmentDescriptor, TextRunPrimitiveCpu};
@@ -1094,8 +1094,8 @@ impl FrameBuilder {
                     self.add_image(
                         clip_and_scroll,
                         &info,
-                        &segment.stretch_size,
-                        &segment.tile_spacing,
+                        segment.stretch_size,
+                        segment.tile_spacing,
                         Some(segment.sub_rect),
                         border.image_key,
                         ImageRendering::Auto,
@@ -1422,41 +1422,45 @@ impl FrameBuilder {
         &mut self,
         clip_and_scroll: ClipAndScrollInfo,
         info: &LayerPrimitiveInfo,
-        stretch_size: &LayerSize,
-        tile_spacing: &LayerSize,
+        stretch_size: LayerSize,
+        mut tile_spacing: LayerSize,
         sub_rect: Option<TexelRect>,
         image_key: ImageKey,
         image_rendering: ImageRendering,
         alpha_type: AlphaType,
-        tile: Option<TileOffset>,
+        tile_offset: Option<TileOffset>,
     ) {
-        let sub_rect_block = sub_rect.unwrap_or(TexelRect::invalid()).into();
-
         // If the tile spacing is the same as the rect size,
         // then it is effectively zero. We use this later on
         // in prim_store to detect if an image can be considered
         // opaque.
-        let tile_spacing = if *tile_spacing == info.rect.size {
-            LayerSize::zero()
-        } else {
-            *tile_spacing
-        };
+        if tile_spacing == info.rect.size {
+            tile_spacing = LayerSize::zero();
+        }
 
         let prim_cpu = ImagePrimitiveCpu {
-            image_key,
-            image_rendering,
-            tile_offset: tile,
             tile_spacing,
             alpha_type,
-            gpu_blocks: [
-                [
-                    stretch_size.width,
-                    stretch_size.height,
-                    tile_spacing.width,
-                    tile_spacing.height,
-                ].into(),
-                sub_rect_block,
-            ],
+            stretch_size,
+            current_epoch: Epoch::invalid(),
+            source: ImageSource::Default,
+            key: ImageCacheKey {
+                image_key,
+                image_rendering,
+                tile_offset,
+                texel_rect: sub_rect.map(|texel_rect| {
+                    DeviceIntRect::new(
+                        DeviceIntPoint::new(
+                            texel_rect.uv0.x as i32,
+                            texel_rect.uv0.y as i32,
+                        ),
+                        DeviceIntSize::new(
+                            (texel_rect.uv1.x - texel_rect.uv0.x) as i32,
+                            (texel_rect.uv1.y - texel_rect.uv0.y) as i32,
+                        ),
+                    )
+                }),
+            },
         };
 
         self.add_primitive(
@@ -1477,9 +1481,9 @@ impl FrameBuilder {
     ) {
         let format = yuv_data.get_format();
         let yuv_key = match yuv_data {
-            YuvData::NV12(plane_0, plane_1) => [plane_0, plane_1, ImageKey::dummy()],
+            YuvData::NV12(plane_0, plane_1) => [plane_0, plane_1, ImageKey::DUMMY],
             YuvData::PlanarYCbCr(plane_0, plane_1, plane_2) => [plane_0, plane_1, plane_2],
-            YuvData::InterleavedYCbCr(plane_0) => [plane_0, ImageKey::dummy(), ImageKey::dummy()],
+            YuvData::InterleavedYCbCr(plane_0) => [plane_0, ImageKey::DUMMY, ImageKey::DUMMY],
         };
 
         let prim_cpu = YuvImagePrimitiveCpu {

@@ -70,8 +70,8 @@ void main(void) {
 #else
     vec2 y_texture_size_normalization_factor = vec2(textureSize(sColor0, 0));
 #endif
-    vec2 y_st0 = y_rect.uv_rect.xy / y_texture_size_normalization_factor;
-    vec2 y_st1 = y_rect.uv_rect.zw / y_texture_size_normalization_factor;
+    vec2 y_st0 = y_rect.uv_rect.p0 / y_texture_size_normalization_factor;
+    vec2 y_st1 = y_rect.uv_rect.p1 / y_texture_size_normalization_factor;
 
     vTextureSizeY = y_st1 - y_st0;
     vTextureOffsetY = y_st0;
@@ -83,11 +83,11 @@ void main(void) {
 #else
     vec2 uv_texture_size_normalization_factor = vec2(textureSize(sColor1, 0));
 #endif
-    vec2 u_st0 = u_rect.uv_rect.xy / uv_texture_size_normalization_factor;
-    vec2 u_st1 = u_rect.uv_rect.zw / uv_texture_size_normalization_factor;
+    vec2 u_st0 = u_rect.uv_rect.p0 / uv_texture_size_normalization_factor;
+    vec2 u_st1 = u_rect.uv_rect.p1 / uv_texture_size_normalization_factor;
 
 #ifndef WR_FEATURE_NV12
-    vec2 v_st0 = v_rect.uv_rect.xy / uv_texture_size_normalization_factor;
+    vec2 v_st0 = v_rect.uv_rect.p0 / uv_texture_size_normalization_factor;
 #endif
 
     vTextureSizeUv = u_st1 - u_st0;

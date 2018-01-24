@@ -140,15 +140,11 @@ const getKBHash = async function(fxaService) {
     throw new Error("User isn't signed in!");
   }
 
-  if (!signedInUser.kB) {
-    throw new Error("User doesn't have kB??");
+  if (!signedInUser.kExtKbHash) {
+    throw new Error("User doesn't have KbHash??");
   }
 
-  let kBbytes = CommonUtils.hexToBytes(signedInUser.kB);
-  let hasher = Cc["@mozilla.org/security/hash;1"]
-      .createInstance(Ci.nsICryptoHash);
-  hasher.init(hasher.SHA256);
-  return CommonUtils.bytesAsHex(CryptoUtils.digestBytes(signedInUser.uid + kBbytes, hasher));
+  return signedInUser.kExtKbHash;
 };
 
 /**
@@ -270,19 +266,11 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
         throw new Error("user isn't signed in to FxA; can't sync");
       }
 
-      if (!user.kB) {
-        throw new Error("user doesn't have kB");
+      if (!user.kExtSync) {
+        throw new Error("user doesn't have kExtSync");
       }
 
-      let kB = CommonUtils.hexToBytes(user.kB);
-
-      let keyMaterial = CryptoUtils.hkdf(kB, undefined,
-                                         "identity.mozilla.com/picl/v1/chrome.storage.sync",
-                                         2 * 32);
-      let bundle = new BulkKeyBundle();
-      // [encryptionKey, hmacKey]
-      bundle.keyPair = [keyMaterial.slice(0, 32), keyMaterial.slice(32, 64)];
-      return bundle;
+      return BulkKeyBundle.fromHexKey(user.kExtSync);
     })();
   }
   // Pass through the kbHash field from the unencrypted record. If

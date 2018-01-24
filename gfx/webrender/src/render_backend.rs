@@ -77,6 +77,11 @@ struct Document {
     // the first frame would produce inconsistent rendering results, because
     // scroll events are not necessarily received in deterministic order.
     render_on_scroll: Option<bool>,
+    // A helper flag to prevent any hit-tests from happening between calls
+    // to build_scene and rendering the document. In between these two calls,
+    // hit-tests produce inconsistent results because the clip_scroll_tree
+    // is out of sync with the display list.
+    render_on_hittest: bool,
 }
 
 impl Document {
@@ -105,8 +110,9 @@ impl Document {
             },
             frame_ctx: FrameContext::new(config),
             frame_builder: Some(FrameBuilder::empty()),
-            render_on_scroll,
             output_pipelines: FastHashSet::default(),
+            render_on_scroll,
+            render_on_hittest: false,
         }
     }
 
@@ -403,6 +409,15 @@ impl RenderBackend {
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
                 profile_scope!("HitTest");
+                if doc.render_on_hittest {
+                    doc.render(
+                        &mut self.resource_cache,
+                        &mut self.gpu_cache,
+                        &mut profile_counters.resources,
+                    );
+                    doc.render_on_hittest = false;
+                }
+
                 let cst = doc.frame_ctx.get_clip_scroll_tree();
                 let result = doc.frame_builder
                     .as_ref()
@@ -580,16 +595,14 @@ impl RenderBackend {
                         DebugCommand::LoadCapture(root, tx) => {
                             NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
                             frame_counter += 1;
-                            let msg = ResultMsg::DebugOutput(
-                                DebugOutput::LoadCapture(root.clone())
-                            );
-                            self.result_tx.send(msg).unwrap();
+
                             self.load_capture(&root, &mut profile_counters);
 
                             for (id, doc) in &self.documents {
                                 let captured = CapturedDocument {
                                     document_id: *id,
                                     root_pipeline_id: doc.scene.root_pipeline_id,
+                                    window_size: doc.view.window_size,
                                 };
                                 tx.send(captured).unwrap();
                             }
@@ -658,6 +671,7 @@ impl RenderBackend {
         if op.build {
             profile_scope!("build scene");
             doc.build_scene(&mut self.resource_cache);
+            doc.render_on_hittest = true;
         }
 
         if op.render {
@@ -683,6 +697,7 @@ impl RenderBackend {
             );
             self.result_tx.send(msg).unwrap();
             profile_counters.reset();
+            doc.render_on_hittest = false;
         }
 
         if op.render || op.scroll {
@@ -862,6 +877,15 @@ impl RenderBackend {
         config.serialize(&backend, "backend");
 
         if config.bits.contains(CaptureBits::FRAME) {
+            // After we rendered the frames, there are pending updates.
+            // Instead of serializing them, we are going to make sure
+            // they are applied on the `Renderer` side.
+            let msg = ResultMsg::UpdateResources {
+                updates: self.resource_cache.pending_updates(),
+                cancel_rendering: false,
+            };
+            self.result_tx.send(msg).unwrap();
+            // Save the texture/glyph/image caches.
             info!("\tresource cache");
             let caches = self.resource_cache.save_caches(&config.root);
             config.serialize(&caches, "resource_cache");
@@ -884,11 +908,15 @@ impl RenderBackend {
             .expect("Unable to open backend.ron");
         let caches_maybe = CaptureConfig::deserialize::<PlainCacheOwn, _>(root, "resource_cache");
 
-        // Note: it would be great to have RenderBackend to be split
+        // Note: it would be great to have `RenderBackend` to be split
         // rather explicitly on what's used before and after scene building
         // so that, for example, we never miss anything in the code below:
 
-        self.resource_cache.load_capture(backend.resources, caches_maybe,root);
+        let plain_externals = self.resource_cache.load_capture(backend.resources, caches_maybe, root);
+        let msg_load = ResultMsg::DebugOutput(
+            DebugOutput::LoadCapture(root.clone(), plain_externals)
+        );
+        self.result_tx.send(msg_load).unwrap();
 
         self.gpu_cache = match CaptureConfig::deserialize::<GpuCache, _>(root, "gpu_cache") {
             Some(gpu_cache) => gpu_cache,
@@ -913,6 +941,7 @@ impl RenderBackend {
                 frame_builder: Some(FrameBuilder::empty()),
                 output_pipelines: FastHashSet::default(),
                 render_on_scroll: None,
+                render_on_hittest: false,
             };
 
             let frame_name = format!("frame-{}-{}", (id.0).0, id.1);
@@ -931,13 +960,13 @@ impl RenderBackend {
                 }
             };
 
-            let msg = ResultMsg::PublishDocument(
+            let msg_publish = ResultMsg::PublishDocument(
                 id,
                 render_doc,
                 self.resource_cache.pending_updates(),
                 profile_counters.clone(),
             );
-            self.result_tx.send(msg).unwrap();
+            self.result_tx.send(msg_publish).unwrap();
             profile_counters.reset();
 
             self.notifier.new_document_ready(id, false, true);

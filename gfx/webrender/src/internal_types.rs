@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DevicePoint, DeviceUintRect, DocumentId, Epoch};
+use api::{ClipId, DeviceUintRect, DocumentId, Epoch};
 use api::{ExternalImageData, ExternalImageId};
 use api::{ImageFormat, PipelineId};
 use api::DebugCommand;
@@ -17,7 +17,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 #[cfg(feature = "capture")]
-use capture::{CaptureConfig, ExternalCaptureImage};
+use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use tiling;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
@@ -154,7 +154,7 @@ pub enum DebugOutput {
     #[cfg(feature = "capture")]
     SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
     #[cfg(feature = "capture")]
-    LoadCapture(PathBuf),
+    LoadCapture(PathBuf, Vec<PlainExternalImage>),
 }
 
 pub enum ResultMsg {
@@ -171,10 +171,4 @@ pub enum ResultMsg {
         updates: TextureUpdateList,
         cancel_rendering: bool,
     },
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct UvRect {
-    pub uv0: DevicePoint,
-    pub uv1: DevicePoint,
 }

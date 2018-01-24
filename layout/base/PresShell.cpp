@@ -4102,6 +4102,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   FlushType flushType = aFlush.mFlushType;
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
+  MOZ_DIAGNOSTIC_ASSERT(mDocument->HasShellOrBFCacheEntry());
+  MOZ_DIAGNOSTIC_ASSERT(mDocument->GetShell() == this);
 
 #ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,
@@ -4123,10 +4125,10 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
                                    GRAPHICS, flushTypeNames[flushType]);
 #endif
 
+
 #ifdef ACCESSIBILITY
 #ifdef DEBUG
-  nsAccessibilityService* accService = GetAccService();
-  if (accService) {
+  if (nsAccessibilityService* accService = GetAccService()) {
     NS_ASSERTION(!accService->IsProcessingRefreshDriverNotification(),
                  "Flush during accessible tree update!");
   }

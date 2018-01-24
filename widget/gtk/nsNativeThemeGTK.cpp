@@ -1575,6 +1575,16 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       *aIsOverridable = false;
     }
     break;
+  case NS_THEME_WINDOW_BUTTON_CLOSE:
+  case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+  case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+  case NS_THEME_WINDOW_BUTTON_RESTORE:
+    {
+      const ToolbarButtonGTKMetrics* metrics = GetToolbarButtonMetrics();
+      aResult->width = metrics->minSizeWithBorderMargin.width;
+      aResult->height = metrics->minSizeWithBorderMargin.height;
+      break;
+    }
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
   case NS_THEME_CHECKBOX_LABEL:
@@ -1583,10 +1593,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   case NS_THEME_MENULIST:
   case NS_THEME_TOOLBARBUTTON:
   case NS_THEME_TREEHEADERCELL:
-  case NS_THEME_WINDOW_BUTTON_CLOSE:
-  case NS_THEME_WINDOW_BUTTON_MINIMIZE:
-  case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
-  case NS_THEME_WINDOW_BUTTON_RESTORE:
     {
       if (aWidgetType == NS_THEME_MENULIST) {
         // Include the arrow size.

@@ -632,8 +632,6 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
     nsCOMPtr<nsIURI> baseURL;
     if (aBase.WasPassed()) {
-      baseURL = new nsStandardURL();
-
       // XXXcatalinb: SetSpec only writes a warning to the console on urls
       // without a valid scheme. I can't fix that because we've come to rely
       // on that behaviour in a bunch of different places.
@@ -649,9 +647,17 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
         return;
       }
     }
-    mStdURL = new nsStandardURL();
-    aRv = mStdURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1,
-                        NS_ConvertUTF16toUTF8(aURL), nullptr, baseURL);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_MutateURI(new nsStandardURL::Mutator())
+            .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                          nsIStandardURL::URLTYPE_STANDARD, -1,
+                                          NS_ConvertUTF16toUTF8(aURL),
+                                          nullptr, baseURL, nullptr)
+            .Finalize(uri);
+    aRv = rv;
+    if (NS_SUCCEEDED(rv)) {
+      mStdURL = static_cast<nsStandardURL*>(uri.get());
+    }
     return;
   }
 

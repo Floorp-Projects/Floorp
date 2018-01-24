@@ -93,14 +93,11 @@ bool HasRTLChars(const char16_t* aText, uint32_t aLength)
   const char16_t* cp = aText;
   const char16_t* end = cp + aLength;
   while (cp < end) {
-    uint32_t ch = *cp++;
+    char16_t ch = *cp++;
     if (ch < mozilla::kMinRTLChar) {
       continue;
     }
-    if (NS_IS_HIGH_SURROGATE(ch) && cp < end && NS_IS_LOW_SURROGATE(*cp)) {
-      ch = SURROGATE_TO_UCS4(ch, *cp++);
-    }
-    if (UTF32_CHAR_IS_BIDI(ch) || IsBidiControlRTL(ch)) {
+    if (UTF16_CODE_UNIT_IS_BIDI(ch) || IsBidiControlRTL(ch)) {
       return true;
     }
   }

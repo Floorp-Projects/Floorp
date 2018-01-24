@@ -43,6 +43,7 @@ typedef UInt32 AudioFormatFlags;
 #define AU_IN_BUS     1
 
 const char * DISPATCH_QUEUE_LABEL = "org.mozilla.cubeb";
+const char * PRIVATE_AGGREGATE_DEVICE_NAME = "CubebAggregateDevice";
 
 #ifdef ALOGV
 #undef ALOGV
@@ -1497,11 +1498,11 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
   struct timeval timestamp;
   gettimeofday(&timestamp, NULL);
   long long int time_id = timestamp.tv_sec * 1000000LL + timestamp.tv_usec;
-  CFStringRef aggregate_device_name = CFStringCreateWithFormat(NULL, NULL, CFSTR("CubebAggregateDevice_%llx"), time_id);
+  CFStringRef aggregate_device_name = CFStringCreateWithFormat(NULL, NULL, CFSTR("%s_%llx"), PRIVATE_AGGREGATE_DEVICE_NAME, time_id);
   CFDictionaryAddValue(aggregate_device_dict, CFSTR(kAudioAggregateDeviceNameKey), aggregate_device_name);
   CFRelease(aggregate_device_name);
 
-  CFStringRef aggregate_device_UID = CFStringCreateWithFormat(NULL, NULL, CFSTR("org.mozilla.CubebAggregateDevice_%llx"), time_id);
+  CFStringRef aggregate_device_UID = CFStringCreateWithFormat(NULL, NULL, CFSTR("org.mozilla.%s_%llx"), PRIVATE_AGGREGATE_DEVICE_NAME, time_id);
   CFDictionaryAddValue(aggregate_device_dict, CFSTR(kAudioAggregateDeviceUIDKey), aggregate_device_UID);
   CFRelease(aggregate_device_UID);
 
@@ -3181,6 +3182,13 @@ audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid,
   return CUBEB_OK;
 }
 
+bool
+is_aggregate_device(cubeb_device_info * device_info)
+{
+  return !strncmp(device_info->friendly_name, PRIVATE_AGGREGATE_DEVICE_NAME,
+                  strlen(PRIVATE_AGGREGATE_DEVICE_NAME));
+}
+
 static int
 audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
                             cubeb_device_collection * collection)
@@ -3209,7 +3217,7 @@ audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
     for (auto dev: output_devs) {
       auto device = &devices[collection->count];
       auto err = audiounit_create_device_from_hwdev(device, dev, CUBEB_DEVICE_TYPE_OUTPUT);
-      if (err != CUBEB_OK) {
+      if (err != CUBEB_OK || is_aggregate_device(device)) {
         continue;
       }
       collection->count += 1;
@@ -3220,7 +3228,7 @@ audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
     for (auto dev: input_devs) {
       auto device = &devices[collection->count];
       auto err = audiounit_create_device_from_hwdev(device, dev, CUBEB_DEVICE_TYPE_INPUT);
-      if (err != CUBEB_OK) {
+      if (err != CUBEB_OK || is_aggregate_device(device)) {
         continue;
       }
       collection->count += 1;

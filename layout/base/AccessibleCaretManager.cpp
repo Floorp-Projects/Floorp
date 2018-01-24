@@ -1028,8 +1028,12 @@ AccessibleCaretManager::ClearMaintainedSelection() const
 void
 AccessibleCaretManager::FlushLayout() const
 {
-  if (mPresShell) {
-    mPresShell->FlushPendingNotifications(FlushType::Layout);
+  if (!mPresShell) {
+    return;
+  }
+
+  if (nsIDocument* doc = mPresShell->GetDocument()) {
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 }
 

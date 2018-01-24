@@ -58,7 +58,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ClientID: "resource://gre/modules/ClientID.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
-  ThirdPartyCookieProbe: "resource://gre/modules/ThirdPartyCookieProbe.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.jsm",

@@ -53,6 +53,9 @@ public:
   static bool
   Parse(const nsACString& aInput, ForEachIterator& aIterator);
 
+  static bool
+  Extract(const nsACString& aInput, const nsAString& aName, nsAString& aValue);
+
   void
   ParseInput(const nsACString& aInput);
 

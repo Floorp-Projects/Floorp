@@ -63,13 +63,13 @@ void brush_vs(
     vec2 uv1 = uv0 + blur_task.common_data.task_rect.size;
 #else
     Picture pic = fetch_picture(prim_address);
-    ImageResource uv_rect = fetch_image_resource(user_data.x);
+    ImageResource res = fetch_image_resource(user_data.x);
     vec2 texture_size = vec2(textureSize(sColor1, 0).xy);
     vColor = pic.color;
-    vec2 uv0 = uv_rect.uv_rect.xy;
-    vec2 uv1 = uv_rect.uv_rect.zw;
-    vec2 src_size = (uv1 - uv0) * uv_rect.user_data.x;
-    vUv.z = uv_rect.layer;
+    vec2 uv0 = res.uv_rect.p0;
+    vec2 uv1 = res.uv_rect.p1;
+    vec2 src_size = (uv1 - uv0) * res.user_data.x;
+    vUv.z = res.layer;
 #endif
 
     // TODO(gw): In the future we'll probably draw these as segments

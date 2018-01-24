@@ -14,15 +14,15 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, parent } = monitor.panelWin;
+  let { document } = monitor.panelWin;
 
   ok(document.querySelector("#requests-list-status-button"),
      "Status column should be shown");
   ok(document.querySelector("#requests-list-contentSize-button"),
      "Content size column should be shown");
 
-  yield hideColumn("status");
-  yield hideColumn("contentSize");
+  yield hideColumn(monitor, "status");
+  yield hideColumn(monitor, "contentSize");
 
   let visibleColumns = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
@@ -33,7 +33,7 @@ add_task(function* () {
   ok(!visibleColumns.includes("contentSize"),
     "Pref should be synced for contentSize");
 
-  yield showColumn("status");
+  yield showColumn(monitor, "status");
 
   visibleColumns = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
@@ -41,30 +41,4 @@ add_task(function* () {
 
   ok(visibleColumns.includes("status"),
     "Pref should be synced for status");
-
-  function* hideColumn(column) {
-    info(`Clicking context-menu item for ${column}`);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelector(".devtools-toolbar.requests-list-headers"));
-
-    let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
-    parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
-
-    yield onHeaderRemoved;
-    ok(!document.querySelector(`#requests-list-${column}-button`),
-       `Column ${column} should be hidden`);
-  }
-
-  function* showColumn(column) {
-    info(`Clicking context-menu item for ${column}`);
-    EventUtils.sendMouseEvent({ type: "contextmenu" },
-      document.querySelector(".devtools-toolbar.requests-list-headers"));
-
-    let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
-    parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
-
-    yield onHeaderAdded;
-    ok(document.querySelector(`#requests-list-${column}-button`),
-       `Column ${column} should be visible`);
-  }
 });
