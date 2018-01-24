@@ -17,6 +17,7 @@ const kCSSVarsMap = new Map([
   ["--lwt-accent-color-inactive", "accentcolorInactive"],
   ["--lwt-background-alignment", "backgroundsAlignment"],
   ["--lwt-background-tiling", "backgroundsTiling"],
+  ["--tab-loading-fill", "tab_loading"],
   ["--lwt-tab-text", "tab_text"],
   ["--toolbar-bgcolor", "toolbarColor"],
   ["--toolbar-color", "toolbar_text"],
