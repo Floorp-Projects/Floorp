@@ -13,13 +13,32 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
+  let profileStorage;
+  try {
+    profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+    profileStorage.initialize();
+  } catch (ex) {
+    profileStorage = null;
+    Cu.reportError(ex);
+  }
+
+  return profileStorage;
+});
 
 var PaymentDialog = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
   request: null,
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference,
+  ]),
 
   init(requestId, frame) {
     if (!requestId || typeof(requestId) != "string") {
@@ -134,6 +153,58 @@ var PaymentDialog = {
     return component.createInstance(componentInterface);
   },
 
+  fetchSavedAddresses() {
+    let savedAddresses = {};
+    for (let address of profileStorage.addresses.getAll()) {
+      savedAddresses[address.guid] = address;
+    }
+    return savedAddresses;
+  },
+
+  fetchSavedPaymentCards() {
+    let savedBasicCards = {};
+    for (let card of profileStorage.creditCards.getAll()) {
+      savedBasicCards[card.guid] = card;
+      // Filter out the encrypted card number since the dialog content is
+      // considered untrusted and runs in a content process.
+      delete card["cc-number-encrypted"];
+    }
+    return savedBasicCards;
+  },
+
+  onAutofillStorageChange() {
+    this.mm.sendAsyncMessage("paymentChromeToContent", {
+      messageType: "updateState",
+      data: {
+        savedAddresses: this.fetchSavedAddresses(),
+        savedBasicCards: this.fetchSavedPaymentCards(),
+      },
+    });
+  },
+
+  initializeFrame() {
+    let requestSerialized = JSON.parse(JSON.stringify(this.request));
+
+    // Manually serialize the nsIPrincipal.
+    let displayHost = this.request.topLevelPrincipal.URI.displayHost;
+    requestSerialized.topLevelPrincipal = {
+      URI: {
+        displayHost,
+      },
+    };
+
+    this.mm.sendAsyncMessage("paymentChromeToContent", {
+      messageType: "showPaymentRequest",
+      data: {
+        request: requestSerialized,
+        savedAddresses: this.fetchSavedAddresses(),
+        savedBasicCards: this.fetchSavedPaymentCards(),
+      },
+    });
+
+    Services.obs.addObserver(this, "formautofill-storage-changed", true);
+  },
+
   onPaymentCancel() {
     const showResponse = this.createShowResponse({
       acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
@@ -161,27 +232,30 @@ var PaymentDialog = {
     paymentSrv.respondPayment(showResponse);
   },
 
+  /**
+   * @implements {nsIObserver}
+   * @param {nsISupports} subject
+   * @param {string} topic
+   * @param {string} data
+   */
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "formautofill-storage-changed": {
+        if (data == "notifyUsed") {
+          break;
+        }
+        this.onAutofillStorageChange();
+        break;
+      }
+    }
+  },
+
   receiveMessage({data}) {
     let {messageType} = data;
 
     switch (messageType) {
       case "initializeRequest": {
-        let requestSerialized = JSON.parse(JSON.stringify(this.request));
-
-        // Manually serialize the nsIPrincipal.
-        let displayHost = this.request.topLevelPrincipal.URI.displayHost;
-        requestSerialized.topLevelPrincipal = {
-          URI: {
-            displayHost,
-          },
-        };
-
-        this.mm.sendAsyncMessage("paymentChromeToContent", {
-          messageType: "showPaymentRequest",
-          data: {
-            request: requestSerialized,
-          },
-        });
+        this.initializeFrame();
         break;
       }
       case "paymentCancel": {

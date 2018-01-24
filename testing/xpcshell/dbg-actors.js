@@ -6,6 +6,7 @@
 
 /* import-globals-from ../../devtools/server/main.js */
 
+const Cu = Components.utils;
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});

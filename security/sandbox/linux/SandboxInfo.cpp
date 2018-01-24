@@ -137,21 +137,6 @@ CanCreateUserNamespace()
     return cached[0] > '0';
   }
 
-  // Valgrind might allow the clone, but doesn't know what to do with
-  // unshare.  Check for that by unsharing nothing.  (Valgrind will
-  // probably need sandboxing disabled entirely, but no need to break
-  // things worse than strictly necessary.)
-  if (syscall(__NR_unshare, 0) != 0) {
-#ifdef MOZ_VALGRIND
-    MOZ_ASSERT(errno == ENOSYS);
-#else
-    // If something else can cause that call to fail, we's like to know
-    // about it; the right way to handle it might not be the same.
-    MOZ_ASSERT(false);
-#endif
-    return false;
-  }
-
   pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER,
                       nullptr, nullptr, nullptr, nullptr);
   if (pid == 0) {
