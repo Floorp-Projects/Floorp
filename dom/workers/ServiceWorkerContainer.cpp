@@ -217,23 +217,41 @@ already_AddRefed<workers::ServiceWorker>
 ServiceWorkerContainer::GetController()
 {
   if (!mControllerWorker) {
-    nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
+    // If we don't have a controller reference cached, then we need to
+    // check if we should create one.  We try to do this in a thread-agnostic
+    // way here to help support workers in the future.  There are still
+    // some main thread calls for now, though.
+
+    nsIGlobalObject* owner = GetOwnerGlobal();
+    NS_ENSURE_TRUE(owner, nullptr);
+
+    Maybe<ServiceWorkerDescriptor> controller(owner->GetController());
+    if (controller.isNothing()) {
+      return nullptr;
+    }
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (!swm) {
       return nullptr;
     }
 
-    // TODO: What should we do here if the ServiceWorker script fails to load?
-    //       In theory the DOM ServiceWorker object can exist without the worker
-    //       thread running, but it seems our design does not expect that.
-    nsCOMPtr<nsISupports> serviceWorker;
-    nsresult rv = swm->GetDocumentController(GetOwner(),
-                                             getter_AddRefs(serviceWorker));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    // This is a main thread only call.  We will need to replace it with
+    // something for worker threads.
+    RefPtr<ServiceWorkerRegistrationInfo> reg =
+      swm->GetRegistration(controller.ref().PrincipalInfo(),
+                           controller.ref().Scope());
+    NS_ENSURE_TRUE(reg, nullptr);
 
-    mControllerWorker =
-      static_cast<workers::ServiceWorker*>(serviceWorker.get());
+    ServiceWorkerInfo* info = reg->GetActive();
+    NS_ENSURE_TRUE(info, nullptr);
+
+    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(owner);
+    NS_ENSURE_TRUE(inner, nullptr);
+
+    // Right now we only know how to create ServiceWorker DOM objects on
+    // the main thread with a window.  In the future this should operate
+    // on only nsIGlobalObject somehow.
+    mControllerWorker = info->GetOrCreateInstance(inner);
   }
 
   RefPtr<workers::ServiceWorker> ref = mControllerWorker;
