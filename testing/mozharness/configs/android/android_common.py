@@ -22,7 +22,7 @@ config = {
     "tooltool_servers": ['http://relengapi/tooltool/'],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",
-    "download_minidump_stackwalk": True,
+    "minidump_stackwalk_path": "/usr/local/bin/linux64-minidump_stackwalk",
     "default_blob_upload_servers": ["https://blobupload.elasticbeanstalk.com"],
     "blob_uploader_auth_file": os.path.join(os.getcwd(), "oauth.txt"),
 
