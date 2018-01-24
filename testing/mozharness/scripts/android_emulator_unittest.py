@@ -90,7 +90,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScri
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.robocop_path = os.path.join(abs_dirs['abs_work_dir'], "robocop.apk")
-        self.minidump_stackwalk_path = c.get("minidump_stackwalk_path")
         self.emulator = c.get('emulator')
         self.test_suite = c.get('test_suite')
         self.this_chunk = c.get('this_chunk')
@@ -767,6 +766,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScri
 
         verify_args = []
         suites = self._query_suites()
+        minidump = self.query_minidump_stackwalk()
         for (verify_suite, suite) in suites:
             self.test_suite = suite
 
@@ -777,8 +777,8 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScri
             except:
                 self.fatal("Don't know how to run --test-suite '%s'!" % self.test_suite)
             env = self.query_env()
-            if self.query_minidump_stackwalk():
-                env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+            if minidump:
+                env['MINIDUMP_STACKWALK'] = minidump
             env['MOZ_UPLOAD_DIR'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['RUST_BACKTRACE'] = 'full'
