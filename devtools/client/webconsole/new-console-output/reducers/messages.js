@@ -56,16 +56,27 @@ const MessageState = overrides => Object.freeze(Object.assign({
   networkMessagesUpdateById: {},
 }, overrides));
 
+function cloneState(state) {
+  return {
+    messagesById: new Map(state.messagesById),
+    visibleMessages: [...state.visibleMessages],
+    filteredMessagesCount: {...state.filteredMessagesCount},
+    messagesUiById: [...state.messagesUiById],
+    messagesTableDataById: new Map(state.messagesTableDataById),
+    groupsById: new Map(state.groupsById),
+    currentGroup: state.currentGroup,
+    removedActors: [...state.removedActors],
+    repeatById: {...state.repeatById},
+    networkMessagesUpdateById: {...state.networkMessagesUpdateById},
+  };
+}
+
 function addMessage(state, filtersState, prefsState, newMessage) {
   const {
     messagesById,
-    messagesUiById,
     groupsById,
     currentGroup,
     repeatById,
-    visibleMessages,
-    filteredMessagesCount,
-    networkMessagesUpdateById,
   } = state;
 
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
@@ -75,10 +86,8 @@ function addMessage(state, filtersState, prefsState, newMessage) {
 
   if (newMessage.type === constants.MESSAGE_TYPE.END_GROUP) {
     // Compute the new current group.
-    return {
-      ...state,
-      currentGroup: getNewCurrentGroup(currentGroup, groupsById)
-    };
+    state.currentGroup = getNewCurrentGroup(currentGroup, groupsById);
+    return state;
   }
 
   if (newMessage.allowRepeating && messagesById.size > 0) {
@@ -88,64 +97,51 @@ function addMessage(state, filtersState, prefsState, newMessage) {
       lastMessage.repeatId === newMessage.repeatId
       && lastMessage.groupId === currentGroup
     ) {
-      return {
-        ...state,
-        repeatById: {
-          ...repeatById,
-          [lastMessage.id]: (repeatById[lastMessage.id] || 1) + 1
-        }
-      };
+      state.repeatById[lastMessage.id] = (repeatById[lastMessage.id] || 1) + 1;
+      return state;
     }
   }
 
-  let newState = {...state};
   // Add the new message with a reference to the parent group.
   let parentGroups = getParentGroups(currentGroup, groupsById);
   newMessage.groupId = currentGroup;
   newMessage.indent = parentGroups.length;
 
   const addedMessage = Object.freeze(newMessage);
-  newState.messagesById = (new Map(newState.messagesById))
-    .set(newMessage.id, addedMessage);
+  state.messagesById.set(newMessage.id, addedMessage);
 
   if (newMessage.type === "trace") {
     // We want the stacktrace to be open by default.
-    newState.messagesUiById = [...messagesUiById, newMessage.id];
+    state.messagesUiById.push(newMessage.id);
   } else if (isGroupType(newMessage.type)) {
-    newState.currentGroup = newMessage.id;
-    newState.groupsById = (new Map(newState.groupsById))
-      .set(newMessage.id, parentGroups);
+    state.currentGroup = newMessage.id;
+    state.groupsById.set(newMessage.id, parentGroups);
 
     if (newMessage.type === constants.MESSAGE_TYPE.START_GROUP) {
       // We want the group to be open by default.
-      newState.messagesUiById = [...messagesUiById, newMessage.id];
+      state.messagesUiById.push(newMessage.id);
     }
   }
 
   const {
     visible,
     cause
-  } = getMessageVisibility(addedMessage, newState, filtersState);
+  } = getMessageVisibility(addedMessage, state, filtersState);
 
   if (visible) {
-    newState.visibleMessages = [...visibleMessages, newMessage.id];
+    state.visibleMessages.push(newMessage.id);
   } else if (DEFAULT_FILTERS.includes(cause)) {
-    newState.filteredMessagesCount = {
-      ...filteredMessagesCount,
-      global: filteredMessagesCount.global + 1,
-      [cause]: filteredMessagesCount[cause] + 1
-    };
+    state.filteredMessagesCount.global++;
+    state.filteredMessagesCount[cause]++;
   }
 
   // Append received network-data also into networkMessagesUpdateById
   // that is responsible for collecting (lazy loaded) HTTP payload data.
   if (newMessage.source == "network") {
-    newState.networkMessagesUpdateById = Object.assign({}, networkMessagesUpdateById, {
-      [newMessage.actor]: newMessage
-    });
+    state.networkMessagesUpdateById[newMessage.actor] = newMessage;
   }
 
-  return newState;
+  return state;
 }
 
 function messages(state = MessageState(), action, filtersState, prefsState) {
@@ -163,8 +159,6 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
   let newState;
   switch (action.type) {
     case constants.MESSAGES_ADD:
-      newState = state;
-
       // Preemptively remove messages that will never be rendered
       let list = [];
       let prunableCount = 0;
@@ -191,6 +185,7 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
         lastMessageRepeatId = message.repeatId;
       }
 
+      newState = cloneState(state);
       list.forEach(message => {
         newState = addMessage(newState, filtersState, prefsState, message);
       });
