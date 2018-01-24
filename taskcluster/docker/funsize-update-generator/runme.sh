@@ -56,4 +56,4 @@ fi
     --task-definition /home/worker/task.json \
     --sha1-signing-cert "/home/worker/keys/${SHA1_SIGNING_CERT}.pubkey" \
     --sha384-signing-cert "/home/worker/keys/${SHA384_SIGNING_CERT}.pubkey" \
-    $EXTRA_PARAMS
+    "$EXTRA_PARAMS"
