@@ -97,6 +97,10 @@ add_task(async function () {
   await onPopupClose;
 });
 
+function stripNS(text) {
+  return text.replace(RegExp(' xmlns="http://www.w3.org/1999/xhtml"', "g"), "");
+}
+
 function checkActiveDescendant(popup, input) {
   let activeElement = input.ownerDocument.activeElement;
   let descendantId = activeElement.getAttribute("aria-activedescendant");
@@ -105,6 +109,6 @@ function checkActiveDescendant(popup, input) {
 
   ok(popupItem, "Active descendant is found in the popup list");
   ok(cloneItem, "Active descendant is found in the list clone");
-  is(popupItem.outerHTML, cloneItem.outerHTML,
+  is(stripNS(popupItem.outerHTML), cloneItem.outerHTML,
     "Cloned item has the same HTML as the original element");
 }
