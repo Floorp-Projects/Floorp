@@ -8,7 +8,6 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
-#include "nsNSSShutDown.h"
 
 namespace mozilla { namespace pkix { struct CertPolicyId; } }
 

@@ -7,7 +7,6 @@
 
 #include "ScopedNSSTypes.h"
 #include "nsIKeyModule.h"
-#include "nsNSSShutDown.h"
 #include "pk11pub.h"
 
 #define NS_KEYMODULEOBJECT_CID   \
@@ -20,7 +19,6 @@
 "@mozilla.org/security/keyobjectfactory;1"
 
 class nsKeyObject final : public nsIKeyObject
-                        , public nsNSSShutDownObject
 {
 public:
   nsKeyObject();
@@ -39,7 +37,6 @@ private:
 
 
 class nsKeyObjectFactory final : public nsIKeyObjectFactory
-                               , public nsNSSShutDownObject
 {
 public:
   nsKeyObjectFactory() {}

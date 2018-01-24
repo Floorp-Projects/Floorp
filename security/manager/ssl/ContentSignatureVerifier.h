@@ -12,7 +12,6 @@
 #include "CSTrustDomain.h"
 #include "nsIContentSignatureVerifier.h"
 #include "nsIStreamListener.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "ScopedNSSTypes.h"
 
@@ -25,7 +24,6 @@
 
 class ContentSignatureVerifier final : public nsIContentSignatureVerifier
                                      , public nsIStreamListener
-                                     , public nsNSSShutDownObject
                                      , public nsIInterfaceRequestor
 {
 public:

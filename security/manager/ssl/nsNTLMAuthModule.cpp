@@ -25,7 +25,6 @@
 #include "nsICryptoHash.h"
 #include "nsIKeyModule.h"
 #include "nsKeyModule.h"
-#include "nsNSSShutDown.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsNetCID.h"
 #include "nsUnicharUtils.h"

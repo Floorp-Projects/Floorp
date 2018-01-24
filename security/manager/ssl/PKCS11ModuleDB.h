@@ -8,7 +8,6 @@
 
 #include "nsIPKCS11ModuleDB.h"
 
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 
 namespace mozilla { namespace psm {
@@ -18,7 +17,6 @@ namespace mozilla { namespace psm {
   { 0xb9, 0x7a, 0xce, 0xed, 0x78, 0x90, 0x99, 0x74 }}
 
 class PKCS11ModuleDB : public nsIPKCS11ModuleDB
-                     , public nsNSSShutDownObject
 {
 public:
   PKCS11ModuleDB() {}

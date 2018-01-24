@@ -11,12 +11,10 @@
 #include "nsIPKCS11Module.h"
 #include "nsIPKCS11Slot.h"
 #include "nsISupports.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "pk11func.h"
 
-class nsPKCS11Slot : public nsIPKCS11Slot,
-                     public nsNSSShutDownObject
+class nsPKCS11Slot : public nsIPKCS11Slot
 {
 public:
   NS_DECL_ISUPPORTS
@@ -40,8 +38,7 @@ private:
                       /*out*/ nsACString& xpcomOutParam);
 };
 
-class nsPKCS11Module : public nsIPKCS11Module,
-                       public nsNSSShutDownObject
+class nsPKCS11Module : public nsIPKCS11Module
 {
 public:
   NS_DECL_ISUPPORTS

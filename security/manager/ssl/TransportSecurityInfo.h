@@ -18,7 +18,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISSLStatusProvider.h"
 #include "nsITransportSecurityInfo.h"
-#include "nsNSSShutDown.h"
 #include "nsSSLStatus.h"
 #include "nsString.h"
 #include "pkix/pkixtypes.h"
@@ -36,7 +35,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo
                             , public nsIAssociatedContentSecurity
                             , public nsISerializable
                             , public nsIClassInfo
-                            , public nsNSSShutDownObject
 {
 protected:
   virtual ~TransportSecurityInfo() {}

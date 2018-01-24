@@ -306,17 +306,6 @@ RTCCertificate::RTCCertificate(nsIGlobalObject* aGlobal,
 {
 }
 
-// This creates some interesting lifecycle consequences, since the DtlsIdentity
-// holds NSS objects, but does not implement nsNSSShutDownObject.
-
-// Unfortunately, the code that uses DtlsIdentity cannot always use that lock
-// due to external linkage requirements.  Therefore, the lock is held on this
-// object instead.  Consequently, the DtlsIdentity that this method returns must
-// have a lifetime that is strictly shorter than the RTCCertificate.
-//
-// RTCPeerConnection provides this guarantee by holding a strong reference to
-// the RTCCertificate.  It will cleanup any DtlsIdentity instances that it
-// creates before the RTCCertificate reference is released.
 RefPtr<DtlsIdentity>
 RTCCertificate::CreateDtlsIdentity() const
 {

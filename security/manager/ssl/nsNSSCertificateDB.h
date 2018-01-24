@@ -12,13 +12,11 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIX509CertDB.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 
 class nsIArray;
 
 class nsNSSCertificateDB final : public nsIX509CertDB
-                               , public nsNSSShutDownObject
 
 {
 public:

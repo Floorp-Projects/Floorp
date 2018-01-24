@@ -44,7 +44,6 @@
 #include "nsLiteralString.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSHelper.h"
-#include "nsNSSShutDown.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -973,7 +972,6 @@ nsNSSComponent::ImportEnterpriseRootsForLocation(
 #endif // XP_WIN
 
 class LoadLoadableRootsTask final : public Runnable
-                                  , public nsNSSShutDownObject
 {
 public:
   explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent)

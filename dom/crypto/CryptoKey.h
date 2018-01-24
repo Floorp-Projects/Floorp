@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
-#include "nsNSSShutDown.h"
 #include "pk11pub.h"
 #include "keyhi.h"
 #include "ScopedNSSTypes.h"
@@ -58,9 +57,8 @@ Thus, internally, a key has the following fields:
 
 struct JsonWebKey;
 
-class CryptoKey final : public nsISupports,
-                        public nsWrapperCache,
-                        public nsNSSShutDownObject
+class CryptoKey final : public nsISupports
+                      , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

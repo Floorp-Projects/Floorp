@@ -13,7 +13,6 @@
 #include "nsError.h"
 #include "nsIFormProcessor.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsNSSShutDown.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "secmodt.h"
@@ -28,7 +27,6 @@ nsresult GetSlotWithMechanism(uint32_t mechanism,
 mozilla::UniqueSECItem DecodeECParams(const char* curve);
 
 class nsKeygenFormProcessor : public nsIFormProcessor
-                            , public nsNSSShutDownObject
 {
 public:
   nsKeygenFormProcessor();
