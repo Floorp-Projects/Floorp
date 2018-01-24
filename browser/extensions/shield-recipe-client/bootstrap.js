@@ -202,6 +202,7 @@ this.Bootstrap = {
       "lib/ShieldPreferences.jsm",
       "lib/ShieldRecipeClient.jsm",
       "lib/Storage.jsm",
+      "lib/TelemetryEvents.jsm",
       "lib/Uptake.jsm",
       "lib/Utils.jsm",
     ].map(m => `resource://shield-recipe-client/${m}`);
