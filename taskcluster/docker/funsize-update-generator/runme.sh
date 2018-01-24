@@ -51,6 +51,8 @@ if [ ! -z "$FILENAME_TEMPLATE" ]; then
     EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE $EXTRA_PARAMS"
 fi
 
+# EXTRA_PARAMS is optional
+# shellcheck disable=SC2086
 /home/worker/bin/funsize.py \
     --artifacts-dir "$ARTIFACTS_DIR" \
     --task-definition /home/worker/task.json \
