@@ -32,6 +32,8 @@ static NS_DEFINE_CID(kSubstitutingURLCID, NS_SUBSTITUTINGURL_CID);
 // SubstitutingURL : overrides nsStandardURL::GetFile to provide nsIFile resolution
 //---------------------------------------------------------------------------------
 
+NS_IMPL_ISUPPORTS(SubstitutingURL::Mutator, nsIURISetters, nsIURIMutator, nsIStandardURLMutator)
+
 nsresult
 SubstitutingURL::EnsureFile()
 {
@@ -196,12 +198,6 @@ SubstitutingProtocolHandler::NewURI(const nsACString &aSpec,
                                     nsIURI *aBaseURI,
                                     nsIURI **result)
 {
-  nsresult rv;
-
-  RefPtr<SubstitutingURL> url = new SubstitutingURL();
-  if (!url)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // unescape any %2f and %2e to make sure nsStandardURL coalesces them.
   // Later net_GetFileFromURLSpec() will do a full unescape and we want to
   // treat them the same way the file system will. (bugs 380994, 394075)
@@ -233,11 +229,12 @@ SubstitutingProtocolHandler::NewURI(const nsACString &aSpec,
   if (last < src)
     spec.Append(last, src-last);
 
-  rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, -1, spec, aCharset, aBaseURI);
-  if (NS_SUCCEEDED(rv)) {
-    url.forget(result);
-  }
-  return rv;
+  return NS_MutateURI(new SubstitutingURL::Mutator())
+           .Apply<nsIStandardURLMutator>(&nsIStandardURLMutator::Init,
+                                         nsIStandardURL::URLTYPE_STANDARD, -1,
+                                         spec, aCharset, aBaseURI,
+                                         nullptr)
+           .Finalize(result);
 }
 
 nsresult

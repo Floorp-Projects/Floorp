@@ -460,7 +460,7 @@ cubeb_upmix(long inframes,
 
   /* Put silence in remaining channels. */
   for (long i = 0, o = 0; i < inframes; ++i, o += out_channels) {
-    for (unsigned int j = 2; j < out_channels; ++j) {
+    for (unsigned int j = in_channels; j < out_channels; ++j) {
       assert((unsigned long)o + j < out_len);
       out[o + j] = 0.0;
     }

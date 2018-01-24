@@ -184,9 +184,17 @@ template<>
 struct AccumulateDelta_impl<Millisecond>
 {
   static void compute(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
+    if (start > end) {
+      Accumulate(id, 0);
+      return;
+    }
     Accumulate(id, static_cast<uint32_t>((end - start).ToMilliseconds()));
   }
   static void compute(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
+    if (start > end) {
+      Accumulate(id, key, 0);
+      return;
+    }
     Accumulate(id, key, static_cast<uint32_t>((end - start).ToMilliseconds()));
   }
 };
@@ -195,9 +203,17 @@ template<>
 struct AccumulateDelta_impl<Microsecond>
 {
   static void compute(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
+    if (start > end) {
+      Accumulate(id, 0);
+      return;
+    }
     Accumulate(id, static_cast<uint32_t>((end - start).ToMicroseconds()));
   }
   static void compute(HistogramID id, const nsCString& key, TimeStamp start, TimeStamp end = TimeStamp::Now()) {
+    if (start > end) {
+      Accumulate(id, key, 0);
+      return;
+    }
     Accumulate(id, key, static_cast<uint32_t>((end - start).ToMicroseconds()));
   }
 };

@@ -478,8 +478,10 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
       getSignedInUser() {
         return Promise.resolve({
           email: "testuser@testuser.com",
-          kA: "kA",
-          kb: "kB",
+          kSync: "kSync",
+          kXCS: "kXCS",
+          kExtSync: "kExtSync",
+          kExtKbHash: "kExtKbHash",
           sessionToken: "sessionToken",
           uid: "uid",
           verified: true
@@ -513,8 +515,10 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
         wasCalled.getSignedInUser = true;
         return Promise.resolve({
           email: "testuser@testuser.com",
-          kA: "kA",
-          kb: "kB",
+          kSync: "kSync",
+          kXCS: "kXCS",
+          kExtSync: "kExtSync",
+          kExtKbHash: "kExtKbHash",
           sessionToken: "sessionToken",
           uid: "uid",
           verified: true
@@ -547,8 +551,10 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
 
       // These properties are filtered and should not
       // be returned to the requester.
-      Assert.equal(false, "kA" in signedInUser);
-      Assert.equal(false, "kB" in signedInUser);
+      Assert.equal(false, "kSync" in signedInUser);
+      Assert.equal(false, "kXCS" in signedInUser);
+      Assert.equal(false, "kExtSync" in signedInUser);
+      Assert.equal(false, "kExtKbHash" in signedInUser);
     });
 });
 
@@ -769,7 +775,7 @@ add_task(async function test_helpers_change_password() {
         return new Promise(resolve => {
           Assert.ok(credentials.hasOwnProperty("email"));
           Assert.ok(credentials.hasOwnProperty("uid"));
-          Assert.ok(credentials.hasOwnProperty("kA"));
+          Assert.ok(credentials.hasOwnProperty("unwrapBKey"));
           Assert.ok(credentials.hasOwnProperty("deviceId"));
           Assert.equal(null, credentials.deviceId);
           // "foo" isn't a field known by storage, so should be dropped.
@@ -787,7 +793,7 @@ add_task(async function test_helpers_change_password() {
       }
     }
   });
-  await helpers.changePassword({ email: "email", uid: "uid", kA: "kA", foo: "foo" });
+  await helpers.changePassword({ email: "email", uid: "uid", unwrapBKey: "unwrapBKey", foo: "foo" });
   Assert.ok(wasCalled.updateUserAccountData);
   Assert.ok(wasCalled.updateDeviceRegistration);
 });

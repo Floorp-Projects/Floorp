@@ -6,15 +6,20 @@
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
-
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+    "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
     "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let log = Log.repository.getLogger("Marionette");
+  log.addAppender(new Log.DumpAppender());
+  return log;
+});
 
 const MARIONETTE_CONTRACT_ID = "@mozilla.org/remote/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
@@ -156,11 +161,11 @@ function MarionetteComponent() {
   // and that we are ready to start the Marionette server
   this.finalUIStartup = false;
 
-  this.logger = this.setupLogger(prefs.logLevel);
+  log.level = prefs.logLevel;
 
   this.enabled = env.exists(ENV_ENABLED);
   if (this.enabled) {
-    this.logger.info(`Enabled via ${ENV_ENABLED}`);
+    log.info(`Enabled via ${ENV_ENABLED}`);
   }
 }
 
@@ -184,12 +189,12 @@ MarionetteComponent.prototype = {
 MarionetteComponent.prototype.handle = function(cmdLine) {
   if (!this.enabled && cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
-    this.logger.info("Enabled via --marionette");
+    log.debug("Enabled via flag");
   }
 };
 
 MarionetteComponent.prototype.observe = function(subject, topic) {
-  this.logger.debug(`Received observer notification "${topic}"`);
+  log.debug(`Received observer notification ${topic}`);
 
   switch (topic) {
     case "profile-after-change":
@@ -262,18 +267,11 @@ MarionetteComponent.prototype.observe = function(subject, topic) {
   }
 };
 
-MarionetteComponent.prototype.setupLogger = function(level) {
-  let logger = Log.repository.getLogger("Marionette");
-  logger.level = level;
-  logger.addAppender(new Log.DumpAppender());
-  return logger;
-};
-
 MarionetteComponent.prototype.suppressSafeModeDialog = function(win) {
   win.addEventListener("load", () => {
     if (win.document.getElementById("safeModeDialog")) {
       // accept the dialog to start in safe-mode
-      this.logger.debug("Safe Mode detected. Going to suspress the dialog now.");
+      log.debug("Safe mode detected, supressing dialog");
       win.setTimeout(() => {
         win.document.documentElement.getButton("accept").click();
       });
@@ -286,26 +284,27 @@ MarionetteComponent.prototype.init = function() {
     return;
   }
 
-  // Delay initialization until we are done with delayed startup...
-  Services.tm.idleDispatchToMainThread(() => {
-    // ... and with startup tests.
-    let promise = Promise.resolve();
-    if ("@mozilla.org/test/startuprecorder;1" in Cc)
-      promise = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.done;
-    promise.then(() => {
-      let s;
-      try {
-        Cu.import("chrome://marionette/content/server.js");
-        s = new server.TCPListener(prefs.port);
-        s.start();
-        this.logger.info(`Listening on port ${s.port}`);
-      } finally {
-        if (s) {
-          this.server = s;
-          this.running = true;
-        }
-      }
-    });
+  // wait for delayed startup...
+  Services.tm.idleDispatchToMainThread(async () => {
+    // ... and for startup tests
+    let startupRecorder = Promise.resolve();
+    if ("@mozilla.org/test/startuprecorder;1" in Cc) {
+      startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
+          .getService().wrappedJSObject.done;
+    }
+    await startupRecorder;
+
+    try {
+      Cu.import("chrome://marionette/content/server.js");
+      let listener = new server.TCPListener(prefs.port);
+      listener.start();
+      log.info(`Listening on port ${listener.port}`);
+      this.server = listener;
+      this.running = true;
+    } catch (e) {
+      log.fatal("Remote protocol server failed to start", e);
+      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+    }
   });
 };
 

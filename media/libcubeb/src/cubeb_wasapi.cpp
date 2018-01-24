@@ -1190,7 +1190,7 @@ int wasapi_init(cubeb ** context, char const * context_name)
 
   ctx->ops = &wasapi_ops;
   if (cubeb_strings_init(&ctx->device_ids) != CUBEB_OK) {
-    free(ctx);
+    delete ctx;
     return CUBEB_ERROR;
   }
 
@@ -1671,6 +1671,10 @@ int setup_wasapi_stream(cubeb_stream * stm)
                                       stm->input_available_event,
                                       stm->capture_client,
                                       &stm->input_mix_params);
+    if (rv != CUBEB_OK) {
+      LOG("Failure to open the input side.");
+      return rv;
+    }
 
     // We initializing an input stream, buffer ahead two buffers worth of silence.
     // This delays the input side slightly, but allow to not glitch when no input
@@ -1680,16 +1684,11 @@ int setup_wasapi_stream(cubeb_stream * stm)
 #if !defined(DEBUG)
     const int silent_buffer_count = 2;
 #else
-    const int silent_buffer_count = 4;
+    const int silent_buffer_count = 6;
 #endif
     stm->linear_input_buffer->push_silence(stm->input_buffer_frame_count *
-                                          stm->input_stream_params.channels *
-                                          silent_buffer_count);
-
-    if (rv != CUBEB_OK) {
-      LOG("Failure to open the input side.");
-      return rv;
-    }
+                                           stm->input_stream_params.channels *
+                                           silent_buffer_count);
   }
 
   if (has_output(stm)) {

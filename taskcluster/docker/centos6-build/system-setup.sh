@@ -2,7 +2,7 @@
 
 set -ve
 
-test `whoami` == 'root'
+test "$(whoami)" == 'root'
 
 # lots of goodies in EPEL
 yum install -y epel-release
@@ -332,7 +332,7 @@ cd valgrind-$valgrind_version
 patch -p0 < /tmp/valgrind-epochs.patch
 
 ./configure --prefix=/usr
-make -j$(grep -c ^processor /proc/cpuinfo) install
+make -j"$(grep -c ^processor /proc/cpuinfo)" install
 
 # Git
 cd $BUILD
@@ -480,4 +480,4 @@ EOF
 cd /
 rm -rf $BUILD ~/.ccache ~/.cache ~/.npm
 yum clean all
-rm $0
+rm "$0"

@@ -130,6 +130,13 @@ this.BulkKeyBundle = function BulkKeyBundle(collection) {
 
   this._collection = collection;
 };
+BulkKeyBundle.fromHexKey = function(hexKey) {
+  let key = CommonUtils.hexToBytes(hexKey);
+  let bundle = new BulkKeyBundle();
+  // [encryptionKey, hmacKey]
+  bundle.keyPair = [key.slice(0, 32), key.slice(32, 64)];
+  return bundle;
+};
 
 BulkKeyBundle.prototype = {
   __proto__: KeyBundle.prototype,
