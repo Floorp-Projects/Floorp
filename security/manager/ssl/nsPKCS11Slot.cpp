@@ -69,24 +69,6 @@ nsPKCS11Slot::refreshSlotInfo()
   return NS_OK;
 }
 
-nsPKCS11Slot::~nsPKCS11Slot()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsPKCS11Slot::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsPKCS11Slot::destructorSafeDestroyNSSReference()
-{
-  mSlot = nullptr;
-}
-
 nsresult
 nsPKCS11Slot::GetAttributeHelper(const nsACString& attribute,
                          /*out*/ nsACString& xpcomOutParam)
@@ -201,24 +183,6 @@ nsPKCS11Module::nsPKCS11Module(SECMODModule* module)
 {
   MOZ_ASSERT(module);
   mModule.reset(SECMOD_ReferenceModule(module));
-}
-
-nsPKCS11Module::~nsPKCS11Module()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsPKCS11Module::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsPKCS11Module::destructorSafeDestroyNSSReference()
-{
-  mModule = nullptr;
 }
 
 NS_IMETHODIMP

@@ -136,10 +136,6 @@ public:
   UniqueSECKEYPrivateKey GetPrivateKey() const;
   UniqueSECKEYPublicKey GetPublicKey() const;
 
-  // For nsNSSShutDownObject
-  virtual void virtualDestroyNSSReference() override;
-  void destructorSafeDestroyNSSReference();
-
   // Serialization and deserialization convenience methods
   // Note:
   // 1. The inputs aKeyData are non-const only because the NSS import
@@ -181,7 +177,7 @@ public:
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
 private:
-  ~CryptoKey();
+  ~CryptoKey() {}
 
   RefPtr<nsIGlobalObject> mGlobal;
   uint32_t mAttributes; // see above

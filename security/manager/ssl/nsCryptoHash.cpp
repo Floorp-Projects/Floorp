@@ -36,24 +36,6 @@ nsCryptoHash::nsCryptoHash()
 {
 }
 
-nsCryptoHash::~nsCryptoHash()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsCryptoHash::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsCryptoHash::destructorSafeDestroyNSSReference()
-{
-  mHashContext = nullptr;
-}
-
 NS_IMPL_ISUPPORTS(nsCryptoHash, nsICryptoHash)
 
 NS_IMETHODIMP
@@ -218,24 +200,6 @@ NS_IMPL_ISUPPORTS(nsCryptoHMAC, nsICryptoHMAC)
 nsCryptoHMAC::nsCryptoHMAC()
   : mHMACContext(nullptr)
 {
-}
-
-nsCryptoHMAC::~nsCryptoHMAC()
-{
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-nsCryptoHMAC::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
-}
-
-void
-nsCryptoHMAC::destructorSafeDestroyNSSReference()
-{
-  mHMACContext = nullptr;
 }
 
 NS_IMETHODIMP

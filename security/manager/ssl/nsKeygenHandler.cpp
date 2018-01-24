@@ -220,11 +220,6 @@ nsKeygenFormProcessor::nsKeygenFormProcessor()
    m_ctx = new PipUIContext();
 }
 
-nsKeygenFormProcessor::~nsKeygenFormProcessor()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
-
 nsresult
 nsKeygenFormProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {

@@ -39,8 +39,3 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
 
   return NS_OK;
 }
-
-nsRandomGenerator::~nsRandomGenerator()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}

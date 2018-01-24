@@ -739,22 +739,14 @@ public:
       mIR(ir)
   {
   }
-  virtual ~PK11PasswordPromptRunnable();
+  virtual ~PK11PasswordPromptRunnable() = default;
 
-  // This doesn't own the PK11SlotInfo or any other NSS objects, so there's
-  // nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
   char * mResult; // out
   virtual void RunOnTargetThread() override;
 private:
   PK11SlotInfo* const mSlot; // in
   nsIInterfaceRequestor* const mIR; // in
 };
-
-PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
 
 void
 PK11PasswordPromptRunnable::RunOnTargetThread()

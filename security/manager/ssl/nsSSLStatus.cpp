@@ -14,12 +14,6 @@
 #include "nsNSSShutDown.h"
 #include "ssl.h"
 
-
-void
-nsSSLStatus::virtualDestroyNSSReference()
-{
-}
-
 NS_IMETHODIMP
 nsSSLStatus::GetServerCert(nsIX509Cert** aServerCert)
 {
@@ -392,11 +386,6 @@ nsSSLStatus::nsSSLStatus()
 }
 
 NS_IMPL_ISUPPORTS(nsSSLStatus, nsISSLStatus, nsISerializable, nsIClassInfo)
-
-nsSSLStatus::~nsSSLStatus()
-{
-  shutdown(ShutdownCalledFrom::Object);
-}
 
 void
 nsSSLStatus::SetServerCert(nsNSSCertificate* aServerCert, EVStatus aEVStatus)

@@ -118,20 +118,6 @@ BackgroundFileSaver::BackgroundFileSaver()
 BackgroundFileSaver::~BackgroundFileSaver()
 {
   LOG(("Destroying BackgroundFileSaver [this = %p]", this));
-  destructorSafeDestroyNSSReference();
-  shutdown(ShutdownCalledFrom::Object);
-}
-
-void
-BackgroundFileSaver::destructorSafeDestroyNSSReference()
-{
-  mDigestContext = nullptr;
-}
-
-void
-BackgroundFileSaver::virtualDestroyNSSReference()
-{
-  destructorSafeDestroyNSSReference();
 }
 
 // Called on the control thread.
@@ -1193,11 +1179,6 @@ DigestOutputStream::DigestOutputStream(nsIOutputStream* aStream,
 {
   MOZ_ASSERT(mDigestContext, "Can't have null digest context");
   MOZ_ASSERT(mOutputStream, "Can't have null output stream");
-}
-
-DigestOutputStream::~DigestOutputStream()
-{
-  shutdown(ShutdownCalledFrom::Object);
 }
 
 NS_IMETHODIMP

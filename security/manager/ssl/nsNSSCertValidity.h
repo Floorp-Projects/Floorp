@@ -20,10 +20,7 @@ public:
   explicit nsX509CertValidity(const mozilla::UniqueCERTCertificate& cert);
 
 protected:
-  virtual ~nsX509CertValidity();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
+  virtual ~nsX509CertValidity() {}
 
 private:
   nsresult FormatTime(const PRTime& aTime,
