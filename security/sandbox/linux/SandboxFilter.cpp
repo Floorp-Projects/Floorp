@@ -15,6 +15,7 @@
 #ifdef MOZ_GMP_SANDBOX
 #include "SandboxOpenedFiles.h"
 #endif
+#include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
@@ -376,6 +377,16 @@ private:
   SandboxBrokerClient* mBroker;
   ContentProcessSandboxParams mParams;
 
+  bool BelowLevel(int aLevel) const {
+    return mParams.mLevel < aLevel;
+  }
+  ResultExpr AllowBelowLevel(int aLevel, ResultExpr aOrElse) const {
+    return BelowLevel(aLevel) ? Allow() : Move(aOrElse);
+  }
+  ResultExpr AllowBelowLevel(int aLevel) const {
+    return AllowBelowLevel(aLevel, InvalidSyscall());
+  }
+
   // Trap handlers for filesystem brokering.
   // (The amount of code duplication here could be improved....)
 #ifdef __NR_open
@@ -614,10 +625,15 @@ public:
     case SYS_SOCKET:
       return Some(Error(EACCES));
 #else // #ifdef DESKTOP
+    case SYS_SOCKET: // DANGEROUS
+      // Some things try to get a socket but can work without one,
+      // like sctp_userspace_get_mtu_from_ifn in WebRTC, so this is
+      // silently disallowed.
+      return Some(AllowBelowLevel(4, Error(EACCES)));
+    case SYS_CONNECT: // DANGEROUS
+      return Some(AllowBelowLevel(4));
     case SYS_RECV:
     case SYS_SEND:
-    case SYS_SOCKET: // DANGEROUS
-    case SYS_CONNECT: // DANGEROUS
     case SYS_GETSOCKOPT:
     case SYS_SETSOCKOPT:
     case SYS_GETSOCKNAME:
