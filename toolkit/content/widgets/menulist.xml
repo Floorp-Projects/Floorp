@@ -594,19 +594,6 @@
     </handlers>
   </binding>
 
-  <binding id="menulist-description" display="xul:menu"
-           extends="chrome://global/content/bindings/menulist.xml#menulist">
-    <content sizetopopup="pref">
-      <xul:hbox class="menulist-label-box" flex="1">
-        <xul:image class="menulist-icon" xbl:inherits="src=image,src"/>
-        <xul:label class="menulist-label" xbl:inherits="value=label,crop,accesskey" crop="right" flex="1"/>
-        <xul:label class="menulist-label menulist-description" xbl:inherits="value=description" crop="right" flex="10000"/>
-      </xul:hbox>
-      <xul:dropmarker class="menulist-dropmarker" type="menu" xbl:inherits="disabled,open"/>
-      <children includes="menupopup"/>
-    </content>
-  </binding>
-
   <binding id="menulist-popuponly" display="xul:menu"
            extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">

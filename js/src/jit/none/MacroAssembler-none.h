@@ -320,12 +320,15 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void unboxSymbol(T, Register) { MOZ_CRASH(); }
     template <typename T> void unboxObject(T, Register) { MOZ_CRASH(); }
     template <typename T> void unboxDouble(T, FloatRegister) { MOZ_CRASH(); }
-    void unboxValue(const ValueOperand&, AnyRegister) { MOZ_CRASH(); }
-    void unboxNonDouble(const ValueOperand&, Register ) { MOZ_CRASH();}
-    void unboxNonDouble(const Address&, Register ) { MOZ_CRASH();}
+    void unboxValue(const ValueOperand&, AnyRegister, JSValueType) { MOZ_CRASH(); }
+    void unboxNonDouble(const ValueOperand&, Register, JSValueType) { MOZ_CRASH();}
+    void unboxNonDouble(const Address&, Register, JSValueType) { MOZ_CRASH();}
+    void unboxGCThingForPreBarrierTrampoline(const Address&, Register) { MOZ_CRASH(); }
     void notBoolean(ValueOperand) { MOZ_CRASH(); }
     Register extractObject(Address, Register) { MOZ_CRASH(); }
     Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
+    Register extractString(ValueOperand, Register) { MOZ_CRASH(); }
+    Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
     Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
     Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }
     template <typename T> Register extractTag(T, Register) { MOZ_CRASH(); }
@@ -354,7 +357,7 @@ class MacroAssemblerNone : public Assembler
 
     template <typename T> void loadUnboxedValue(T, MIRType, AnyRegister) { MOZ_CRASH(); }
     template <typename T> void storeUnboxedValue(const ConstantOrRegister&, MIRType, T, MIRType) { MOZ_CRASH(); }
-    template <typename T> void storeUnboxedPayload(ValueOperand value, T, size_t) { MOZ_CRASH(); }
+    template <typename T> void storeUnboxedPayload(ValueOperand value, T, size_t, JSValueType) { MOZ_CRASH(); }
 
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
     void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }

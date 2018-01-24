@@ -13,6 +13,7 @@ class nsWrapperCache;
 
 typedef unsigned long long DOMTimeStamp;
 typedef double DOMHighResTimeStamp;
+typedef unsigned long long nsViewID;
 
 // Core
 interface nsIDOMCDATASection;

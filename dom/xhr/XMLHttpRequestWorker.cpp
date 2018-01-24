@@ -97,6 +97,8 @@ public:
   // Read on multiple threads.
   WorkerPrivate* mWorkerPrivate;
   XMLHttpRequestWorker* mXMLHttpRequestPrivate;
+  const ClientInfo mClientInfo;
+  const Maybe<ServiceWorkerDescriptor> mController;
 
   // XHR Params:
   bool mMozAnon;
@@ -132,8 +134,11 @@ public:
   bool mArrayBufferResponseWasTransferred;
 
 public:
-  Proxy(XMLHttpRequestWorker* aXHRPrivate, bool aMozAnon, bool aMozSystem)
+  Proxy(XMLHttpRequestWorker* aXHRPrivate, const ClientInfo& aClientInfo,
+        const Maybe<ServiceWorkerDescriptor>& aController, bool aMozAnon,
+        bool aMozSystem)
   : mWorkerPrivate(nullptr), mXMLHttpRequestPrivate(aXHRPrivate),
+    mClientInfo(aClientInfo), mController(aController),
     mMozAnon(aMozAnon), mMozSystem(aMozSystem),
     mInnerEventStreamId(0), mInnerChannelId(0), mOutstandingSendCount(0),
     mOuterEventStreamId(0), mOuterChannelId(0), mOpenCount(0), mLastLoaded(0),
@@ -871,6 +876,7 @@ Proxy::Init()
                   mWorkerPrivate->GetLoadGroup());
 
   mXHR->SetParameters(mMozAnon, mMozSystem);
+  mXHR->SetClientInfoAndController(mClientInfo, mController);
 
   ErrorResult rv;
   mXHRUpload = mXHR->GetUpload(rv);
@@ -1882,7 +1888,8 @@ XMLHttpRequestWorker::Open(const nsACString& aMethod,
     }
   }
   else {
-    mProxy = new Proxy(this, mMozAnon, mMozSystem);
+    mProxy = new Proxy(this, mWorkerPrivate->GetClientInfo(),
+                       mWorkerPrivate->GetController(), mMozAnon, mMozSystem);
   }
 
   mProxy->mOuterEventStreamId++;

@@ -29,6 +29,7 @@
 #endif
 #include "jswrapper.h"
 
+#include "gc/FreeOp.h"
 #include "js/Conversions.h"
 #include "shell/jsshell.h"
 #include "vm/StringBuffer.h"

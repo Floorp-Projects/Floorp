@@ -27,7 +27,7 @@
   });
 
   navigator.serviceWorker.onmessage = function(msg) {
-    testWindow.callback(msg.data.result);
+    testWindow.callback(msg.data);
   };
 </script>
 

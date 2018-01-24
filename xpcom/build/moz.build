@@ -15,13 +15,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    '!Services.h',
     'FileLocation.h',
     'IOInterposer.h',
     'LateWriteChecks.h',
     'Omnijar.h',
     'PoisonIOInterposer.h',
-    'ServiceList.h',
-    'Services.h',
     'XPCOM.h',
     'XREAppData.h',
 ]
@@ -55,14 +54,25 @@ UNIFIED_SOURCES += [
     'LateWriteChecks.cpp',
     'MainThreadIOLogger.cpp',
     'Omnijar.cpp',
-    'Services.cpp',
     'XPCOMInit.cpp',
 ]
+
+SOURCES += ['!Services.cpp']
 
 if CONFIG['OS_ARCH'] != 'WINNT':
     SOURCES += [
         'NSPRInterposer.cpp',
     ]
+
+GENERATED_FILES += [
+    'Services.cpp',
+    'Services.h',
+    'services.rs',
+]
+
+GENERATED_FILES['Services.cpp'].script = 'Services.py:services_cpp'
+GENERATED_FILES['Services.h'].script = 'Services.py:services_h'
+GENERATED_FILES['services.rs'].script = 'Services.py:services_rs'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

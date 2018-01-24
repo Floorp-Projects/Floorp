@@ -1183,12 +1183,15 @@ CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull* lir)
     OutOfLineCode* ool = oolCallVM(ToObjectInfo, lir, ArgList(input, Imm32(0)),
                                    StoreRegisterTo(output));
 
-    Label done;
-    masm.branchTestObject(Assembler::Equal, input, &done);
+    Label isObject;
+    masm.branchTestObject(Assembler::Equal, input, &isObject);
     masm.branchTestNull(Assembler::NotEqual, input, ool->entry());
 
-    masm.bind(&done);
-    masm.unboxNonDouble(input, output);
+    masm.movePtr(ImmWord(0), output);
+    masm.jump(ool->rejoin());
+
+    masm.bind(&isObject);
+    masm.unboxObject(input, output);
 
     masm.bind(ool->rejoin());
 }

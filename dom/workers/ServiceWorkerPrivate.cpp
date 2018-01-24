@@ -1253,18 +1253,22 @@ public:
     }
 
     event->SetTrusted(true);
-    aWorkerPrivate->GlobalScope()->AllowWindowInteraction();
-    RefPtr<AllowWindowInteractionHandler> allowWindowInteraction =
-      new AllowWindowInteractionHandler(aWorkerPrivate);
+
+    RefPtr<AllowWindowInteractionHandler> allowWindowInteraction;
+    if (mEventName.EqualsLiteral(NOTIFICATION_CLICK_EVENT_NAME)) {
+      allowWindowInteraction =
+        new AllowWindowInteractionHandler(aWorkerPrivate);
+    }
+
     nsresult rv = DispatchExtendableEventOnWorkerScope(aCx,
                                                        aWorkerPrivate->GlobalScope(),
                                                        event,
                                                        allowWindowInteraction);
     // Don't reject when catching an exception
-    if (NS_FAILED(rv) && rv != NS_ERROR_XPC_JS_THREW_EXCEPTION) {
+    if (NS_FAILED(rv) && rv != NS_ERROR_XPC_JS_THREW_EXCEPTION &&
+        allowWindowInteraction) {
       allowWindowInteraction->FinishedWithResult(Rejected);
     }
-    aWorkerPrivate->GlobalScope()->ConsumeWindowInteraction();
 
     return true;
   }

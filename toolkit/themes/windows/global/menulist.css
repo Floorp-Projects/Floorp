@@ -38,12 +38,6 @@ menulist {
   margin-inline-start: 1px !important;
 }
 
-.menulist-description {
-  font-style: italic;
-  color: GrayText;
-  margin-inline-start: 1ex !important;
-}
-
 /* ..... focused state ..... */
 
 menulist:focus:not([open="true"]) > .menulist-label-box {
@@ -89,10 +83,6 @@ html|*.menulist-editable-input {
     margin-top: -1px !important;
     margin-bottom: -1px !important;
     margin-inline-start: 0 !important;
-  }
-
-  .menulist-description {
-    margin-inline-start: 1ex !important;
   }
 
   menulist:not([editable="true"]) > .menulist-dropmarker {

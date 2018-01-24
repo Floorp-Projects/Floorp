@@ -27,12 +27,6 @@ menulist:not([popuponly="true"]) {
   margin: 1px 3px !important;
 }
 
-.menulist-description {
-  font-style: italic;
-  color: GrayText;
-  margin-inline-start: 1ex !important;
-}
-
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {

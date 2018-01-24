@@ -56,7 +56,11 @@ public:
            nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext,
            nsSecurityFlags aSecurityFlags,
-           nsContentPolicyType aContentPolicyType);
+           nsContentPolicyType aContentPolicyType,
+           const Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo
+              = Maybe<mozilla::dom::ClientInfo>(),
+           const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController
+              = Maybe<mozilla::dom::ServiceWorkerDescriptor>());
 
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
@@ -99,6 +103,10 @@ private:
            nsIPrincipal* aPrincipalToInherit,
            nsIPrincipal* aSandboxedLoadingPrincipal,
            nsIURI* aResultPrincipalURI,
+           const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
+           const Maybe<mozilla::dom::ClientInfo>& aReservedClientInfo,
+           const Maybe<mozilla::dom::ClientInfo>& aInitialClientInfo,
+           const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
            LoadTainting aTainting,
@@ -115,6 +123,7 @@ private:
            bool aEnforceSecurity,
            bool aInitialSecurityCheckDone,
            bool aIsThirdPartyRequest,
+           bool aIsDocshellReload,
            const OriginAttributes& aOriginAttributes,
            RedirectHistoryArray& aRedirectChainIncludingInternalRedirects,
            RedirectHistoryArray& aRedirectChain,
@@ -177,6 +186,7 @@ private:
   bool                             mEnforceSecurity;
   bool                             mInitialSecurityCheckDone;
   bool                             mIsThirdPartyContext;
+  bool                             mIsDocshellReload;
   OriginAttributes                 mOriginAttributes;
   RedirectHistoryArray             mRedirectChainIncludingInternalRedirects;
   RedirectHistoryArray             mRedirectChain;

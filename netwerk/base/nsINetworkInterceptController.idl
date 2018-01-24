@@ -247,10 +247,12 @@ interface nsINetworkInterceptController : nsISupports
      * Returns true if a channel should avoid initiating any network
      * requests until specifically instructed to do so.
      *
-     * @param aURI the URI being requested by a channel
-     * @param aIsNavigate True if the request is for a navigation, false for a fetch.
+     * @param aURI The URI to be loaded.  Note, this may differ from
+     *             the channel's current URL in some cases.
+     * @param aChannel The channel that may be intercepted.  It will
+     *                 be in the state prior to calling OnStartRequest().
      */
-    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNonSubresourceRequest);
+    bool shouldPrepareForIntercept(in nsIURI aURI, in nsIChannel aChannel);
 
     /**
      * Notification when a given intercepted channel is prepared to accept a synthesized

@@ -7,6 +7,7 @@
 #ifndef nsNetUtil_h__
 #define nsNetUtil_h__
 
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -55,7 +56,11 @@ class nsIUnicharStreamLoaderObserver;
 namespace mozilla {
 class Encoding;
 class OriginAttributes;
-}
+namespace dom {
+class ClientInfo;
+class ServiceWorkerDescriptor;
+} // namespace dom
+} // namespace mozilla
 
 template <class> class nsCOMPtr;
 template <typename> struct already_AddRefed;
@@ -113,8 +118,10 @@ nsresult NS_GetSanitizedURIStringFromURI(nsIURI *aUri,
 * * The NS_NewChannelInternal functions should almost never be directly
 *   called outside of necko code.
 * * If possible, use NS_NewChannel() providing a loading *nsINode*
-* * If no loading *nsINode* is avaialable, call NS_NewChannel() providing
-*   a loading *nsIPrincipal*.
+* * If no loading *nsINode* is available, try calling NS_NewChannel() providing
+*   a loading *ClientInfo*.
+* * If no loading *nsINode* or *ClientInfo* are available, call NS_NewChannel()
+*   providing a loading *nsIPrincipal*.
 * * Call NS_NewChannelWithTriggeringPrincipal if the triggeringPrincipal
 *   is different from the loadingPrincipal.
 * * Call NS_NewChannelInternal() providing aLoadInfo object in cases where
@@ -134,6 +141,12 @@ nsresult NS_GetSanitizedURIStringFromURI(nsIURI *aUri,
 * then loadingPrincipal must be equal to loadingNode->NodePrincipal().
 * But less error prone is to just supply a loadingNode.
 *
+* Note, if you provide a loading ClientInfo its principal must match the
+* loading principal.  Currently you must pass both as the loading principal
+* may have additional mutable values like CSP on it.  In the future these
+* will be removed from nsIPrincipal and the API can be changed to take just
+* the loading ClientInfo.
+*
 * Keep in mind that URIs coming from a webpage should *never* use the
 * systemPrincipal as the loadingPrincipal.
 */
@@ -142,6 +155,8 @@ nsresult NS_NewChannelInternal(nsIChannel           **outChannel,
                                nsINode               *aLoadingNode,
                                nsIPrincipal          *aLoadingPrincipal,
                                nsIPrincipal          *aTriggeringPrincipal,
+                               const mozilla::Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
+                               const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
                                nsSecurityFlags        aSecurityFlags,
                                nsContentPolicyType    aContentPolicyType,
                                nsILoadGroup          *aLoadGroup = nullptr,
@@ -171,9 +186,8 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
                                      nsIIOService          *aIoService = nullptr);
 
-
 // See NS_NewChannelInternal for usage and argument description
-nsresult /*NS_NewChannelWithPrincipalAndTriggeringPrincipal */
+nsresult
 NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsIURI                *aUri,
                                      nsIPrincipal          *aLoadingPrincipal,
@@ -186,7 +200,23 @@ NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsIIOService          *aIoService = nullptr);
 
 // See NS_NewChannelInternal for usage and argument description
-nsresult /* NS_NewChannelNode */
+nsresult
+NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
+                                     nsIURI                *aUri,
+                                     nsIPrincipal          *aLoadingPrincipal,
+                                     nsIPrincipal          *aTriggeringPrincipal,
+                                     const mozilla::dom::ClientInfo& aLoadingClientInfo,
+                                     const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
+                                     nsSecurityFlags        aSecurityFlags,
+                                     nsContentPolicyType    aContentPolicyType,
+                                     nsILoadGroup          *aLoadGroup = nullptr,
+                                     nsIInterfaceRequestor *aCallbacks = nullptr,
+                                     nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
+                                     nsIIOService          *aIoService = nullptr);
+
+
+// See NS_NewChannelInternal for usage and argument description
+nsresult
 NS_NewChannel(nsIChannel           **outChannel,
               nsIURI                *aUri,
               nsINode               *aLoadingNode,
@@ -198,7 +228,7 @@ NS_NewChannel(nsIChannel           **outChannel,
               nsIIOService          *aIoService = nullptr);
 
 // See NS_NewChannelInternal for usage and argument description
-nsresult /* NS_NewChannelPrincipal */
+nsresult
 NS_NewChannel(nsIChannel           **outChannel,
               nsIURI                *aUri,
               nsIPrincipal          *aLoadingPrincipal,
@@ -208,6 +238,20 @@ NS_NewChannel(nsIChannel           **outChannel,
               nsIInterfaceRequestor *aCallbacks = nullptr,
               nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
               nsIIOService          *aIoService = nullptr);
+
+// See NS_NewChannelInternal for usage and argument description
+nsresult
+NS_NewChannel(nsIChannel** outChannel,
+              nsIURI* aUri,
+              nsIPrincipal* aLoadingPrincipal,
+              const mozilla::dom::ClientInfo& aLoadingClientInfo,
+              const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
+              nsSecurityFlags aSecurityFlags,
+              nsContentPolicyType aContentPolicyType,
+              nsILoadGroup* aLoadGroup = nullptr,
+              nsIInterfaceRequestor* aCallbacks = nullptr,
+              nsLoadFlags aLoadFlags = nsIRequest::LOAD_NORMAL,
+              nsIIOService* aIoService = nullptr);
 
 nsresult NS_GetIsDocumentChannel(nsIChannel * aChannel, bool *aIsDocument);
 
@@ -349,7 +393,7 @@ nsresult NS_NewStreamLoaderInternal(nsIStreamLoader        **outStream,
                                     nsLoadFlags              aLoadFlags = nsIRequest::LOAD_NORMAL,
                                     nsIURI                  *aReferrer = nullptr);
 
-nsresult /* NS_NewStreamLoaderNode */
+nsresult
 NS_NewStreamLoader(nsIStreamLoader        **outStream,
                    nsIURI                  *aUri,
                    nsIStreamLoaderObserver *aObserver,
@@ -361,7 +405,7 @@ NS_NewStreamLoader(nsIStreamLoader        **outStream,
                    nsLoadFlags              aLoadFlags = nsIRequest::LOAD_NORMAL,
                    nsIURI                  *aReferrer = nullptr);
 
-nsresult /* NS_NewStreamLoaderPrincipal */
+nsresult
 NS_NewStreamLoader(nsIStreamLoader        **outStream,
                    nsIURI                  *aUri,
                    nsIStreamLoaderObserver *aObserver,

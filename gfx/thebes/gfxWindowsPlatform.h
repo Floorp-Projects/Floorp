@@ -176,6 +176,8 @@ public:
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
+    mozilla::gfx::BackendType GetPreferredCanvasBackend() override;
+
     static void GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion);
 
     // returns ClearType tuning information for each display

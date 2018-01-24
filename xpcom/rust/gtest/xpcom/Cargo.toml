@@ -1,0 +1,14 @@
+[package]
+name = "xpcom-gtest"
+version = "0.1.0"
+authors = ["michael@thelayzells.com"]
+license = "MPL-2.0"
+description = "Tests for rust bindings to xpcom interfaces"
+
+[dependencies]
+xpcom = { path = "../../xpcom" }
+nserror = { path = "../../nserror" }
+nsstring = { path = "../../../../servo/support/gecko/nsstring" }
+
+[lib]
+path = "test.rs"

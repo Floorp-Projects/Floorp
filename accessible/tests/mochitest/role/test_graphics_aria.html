@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Graphics ARIA roles</title>
+
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest() {
+      // Graphics ARIA role map.
+      testRole("graphics-document", ROLE_DOCUMENT);
+      testRole("graphics-object", ROLE_GROUPING);
+      testRole("graphics-symbol", ROLE_GRAPHIC);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1432513"
+     title="implement ARIA Graphics roles">
+    Bug 1432513
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+  <div id="graphics-document" role="graphics-document">document</div>
+  <div id="graphics-object" role="graphics-object">object</div>
+  <div id="graphics-symbol" role="graphics-symbol">symbol</div>
+</body>
+</html>
