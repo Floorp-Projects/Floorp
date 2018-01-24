@@ -2207,14 +2207,6 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->BeforeEditAction();
       }
-
-      if (!mEditorObservers.IsEmpty()) {
-        // Copy the observers since EditAction()s can modify mEditorObservers.
-        AutoEditorObserverArray observers(mEditorObservers);
-        for (auto& observer : observers) {
-          observer->BeforeEditAction();
-        }
-      }
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditAction = false;
@@ -2222,14 +2214,6 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       if (mIMEContentObserver) {
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->CancelEditAction();
-      }
-
-      if (!mEditorObservers.IsEmpty()) {
-        // Copy the observers since EditAction()s can modify mEditorObservers.
-        AutoEditorObserverArray observers(mEditorObservers);
-        for (auto& observer : observers) {
-          observer->CancelEditAction();
-        }
       }
       break;
     default:
