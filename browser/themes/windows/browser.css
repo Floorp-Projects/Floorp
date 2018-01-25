@@ -776,6 +776,14 @@ html|span.ac-emphasize-text-url {
 
 %include ../shared/tabs.inc.css
 
+@media (-moz-windows-default-theme: 0) {
+  /* For high contrast themes. */
+  tabbrowser,
+  :root[privatebrowsingmode=temporary] tabbrowser {
+    background-color: -moz-default-background-color;
+  }
+}
+
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab:focus > .tab-stack > .tab-content {
   outline: 1px dotted;
