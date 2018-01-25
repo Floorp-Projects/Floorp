@@ -3603,8 +3603,7 @@ XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
         if (attr == nsGkAtoms::removeelement && value.EqualsLiteral("true")) {
             nsCOMPtr<nsINode> parent = aTargetElement->GetParentNode();
             if (!parent) return NS_ERROR_FAILURE;
-            rv = RemoveElement(parent, aTargetElement);
-            if (NS_FAILED(rv)) return rv;
+            parent->RemoveChildNode(aTargetElement, true);
             return NS_OK;
         }
 
@@ -3671,13 +3670,19 @@ XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
                 // non-null ID.
                 rv = Merge(elementInDocument, currContent->AsElement(), aNotify);
                 if (NS_FAILED(rv)) return rv;
-                aOverlayElement->RemoveChildAt_Deprecated(0, false);
+                nsIContent* firstChild = aOverlayElement->GetFirstChild();
+                if (firstChild) {
+                  aOverlayElement->RemoveChildNode(firstChild, false);
+                }
 
                 continue;
             }
         }
 
-        aOverlayElement->RemoveChildAt_Deprecated(0, false);
+        nsIContent* firstChild = aOverlayElement->GetFirstChild();
+        if (firstChild) {
+          aOverlayElement->RemoveChildNode(firstChild, false);
+        }
 
         rv = InsertElement(aTargetElement, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
@@ -4034,15 +4039,6 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
     if (!wasInserted) {
         return aParent->AppendChildTo(aChild, aNotify);
     }
-    return NS_OK;
-}
-
-nsresult
-XULDocument::RemoveElement(nsINode* aParent, nsINode* aChild)
-{
-    int32_t nodeOffset = aParent->ComputeIndexOf(aChild);
-
-    aParent->RemoveChildAt_Deprecated(nodeOffset, true);
     return NS_OK;
 }
 
