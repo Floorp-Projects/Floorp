@@ -36,7 +36,7 @@ import mozlog
 import mozprocess
 import mozprofile
 import mozrunner
-from manifestparser import TestManifest
+from manifestparser import TestManifest, filters as mpf
 from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import printstatus, dump_screen
 
@@ -288,10 +288,6 @@ class RefTest(object):
         # to work should instead be set in reftest-preferences.js .
         prefs = prefs or {}
         prefs['reftest.timeout'] = options.timeout * 1000
-        if options.totalChunks:
-            prefs['reftest.totalChunks'] = options.totalChunks
-        if options.thisChunk:
-            prefs['reftest.thisChunk'] = options.thisChunk
         if options.logFile:
             prefs['reftest.logFile'] = options.logFile
         if options.ignoreWindowSize:
@@ -831,6 +827,9 @@ class RefTest(object):
         mp.tests = tests
 
         filters = []
+        if options.totalChunks:
+            filters.append(mpf.chunk_by_slice(options.thisChunk, options.totalChunks))
+
         tests = mp.active_tests(exists=False, filters=filters)
         return tests
 
