@@ -49,6 +49,10 @@ async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
   info("Waiting for the node-highlight event from the toolbox");
   await inspector.toolbox.once("node-highlight");
 
+  // Wait for the next event tick to make sure the remaining part of the
+  // test is executed after finishing synthesizing mouse event.
+  await new Promise(executeSoon);
+
   is(highlightedNodeFront, inspector.selection.nodeFront,
     "The right nodeFront was highlighted");
   is(highlighterOptions.region, expectedRegion,
