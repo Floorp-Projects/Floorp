@@ -112,7 +112,7 @@ The following event properties are valid:
 - ``notification_emails`` *(required, list of strings)*: A list of emails of owners for this event. This is used for contact for data reviews and potentially to email alerts.
 - expiry: There are two properties that can specify expiry, at least one needs to be set:
 
-  - ``expiry_version`` *(string)*: The version number in which the event expires, e.g. ``"50"``, or ``"never"``. A version number of type "N" and "N.0" is automatically converted to "N.0a1" in order to expire the event also in the development channels. For events that never expire the value ``never`` can be used.
+  - ``expiry_version`` *(string)*: The version number in which the event expires, e.g. ``"50"``, or ``"never"``. A version number of type "N" is automatically converted to "N.0a1" in order to expire the event also in the development channels. For events that never expire the value ``never`` can be used.
 
 - ``extra_keys`` *(optional, object)*: An object that specifies valid keys for the ``extra`` argument and a description - see the example above.
 
