@@ -32,13 +32,17 @@ CMD ["/bin/bash", "--login"]
 # Set apt sources list to a snapshot.
 COPY sources.list /etc/apt/
 
-RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99check-valid-until
+RUN ( echo 'quiet "true";'; \
+      echo 'APT::Get::Assume-Yes "true";'; \
+      echo 'APT::Install-Recommends "false";'; \
+      echo 'Acquire::Check-Valid-Until "false";'; \
+    ) > /etc/apt/apt.conf.d/99taskcluster
 
 # rsync is required for l10n single locale repacks.  less, screen, and
 # vim, help debugging interactive tasks in Task Cluster.
 # git and openssh-client are used to upload GeckoView javadoc to Github.
-RUN apt-get update -q && \
-    apt-get install -yyq --no-install-recommends \
+RUN apt-get update && \
+    apt-get install \
       autoconf2.13 \
       build-essential \
       base-files \
@@ -125,7 +129,7 @@ USER root
 # https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
 
 # Observe missing --no-install-recommends, in order to install glib2.0/gconf/etc.
-RUN apt-get install -yyq \
+RUN apt-get install \
       libgconf2-4 \
       libgnome2-0 \
       openjdk-8-jdk-headless \
