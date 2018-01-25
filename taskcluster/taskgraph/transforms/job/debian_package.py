@@ -182,9 +182,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'cd {artifacts} && '
         # Make the artifacts directory usable as an APT repository.
         'apt-ftparchive sources debian | gzip -c9 > debian/Sources.gz && '
-        'apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz && '
-        'apt-ftparchive release -o APT::FTPArchive::Release::Codename={dist} debian > Release && '
-        'mv Release debian/'
+        'apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz'
         .format(
             package=package,
             snapshot=run['snapshot'],
