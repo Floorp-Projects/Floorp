@@ -66,6 +66,7 @@ var publicProperties = [
   "promiseAccountsForceSigninURI",
   "promiseAccountsManageURI",
   "promiseAccountsManageDevicesURI",
+  "promiseAccountsConnectDeviceURI",
   "promiseAccountsSignUpURI",
   "promiseAccountsSignInURI",
   "removeCachedOAuthToken",
@@ -1483,6 +1484,12 @@ FxAccountsInternal.prototype = {
   // the current user's FxA acct.
   async promiseAccountsManageDevicesURI(entrypoint) {
     return this._formatPrefURL("identity.fxaccounts.settings.devices.uri", entrypoint);
+  },
+
+  // Returns a promise that resolves with the URL to use to connect a new
+  // device to the current user's FxA acct.
+  async promiseAccountsConnectDeviceURI(entrypoint) {
+    return this._formatPrefURL("identity.fxaccounts.remote.connectdevice.uri", entrypoint);
   },
 
   /**

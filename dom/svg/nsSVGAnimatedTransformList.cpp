@@ -21,8 +21,7 @@ namespace mozilla {
 using namespace dom;
 
 nsresult
-nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue,
-                                               nsSVGElement* aSVGElement)
+nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue)
 {
   SVGTransformList newBaseValue;
   nsresult rv = newBaseValue.SetValueFromString(aValue);
@@ -30,12 +29,11 @@ nsSVGAnimatedTransformList::SetBaseValueString(const nsAString& aValue,
     return rv;
   }
 
-  return SetBaseValue(newBaseValue, aSVGElement);
+  return SetBaseValue(newBaseValue);
 }
 
 nsresult
-nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
-                                         nsSVGElement* aSVGElement)
+nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue)
 {
   SVGAnimatedTransformList *domWrapper =
     SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
@@ -62,12 +60,7 @@ nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
     domWrapper->InternalBaseValListWillChangeLengthTo(mBaseVal.Length());
   } else {
     mIsAttrSet = true;
-    // If we set this flag to false, we're indicating that aSVGElement's frames
-    // will need reconstructing to account for stacking context changes.
-    // If aSVGElement doesn't have any frames, then that's clearly unnecessary,
-    // so in that case we set the flag to true.
-    mHadTransformBeforeLastBaseValChange =
-      !aSVGElement->GetPrimaryFrame() || hadTransform;
+    mHadTransformBeforeLastBaseValChange = hadTransform;
   }
   return rv;
 }

@@ -101,3 +101,6 @@ both, to better adapt this sentence to their language.
 <!ENTITY mobilePromo3.iOSLink          "iOS">
 
 <!ENTITY mobilePromo3.end              " to sync with your mobile device.">
+
+<!ENTITY mobilepromo.singledevice      "Connect another device">
+<!ENTITY mobilepromo.multidevice       "Manage devices">

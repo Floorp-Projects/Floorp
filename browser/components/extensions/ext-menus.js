@@ -8,6 +8,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
 
 var {
+  DefaultMap,
   ExtensionError,
 } = ExtensionUtils;
 
@@ -27,6 +28,13 @@ var gMenuMap = new Map();
 // Map[Extension -> MenuItem]
 var gRootItems = new Map();
 
+// Map[Extension -> ID[]]
+// Menu IDs that were eligible for being shown in the current menu.
+var gShownMenuItems = new DefaultMap(() => []);
+
+// Set of extensions that are listening to onShown.
+var gOnShownSubscribers = new Set();
+
 // If id is not specified for an item we use an integer.
 var gNextMenuItemID = 0;
 
@@ -42,43 +50,21 @@ var gMenuBuilder = {
   // to be displayed. We always clear all the items again when
   // popuphidden fires.
   build(contextData) {
-    let firstItem = true;
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
     for (let [, root] of gRootItems) {
-      let rootElement = this.buildElementWithChildren(root, contextData);
-      if (!rootElement.firstChild || !rootElement.firstChild.childNodes.length) {
-        // If the root has no visible children, there is no reason to show
-        // the root menu item itself either.
-        continue;
+      let rootElement = this.createTopLevelElement(root, contextData);
+      if (rootElement) {
+        this.appendTopLevelElement(rootElement);
       }
-      rootElement.setAttribute("ext-type", "top-level-menu");
-      rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
-
-      // Display the extension icon on the root element.
-      if (root.extension.manifest.icons) {
-        this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
-      }
-
-      if (firstItem) {
-        firstItem = false;
-        const separator = xulMenu.ownerDocument.createElement("menuseparator");
-        this.itemsToCleanUp.add(separator);
-        xulMenu.append(separator);
-      }
-
-      xulMenu.appendChild(rootElement);
-      this.itemsToCleanUp.add(rootElement);
     }
+    this.afterBuildingMenu(contextData);
   },
 
   // Builds a context menu for browserAction and pageAction buttons.
   buildActionContextMenu(contextData) {
     const {menu} = contextData;
-
-    contextData.tab = tabTracker.activeTab;
-    contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
 
     const root = gRootItems.get(contextData.extension);
     if (!root) {
@@ -88,10 +74,10 @@ var gMenuBuilder = {
     const children = this.buildChildren(root, contextData);
     const visible = children.slice(0, ACTION_MENU_TOP_LEVEL_LIMIT);
 
-    if (visible.length) {
-      this.xulMenu = menu;
-      menu.addEventListener("popuphidden", this);
+    this.xulMenu = menu;
+    menu.addEventListener("popuphidden", this);
 
+    if (visible.length) {
       const separator = menu.ownerDocument.createElement("menuseparator");
       menu.insertBefore(separator, menu.firstChild);
       this.itemsToCleanUp.add(separator);
@@ -101,6 +87,7 @@ var gMenuBuilder = {
         menu.insertBefore(child, separator);
       }
     }
+    this.afterBuildingMenu(contextData);
   },
 
   buildElementWithChildren(item, contextData) {
@@ -130,6 +117,43 @@ var gMenuBuilder = {
       }
     }
     return children;
+  },
+
+  createTopLevelElement(root, contextData) {
+    let rootElement = this.buildElementWithChildren(root, contextData);
+    if (!rootElement.firstChild || !rootElement.firstChild.childNodes.length) {
+      // If the root has no visible children, there is no reason to show
+      // the root menu item itself either.
+      return null;
+    }
+    rootElement.setAttribute("ext-type", "top-level-menu");
+    rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
+
+    // Display the extension icon on the root element.
+    if (root.extension.manifest.icons) {
+      this.setMenuItemIcon(rootElement, root.extension, contextData, root.extension.manifest.icons);
+    }
+    return rootElement;
+  },
+
+  appendTopLevelElement(rootElement) {
+    if (this.itemsToCleanUp.size === 0) {
+      const separator = this.xulMenu.ownerDocument.createElement("menuseparator");
+      this.itemsToCleanUp.add(separator);
+      this.xulMenu.append(separator);
+    }
+
+    this.xulMenu.appendChild(rootElement);
+    this.itemsToCleanUp.add(rootElement);
+  },
+
+  removeSeparatorIfNoTopLevelItems() {
+    if (this.itemsToCleanUp.size === 1) {
+      // Remove the separator if all extension menu items have disappeared.
+      const separator = this.itemsToCleanUp.values().next().value;
+      separator.remove();
+      this.itemsToCleanUp.clear();
+    }
   },
 
   removeTopLevelMenuIfNeeded(element) {
@@ -208,9 +232,7 @@ var gMenuBuilder = {
       element.setAttribute("label", label);
     }
 
-    if (item.id && item.extension && item.extension.id) {
-      element.setAttribute("id", `${makeWidgetId(item.extension.id)}_${item.id}`);
-    }
+    element.setAttribute("id", item.elementId);
 
     if (item.icons) {
       this.setMenuItemIcon(element, item.extension, contextData, item.icons);
@@ -279,6 +301,12 @@ var gMenuBuilder = {
       item.extension.emit("webext-menu-menuitem-click", info, tab);
     });
 
+    // Don't publish the ID of the root because the root element is
+    // auto-generated.
+    if (item.parent) {
+      gShownMenuItems.get(item.extension).push(item.id);
+    }
+
     return element;
   },
 
@@ -302,18 +330,100 @@ var gMenuBuilder = {
     element.setAttribute("image", resolvedURL);
   },
 
+  rebuildMenu(extension) {
+    let {contextData} = this;
+    if (!contextData) {
+      // This happens if the menu is not visible.
+      return;
+    }
+
+    if (!gShownMenuItems.has(extension)) {
+      // The onShown event was not fired for the extension, so the extension
+      // does not know that a menu is being shown, and therefore they should
+      // not care whether the extension menu is updated.
+      return;
+    }
+
+    if (contextData.onBrowserAction || contextData.onPageAction) {
+      // The action menu can only have items from one extension, so remove all
+      // items (including the separator) and rebuild the action menu (if any).
+      for (let item of this.itemsToCleanUp) {
+        item.remove();
+      }
+      this.itemsToCleanUp.clear();
+      this.buildActionContextMenu(contextData);
+      return;
+    }
+
+    // First find the one and only top-level menu item for the extension.
+    let elementIdPrefix = `${makeWidgetId(extension.id)}-menuitem-`;
+    let oldRoot = null;
+    for (let item = this.xulMenu.lastElementChild; item !== null; item = item.previousElementSibling) {
+      if (item.id && item.id.startsWith(elementIdPrefix)) {
+        oldRoot = item;
+        this.itemsToCleanUp.delete(oldRoot);
+        break;
+      }
+    }
+
+    let root = gRootItems.get(extension);
+    let newRoot = root && this.createTopLevelElement(root, contextData);
+    if (newRoot) {
+      this.itemsToCleanUp.add(newRoot);
+      if (oldRoot) {
+        oldRoot.replaceWith(newRoot);
+      } else {
+        this.appendTopLevelElement(newRoot);
+      }
+    } else if (oldRoot) {
+      oldRoot.remove();
+      this.removeSeparatorIfNoTopLevelItems();
+    }
+  },
+
+  afterBuildingMenu(contextData) {
+    if (this.contextData) {
+      // rebuildMenu can trigger us again, but the logic below should run only
+      // once per open menu.
+      return;
+    }
+
+    function dispatchOnShownEvent(extension) {
+      // Note: gShownMenuItems is a DefaultMap, so .get(extension) causes the
+      // extension to be stored in the map even if there are currently no
+      // shown menu items. This ensures that the onHidden event can be fired
+      // when the menu is closed.
+      let menuIds = gShownMenuItems.get(extension);
+      extension.emit("webext-menu-shown", menuIds, contextData);
+    }
+
+    if (contextData.onBrowserAction || contextData.onPageAction) {
+      dispatchOnShownEvent(contextData.extension);
+    } else {
+      gOnShownSubscribers.forEach(dispatchOnShownEvent);
+    }
+
+    this.contextData = contextData;
+  },
+
   handleEvent(event) {
     if (this.xulMenu != event.target || event.type != "popuphidden") {
       return;
     }
 
     delete this.xulMenu;
+    delete this.contextData;
+
     let target = event.target;
     target.removeEventListener("popuphidden", this);
     for (let item of this.itemsToCleanUp) {
       item.remove();
     }
     this.itemsToCleanUp.clear();
+    for (let extension of gShownMenuItems.keys()) {
+      extension.emit("webext-menu-hidden");
+    }
+    gShownMenuItems.clear();
   },
 
   itemsToCleanUp: new Set(),
@@ -321,6 +431,8 @@ var gMenuBuilder = {
 
 // Called from pageAction or browserAction popup.
 global.actionContextMenu = function(contextData) {
+  contextData.tab = tabTracker.activeTab;
+  contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
   gMenuBuilder.buildActionContextMenu(contextData);
 };
 
@@ -361,6 +473,41 @@ const getMenuContexts = contextData => {
 
   return contexts;
 };
+
+function addMenuEventInfo(info, contextData, includeSensitiveData) {
+  if (contextData.onVideo) {
+    info.mediaType = "video";
+  } else if (contextData.onAudio) {
+    info.mediaType = "audio";
+  } else if (contextData.onImage) {
+    info.mediaType = "image";
+  }
+  if (contextData.frameId !== undefined) {
+    info.frameId = contextData.frameId;
+  }
+  if (contextData.onBookmark) {
+    info.bookmarkId = contextData.bookmarkId;
+  }
+  info.editable = contextData.onEditableArea || contextData.onPassword || false;
+  if (includeSensitiveData) {
+    if (contextData.onLink) {
+      info.linkText = contextData.linkText;
+      info.linkUrl = contextData.linkUrl;
+    }
+    if (contextData.onAudio || contextData.onImage || contextData.onVideo) {
+      info.srcUrl = contextData.srcUrl;
+    }
+    if (!contextData.onBookmark) {
+      info.pageUrl = contextData.pageUrl;
+    }
+    if (contextData.inFrame) {
+      info.frameUrl = contextData.frameUrl;
+    }
+    if (contextData.isTextSelected) {
+      info.selectionText = contextData.selectionText;
+    }
+  }
+}
 
 function MenuItem(extension, createProperties, isRoot = false) {
   this.extension = extension;
@@ -428,6 +575,18 @@ MenuItem.prototype = {
 
   get id() {
     return this._id;
+  },
+
+  get elementId() {
+    let id = this.id;
+    // If the ID is an integer, it is auto-generated and globally unique.
+    // If the ID is a string, it is only unique within one extension and the
+    // ID needs to be concatenated with the extension ID.
+    if (typeof id !== "number") {
+      // To avoid collisions with numeric IDs, add a prefix to string IDs.
+      id = `_${id}`;
+    }
+    return `${makeWidgetId(this.extension.id)}-menuitem-${id}`;
   },
 
   ensureValidParentId(parentId) {
@@ -510,38 +669,14 @@ MenuItem.prototype = {
   },
 
   getClickInfo(contextData, wasChecked) {
-    let mediaType;
-    if (contextData.onVideo) {
-      mediaType = "video";
-    }
-    if (contextData.onAudio) {
-      mediaType = "audio";
-    }
-    if (contextData.onImage) {
-      mediaType = "image";
-    }
-
     let info = {
       menuItemId: this.id,
-      editable: contextData.onEditableArea || contextData.onPassword,
     };
-
-    function setIfDefined(argName, value) {
-      if (value !== undefined) {
-        info[argName] = value;
-      }
+    if (this.parent) {
+      info.parentMenuItemId = this.parentId;
     }
 
-    setIfDefined("parentMenuItemId", this.parentId);
-    setIfDefined("mediaType", mediaType);
-    setIfDefined("linkText", contextData.linkText);
-    setIfDefined("linkUrl", contextData.linkUrl);
-    setIfDefined("srcUrl", contextData.srcUrl);
-    setIfDefined("pageUrl", contextData.pageUrl);
-    setIfDefined("frameUrl", contextData.frameUrl);
-    setIfDefined("frameId", contextData.frameId);
-    setIfDefined("selectionText", contextData.selectionText);
-    setIfDefined("bookmarkId", contextData.bookmarkId);
+    addMenuEventInfo(info, contextData, true);
 
     if ((this.type === "checkbox") || (this.type === "radio")) {
       info.checked = this.checked;
@@ -666,6 +801,8 @@ this.menusInternal = class extends ExtensionAPI {
     if (gMenuMap.has(extension)) {
       gMenuMap.delete(extension);
       gRootItems.delete(extension);
+      gShownMenuItems.delete(extension);
+      gOnShownSubscribers.delete(extension);
       if (!gMenuMap.size) {
         menuTracker.unregister();
       }
@@ -675,7 +812,51 @@ this.menusInternal = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
 
+    const menus = {
+      refresh() {
+        gMenuBuilder.rebuildMenu(extension);
+      },
+
+      onShown: new EventManager(context, "menus.onShown", fire => {
+        let listener = (event, menuIds, contextData) => {
+          let info = {
+            menuIds,
+            contexts: Array.from(getMenuContexts(contextData)),
+          };
+
+          // The menus.onShown event is fired before the user has consciously
+          // interacted with an extension, so we require permissions before
+          // exposing sensitive contextual data.
+          let includeSensitiveData =
+            extension.tabManager.hasActiveTabPermission(contextData.tab) ||
+            extension.whiteListedHosts.matches(contextData.inFrame ? contextData.frameUrl : contextData.pageUrl);
+
+          addMenuEventInfo(info, contextData, includeSensitiveData);
+
+          let tab = extension.tabManager.convert(contextData.tab);
+          fire.sync(info, tab);
+        };
+        gOnShownSubscribers.add(extension);
+        extension.on("webext-menu-shown", listener);
+        return () => {
+          gOnShownSubscribers.delete(extension);
+          extension.off("webext-menu-shown", listener);
+        };
+      }).api(),
+      onHidden: new EventManager(context, "menus.onHidden", fire => {
+        let listener = () => {
+          fire.sync();
+        };
+        extension.on("webext-menu-hidden", listener);
+        return () => {
+          extension.off("webext-menu-hidden", listener);
+        };
+      }).api(),
+    };
+
     return {
+      contextMenus: menus,
+      menus,
       menusInternal: {
         create: function(createProperties) {
           // Note that the id is required by the schema. If the addon did not set

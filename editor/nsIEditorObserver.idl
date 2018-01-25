@@ -5,32 +5,18 @@
 
 #include "nsISupports.idl"
 
-/*
-Editor Observer interface to outside world
-*/
-
-[scriptable, uuid(f3ee57a6-890c-4ce0-a584-8a84bba0292e)]
-
 /**
- * A generic editor observer interface.
- * <P>
- * nsIEditorObserver is the interface used by applications wishing to be notified
- * when the editor has completed a user action.
- *
+ * nsIEditorObserver is the interface used by applications wishing to be
+ * notified when the editor has completed a user action.
+ * Note that when you want to use this from C++, please check if EditorBase
+ * can treat your class directly since using this interface may make editor
+ * slower.
  */
-interface nsIEditorObserver : nsISupports {
+[scriptable, uuid(f3ee57a6-890c-4ce0-a584-8a84bba0292e)]
+interface nsIEditorObserver : nsISupports
+{
   /**
    * Called after the editor completes a user action.
    */
   void EditAction();
-  /**
-   * Called when editor starts to handle a user action.  I.e., This must be
-   * called before the first DOM change.
-   */
-  void BeforeEditAction();
-  /**
-   * Called after BeforeEditAction() is called but EditorAction() won't be
-   * called.
-   */
-  void CancelEditAction();
 };

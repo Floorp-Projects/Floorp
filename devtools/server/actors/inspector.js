@@ -3234,13 +3234,11 @@ function standardTreeWalkerFilter(node) {
            : nodeFilterConstants.FILTER_SKIP;
   }
 
-  // Ignore all native and XBL anonymous content inside a non-XUL document
+  // Ignore all native and XBL anonymous content inside a non-XUL document.
+  // We need to do this to skip things like form controls, scrollbars,
+  // video controls, etc (see bug 1187482).
   if (!isInXULDocument(node) && (isXBLAnonymous(node) ||
                                   isNativeAnonymous(node))) {
-    // Note: this will skip inspecting the contents of feedSubscribeLine since
-    // that's XUL content injected in an HTML document, but we need to because
-    // this also skips many other elements that need to be skipped - like form
-    // controls, scrollbars, video controls, etc (see bug 1187482).
     return nodeFilterConstants.FILTER_SKIP;
   }
 

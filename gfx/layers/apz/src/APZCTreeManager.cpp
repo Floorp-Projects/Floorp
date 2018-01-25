@@ -79,6 +79,8 @@ struct APZCTreeManager::TreeBuildingState {
   {
   }
 
+  typedef std::unordered_map<AsyncPanZoomController*, gfx::Matrix4x4> DeferredTransformMap;
+
   // State that doesn't change as we recurse in the tree building
   const LayerTreeState* const mLayerTreeState;
   const bool mIsFirstPaint;
@@ -101,6 +103,16 @@ struct APZCTreeManager::TreeBuildingState {
   // to facilitate re-using the same APZC for different layers that scroll
   // together (and thus have the same ScrollableLayerGuid).
   std::unordered_map<ScrollableLayerGuid, AsyncPanZoomController*, ScrollableLayerGuidHash> mApzcMap;
+
+  // As the tree is traversed, the top element of this stack tracks whether
+  // the parent scroll node has a perspective transform.
+  std::stack<bool> mParentHasPerspective;
+
+  // During the tree building process, the perspective transform component
+  // of the ancestor transforms of some APZCs can be "deferred" to their
+  // children, meaning they are added to the children's ancestor transforms
+  // instead. Those deferred transforms are tracked here.
+  DeferredTransformMap mPerspectiveTransformsDeferredToChildren;
 };
 
 class APZCTreeManager::CheckerboardFlushObserver : public nsIObserver {
@@ -327,6 +339,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
     HitTestingTreeNode* next = nullptr;
     uint64_t layersId = aRootLayerTreeId;
     ancestorTransforms.push(AncestorTransform());
+    state.mParentHasPerspective.push(false);
 
     state.mLayersIdsToDestroy.erase(aRootLayerTreeId);
 
@@ -376,6 +389,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           }
 
           indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
+          state.mParentHasPerspective.push(aLayerMetrics.TransformIsPerspective());
         },
         [&](ScrollNode aLayerMetrics)
         {
@@ -384,9 +398,41 @@ APZCTreeManager::UpdateHitTestingTreeImpl(uint64_t aRootLayerTreeId,
           layersId = next->GetLayersId();
           ancestorTransforms.pop();
           indents.pop();
+          state.mParentHasPerspective.pop();
         });
 
     mApzcTreeLog << "[end]\n";
+
+    // If we have perspective transforms deferred to children, do another
+    // walk of the tree and actually apply them to the children.
+    // We can't do this "as we go" in the previous traversal, because by the
+    // time we realize we need to defer a perspective transform for an APZC,
+    // we may already have processed a previous layer (including children
+    // found in its subtree) that shares that APZC.
+    if (!state.mPerspectiveTransformsDeferredToChildren.empty()) {
+      ForEachNode<ReverseIterator>(mRootNode.get(),
+          [&state](HitTestingTreeNode* aNode) {
+            AsyncPanZoomController* apzc = aNode->GetApzc();
+            if (!apzc) {
+              return;
+            }
+            if (!aNode->IsPrimaryHolder()) {
+              return;
+            }
+
+            AsyncPanZoomController* parent = apzc->GetParent();
+            if (!parent) {
+              return;
+            }
+
+            auto it = state.mPerspectiveTransformsDeferredToChildren.find(parent);
+            if (it != state.mPerspectiveTransformsDeferredToChildren.end()) {
+              apzc->SetAncestorTransform(AncestorTransform{
+                it->second * apzc->GetAncestorTransform(), false
+              });
+            }
+          });
+    }
   }
 
   // We do not support tree structures where the root node has siblings.
@@ -744,6 +790,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     needsApzc = false;
   }
 
+  bool parentHasPerspective = aState.mParentHasPerspective.top();
+
   RefPtr<HitTestingTreeNode> node = nullptr;
   if (!needsApzc) {
     // Note: if layer properties must be propagated to nodes, RecvUpdate in
@@ -755,7 +803,9 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         GetEventRegions(aLayer),
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
-        aLayer.GetClipRect() ? Some(ParentLayerIntRegion(*aLayer.GetClipRect())) : Nothing(),
+        (!parentHasPerspective && aLayer.GetClipRect())
+          ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
+          : Nothing(),
         GetEventRegionsOverride(aParent, aLayer));
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
@@ -862,12 +912,14 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // or not, depending on whether it went through the newApzc branch above.
     MOZ_ASSERT(node->IsPrimaryHolder() && node->GetApzc() && node->GetApzc()->Matches(guid));
 
-    ParentLayerIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
+    Maybe<ParentLayerIntRegion> clipRegion = parentHasPerspective
+      ? Nothing()
+      : Some(ComputeClipRegion(state->mController, aLayer));
     node->SetHitTestData(
         GetEventRegions(aLayer),
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
-        Some(clipRegion),
+        clipRegion,
         GetEventRegionsOverride(aParent, aLayer));
     apzc->SetAncestorTransform(aAncestorTransform);
 
@@ -942,22 +994,31 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // This represents situations where some content in a scrollable frame
     // is subject to a perspective transform and other content does not.
     // In such cases, go with the one that does not include the perspective
-    // component.
-    if (!aAncestorTransform.mTransform.FuzzyEqualsMultiplicative(apzc->GetAncestorTransform())) {
-      if (!aAncestorTransform.mContainsPerspectiveTransform &&
+    // component; the perspective transform is remembered and applied to the
+    // children instead.
+    if (!aAncestorTransform.CombinedTransform().FuzzyEqualsMultiplicative(apzc->GetAncestorTransform())) {
+      typedef TreeBuildingState::DeferredTransformMap::value_type PairType;
+      if (!aAncestorTransform.ContainsPerspectiveTransform() &&
           !apzc->AncestorTransformContainsPerspective()) {
         MOZ_ASSERT(false, "Two layers that scroll together have different ancestor transforms");
-      } else if (!aAncestorTransform.mContainsPerspectiveTransform) {
+      } else if (!aAncestorTransform.ContainsPerspectiveTransform()) {
+        aState.mPerspectiveTransformsDeferredToChildren.insert(
+            PairType{apzc, apzc->GetAncestorTransformPerspective()});
         apzc->SetAncestorTransform(aAncestorTransform);
+      } else {
+        aState.mPerspectiveTransformsDeferredToChildren.insert(
+            PairType{apzc, aAncestorTransform.GetPerspectiveTransform()});
       }
     }
 
-    ParentLayerIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
+    Maybe<ParentLayerIntRegion> clipRegion = parentHasPerspective
+      ? Nothing()
+      : Some(ComputeClipRegion(state->mController, aLayer));
     node->SetHitTestData(
         GetEventRegions(aLayer),
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
-        Some(clipRegion),
+        clipRegion,
         GetEventRegionsOverride(aParent, aLayer));
   }
 

@@ -374,6 +374,13 @@
             "description": "Called when removal is complete."
           }
         ]
+      },
+      {
+        "name": "refresh",
+        "type": "function",
+        "description": "Updates the extension items in the shown menu, including changes that have been made since the menu was shown. Has no effect if the menu is hidden. Rebuilding a shown menu is an expensive operation, only invoke this method when necessary.",
+        "async": true,
+        "parameters": []
       }
     ],
     "events": [
@@ -394,6 +401,77 @@
             "optional": true
           }
         ]
+      },
+      {
+        "name": "onShown",
+        "type": "function",
+        "description": "Fired when a menu is shown. The extension can add, modify or remove menu items and call menus.refresh() to update the menu.",
+        "parameters": [
+          {
+            "name": "info",
+            "type": "object",
+            "description": "Information about the context of the menu action and the created menu items. For more information about each property, see contextMenusInternal.OnClickData. The following properties are only set if the extension has host permissions for the given context: linkUrl, linkText, srcUrl, pageUrl, frameUrl, selectionText.",
+            "properties": {
+              "menuIds": {
+                "description": "A list of IDs of the menu items that were shown.",
+                "type": "array",
+                "items": {
+                  "choices": [
+                    { "type": "integer" },
+                    { "type": "string" }
+                  ]
+                }
+              },
+              "contexts": {
+                "description": "A list of all contexts that apply to the menu.",
+                "type": "array",
+                "items": {"$ref": "ContextType"}
+              },
+              "editable": {
+                "type": "boolean"
+              },
+              "mediaType": {
+                "type": "string",
+                "optional": true
+              },
+              "linkUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "linkText": {
+                "type": "string",
+                "optional": true
+              },
+              "srcUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "pageUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "frameUrl": {
+                "type": "string",
+                "optional": true
+              },
+              "selectionText": {
+                "type": "string",
+                "optional": true
+              }
+            }
+          },
+          {
+            "name": "tab",
+            "$ref": "tabs.Tab",
+            "description": "The details of the tab where the menu was opened."
+          }
+        ]
+      },
+      {
+        "name": "onHidden",
+        "type": "function",
+        "description": "Fired when a menu is hidden. This event is only fired if onShown has fired before.",
+        "parameters": []
       }
     ]
   }

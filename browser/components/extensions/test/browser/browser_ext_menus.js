@@ -79,7 +79,7 @@ add_task(async function test_actionContextMenus() {
     is(popup, submenu.firstChild, "Correct submenu opened");
     is(popup.children.length, 2, "Correct number of submenu items");
 
-    let idPrefix = `${makeWidgetId(extension.id)}_`;
+    let idPrefix = `${makeWidgetId(extension.id)}-menuitem-_`;
 
     is(second.tagName, "menuitem", "Second menu item type is correct");
     is(second.label, "click 1", "Second menu item title is correct");

@@ -28,13 +28,12 @@ from mozbuild.frontend.data import (
     HostRustLibrary,
     HostRustProgram,
     HostSources,
-    IPDLFile,
+    IPDLCollection,
     JARManifest,
     LinkageMultipleRustLibrariesError,
     LocalInclude,
     LocalizedFiles,
     LocalizedPreprocessedFiles,
-    PreprocessedIPDLFile,
     Program,
     RustLibrary,
     RustProgram,
@@ -923,32 +922,50 @@ class TestEmitterBasic(unittest.TestCase):
             self.read_topsrcdir(reader)
 
     def test_ipdl_sources(self):
-        reader = self.reader('ipdl_sources')
+        reader = self.reader('ipdl_sources',
+                             extra_substs={'IPDL_ROOT': mozpath.abspath('/path/to/topobjdir')})
         objs = self.read_topsrcdir(reader)
+        ipdl_collection = objs[0]
+        self.assertIsInstance(ipdl_collection, IPDLCollection)
 
-        ipdls = []
-        nonstatic_ipdls = []
-        for o in objs:
-            if isinstance(o, IPDLFile):
-                ipdls.append('%s/%s' % (o.relsrcdir, o.basename))
-            elif isinstance(o, PreprocessedIPDLFile):
-                nonstatic_ipdls.append('%s/%s' % (o.relsrcdir, o.basename))
-
-        expected = [
+        ipdls = set(mozpath.relpath(p, ipdl_collection.topsrcdir)
+                    for p in ipdl_collection.all_regular_sources())
+        expected = set([
             'bar/bar.ipdl',
             'bar/bar2.ipdlh',
             'foo/foo.ipdl',
             'foo/foo2.ipdlh',
-        ]
+        ])
 
         self.assertEqual(ipdls, expected)
 
-        expected = [
+        pp_ipdls = set(mozpath.relpath(p, ipdl_collection.topsrcdir)
+                       for p in ipdl_collection.all_preprocessed_sources())
+        expected = set([
             'bar/bar1.ipdl',
             'foo/foo1.ipdl',
-        ]
+        ])
+        self.assertEqual(pp_ipdls, expected)
 
-        self.assertEqual(nonstatic_ipdls, expected)
+        generated_sources = set(ipdl_collection.all_generated_sources())
+        expected = set([
+            'bar.cpp',
+            'barChild.cpp',
+            'barParent.cpp',
+            'bar1.cpp',
+            'bar1Child.cpp',
+            'bar1Parent.cpp',
+            'bar2.cpp',
+            'foo.cpp',
+            'fooChild.cpp',
+            'fooParent.cpp',
+            'foo1.cpp',
+            'foo1Child.cpp',
+            'foo1Parent.cpp',
+            'foo2.cpp'
+        ])
+        self.assertEqual(generated_sources, expected)
+
 
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES is emitted correctly."""

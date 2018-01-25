@@ -34,6 +34,7 @@
 #include "mozilla/EditorUtils.h"        // for AutoRules, etc.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/FlushType.h"          // for FlushType::Frames
+#include "mozilla/IMEContentObserver.h" // for IMEContentObserver
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/mozalloc.h"           // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h" // for mozInlineSpellChecker
@@ -43,6 +44,7 @@
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
 #include "mozilla/TextComposition.h"    // for TextComposition
+#include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
@@ -167,8 +169,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(mIMEContentObserver)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextServicesDocument)
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextInputListener)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
@@ -190,8 +194,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionController)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMEContentObserver)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextServicesDocument)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextInputListener)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorObservers)
@@ -344,6 +350,22 @@ EditorBase::PostCreate()
 }
 
 void
+EditorBase::SetTextInputListener(TextInputListener* aTextInputListener)
+{
+  MOZ_ASSERT(!mTextInputListener || !aTextInputListener ||
+             mTextInputListener == aTextInputListener);
+  mTextInputListener = aTextInputListener;
+}
+
+void
+EditorBase::SetIMEContentObserver(IMEContentObserver* aIMEContentObserver)
+{
+  MOZ_ASSERT(!mIMEContentObserver || !aIMEContentObserver ||
+             mIMEContentObserver == aIMEContentObserver);
+  mIMEContentObserver = aIMEContentObserver;
+}
+
+void
 EditorBase::CreateEventListeners()
 {
   // Don't create the handler twice
@@ -471,6 +493,7 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
   mDocStateListeners.Clear();
   mInlineSpellChecker = nullptr;
   mTextServicesDocument = nullptr;
+  mTextInputListener = nullptr;
   mSpellcheckCheckboxState = eTriUnset;
   mRootElement = nullptr;
 
@@ -2073,6 +2096,8 @@ EditorBase::AddEditorObserver(nsIEditorObserver* aObserver)
   // Make sure the listener isn't already on the list
   if (!mEditorObservers.Contains(aObserver)) {
     mEditorObservers.AppendElement(*aObserver);
+    NS_WARNING_ASSERTION(mEditorObservers.Length() != 1,
+      "nsIEditorObserver installed, this editor becomes slower");
   }
 
   return NS_OK;
@@ -2083,6 +2108,8 @@ EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver)
 {
   NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
 
+  NS_WARNING_ASSERTION(mEditorObservers.Length() != 1,
+    "All nsIEditorObservers have been removed, this editor becomes faster");
   mEditorObservers.RemoveElement(aObserver);
 
   return NS_OK;
@@ -2141,13 +2168,26 @@ private:
 void
 EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 {
-  // Copy the observers since EditAction()s can modify mEditorObservers.
-  AutoEditorObserverArray observers(mEditorObservers);
   switch (aNotification) {
     case eNotifyEditorObserversOfEnd:
       mIsInEditAction = false;
-      for (auto& observer : observers) {
-        observer->EditAction();
+
+      if (mTextInputListener) {
+        RefPtr<TextInputListener> listener = mTextInputListener;
+        listener->OnEditActionHandled();
+      }
+
+      if (mIMEContentObserver) {
+        RefPtr<IMEContentObserver> observer = mIMEContentObserver;
+        observer->OnEditActionHandled();
+      }
+
+      if (!mEditorObservers.IsEmpty()) {
+        // Copy the observers since EditAction()s can modify mEditorObservers.
+        AutoEditorObserverArray observers(mEditorObservers);
+        for (auto& observer : observers) {
+          observer->EditAction();
+        }
       }
 
       if (!mDispatchInputEvent) {
@@ -2160,14 +2200,19 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       if (NS_WARN_IF(mIsInEditAction)) {
         break;
       }
+
       mIsInEditAction = true;
-      for (auto& observer : observers) {
+
+      if (mIMEContentObserver) {
+        RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->BeforeEditAction();
       }
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditAction = false;
-      for (auto& observer : observers) {
+
+      if (mIMEContentObserver) {
+        RefPtr<IMEContentObserver> observer = mIMEContentObserver;
         observer->CancelEditAction();
       }
       break;

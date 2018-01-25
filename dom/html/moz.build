@@ -46,6 +46,10 @@ EXPORTS += [
     'nsTextEditorState.h',
 ]
 
+EXPORTS.mozilla += [
+    'TextInputListener.h',
+]
+
 EXPORTS.mozilla.dom += [
     'HTMLAllCollection.h',
     'HTMLAnchorElement.h',

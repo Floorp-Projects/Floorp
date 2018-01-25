@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import itertools
 import json
 import os
 
@@ -23,23 +22,16 @@ from mozbuild.frontend.data import (
     BaseProgram,
     ChromeManifestEntry,
     ConfigFileSubstitution,
-    ExampleWebIDLInterface,
     Exports,
-    IPDLFile,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
-    GeneratedEventWebIDLFile,
     GeneratedSources,
-    GeneratedWebIDLFile,
     GnProjectData,
-    PreprocessedIPDLFile,
-    PreprocessedTestWebIDLFile,
-    PreprocessedWebIDLFile,
+    IPDLCollection,
     SharedLibrary,
-    TestWebIDLFile,
     UnifiedSources,
     XPIDLFile,
-    WebIDLFile,
+    WebIDLCollection,
 )
 from mozbuild.jar import (
     DeprecatedJarManifest,
@@ -93,80 +85,6 @@ class XPIDLManager(object):
             self.chrome_manifests.add(chrome_manifest)
 
 
-class WebIDLCollection(object):
-    """Collects WebIDL info referenced during the build."""
-
-    def __init__(self):
-        self.sources = set()
-        self.generated_sources = set()
-        self.generated_events_sources = set()
-        self.preprocessed_sources = set()
-        self.test_sources = set()
-        self.preprocessed_test_sources = set()
-        self.example_interfaces = set()
-
-    def all_regular_sources(self):
-        return self.sources | self.generated_sources | \
-            self.generated_events_sources | self.preprocessed_sources
-
-    def all_regular_basenames(self):
-        return [os.path.basename(source) for source in self.all_regular_sources()]
-
-    def all_regular_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_regular_basenames()]
-
-    def all_regular_bindinggen_stems(self):
-        for stem in self.all_regular_stems():
-            yield '%sBinding' % stem
-
-        for source in self.generated_events_sources:
-            yield os.path.splitext(os.path.basename(source))[0]
-
-    def all_regular_cpp_basenames(self):
-        for stem in self.all_regular_bindinggen_stems():
-            yield '%s.cpp' % stem
-
-    def all_test_sources(self):
-        return self.test_sources | self.preprocessed_test_sources
-
-    def all_test_basenames(self):
-        return [os.path.basename(source) for source in self.all_test_sources()]
-
-    def all_test_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_test_basenames()]
-
-    def all_test_cpp_basenames(self):
-        return ['%sBinding.cpp' % s for s in self.all_test_stems()]
-
-    def all_static_sources(self):
-        return self.sources | self.generated_events_sources | \
-            self.test_sources
-
-    def all_non_static_sources(self):
-        return self.generated_sources | self.all_preprocessed_sources()
-
-    def all_non_static_basenames(self):
-        return [os.path.basename(s) for s in self.all_non_static_sources()]
-
-    def all_preprocessed_sources(self):
-        return self.preprocessed_sources | self.preprocessed_test_sources
-
-    def all_sources(self):
-        return set(self.all_regular_sources()) | set(self.all_test_sources())
-
-    def all_basenames(self):
-        return [os.path.basename(source) for source in self.all_sources()]
-
-    def all_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_basenames()]
-
-    def generated_events_basenames(self):
-        return [os.path.basename(s) for s in self.generated_events_sources]
-
-    def generated_events_stems(self):
-        return [os.path.splitext(b)[0] for b in self.generated_events_basenames()]
-
-
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""
 
@@ -174,31 +92,13 @@ class BinariesCollection(object):
         self.shared_libraries = []
         self.programs = []
 
-class IPDLCollection(object):
-    """Collects IPDL files during the build."""
-
-    def __init__(self):
-        self.sources = set()
-        self.preprocessed_sources = set()
-
-    def all_sources(self):
-        return self.sources | self.preprocessed_sources
-
-    def all_regular_sources(self):
-        return self.sources
-
-    def all_preprocessed_sources(self):
-        return self.preprocessed_sources
-
 class CommonBackend(BuildBackend):
     """Holds logic common to all build backends."""
 
     def _init(self):
         self._idl_manager = XPIDLManager(self.environment)
-        self._webidls = WebIDLCollection()
         self._binaries = BinariesCollection()
         self._configs = set()
-        self._ipdls = IPDLCollection()
         self._generated_sources = set()
 
     def consume_object(self, obj):
@@ -218,74 +118,19 @@ class CommonBackend(BuildBackend):
                 pp.do_include(obj.input_path)
             self.backend_input_files.add(obj.input_path)
 
-        # We should consider aggregating WebIDL types in emitter.py.
-        elif isinstance(obj, WebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
+        elif isinstance(obj, WebIDLCollection):
+            self._handle_webidl_collection(obj)
 
-            self._webidls.sources.add(mozpath.join(obj.srcdir, obj.basename))
-
-        elif isinstance(obj, GeneratedEventWebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.generated_events_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-
-        elif isinstance(obj, TestWebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.test_sources.add(mozpath.join(obj.srcdir,
-                obj.basename))
-
-        elif isinstance(obj, PreprocessedTestWebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.preprocessed_test_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-
-        elif isinstance(obj, GeneratedWebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.generated_sources.add(mozpath.join(obj.srcdir,
-                obj.basename))
-
-        elif isinstance(obj, PreprocessedIPDLFile):
-            if self.environment.is_artifact_build:
-                return True
-
-            self._ipdls.preprocessed_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-
-        elif isinstance(obj, PreprocessedWebIDLFile):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.preprocessed_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-
-        elif isinstance(obj, ExampleWebIDLInterface):
-            # WebIDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._webidls.example_interfaces.add(obj.name)
-
-        elif isinstance(obj, IPDLFile):
-            # IPDL isn't relevant to artifact builds.
-            if self.environment.is_artifact_build:
-                return True
-
-            self._ipdls.sources.add(mozpath.join(obj.srcdir, obj.basename))
+        elif isinstance(obj, IPDLCollection):
+            self._handle_generated_sources(mozpath.join(obj.objdir, f)
+                                           for f in obj.all_generated_sources())
+            self._write_unified_files(obj.unified_source_mapping, obj.objdir,
+                                      poison_windows_h=False)
+            self._handle_ipdl_sources(obj.objdir,
+                                      list(sorted(obj.all_sources())),
+                                      list(sorted(obj.all_preprocessed_sources())),
+                                      list(sorted(obj.all_regular_sources())),
+                                      obj.unified_source_mapping)
 
         elif isinstance(obj, UnifiedSources):
             # Unified sources aren't relevant to artifact builds.
@@ -331,36 +176,6 @@ class CommonBackend(BuildBackend):
             self._handle_idl_manager(self._idl_manager)
             self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
 
-        self._handle_webidl_collection(self._webidls)
-
-        sorted_ipdl_sources = list(sorted(self._ipdls.all_sources()))
-        sorted_nonstatic_ipdl_sources = list(sorted(self._ipdls.all_preprocessed_sources()))
-        sorted_static_ipdl_sources = list(sorted(self._ipdls.all_regular_sources()))
-
-        def files_from(ipdl):
-            base = mozpath.basename(ipdl)
-            root, ext = mozpath.splitext(base)
-
-            # Both .ipdl and .ipdlh become .cpp files
-            files = ['%s.cpp' % root]
-            if ext == '.ipdl':
-                # .ipdl also becomes Child/Parent.cpp files
-                files.extend(['%sChild.cpp' % root,
-                              '%sParent.cpp' % root])
-            return files
-
-        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
-
-        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
-        self._handle_generated_sources(mozpath.join(ipdl_dir, f) for f in ipdl_cppsrcs)
-        unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
-                                                          unified_prefix='UnifiedProtocols',
-                                                          unified_suffix='cpp',
-                                                          files_per_unified_file=16))
-
-        self._write_unified_files(unified_source_mapping, ipdl_dir, poison_windows_h=False)
-        self._handle_ipdl_sources(ipdl_dir, sorted_ipdl_sources, sorted_nonstatic_ipdl_sources,
-                                  sorted_static_ipdl_sources, unified_source_mapping)
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
@@ -385,8 +200,6 @@ class CommonBackend(BuildBackend):
         self._generated_sources.update(mozpath.relpath(f, self.environment.topobjdir) for f in files)
 
     def _handle_webidl_collection(self, webidls):
-        if not webidls.all_stems():
-            return
 
         bindings_dir = mozpath.join(self.environment.topobjdir, 'dom', 'bindings')
 
