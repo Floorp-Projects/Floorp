@@ -6358,6 +6358,10 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
   gfx::Rect boundingRect = CalculateBounds(newData.mRoundedClipRects,
                                            newData.mAppUnitsPerDevPixel);
   boundingRect.Scale(mParameters.mXScale, mParameters.mYScale);
+  if (boundingRect.IsEmpty()) {
+    // Return early if we know that there is effectively no visible data.
+    return nullptr;
+  }
 
   uint32_t maxSize = mManager->GetMaxTextureSize();
   NS_ASSERTION(maxSize > 0, "Invalid max texture size");
