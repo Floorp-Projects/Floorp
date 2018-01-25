@@ -1581,12 +1581,19 @@ public:
    * Windows; changing those margins willy-nilly can cause the Windows 7 glass
    * haze effect to jump around disconcertingly.
    */
-  void AddWindowExcludeGlassRegion(const nsRegion& bounds) {
-    mWindowExcludeGlassRegion.Or(mWindowExcludeGlassRegion, bounds);
+  void AddWindowExcludeGlassRegion(nsIFrame* aFrame, const nsRect& aBounds)
+  {
+    mWindowExcludeGlassRegion.Add(aFrame, aBounds);
   }
-  const nsRegion& GetWindowExcludeGlassRegion() {
-    return mWindowExcludeGlassRegion;
+
+  /**
+   * Returns the window exclude glass region.
+   */
+  nsRegion GetWindowExcludeGlassRegion() const
+  {
+    return mWindowExcludeGlassRegion.ToRegion();
   }
+
   /**
    * Accumulates opaque stuff into the window opaque region.
    */
@@ -1898,9 +1905,9 @@ private:
   // Relative to mCurrentFrame.
   nsRect                         mVisibleRect;
   nsRect                         mDirtyRect;
-  nsRegion                       mWindowExcludeGlassRegion;
 
   // Tracked regions used for retained display list.
+  WeakFrameRegion                mWindowExcludeGlassRegion;
   WeakFrameRegion                mRetainedWindowDraggingRegion;
   WeakFrameRegion                mRetainedWindowNoDraggingRegion;
 
