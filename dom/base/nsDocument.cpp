@@ -6800,6 +6800,26 @@ nsIDocument::GetHtmlChildElement(nsAtom* aTag)
   return nullptr;
 }
 
+nsGenericHTMLElement*
+nsIDocument::GetBody()
+{
+  Element* html = GetHtmlElement();
+  if (!html) {
+    return nullptr;
+  }
+
+  for (nsIContent* child = html->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::body) ||
+        child->IsHTMLElement(nsGkAtoms::frameset)) {
+      return static_cast<nsGenericHTMLElement*>(child);
+    }
+  }
+
+  return nullptr;
+}
+
 Element*
 nsDocument::GetTitleElement()
 {
