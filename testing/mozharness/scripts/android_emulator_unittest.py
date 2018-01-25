@@ -23,15 +23,13 @@ from mozprocess import ProcessHandler
 
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript, PreScriptAction, PostScriptAction
-from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.buildbot import TBPL_RETRY, EXIT_STATUS_DICT
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.unittest import EmulatorMixin
 
 
-class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScript,
-                          MozbaseMixin):
+class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin):
     config_options = [[
         ["--test-suite"],
         {"action": "store",
@@ -52,8 +50,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScri
          "default": None,
          "help": "Number of this chunk",
          }
-    ]] + copy.deepcopy(testing_config_options) + \
-        copy.deepcopy(blobupload_config_options)
+    ]] + copy.deepcopy(testing_config_options)
 
     app_name = None
 
@@ -837,19 +834,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, BaseScri
         '''
         self._verify_emulator()
         self._kill_processes(self.config["emulator_process_name"])
-
-    def upload_blobber_files(self):
-        '''
-        Override BlobUploadMixin.upload_blobber_files to ensure emulator is killed
-        first (if the emulator is still running, logcat may still be running, which
-        may lock the blob upload directory, causing a hang).
-        '''
-        if self.config.get('blob_upload_branch'):
-            # Except on interactive workers, we want the emulator to keep running
-            # after the script is finished. So only kill it if blobber would otherwise
-            # have run anyway (it doesn't get run on interactive workers).
-            self._kill_processes(self.config["emulator_process_name"])
-        super(AndroidEmulatorTest, self).upload_blobber_files()
 
 
 if __name__ == '__main__':
