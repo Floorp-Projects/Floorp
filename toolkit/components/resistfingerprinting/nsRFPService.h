@@ -158,13 +158,18 @@ public:
   static bool IsResistFingerprintingEnabled();
   static bool IsTimerPrecisionReductionEnabled();
 
+  enum TimeScale {
+    Seconds      = 1,
+    MilliSeconds = 1000,
+    MicroSeconds = 1000000
+  };
+
   // The following Reduce methods can be called off main thread.
   static double ReduceTimePrecisionAsUSecs(double aTime);
   static double ReduceTimePrecisionAsMSecs(double aTime);
   static double ReduceTimePrecisionAsSecs(double aTime);
-  // Public only for testing purposes
-  static double ReduceTimePrecisionImpl(double aTime, double aResolutionUSec, double aTimeScaleCorrection);
-
+  // Public only for testing purposes.
+  static double ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale, double aResolutionUSec);
 
   // This method calculates the video resolution (i.e. height x width) based
   // on the video quality (480p, 720p, etc).

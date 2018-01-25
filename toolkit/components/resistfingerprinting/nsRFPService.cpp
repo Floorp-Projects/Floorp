@@ -110,47 +110,45 @@ bool
 nsRFPService::IsTimerPrecisionReductionEnabled()
 {
   return (sPrivacyTimerPrecisionReduction || IsResistFingerprintingEnabled()) &&
-         TimerResolution() != 0;
+         TimerResolution() > 0;
 }
 
 /*
-  @param aTime timestamp in native units
-  @param aResolutionUS the precision, in microseconds, to clamp it to
-  @param aResolutionScaleCorrection the amount aResolutionScaleCorrection must be divided by to match the units of aResolutionUS
+  @param aTime timestamp in native units (either seconds, milliseconds, or microseconds).
+  @param aResolutionUS the precision, in microseconds, to clamp it to.
+  @param aTimeScaleCorrection the amount aTime must be multiplied by to convert to microseconds.
 */
 /* static */
 double
-nsRFPService::ReduceTimePrecisionImpl(double aTime, double aResolutionUS, double aResolutionScaleCorrection)
+nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale, double aResolutionUSec)
 {
-  if (!IsTimerPrecisionReductionEnabled()) {
-    return aTime;
-  }
-  if (aResolutionScaleCorrection != 1 &&
-      aResolutionScaleCorrection != 1000 &&
-      aResolutionScaleCorrection != 1000000) {
-    MOZ_ASSERT(false, "Only scale corrections of 1, 1000, and 1000000 are supported.");
+  if (!IsTimerPrecisionReductionEnabled() ||
+      aResolutionUSec <= 0) {
     return aTime;
   }
 
-  double ret;
-  const double reducedResolution = aResolutionUS / aResolutionScaleCorrection;
-  if (aResolutionScaleCorrection >= 1000000 && aResolutionUS < 1000000) {
-    // The resolution is so small we need to use the reciprocal to avoid floating point error.
-    const double resolutionReciprocal = 1000000.0 / reducedResolution;
-    ret = floor(aTime * resolutionReciprocal) / resolutionReciprocal;
-#if defined(DEBUG)
-  MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-    ("Given: %.*f, Reciprocal Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-      DBL_DIG-1, aTime, DBL_DIG-1, resolutionReciprocal, DBL_DIG-1, floor(aTime * resolutionReciprocal), DBL_DIG-1, ret));
-#endif
-  } else {
-    ret = floor(aTime / reducedResolution) * reducedResolution;
+  // Increase the time as needed until it is in microseconds.
+  // Note that a double can hold up to 2**53 with integer precision. This gives us
+  // only until June 5, 2255 in time-since-the-epoch with integer precision.
+  // So we will be losing microseconds precision after that date.
+  // We think this is okay, and we codify it in some tests.
+  double timeScaled = aTime * (1000000 / aTimeScale);
+  //Cut off anything less than a microsecond.
+  long long timeAsInt = llround(timeScaled);
+  //Cast the resolution (in microseconds) to an int.
+  long long resolutionAsInt = aResolutionUSec;
+  // Perform the clamping.
+  long long rounded = (timeAsInt / resolutionAsInt) * resolutionAsInt;
+  // Cast it back to a double and reduce it to the correct units.
+  double ret = double(rounded) / (1000000.0 / aTimeScale);
+
 #if defined(DEBUG)
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Verbose,
-      ("Given: %.*f, Rounding with %.*f, Intermediate: %.*f, Got: %.*f",
-        DBL_DIG-1, aTime, DBL_DIG-1, reducedResolution, DBL_DIG-1, floor(aTime / reducedResolution), DBL_DIG-1, ret));
+      ("Given: (%.*f, Scaled: %.*f, Converted: %lli), Rounding with (%lli, Originally %.*f), Intermediate: (%lli), Got: (%lli Converted: %.*f)",
+      DBL_DIG-1, aTime, DBL_DIG-1, timeScaled, timeAsInt, resolutionAsInt, DBL_DIG-1, aResolutionUSec,
+      (timeAsInt / resolutionAsInt), rounded, DBL_DIG-1, ret));
 #endif
-  }
+
   return ret;
 }
 
@@ -158,21 +156,21 @@ nsRFPService::ReduceTimePrecisionImpl(double aTime, double aResolutionUS, double
 double
 nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
 {
-  return nsRFPService::ReduceTimePrecisionImpl(aTime, TimerResolution(), 1);
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, MicroSeconds, TimerResolution());
 }
 
 /* static */
 double
 nsRFPService::ReduceTimePrecisionAsMSecs(double aTime)
 {
-  return nsRFPService::ReduceTimePrecisionImpl(aTime, TimerResolution(), 1000);
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, MilliSeconds, TimerResolution());
 }
 
 /* static */
 double
 nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
 {
-  return nsRFPService::ReduceTimePrecisionImpl(aTime, TimerResolution(), 1000000);
+  return nsRFPService::ReduceTimePrecisionImpl(aTime, Seconds, TimerResolution());
 }
 
 /* static */
