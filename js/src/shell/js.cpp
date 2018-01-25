@@ -271,6 +271,7 @@ NewOffThreadJob(JSContext* cx, ScriptKind kind, OffThreadJob::Source&& source)
         return nullptr;
 
     if (!sc->offThreadJobs.append(job.get())) {
+        job->cancel();
         JS_ReportErrorASCII(cx, "OOM adding off-thread job");
         return nullptr;
     }
