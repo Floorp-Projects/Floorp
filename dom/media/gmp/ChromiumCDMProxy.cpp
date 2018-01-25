@@ -101,13 +101,13 @@ ChromiumCDMProxy::Init(PromiseId aPromiseId,
         [self, aPromiseId](RefPtr<gmp::ChromiumCDMParent> cdm) {
           self->mCallback =
             MakeUnique<ChromiumCDMCallbackProxy>(self, self->mMainThread);
+          nsCString failureReason;
           if (!cdm->Init(self->mCallback.get(),
                          self->mDistinctiveIdentifierRequired,
                          self->mPersistentStateRequired,
-                         self->mMainThread)) {
-            self->RejectPromise(aPromiseId,
-                                NS_ERROR_FAILURE,
-                                NS_LITERAL_CSTRING("GetCDM failed due to CDM initialization failure."));
+                         self->mMainThread,
+                         failureReason)) {
+            self->RejectPromise(aPromiseId, NS_ERROR_FAILURE, failureReason);
             return;
           }
           {

@@ -387,6 +387,8 @@ GeckoMediaPluginServiceChild::Observe(nsISupports* aSubject,
       mServiceChild = nullptr;
     }
     ShutdownGMPThread();
+  } else if (!strcmp(NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, aTopic)) {
+    mXPCOMWillShutdown = true;
   }
 
   return NS_OK;
