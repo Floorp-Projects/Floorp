@@ -1247,10 +1247,14 @@ JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
         return false;
     }
 
-    // We must not transfer buffer pointers cross-process.  The cloneDataPolicy
-    // should guard against this; check that it does.
+    // We must not transmit SAB pointers (including for WebAssembly.Memory)
+    // cross-process.  The cloneDataPolicy should have guarded against this;
+    // since it did not then throw, with a very explicit message.
 
-    MOZ_RELEASE_ASSERT(scope <= JS::StructuredCloneScope::SameProcessDifferentThread);
+    if (scope > JS::StructuredCloneScope::SameProcessDifferentThread) {
+        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SHMEM_POLICY);
+        return false;
+    }
 
     Rooted<SharedArrayBufferObject*> sharedArrayBuffer(context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
     SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
