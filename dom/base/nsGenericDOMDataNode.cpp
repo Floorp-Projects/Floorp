@@ -652,6 +652,14 @@ nsGenericDOMDataNode::ComputeIndexOf(const nsINode* aPossibleChild) const
 }
 
 nsresult
+nsGenericDOMDataNode::InsertChildBefore(nsIContent* aKid,
+                                        nsIContent* aBeforeThis,
+                                        bool aNotify)
+{
+  return NS_OK;
+}
+
+nsresult
 nsGenericDOMDataNode::InsertChildAt_Deprecated(nsIContent* aKid,
                                                uint32_t aIndex,
                                                bool aNotify)

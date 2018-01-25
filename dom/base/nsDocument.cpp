@@ -4364,6 +4364,21 @@ nsDocument::GetChildCount() const
 }
 
 nsresult
+nsDocument::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                            bool aNotify)
+{
+  if (aKid->IsElement() && GetRootElement()) {
+    NS_WARNING("Inserting root element when we already have one");
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  MOZ_ASSERT(index >= 0);
+
+  return doInsertChildAt(aKid, index, aNotify, mChildren);
+}
+
+nsresult
 nsDocument::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
                                      bool aNotify)
 {

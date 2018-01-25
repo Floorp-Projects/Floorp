@@ -75,6 +75,21 @@ HTMLOptGroupElement::GetSelect()
 }
 
 nsresult
+HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
+                                       nsIContent* aBeforeThis,
+                                       bool aNotify)
+{
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  SafeOptionListMutation safeMutation(GetSelect(), this, aKid, index, aNotify);
+  nsresult rv =
+    nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify);
+  if (NS_FAILED(rv)) {
+    safeMutation.MutationFailed();
+  }
+  return rv;
+}
+
+nsresult
 HTMLOptGroupElement::InsertChildAt_Deprecated(nsIContent* aKid,
                                               uint32_t aIndex,
                                               bool aNotify)

@@ -1157,6 +1157,19 @@ nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 }
 
 nsresult
+FragmentOrElement::InsertChildBefore(nsIContent* aKid,
+                                     nsIContent* aBeforeThis,
+                                     bool aNotify)
+{
+  NS_PRECONDITION(aKid, "null ptr");
+
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  MOZ_ASSERT(index >= 0);
+
+  return doInsertChildAt(aKid, index, aNotify, mAttrsAndChildren);
+}
+
+nsresult
 FragmentOrElement::InsertChildAt_Deprecated(nsIContent* aKid,
                                             uint32_t aIndex,
                                             bool aNotify)
