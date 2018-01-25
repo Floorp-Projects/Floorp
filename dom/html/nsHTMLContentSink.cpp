@@ -981,9 +981,7 @@ HTMLContentSink::NotifyRootInsertion()
   // document; in those cases we just want to put all the attrs on one
   // tag.
   mNotifiedRootInsertion = true;
-  int32_t index = mDocument->ComputeIndexOf(mRoot);
-  NS_ASSERTION(index != -1, "mRoot not child of document?");
-  NotifyInsert(nullptr, mRoot, index);
+  NotifyInsert(nullptr, mRoot);
 
   // Now update the notification information in all our
   // contexts, since we just inserted the root and notified on
