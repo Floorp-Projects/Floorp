@@ -1453,7 +1453,7 @@ var PlacesControllerDragHelper = {
     // Collect all data from the DataTransfer before processing it, as the
     // DataTransfer is only valid during the synchronous handling of the `drop`
     // event handler callback.
-    let dtItems = [];
+    let nodes = [];
     for (let i = 0; i < dropCount; ++i) {
       let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
       if (!flavor)
@@ -1466,13 +1466,7 @@ var PlacesControllerDragHelper = {
           continue;
         handled.add(data);
       }
-      dtItems.push({flavor, data});
-    }
 
-    let nodes = [];
-    // TODO: Bug 1432407. When sync transactions are removed, merge the for loop
-    // here into the one above.
-    for (let {flavor, data} of dtItems) {
       if (flavor != TAB_DROP_TYPE) {
         nodes = [...nodes, ...PlacesUtils.unwrapNodes(data, flavor)];
       } else if (data instanceof XULElement && data.localName == "tab" &&
