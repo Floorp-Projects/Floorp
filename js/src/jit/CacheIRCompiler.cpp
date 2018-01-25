@@ -1838,8 +1838,7 @@ CacheIRCompiler::emitLoadStringCharResult()
     masm.loadStringChar(str, index, scratch1, failure->label());
 
     // Load StaticString for this char.
-    masm.branch32(Assembler::AboveOrEqual, scratch1, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
-                  failure->label());
+    masm.boundsCheck32PowerOfTwo(scratch1, StaticStrings::UNIT_STATIC_LIMIT, failure->label());
     masm.movePtr(ImmPtr(&cx_->staticStrings().unitStaticTable), scratch2);
     masm.loadPtr(BaseIndex(scratch2, scratch1, ScalePointer), scratch2);
 

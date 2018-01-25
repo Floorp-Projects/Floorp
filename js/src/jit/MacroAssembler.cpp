@@ -7,6 +7,7 @@
 #include "jit/MacroAssembler-inl.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "jsfriendapi.h"
 #include "jsprf.h"
@@ -18,6 +19,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitOptions.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
 #include "js/Conversions.h"
@@ -3480,6 +3482,18 @@ void
 MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
 {
     spectreMaskIndexImpl(index, length, output);
+}
+
+void
+MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure)
+{
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(length));
+    branch32(Assembler::AboveOrEqual, index, Imm32(length), failure);
+
+    // Note: it's fine to clobber the input register, as this is a no-op: it
+    // only affects speculative execution.
+    if (JitOptions.spectreIndexMasking)
+        and32(Imm32(length - 1), index);
 }
 
 namespace js {
