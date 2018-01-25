@@ -54,10 +54,10 @@ subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   }
 
   // The three protocols: data:, blob: and filesystem: share the same
-  // protocol flag (URI_IS_LOCAL_RESOURCE) with other protocols, like
-  // chrome:, resource:, moz-icon:, but those three protocols get
-  // special attention in CSP and are subject to CSP, hence we have
-  // to make sure those protocols are subject to CSP, see:
+  // protocol flag (URI_IS_LOCAL_RESOURCE) with other protocols,
+  // but those three protocols get special attention in CSP and
+  // are subject to CSP, hence we have to make sure those
+  // protocols are subject to CSP, see:
   // http://www.w3.org/TR/CSP2/#source-list-guid-matching
   bool match = false;
   nsresult rv = aURI->SchemeIs("data", &match);
@@ -85,12 +85,23 @@ subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
     return false;
   }
 
-  // Other protocols are not subject to CSP and can be whitelisted:
-  // * URI_IS_LOCAL_RESOURCE
-  //   e.g. chrome:, data:, blob:, resource:, moz-icon:
   // Please note that it should be possible for websites to
   // whitelist their own protocol handlers with respect to CSP,
-  // hence we use protocol flags to accomplish that.
+  // hence we use protocol flags to accomplish that, but we also
+  // want resource:, chrome: and moz-icon to be subject to CSP
+  // (which also use URI_IS_LOCAL_RESOURCE).
+  rv = aURI->SchemeIs("resource", &match);
+  if (NS_SUCCEEDED(rv) && match) {
+    return true;
+  }
+  rv = aURI->SchemeIs("chrome", &match);
+  if (NS_SUCCEEDED(rv) && match) {
+    return true;
+  }
+  rv = aURI->SchemeIs("moz-icon", &match);
+  if (NS_SUCCEEDED(rv) && match) {
+    return true;
+  }
   rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &match);
   if (NS_SUCCEEDED(rv) && match) {
     return false;
