@@ -208,6 +208,14 @@ function do_test() {
   var values = InspectorUtils.getCSSValuesForProperty("clip");
   ok(testValues(values, expected), "property clip's values");
 
+  // Regression test for bug 1255380.
+  var expected = [ "normal", "none", "url", "counter", "counters",
+                   "attr", "open-quote", "close-quote", "no-open-quote",
+                   "no-close-quote", "inherit", "initial", "unset",
+                   "-moz-alt-content" ];
+  var values = InspectorUtils.getCSSValuesForProperty("content");
+  ok(testValues(values, expected), "property counter's values");
+
   SimpleTest.finish();
 }
 
