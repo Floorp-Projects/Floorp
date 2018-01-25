@@ -3212,13 +3212,9 @@ void PeerConnectionImpl::IceConnectionStateChange(
   if (!pco) {
     return;
   }
+
   WrappableJSErrorResult rv;
-  RUN_ON_THREAD(mThread,
-                WrapRunnable(pco,
-                             &PeerConnectionObserver::OnStateChange,
-                             PCObserverStateType::IceConnectionState,
-                             rv, static_cast<JSCompartment*>(nullptr)),
-                NS_DISPATCH_NORMAL);
+  pco->OnStateChange(PCObserverStateType::IceConnectionState, rv);
 }
 
 void
