@@ -2349,6 +2349,96 @@ nsNavBookmarks::FetchFolderInfo(int64_t aFolderId,
 
 
 NS_IMETHODIMP
+nsNavBookmarks::ChangeBookmarkURI(int64_t aBookmarkId, nsIURI* aNewURI,
+                                  uint16_t aSource)
+{
+  NS_ENSURE_ARG_MIN(aBookmarkId, 1);
+  NS_ENSURE_ARG(aNewURI);
+
+  BookmarkData bookmark;
+  nsresult rv = FetchItemInfo(aBookmarkId, bookmark);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG(bookmark.type == TYPE_BOOKMARK);
+
+  mozStorageTransaction transaction(mDB->MainConn(), false);
+
+  int64_t tagsRootId = TagsRootId();
+  bool isTagging = bookmark.grandParentId == tagsRootId;
+  int64_t syncChangeDelta = DetermineSyncChangeDelta(aSource);
+
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  int64_t newPlaceId;
+  nsAutoCString newPlaceGuid;
+  rv = history->GetOrCreateIdForPage(aNewURI, &newPlaceId, newPlaceGuid);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!newPlaceId)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<mozIStorageStatement> statement = mDB->GetStatement(
+    "UPDATE moz_bookmarks SET "
+     "fk = :page_id, lastModified = :date, "
+     "syncChangeCounter = syncChangeCounter + :delta "
+    "WHERE id = :item_id "
+  );
+  NS_ENSURE_STATE(statement);
+  mozStorageStatementScoper scoper(statement);
+
+  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), newPlaceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bookmark.lastModified = RoundedPRNow();
+  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("date"),
+                                  bookmark.lastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), bookmark.id);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("delta"), syncChangeDelta);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (isTagging) {
+    // For consistency with the tagging service behavior, changing a tag entry's
+    // URL bumps the change counter for bookmarks with the old and new URIs.
+    rv = AddSyncChangesForBookmarksWithURL(bookmark.url, syncChangeDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AddSyncChangesForBookmarksWithURI(aNewURI, syncChangeDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = history->UpdateFrecency(newPlaceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Upon changing the URI for a bookmark, update the frecency for the old
+  // place as well.
+  rv = history->UpdateFrecency(bookmark.placeId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString spec;
+  rv = aNewURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavBookmarkObserver,
+                   OnItemChanged(bookmark.id,
+                                 NS_LITERAL_CSTRING("uri"),
+                                 false,
+                                 spec,
+                                 bookmark.lastModified,
+                                 bookmark.type,
+                                 bookmark.parentId,
+                                 bookmark.guid,
+                                 bookmark.parentGuid,
+                                 bookmark.url,
+                                 aSource));
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsNavBookmarks::GetFolderIdForItem(int64_t aItemId, int64_t* _parentId)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
