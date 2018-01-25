@@ -21,6 +21,9 @@ enum : StyleFlags {
 GtkWidget*
 GetWidget(WidgetNodeType aNodeType);
 
+GdkPixbuf*
+GetWidgetIconPixbuf(GtkWidget* aWidgetIcon);
+
 /*
  * Return a new style context based on aWidget, as a child of aParentStyle.
  * If aWidget still has a floating reference, then it is sunk and released.
