@@ -300,7 +300,7 @@ function loadLazyObjects() {
   let uri = "resource://gre/modules/addons/XPIProviderUtils.js";
   let scope = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), {
     sandboxName: uri,
-    wantGlobalProperties: ["TextDecoder"],
+    wantGlobalProperties: ["ChromeUtils", "TextDecoder"],
   });
 
   Object.assign(scope, {
@@ -4237,6 +4237,7 @@ this.XPIProvider = {
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: aFile.path,
                                     addonId: aId,
+                                    wantGlobalProperties: ["ChromeUtils"],
                                     metadata: { addonID: aId } });
       logger.error("Attempted to load bootstrap scope from missing directory " + aFile.path);
       return;
@@ -4256,6 +4257,7 @@ this.XPIProvider = {
       activeAddon.bootstrapScope =
         new Cu.Sandbox(principal, { sandboxName: uri,
                                     addonId: aId,
+                                    wantGlobalProperties: ["ChromeUtils"],
                                     metadata: { addonID: aId, URI: uri } });
 
       try {

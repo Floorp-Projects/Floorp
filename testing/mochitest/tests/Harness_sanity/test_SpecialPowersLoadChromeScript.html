@@ -40,7 +40,7 @@ function endOfFirstTest() {
       assert.equal(typeof CSS, "undefined", "CSS is not defined");
       sendAsyncMessage("valid-assert-done");
     });
-  }, { wantGlobalProperties: ["XMLHttpRequest"] });
+  }, { wantGlobalProperties: ["ChromeUtils", "XMLHttpRequest"] });
 
   script2.sendAsyncMessage("valid-assert");
   script2.addMessageListener("valid-assert-done", endOfTest);

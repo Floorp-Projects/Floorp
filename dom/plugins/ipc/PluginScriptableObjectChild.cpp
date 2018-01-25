@@ -1273,6 +1273,11 @@ PluginScriptableObjectChild::UnregisterObject(NPObject* aObject)
 PluginScriptableObjectChild::GetInstanceForNPObject(NPObject* aObject)
 {
   AssertPluginThread();
+  if (!sObjectMap) {
+    // All PluginInstanceChilds have been destroyed
+    return nullptr;
+  }
+
   NPObjectData* d = sObjectMap->GetEntry(aObject);
   if (!d) {
     return nullptr;

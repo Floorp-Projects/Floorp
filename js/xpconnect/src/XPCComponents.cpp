@@ -2294,7 +2294,7 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
     AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
       "nsXPCComponents_Utils::Import", OTHER, registryLocation);
 
-    return moduleloader->Import(registryLocation, targetObj, cx, optionalArgc, retval);
+    return moduleloader->ImportInto(registryLocation, targetObj, cx, optionalArgc, retval);
 }
 
 NS_IMETHODIMP

@@ -43,6 +43,15 @@ HasCompilerSupport(JSContext* cx);
 bool
 HasSupport(JSContext* cx);
 
+// ToWebAssemblyValue and ToJSValue are conversion functions defined in
+// the Wasm JS API spec.
+
+bool
+ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val);
+
+void
+ToJSValue(const Val& val, MutableHandleValue v);
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
@@ -274,6 +283,42 @@ class WasmTableObject : public NativeObject
     static WasmTableObject* create(JSContext* cx, const wasm::Limits& limits);
     wasm::Table& table() const;
 };
+
+#ifdef ENABLE_WASM_GLOBAL
+
+// The class of WebAssembly.Global.  A WasmGlobalObject holds either the value
+// of an immutable wasm global or the cell of a mutable wasm global.
+
+class WasmGlobalObject : public NativeObject
+{
+    static const unsigned TYPE_SLOT = 0;
+    static const unsigned MUTABLE_SLOT = 1;
+    static const unsigned VALUE_SLOT = 2;
+
+    static const ClassOps classOps_;
+
+    static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool valueGetter(JSContext* cx, unsigned argc, Value* vp);
+    static bool valueSetterImpl(JSContext* cx, const CallArgs& args);
+    static bool valueSetter(JSContext* cx, unsigned argc, Value* vp);
+
+  public:
+    static const unsigned RESERVED_SLOTS = 3;
+    static const Class class_;
+    static const JSPropertySpec properties[];
+    static const JSFunctionSpec methods[];
+    static const JSFunctionSpec static_methods[];
+    static bool construct(JSContext*, unsigned, Value*);
+
+    static WasmGlobalObject* create(JSContext* cx, wasm::ValType type, bool isMutable,
+                                    HandleValue value);
+
+    wasm::ValType type() const;
+    bool isMutable() const;
+    Value value() const;
+};
+
+#endif // ENABLE_WASM_GLOBAL
 
 } // namespace js
 
