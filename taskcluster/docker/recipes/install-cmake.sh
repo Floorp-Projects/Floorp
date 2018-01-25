@@ -15,7 +15,8 @@ tooltool_fetch <<'EOF'
   }
 ]
 EOF
-cd cmake-3.7.1
-./bootstrap && make install
-cd ..
+(
+  cd cmake-3.7.1 || exit
+  ./bootstrap && make install
+)
 rm -rf cmake-3.7.1

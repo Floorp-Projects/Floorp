@@ -353,7 +353,7 @@ function addTestGlobal(name, server = DebuggerServer) {
 // List the DebuggerClient |client|'s tabs, look for one whose title is
 // |title|, and apply |callback| to the packet's entry for that tab.
 function getTestTab(client, title, callback) {
-  client.listTabs(function (response) {
+  client.listTabs().then(function (response) {
     for (let tab of response.tabs) {
       if (tab.title === title) {
         callback(tab, response);

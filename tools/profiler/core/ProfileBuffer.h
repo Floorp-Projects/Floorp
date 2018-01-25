@@ -49,11 +49,11 @@ public:
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
 
-  void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+  bool StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, double* aOutFirstSampleTime,
                            JSContext* cx,
                            UniqueStacks& aUniqueStacks) const;
-  void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
+  bool StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;

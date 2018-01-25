@@ -286,7 +286,7 @@ RootActor.prototype = {
    * would trigger any lazy tabs to be loaded, greatly increasing resource usage.  Avoid
    * this method whenever possible.
    */
-  onListTabs: async function () {
+  onListTabs: async function (request) {
     let tabList = this._parameters.tabList;
     if (!tabList) {
       return { from: this.actorID, error: "noTabs",
@@ -305,7 +305,8 @@ RootActor.prototype = {
     let tabActorList = [];
     let selected;
 
-    let tabActors = await tabList.getList();
+    let options = request.options || {};
+    let tabActors = await tabList.getList(options);
     for (let tabActor of tabActors) {
       if (tabActor.exited) {
         // Tab actor may have exited while we were gathering the list.

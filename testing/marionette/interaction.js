@@ -270,7 +270,7 @@ interaction.selectOption = function(el) {
   event.mouseover(containerEl);
   event.mousemove(containerEl);
   event.mousedown(containerEl);
-  event.focus(containerEl);
+  containerEl.focus();
 
   if (!el.disabled) {
     // Clicking <option> in <select> should not be deselected if selected.
@@ -287,6 +287,7 @@ interaction.selectOption = function(el) {
 
   event.mouseup(containerEl);
   event.click(containerEl);
+  containerEl.blur();
 };
 
 /**
@@ -340,10 +341,10 @@ function clearContentEditableElement(el) {
   if (el.innerHTML === "") {
     return;
   }
-  event.focus(el);
+  el.focus();
   el.innerHTML = "";
   event.change(el);
-  event.blur(el);
+  el.blur();
 }
 
 function clearResettableElement(el) {
@@ -366,10 +367,10 @@ function clearResettableElement(el) {
     return;
   }
 
-  event.focus(el);
+  el.focus();
   el.value = "";
   event.change(el);
-  event.blur(el);
+  el.blur();
 }
 
 /**
@@ -413,21 +414,27 @@ interaction.flushEventLoop = async function(el) {
 };
 
 /**
- * Focus element and, if a textual input field and no previous selection
- * state exists, move the caret to the end of the input field.
+ * If <var>el<var> is a textual form control and no previous
+ * selection state exists, move the caret to the end of the form control.
  *
- * @param {Element} element
- *     Element to focus.
+ * The element has to be a <code>&lt;input type=text&gt;</code>
+ * or <code>&lt;textarea&gt;</code> element for the cursor to move
+ * be moved.
+ *
+ * @param {Element} el
+ *     Element to potential move the caret in.
  */
-interaction.focusElement = function(el) {
-  let t = el.type;
-  if (t && (t == "text" || t == "textarea")) {
-    if (el.selectionEnd == 0) {
-      let len = el.value.length;
-      el.setSelectionRange(len, len);
-    }
+interaction.moveCaretToEnd = function(el) {
+  if (!element.isDOMElement(el) ||
+      el.localName != "textarea" ||
+      (el.localName != "input" && el.type == "text")) {
+    return;
   }
-  el.focus();
+
+  if (el.selectionEnd == 0) {
+    let len = el.value.length;
+    el.setSelectionRange(len, len);
+  }
 };
 
 /**
@@ -453,7 +460,6 @@ interaction.isKeyboardInteractable = function(el) {
   }
 
   el.focus();
-
   return el === win.document.activeElement;
 };
 
@@ -486,13 +492,14 @@ interaction.uploadFile = async function(el, path) {
   event.mouseover(el);
   event.mousemove(el);
   event.mousedown(el);
-  event.focus(el);
+  el.focus();
   event.mouseup(el);
   event.click(el);
 
   el.mozSetFileArray(fs);
 
   event.change(el);
+  el.blur();
 };
 
 /**
@@ -558,7 +565,8 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   let acc = await a11y.getAccessible(el, true);
   a11y.assertActionable(acc, el);
 
-  interaction.focusElement(el);
+  interaction.moveCaretToEnd(el);
+  el.focus();
 
   if (el.type == "file") {
     await interaction.uploadFile(el, value);
@@ -568,6 +576,8 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   } else {
     event.sendKeysToElement(value, el, win);
   }
+
+  el.blur();
 }
 
 async function legacySendKeysToElement(el, value, a11y) {
@@ -591,7 +601,8 @@ async function legacySendKeysToElement(el, value, a11y) {
     let acc = await a11y.getAccessible(el, true);
     a11y.assertActionable(acc, el);
 
-    interaction.focusElement(el);
+    interaction.moveCaretToEnd(el);
+    el.focus();
     event.sendKeysToElement(value, el, win);
   }
 }

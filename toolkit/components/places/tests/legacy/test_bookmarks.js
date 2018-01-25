@@ -116,9 +116,6 @@ add_task(async function test_bookmarks() {
   // test getItemIndex for folders
   Assert.equal(bs.getItemIndex(testRoot), bmStartIndex);
 
-  // test getItemType for folders
-  Assert.equal(bs.getItemType(testRoot), bs.TYPE_FOLDER);
-
   // insert a bookmark.
   // the time before we insert, in microseconds
   let beforeInsert = Date.now() * 1000;
@@ -174,9 +171,6 @@ add_task(async function test_bookmarks() {
   // get item title
   let title = bs.getItemTitle(newId);
   Assert.equal(title, "Google");
-
-  // test getItemType for bookmarks
-  Assert.equal(bs.getItemType(newId), bs.TYPE_BOOKMARK);
 
   // get item title bad input
   try {

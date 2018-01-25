@@ -66,7 +66,7 @@ function attachURL(url, callback) {
     if (event.data === "ready") {
       client = new DebuggerClient(DebuggerServer.connectPipe());
       client.connect().then(([applicationType, traits]) => {
-        client.listTabs(response => {
+        client.listTabs().then(response => {
           for (let tab of response.tabs) {
             if (tab.url === url) {
               window.removeEventListener("message", loadListener);
