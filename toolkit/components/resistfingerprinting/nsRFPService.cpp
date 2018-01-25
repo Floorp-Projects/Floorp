@@ -58,12 +58,22 @@ static mozilla::LazyLogModule gResistFingerprintingLog("nsResistFingerprinting")
 
 NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
+/*
+ * The below variables are marked with 'Relaxed' memory ordering. We don't
+ * particurally care that threads have a percently consistent view of the values
+ * of these prefs. They are not expected to change often, and having an outdated
+ * view is not particurally harmful. They will eventually become consistent.
+ *
+ * The variables will, however, be read often (specifically sResolutionUSec on
+ * each timer rounding) so performance is important.
+ */
+
 static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
-Atomic<bool, ReleaseAcquire> nsRFPService::sPrivacyResistFingerprinting;
-Atomic<bool, ReleaseAcquire> nsRFPService::sPrivacyTimerPrecisionReduction;
+Atomic<bool, Relaxed> nsRFPService::sPrivacyResistFingerprinting;
+Atomic<bool, Relaxed> nsRFPService::sPrivacyTimerPrecisionReduction;
 // Note: anytime you want to use this variable, you should probably use TimerResolution() instead
-Atomic<uint32_t, ReleaseAcquire> sResolutionUSec;
+Atomic<uint32_t, Relaxed> sResolutionUSec;
 static uint32_t sVideoFramesPerSec;
 static uint32_t sVideoDroppedRatio;
 static uint32_t sTargetVideoRes;
