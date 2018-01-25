@@ -312,7 +312,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   addMessageListener("testProfileLoad", testProfileLoad);
   addMessageListener("set-overrides", function(overrides) { OVERRIDES = overrides});
   addMessageListener("notify-on-update", () => { _notifyOnUpdate = true });
-}, { wantGlobalProperties: ["TextEncoder", "TextDecoder"]});
+}, { wantGlobalProperties: ["ChromeUtils", "TextEncoder", "TextDecoder"]});
 
 chromeScript.addMessageListener("testProfileSaveDone", SimpleTest.finish);
 chromeScript.addMessageListener("testProfileLoadDone", function() {

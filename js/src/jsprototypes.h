@@ -127,6 +127,7 @@ IF_SAB(real,imaginary)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
     imaginary(WasmInstance,     dummy,                  dummy) \
     imaginary(WasmMemory,       dummy,                  dummy) \
     imaginary(WasmTable,        dummy,                  dummy) \
+    imaginary(WasmGlobal,       dummy,                  dummy) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

@@ -485,10 +485,8 @@ SpecialPowersObserverAPI.prototype = {
         // and addMessageListener in order to communicate with
         // the mochitest.
         let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-        let sandboxOptions = aMessage.json.sandboxOptions;
-        if (!sandboxOptions) {
-          sandboxOptions = {};
-        }
+        let sandboxOptions = Object.assign({wantGlobalProperties: ["ChromeUtils"]},
+                                           aMessage.json.sandboxOptions);
         let sb = Components.utils.Sandbox(systemPrincipal, sandboxOptions);
         let mm = aMessage.target.frameLoader
                          .messageManager;

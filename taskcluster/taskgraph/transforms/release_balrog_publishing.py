@@ -15,7 +15,7 @@ transforms = TransformSequence()
 @transforms.add
 def add_release_eta(config, jobs):
     for job in jobs:
-        if config.params['release_eta'] != '':
+        if config.params['release_eta']:
             job['run']['release-eta'] = config.params['release_eta']
 
         yield job

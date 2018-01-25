@@ -172,6 +172,9 @@ class PrintDisassembler: public Disassembler {
  private:
   FILE *stream_;
 };
+
+void DisassembleInstruction(char* buffer, size_t bufsize, const Instruction* instr);
+
 }  // namespace vixl
 
 #endif  // VIXL_A64_DISASM_A64_H

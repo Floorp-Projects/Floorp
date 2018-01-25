@@ -3743,36 +3743,29 @@ class BaseCompiler final : public BaseCompilerInterface
 
 #ifndef RABALDR_I64_TO_FLOAT_CALLOUT
     RegI32 needConvertI64ToFloatTemp(ValType to, bool isUnsigned) {
-# if defined(JS_CODEGEN_X86)
-        bool needs = isUnsigned &&
-                     ((to == ValType::F64 && AssemblerX86Shared::HasSSE3()) ||
-                      to == ValType::F32);
-# else
-        bool needs = isUnsigned;
+        bool needs = false;
+        if (to == ValType::F64) {
+            needs = isUnsigned && masm.convertUInt64ToDoubleNeedsTemp();
+        } else {
+# if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+            needs = true;
 # endif
+        }
         return needs ? needI32() : RegI32::Invalid();
     }
 
     void convertI64ToF32(RegI64 src, bool isUnsigned, RegF32 dest, RegI32 temp) {
-# if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
             masm.convertUInt64ToFloat32(src, dest, temp);
         else
             masm.convertInt64ToFloat32(src, dest);
-# else
-        MOZ_CRASH("BaseCompiler platform hook: convertI64ToF32");
-# endif
     }
 
     void convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest, RegI32 temp) {
-# if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         if (isUnsigned)
             masm.convertUInt64ToDouble(src, dest, temp);
         else
             masm.convertInt64ToDouble(src, dest);
-# else
-        MOZ_CRASH("BaseCompiler platform hook: convertI64ToF64");
-# endif
     }
 #endif // RABALDR_I64_TO_FLOAT_CALLOUT
 

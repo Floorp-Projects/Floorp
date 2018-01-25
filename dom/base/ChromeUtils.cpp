@@ -402,8 +402,8 @@ ChromeUtils::Import(const GlobalObject& aGlobal,
   }
 
   JS::Rooted<JS::Value> retval(cx);
-  nsresult rv = moduleloader->Import(registryLocation, targetObj, cx,
-                                     optionalArgc, &retval);
+  nsresult rv = moduleloader->ImportInto(registryLocation, targetObj, cx,
+                                         optionalArgc, &retval);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -419,6 +419,149 @@ ChromeUtils::Import(const GlobalObject& aGlobal,
   // Now we better have an object.
   MOZ_ASSERT(retval.isObject());
   aRetval.set(&retval.toObject());
+}
+
+namespace module_getter {
+  static const size_t SLOT_ID = 0;
+  static const size_t SLOT_URI = 1;
+
+  static bool
+  ExtractArgs(JSContext* aCx, JS::CallArgs& aArgs,
+              JS::MutableHandle<JSObject*> aCallee,
+              JS::MutableHandle<JSObject*> aThisObj,
+              JS::MutableHandle<jsid> aId)
+  {
+    aCallee.set(&aArgs.callee());
+
+    JS::Handle<JS::Value> thisv = aArgs.thisv();
+    if (!thisv.isObject()) {
+      JS_ReportErrorASCII(aCx, "Invalid target object");
+      return false;
+    }
+
+    aThisObj.set(&thisv.toObject());
+
+    JS::Rooted<JS::Value> id(aCx, js::GetFunctionNativeReserved(aCallee, SLOT_ID));
+    MOZ_ALWAYS_TRUE(JS_ValueToId(aCx, id, aId));
+    return true;
+  }
+
+  static bool
+  ModuleGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+  {
+    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+
+    JS::Rooted<JSObject*> callee(aCx);
+    JS::Rooted<JSObject*> thisObj(aCx);
+    JS::Rooted<jsid> id(aCx);
+    if (!ExtractArgs(aCx, args, &callee, &thisObj, &id)) {
+      return false;
+    }
+
+    JS::Rooted<JSString*> moduleURI(
+      aCx, js::GetFunctionNativeReserved(callee, SLOT_URI).toString());
+    JSAutoByteString bytes;
+    if (!bytes.encodeUtf8(aCx, moduleURI)) {
+      return false;
+    }
+    nsDependentCString uri(bytes.ptr());
+
+    RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+    MOZ_ASSERT(moduleloader);
+
+    JS::Rooted<JSObject*> moduleGlobal(aCx);
+    JS::Rooted<JSObject*> moduleExports(aCx);
+    nsresult rv = moduleloader->Import(aCx, uri, &moduleGlobal, &moduleExports);
+    if (NS_FAILED(rv)) {
+      Throw(aCx, rv);
+      return false;
+    }
+
+    JS::RootedValue value(aCx);
+    {
+      JSAutoCompartment ac(aCx, moduleExports);
+
+      if (!JS_GetPropertyById(aCx, moduleExports, id, &value)) {
+        return false;
+      }
+    }
+
+    if (!JS_WrapValue(aCx, &value) ||
+        !JS_DefinePropertyById(aCx, thisObj, id, value,
+                               JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    args.rval().set(value);
+    return true;
+  }
+
+  static bool
+  ModuleSetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+  {
+    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+
+    JS::Rooted<JSObject*> callee(aCx);
+    JS::Rooted<JSObject*> thisObj(aCx);
+    JS::Rooted<jsid> id(aCx);
+    if (!ExtractArgs(aCx, args, &callee, &thisObj, &id)) {
+      return false;
+    }
+
+    return JS_DefinePropertyById(aCx, thisObj, id, args.get(0),
+                                 JSPROP_ENUMERATE);
+  }
+
+  static bool
+  DefineGetter(JSContext* aCx,
+               JS::Handle<JSObject*> aTarget,
+               const nsAString& aId,
+               const nsAString& aResourceURI)
+  {
+    JS::RootedValue uri(aCx);
+    JS::RootedValue idValue(aCx);
+    JS::Rooted<jsid> id(aCx);
+    if (!xpc::NonVoidStringToJsval(aCx, aResourceURI, &uri) ||
+        !xpc::NonVoidStringToJsval(aCx, aId, &idValue) ||
+        !JS_ValueToId(aCx, idValue, &id)) {
+      return false;
+    }
+    idValue = js::IdToValue(id);
+
+
+    JS::Rooted<JSObject*> getter(aCx, JS_GetFunctionObject(
+      js::NewFunctionByIdWithReserved(aCx, ModuleGetter, 0, 0, id)));
+
+    JS::Rooted<JSObject*> setter(aCx, JS_GetFunctionObject(
+      js::NewFunctionByIdWithReserved(aCx, ModuleSetter, 0, 0, id)));
+
+    if (!getter || !setter) {
+      JS_ReportOutOfMemory(aCx);
+      return false;
+    }
+
+    js::SetFunctionNativeReserved(getter, SLOT_ID, idValue);
+    js::SetFunctionNativeReserved(setter, SLOT_ID, idValue);
+
+    js::SetFunctionNativeReserved(getter, SLOT_URI, uri);
+
+    return JS_DefinePropertyById(aCx, aTarget, id,
+                                 JS_DATA_TO_FUNC_PTR(JSNative, getter.get()),
+                                 JS_DATA_TO_FUNC_PTR(JSNative, setter.get()),
+                                 JSPROP_GETTER | JSPROP_SETTER | JSPROP_ENUMERATE);
+  }
+} // namespace module_getter
+
+/* static */ void
+ChromeUtils::DefineModuleGetter(const GlobalObject& global,
+                                JS::Handle<JSObject*> target,
+                                const nsAString& id,
+                                const nsAString& resourceURI,
+                                ErrorResult& aRv)
+{
+  if (!module_getter::DefineGetter(global.Context(), target, id, resourceURI)) {
+    aRv.NoteJSContextException(global.Context());
+  }
 }
 
 /* static */ void
