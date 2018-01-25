@@ -204,6 +204,22 @@ HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
 }
 
 nsresult
+HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
+                                     nsIContent* aBeforeThis,
+                                     bool aNotify)
+{
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
+  nsresult rv =
+    nsGenericHTMLFormElementWithState::InsertChildBefore(aKid, aBeforeThis,
+                                                         aNotify);
+  if (NS_FAILED(rv)) {
+    safeMutation.MutationFailed();
+  }
+  return rv;
+}
+
+nsresult
 HTMLSelectElement::InsertChildAt_Deprecated(nsIContent* aKid,
                                             uint32_t aIndex,
                                             bool aNotify)
