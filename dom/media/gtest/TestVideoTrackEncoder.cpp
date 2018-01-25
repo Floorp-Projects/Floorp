@@ -1140,6 +1140,93 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
   EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[5]->GetFrameType());
 }
 
+// Test that an encoding with no defined key frame interval encodes keyframes
+// as expected. Default interval should be 1000ms.
+TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
+{
+  TestVP8TrackEncoder encoder;
+
+  // Pass frames at 0, 600ms, 900ms, 1100ms, 1900ms, 2100ms
+  // Expected keys: ^                ^^^^^^          ^^^^^^
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 600), // 600ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now);
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 300), // 300ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromMilliseconds(600));
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200), // 200ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromMilliseconds(900));
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 800), // 800ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromMilliseconds(1100));
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 200), // 200ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromMilliseconds(1900));
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(VIDEO_TRACK_RATE / 1000 * 100), // 100ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromMilliseconds(2100));
+
+  encoder.SetStartOffset(0);
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 22); // 2200ms
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  ASSERT_EQ(6UL, frames.Length());
+
+  // [0, 600ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 600UL, frames[0]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->GetFrameType());
+
+  // [600ms, 900ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 300UL, frames[1]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[1]->GetFrameType());
+
+  // [900ms, 1100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[2]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[2]->GetFrameType());
+
+  // [1100ms, 1900ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 800UL, frames[3]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[3]->GetFrameType());
+
+  // [1900ms, 2100ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 200UL, frames[4]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_P_FRAME, frames[4]->GetFrameType());
+
+  // [2100ms, 2200ms)
+  EXPECT_EQ(PR_USEC_PER_SEC / 1000 * 100UL, frames[5]->GetDuration());
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[5]->GetFrameType());
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
