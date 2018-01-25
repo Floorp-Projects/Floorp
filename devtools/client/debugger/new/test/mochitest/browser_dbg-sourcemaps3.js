@@ -18,7 +18,7 @@ function hasScopeNode(dbg, index) {
 
 async function waitForScopeNode(dbg, index) {
   const selector = getSelector("scopeNode", index);
-  return waitForElement(dbg, selector);
+  return waitForElementWithSelector(dbg, selector);
 }
 
 // This source map does not have source contents, so it's fetched separately

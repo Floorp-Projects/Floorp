@@ -960,13 +960,13 @@ menuseparator {
 }
 
 .worker,
+.file,
 .folder {
   position: relative;
   top: 2px;
 }
 
 .domain,
-.file,
 .worker,
 .refresh,
 .add-button {
@@ -1280,6 +1280,19 @@ html[dir="rtl"] .managed-tree .tree .node > div {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.search-container {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: calc(100% - 1px);
+  height: calc(100% - 31px);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  background-color: var(--theme-body-background);
+  overflow-y: hidden;
+}
+
 .project-text-search {
   flex-grow: 1;
   display: flex;
@@ -1376,22 +1389,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.search-container {
-  position: absolute;
-  top: 30px;
-  left: 0;
-  width: calc(100% - 1px);
-  height: calc(100% - 31px);
-  display: flex;
-  flex-direction: column;
-  z-index: 20;
-  background-color: var(--theme-body-background);
-  overflow-y: hidden;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 .sources-panel {
   background-color: var(--theme-sidebar-background);
   display: flex;
@@ -1411,7 +1408,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   display: flex;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-top: 11px;
 }
 
 .sources-list .managed-tree {
@@ -1423,6 +1419,8 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .sources-list .managed-tree .tree .node {
   padding: 0px 0px 0px 3px;
+  height: 21px;
+  width: 100%;
 }
 
 .sources-list .tree img.arrow {
@@ -1925,14 +1923,15 @@ html .toggle-button.end.vertical svg {
 .theme-dark,
 .theme-light {
   --number-color: var(--theme-highlight-green);
-  --string-color: var(--theme-highlight-orange);
+  --string-color: var(--theme-highlight-red);
   --null-color: var(--theme-comment);
-  --object-color: var(--theme-body-color);
+  --object-color: var(--theme-highlight-blue);
   --caption-color: var(--theme-highlight-blue);
-  --location-color: var(--theme-content-color1);
+  --location-color: var(--theme-comment);
   --source-link-color: var(--theme-highlight-blue);
-  --node-color: var(--theme-highlight-bluegrey);
-  --reference-color: var(--theme-highlight-purple);
+  --node-color: var(--theme-highlight-purple);
+  --reference-color: var(--theme-highlight-blue);
+  --comment-node-color: var(--theme-comment);
 }
 
 .theme-firebug {
@@ -1992,16 +1991,16 @@ html .toggle-button.end.vertical svg {
   color: var(--object-color);
 }
 
-.objectBox-Location {
-  font-style: italic;
+.objectBox-Location,
+.location {
   color: var(--location-color);
 }
 
 .objectBox-null,
 .objectBox-undefined,
 .objectBox-hint,
+.objectBox-nan,
 .logRowHint {
-  font-style: italic;
   color: var(--null-color);
 }
 
@@ -2028,25 +2027,42 @@ html .toggle-button.end.vertical svg {
 .objectBox-event,
 .objectBox-eventLog,
 .objectBox-regexp,
-.objectBox-object,
-.objectBox-Date {
-  font-weight: bold;
+.objectBox-object {
   color: var(--object-color);
+  white-space: pre-wrap;
+}
+
+.objectBox .Date {
+  color: var(--string-color);
   white-space: pre-wrap;
 }
 
 /******************************************************************************/
 
-.objectBox-object .nodeName,
-.objectBox-NamedNodeMap .nodeName,
-.objectBox-NamedNodeMap .objectEqual,
-.objectBox-Attr .attrEqual,
-.objectBox-Attr .attrTitle {
+.objectBox.theme-comment {
+  color: var(--comment-node-color);
+}
+
+.tag-name {
+  color: var(--object-color);
+}
+
+.attrName {
+  color: var(--string-color);
+}
+
+.attrEqual,
+.objectEqual {
+  color: var(--comment-node-color);
+}
+
+.attrValue,
+.attrValue.objectBox-string {
   color: var(--node-color);
 }
 
-.objectBox-object .nodeName {
-  font-weight: normal;
+.angleBracket {
+  color: var(--theme-body-color);
 }
 
 /******************************************************************************/
@@ -2055,7 +2071,7 @@ html .toggle-button.end.vertical svg {
 .objectRightBrace,
 .arrayLeftBracket,
 .arrayRightBracket {
-  color: var(--theme-highlight-blue);
+  color: var(--object-color);
 }
 
 /******************************************************************************/
@@ -2066,14 +2082,12 @@ html .toggle-button.end.vertical svg {
   color: var(--reference-color);
 }
 
-[class*="objectBox-"] > .objectTitle {
-  color: var(--theme-highlight-blue);
-  font-style: italic;
+[class*="objectBox"] > .objectTitle {
+  color: var(--object-color);
 }
 
 .caption {
-  font-weight: bold;
-  color:  var(--caption-color);
+  color: var(--caption-color);
 }
 
 /******************************************************************************/
@@ -2101,7 +2115,7 @@ html .toggle-button.end.vertical svg {
 /* Open DOMNode in inspector button */
 
 .open-inspector svg {
-  fill: rgb(215, 215, 215);
+  fill: var(--comment-node-color);
   height: 16px;
   width: 16px;
   margin-left: .25em;
@@ -2112,13 +2126,29 @@ html .toggle-button.end.vertical svg {
 .objectBox-node:hover .open-inspector svg,
 .objectBox-textNode:hover .open-inspector svg,
 .open-inspector svg:hover {
-  fill: rgb(65, 175, 230);
+  fill: var(--theme-highlight-blue);
+}
+
+/******************************************************************************/
+/* Jump to definition button */
+
+.jump-definition svg {
+  stroke: var(--comment-node-color);
+  height: 16px;
+  width: 16px;
+  margin-left: .25em;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.jump-definition svg:hover {
+  stroke: var(--theme-highlight-blue);
 }
 
 /******************************************************************************/
 /* "more…" ellipsis */
 .more-ellipsis {
-  color: var(--theme-comment);
+  color: var(--comment-node-color);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2148,19 +2178,48 @@ html .toggle-button.end.vertical svg {
   display: block;
 }
 
-.tree .node {
-  padding: 0 0.25em;
-  position: relative;
-  cursor: pointer;
+.tree .tree-node {
+  display: flex;
 }
 
-.tree .node.focused {
+.tree-indent {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 5px;
+  border-inline-start: 1px solid #A2D1FF;
+  flex-shrink: 0;
+}
+
+/* Align with expandables siblings (where we have the arrow) */
+.tree-node[data-expandable="false"] .tree-indent:last-of-type {
+  margin-inline-end: 15px;
+}
+
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="0"] {
+  padding-inline-start: 15px
+}
+
+.tree .tree-node[data-expandable="true"] {
+  cursor: default;
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: #F0F9FE;
+}
+
+.tree .tree-node.focused {
   color: white;
-  background-color: var(--theme-selection-background);
+  background-color: var(--theme-selection-background, #0a84ff);
+}
+
+.tree-node.focused .arrow svg {
+  fill: currentColor;
 }
 
 .arrow svg {
-  fill: var(--theme-splitter-color);
+  fill: var(--theme-splitter-color, #9B9B9B);
   transition: transform 0.125s ease;
   width: 10px;
   margin-inline-end: 5px;
@@ -2176,19 +2235,33 @@ html[dir="rtl"] .arrow svg,
 .arrow.expanded.expanded svg {
   transform: rotate(0deg);
 }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.object-label, .object-label * {
+.tree.object-inspector .node.object-node {
+  display: inline-block;
+}
+
+.tree.object-inspector .object-label,
+.tree.object-inspector .object-label * {
   color: var(--theme-highlight-blue);
 }
 
-.tree .node .unavailable {
-  color: var(--theme-content-color3);
+.tree.object-inspector .node .unavailable {
+  color: var(--theme-comment);
 }
 
-.lessen {
-  opacity: 0.6;
+.tree.object-inspector .lessen,
+.tree.object-inspector .lessen *,
+.tree.object-inspector .lessen .object-label,
+.tree.object-inspector .lessen .object-label * {
+  color: var(--theme-comment);
 }
 
+.object-inspector .object-delimiter {
+  color: var(--theme-comment);
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -3358,7 +3431,7 @@ img.resume {
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: 0 0 26px;
+  flex: 0 0 25px;
 }
 
 .command-bar.bottom {
@@ -3540,6 +3613,10 @@ img.ignore-exceptions {
 
 .scopes-pane {
   overflow: auto;
+}
+
+.scopes-list {
+  padding-left: 4px;
 }
 
 .scopes-list .function-signature {
