@@ -10,6 +10,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "nsString.h"
@@ -107,6 +108,8 @@ public:
   void ConnectCrashHelper(uint32_t aPluginId, GMPCrashHelper* aHelper);
   void DisconnectCrashHelper(GMPCrashHelper* aHelper);
 
+  bool XPCOMWillShutdownReceived() const { return mXPCOMWillShutdown; }
+
 protected:
   GeckoMediaPluginService();
   virtual ~GeckoMediaPluginService();
@@ -135,6 +138,7 @@ protected:
   RefPtr<AbstractThread> mAbstractGMPThread;
   bool mGMPThreadShutdown;
   bool mShuttingDownOnGMPThread;
+  Atomic<bool> mXPCOMWillShutdown;
 
   nsClassHashtable<nsUint32HashKey, nsTArray<RefPtr<GMPCrashHelper>>> mPluginCrashHelpers;
 };

@@ -465,7 +465,12 @@ class CDMStorageTest
                     self->mCDM = cdm;
                     EXPECT_TRUE(!!self->mCDM);
                     self->mCallback.reset(new CallbackProxy(self));
-                    self->mCDM->Init(self->mCallback.get(), false, true, GetMainThreadEventTarget());
+                    nsCString failureReason;
+                    self->mCDM->Init(self->mCallback.get(),
+                                     false,
+                                     true,
+                                     GetMainThreadEventTarget(),
+                                     failureReason);
 
                     for (auto& update : aUpdates) {
                       self->Update(update);
