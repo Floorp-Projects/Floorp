@@ -763,11 +763,11 @@ nsGenericDOMDataNode::SplitData(uint32_t aOffset, nsIContent** aReturn,
 
   nsCOMPtr<nsINode> parent = GetParentNode();
   if (parent) {
-    int32_t insertionIndex = parent->ComputeIndexOf(this);
+    nsCOMPtr<nsIContent> beforeNode = this;
     if (aCloneAfterOriginal) {
-      ++insertionIndex;
+      beforeNode = beforeNode->GetNextSibling();
     }
-    parent->InsertChildAt_Deprecated(newContent, insertionIndex, true);
+    parent->InsertChildBefore(newContent, beforeNode, true);
   }
 
   newContent.swap(*aReturn);
