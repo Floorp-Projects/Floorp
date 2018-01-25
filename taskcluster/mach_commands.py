@@ -421,15 +421,18 @@ class TaskClusterImagesProvider(MachCommandBase):
              description='Build a Docker image')
     @CommandArgument('image_name',
                      help='Name of the image to build')
+    @CommandArgument('-t', '--tag',
+                     help="tag that the image should be built as.",
+                     metavar="name:tag")
     @CommandArgument('--context-only',
                      help="File name the context tarball should be written to."
                           "with this option it will only build the context.tar.",
                      metavar='context.tar')
-    def build_image(self, image_name, context_only):
+    def build_image(self, image_name, tag, context_only):
         from taskgraph.docker import build_image, build_context
         try:
             if context_only is None:
-                build_image(image_name, os.environ)
+                build_image(image_name, tag, os.environ)
             else:
                 build_context(image_name, context_only, os.environ)
         except Exception:

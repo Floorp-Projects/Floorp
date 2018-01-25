@@ -64,7 +64,7 @@ def build_context(name, outputFile, args=None):
     docker.create_context_tar(GECKO, image_dir, outputFile, "", args)
 
 
-def build_image(name, args=None):
+def build_image(name, tag, args=None):
     """Build a Docker image of specified name.
 
     Output from image building process will be printed to stdout.
@@ -76,7 +76,7 @@ def build_image(name, args=None):
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
-    tag = docker.docker_image(name, by_tag=True)
+    tag = tag or docker.docker_image(name, by_tag=True)
 
     buf = BytesIO()
     docker.stream_context_tar(GECKO, image_dir, buf, '', args)
