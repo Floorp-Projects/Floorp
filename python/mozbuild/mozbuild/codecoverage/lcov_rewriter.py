@@ -9,7 +9,7 @@ import urlparse
 
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
-from chrome_map import ChromeManifestHandler
+from manifest_handler import ChromeManifestHandler
 
 class LcovRecord(object):
     __slots__ = ("test_name",
