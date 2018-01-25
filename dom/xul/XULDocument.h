@@ -524,10 +524,6 @@ protected:
     nsresult
     InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify);
 
-    static
-    nsresult
-    RemoveElement(nsINode* aParent, nsINode* aChild);
-
     /**
      * The current prototype that we are walking to construct the
      * content model.
