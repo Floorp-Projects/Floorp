@@ -10,13 +10,13 @@ function getScopeNodeValue(dbg, index) {
 }
 
 function expandNode(dbg, index) {
-  let onLoadProperties = onLoadObjectProperties(dbg);
+  const node = findElement(dbg, "scopeNode", index);
+  const objectInspector = node.closest(".object-inspector");
+  const properties = objectInspector.querySelectorAll(".node").length;
   findElement(dbg, "scopeNode", index).click();
-  return onLoadProperties;
-}
-
-function onLoadObjectProperties(dbg) {
-  return waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
+  return waitUntil(
+    () => objectInspector.querySelectorAll(".node").length !== properties
+  );
 }
 
 add_task(async function() {
