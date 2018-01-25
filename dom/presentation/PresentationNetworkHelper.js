@@ -7,8 +7,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const NETWORKHELPER_CID = Components.ID("{5fb96caa-6d49-4f6b-9a4b-65dd0d51f92d}");
 

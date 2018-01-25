@@ -8,7 +8,7 @@
 // is called at the appropriate times and with the correct arguments.
 
 const { MockRegistrar } =
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
+  Cu.import("resource://testing-common/MockRegistrar.jsm", {});
 
 const DialogState = {
   // Assert that chooseCertificate() is never called.

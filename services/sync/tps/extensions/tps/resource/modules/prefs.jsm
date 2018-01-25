@@ -13,8 +13,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://tps/logger.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://tps/logger.jsm");
 
 /**
  * Preference class constructor

@@ -157,10 +157,10 @@ var {Task} = require("devtools/shared/task");
 
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
-ChromeUtils.defineModuleGetter(this, "Parser",
+XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource://devtools/shared/Parser.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ShortcutUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",

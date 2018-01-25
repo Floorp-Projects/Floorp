@@ -334,7 +334,7 @@ this.XPCOMUtils = {
     this.defineLazyGetter(aObject, aName, function XPCU_moduleLambda() {
       var temp = {};
       try {
-        ChromeUtils.import(aResource, temp);
+        Cu.import(aResource, temp);
 
         if (typeof(aPostLambda) === "function") {
           aPostLambda.apply(proxy);
@@ -531,7 +531,7 @@ this.XPCOMUtils = {
                   "must be that JSM's global object (hint: use this)");
 
     Cu.importGlobalProperties(["URL"]);
-    ChromeUtils.import(new URL(path, that.__URI__).href, scope || that);
+    Components.utils.import(new URL(path, that.__URI__).href, scope || that);
   },
 
   /**
@@ -574,8 +574,8 @@ this.XPCOMUtils = {
 
 var XPCU_lazyPreferenceObserverQI = XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(XPCOMUtils, "categoryManager",
                                    "@mozilla.org/categorymanager;1",

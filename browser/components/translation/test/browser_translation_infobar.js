@@ -5,7 +5,7 @@
 // tests the translation infobar, using a fake 'Translation' implementation.
 
 var tmp = {};
-ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
+Cu.import("resource:///modules/translation/Translation.jsm", tmp);
 var {Translation} = tmp;
 
 const kShowUIPref = "browser.translation.ui.show";

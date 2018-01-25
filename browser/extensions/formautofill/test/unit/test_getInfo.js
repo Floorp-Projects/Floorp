@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
+Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
 
 const TESTCASES = [
   {

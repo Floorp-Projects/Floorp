@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/osfile.jsm");
 
 // Check if Scheduler.queue returned by OS.File.queue is resolved initially.
 add_task(async function check_init() {

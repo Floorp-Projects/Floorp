@@ -5,19 +5,19 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Log",
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
   "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "CommonUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
   "resource://services-common/utils.js");
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "LogManager",

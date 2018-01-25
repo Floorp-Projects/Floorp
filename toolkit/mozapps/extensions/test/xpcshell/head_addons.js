@@ -39,31 +39,31 @@ const MAX_TIME_DIFFERENCE = 3000;
 // times are modified (10 hours old).
 const MAKE_FILE_OLD_DIFFERENCE = 10 * 3600 * 1000;
 
-ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
-ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm", {});
+Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Extension",
-                               "resource://gre/modules/Extension.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionTestUtils",
-                               "resource://testing-common/ExtensionXPCShellUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionTestCommon",
-                               "resource://testing-common/ExtensionTestCommon.jsm");
-ChromeUtils.defineModuleGetter(this, "HttpServer",
-                               "resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "MockAsyncShutdown",
-                               "resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "MockRegistrar",
-                               "resource://testing-common/MockRegistrar.jsm");
-ChromeUtils.defineModuleGetter(this, "MockRegistry",
-                               "resource://testing-common/MockRegistry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Extension",
+                                  "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
+                                  "resource://testing-common/ExtensionXPCShellUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestCommon",
+                                  "resource://testing-common/ExtensionTestCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
+                                  "resource://testing-common/httpd.js");
+XPCOMUtils.defineLazyModuleGetter(this, "MockAsyncShutdown",
+                                  "resource://testing-common/AddonTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
+                                  "resource://testing-common/MockRegistrar.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistry",
+                                  "resource://testing-common/MockRegistry.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "@mozilla.org/addons/addon-manager-startup;1",
@@ -156,7 +156,7 @@ Object.defineProperty(this, "TEST_UNPACKED", {
 });
 
 // We need some internal bits of AddonManager
-var AMscope = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
+var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
 var { AddonManager, AddonManagerInternal, AddonManagerPrivate } = AMscope;
 
 const promiseAddonByID = AddonManager.getAddonByID;
@@ -1340,7 +1340,7 @@ async function installSystemAddons(xml, testserver) {
   info("Triggering system add-on update check.");
 
   await serveSystemUpdate(xml, async function() {
-    let { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    let { XPIProvider } = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
     await XPIProvider.updateSystemAddons();
   }, testserver);
 }

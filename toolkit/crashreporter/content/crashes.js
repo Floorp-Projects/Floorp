@@ -6,12 +6,12 @@ var { classes: Cc, utils: Cu, interfaces: Ci } = Components;
 
 var reportURL;
 
-ChromeUtils.import("resource://gre/modules/CrashReports.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/CrashReports.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CrashSubmit",
+XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm");
 
 const buildID = Services.appinfo.appBuildID;

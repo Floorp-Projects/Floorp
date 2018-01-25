@@ -5,13 +5,13 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browser.js */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var {
   ExtensionError,
 } = ExtensionUtils;
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

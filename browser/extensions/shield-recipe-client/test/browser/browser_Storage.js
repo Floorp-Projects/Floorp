@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://shield-recipe-client/lib/Storage.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/Storage.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
 
 add_task(async function() {
   const store1 = new Storage("prefix1");

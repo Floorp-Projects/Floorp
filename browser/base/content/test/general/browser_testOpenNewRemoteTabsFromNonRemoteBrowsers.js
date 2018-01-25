@@ -5,7 +5,7 @@
 const OPEN_LOCATION_PREF = "browser.link.open_newwindow";
 const NON_REMOTE_PAGE = "about:welcomeback";
 
-ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 requestLongerTimeout(2);
 

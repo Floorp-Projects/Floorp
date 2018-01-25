@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ["Sanitizer"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var scope = {};
 Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", scope);

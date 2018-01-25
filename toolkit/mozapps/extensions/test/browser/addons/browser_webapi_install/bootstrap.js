@@ -1,5 +1,5 @@
 /* exported startup, shutdown, install, uninstall */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function startup(data, reason) {
   Services.prefs.setIntPref("webapitest.active_version", 1);

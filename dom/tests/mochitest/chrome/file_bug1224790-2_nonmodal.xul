@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
     // that mutates mAncestorLink of this window.
     const Ci = Components.interfaces;
     const Cu = Components.utils;
-    var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+    var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
     var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
       getInterface(Ci.nsIDOMWindowUtils);
 

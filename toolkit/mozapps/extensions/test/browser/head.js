@@ -5,11 +5,11 @@
 
 /* eslint no-unused-vars: ["error", {vars: "local", args: "none"}] */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 var tmp = {};
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm", tmp);
-ChromeUtils.import("resource://gre/modules/Log.jsm", tmp);
+Components.utils.import("resource://gre/modules/AddonManager.jsm", tmp);
+Components.utils.import("resource://gre/modules/Log.jsm", tmp);
 var AddonManager = tmp.AddonManager;
 var AddonManagerPrivate = tmp.AddonManagerPrivate;
 var Log = tmp.Log;

@@ -6,17 +6,17 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher",
   () => EventDispatcher.for(window));
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    ChromeUtils.import("resource://gre/modules/AndroidLog.jsm",
-                       {}).AndroidLog.d.bind(null, "View"));
+    Cu.import("resource://gre/modules/AndroidLog.jsm",
+              {}).AndroidLog.d.bind(null, "View"));
 
 // Creates and manages GeckoView modules.
 // A module must extend GeckoViewModule.
@@ -33,7 +33,7 @@ var ModuleManager = {
   add: function(aResource, aType, ...aArgs) {
     this.remove(aType);
     let scope = {};
-    ChromeUtils.import(aResource, scope);
+    Cu.import(aResource, scope);
     this.modules[aType] = new scope[aType](
       aType, window, this.browser, WindowEventDispatcher, ...aArgs
     );

@@ -5,15 +5,15 @@
 
 const {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+const {actionTypes: at, actionCreators: ac} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "ShellService",
+XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
   "resource:///modules/ShellService.jsm");
-ChromeUtils.defineModuleGetter(this, "ProfileAge",
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
   "resource://gre/modules/ProfileAge.jsm");
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 
 // Url to fetch snippets, in the urlFormatter service format.

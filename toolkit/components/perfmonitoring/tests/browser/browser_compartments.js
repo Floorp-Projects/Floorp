@@ -11,9 +11,9 @@
  * and that jank from several iframes are actually charged
  * to the top window.
  */
-ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/ContentTask.jsm", this);
+Cu.import("resource://gre/modules/PerformanceStats.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://testing-common/ContentTask.jsm", this);
 
 
 const URL = "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_compartments.html?test=" + Math.random();
@@ -28,8 +28,8 @@ function frameScript() {
     "use strict";
 
     const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-    ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm");
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/PerformanceStats.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
 
     // Make sure that the stopwatch is now active.
     let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks", "compartments"]);

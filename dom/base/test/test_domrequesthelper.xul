@@ -18,7 +18,7 @@
     const Cc = Components.classes;
     const Cu = Components.utils;
     const Ci = Components.interfaces;
-    ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
+    Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
     let obs = Cc["@mozilla.org/observer-service;1"].
               getService(Ci.nsIObserverService);
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"].

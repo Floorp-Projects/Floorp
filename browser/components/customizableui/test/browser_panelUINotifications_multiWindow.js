@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 /**
  * Tests that when we try to show a notification in a background window, it

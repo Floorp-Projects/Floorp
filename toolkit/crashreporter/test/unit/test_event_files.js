@@ -5,8 +5,8 @@
 
 var {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://testing-common/AppData.jsm", this);
 
 add_task(async function test_setup() {
   do_get_profile();
@@ -23,7 +23,7 @@ add_task(async function test_main_process_crash() {
       function() {
         // TelemetrySession setup will trigger the session annotation
         let scope = {};
-        ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
+        Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
         scope.TelemetryController.testSetup();
         crashType = CrashTestUtils.CRASH_MOZ_CRASH;
         crashReporter.annotateCrashReport("ShutdownProgress", "event-test");

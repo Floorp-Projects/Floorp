@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // enable crash reporting first
 var cwd = Services.dirsvc.get("CurWorkD", Components.interfaces.nsIFile);
@@ -25,6 +25,6 @@ var protocolHandler = Services.io.getProtocolHandler("resource")
   .QueryInterface(Components.interfaces.nsIResProtocolHandler);
 var curDirURI = Services.io.newFileURI(cwd);
 protocolHandler.setSubstitution("test", curDirURI);
-ChromeUtils.import("resource://test/CrashTestUtils.jsm");
+Components.utils.import("resource://test/CrashTestUtils.jsm");
 var crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;
 var shouldDelay = false;

@@ -60,13 +60,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.importGlobalProperties(["fetch"]);
-const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
+const { EventEmitter } = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
 const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 // Use standalone kinto-http module landed in FFx.
-const { KintoHttpClient } = ChromeUtils.import("resource://services-common/kinto-http-client.js");
+const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js");
 
 class Kinto extends _KintoBase2.default {
   constructor(options = {}) {

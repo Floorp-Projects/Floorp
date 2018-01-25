@@ -4,8 +4,8 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // XXX: NS_ERROR_UNKNOWN_HOST is not in Components.results
 const NS_ERROR_UNKNOWN_HOST = 0x804B001E;

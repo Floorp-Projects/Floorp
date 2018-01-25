@@ -4,7 +4,7 @@
 
 // This verifies that add-ons URIs can be mapped to add-on IDs
 //
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
@@ -75,7 +75,7 @@ function run_test_early() {
       // See bug 957089
 
       // First force-initialize the XPIProvider.
-      let s = ChromeUtils.import(
+      let s = Components.utils.import(
         "resource://gre/modules/addons/XPIProvider.jsm", {});
 
       // Make the early API call.

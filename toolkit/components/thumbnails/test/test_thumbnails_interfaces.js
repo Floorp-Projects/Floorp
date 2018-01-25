@@ -3,7 +3,7 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // need profile so that PageThumbsStorageService can resolve the path to the underlying file
 do_get_profile();

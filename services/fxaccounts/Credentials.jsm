@@ -15,10 +15,10 @@ this.EXPORTED_SYMBOLS = ["Credentials"];
 
 const {utils: Cu, interfaces: Ci} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-crypto/utils.js");
+Cu.import("resource://services-common/utils.js");
 
 const PROTOCOL_VERSION = "identity.mozilla.com/picl/v1/";
 const PBKDF2_ROUNDS = 1000;

@@ -6,7 +6,7 @@
 // This test covers MozTrap test 6047
 // bug 880621
 
-var {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", null);
+var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
 
 var tmp = {};
 

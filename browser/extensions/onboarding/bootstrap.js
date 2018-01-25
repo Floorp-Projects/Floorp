@@ -6,7 +6,7 @@
 "use strict";
 
 const {utils: Cu, interfaces: Ci} = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   OnboardingTourType: "resource://onboarding/modules/OnboardingTourType.jsm",
   OnboardingTelemetry: "resource://onboarding/modules/OnboardingTelemetry.jsm",

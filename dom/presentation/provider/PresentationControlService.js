@@ -8,20 +8,20 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 /* globals XPCOMUtils */
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 /* globals Services */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 /* globals NetUtil */
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 /* globals setTimeout, clearTimeout */
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 /* globals ControllerStateMachine */
-ChromeUtils.defineModuleGetter(this, "ControllerStateMachine", // jshint ignore:line
-                               "resource://gre/modules/presentation/ControllerStateMachine.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ControllerStateMachine", // jshint ignore:line
+                                  "resource://gre/modules/presentation/ControllerStateMachine.jsm");
 /* global ReceiverStateMachine */
-ChromeUtils.defineModuleGetter(this, "ReceiverStateMachine", // jshint ignore:line
-                               "resource://gre/modules/presentation/ReceiverStateMachine.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReceiverStateMachine", // jshint ignore:line
+                                  "resource://gre/modules/presentation/ReceiverStateMachine.jsm");
 
 const kProtocolVersion = 1; // need to review isCompatibleServer while fiddling the version number.
 const kLocalCertName = "presentation";

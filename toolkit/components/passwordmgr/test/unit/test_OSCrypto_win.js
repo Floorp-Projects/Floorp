@@ -6,8 +6,8 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(this, "OSCrypto",
-                               "resource://gre/modules/OSCrypto.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
+                                  "resource://gre/modules/OSCrypto.jsm");
 
 var crypto = new OSCrypto();
 

@@ -1,7 +1,7 @@
 "use strict";
 
-let {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+let {AddonManager} = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
+let {ExtensionTestCommon} = Components.utils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
 async function makeAndInstallXPI(id, backgroundScript, loadedURL) {
   let xpi = ExtensionTestCommon.generateXPI({

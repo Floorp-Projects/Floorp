@@ -7,8 +7,8 @@ const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/bloc
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 var ADDONS = [{
   id: "test_bug449027_1@tests.mozilla.org",

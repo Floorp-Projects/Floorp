@@ -1,9 +1,9 @@
 var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://testing-common/AppData.jsm", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 function getEventDir() {
   return OS.Path.join(do_get_tempdir().path, "crash-events");
@@ -274,5 +274,5 @@ function do_triggered_content_crash(trigger, callback) {
 }
 
 // Import binary APIs via js-ctypes.
-ChromeUtils.import("resource://test/CrashTestUtils.jsm");
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+Components.utils.import("resource://test/CrashTestUtils.jsm");
+Components.utils.import("resource://gre/modules/KeyValueParser.jsm");

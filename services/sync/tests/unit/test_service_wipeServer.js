@@ -1,10 +1,10 @@
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://testing-common/services/sync/fakeservices.js");
 
 Svc.Prefs.set("registerEngines", "");
-ChromeUtils.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/service.js");
 
 // configure the identity we use for this test.
 const identityConfig = makeIdentityConfig({username: "johndoe"});

@@ -14,7 +14,7 @@
       addMessageListener("test:check", () => {
         const { utils: Cu } = Components;
 
-        ChromeUtils.import("resource://gre/modules/Services.jsm");
+        Cu.import("resource://gre/modules/Services.jsm");
 
         let sawFind = false;
         let findDialog = Services.wm.getMostRecentWindow("findInPage");

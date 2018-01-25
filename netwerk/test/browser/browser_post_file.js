@@ -2,7 +2,7 @@
  * Tests for bug 1241100: Post to local file should not overwrite the file.
  */
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/osfile.jsm");
 
 async function createTestFile(filename, content) {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, filename);

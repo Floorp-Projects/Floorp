@@ -3,7 +3,7 @@
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);

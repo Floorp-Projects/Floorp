@@ -8,9 +8,9 @@ this.EXPORTED_SYMBOLS = ["CustomizableUI"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
@@ -169,7 +169,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gDebuggingEnabled", kPrefCustomizat
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let scope = {};
-  ChromeUtils.import("resource://gre/modules/Console.jsm", scope);
+  Cu.import("resource://gre/modules/Console.jsm", scope);
   let consoleOptions = {
     maxLogLevel: gDebuggingEnabled ? "all" : "log",
     prefix: "CustomizableUI",
