@@ -1,5 +1,5 @@
 const URL = "ftp://localhost/bug543805/";
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var year = new Date().getFullYear().toString();

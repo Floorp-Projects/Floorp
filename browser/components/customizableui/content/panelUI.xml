@@ -29,7 +29,7 @@
     </content>
     <implementation>
       <constructor><![CDATA[
-        const {PanelMultiView} = ChromeUtils.import("resource:///modules/PanelMultiView.jsm", {});
+        const {PanelMultiView} = Components.utils.import("resource:///modules/PanelMultiView.jsm", {});
         this.instance = new PanelMultiView(this);
       ]]></constructor>
 

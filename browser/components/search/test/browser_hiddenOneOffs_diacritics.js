@@ -8,7 +8,7 @@ const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const diacritic_engine = "Foo \u2661";
 
 var Preferences =
-  ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+  Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
 let searchbar;
 let searchIcon;

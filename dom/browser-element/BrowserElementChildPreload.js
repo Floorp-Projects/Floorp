@@ -13,14 +13,14 @@ debug("loaded");
 var BrowserElementIsReady;
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/BrowserElementPromptService.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ManifestFinder",
-                               "resource://gre/modules/ManifestFinder.jsm");
-ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
-                               "resource://gre/modules/ManifestObtainer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ManifestFinder",
+                                  "resource://gre/modules/ManifestFinder.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ManifestObtainer",
+                                  "resource://gre/modules/ManifestObtainer.jsm");
 
 
 var kLongestReturnedString = 128;
@@ -1330,7 +1330,7 @@ BrowserElementChild.prototype = {
 
   _initFinder: function() {
     if (!this._finder) {
-      let {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm", {});
+      let {Finder} = Components.utils.import("resource://gre/modules/Finder.jsm", {});
       this._finder = new Finder(docShell);
     }
     let listener = {

@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://shield-recipe-client/lib/Utils.jsm");
+Cu.import("resource://shield-recipe-client/lib/Utils.jsm");
 
 add_task(async function testKeyBy() {
   const list = [];

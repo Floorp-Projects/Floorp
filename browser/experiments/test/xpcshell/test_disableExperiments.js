@@ -3,10 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://testing-common/AddonManagerTesting.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Experiments",
+XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
   "resource:///modules/experiments/Experiments.jsm");
 
 const MANIFEST_HANDLER         = "manifests/handler";

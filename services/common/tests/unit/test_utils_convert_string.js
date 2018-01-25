@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/utils.js");
 
 // A wise line of Greek verse, and the utf-8 byte encoding.
 // N.b., Greek begins at utf-8 ce 91

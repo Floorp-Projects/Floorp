@@ -17,10 +17,10 @@ var Cr = Components.results;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Components.classes[nsX509CertDB].getService(Ci.nsIX509CertDB);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js", {});
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+const { CommonUtils } = Cu.import("resource://services-common/utils.js", {});
 
 const FILENAME_OUTPUT = "RootHashes.inc";
 const FILENAME_TRUST_ANCHORS = "KnownRootHashes.json";

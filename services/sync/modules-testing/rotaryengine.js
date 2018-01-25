@@ -13,9 +13,9 @@ this.EXPORTED_SYMBOLS = [
 
 var {utils: Cu} = Components;
 
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/util.js");
 
 /*
  * A fake engine implementation.

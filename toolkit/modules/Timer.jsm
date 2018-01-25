@@ -16,7 +16,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // This gives us >=2^30 unique timer IDs, enough for 1 per ms for 12.4 days.
 var gNextId = 1; // setTimeout and setInterval must return a positive integer

@@ -1,6 +1,6 @@
 "use strict";
 
-const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
 
 // Ensure the pref prevents API use when the extension has the tabHide permission.

@@ -17,7 +17,7 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 function cleanup() {
   SpecialPowers.clearUserPref("privacy.trackingprotection.enabled");

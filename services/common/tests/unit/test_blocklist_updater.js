@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://testing-common/httpd.js");
-const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
+Cu.import("resource://testing-common/httpd.js");
+const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
 
 var server;
 
@@ -56,7 +56,7 @@ add_task(async function test_check_maybeSync() {
 
   let startTime = Date.now();
 
-  let updater = ChromeUtils.import("resource://services-common/blocklist-updater.js", {});
+  let updater = Cu.import("resource://services-common/blocklist-updater.js", {});
 
   // ensure we get the maybeSync call
   // add a test kinto client that will respond to lastModified information

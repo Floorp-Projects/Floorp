@@ -2,11 +2,11 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Making sure after processing incoming bookmarks, they show up in the right order");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 async function serverForFoo(engine) {
   await generateNewKeys(Service.collectionKeys);

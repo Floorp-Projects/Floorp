@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 requestLongerTimeout(2);
 
@@ -14,8 +14,8 @@ var tempScope = {};
 Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 var Sanitizer = tempScope.Sanitizer;
 
-var FormHistory = (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
-var Downloads = (ChromeUtils.import("resource://gre/modules/Downloads.jsm", {})).Downloads;
+var FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
+var Downloads = (Components.utils.import("resource://gre/modules/Downloads.jsm", {})).Downloads;
 
 function promiseFormHistoryRemoved() {
   return new Promise(resolve => {

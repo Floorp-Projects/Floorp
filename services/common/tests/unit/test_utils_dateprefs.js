@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://services-common/utils.js");
 
 
 var prefs = new Preferences("servicescommon.tests.");

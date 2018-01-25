@@ -8,16 +8,16 @@ this.EXPORTED_SYMBOLS = ["GeckoViewRemoteDebugger"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/GeckoViewModule.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/GeckoViewModule.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "dump", () =>
-  ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {})
+  Cu.import("resource://gre/modules/AndroidLog.jsm", {})
     .AndroidLog.d.bind(null, "ViewRemoteDebugger"));
 
 XPCOMUtils.defineLazyGetter(this, "DebuggerServer", () => {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const { DebuggerServer } = require("devtools/server/main");
   return DebuggerServer;
 });

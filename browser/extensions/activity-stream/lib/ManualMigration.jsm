@@ -4,16 +4,16 @@
 "use strict";
 
 const {utils: Cu} = Components;
-const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const MIGRATION_ENDED_EVENT = "Migration:Ended";
 const MS_PER_DAY = 86400000;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "MigrationUtils", "resource:///modules/MigrationUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ProfileAge", "resource://gre/modules/ProfileAge.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MigrationUtils", "resource:///modules/MigrationUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge", "resource://gre/modules/ProfileAge.jsm");
 
 this.ManualMigration = class ManualMigration {
   constructor() {

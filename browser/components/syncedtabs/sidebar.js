@@ -6,12 +6,12 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
-ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-sync/SyncedTabs.jsm");
+Cu.import("resource:///modules/syncedtabs/SyncedTabsDeckComponent.js");
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+                                  "resource://gre/modules/FxAccounts.jsm");
 
 var syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, fxAccounts});
 

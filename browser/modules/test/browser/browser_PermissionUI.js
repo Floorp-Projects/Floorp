@@ -6,9 +6,9 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Integration.jsm", this);
-ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+Cu.import("resource://gre/modules/Integration.jsm", this);
+Cu.import("resource:///modules/PermissionUI.jsm", this);
+Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 /**
  * Tests the PermissionPromptForRequest prototype to ensure that a prompt

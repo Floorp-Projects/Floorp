@@ -6,17 +6,17 @@
 this.EXPORTED_SYMBOLS = ["Screenshots"];
 
 const {utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BackgroundPageThumbs",
+XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
   "resource://gre/modules/BackgroundPageThumbs.jsm");
-ChromeUtils.defineModuleGetter(this, "PageThumbs",
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
     "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "MIMEService",
   "@mozilla.org/mime;1", "nsIMIMEService");
-ChromeUtils.defineModuleGetter(this, "OS",
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
 const GREY_10 = "#F9F9FA";

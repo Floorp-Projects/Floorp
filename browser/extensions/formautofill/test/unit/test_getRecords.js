@@ -4,9 +4,9 @@
 
 "use strict";
 
-let {FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {});
-ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
-ChromeUtils.import("resource://formautofill/ProfileStorage.jsm");
+let {FormAutofillParent} = Cu.import("resource://formautofill/FormAutofillParent.jsm", {});
+Cu.import("resource://formautofill/MasterPassword.jsm");
+Cu.import("resource://formautofill/ProfileStorage.jsm");
 
 const TEST_ADDRESS_1 = {
   "given-name": "Timothy",

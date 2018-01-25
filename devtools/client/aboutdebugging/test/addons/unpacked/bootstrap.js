@@ -6,7 +6,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // This function is called from the webconsole test:
 // browser_addons_debug_bootstrapped.js

@@ -18,7 +18,7 @@ const FONT_EXTENSIONS = [ "otf", "ttf", "ttc", "otc", "dfont" ];
 // if the file was successfully created, otherwise false. Include imports
 // so this can be safely serialized and run remotely by ContentTask.spawn.
 function createFile(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   let encoder = new TextEncoder();
   let array = encoder.encode("TEST FILE DUMMY DATA");
   return OS.File.writeAtomic(path, array).then(function(value) {
@@ -32,7 +32,7 @@ function createFile(path) {
 // if the symlink was successfully created, otherwise false. Include imports
 // so this can be safely serialized and run remotely by ContentTask.spawn.
 function createSymlink(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   // source location for the symlink can be anything
   return OS.File.unixSymLink("/Users", path).then(function(value) {
     return true;
@@ -45,7 +45,7 @@ function createSymlink(path) {
 // if the file was successfully deleted, otherwise false. Include imports
 // so this can be safely serialized and run remotely by ContentTask.spawn.
 function deleteFile(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   return OS.File.remove(path, {ignoreAbsent: false}).then(function(value) {
     return true;
   }).catch(function(err) {
@@ -58,7 +58,7 @@ function deleteFile(path) {
 // resolves with an object where .ok indicates success or failure and
 // .numEntries is the number of directory entries found.
 function readDir(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   let numEntries = 0;
   let iterator = new OS.File.DirectoryIterator(path);
   let promise = iterator.forEach(function (dirEntry) {
@@ -76,7 +76,7 @@ function readDir(path) {
 // reading is completed. Returned object has boolean .ok to indicate
 // success or failure.
 function readFile(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   let promise = OS.File.read(path).then(function (binaryData) {
     return {ok: true};
   }).catch(function (error) {
@@ -89,7 +89,7 @@ function readFile(path) {
 // stat is successful. Returned object has boolean .ok to indicate
 // success or failure.
 function statPath(path) {
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   let promise = OS.File.stat(path).then(function (stat) {
     return {ok: true};
   }).catch(function (error) {

@@ -7,11 +7,11 @@ this.EXPORTED_SYMBOLS = ["Finder", "GetClipboardSearchString"];
 
 const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Geometry.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Geometry.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "TextToSubURIService",
@@ -49,7 +49,7 @@ Finder.prototype = {
   get iterator() {
     if (this._iterator)
       return this._iterator;
-    this._iterator = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
+    this._iterator = Cu.import("resource://gre/modules/FinderIterator.jsm", null).FinderIterator;
     return this._iterator;
   },
 
@@ -166,7 +166,7 @@ Finder.prototype = {
     if (this._highlighter)
       return this._highlighter;
 
-    const {FinderHighlighter} = ChromeUtils.import("resource://gre/modules/FinderHighlighter.jsm", {});
+    const {FinderHighlighter} = Cu.import("resource://gre/modules/FinderHighlighter.jsm", {});
     return this._highlighter = new FinderHighlighter(this);
   },
 

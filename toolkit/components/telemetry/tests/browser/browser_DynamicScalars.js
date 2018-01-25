@@ -1,8 +1,8 @@
 "use strict";
 
-const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
-const { TelemetryController } = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", {});
-const { TelemetryUtils } = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", {});
+const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+const { TelemetryController } = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
+const { TelemetryUtils } = Cu.import("resource://gre/modules/TelemetryUtils.jsm", {});
 
 const CONTENT_CREATED = "ipc:content-created";
 

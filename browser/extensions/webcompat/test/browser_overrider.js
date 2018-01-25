@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UAOverrider", "chrome://webcompat/content/lib/ua_overrider.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UAOverrider", "chrome://webcompat/content/lib/ua_overrider.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "IOService", "@mozilla.org/network/io-service;1", "nsIIOService");
 
 function getnsIURI(uri) {

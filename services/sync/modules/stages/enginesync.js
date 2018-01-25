@@ -10,13 +10,13 @@ this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
 var {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.defineModuleGetter(this, "Doctor",
-                               "resource://services-sync/doctor.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/async.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Doctor",
+                                  "resource://services-sync/doctor.js");
 
 /**
  * Perform synchronization of engines.

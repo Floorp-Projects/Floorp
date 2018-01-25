@@ -10,7 +10,7 @@ function test() {
   CustomizableUI.addWidgetToArea("feed-button", CustomizableUI.AREA_NAVBAR);
 
   // Check what version we're on:
-  let CustomizableUIBSPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
+  let CustomizableUIBSPass = Cu.import("resource:///modules/CustomizableUI.jsm", {});
 
   let oldState = CustomizableUIBSPass.gSavedState;
   registerCleanupFunction(() => CustomizableUIBSPass.gSavedState = oldState );

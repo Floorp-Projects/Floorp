@@ -18,23 +18,23 @@ const PBKDF2_KEY_BYTES = 16;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/clients.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/policies.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/stages/enginesync.js");
-ChromeUtils.import("resource://services-sync/stages/declined.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/policies.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/stages/enginesync.js");
+Cu.import("resource://services-sync/stages/declined.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/telemetry.js");
+Cu.import("resource://services-sync/util.js");
 
 function getEngineModules() {
   let result = {
@@ -391,7 +391,7 @@ Sync11Service.prototype = {
       }
       let ns = {};
       try {
-        ChromeUtils.import(module, ns);
+        Cu.import(module, ns);
         if (!(symbol in ns)) {
           this._log.warn("Could not find exported engine instance: " + symbol);
           continue;

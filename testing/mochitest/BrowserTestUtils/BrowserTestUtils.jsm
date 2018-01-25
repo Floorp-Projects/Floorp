@@ -17,18 +17,18 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
 
 Cc["@mozilla.org/globalmessagemanager;1"]
   .getService(Ci.nsIMessageListenerManager)
   .loadFrameScript(
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js", true);
 
-ChromeUtils.defineModuleGetter(this, "E10SUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
   "resource://gre/modules/E10SUtils.jsm");
 
 const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
@@ -1157,7 +1157,7 @@ this.BrowserTestUtils = {
     let extra = {};
     let KeyValueParser = {};
     if (AppConstants.MOZ_CRASHREPORTER) {
-      ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm", KeyValueParser);
+      Cu.import("resource://gre/modules/KeyValueParser.jsm", KeyValueParser);
     }
 
     if (!browser.isRemoteBrowser) {
@@ -1198,7 +1198,7 @@ this.BrowserTestUtils = {
     // frame script.
     let frame_script = () => {
       const Cu = Components.utils;
-      ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+      Cu.import("resource://gre/modules/ctypes.jsm");
 
       let dies = function() {
         privateNoteIntentionalCrash();

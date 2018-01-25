@@ -40,7 +40,7 @@ function run_test() {
 
              // TelemetrySession setup will trigger the session annotation
              let scope = {};
-             ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
+             Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
              scope.TelemetryController.testSetup();
            },
            function(mdump, extra) {
@@ -69,8 +69,8 @@ function run_test() {
 
     // TelemetrySession setup will trigger the session annotation
     let scope = {};
-    ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
-    ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetrySend.jsm", scope);
     scope.TelemetrySend.setTestModeEnabled(true);
     scope.TelemetryController.testSetup();
   }, function(mdump, extra) {
@@ -92,8 +92,8 @@ function run_test() {
 
     // TelemetrySession setup will trigger the session annotation
     let scope = {};
-    ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
-    ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetrySend.jsm", scope);
     scope.TelemetrySend.setTestModeEnabled(true);
     scope.TelemetryController.testSetup();
   }, function(mdump, extra) {
@@ -111,8 +111,8 @@ function run_test() {
 
     // TelemetrySession setup will trigger the session annotation
     let scope = {};
-    ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", scope);
-    ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetryController.jsm", scope);
+    Components.utils.import("resource://gre/modules/TelemetrySend.jsm", scope);
     scope.TelemetrySend.setTestModeEnabled(true);
     scope.TelemetryController.testSetup();
   }, function(mdump, extra) {

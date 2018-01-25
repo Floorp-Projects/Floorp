@@ -10,14 +10,14 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const REGIONS_BUNDLE_URI = "chrome://global/locale/regionNames.properties";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "profileStorage",
-                               "resource://formautofill/ProfileStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "MasterPassword",
-                               "resource://formautofill/MasterPassword.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "profileStorage",
+                                  "resource://formautofill/ProfileStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
+                                  "resource://formautofill/MasterPassword.jsm");
 
 class EditDialog {
   constructor(subStorageName, elements, record) {

@@ -4,7 +4,7 @@ function bar(v) { return baz(v + 1); } // line 3
 function baz(v) { throw new Error(v + 1); } // line 4
 
 print("Make sure lazy constructor calling/assignment works");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Components.utils.import("resource://gre/modules/Log.jsm");
 
 function run_test() {
   print("Make sure functions, arguments, files are pretty printed in the trace");

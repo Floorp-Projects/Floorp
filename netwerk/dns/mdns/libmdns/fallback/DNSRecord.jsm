@@ -10,8 +10,8 @@ this.EXPORTED_SYMBOLS = ['DNSRecord'];
 
 const { utils: Cu } = Components;
 
-ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
-ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');
+Cu.import('resource://gre/modules/DataWriter.jsm');
+Cu.import('resource://gre/modules/DNSTypes.jsm');
 
 class DNSRecord {
   constructor(properties = {}) {

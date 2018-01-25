@@ -1,10 +1,10 @@
 "use strict";
 
 const Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NewTabPrefsProvider",
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
     "resource:///modules/NewTabPrefsProvider.jsm");
 
 add_task(async function test_observe() {

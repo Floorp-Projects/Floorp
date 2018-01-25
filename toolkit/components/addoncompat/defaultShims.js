@@ -7,7 +7,7 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Using multiprocessShims is optional, and if an add-on is e10s compatible it should not

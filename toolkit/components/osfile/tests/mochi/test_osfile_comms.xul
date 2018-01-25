@@ -20,8 +20,8 @@ let worker;
 
 let test = function test() {
   SimpleTest.info("test_osfile_comms.xul: Starting test");
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
   worker = new ChromeWorker("worker_test_osfile_comms.js");
   SimpleTest.waitForExplicitFinish();
   try {

@@ -1,8 +1,8 @@
 var Cu = Components.utils;
 const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
 
-ChromeUtils.import("resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
+Cu.import("resource://gre/modules/accessibility/Utils.jsm");
+Cu.import("resource://gre/modules/accessibility/OutputGenerator.jsm", this);
 
 /**
  * Test context output generation.

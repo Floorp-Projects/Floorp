@@ -5,20 +5,20 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Utils",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Logger",
+XPCOMUtils.defineLazyModuleGetter(this, "Logger",
   "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Roles",
+XPCOMUtils.defineLazyModuleGetter(this, "Roles",
   "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "TraversalRules",
+XPCOMUtils.defineLazyModuleGetter(this, "TraversalRules",
   "resource://gre/modules/accessibility/Traversal.jsm");
-ChromeUtils.defineModuleGetter(this, "TraversalHelper",
+XPCOMUtils.defineLazyModuleGetter(this, "TraversalHelper",
   "resource://gre/modules/accessibility/Traversal.jsm");
-ChromeUtils.defineModuleGetter(this, "Presentation",
+XPCOMUtils.defineLazyModuleGetter(this, "Presentation",
   "resource://gre/modules/accessibility/Presentation.jsm");
 
 this.EXPORTED_SYMBOLS = ["ContentControl"];

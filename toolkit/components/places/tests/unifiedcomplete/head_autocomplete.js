@@ -9,8 +9,8 @@ var Cu = Components.utils;
 
 const FRECENCY_DEFAULT = 10000;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
 
 // Import common head.
 {

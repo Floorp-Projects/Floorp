@@ -3,7 +3,7 @@
 const {
   getCryptoParamsFromHeaders,
   PushCrypto,
-} = ChromeUtils.import('resource://gre/modules/PushCrypto.jsm', {});
+} = Cu.import('resource://gre/modules/PushCrypto.jsm', {});
 
 const REJECT_PADDING = { padding: 'reject' };
 

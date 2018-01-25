@@ -16,8 +16,8 @@ this.EXPORTED_SYMBOLS = [
 
 const { interfaces: Ci, classes: Cc, results: Cr, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function ContentPref(domain, name, value) {
   this.domain = domain;

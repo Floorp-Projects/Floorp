@@ -1,6 +1,6 @@
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://services-sync/engines/passwords.js");
-ChromeUtils.import("resource://services-sync/service.js");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://services-sync/engines/passwords.js");
+Cu.import("resource://services-sync/service.js");
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");

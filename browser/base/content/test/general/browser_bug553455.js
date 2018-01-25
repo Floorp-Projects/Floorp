@@ -9,7 +9,7 @@ const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 var rootDir = getRootDirectory(gTestPath);
 var rootPath = rootDir.split("/");

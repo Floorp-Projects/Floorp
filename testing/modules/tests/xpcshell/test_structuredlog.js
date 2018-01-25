@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  ChromeUtils.import("resource://testing-common/StructuredLog.jsm");
+  Components.utils.import("resource://testing-common/StructuredLog.jsm");
 
   let testBuffer = [];
 

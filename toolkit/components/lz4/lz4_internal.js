@@ -12,7 +12,7 @@ var SharedAll;
 if (typeof Components != "undefined") {
   let Cu = Components.utils;
   SharedAll = {};
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
 
   this.EXPORTED_SYMBOLS = [
     "Primitives"

@@ -10,16 +10,16 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 const STYLESHEET_URI = "chrome://formautofill/content/formautofill.css";
 const CACHED_STYLESHEETS = new WeakMap();
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "formAutofillParent",
-                               "resource://formautofill/FormAutofillParent.jsm");
-ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
-                               "resource://formautofill/FormAutofillUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "formAutofillParent",
+                                  "resource://formautofill/FormAutofillParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillUtils",
+                                  "resource://formautofill/FormAutofillUtils.jsm");
 
 function insertStyleSheet(domWindow, url) {
   let doc = domWindow.document;
@@ -115,7 +115,7 @@ function startup(data) {
 
   formAutofillParent.init().catch(Cu.reportError);
   Services.ppmm.loadProcessScript("data:,new " + function() {
-    ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
+    Components.utils.import("resource://formautofill/FormAutofillContent.jsm");
   }, true);
   Services.mm.loadFrameScript("chrome://formautofill/content/FormAutofillFrameScript.js", true);
 }

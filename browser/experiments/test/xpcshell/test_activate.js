@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource:///modules/experiments/Experiments.jsm");
 
 const SEC_IN_ONE_DAY  = 24 * 60 * 60;
 const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;

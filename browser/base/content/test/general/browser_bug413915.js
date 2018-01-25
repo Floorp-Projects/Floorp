@@ -1,4 +1,4 @@
-ChromeUtils.defineModuleGetter(this, "Feeds",
+XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
 
 function test() {

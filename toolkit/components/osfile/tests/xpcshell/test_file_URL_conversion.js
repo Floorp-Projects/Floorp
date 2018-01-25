@@ -3,9 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/osfile.jsm");
-  ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/osfile.jsm");
+  Components.utils.import("resource://gre/modules/FileUtils.jsm");
 
   let isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
 

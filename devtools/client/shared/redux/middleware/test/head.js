@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const flags = require("devtools/shared/flags");
 
 flags.testing = true;

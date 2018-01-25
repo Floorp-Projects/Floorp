@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://services-crypto/WeaveCrypto.js");
+Cu.import("resource://services-crypto/WeaveCrypto.js");
 Cu.importGlobalProperties(["crypto"]);
 
 var cryptoSvc = new WeaveCrypto();
@@ -38,7 +38,7 @@ add_task(async function test_key_memoization() {
 
 // Just verify that it gets populated with the correct bytes.
 add_task(async function test_makeUint8Array() {
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
 
   let item1 = cryptoSvc.makeUint8Array("abcdefghi", false);
   Assert.ok(item1);

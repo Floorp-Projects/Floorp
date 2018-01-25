@@ -2,9 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Rewrite place: URIs.");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 let engine = new BookmarksEngine(Service);
 let store = engine._store;

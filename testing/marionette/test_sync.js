@@ -4,7 +4,7 @@
 
 const {utils: Cu} = Components;
 
-const {PollPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 const DEFAULT_TIMEOUT = 2000;
 

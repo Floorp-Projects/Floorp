@@ -2,8 +2,8 @@
 
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -30,7 +30,7 @@ var calendarNotification =
 
 // Helper to start the NotificationDB
 function startNotificationDB() {
-  ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
+  Cu.import("resource://gre/modules/NotificationDB.jsm");
 }
 
 // Helper function to add a listener, send message and treat the reply
