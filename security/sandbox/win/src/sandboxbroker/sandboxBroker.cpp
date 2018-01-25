@@ -7,7 +7,9 @@
 #include "sandboxBroker.h"
 
 #include <string>
+#if defined(NIGHTLY_BUILD)
 #include <vector>
+#endif
 
 #include "base/win/windows_version.h"
 #include "mozilla/Assertions.h"
@@ -28,6 +30,8 @@
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
+
+#if defined(NIGHTLY_BUILD)
 
 // This list of DLLs have been found to cause instability in sandboxed child
 // processes and so they will be unloaded if they attempt to load.
@@ -50,6 +54,8 @@ const std::vector<std::wstring> kDllsToUnload = {
   // Comodo Internet Security (bug 1400637)
   L"guard32.dll",
 };
+
+#endif
 
 namespace mozilla
 {
@@ -252,9 +258,11 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                      sandbox::TargetPolicy::FILES_ALLOW_ANY, logFileName);
   }
 
+  sandbox::ResultCode result;
+#if defined(NIGHTLY_BUILD)
+
   // Add DLLs to the policy that have been found to cause instability with the
   // sandbox, so that they will be unloaded when they attempt to load.
-  sandbox::ResultCode result;
   for (std::wstring dllToUnload : kDllsToUnload) {
     // Similar to Chromium, we only add a DLL if it is loaded in this process.
     if (::GetModuleHandleW(dllToUnload.c_str())) {
@@ -269,6 +277,8 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   result = mPolicy->AddDllToUnload(L"k7pswsen.dll");
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "AddDllToUnload should never fail, what happened?");
+
+#endif
 
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo = {0};
