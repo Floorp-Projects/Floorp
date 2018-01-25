@@ -1959,6 +1959,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void spectreMaskIndex(Register index, Register length, Register output);
     void spectreMaskIndex(Register index, const Address& length, Register output);
 
+    // The length must be a power of two.
+    void boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure);
+
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {
         Label done;
