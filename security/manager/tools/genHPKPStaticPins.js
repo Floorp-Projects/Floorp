@@ -21,9 +21,9 @@ if (arguments.length != 3) {
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);

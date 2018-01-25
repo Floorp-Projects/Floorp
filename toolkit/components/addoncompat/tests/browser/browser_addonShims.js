@@ -1,5 +1,5 @@
-var {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+var {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+var {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const ADDON_URL = "http://example.com/browser/toolkit/components/addoncompat/tests/browser/addon.xpi";
 const COMPAT_ADDON_URL = "http://example.com/browser/toolkit/components/addoncompat/tests/browser/compat-addon.xpi";

@@ -2,7 +2,7 @@ const CLASS_ID = Components.ID("{12345678-1234-1234-1234-123456789abc}");
 const CONTRACT_ID = "@mozilla.org/test-parameter-source;1";
 
 // Get and create the HTTP server.
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;

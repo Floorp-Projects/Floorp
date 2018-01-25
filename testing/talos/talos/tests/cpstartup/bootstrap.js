@@ -4,7 +4,7 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 

@@ -29,22 +29,22 @@ const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
 const MAX_STRING_PREF_LENGTH = 128;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NetworkManager",
+XPCOMUtils.defineLazyModuleGetter(this, "NetworkManager",
   "resource://pdf.js/PdfJsNetwork.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PdfJsTelemetry",
+XPCOMUtils.defineLazyModuleGetter(this, "PdfJsTelemetry",
   "resource://pdf.js/PdfJsTelemetry.jsm");
 
-ChromeUtils.defineModuleGetter(this, "PdfjsContentUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PdfjsContentUtils",
   "resource://pdf.js/PdfjsContentUtils.jsm");
 
 var Svc = {};

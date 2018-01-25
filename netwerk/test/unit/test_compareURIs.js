@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 function do_info(text, stack) {
   if (!stack)

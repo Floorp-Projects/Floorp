@@ -18,9 +18,9 @@
 <script class="testbody" type="text/javascript">
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 /* import-globals-from classifierHelper.js */
 
 var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)

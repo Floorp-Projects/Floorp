@@ -7,7 +7,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that reading non existant inner jars results in the right error
 

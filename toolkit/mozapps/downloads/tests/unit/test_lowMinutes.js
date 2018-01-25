@@ -7,7 +7,7 @@
  * and seconds; but continue to show only minutes when we have plenty.
  */
 
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 
 /**
  * Print some debug message to the console. All arguments will be printed,

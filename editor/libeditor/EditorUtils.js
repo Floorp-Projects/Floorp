@@ -6,8 +6,8 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const EDITORUTILS_CID = Components.ID('{12e63991-86ac-4dff-bb1a-703495d67d17}');
 

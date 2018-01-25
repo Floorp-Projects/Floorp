@@ -3,7 +3,7 @@
  */
 
 // This verifies that bootstrap.js has the expected globals defined
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 

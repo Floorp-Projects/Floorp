@@ -10,34 +10,34 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 try {
   // AddonManager.jsm doesn't allow itself to be imported in the child
   // process. We're used in the child process (for now), so guard against
   // this.
-  ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+  Components.utils.import("resource://gre/modules/AddonManager.jsm");
   /* globals AddonManagerPrivate*/
 } catch (e) {
 }
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
-                               "resource://gre/modules/UpdateUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "ServiceRequest",
-                               "resource://gre/modules/ServiceRequest.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
+                                  "resource://gre/modules/ServiceRequest.jsm");
 
 // The blocklist updater is the new system in charge of fetching remote data
 // securely and efficiently. It will replace the current XML-based system.
 // See Bug 1257565 and Bug 1252456.
 const BlocklistUpdater = {};
-ChromeUtils.defineModuleGetter(BlocklistUpdater, "checkVersions",
-                               "resource://services-common/blocklist-updater.js");
+XPCOMUtils.defineLazyModuleGetter(BlocklistUpdater, "checkVersions",
+                                  "resource://services-common/blocklist-updater.js");
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const KEY_PROFILEDIR                  = "ProfD";
@@ -141,7 +141,7 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function() {
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
   let temp = { };
-  ChromeUtils.import("resource://gre/modules/CertUtils.jsm", temp);
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
   return temp;
 });
 

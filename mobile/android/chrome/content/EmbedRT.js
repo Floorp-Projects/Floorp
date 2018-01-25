@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ConsoleAPI",
-                               "resource://gre/modules/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
+                                  "resource://gre/modules/Console.jsm");
 
 /*
  * Collection of methods and features specific to using a GeckoView instance.

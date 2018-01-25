@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {OS: {File, Path, Constants}} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+var {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
 
 add_task(async function testFileError_with_writeAtomic() {
   let DEFAULT_CONTENTS = "default contents" + Math.random();

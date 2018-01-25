@@ -18,7 +18,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   // Load a custom sjs script that echos our "User-Agent" header back at us
   const TestURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/desktopmode_user_agent.sjs");

@@ -12,15 +12,15 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [];
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 const FLASH_MIME_TYPE        = "application/x-shockwave-flash";
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.plugins";
 
 // Create a new logger for use by the Addons Plugin Provider

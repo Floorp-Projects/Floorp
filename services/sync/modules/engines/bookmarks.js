@@ -10,25 +10,25 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/util.js");
 
-ChromeUtils.defineModuleGetter(this, "BookmarkValidator",
-                               "resource://services-sync/bookmark_validator.js");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
+                                  "resource://services-sync/bookmark_validator.js");
 XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
   return Services.strings.createBundle("chrome://places/locale/places.properties");
 });
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
-                               "resource://gre/modules/PlacesSyncUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesBackups",
-                               "resource://gre/modules/PlacesBackups.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
+                                  "resource://gre/modules/PlacesSyncUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
+                                  "resource://gre/modules/PlacesBackups.jsm");
 
 const ANNOS_TO_TRACK = [PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
                         PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,

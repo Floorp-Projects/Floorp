@@ -5,7 +5,7 @@
 // Checks that we rebuild something sensible from a corrupt database
 
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 // Create and configure the HTTP server.
 var testserver = new HttpServer();
 testserver.start(-1);

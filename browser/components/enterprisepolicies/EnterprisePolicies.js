@@ -7,9 +7,9 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -33,7 +33,7 @@ const PREF_ENABLED            = "browser.policies.enabled";
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
     prefix: "Enterprise Policies",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
@@ -100,7 +100,7 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _activatePolicies() {
-    let { schema } = ChromeUtils.import("resource:///modules/policies/schema.jsm", {});
+    let { schema } = Cu.import("resource:///modules/policies/schema.jsm", {});
     let json = this._file.json;
 
     for (let policyName of Object.keys(json.policies)) {
@@ -173,8 +173,8 @@ EnterprisePoliciesManager.prototype = {
     delete Services.ppmm.initialProcessData.policies;
     Services.ppmm.broadcastAsyncMessage("EnterprisePolicies:Restart", null);
 
-    let { PromiseUtils } = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm",
-                                              {});
+    let { PromiseUtils } = Cu.import("resource://gre/modules/PromiseUtils.jsm",
+                                     {});
 
     // Simulate the startup process. This step-by-step is a bit ugly but it
     // tries to emulate the same behavior as of a normal startup.

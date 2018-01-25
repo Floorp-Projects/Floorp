@@ -5,10 +5,10 @@
 "use strict";
 
 const Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Async",
-                               "resource://services-common/async.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Async",
+                                  "resource://services-common/async.js");
 
 
 this.EXPORTED_SYMBOLS = ["CollectionValidator", "CollectionProblemData"];

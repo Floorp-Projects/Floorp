@@ -13,16 +13,16 @@ this.EXPORTED_SYMBOLS = [
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/JSONFile.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/JSONFile.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",

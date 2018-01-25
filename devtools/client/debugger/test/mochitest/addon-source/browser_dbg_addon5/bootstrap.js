@@ -4,13 +4,13 @@
 var { interfaces: Ci, classes: Cc } = Components;
 
 function startup(aParams, aReason) {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
   let res = Services.io.getProtocolHandler("resource")
                        .QueryInterface(Ci.nsIResProtocolHandler);
   res.setSubstitution("browser_dbg_addon5", aParams.resourceURI);
 
   // Load a JS module
-  ChromeUtils.import("resource://browser_dbg_addon5/test.jsm");
+  Components.utils.import("resource://browser_dbg_addon5/test.jsm");
 }
 
 function shutdown(aParams, aReason) {

@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["AppMenu"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 this.AppMenu = {
 

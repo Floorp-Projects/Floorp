@@ -8,7 +8,7 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function RemoteController(browser) {
   this._browser = browser;

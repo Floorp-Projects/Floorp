@@ -4,15 +4,15 @@
 
 "use strict";
 
-const {interfaces: Ci} = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
-ChromeUtils.import("chrome://marionette/content/capture.js");
+Cu.import("chrome://marionette/content/assert.js");
+Cu.import("chrome://marionette/content/capture.js");
 const {InvalidArgumentError} =
-    ChromeUtils.import("chrome://marionette/content/error.js", {});
+    Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["reftest"];
 

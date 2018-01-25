@@ -1,6 +1,6 @@
 "use strict";
 
-const {Utils} = ChromeUtils.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
 const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
 
 const MAX_CONCURRENT_TABS = "browser.engagement.max_concurrent_tab_count";
@@ -70,7 +70,7 @@ add_task(async function test_sessionRestore() {
 
   // Save the current session.
   let SessionStore =
-    ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm", {}).SessionStore;
+    Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {}).SessionStore;
 
   // Load the custom state and wait for SSTabRestored, as we want to make sure
   // that the URI counting code was hit.

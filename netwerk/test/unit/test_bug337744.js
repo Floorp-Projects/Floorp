@@ -1,8 +1,8 @@
 /* verify that certain invalid URIs are not parsed by the resource
    protocol handler */
 
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const specs = [
   "resource://res-test//",

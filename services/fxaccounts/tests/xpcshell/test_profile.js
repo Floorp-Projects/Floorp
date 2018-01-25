@@ -3,10 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsProfile.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/FxAccountsProfileClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsProfile.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 const URL_STRING = "https://example.com";
 Services.prefs.setCharPref("identity.fxaccounts.settings.uri", "https://example.com/settings");

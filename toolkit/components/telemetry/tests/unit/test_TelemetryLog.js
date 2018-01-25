@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/TelemetryLog.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
+Cu.import("resource://gre/modules/TelemetryLog.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 const TEST_PREFIX = "TEST-";
 const TEST_REGEX = new RegExp("^" + TEST_PREFIX);

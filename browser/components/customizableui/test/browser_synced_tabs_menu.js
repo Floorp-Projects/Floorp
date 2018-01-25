@@ -6,10 +6,10 @@
 
 requestLongerTimeout(2);
 
-let {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
-let {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
+let {SyncedTabs} = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
+let {UIState} = Cu.import("resource://services-sync/UIState.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 
 // These are available on the widget implementation, but it seems impossible
 // to grab that impl at runtime.

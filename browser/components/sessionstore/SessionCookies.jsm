@@ -9,12 +9,12 @@ this.EXPORTED_SYMBOLS = ["SessionCookies"];
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "Utils",
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
   "resource://gre/modules/sessionstore/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 
 const MAX_EXPIRY = Number.MAX_SAFE_INTEGER;

@@ -5,7 +5,7 @@
 // Note: normally we would just feature detect Components.utils here, but
 // unfortunately that throws an ugly warning in content if we do.
 if (typeof Window === "undefined" && typeof Components !== "undefined" && Components.utils) {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
 }
 
 let usablePerfObj;

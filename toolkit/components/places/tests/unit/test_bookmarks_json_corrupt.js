@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/BookmarkJSONUtils.jsm");
+Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
 // Exported bookmarks file pointer.
 var bookmarksExportedFile;

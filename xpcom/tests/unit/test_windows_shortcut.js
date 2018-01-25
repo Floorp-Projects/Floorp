@@ -7,7 +7,7 @@
 
 const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   // This test makes sense only on Windows, so skip it on other platforms

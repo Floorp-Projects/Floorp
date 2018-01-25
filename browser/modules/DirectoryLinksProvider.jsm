@@ -9,14 +9,14 @@ this.EXPORTED_SYMBOLS = ["DirectoryLinksProvider"];
 const Cu = Components.utils;
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "OS",
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();

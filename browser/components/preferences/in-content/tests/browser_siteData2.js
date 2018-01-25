@@ -1,5 +1,5 @@
 "use strict";
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
+const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
 /* eslint-disable mozilla/no-cpows-in-tests */

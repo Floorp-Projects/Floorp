@@ -11,16 +11,16 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "SelectContentHelper",
+XPCOMUtils.defineLazyModuleGetter(this, "SelectContentHelper",
   "resource://gre/modules/SelectContentHelper.jsm");
-ChromeUtils.defineModuleGetter(this, "FindContent",
+XPCOMUtils.defineLazyModuleGetter(this, "FindContent",
   "resource://gre/modules/FindContent.jsm");
 
 var global = this;
@@ -28,7 +28,7 @@ var global = this;
 
 // Lazily load the finder code
 addMessageListener("Finder:Initialize", function() {
-  let {RemoteFinderListener} = ChromeUtils.import("resource://gre/modules/RemoteFinder.jsm", {});
+  let {RemoteFinderListener} = Cu.import("resource://gre/modules/RemoteFinder.jsm", {});
   new RemoteFinderListener(global);
 });
 
@@ -489,7 +489,7 @@ PopupBlocking.init();
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   // Set up console.* for frame scripts.
-  let Console = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  let Console = Components.utils.import("resource://gre/modules/Console.jsm", {});
   return new Console.ConsoleAPI();
 });
 

@@ -8,7 +8,7 @@ var Cc = Components.classes;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function loadUtilsScript() {
   /* import-globals-from ../../contentAreaUtils.js */

@@ -6,7 +6,7 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 // Functions that look like mochitest functions but forward to the
 // browser process.

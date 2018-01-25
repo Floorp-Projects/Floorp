@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
   Services.prefs.getBoolPref("devtools.debugger.ui.variables-sorting-enabled")
 );
 
-ChromeUtils.defineModuleGetter(this, "console",
+XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
 
 const MAX_LONG_STRING_LENGTH = 200000;

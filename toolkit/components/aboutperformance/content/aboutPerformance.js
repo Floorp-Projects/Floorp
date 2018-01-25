@@ -8,11 +8,11 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-const { PerformanceStats } = ChromeUtils.import("resource://gre/modules/PerformanceStats.jsm", {});
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { ObjectUtils } = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", {});
-const { Memory } = ChromeUtils.import("resource://gre/modules/Memory.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
+const { PerformanceStats } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { ObjectUtils } = Cu.import("resource://gre/modules/ObjectUtils.jsm", {});
+const { Memory } = Cu.import("resource://gre/modules/Memory.jsm", {});
+const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 // about:performance observes notifications on this topic.
 // if a notification is sent, this causes the page to be updated immediately,

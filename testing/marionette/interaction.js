@@ -6,20 +6,20 @@
 
 const {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
-ChromeUtils.import("chrome://marionette/content/accessibility.js");
-ChromeUtils.import("chrome://marionette/content/atom.js");
-ChromeUtils.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/accessibility.js");
+Cu.import("chrome://marionette/content/atom.js");
+Cu.import("chrome://marionette/content/element.js");
 const {
   ElementClickInterceptedError,
   ElementNotInteractableError,
   InvalidArgumentError,
   InvalidElementStateError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-ChromeUtils.import("chrome://marionette/content/event.js");
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
-const {TimedPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
+} = Cu.import("chrome://marionette/content/error.js", {});
+Cu.import("chrome://marionette/content/event.js");
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
+const {TimedPromise} = Cu.import("chrome://marionette/content/sync.js", {});
 
 Cu.importGlobalProperties(["File"]);
 

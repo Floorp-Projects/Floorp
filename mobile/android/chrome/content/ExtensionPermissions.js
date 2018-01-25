@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionData",
-                               "resource://gre/modules/Extension.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
+                                  "resource://gre/modules/Extension.jsm");
 
 var ExtensionPermissions = {
   // id -> object containing update details (see applyUpdate() )

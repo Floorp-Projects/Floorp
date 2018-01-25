@@ -24,7 +24,7 @@ const FILES = gTestPath.replace("browser_isSynthetic.js", "")
 
 function waitForPageShow(browser) {
   return ContentTask.spawn(browser, null, async function() {
-    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+    Cu.import("resource://gre/modules/PromiseUtils.jsm");
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("pageshow", listener, true);

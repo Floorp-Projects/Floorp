@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "LanguageDetector",
-                               "resource:///modules/translation/LanguageDetector.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
+                                  "resource:///modules/translation/LanguageDetector.jsm");
 
 
 this.i18n = class extends ExtensionAPI {

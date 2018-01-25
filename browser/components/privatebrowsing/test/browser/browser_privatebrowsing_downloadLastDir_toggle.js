@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/DownloadLastDir.jsm");
 
 /**
  * Tests how the browser remembers the last download folder

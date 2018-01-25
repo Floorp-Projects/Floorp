@@ -8,7 +8,7 @@
 //
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.whitelistRejectionsGlobally(/aborted by the user agent/);
 
 const permissionError = "error: NotAllowedError: The request is not allowed " +

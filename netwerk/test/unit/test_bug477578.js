@@ -1,5 +1,5 @@
 // test that methods are not normalized
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const testMethods = [
   ["GET"],

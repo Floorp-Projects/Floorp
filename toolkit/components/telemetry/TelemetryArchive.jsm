@@ -10,17 +10,17 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/Log.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryArchive::";
 
-ChromeUtils.defineModuleGetter(this, "TelemetryStorage",
-                               "resource://gre/modules/TelemetryStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
+                                  "resource://gre/modules/TelemetryStorage.jsm");
 
 this.TelemetryArchive = {
   /**

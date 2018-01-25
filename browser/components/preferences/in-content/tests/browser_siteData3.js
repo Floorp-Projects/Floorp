@@ -1,6 +1,6 @@
 "use strict";
-const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
-const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
+const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
+const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 // Test not displaying sites which store 0 byte and don't have persistent storage.
 add_task(async function() {

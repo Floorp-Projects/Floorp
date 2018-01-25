@@ -106,7 +106,7 @@ add_task(async function test_reader_button() {
 });
 
 add_task(async function test_getOriginalUrl() {
-  let { ReaderMode } = ChromeUtils.import("resource://gre/modules/ReaderMode.jsm", {});
+  let { ReaderMode } = Cu.import("resource://gre/modules/ReaderMode.jsm", {});
   let url = "http://foo.com/article.html";
 
   is(ReaderMode.getOriginalUrl("about:reader?url=" + encodeURIComponent(url)), url, "Found original URL from encoded URL");

@@ -52,7 +52,7 @@ function getLogSuffix() {
   return "_linux";
 }
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 const DIR_MACOS = IS_MACOSX ? "Contents/MacOS/" : "";
 const DIR_RESOURCES = IS_MACOSX ? "Contents/Resources/" : "";
@@ -205,10 +205,10 @@ const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("../data", false)).spec
 /* import-globals-from ../data/shared.js */
 Services.scriptloader.loadSubScript(DATA_URI_SPEC + "shared.js", this);
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(this, "MockRegistrar",
-                               "resource://testing-common/MockRegistrar.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
+                                  "resource://gre/modules/ctypes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
+                                  "resource://testing-common/MockRegistrar.jsm");
 
 var gTestFiles = [];
 var gTestDirs = [];
@@ -3695,7 +3695,7 @@ function checkFilesInDirRecursive(aDir, aCallback) {
  *          The callback to call if the update prompt component is called.
  */
 function overrideUpdatePrompt(aCallback) {
-  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+  Cu.import("resource://testing-common/MockRegistrar.jsm");
   MockRegistrar.register("@mozilla.org/updates/update-prompt;1", UpdatePrompt, [aCallback]);
 }
 
@@ -3804,7 +3804,7 @@ function start_httpserver(options) {
              "registerDirectory! Path: " + dir.path);
   }
 
-  let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js", {});
+  let { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/", dir);
   gTestserver.registerPathHandler("/" + gHTTPHandlerPath, pathHandler);

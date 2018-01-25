@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
+                                  "resource://gre/modules/ctypes.jsm");
 
 add_task(async function() {
   let migrator = await MigrationUtils.getMigrator("ie");

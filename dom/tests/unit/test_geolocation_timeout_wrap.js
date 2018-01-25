@@ -2,7 +2,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 

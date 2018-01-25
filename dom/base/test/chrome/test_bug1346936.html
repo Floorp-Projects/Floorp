@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1346936
 
 /** Test for Bug 1346936 **/
 
-ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
+Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
 window.onload = function () {

@@ -33,7 +33,7 @@ function listener(callback) {
 function chromeTouchEventCounter(operation) {
   function chromeProcessCounter() {
     addMessageListener('start', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
+      Components.utils.import('resource://gre/modules/Services.jsm');
       var topWin = Services.wm.getMostRecentWindow('navigator:browser');
       if (typeof topWin.eventCounts != 'undefined') {
         dump('Found pre-existing eventCounts object on the top window!\n');
@@ -52,13 +52,13 @@ function chromeTouchEventCounter(operation) {
     });
 
     addMessageListener('report', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
+      Components.utils.import('resource://gre/modules/Services.jsm');
       var topWin = Services.wm.getMostRecentWindow('navigator:browser');
       return JSON.stringify(topWin.eventCounts);
     });
 
     addMessageListener('end', function() {
-      ChromeUtils.import('resource://gre/modules/Services.jsm');
+      Components.utils.import('resource://gre/modules/Services.jsm');
       var topWin = Services.wm.getMostRecentWindow('navigator:browser');
       if (typeof topWin.eventCounts == 'undefined') {
         dump('The eventCounts object was not found on the top window!\n');

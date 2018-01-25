@@ -7,7 +7,7 @@
 this.EXPORTED_SYMBOLS = ["AsyncPrefs"];
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 

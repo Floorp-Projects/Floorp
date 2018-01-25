@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
+const {actionTypes: at} = Components.utils.import("resource://activity-stream/common/Actions.jsm", {});
+const {Dedupe} = Components.utils.import("resource://activity-stream/common/Dedupe.jsm", {});
 
 const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;

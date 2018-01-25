@@ -1,6 +1,6 @@
 "use strict";
 
-const {TabStateFlusher} = ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 // Keep this in sync with the order in Histograms.json for
 // BUSY_TAB_ABANDONED

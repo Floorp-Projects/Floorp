@@ -8,14 +8,14 @@ this.EXPORTED_SYMBOLS = ["RemoteFinder", "RemoteFinderListener"];
 
 const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Geometry.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "GetClipboardSearchString",
-  () => ChromeUtils.import("resource://gre/modules/Finder.jsm", {}).GetClipboardSearchString
+  () => Cu.import("resource://gre/modules/Finder.jsm", {}).GetClipboardSearchString
 );
 XPCOMUtils.defineLazyGetter(this, "Rect",
-  () => ChromeUtils.import("resource://gre/modules/Geometry.jsm", {}).Rect
+  () => Cu.import("resource://gre/modules/Geometry.jsm", {}).Rect
 );
 
 function RemoteFinder(browser) {
@@ -207,7 +207,7 @@ RemoteFinder.prototype = {
 };
 
 function RemoteFinderListener(global) {
-  let {Finder} = ChromeUtils.import("resource://gre/modules/Finder.jsm", {});
+  let {Finder} = Cu.import("resource://gre/modules/Finder.jsm", {});
   this._finder = new Finder(global.docShell);
   this._finder.addResultListener(this);
   this._global = global;

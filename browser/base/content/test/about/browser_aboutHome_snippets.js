@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.defineModuleGetter(this, "AboutHomeUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
 ignoreAllUncaughtExceptions();

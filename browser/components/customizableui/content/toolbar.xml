@@ -17,7 +17,7 @@
 
       <constructor><![CDATA[
           let scope = {};
-          ChromeUtils.import("resource:///modules/CustomizableUI.jsm", scope);
+          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
           let CustomizableUI = scope.CustomizableUI;
           // Add an early overflow event listener that will mark if the
           // toolbar overflowed during construction.
@@ -336,7 +336,7 @@
           this._draggableStarted = true;
           try {
             let tmp = {};
-            ChromeUtils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
             let draggableThis = new tmp.WindowDraggingElement(this);
             draggableThis.mouseDownCheck = function(e) {
               return this._dragBindingAlive;

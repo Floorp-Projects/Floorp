@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+var {PromiseUtils} = Cu.import("resource://gre/modules/PromiseUtils.jsm", {});
+Cu.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "TestUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
   "resource://testing-common/TestUtils.jsm");
 
 function whenNewWindowLoaded(aOptions, aCallback) {
@@ -29,7 +29,7 @@ function openWindow(aParent, aOptions) {
 
 function newDirectory() {
   let FileUtils =
-    ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
+    Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
   let tmpDir = FileUtils.getDir("TmpD", [], true);
   let dir = tmpDir.clone();
   dir.append("testdir");
@@ -39,7 +39,7 @@ function newDirectory() {
 
 function newFileInDirectory(aDir) {
   let FileUtils =
-    ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
+    Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
   let file = aDir.clone();
   file.append("testfile");
   file.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_FILE);

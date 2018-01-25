@@ -2,10 +2,10 @@
 
 /* import-globals-from ext-c-toolkit.js */
 
-ChromeUtils.defineModuleGetter(this, "ExtensionStorage",
-                               "resource://gre/modules/ExtensionStorage.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorage",
+                                  "resource://gre/modules/ExtensionStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 var {
   ExtensionError,

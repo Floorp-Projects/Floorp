@@ -14,10 +14,10 @@ var Cr = Components.results;
  * appropriate action here in the parent.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/BrowserElementPromptService.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 function debug(msg) {
   //dump("BrowserElementParent - " + msg + "\n");

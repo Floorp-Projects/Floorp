@@ -26,7 +26,7 @@
 
 add_task(async function testBUIT() {
   let s = {};
-  ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm", s);
+  Components.utils.import("resource:///modules/BrowserUITelemetry.jsm", s);
   let BUIT = s.BrowserUITelemetry;
 
   registerCleanupFunction(function() {

@@ -74,7 +74,7 @@ add_task(async function test_suspend() {
 add_task(async function test_error_resume() {
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
 
     let observer = channel => {
       if (channel instanceof Ci.nsIHttpChannel && channel.URI.spec === "http://example.com/") {
@@ -173,9 +173,9 @@ add_task(async function test_set_responseHeaders() {
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-    ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    Cu.import("resource://gre/modules/NetUtil.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
     let ssm = Services.scriptSecurityManager;
 

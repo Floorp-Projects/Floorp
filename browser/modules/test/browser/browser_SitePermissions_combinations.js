@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
+Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 // This function applies combinations of different permissions and
 // checks how they override each other.

@@ -1,13 +1,13 @@
 "use strict";
 
-ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/Uptake.jsm", this);
+Cu.import("resource://testing-common/TestUtils.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/Uptake.jsm", this);
 
 add_task(async function getFilterContext() {
   const recipe = {id: 17, arguments: {foo: "bar"}, unrelated: false};

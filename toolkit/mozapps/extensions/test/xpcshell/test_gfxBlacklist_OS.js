@@ -9,7 +9,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 // exactly matches the blacklist entry, is not blocked.
 // Uses test_gfxBlacklist.xml
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
 var gTestserver = new HttpServer();
 gTestserver.start(-1);

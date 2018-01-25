@@ -10,14 +10,14 @@ this.EXPORTED_SYMBOLS = ['MulticastDNS'];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-ChromeUtils.import('resource://gre/modules/Timer.jsm');
-ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/Timer.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
-ChromeUtils.import('resource://gre/modules/DNSPacket.jsm');
-ChromeUtils.import('resource://gre/modules/DNSRecord.jsm');
-ChromeUtils.import('resource://gre/modules/DNSResourceRecord.jsm');
-ChromeUtils.import('resource://gre/modules/DNSTypes.jsm');
+Cu.import('resource://gre/modules/DNSPacket.jsm');
+Cu.import('resource://gre/modules/DNSRecord.jsm');
+Cu.import('resource://gre/modules/DNSResourceRecord.jsm');
+Cu.import('resource://gre/modules/DNSTypes.jsm');
 
 const NS_NETWORK_LINK_TOPIC = 'network:link-status-changed';
 

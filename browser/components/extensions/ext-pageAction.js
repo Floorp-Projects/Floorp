@@ -6,15 +6,15 @@
 /* import-globals-from ext-browserAction.js */
 /* import-globals-from ext-browser.js */
 
-ChromeUtils.defineModuleGetter(this, "PageActions",
-                               "resource:///modules/PageActions.jsm");
-ChromeUtils.defineModuleGetter(this, "PanelPopup",
-                               "resource:///modules/ExtensionPopups.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
-                               "resource://gre/modules/TelemetryStopwatch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource:///modules/PageActions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PanelPopup",
+                                  "resource:///modules/ExtensionPopups.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+                                  "resource://gre/modules/TelemetryStopwatch.jsm");
 
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

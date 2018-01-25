@@ -20,7 +20,7 @@
  * initializing our built-in version of pdfjs when running remote.
  */
 
-ChromeUtils.import("resource://pdf.js/PdfjsContentUtils.jsm");
+Components.utils.import("resource://pdf.js/PdfjsContentUtils.jsm");
 
 // init content utils shim pdfjs will use to access privileged apis.
 PdfjsContentUtils.init();

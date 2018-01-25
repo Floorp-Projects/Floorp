@@ -8,7 +8,7 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components
 
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 // The xpcshell test harness sets PYTHON so we can read it here.
 var gEnv = Cc["@mozilla.org/process/environment;1"]

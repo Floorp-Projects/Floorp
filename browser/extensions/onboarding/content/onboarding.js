@@ -7,7 +7,7 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const ONBOARDING_CSS_URL = "resource://onboarding/onboarding.css";
 const ABOUT_HOME_URL = "about:home";

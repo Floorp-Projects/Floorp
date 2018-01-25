@@ -12,14 +12,14 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://testing-common/AddonManagerTesting.jsm");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://testing-common/AddonManagerTesting.jsm");
+Cu.import("resource://testing-common/AddonTestUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
 
 const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";
 const PREF_LOGGING_LEVEL        = "experiments.logging.level";
