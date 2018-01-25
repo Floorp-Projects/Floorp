@@ -2016,6 +2016,7 @@ nsDisplayListBuilder::RemoveModifiedWindowRegions()
 {
   RemoveModifiedFramesAndRects(mRetainedWindowDraggingRegion);
   RemoveModifiedFramesAndRects(mRetainedWindowNoDraggingRegion);
+  RemoveModifiedFramesAndRects(mWindowExcludeGlassRegion);
 }
 
 void
@@ -2023,6 +2024,7 @@ nsDisplayListBuilder::ClearRetainedWindowRegions()
 {
   mRetainedWindowDraggingRegion.Clear();
   mRetainedWindowNoDraggingRegion.Clear();
+  mWindowExcludeGlassRegion.Clear();
 }
 
 const uint32_t gWillChangeAreaMultiplier = 3;
