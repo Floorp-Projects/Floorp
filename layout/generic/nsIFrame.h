@@ -1955,7 +1955,8 @@ public:
    * Ensure that aImage gets notifed when the underlying image request loads
    * or animates.
    */
-  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext);
+  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext,
+                      uint32_t aImageLoaderFlags);
 
   /**
    * This structure holds information about a cursor. mContainer represents a
