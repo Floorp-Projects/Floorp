@@ -41,6 +41,8 @@ WORKER_TYPES = {
     'scriptworker-prov-v1/beetmoverworker-v1': ('beetmover', None),
     'scriptworker-prov-v1/pushapk-v1': ('push-apk', None),
     "scriptworker-prov-v1/signing-linux-v1": ('scriptworker-signing', None),
+    "scriptworker-prov-v1/shipit": ('shipit', None),
+    "scriptworker-prov-v1/shipit-dev": ('shipit', None),
     'releng-hardware/gecko-t-osx-1010': ('generic-worker', 'macosx'),
 }
 

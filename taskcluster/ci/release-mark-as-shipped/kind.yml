@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.release_mark_as_shipped:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -17,12 +17,21 @@ kind-dependencies:
 
 job-defaults:
    description: mark release as shipped in Ship-It
-   worker-type: buildbot-bridge/buildbot-bridge
+   worker-type:
+      by-project:
+         mozilla-central: scriptworker-prov-v1/shipit-v1
+         mozilla-beta: scriptworker-prov-v1/shipit-v1
+         mozilla-release: scriptworker-prov-v1/shipit-v1
+         default: scriptworker-prov-v1/shipit-dev
+   worker:
+      implementation: shipit
+   scopes:
+      by-project:
+         mozilla-beta: ['project:releng:ship-it:production']
+         mozilla-release: ['project:releng:ship-it:production']
+         default: ['project:releng:ship-it:staging']
    run-on-projects: []
    shipping-phase: ship
-   run:
-      using: buildbot
-      release-promotion: true
    index:
       type: release
    notifications:
@@ -74,24 +83,15 @@ jobs:
    fennec:
       name: release-fennec_mark_as_shipped
       shipping-product: fennec
-      run:
-         product: fennec
-         buildername: release-{branch}-fennec_mark_as_shipped
       index:
          product: fennec
    firefox:
       name: release-firefox_mark_as_shipped
       shipping-product: firefox
-      run:
-         product: firefox
-         buildername: release-{branch}-firefox_mark_as_shipped
       index:
          product: firefox
    devedition:
       name: release-devedition_mark_as_shipped
       shipping-product: devedition
-      run:
-         product: devedition
-         buildername: release-{branch}-devedition_mark_as_shipped
       index:
          product: devedition
