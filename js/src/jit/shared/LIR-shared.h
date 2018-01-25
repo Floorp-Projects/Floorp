@@ -6210,14 +6210,16 @@ class LLoadUnboxedScalar : public LInstructionHelper<1, 2, 1>
     }
 };
 
-class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 0>
+class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 1>
 {
   public:
     LIR_HEADER(LoadTypedArrayElementHole)
 
-    LLoadTypedArrayElementHole(const LAllocation& object, const LAllocation& index) {
+    LLoadTypedArrayElementHole(const LAllocation& object, const LAllocation& index,
+                               const LDefinition& temp) {
         setOperand(0, object);
         setOperand(1, index);
+        setTemp(0, temp);
     }
     const MLoadTypedArrayElementHole* mir() const {
         return mir_->toLoadTypedArrayElementHole();
@@ -6227,6 +6229,9 @@ class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 0>
     }
     const LAllocation* index() {
         return getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
     }
 };
 
