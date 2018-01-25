@@ -26,13 +26,11 @@
                 });
 
                 window.addEventListener('load', function() {
-                  requestAnimationFrame(function() {
-                    requestAnimationFrame(
-                        t.step_func_done(function() {
-                            var isOverlay = calculateScrollbarThickness() == 0;
-                            assert_equals(numViewResizes, isOverlay ? 0 : 1);
-                        }));
-                    });
+                  requestAnimationFrame(
+                      t.step_func_done(function() {
+                          var isOverlay = calculateScrollbarThickness() == 0;
+                          assert_equals(numViewResizes, isOverlay ? 0 : 1);
+                      }));
                 });
             }
         </script>

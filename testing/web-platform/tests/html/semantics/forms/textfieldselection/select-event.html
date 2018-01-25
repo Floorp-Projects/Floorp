@@ -47,10 +47,10 @@ const actions = [
   }
 ];
 
-els.forEach((el) => {
+for (const el of els) {
   const elLabel = el.localName === "textarea" ? "textarea" : "input type " + el.type;
 
-  actions.forEach((action) => {
+  for (const action of actions) {
     // promise_test instead of async_test is important because these need to happen in sequence (to test that events
     // fire if and only if the selection changes).
     promise_test(t => {
@@ -79,6 +79,6 @@ els.forEach((el) => {
         }, 200);
       });
     }, `${elLabel}: ${action.label} a second time (must not fire select)`);
-  });
-});
+  }
+}
 </script>
