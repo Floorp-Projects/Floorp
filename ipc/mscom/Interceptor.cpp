@@ -564,11 +564,11 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
   }
 
   // Raise the refcount for stabilization purposes during aggregation
-  RefPtr<IUnknown> kungFuDeathGrip(static_cast<IUnknown*>(
-        static_cast<WeakReferenceSupport*>(this)));
+  WeakReferenceSupport::StabilizeRefCount stabilizer(*this);
 
   RefPtr<IUnknown> unkInterceptor;
-  HRESULT hr = CreateInterceptor(aTargetIid, kungFuDeathGrip,
+  HRESULT hr = CreateInterceptor(aTargetIid,
+                                 static_cast<WeakReferenceSupport*>(this),
                                  getter_AddRefs(unkInterceptor));
   ENSURE_HR_SUCCEEDED(hr);
 
@@ -678,10 +678,10 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
   // IUnknown to |this|.
 
   // Raise the refcount for stabilization purposes during aggregation
-  RefPtr<IUnknown> kungFuDeathGrip(static_cast<IUnknown*>(
-        static_cast<WeakReferenceSupport*>(this)));
+  WeakReferenceSupport::StabilizeRefCount stabilizer(*this);
 
-  hr = CreateInterceptor(interceptorIid, kungFuDeathGrip,
+  hr = CreateInterceptor(interceptorIid,
+                         static_cast<WeakReferenceSupport*>(this),
                          getter_AddRefs(unkInterceptor));
   ENSURE_HR_SUCCEEDED(hr);
 
