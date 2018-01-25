@@ -252,17 +252,13 @@ endef
 # .gradle.deps: .aapt.deps FORCE
 $(eval $(call gradle_command,.gradle.deps,.aapt.deps FORCE))
 
-classes.dex: .gradle.deps
-	$(REPORT_BUILD)
-	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex $@
-
 GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.deps
 	$(REPORT_BUILD)
 
 FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
 	$(REPORT_BUILD)
 
-else
+else # !MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex --force-jumbo jars-proguarded
@@ -501,7 +497,6 @@ $(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(constants_PP_J
 .aapt.nodeps: .gradle.nodeps FORCE
 	@$(TOUCH) $@
 	cp $(GRADLE_ANDROID_APP_APK) gecko-nodeps.ap_
-	cp $(gradle_dir)/app/intermediates/transforms/dex/officialPhoton/debug/folders/1000/1f/main/classes.dex classes.dex
 else
 # .aapt.nodeps: AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
@@ -617,8 +612,10 @@ libs:: FennecJNIWrappers.cpp
 	  echo '*****************************************************' && \
 	  exit 1)
 
+ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 libs:: classes.dex
 	$(INSTALL) classes.dex $(FINAL_TARGET)
+endif # MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
 ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
 
