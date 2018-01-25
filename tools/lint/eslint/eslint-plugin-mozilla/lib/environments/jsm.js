@@ -18,6 +18,11 @@ module.exports = {
     "btoa": false,
     "debug": false,
     "dump": false,
+    // These globals are defined in XPCWrappedNativeScope::AttachComponentsObject.
+    "Cc": false,
+    "Ci": false,
+    "Cr": false,
+    "Cu": false,
     // These globals are made available via WebIDL files, see ResolveSystemBinding in:
     // https://searchfox.org/mozilla-central/source/__GENERATED__/dom/bindings/ResolveSystemBinding.cpp
     "AbortController": false,
