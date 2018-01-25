@@ -75,7 +75,6 @@
 .requests-list-column {
   display: table-cell;
   cursor: default;
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -546,9 +545,6 @@
 }
 
 .requests-list-timings {
-  display: flex;
-  flex: none;
-  align-items: center;
   transform: scaleX(var(--timings-scale));
 }
 
@@ -606,6 +602,7 @@
   white-space: nowrap;
   /* This node should not be scaled - apply a reversed transformation */
   transform: scaleX(var(--timings-rev-scale));
+  text-align: left;
 }
 
 .requests-list-timings-total:dir(ltr) {
