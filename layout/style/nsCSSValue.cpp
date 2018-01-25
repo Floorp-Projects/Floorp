@@ -8,6 +8,7 @@
 
 #include "nsCSSValue.h"
 
+#include "mozilla/CORSMode.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoTypes.h"
@@ -3166,7 +3167,9 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
   if (!mLoadedImage) {
     loadingDoc->StyleImageLoader()->LoadImage(GetURI(),
                                               mExtraData->GetPrincipal(),
-                                              mExtraData->GetReferrer(), this);
+                                              mExtraData->GetReferrer(),
+                                              this,
+                                              CORSMode::CORS_NONE);
 
      mLoadedImage = true;
   }
