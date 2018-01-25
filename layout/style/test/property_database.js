@@ -6289,6 +6289,59 @@ function get_computed_value(cs, property)
   return cs.getPropertyValue(property);
 }
 
+if (SpecialPowers.DOMWindowUtils.isStyledByServo &&
+    IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
+  gCSSProperties.rotate = {
+    domProp: "rotate",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "45deg", "45grad", "72rad", "0.25turn", ".57rad",
+                    "0 0 0 0rad", "0 0 1 45deg", "0 0 1 0rad",
+                    /* valid calc() values */
+                    "calc(1) 0 0 calc(45deg + 5rad)",
+                    "0 1 0 calc(400grad + 1rad)",
+                    "calc(0.5turn + 10deg)"],
+    invalid_values: [ "0", "7", "0, 0, 1, 45deg", "0 0 45deg", "0 0 20rad",
+                      "0 0 0 0",
+                      /* invalid calc() values */
+                      "0.5 1 0 calc(45deg + 10)", "calc(0.5turn + 10%)"],
+  };
+
+  gCSSProperties.translate = {
+    domProp: "translate",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    prerequisites: { "width": "10px", "height": "10px", "display": "block" },
+    initial_values: [ "none" ],
+    other_values: [ "-4px", "3px", "4em", "50%", "4px 5px 6px",
+                    "4px 5px", "50% 5px 6px", "50% 10% 6em",
+                    /* valid calc() values */
+                    "calc(5px + 10%)",
+                    "calc(0.25 * 5px + 10% / 3)",
+                    "calc(5px - 10% * 3)",
+                    "calc(5px - 3 * 10%) 50px",
+                    "-50px calc(5px - 10% * 3)"],
+    invalid_values: [ "1", "-moz-min(5px,10%)", "4px, 5px, 6px",
+                      "3px 4px 1px 7px", "4px 5px 10%",
+                      /* invalid calc() values */
+                      "10px calc(min(5px,10%))",
+                      "calc(max(5px,10%) 10%)", "calc(nonsense)"],
+  };
+  gCSSProperties.scale = {
+    domProp: "scale",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "10", "10 20", "10 20 30", "0 2.0",
+                     /* valid calc() values */
+                     "calc(1 + 2)", "calc(10) calc(20) 30"],
+    invalid_values: ["150%", "10px", "10deg", "10, 20, 30",
+                      /* invalid calc() values */
+                      "calc(1 + 20%)",  "10 calc(1 + 10px)"],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
     gCSSProperties["touch-action"] = {
         domProp: "touchAction",
