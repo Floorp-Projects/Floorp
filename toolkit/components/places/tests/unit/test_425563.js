@@ -40,10 +40,10 @@ add_task(async function test_execute() {
 
   // check that all links are marked as visited
   for (let visited_uri of count_visited_URIs) {
-    Assert.ok(await promiseIsURIVisited(uri(visited_uri)));
+    Assert.ok(await PlacesUtils.history.hasVisits(uri(visited_uri)));
   }
   for (let visited_uri of notcount_visited_URIs) {
-    Assert.ok(await promiseIsURIVisited(uri(visited_uri)));
+    Assert.ok(await PlacesUtils.history.hasVisits(uri(visited_uri)));
   }
 
   // check that visit_count does not take in count embed and downloads

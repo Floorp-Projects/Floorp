@@ -45,7 +45,7 @@ function testFirstTab(aTab) {
   gNewTab = aTab;
   ok(!!gNewTab, "Second tab created.");
 
-  gClient.listTabs(aResponse => {
+  gClient.listTabs().then(aResponse => {
     let tabActor = aResponse.tabs.filter(aGrip => aGrip.url == TAB1_URL).pop();
     ok(tabActor,
       "Should find a tab actor for the first tab.");
@@ -75,7 +75,7 @@ function testNewWindow(aWindow) {
   let isLoaded = promise.defer();
 
   promise.all([isActive.promise, isLoaded.promise]).then(() => {
-    gClient.listTabs(aResponse => {
+    gClient.listTabs().then(aResponse => {
       is(aResponse.selected, 2,
         "The second tab is selected.");
 
@@ -115,7 +115,7 @@ function testFocusFirst() {
   let deferred = promise.defer();
 
   once(window.content, "focus").then(() => {
-    gClient.listTabs(aResponse => {
+    gClient.listTabs().then(aResponse => {
       is(aResponse.selected, 1,
         "The first tab is selected after focusing on it.");
 
@@ -142,7 +142,7 @@ function continue_remove_tab(deferred)
 {
   removeTab(gNewTab);
 
-  gClient.listTabs(aResponse => {
+  gClient.listTabs().then(aResponse => {
     // Verify that tabs are no longer included in listTabs.
     let foundTab1 = aResponse.tabs.some(aGrip => aGrip.url == TAB1_URL);
     let foundTab2 = aResponse.tabs.some(aGrip => aGrip.url == TAB2_URL);

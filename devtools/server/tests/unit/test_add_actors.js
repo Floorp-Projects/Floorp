@@ -90,7 +90,7 @@ function test_stable_global_actor_instances() {
   let connID = Object.keys(DebuggerServer._connections)[0];
   let postInitGlobalActor = getActorInstance(connID, gActors.postInitGlobalActor);
   let preInitGlobalActor = getActorInstance(connID, gActors.preInitGlobalActor);
-  gClient.listTabs(function onListTabs(response) {
+  gClient.listTabs().then(function onListTabs(response) {
     Assert.equal(postInitGlobalActor,
                  getActorInstance(connID, response.postInitGlobalActor));
     Assert.equal(preInitGlobalActor,

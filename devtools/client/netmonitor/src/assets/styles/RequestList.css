@@ -227,6 +227,8 @@
   padding: 0 2px;
   border-radius: 3px;
   font-family: var(--monospace-font-family);
+  /* prevent status code from having full line height width from .request-list-item */
+  line-height: normal;
 }
 
 .status-code[data-code^="1"] {
@@ -402,7 +404,7 @@
   width: 16px;
   height: 16px;
   margin: 0 4px;
-  vertical-align: top;
+  vertical-align: text-bottom;
 }
 
 .request-list-item.selected .requests-security-state-icon {
@@ -624,6 +626,7 @@
   a new request/row.
 */
   height: 24px;
+  line-height: 24px;
 }
 
 .request-list-item.selected {

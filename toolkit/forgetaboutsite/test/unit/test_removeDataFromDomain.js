@@ -36,25 +36,6 @@ const PREFERENCE_NAME = "test-pref";
 // Utility Functions
 
 /**
- * Asynchronously check a url is visited.
- *
- * @param aURI
- *        The URI.
- *
- * @return {Promise}
- * @resolves When the check has been added successfully.
- * @rejects JavaScript exception.
- */
-function promiseIsURIVisited(aURI) {
-  return new Promise(resolve => {
-    PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
-      resolve(aIsVisited);
-    });
-
-  });
-}
-
-/**
  * Add a cookie to the cookie service.
  *
  * @param aDomain
@@ -206,29 +187,29 @@ function preference_exists(aURI) {
 // History
 async function test_history_cleared_with_direct_match() {
   const TEST_URI = Services.io.newURI("http://mozilla.org/foo");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
 }
 
 async function test_history_cleared_with_subdomain() {
   const TEST_URI = Services.io.newURI("http://www.mozilla.org/foo");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
 }
 
 async function test_history_not_cleared_with_uri_contains_domain() {
   const TEST_URI = Services.io.newURI("http://ilovemozilla.org/foo");
-  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  Assert.ok(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await PlacesUtils.history.hasVisits(TEST_URI));
 
   // Clear history since we left something there from this test.
   await PlacesTestUtils.clearHistory();

@@ -121,11 +121,7 @@ async function initPerfFront() {
  * @return {RootActor} Resolves when connected.
  */
 function getRootForm(client) {
-  return new Promise(resolve => {
-    client.listTabs(rootForm => {
-      resolve(rootForm);
-    });
-  });
+  return client.listTabs();
 }
 
 /**

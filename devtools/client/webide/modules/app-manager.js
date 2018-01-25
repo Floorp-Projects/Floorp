@@ -167,7 +167,7 @@ var AppManager = exports.AppManager = {
       }
       this._listTabsResponse = null;
     } else {
-      this.connection.client.listTabs((response) => {
+      this.connection.client.listTabs().then((response) => {
         if (response.webappsActor) {
           let front = new AppActorFront(this.connection.client,
                                         response);

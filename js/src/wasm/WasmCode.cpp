@@ -573,7 +573,9 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(tables) +
            SerializedPodVectorSize(funcNames) +
            SerializedPodVectorSize(customSections) +
-           filename.serializedSize();
+           filename.serializedSize() +
+           baseURL.serializedSize() +
+           sourceMapURL.serializedSize();
 }
 
 size_t
@@ -590,7 +592,9 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            tables.sizeOfExcludingThis(mallocSizeOf) +
            funcNames.sizeOfExcludingThis(mallocSizeOf) +
            customSections.sizeOfExcludingThis(mallocSizeOf) +
-           filename.sizeOfExcludingThis(mallocSizeOf);
+           filename.sizeOfExcludingThis(mallocSizeOf) +
+           baseURL.sizeOfExcludingThis(mallocSizeOf) +
+           sourceMapURL.sizeOfExcludingThis(mallocSizeOf);
 }
 
 uint8_t*
@@ -605,6 +609,8 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, funcNames);
     cursor = SerializePodVector(cursor, customSections);
     cursor = filename.serialize(cursor);
+    cursor = baseURL.serialize(cursor);
+    cursor = sourceMapURL.serialize(cursor);
     return cursor;
 }
 
@@ -619,6 +625,8 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
     (cursor = filename.deserialize(cursor));
+    (cursor = baseURL.deserialize(cursor));
+    (cursor = sourceMapURL.deserialize(cursor));
     debugEnabled = false;
     debugFuncArgTypes.clear();
     debugFuncReturnTypes.clear();

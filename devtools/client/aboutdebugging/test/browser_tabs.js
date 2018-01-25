@@ -29,6 +29,23 @@ add_task(function* () {
     return container.querySelector(".target-name").title === TAB_URL;
   }, 100);
 
+  let icon = container.querySelector(".target-icon");
+  ok(icon && icon.src, "Tab icon found and src attribute is not empty");
+
+  info("Check if the tab icon is a valid image");
+  yield new Promise(r => {
+    let image = new Image();
+    image.onload = () => {
+      ok(true, "Favicon is not a broken image");
+      r();
+    };
+    image.onerror = () => {
+      ok(false, "Favicon is a broken image");
+      r();
+    };
+    image.src = icon.src;
+  });
+
   // Finally, close the tab
   yield removeTab(newTab);
 

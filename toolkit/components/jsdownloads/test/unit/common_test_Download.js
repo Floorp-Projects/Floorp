@@ -2410,7 +2410,7 @@ add_task(async function test_history() {
   await download.start();
 
   // The restart should not have added a new history visit.
-  Assert.equal(false, await promiseIsURIVisited(httpUrl("interruptible.txt")));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(httpUrl("interruptible.txt")));
 });
 
 /**

@@ -76,6 +76,7 @@ class Message extends Component {
   constructor(props) {
     super(props);
     this.onLearnMoreClick = this.onLearnMoreClick.bind(this);
+    this.toggleMessage = this.toggleMessage.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
   }
 
@@ -98,6 +99,15 @@ class Message extends Component {
     this.props.serviceContainer.openLink(exceptionDocURL, e);
   }
 
+  toggleMessage(e) {
+    let { open, dispatch, messageId } = this.props;
+    if (open) {
+      dispatch(actions.messageClose(messageId));
+    } else {
+      dispatch(actions.messageOpen(messageId));
+    }
+  }
+
   onContextMenu(e) {
     let { serviceContainer, source, request, messageId } = this.props;
     let messageInfo = {
@@ -112,7 +122,6 @@ class Message extends Component {
 
   render() {
     const {
-      messageId,
       open,
       collapsible,
       collapseTitle,
@@ -125,7 +134,6 @@ class Message extends Component {
       frame,
       stacktrace,
       serviceContainer,
-      dispatch,
       exceptionDocURL,
       timeStamp = Date.now(),
       timestampsVisible,
@@ -170,13 +178,7 @@ class Message extends Component {
       collapse = CollapseButton({
         open,
         title: collapseTitle,
-        onClick: function () {
-          if (open) {
-            dispatch(actions.messageClose(messageId));
-          } else {
-            dispatch(actions.messageOpen(messageId));
-          }
-        },
+        onClick: this.toggleMessage
       });
     }
 
@@ -253,7 +255,10 @@ class Message extends Component {
       icon,
       collapse,
       dom.span({ className: "message-body-wrapper" },
-        dom.span({ className: "message-flex-body" },
+        dom.span({
+          className: "message-flex-body",
+          onClick: collapsible && this.toggleMessage,
+        },
           // Add whitespaces for formatting when copying to the clipboard.
           timestampEl ? " " : null,
           dom.span({ className: "message-body devtools-monospace" },
