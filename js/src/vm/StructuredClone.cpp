@@ -2679,6 +2679,14 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
         } else {
             // For any other Object, interpret them as plain properties.
             RootedId id(context());
+
+            if (!key.isString() && !key.isInt32()) {
+                JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                          JSMSG_SC_BAD_SERIALIZED_DATA,
+                                          "property key expected");
+                return false;
+            }
+
             if (!ValueToId<CanGC>(context(), key, &id))
                 return false;
 
