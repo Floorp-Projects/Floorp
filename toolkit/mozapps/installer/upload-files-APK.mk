@@ -71,7 +71,7 @@ INNER_FENNEC_PACKAGE = \
     --inputs \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
-    --classes-dex $(GECKO_APP_AP_PATH)/classes.dex \
+    $(if $(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE),,--classes-dex $(GECKO_APP_AP_PATH)/classes.dex) \
     --lib-dirs $(MOZ_PKG_DIR)/lib \
     --assets-dirs $(MOZ_PKG_DIR)/assets \
     --features-dirs $(MOZ_PKG_DIR)/features \
@@ -94,7 +94,7 @@ repackage_fennec = \
       $(UNPACKAGE) \
       $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
-    --classes-dex $(GECKO_APP_AP_PATH)/classes.dex \
+    $(if $(MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE),,--classes-dex $(GECKO_APP_AP_PATH)/classes.dex) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))
 
