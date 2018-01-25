@@ -307,14 +307,13 @@ class MochiRemote(MochitestDesktop):
 
         return ret, None
 
-
 def run_test_harness(parser, options):
     parser.validate(options)
 
     message_logger = MessageLogger(logger=None)
     counts = dict()
     process_args = {'messageLogger': message_logger, 'counts': counts}
-    auto = RemoteAutomation(None, "fennec", processArgs=process_args)
+    auto = RemoteAutomation(None, options.app, processArgs=process_args)
 
     if options is None:
         raise ValueError("Invalid options specified, use --help for a list of valid options")
