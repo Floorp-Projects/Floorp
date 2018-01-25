@@ -583,6 +583,9 @@ task_description_schema = Schema({
         Required('google-play-track'): Any('production', 'beta', 'alpha', 'rollout', 'invalid'),
         Required('commit'): bool,
         Optional('rollout-percentage'): Any(int, None),
+    }, {
+        Required('implementation'): 'shipit',
+        Required('release-name'): basestring,
     }),
 })
 
@@ -1057,6 +1060,15 @@ def build_push_apk_payload(config, task, task_def):
 @payload_builder('push-apk-breakpoint')
 def build_push_apk_breakpoint_payload(config, task, task_def):
     task_def['payload'] = task['worker']['payload']
+
+
+@payload_builder('shipit')
+def build_ship_it_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'release_name': worker['release-name']
+    }
 
 
 @payload_builder('invalid')
