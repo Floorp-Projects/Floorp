@@ -1052,30 +1052,21 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
       }
     }
 
-    switch (global.type()) {
-      case ValType::I32: {
-        jsval.set(Int32Value(val.i32()));
-        return true;
-      }
-      case ValType::I64: {
+    if (val.type() == ValType::I64) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
         return false;
-      }
-      case ValType::F32: {
-        float f = val.f32();
-        jsval.set(DoubleValue(JS::CanonicalizeNaN(double(f))));
-        return true;
-      }
-      case ValType::F64: {
-        double d = val.f64();
-        jsval.set(DoubleValue(JS::CanonicalizeNaN(d)));
-        return true;
-      }
-      default: {
-        break;
-      }
     }
-    MOZ_CRASH("unexpected type when creating global exports");
+
+    ToJSValue(val, jsval);
+
+#ifdef ENABLE_WASM_GLOBAL
+    Rooted<WasmGlobalObject*> go(cx, WasmGlobalObject::create(cx, ValType::I32, false, jsval));
+    if (!go)
+        return false;
+    jsval.setObject(*go);
+#endif
+
+    return true;
 }
 
 static bool
