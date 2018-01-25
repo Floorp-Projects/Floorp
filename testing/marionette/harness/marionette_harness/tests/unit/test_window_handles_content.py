@@ -5,10 +5,15 @@
 from __future__ import absolute_import
 
 import types
+import urllib
 
 from marionette_driver import By, errors, Wait
 
 from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+
+
+def inline(doc):
+    return "data:text/html;charset=utf-8,{}".format(urllib.quote(doc))
 
 
 class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
@@ -101,7 +106,17 @@ class TestWindowHandles(WindowManagerMixin, MarionetteTestCase):
     @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_window_handles_after_opening_new_non_browser_window(self):
         def open_with_link():
-            self.marionette.navigate(self.marionette.absolute_url("blob_download.html"))
+            self.marionette.navigate(inline("""
+              <a id="blob-download" download="foo.html">Download</a>
+
+              <script>
+                const string = "test";
+                const blob = new Blob([string], { type: "text/html" });
+
+                const link = document.getElementById("blob-download");
+                link.href = URL.createObjectURL(blob);
+              </script>
+            """))
             link = self.marionette.find_element(By.ID, "blob-download")
             link.click()
 
