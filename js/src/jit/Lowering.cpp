@@ -3224,7 +3224,7 @@ LIRGenerator::visitLoadElementHole(MLoadElementHole* ins)
     MOZ_ASSERT(ins->type() == MIRType::Value);
 
     LLoadElementHole* lir = new(alloc()) LLoadElementHole(useRegister(ins->elements()),
-                                                          useRegisterOrConstant(ins->index()),
+                                                          useRegister(ins->index()),
                                                           useRegister(ins->initLength()));
     if (ins->needsNegativeIntCheck())
         assignSnapshot(lir, Bailout_NegativeIndex);
@@ -3654,9 +3654,10 @@ LIRGenerator::visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole* ins)
     MOZ_ASSERT(ins->type() == MIRType::Value);
 
     const LUse object = useRegister(ins->object());
-    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation index = useRegister(ins->index());
 
-    LLoadTypedArrayElementHole* lir = new(alloc()) LLoadTypedArrayElementHole(object, index);
+    LLoadTypedArrayElementHole* lir = new(alloc()) LLoadTypedArrayElementHole(object, index,
+                                                                              temp());
     if (ins->fallible())
         assignSnapshot(lir, Bailout_Overflow);
     defineBox(lir, ins);

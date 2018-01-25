@@ -1379,6 +1379,7 @@ void
 MacroAssembler::loadStringChar(Register str, Register index, Register output, Label* fail)
 {
     MOZ_ASSERT(str != output);
+    MOZ_ASSERT(str != index);
     MOZ_ASSERT(index != output);
 
     movePtr(str, output);
@@ -1392,7 +1393,17 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output, La
 
     // Check if the index is contained in the leftChild.
     // Todo: Handle index in the rightChild.
-    branch32(Assembler::BelowOrEqual, Address(output, JSString::offsetOfLength()), index, fail);
+    Label failPopStr, inLeft;
+    push(str);
+    boundsCheck32ForLoad(index, Address(output, JSString::offsetOfLength()), str, &failPopStr);
+    pop(str);
+    jump(&inLeft);
+
+    bind(&failPopStr);
+    pop(str);
+    jump(fail);
+
+    bind(&inLeft);
 
     // If the left side is another rope, give up.
     branchIfRope(output, fail);
@@ -3415,69 +3426,143 @@ MacroAssembler::debugAssertIsObject(const ValueOperand& val)
 
 template <typename T>
 void
-MacroAssembler::spectreMaskIndexImpl(Register index, const T& length, Register output)
+MacroAssembler::computeSpectreIndexMaskGeneric(Register index, const T& length, Register output)
 {
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+    MOZ_ASSERT(index != output);
+
     // mask := ((index - length) & ~index) >> 31
-    // output := index & mask
     mov(index, output);
     sub32(length, output);
     not32(index);
     and32(index, output);
     not32(index); // Restore index register to its original value.
     rshift32Arithmetic(Imm32(31), output);
-    and32(index, output);
 }
 
 template <typename T>
 void
-MacroAssembler::spectreMaskIndexImpl(int32_t index, const T& length, Register output)
+MacroAssembler::computeSpectreIndexMask(int32_t index, const T& length, Register output)
 {
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+
     // mask := ((index - length) & ~index) >> 31
-    // output := index & mask
     move32(Imm32(index), output);
-    if (index == 0)
-        return;
     sub32(length, output);
     and32(Imm32(~index), output);
     rshift32Arithmetic(Imm32(31), output);
-    and32(Imm32(index), output);
 }
 
 void
-MacroAssembler::spectreMaskIndex(int32_t index, Register length, Register output)
+MacroAssembler::computeSpectreIndexMask(Register index, Register length, Register output)
 {
-    spectreMaskIndexImpl(index, length, output);
-}
+    MOZ_ASSERT(JitOptions.spectreIndexMasking);
+    MOZ_ASSERT(index != length);
+    MOZ_ASSERT(length != output);
+    MOZ_ASSERT(index != output);
 
-void
-MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register output)
-{
-    spectreMaskIndexImpl(index, length, output);
-}
-
-void
-MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
-{
 #if JS_BITS_PER_WORD == 64
     // On 64-bit platforms, we can use a faster algorithm:
     //
     //   mask := (uint64_t(index) - uint64_t(length)) >> 32
-    //   output := index & mask
     //
     // mask is 0x11…11 if index < length, 0 otherwise.
     move32(index, output);
     subPtr(length, output);
     rshiftPtr(Imm32(32), output);
-    and32(index, output);
 #else
-    spectreMaskIndexImpl(index, length, output);
+    computeSpectreIndexMaskGeneric(index, length, output);
 #endif
+}
+
+void
+MacroAssembler::spectreMaskIndex(int32_t index, Register length, Register output)
+{
+    MOZ_ASSERT(length != output);
+    if (index == 0) {
+        move32(Imm32(index), output);
+    } else {
+        computeSpectreIndexMask(index, length, output);
+        and32(Imm32(index), output);
+    }
+}
+
+void
+MacroAssembler::spectreMaskIndex(int32_t index, const Address& length, Register output)
+{
+    MOZ_ASSERT(length.base != output);
+    if (index == 0) {
+        move32(Imm32(index), output);
+    } else {
+        computeSpectreIndexMask(index, length, output);
+        and32(Imm32(index), output);
+    }
+}
+
+void
+MacroAssembler::spectreMaskIndex(Register index, Register length, Register output)
+{
+    MOZ_ASSERT(index != length);
+    MOZ_ASSERT(length != output);
+    MOZ_ASSERT(index != output);
+
+    computeSpectreIndexMask(index, length, output);
+    and32(index, output);
 }
 
 void
 MacroAssembler::spectreMaskIndex(Register index, const Address& length, Register output)
 {
-    spectreMaskIndexImpl(index, length, output);
+    MOZ_ASSERT(index != length.base);
+    MOZ_ASSERT(length.base != output);
+    MOZ_ASSERT(index != output);
+
+    computeSpectreIndexMaskGeneric(index, length, output);
+    and32(index, output);
+}
+
+void
+MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length, Label* failure)
+{
+    MOZ_ASSERT(mozilla::IsPowerOfTwo(length));
+    branch32(Assembler::AboveOrEqual, index, Imm32(length), failure);
+
+    // Note: it's fine to clobber the input register, as this is a no-op: it
+    // only affects speculative execution.
+    if (JitOptions.spectreIndexMasking)
+        and32(Imm32(length - 1), index);
+}
+
+void
+MacroAssembler::boundsCheck32ForLoad(Register index, Register length, Register scratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length);
+    MOZ_ASSERT(length != scratch);
+    MOZ_ASSERT(index != scratch);
+
+    branch32(Assembler::AboveOrEqual, index, length, failure);
+
+    if (JitOptions.spectreIndexMasking) {
+        computeSpectreIndexMask(index, length, scratch);
+        and32(scratch, index);
+    }
+}
+
+void
+MacroAssembler::boundsCheck32ForLoad(Register index, const Address& length, Register scratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length.base);
+    MOZ_ASSERT(length.base != scratch);
+    MOZ_ASSERT(index != scratch);
+
+    branch32(Assembler::BelowOrEqual, length, index, failure);
+
+    if (JitOptions.spectreIndexMasking) {
+        computeSpectreIndexMaskGeneric(index, length, scratch);
+        and32(scratch, index);
+    }
 }
 
 namespace js {
