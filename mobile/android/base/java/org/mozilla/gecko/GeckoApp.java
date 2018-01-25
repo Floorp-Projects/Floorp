@@ -958,7 +958,7 @@ public abstract class GeckoApp extends GeckoActivity
         if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
-            // Now that we've got multiple GeckoApp-based activities, this can
+            // In case we have multiple GeckoApp-based activities, this can
             // also happen if we're not the first activity to run within a session.
             mIsRestoringActivity = true;
             Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
