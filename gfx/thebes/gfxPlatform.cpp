@@ -2576,13 +2576,14 @@ gfxPlatform::InitOMTPConfig()
   ScopedGfxFeatureReporter reporter("OMTP");
 
   FeatureState& omtp = gfxConfig::GetFeature(Feature::OMTP);
+  int32_t paintWorkerCount = PaintThread::CalculatePaintWorkerCount();
 
   if (!XRE_IsParentProcess()) {
     // The parent process runs through all the real decision-making code
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
     if (gfxVars::UseOMTP()) {
-      reporter.SetSuccessful();
+      reporter.SetSuccessful(paintWorkerCount);
     }
     return;
   }
@@ -2607,7 +2608,7 @@ gfxPlatform::InitOMTPConfig()
 
   if (omtp.IsEnabled()) {
     gfxVars::SetUseOMTP(true);
-    reporter.SetSuccessful();
+    reporter.SetSuccessful(paintWorkerCount);
   }
 }
 

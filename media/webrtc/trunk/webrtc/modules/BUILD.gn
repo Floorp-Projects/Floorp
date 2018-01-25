@@ -23,16 +23,26 @@ group("modules") {
     "audio_processing",
     "bitrate_controller",
     "congestion_controller",
-    "desktop_capture",
     "media_file",
     "pacing",
     "remote_bitrate_estimator",
     "rtp_rtcp",
     "utility",
-    "video_capture",
     "video_coding",
     "video_processing",
   ]
+
+  if (!build_with_mozilla) {
+    public_deps += [
+      "video_capture",
+    ]
+  }
+
+  if (rtc_desktop_capture_supported) {
+    public_deps += [
+      "desktop_capture",
+    ]
+  }
 }
 
 if (rtc_include_tests) {
@@ -66,7 +76,6 @@ if (rtc_include_tests) {
     deps = [
       "..:webrtc_common",
       "../common_video",
-      "../media:rtc_media_base",
       "../modules/audio_coding",
       "../modules/audio_coding:audio_format_conversion",
       "../modules/rtp_rtcp",
@@ -78,6 +87,12 @@ if (rtc_include_tests) {
       "//testing/gmock",
       "//testing/gtest",
     ]
+
+    if (!build_with_mozilla) {
+      deps += [
+        "../media:rtc_media_base",
+      ]
+    }
 
     sources = [
       "audio_coding/test/APITest.cc",
@@ -546,7 +561,7 @@ if (rtc_include_tests) {
       sources += [ "video_coding/codecs/h264/h264_encoder_impl_unittest.cc" ]
     }
 
-    if (rtc_desktop_capture_supported || is_android) {
+    if (rtc_desktop_capture_supported || (is_android && !build_with_mozilla)) {
       deps += [ "desktop_capture" ]
       sources += [
         "desktop_capture/desktop_region_unittest.cc",
@@ -648,7 +663,6 @@ if (rtc_include_tests) {
       ":audio_network_adaptor_unittests",
       "..:webrtc_common",
       "../api:transport_api",
-      "../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
       "../base:rtc_base_tests_utils",
       "../common_audio",
       "../common_video",
@@ -693,6 +707,11 @@ if (rtc_include_tests) {
       "//third_party/gflags",
     ]
 
+    if (!build_with_mozilla) {
+      deps += [
+        "../base:rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
+      ]
+    }
     data = modules_unittests_resources
 
     if (is_android) {

@@ -5,6 +5,7 @@
 include $(topsrcdir)/mozglue/build/replace_malloc.mk
 
 ifndef CROSS_COMPILE
+ifndef MOZ_CODE_COVERAGE
 
 ifeq ($(OS_TARGET),WINNT)
 LOGALLOC_VAR = MOZ_REPLACE_MALLOC_LIB
@@ -39,4 +40,5 @@ check:: $(srcdir)/replay.log expected_output.log $(srcdir)/expected_output_minim
 
 	MALLOC_LOG=1 MALLOC_LOG_MINIMAL=1 $(LOGALLOC) ./$(PROGRAM) < $< | sed -n '/jemalloc_stats/,$$p' | $(PYTHON) $(srcdir)/logalloc_munge.py | diff -w - $(srcdir)/expected_output_minimal.log
 
+endif
 endif

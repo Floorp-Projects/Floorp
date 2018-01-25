@@ -1,101 +1,78 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # Copyright (c) 2012 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Script to install everything needed to build chromium on android that
-# requires sudo privileges.
-# See http://code.google.com/p/chromium/wiki/AndroidBuildInstructions
+# Script to install everything needed to build chromium on android, including
+# items requiring sudo privileges.
+# See https://www.chromium.org/developers/how-tos/android-build-instructions
 
-# This script installs the sun-java6 packages (bin, jre and jdk). Sun requires
-# a license agreement, so upon installation it will prompt the user. To get
-# past the curses-based dialog press TAB <ret> TAB <ret> to agree.
+args="$@"
 
 if ! uname -m | egrep -q "i686|x86_64"; then
   echo "Only x86 architectures are currently supported" >&2
   exit
 fi
 
-if [ "x$(id -u)" != x0 ]; then
-  echo "Running as non-root user."
-  echo "You might have to enter your password one or more times for 'sudo'."
-  echo
-fi
+# Exit if any commands fail.
+set -e
 
-# The temporary directory used to store output of update-java-alternatives
-TEMPDIR=$(mktemp -d)
-cleanup() {
-  local status=${?}
-  trap - EXIT
-  rm -rf "${TEMPDIR}"
-  exit ${status}
-}
-trap cleanup EXIT
+lsb_release=$(lsb_release --codename --short)
 
-sudo apt-get update
+# Install first the default Linux build deps.
+"$(dirname "${BASH_SOURCE[0]}")/install-build-deps.sh" \
+  --no-syms --lib32 --no-arm --no-chromeos-fonts --no-nacl --no-prompt "${args}"
 
 # Fix deps
 sudo apt-get -f install
 
-# Install deps
-# This step differs depending on what Ubuntu release we are running
-# on since the package names are different, and Sun's Java must
-# be installed manually on late-model versions.
-
 # common
-sudo apt-get -y install python-pexpect xvfb x11-utils
+sudo apt-get -y install lib32z1 lighttpd python-pexpect xvfb x11-utils
 
-if /usr/bin/lsb_release -r -s | grep -q "12."; then
-  # Ubuntu 12.x
-  sudo apt-get -y install ant
+# Some binaries in the Android SDK require 32-bit libraries on the host.
+# See https://developer.android.com/sdk/installing/index.html?pkg=tools
+sudo apt-get -y install libncurses5:i386 libstdc++6:i386 zlib1g:i386
 
-  # Java can not be installed via ppa on Ubuntu 12.04+ so we'll
-  # simply check to see if it has been setup properly -- if not
-  # let the user know.
+# Required by //components/cronet/tools/generate_javadoc.py
+# TODO(375324): Stop requiring ANT.
+sudo apt-get -y install ant
 
-  if ! java -version 2>&1 | grep -q "Java(TM)"; then
-    echo "****************************************************************"
-    echo "You need to install the Oracle Java SDK from http://goo.gl/uPRSq"
-    echo "and configure it as the default command-line Java environment."
-    echo "****************************************************************"
-    exit
-  fi
+# Required for apk-patch-size-estimator
+sudo apt-get -y install bsdiff
 
-else
-  # Ubuntu 10.x
+# Do our own error handling for java.
+set +e
 
-  sudo apt-get -y install ant1.8
+function IsJava8() {
+  # Arg is either "java" or "javac"
+  $1 -version 2>&1 | grep -q '1\.8'
+}
 
-  # Install sun-java6 stuff
-  sudo apt-get -y install sun-java6-bin sun-java6-jre sun-java6-jdk
+if ! (IsJava8 java && IsJava8 javac); then
+  sudo apt-get -y install openjdk-8-jre openjdk-8-jdk
+fi
 
-  # Switch version of Java to java-6-sun
-  # Sun's java is missing certain Java plugins (e.g. for firefox, mozilla).
-  # These are not required to build, and thus are treated only as warnings.
-  # Any errors in updating java alternatives which are not '*-javaplugin.so'
-  # will cause errors and stop the script from completing successfully.
-  if ! sudo update-java-alternatives -s java-6-sun \
-            >& "${TEMPDIR}"/update-java-alternatives.out
-  then
-    # Check that there are the expected javaplugin.so errors for the update
-    if grep 'javaplugin.so' "${TEMPDIR}"/update-java-alternatives.out >& \
-           /dev/null
-    then
-      # Print as warnings all the javaplugin.so errors
-      echo 'WARNING: java-6-sun has no alternatives for the following plugins:'
-      grep 'javaplugin.so' "${TEMPDIR}"/update-java-alternatives.out
-    fi
-    # Check if there are any errors that are not javaplugin.so
-    if grep -v 'javaplugin.so' "${TEMPDIR}"/update-java-alternatives.out \
-           >& /dev/null
-    then
-      # If there are non-javaplugin.so errors, treat as errors and exit
-      echo 'ERRORS: Failed to update alternatives for java-6-sun:'
-      grep -v 'javaplugin.so' "${TEMPDIR}"/update-java-alternatives.out
-      exit 1
-    fi
-  fi
+# There can be several reasons why java8 is not default despite being installed.
+# Just show an error and exit.
+if ! (IsJava8 java && IsJava8 javac); then
+  echo
+  echo "Automatic java installation failed."
+  echo '`java -version` reports:'
+  java -version
+  echo
+  echo '`javac -version` reports:'
+  javac -version
+  echo
+  echo "Please ensure that JDK 8 is installed and resolves first in your PATH."
+  echo -n '`which java` reports: '
+  which java
+  echo -n '`which javac` reports: '
+  which javac
+  echo
+  echo "You might also try running:"
+  echo "    sudo update-java-alternatives -s java-1.8.0-openjdk-amd64"
+  exit 1
 fi
 
 echo "install-build-deps-android.sh complete."

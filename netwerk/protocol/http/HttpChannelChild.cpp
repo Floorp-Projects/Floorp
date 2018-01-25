@@ -435,12 +435,14 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                     const uint32_t& aCacheKey,
                     const nsCString& altDataType,
                     const int64_t& altDataLen,
-                    Maybe<ServiceWorkerDescriptor>&& aController)
+                    Maybe<ServiceWorkerDescriptor>&& aController,
+                    const bool& aApplyConversion)
   : NeckoTargetChannelEvent<HttpChannelChild>(aChild)
   , mChannelStatus(aChannelStatus)
   , mResponseHead(aResponseHead)
   , mRequestHeaders(aRequestHeaders)
   , mUseResponseHead(aUseResponseHead)
+  , mApplyConversion(aApplyConversion)
   , mIsFromCache(aIsFromCache)
   , mCacheEntryAvailable(aCacheEntryAvailable)
   , mCacheEntryId(aCacheEntryId)
@@ -465,7 +467,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
                            mCacheExpirationTime, mCachedCharset,
                            mSecurityInfoSerialization, mSelfAddr, mPeerAddr,
                            mCacheKey, mAltDataType, mAltDataLen,
-                           mController);
+                           mController, mApplyConversion);
   }
 
  private:
@@ -473,6 +475,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
   nsHttpResponseHead mResponseHead;
   nsHttpHeaderArray mRequestHeaders;
   bool mUseResponseHead;
+  bool mApplyConversion;
   bool mIsFromCache;
   bool mCacheEntryAvailable;
   uint64_t mCacheEntryId;
@@ -506,7 +509,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                      const uint32_t& cacheKey,
                                      const nsCString& altDataType,
                                      const int64_t& altDataLen,
-                                     const OptionalIPCServiceWorkerDescriptor& aController)
+                                     const OptionalIPCServiceWorkerDescriptor& aController,
+                                     const bool& aApplyConversion)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -532,7 +536,8 @@ HttpChannelChild::RecvOnStartRequest(const nsresult& channelStatus,
                                               securityInfoSerialization,
                                               selfAddr, peerAddr, cacheKey,
                                               altDataType, altDataLen,
-                                              Move(controller)));
+                                              Move(controller),
+                                              aApplyConversion));
 
   {
     // Child's mEventQ is to control the execution order of the IPC messages
@@ -573,7 +578,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
                                  const uint32_t& cacheKey,
                                  const nsCString& altDataType,
                                  const int64_t& altDataLen,
-                                 const Maybe<ServiceWorkerDescriptor>& aController)
+                                 const Maybe<ServiceWorkerDescriptor>& aController,
+                                 const bool& aApplyConversion)
 {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
@@ -610,6 +616,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
 
   const Maybe<ServiceWorkerDescriptor>& prevController =
     mLoadInfo->GetController();
+
+  SetApplyConversion(aApplyConversion);
 
   // If we got a service worker controller from the parent, then note
   // it on the LoadInfo.  This may indicate that a non-subresource request
@@ -2739,6 +2747,10 @@ HttpChannelChild::ContinueAsyncOpen()
 
   EnsureRequestContextID();
   openArgs.requestContextID() = mRequestContextID;
+
+  openArgs.corsMode() = mCorsMode;
+  openArgs.redirectMode() = mRedirectMode;
+  openArgs.fetchCacheMode() = mFetchCacheMode;
 
   openArgs.channelId() = mChannelId;
 

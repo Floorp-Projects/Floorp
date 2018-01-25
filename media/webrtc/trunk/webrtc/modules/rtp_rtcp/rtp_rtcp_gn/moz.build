@@ -1,0 +1,246 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+FINAL_LIBRARY = "webrtc"
+
+
+UNIFIED_SOURCES += [
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/dtmf_queue.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/flexfec_sender.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/forward_error_correction.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/packet_loss_stats.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/playout_delay_oracle.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/receive_statistics_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/remote_ntp_time_estimator.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/app.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/bye.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/common_header.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/compound_packet.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/dlrr.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_jitter_report.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/extended_reports.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/fir.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/nack.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/pli.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/psfb.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/rapid_resync_request.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/receiver_report.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/remb.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/report_block.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/rpsi.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/rrtr.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/rtpfb.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/sdes.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/sender_report.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/sli.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/target_bitrate.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmb_item.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/transport_feedback.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/voip_metric.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_receiver.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_sender.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_utility.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_format.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_format_h264.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_format_vp8.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_format_vp9.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_header_extension.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_header_extensions.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_header_parser.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_packet.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_packet_history.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_payload_registry.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_receiver_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_receiver_video.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_sender.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_sender_audio.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_sender_video.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtp_utility.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/ssrc_database.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/time_util.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/tmmbr_help.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/ulpfec_header_reader_writer.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/ulpfec_receiver_impl.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/vp8_partition_aggregator.cc"
+]
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/ipc/glue",
+    "/media/webrtc/trunk/",
+    "/media/webrtc/trunk/webrtc/common_video/include/",
+    "/media/webrtc/trunk/webrtc/common_video/libyuv/include/"
+]
+
+SOURCES += [
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc",
+    "/media/webrtc/trunk/webrtc/modules/rtp_rtcp/source/ulpfec_generator.cc"
+]
+
+COMPILE_FLAGS["STL"] = []
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["V8_DEPRECATION_WARNINGS"] = True
+DEFINES["WEBRTC_RESTRICT_LOGGING"] = True
+DEFINES["WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE"] = True
+DEFINES["CHROMIUM_BUILD"] = True
+DEFINES["BWE_TEST_LOGGING_COMPILE_TIME_ENABLE"] = "0"
+DEFINES["EXPAT_RELATIVE_PATH"] = True
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NVALGRIND"] = True
+    DEFINES["NDEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["WTF_USE_DYNAMIC_ANNOTATIONS"] = "1"
+
+if CONFIG["OS_TARGET"] == "WINNT":
+
+    OS_LIBS += [
+        "winmm"
+    ]
+
+    DEFINES["_WIN32_WINNT"] = "0x0A00"
+    DEFINES["_HAS_EXCEPTIONS"] = "0"
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["_USING_V110_SDK71_"] = True
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["__STD_C"] = True
+    DEFINES["UNICODE"] = True
+    DEFINES["NOMINMAX"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True
+    DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+    DEFINES["WIN32"] = True
+    DEFINES["PSAPI_VERSION"] = "1"
+    DEFINES["WEBRTC_WIN"] = True
+    DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+    DEFINES["_ATL_NO_OPENGL"] = True
+    DEFINES["WINVER"] = "0x0A00"
+    DEFINES["_CRT_SECURE_NO_WARNINGS"] = True
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["NTDDI_VERSION"] = "0x0A000000"
+    DEFINES["_WINDOWS"] = True
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    OS_LIBS += [
+        "rt"
+    ]
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["USE_NSS_CERTS"] = "1"
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "Android":
+
+    OS_LIBS += [
+        "log"
+    ]
+
+    DEFINES["__GNU_SOURCE"] = "1"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["HAVE_SYS_UIO_H"] = True
+    DEFINES["WEBRTC_LINUX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
+    DEFINES["ANDROID_NDK_VERSION"] = "r12b"
+    DEFINES["WEBRTC_ANDROID"] = True
+    DEFINES["USE_OPENSSL_CERTS"] = "1"
+    DEFINES["ANDROID"] = True
+    DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
+    DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["DISABLE_NACL"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "Darwin":
+
+    OS_LIBS += [
+        "-framework CoreVideo"
+    ]
+
+    DEFINES["CR_XCODE_VERSION"] = "0920"
+    DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORE"] = "0"
+    DEFINES["NO_TCMALLOC"] = True
+    DEFINES["WEBRTC_MAC"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["OS_TARGET"] == "Android" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["OS_TARGET"] == "Darwin" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"]:
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"]:
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1":
+
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
+Library("rtp_rtcp_gn")

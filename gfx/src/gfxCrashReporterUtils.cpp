@@ -97,7 +97,7 @@ private:
 };
 
 void
-ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
+ScopedGfxFeatureReporter::WriteAppNote(char statusChar, int32_t statusNumber)
 {
   StaticMutexAutoLock al(gFeaturesAlreadyReportedMutex);
 
@@ -108,9 +108,16 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
   }
 
   nsAutoCString featureString;
-  featureString.AppendPrintf("%s%c ",
-                             mFeature,
-                             statusChar);
+  if (statusNumber == 0) {
+    featureString.AppendPrintf("%s%c ",
+                               mFeature,
+                               statusChar);
+  } else {
+    featureString.AppendPrintf("%s%c%d ",
+                               mFeature,
+                               statusChar,
+                               statusNumber);
+  }
 
   if (!gFeaturesAlreadyReported->Contains(featureString)) {
     gFeaturesAlreadyReported->AppendElement(featureString);

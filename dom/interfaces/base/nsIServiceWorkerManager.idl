@@ -167,12 +167,6 @@ interface nsIServiceWorkerManager : nsISupports
   [noscript] nsISupports GetActive(in nsPIDOMWindowInner aWindow, in DOMString aScope);
 
   /*
-   * Returns a ServiceWorker object representing the active worker controlling this
-   * window.
-   */
-  [noscript] nsISupports GetDocumentController(in nsPIDOMWindowInner aWindow);
-
-  /*
    * Clears ServiceWorker registrations from memory and disk for the specified
    * host.
    * - All ServiceWorker instances change their state to redundant.
