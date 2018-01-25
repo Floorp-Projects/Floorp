@@ -272,6 +272,7 @@ UNIFIED_SOURCES += [
     'jit/shared/Assembler-shared.cpp',
     'jit/shared/BaselineCompiler-shared.cpp',
     'jit/shared/CodeGenerator-shared.cpp',
+    'jit/shared/Disassembler-shared.cpp',
     'jit/shared/Lowering-shared.cpp',
     'jit/SharedIC.cpp',
     'jit/Sink.cpp',
@@ -652,6 +653,11 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_SIMD'] = True
     DEFINES['ENABLE_WASM_SIGNEXTEND_OPS'] = True
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
+    # An experiment we want to run on Nightly: Can we change the JS
+    # representation of an exported global from the global's value
+    # to an instance of WebAssembly.Global without breaking existing
+    # wasm content?
+    DEFINES['ENABLE_WASM_GLOBAL'] = True
 
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.

@@ -77,25 +77,6 @@ MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest
     as_addd(dest, dest, SecondScratchDoubleReg);
 }
 
-static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
-
-bool
-MacroAssemblerMIPSCompat::convertUInt64ToDoubleNeedsTemp()
-{
-    return false;
-}
-
-void
-MacroAssemblerMIPSCompat::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
-{
-    MOZ_ASSERT(temp == Register::Invalid());
-    convertUInt32ToDouble(src.high, dest);
-    loadConstantDouble(TO_DOUBLE_HIGH_SCALE, ScratchDoubleReg);
-    asMasm().mulDouble(ScratchDoubleReg, dest);
-    convertUInt32ToDouble(src.low, ScratchDoubleReg);
-    asMasm().addDouble(ScratchDoubleReg, dest);
-}
-
 void
 MacroAssemblerMIPSCompat::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
@@ -2504,6 +2485,28 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     as_truncws(ScratchDoubleReg, input);
     moveFromFloat32(ScratchDoubleReg, output);
     bind(&done);
+}
+
+// ========================================================================
+// Convert floating point.
+
+static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return false;
+}
+
+void
+MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    convertUInt32ToDouble(src.high, dest);
+    loadConstantDouble(TO_DOUBLE_HIGH_SCALE, ScratchDoubleReg);
+    mulDouble(ScratchDoubleReg, dest);
+    convertUInt32ToDouble(src.low, ScratchDoubleReg);
+    addDouble(ScratchDoubleReg, dest);
 }
 
 //}}} check_macroassembler_style

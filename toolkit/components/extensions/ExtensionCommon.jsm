@@ -136,6 +136,7 @@ var ExtensionAPIs = {
       wantXrays: false,
       sandboxName: script,
       addonId,
+      wantGlobalProperties: ["ChromeUtils"],
       metadata: {addonID: addonId},
     });
 
@@ -1326,12 +1327,12 @@ class SchemaAPIManager extends EventEmitter {
   _createExtGlobal() {
     let global = Cu.Sandbox(Services.scriptSecurityManager.getSystemPrincipal(), {
       wantXrays: false,
+      wantGlobalProperties: ["ChromeUtils"],
       sandboxName: `Namespace of ext-*.js scripts for ${this.processType} (from: resource://gre/modules/ExtensionCommon.jsm)`,
     });
 
     Object.assign(global, {
       Cc,
-      ChromeUtils,
       ChromeWorker,
       Ci,
       Cr,

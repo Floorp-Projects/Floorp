@@ -16,6 +16,7 @@
 
 #include "jit/arm64/Architecture-arm64.h"
 #include "jit/arm64/MacroAssembler-arm64.h"
+#include "jit/arm64/vixl/Disasm-vixl.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
 
@@ -167,19 +168,20 @@ Assembler::executableCopy(uint8_t* buffer, bool flushICache)
 }
 
 BufferOffset
-Assembler::immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op, ARMBuffer::PoolEntry* pe)
+Assembler::immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
+                   const LiteralDoc& doc, ARMBuffer::PoolEntry* pe)
 {
     uint32_t inst = op | Rt(dest);
     const size_t numInst = 1;
     const unsigned sizeOfPoolEntryInBytes = 4;
     const unsigned numPoolEntries = sizeof(value) / sizeOfPoolEntryInBytes;
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value, pe);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&inst, value, doc, pe);
 }
 
 BufferOffset
 Assembler::immPool64(ARMRegister dest, uint64_t value, ARMBuffer::PoolEntry* pe)
 {
-    return immPool(dest, (uint8_t*)&value, vixl::LDR_x_lit, pe);
+    return immPool(dest, (uint8_t*)&value, vixl::LDR_x_lit, LiteralDoc(value), pe);
 }
 
 BufferOffset
@@ -189,29 +191,34 @@ Assembler::immPool64Branch(RepatchLabel* label, ARMBuffer::PoolEntry* pe, Condit
 }
 
 BufferOffset
-Assembler::fImmPool(ARMFPRegister dest, uint8_t* value, vixl::LoadLiteralOp op)
+Assembler::fImmPool(ARMFPRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
+                    const LiteralDoc& doc)
 {
     uint32_t inst = op | Rt(dest);
     const size_t numInst = 1;
     const unsigned sizeOfPoolEntryInBits = 32;
     const unsigned numPoolEntries = dest.size() / sizeOfPoolEntryInBits;
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&inst, value, doc);
 }
 
 BufferOffset
 Assembler::fImmPool64(ARMFPRegister dest, double value)
 {
-    return fImmPool(dest, (uint8_t*)&value, vixl::LDR_d_lit);
+    return fImmPool(dest, (uint8_t*)&value, vixl::LDR_d_lit, LiteralDoc(value));
 }
+
 BufferOffset
 Assembler::fImmPool32(ARMFPRegister dest, float value)
 {
-    return fImmPool(dest, (uint8_t*)&value, vixl::LDR_s_lit);
+    return fImmPool(dest, (uint8_t*)&value, vixl::LDR_s_lit, LiteralDoc(value));
 }
 
 void
 Assembler::bind(Label* label, BufferOffset targetOffset)
 {
+#ifdef JS_DISASM_ARM64
+    spew_.spewBind(label);
+#endif
     // Nothing has seen the label yet: just mark the location.
     // If we've run out of memory, don't attempt to modify the buffer which may
     // not be there. Just mark the label as bound to the (possibly bogus)
@@ -634,6 +641,9 @@ Assembler::FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader
 void
 Assembler::retarget(Label* label, Label* target)
 {
+#ifdef JS_DISASM_ARM64
+    spew_.spewRetarget(label, target);
+#endif
     if (label->used()) {
         if (target->bound()) {
             bind(label, BufferOffset(target));
