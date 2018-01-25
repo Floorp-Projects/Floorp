@@ -393,9 +393,13 @@ class MachCommands(MachCommandBase):
         if buildapp == 'android':
             from mozrunner.devices.android_device import grant_runtime_permissions
             from mozrunner.devices.android_device import verify_android_device
+            app = kwargs.get('app')
+            if not app:
+                app = self.substs["ANDROID_PACKAGE_NAME"]
+
             # verify installation
-            verify_android_device(self, install=True, xre=False, app=kwargs['app'])
-            grant_runtime_permissions(self)
+            verify_android_device(self, install=True, xre=False, app=app)
+            grant_runtime_permissions(self, app)
             run_mochitest = mochitest.run_android_test
         else:
             run_mochitest = mochitest.run_desktop_test
