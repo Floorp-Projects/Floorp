@@ -3,15 +3,9 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-toolkit.js */
 
-// WeakMap[Extension -> Map[name -> Alarm]]
-let alarmsMap = new WeakMap();
-
-// WeakMap[Extension -> Set[callback]]
-let alarmCallbacksMap = new WeakMap();
-
 // Manages an alarm created by the extension (alarms API).
-function Alarm(extension, name, alarmInfo) {
-  this.extension = extension;
+function Alarm(api, name, alarmInfo) {
+  this.api = api;
   this.name = name;
   this.when = alarmInfo.when;
   this.delayInMinutes = alarmInfo.delayInMinutes;
@@ -40,7 +34,7 @@ function Alarm(extension, name, alarmInfo) {
 Alarm.prototype = {
   clear() {
     this.timer.cancel();
-    alarmsMap.get(this.extension).delete(this.name);
+    this.api.alarms.delete(this.name);
     this.canceled = true;
   },
 
@@ -49,7 +43,7 @@ Alarm.prototype = {
       return;
     }
 
-    for (let callback of alarmCallbacksMap.get(this.extension)) {
+    for (let callback of this.api.callbacks) {
       callback(this);
     }
 
@@ -73,55 +67,50 @@ Alarm.prototype = {
 };
 
 this.alarms = class extends ExtensionAPI {
-  onShutdown() {
-    let {extension} = this;
+  constructor(extension) {
+    super(extension);
 
-    if (alarmsMap.has(extension)) {
-      for (let alarm of alarmsMap.get(extension).values()) {
-        alarm.clear();
-      }
-      alarmsMap.delete(extension);
-      alarmCallbacksMap.delete(extension);
+    this.alarms = new Map();
+    this.callbacks = new Set();
+  }
+
+  onShutdown() {
+    for (let alarm of this.alarms.values()) {
+      alarm.clear();
     }
   }
 
   getAPI(context) {
-    let {extension} = context;
-
-    alarmsMap.set(extension, new Map());
-    alarmCallbacksMap.set(extension, new Set());
+    const self = this;
 
     return {
       alarms: {
         create: function(name, alarmInfo) {
           name = name || "";
-          let alarms = alarmsMap.get(extension);
-          if (alarms.has(name)) {
-            alarms.get(name).clear();
+          if (self.alarms.has(name)) {
+            self.alarms.get(name).clear();
           }
-          let alarm = new Alarm(extension, name, alarmInfo);
-          alarms.set(alarm.name, alarm);
+          let alarm = new Alarm(self, name, alarmInfo);
+          self.alarms.set(alarm.name, alarm);
         },
 
         get: function(name) {
           name = name || "";
-          let alarms = alarmsMap.get(extension);
-          if (alarms.has(name)) {
-            return Promise.resolve(alarms.get(name).data);
+          if (self.alarms.has(name)) {
+            return Promise.resolve(self.alarms.get(name).data);
           }
           return Promise.resolve();
         },
 
         getAll: function() {
-          let result = Array.from(alarmsMap.get(extension).values(), alarm => alarm.data);
+          let result = Array.from(self.alarms.values(), alarm => alarm.data);
           return Promise.resolve(result);
         },
 
         clear: function(name) {
           name = name || "";
-          let alarms = alarmsMap.get(extension);
-          if (alarms.has(name)) {
-            alarms.get(name).clear();
+          if (self.alarms.has(name)) {
+            self.alarms.get(name).clear();
             return Promise.resolve(true);
           }
           return Promise.resolve(false);
@@ -129,7 +118,7 @@ this.alarms = class extends ExtensionAPI {
 
         clearAll: function() {
           let cleared = false;
-          for (let alarm of alarmsMap.get(extension).values()) {
+          for (let alarm of self.alarms.values()) {
             alarm.clear();
             cleared = true;
           }
@@ -141,9 +130,9 @@ this.alarms = class extends ExtensionAPI {
             fire.sync(alarm.data);
           };
 
-          alarmCallbacksMap.get(extension).add(callback);
+          self.callbacks.add(callback);
           return () => {
-            alarmCallbacksMap.get(extension).delete(callback);
+            self.callbacks.delete(callback);
           };
         }).api(),
       },

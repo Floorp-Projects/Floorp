@@ -185,7 +185,7 @@ struct gfxFontStyle {
 
     PLDHashNumber Hash() const {
         return ((style + (systemFont << 7) +
-            (weight << 8)) + uint32_t(size*1000) + uint32_t(sizeAdjust*1000)) ^
+            (weight << 8)) + uint32_t(size*1000) + int32_t(sizeAdjust*1000)) ^
             nsRefPtrHashKey<nsAtom>::HashKey(language);
     }
 

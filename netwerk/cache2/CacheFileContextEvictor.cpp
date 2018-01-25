@@ -73,6 +73,16 @@ CacheFileContextEvictor::Init(nsIFile *aCacheDirectory)
   return NS_OK;
 }
 
+void
+CacheFileContextEvictor::Shutdown()
+{
+  LOG(("CacheFileContextEvictor::Shutdown()"));
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
+
+  CloseIterators();
+}
+
 uint32_t
 CacheFileContextEvictor::ContextsCount()
 {
