@@ -321,6 +321,10 @@ this.XPCOMUtils = {
                                    aObject, aName, aResource, aSymbol,
                                    aPreLambda, aPostLambda, aProxy)
   {
+    if (arguments.length == 3) {
+      return ChromeUtils.defineModuleGetter(aObject, aName, aResource);
+    }
+
     let proxy = aProxy || {};
 
     if (typeof(aPreLambda) === "function") {
@@ -358,7 +362,7 @@ this.XPCOMUtils = {
                                    aObject, aModules)
   {
     for (let [name, module] of Object.entries(aModules)) {
-      this.defineLazyModuleGetter(aObject, name, module);
+      ChromeUtils.defineModuleGetter(aObject, name, module);
     }
   },
 

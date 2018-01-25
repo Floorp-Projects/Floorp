@@ -81,7 +81,7 @@ MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 
     // Scratch space for generating the load instruction.
     //
-    // allocEntry() will use InsertIndexIntoTag() to store a temporary
+    // allocLiteralLoadEntry() will use InsertIndexIntoTag() to store a temporary
     // index to the corresponding PoolEntry in the instruction itself.
     //
     // That index will be fixed up later when finishPool()
@@ -94,8 +94,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
-                      literalAddr);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                                 literalAddr);
 }
 
 BufferOffset
@@ -107,7 +107,7 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 
     // Scratch space for generating the load instruction.
     //
-    // allocEntry() will use InsertIndexIntoTag() to store a temporary
+    // allocLiteralLoadEntry() will use InsertIndexIntoTag() to store a temporary
     // index to the corresponding PoolEntry in the instruction itself.
     //
     // That index will be fixed up later when finishPool()
@@ -120,8 +120,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
-                      literalAddr);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                                 literalAddr);
 }
 
 void
@@ -880,6 +880,69 @@ void
 MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
 {
     MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                          Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                           Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt64(FloatRegister input, Register64 output, Label* oolEntry,
+                                            Label* oolRejoin, FloatRegister tempDouble)
+{
+    MOZ_CRASH("NYI");
+}
+
+// ========================================================================
+// Convert floating point.
+
+bool
+MacroAssembler::convertUInt64ToDoubleNeedsTemp()
+{
+    return false;
+}
+
+void
+MacroAssembler::convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertInt64ToDouble(Register64 src, FloatRegister dest)
+{
+    Scvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertUInt64ToFloat32(Register64 src, FloatRegister dest, Register temp)
+{
+    MOZ_ASSERT(temp == Register::Invalid());
+    Ucvtf(ARMFPRegister(dest, 32), ARMRegister(src.reg, 64));
+}
+
+void
+MacroAssembler::convertInt64ToFloat32(Register64 src, FloatRegister dest)
+{
+    Scvtf(ARMFPRegister(dest, 32), ARMRegister(src.reg, 64));
 }
 
 // ========================================================================

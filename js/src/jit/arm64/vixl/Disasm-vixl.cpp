@@ -2751,10 +2751,14 @@ void Disassembler::Format(const Instruction* instr, const char* mnemonic,
                           const char* format) {
   VIXL_ASSERT(mnemonic != NULL);
   ResetOutput();
+  uint32_t pos = buffer_pos_;
   Substitute(instr, mnemonic);
   if (format != NULL) {
-    VIXL_ASSERT(buffer_pos_ < buffer_size_);
-    buffer_[buffer_pos_++] = ' ';
+    uint32_t spaces = buffer_pos_ - pos < 8 ? 8 - (buffer_pos_ - pos) : 1;
+    while (spaces--) {
+      VIXL_ASSERT(buffer_pos_ < buffer_size_);
+      buffer_[buffer_pos_++] = ' ';
+    }
     Substitute(instr, format);
   }
   VIXL_ASSERT(buffer_pos_ < buffer_size_);
@@ -3483,6 +3487,15 @@ void PrintDisassembler::ProcessOutput(const Instruction* instr) {
           reinterpret_cast<uint64_t>(instr),
           instr->InstructionBits(),
           GetOutput());
+}
+
+void DisassembleInstruction(char* buffer, size_t bufsize, const Instruction* instr)
+{
+    vixl::Disassembler disasm(buffer, bufsize-1);
+    vixl::Decoder decoder;
+    decoder.AppendVisitor(&disasm);
+    decoder.Decode(instr);
+    buffer[bufsize-1] = 0;      // Just to be safe
 }
 
 }  // namespace vixl

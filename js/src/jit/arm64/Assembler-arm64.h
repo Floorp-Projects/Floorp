@@ -10,6 +10,7 @@
 #include "jit/arm64/vixl/Assembler-vixl.h"
 
 #include "jit/JitCompartment.h"
+#include "jit/shared/Disassembler-shared.h"
 
 namespace js {
 namespace jit {
@@ -19,6 +20,9 @@ typedef vixl::Register ARMRegister;
 typedef vixl::FPRegister ARMFPRegister;
 using vixl::ARMBuffer;
 using vixl::Instruction;
+
+using LabelDoc = DisassemblerSpew::LabelDoc;
+using LiteralDoc = DisassemblerSpew::LiteralDoc;
 
 static const uint32_t AlignmentAtPrologue = 0;
 static const uint32_t AlignmentMidPrologue = 8;
@@ -205,10 +209,11 @@ class Assembler : public vixl::Assembler
     void executableCopy(uint8_t* buffer, bool flushICache = true);
 
     BufferOffset immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
-                         ARMBuffer::PoolEntry* pe = nullptr);
+                         const LiteralDoc& doc, ARMBuffer::PoolEntry* pe = nullptr);
     BufferOffset immPool64(ARMRegister dest, uint64_t value, ARMBuffer::PoolEntry* pe = nullptr);
     BufferOffset immPool64Branch(RepatchLabel* label, ARMBuffer::PoolEntry* pe, vixl::Condition c);
-    BufferOffset fImmPool(ARMFPRegister dest, uint8_t* value, vixl::LoadLiteralOp op);
+    BufferOffset fImmPool(ARMFPRegister dest, uint8_t* value, vixl::LoadLiteralOp op,
+                          const LiteralDoc& doc);
     BufferOffset fImmPool64(ARMFPRegister dest, double value);
     BufferOffset fImmPool32(ARMFPRegister dest, float value);
 
@@ -267,8 +272,9 @@ class Assembler : public vixl::Assembler
     }
 
     void comment(const char* msg) {
-        // This is not implemented because setPrinter() is not implemented.
-        // TODO spew("; %s", msg);
+#ifdef JS_DISASM_ARM64
+        spew_.spew("; %s", msg);
+#endif
     }
 
     int actualIndex(int curOffset) {
@@ -278,7 +284,11 @@ class Assembler : public vixl::Assembler
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
         return code->raw() + index;
     }
+
     void setPrinter(Sprinter* sp) {
+#ifdef JS_DISASM_ARM64
+        spew_.setPrinter(sp);
+#endif
     }
 
     static bool SupportsFloatingPoint() { return true; }

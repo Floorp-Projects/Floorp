@@ -671,7 +671,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void jump(TrampolinePtr code) {
         syncStackPtr();
-        BufferOffset loc = b(-1); // The jump target will be patched by executableCopy().
+        BufferOffset loc = b(-1, LabelDoc()); // The jump target will be patched by executableCopy().
         addPendingJump(loc, ImmPtr(code.value), Relocation::HARDCODED);
     }
     void jump(RepatchLabel* label) {
@@ -1266,13 +1266,17 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void branch(JitCode* target) {
         syncStackPtr();
-        BufferOffset loc = b(-1); // The jump target will be patched by executableCopy().
+        BufferOffset loc = b(-1, LabelDoc()); // The jump target will be patched by executableCopy().
         addPendingJump(loc, ImmPtr(target->raw()), Relocation::JITCODE);
     }
 
-    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always,
-                                 Label* documentation = nullptr)
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label, Condition cond = Always, Label* documentation = nullptr)
     {
+#ifdef JS_DISASM_ARM64
+        LabelDoc doc = spew_.refLabel(documentation);
+#else
+        LabelDoc doc;
+#endif
         ARMBuffer::PoolEntry pe;
         BufferOffset load_bo;
         BufferOffset branch_bo;
@@ -1288,16 +1292,16 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         if (cond != Always) {
             Label notTaken;
             B(&notTaken, Assembler::InvertCondition(cond));
-            branch_bo = b(-1);
+            branch_bo = b(-1, doc);
             bind(&notTaken);
         } else {
             nop();
-            branch_bo = b(-1);
+            branch_bo = b(-1, doc);
         }
         label->use(branch_bo.getOffset());
         return CodeOffsetJump(load_bo.getOffset(), pe.index());
     }
-    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation = nullptr) {
+    CodeOffsetJump backedgeJump(RepatchLabel* label, Label* documentation) {
         return jumpWithPatch(label, Always, documentation);
     }
 
@@ -1984,15 +1988,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void abiret() {
         syncStackPtr(); // SP is always used to transmit the stack between calls.
         vixl::MacroAssembler::Ret(vixl::lr);
-    }
-
-    bool convertUInt64ToDoubleNeedsTemp() {
-        return false;
-    }
-
-    void convertUInt64ToDouble(Register64 src, FloatRegister dest, Register temp) {
-        MOZ_ASSERT(temp == Register::Invalid());
-        Ucvtf(ARMFPRegister(dest, 64), ARMRegister(src.reg, 64));
     }
 
     void clampCheck(Register r, Label* handleNotAnInt) {

@@ -1705,8 +1705,8 @@ void Assembler::LoadStoreStruct(const VRegister& vt,
 
 
 void Assembler::LoadStoreStructSingleAllLanes(const VRegister& vt,
-                                      const MemOperand& addr,
-                                      NEONLoadStoreSingleStructOp op) {
+					      const MemOperand& addr,
+					      NEONLoadStoreSingleStructOp op) {
   LoadStoreStructVerify(vt, addr, op);
   Emit(op | LoadStoreStructAddrModeField(addr) | LSVFormat(vt) | Rt(vt));
 }
