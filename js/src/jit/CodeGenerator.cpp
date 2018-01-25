@@ -1008,7 +1008,7 @@ CodeGenerator::visitBooleanToString(LBooleanToString* lir)
 void
 CodeGenerator::emitIntToString(Register input, Register output, Label* ool)
 {
-    masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT), ool);
+    masm.boundsCheck32PowerOfTwo(input, StaticStrings::INT_STATIC_LIMIT, ool);
 
     // Fast path for small integers.
     masm.movePtr(ImmPtr(&gen->runtime->staticStrings().intStaticTable), output);
@@ -8162,8 +8162,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode* lir)
     OutOfLineCode* ool = oolCallVM(StringFromCharCodeInfo, lir, ArgList(code), StoreRegisterTo(output));
 
     // OOL path if code >= UNIT_STATIC_LIMIT.
-    masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
-                  ool->entry());
+    masm.boundsCheck32PowerOfTwo(code, StaticStrings::UNIT_STATIC_LIMIT, ool->entry());
 
     masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
@@ -8193,8 +8192,7 @@ CodeGenerator::visitFromCodePoint(LFromCodePoint* lir)
 
     static_assert(StaticStrings::UNIT_STATIC_LIMIT -1 == JSString::MAX_LATIN1_CHAR,
                   "Latin-1 strings can be loaded from static strings");
-    masm.branch32(Assembler::AboveOrEqual, codePoint, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
-                  &isTwoByte);
+    masm.boundsCheck32PowerOfTwo(codePoint, StaticStrings::UNIT_STATIC_LIMIT, &isTwoByte);
     {
         masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable), output);
         masm.loadPtr(BaseIndex(output, codePoint, ScalePointer), output);
