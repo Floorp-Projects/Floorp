@@ -600,49 +600,53 @@ MacroAssembler::negateDouble(FloatRegister reg)
 void
 MacroAssembler::absFloat32(FloatRegister src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI - absFloat32");
+    fabs(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
 }
 
 void
 MacroAssembler::absDouble(FloatRegister src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI - absDouble");
+    fabs(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
 }
 
 void
 MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI - sqrtFloat32");
+    fsqrt(ARMFPRegister(dest, 32), ARMFPRegister(src, 32));
 }
 
 void
 MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest)
 {
-    MOZ_CRASH("NYI - sqrtDouble");
+    fsqrt(ARMFPRegister(dest, 64), ARMFPRegister(src, 64));
 }
 
 void
 MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
 {
-    MOZ_CRASH("NYI - minFloat32");
+    MOZ_ASSERT(handleNaN);      // Always true for wasm
+    fmin(ARMFPRegister(srcDest, 32), ARMFPRegister(srcDest, 32), ARMFPRegister(other, 32));
 }
 
 void
 MacroAssembler::minDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
 {
-    MOZ_CRASH("NYI - minDouble");
+    MOZ_ASSERT(handleNaN);      // Always true for wasm
+    fmin(ARMFPRegister(srcDest, 64), ARMFPRegister(srcDest, 64), ARMFPRegister(other, 64));
 }
 
 void
 MacroAssembler::maxFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
 {
-    MOZ_CRASH("NYI - maxFloat32");
+    MOZ_ASSERT(handleNaN);      // Always true for wasm
+    fmax(ARMFPRegister(srcDest, 32), ARMFPRegister(srcDest, 32), ARMFPRegister(other, 32));
 }
 
 void
 MacroAssembler::maxDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
 {
-    MOZ_CRASH("NYI - maxDouble");
+    MOZ_ASSERT(handleNaN);      // Always true for wasm
+    fmax(ARMFPRegister(srcDest, 64), ARMFPRegister(srcDest, 64), ARMFPRegister(other, 64));
 }
 
 // ===============================================================
