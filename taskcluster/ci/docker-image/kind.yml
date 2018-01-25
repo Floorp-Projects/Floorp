@@ -62,8 +62,18 @@ jobs:
       ARCH: i386
   lint:
     symbol: I(lnt)
+  debian9-base:
+    symbol: I(deb9-base)
+    definition: debian-base
+    args:
+      DIST: stretch
+      BASE_TAG: '20170620'
+      SNAPSHOT: '20170830T000511Z'
+    packages:
+      - deb9-mercurial
   android-build:
     symbol: I(agb)
+    parent: debian9-base
   index-task:
     symbol: I(idx)
   funsize-update-generator:
