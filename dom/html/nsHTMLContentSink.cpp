@@ -175,8 +175,7 @@ protected:
   void UpdateChildCounts() override;
 
   void NotifyInsert(nsIContent* aContent,
-                    nsIContent* aChildContent,
-                    int32_t aIndexInContainer);
+                    nsIContent* aChildContent);
   void NotifyRootInsertion();
 };
 
@@ -332,7 +331,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
     int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
     NS_ASSERTION(parent->GetChildAt_Deprecated(childIndex) == aContent,
                  "Flushing the wrong child.");
-    mSink->NotifyInsert(parent, aContent, childIndex);
+    mSink->NotifyInsert(parent, aContent);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
     FlushTags();
@@ -529,7 +528,7 @@ SinkContext::FlushTags()
           NS_ASSERTION(!(mStackPos > (stackPos + 1)) ||
                        (child == mStack[stackPos + 1].mContent),
                        "Flushing the wrong child.");
-          mSink->NotifyInsert(content, child, childIndex);
+          mSink->NotifyInsert(content, child);
         } else {
           mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
         }
@@ -849,7 +848,7 @@ HTMLContentSink::OpenBody()
     uint32_t oldUpdates = mUpdatesInNotification;
     mUpdatesInNotification = 0;
     if (insertionPoint != -1) {
-      NotifyInsert(parent, mBody, insertionPoint - 1);
+      NotifyInsert(parent, mBody);
     } else {
       NotifyAppend(parent, numFlushed);
     }
@@ -947,8 +946,7 @@ HTMLContentSink::CloseHeadContext()
 
 void
 HTMLContentSink::NotifyInsert(nsIContent* aContent,
-                              nsIContent* aChildContent,
-                              int32_t aIndexInContainer)
+                              nsIContent* aChildContent)
 {
   if (aContent && aContent->GetUncomposedDoc() != mDocument) {
     // aContent is not actually in our document anymore.... Just bail out of
