@@ -180,6 +180,18 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
             return false;
     }
 
+    if (compileArgs_->responseURLs.baseURL) {
+        metadata_->baseURL = DuplicateString(compileArgs_->responseURLs.baseURL.get());
+        if (!metadata_->baseURL)
+            return false;
+    }
+
+    if (compileArgs_->responseURLs.sourceMapURL) {
+        metadata_->sourceMapURL = DuplicateString(compileArgs_->responseURLs.sourceMapURL.get());
+        if (!metadata_->sourceMapURL)
+            return false;
+    }
+
     if (!linkData_.initTier1(tier(), *metadata_))
         return false;
 

@@ -15,7 +15,6 @@
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
-var promise = require("promise");
 var {
   ActorPool, createExtraActors, appendExtraActors
 } = require("devtools/server/actors/common");
@@ -238,9 +237,6 @@ function TabActor(connection) {
   this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
 }
 
-// XXX (bug 710213): TabActor attach/detach/exit/destroy is a
-// *complete* mess, needs to be rethought asap.
-
 TabActor.prototype = {
   traits: null,
 
@@ -441,15 +437,6 @@ TabActor.prototype = {
       this._sources = new TabSources(this.threadActor, this._allowSource);
     }
     return this._sources;
-  },
-
-  /**
-   * This is called by BrowserTabList.getList for existing tab actors prior to
-   * calling |form| below.  It can be used to do any async work that may be
-   * needed to assemble the form.
-   */
-  update() {
-    return promise.resolve(this);
   },
 
   form() {

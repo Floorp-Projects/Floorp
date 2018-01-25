@@ -566,6 +566,23 @@ FetchUtil::StreamResponseToJS(JSContext* aCx,
     return ThrowException(aCx, JSMSG_RESPONSE_ALREADY_CONSUMED);
   }
 
+  switch (aMimeType) {
+    case JS::MimeType::Wasm:
+      nsAutoString url;
+      response->GetUrl(url);
+
+      IgnoredErrorResult result;
+      nsCString sourceMapUrl;
+      response->GetInternalHeaders()->Get(NS_LITERAL_CSTRING("SourceMap"), sourceMapUrl, result);
+      if (NS_WARN_IF(result.Failed())) {
+        return ThrowException(aCx, JSMSG_ERROR_CONSUMING_RESPONSE);
+      }
+      NS_ConvertUTF16toUTF8 urlUTF8(url);
+      aConsumer->noteResponseURLs(urlUTF8.get(),
+                                  sourceMapUrl.IsVoid() ? nullptr : sourceMapUrl.get());
+      break;
+  }
+
   RefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);

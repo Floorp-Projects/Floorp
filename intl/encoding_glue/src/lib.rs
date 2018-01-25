@@ -583,3 +583,10 @@ fn checked_min(one: Option<usize>, other: Option<usize>) -> Option<usize> {
         other
     }
 }
+
+// Bindings for encoding_rs::mem. These may move to a separate crate in the future.
+
+#[no_mangle]
+pub unsafe extern "C" fn encoding_mem_is_utf16_bidi(buffer: *const u16, len: usize) -> bool {
+    encoding_rs::mem::is_utf16_bidi(::std::slice::from_raw_parts(buffer, len))
+}

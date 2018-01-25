@@ -2,11 +2,11 @@
 
 set -xe
 
-test $PARENT_TASK_ARTIFACTS_URL_PREFIX
-test $BALROG_API_ROOT
+test "$PARENT_TASK_ARTIFACTS_URL_PREFIX"
+test "$BALROG_API_ROOT"
 # BALROG_BLOB_SUFFIX is used by the script implicitly to avoid possible CLI
 # issues with suffixes starting with "-"
-test $BALROG_BLOB_SUFFIX
+test "$BALROG_BLOB_SUFFIX"
 
 
 ARTIFACTS_DIR="/home/worker/artifacts"
@@ -20,4 +20,4 @@ python /home/worker/bin/funsize-balrog-submitter-complete.py  \
     --manifest "$ARTIFACTS_DIR/manifest.json" \
     -a "$BALROG_API_ROOT" \
     --verbose \
-    $EXTRA_BALROG_SUBMITTER_PARAMS
+    "$EXTRA_BALROG_SUBMITTER_PARAMS"

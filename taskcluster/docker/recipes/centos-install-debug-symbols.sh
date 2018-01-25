@@ -17,7 +17,7 @@ install_debuginfo_for_installed_packages() {
                 # Remove arch suffix
                 print gensub(/\.(i.86|x86_64|noarch)/, "", "", $1)
             }' \
-        | xargs $debuginfo_install \
+        | xargs "$debuginfo_install" \
         || : # ignore errors
 }
 
@@ -34,7 +34,7 @@ strlen() {
     LANG=C
     byteslen=${#1}
     LANG=$old_lang
-    echo $byteslen
+    echo "$byteslen"
 }
 
 echo "Searching for additional debuginfo packages..."
@@ -47,14 +47,14 @@ libraries=""
 # argument length limit. arg_max stores the argument limit in
 # bytes, discounting the $debuginfo_install command plus one
 # space.
-arg_max=$(( $(getconf ARG_MAX)-$(strlen $debuginfo_install)-$(strlen " ") ))
+arg_max=$(( $(getconf ARG_MAX)-$(strlen "$debuginfo_install")-$(strlen " ") ))
 
 to_debuginfo() {
     # extracted from debuginfo-install script
     if [[ $1 == *-rpms ]]; then
-        echo ${1%*-rpms}-debug-rpms
+        echo "${1%*-rpms}-debug-rpms"
     else
-        echo $1-debuginfo
+        echo "$1-debuginfo"
     fi
 }
 
@@ -68,7 +68,7 @@ get_debuginfo_package() {
         package="$package $unversioned_package"
     fi
 
-    echo $package
+    echo "$package"
 }
 
 walk_dir() {
@@ -76,8 +76,8 @@ walk_dir() {
     for i in $1/*; do
         # if we found a library...
         if [[ $i == *.so ]]; then
-            lib="$(get_debuginfo_package $(basename $i))"
-            if [ $(strlen "$debuginfo_install $libraries $lib") -ge $arg_max ]; then
+            lib="$(get_debuginfo_package "$(basename "$i")")"
+            if [ "$(strlen "$debuginfo_install $libraries $lib")" -ge $arg_max ]; then
                 $debuginfo_install $libraries > /dev/null
                 libraries=""
             fi
@@ -91,5 +91,5 @@ for i in /usr/lib /usr/lib64 /lib /lib64; do
 done
 
 if [ ${#libraries} -gt 0 ]; then
-    $debuginfo_install $libraries > /dev/null
+    $debuginfo_install "$libraries" > /dev/null
 fi

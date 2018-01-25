@@ -73,7 +73,7 @@ function test_lazy_api() {
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
-    client.listTabs(onListTabs);
+    client.listTabs().then(onListTabs);
   });
   function onListTabs(response) {
     // On listTabs, the actor is still not loaded,

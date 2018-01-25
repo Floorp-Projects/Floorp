@@ -8,56 +8,39 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-bug-762593-insecure-passwords-web-" +
-                 "console-warning.html";
-const INSECURE_PASSWORD_MSG = "Password fields present on an insecure " +
-                 "(http://) page. This is a security risk that allows user " +
-                 "login credentials to be stolen.";
-const INSECURE_FORM_ACTION_MSG = "Password fields present in a form with an " +
-                 "insecure (http://) form action. This is a security risk " +
-                 "that allows user login credentials to be stolen.";
-const INSECURE_IFRAME_MSG = "Password fields present on an insecure " +
-                 "(http://) iframe. This is a security risk that allows " +
-                 "user login credentials to be stolen.";
-const INSECURE_PASSWORDS_URI = "https://developer.mozilla.org/docs/Web/" +
-                               "Security/Insecure_passwords" + DOCS_GA_PARAMS;
+const INSECURE_IFRAME_URI = "http://example.com/browser/devtools/client/webconsole/" +
+  "new-console-output/test/mochitest/test-insecure-passwords-web-console-warning.html";
+const INSECURE_PASSWORD_URI = "http://example.com/browser/devtools/client/webconsole/" +
+  "new-console-output/test/mochitest/test-iframe-insecure-form-action.html";
+const INSECURE_FORM_ACTION_URI = "https://example.com/browser/devtools/client/" +
+  "webconsole/new-console-output/test/mochitest/test-iframe-insecure-form-action.html";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
+const STOLEN = "This is a security risk that allows user login credentials to be stolen.";
+const INSECURE_PASSWORD_MSG =
+  "Password fields present on an insecure (http://) page. " + STOLEN;
+const INSECURE_FORM_ACTION_MSG =
+  "Password fields present in a form with an insecure (http://) form action. " + STOLEN;
+const INSECURE_IFRAME_MSG =
+  "Password fields present on an insecure (http://) iframe. " + STOLEN;
+const INSECURE_PASSWORDS_URI =
+  "https://developer.mozilla.org/docs/Web/Security/Insecure_passwords" + DOCS_GA_PARAMS;
 
-  let hud = yield openConsole();
-
-  let result = yield waitForMessages({
-    webconsole: hud,
-    messages: [
-      {
-        name: "Insecure password error displayed successfully",
-        text: INSECURE_PASSWORD_MSG,
-        category: CATEGORY_SECURITY,
-        severity: SEVERITY_WARNING
-      },
-      {
-        name: "Insecure iframe error displayed successfully",
-        text: INSECURE_IFRAME_MSG,
-        category: CATEGORY_SECURITY,
-        severity: SEVERITY_WARNING
-      },
-      {
-        name: "Insecure form action error displayed successfully",
-        text: INSECURE_FORM_ACTION_MSG,
-        category: CATEGORY_SECURITY,
-        severity: SEVERITY_WARNING
-      },
-    ],
-  });
-
-  yield testClickOpenNewTab(hud, result);
+add_task(async function () {
+  await testUriWarningMessage(INSECURE_IFRAME_URI, INSECURE_IFRAME_MSG);
+  await testUriWarningMessage(INSECURE_PASSWORD_URI, INSECURE_PASSWORD_MSG);
+  await testUriWarningMessage(INSECURE_FORM_ACTION_URI, INSECURE_FORM_ACTION_MSG);
 });
 
-function testClickOpenNewTab(hud, [result]) {
-  let msg = [...result.matched][0];
-  let warningNode = msg.querySelector(".learn-more-link");
-  ok(warningNode, "learn more link");
-  return simulateMessageLinkClick(warningNode, INSECURE_PASSWORDS_URI);
+async function testUriWarningMessage(uri, warningMessage) {
+  let hud = await openNewTabAndConsole(uri);
+  let message = await waitFor(()=> findMessage(hud, warningMessage, ".message.warn"));
+  ok(message, "Warning message displayed successfully");
+  await testLearnMoreLinkClick(message, INSECURE_PASSWORDS_URI);
+}
+
+async function testLearnMoreLinkClick(message, expectedUri) {
+  let learnMoreLink = message.querySelector(".learn-more-link");
+  ok(learnMoreLink, "There is a [Learn More] link");
+  const {link} = await simulateLinkClick(learnMoreLink);
+  is(link, expectedUri, "Click on [Learn More] link navigates user to " + expectedUri);
 }

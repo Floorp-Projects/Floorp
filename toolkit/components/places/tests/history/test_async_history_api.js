@@ -377,7 +377,7 @@ add_task(async function test_non_addable_uri_errors() {
   for (let place of placesResult.errors) {
     info("Checking '" + place.info.uri.spec + "'");
     Assert.equal(place.resultCode, Cr.NS_ERROR_INVALID_ARG);
-    Assert.equal(false, await promiseIsURIVisited(place.info.uri));
+    Assert.equal(false, await PlacesUtils.history.hasVisits(place.info.uri));
   }
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -392,13 +392,13 @@ add_task(async function test_duplicate_guid_errors() {
     ],
   };
 
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(placeInfo.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
@@ -408,14 +408,14 @@ add_task(async function test_duplicate_guid_errors() {
     guid: placeInfo.guid,
   };
 
-  Assert.equal(false, await promiseIsURIVisited(badPlace.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(badPlace.uri));
   placesResult = await promiseUpdatePlaces(badPlace);
   if (placesResult.results.length > 0) {
     do_throw("Unexpected success.");
   }
   let badPlaceInfo = placesResult.errors[0];
   Assert.equal(badPlaceInfo.resultCode, Cr.NS_ERROR_STORAGE_CONSTRAINT);
-  Assert.equal(false, await promiseIsURIVisited(badPlaceInfo.info.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(badPlaceInfo.info.uri));
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -429,18 +429,18 @@ add_task(async function test_invalid_referrerURI_ignored() {
     ],
   };
   place.visits[0].referrerURI = NetUtil.newURI(place.uri.spec + "_unvisistedURI");
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
-  Assert.equal(false, await promiseIsURIVisited(place.visits[0].referrerURI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.visits[0].referrerURI));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(placeInfo.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   // Check to make sure we do not visit the invalid referrer.
-  Assert.equal(false, await promiseIsURIVisited(place.visits[0].referrerURI));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.visits[0].referrerURI));
 
   // Check to make sure from_visit is zero in database.
   let stmt = DBConn().createStatement(
@@ -465,14 +465,14 @@ add_task(async function test_nonnsIURI_referrerURI_ignored() {
     ],
   };
   place.visits[0].referrerURI = place.uri.spec + "_nonnsIURI";
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(placeInfo.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   // Check to make sure from_visit is zero in database.
   let stmt = DBConn().createStatement(
@@ -502,7 +502,7 @@ add_task(async function test_old_referrer_ignored() {
 
   // First we must add our referrer to the history so that it is not ignored
   // as being invalid.
-  Assert.equal(false, await promiseIsURIVisited(referrerPlace.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(referrerPlace.uri));
   let placesResult = await promiseUpdatePlaces(referrerPlace);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
@@ -511,7 +511,7 @@ add_task(async function test_old_referrer_ignored() {
   // Now that the referrer is added, we can add a page with a valid
   // referrer to determine if the recency of the referrer is taken into
   // account.
-  Assert.ok(await promiseIsURIVisited(referrerPlace.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(referrerPlace.uri));
 
   let visitInfo = new VisitInfo();
   visitInfo.referrerURI = referrerPlace.uri;
@@ -522,13 +522,13 @@ add_task(async function test_old_referrer_ignored() {
     ],
   };
 
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
   placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(place.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(place.uri));
 
   // Though the visit will not contain the referrer, we must examine the
   // database to be sure.
@@ -556,13 +556,13 @@ add_task(async function test_place_id_ignored() {
     ],
   };
 
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(place.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(place.uri));
 
   let placeId = placeInfo.placeId;
   Assert.notEqual(placeId, 0);
@@ -575,7 +575,7 @@ add_task(async function test_place_id_ignored() {
     placeId,
   };
 
-  Assert.equal(false, await promiseIsURIVisited(badPlace.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(badPlace.uri));
   placesResult = await promiseUpdatePlaces(badPlace);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
@@ -583,7 +583,7 @@ add_task(async function test_place_id_ignored() {
   placeInfo = placesResult.results[0];
 
   Assert.notEqual(placeInfo.placeId, placeId);
-  Assert.ok(await promiseIsURIVisited(badPlace.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(badPlace.uri));
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });
@@ -606,8 +606,8 @@ add_task(async function test_handleCompletion_called_when_complete() {
       ],
     },
   ];
-  Assert.equal(false, await promiseIsURIVisited(places[0].uri));
-  Assert.equal(false, await promiseIsURIVisited(places[1].uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(places[0].uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(places[1].uri));
 
   const EXPECTED_COUNT_SUCCESS = 2;
   const EXPECTED_COUNT_FAILURE = 1;
@@ -631,7 +631,7 @@ add_task(async function test_add_visit() {
     let transitionType = PlacesUtils.history.TRANSITIONS[t];
     place.visits.push(new VisitInfo(transitionType, VISIT_TIME));
   }
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let callbackCount = 0;
   let placesResult = await promiseUpdatePlaces(place);
@@ -639,7 +639,7 @@ add_task(async function test_add_visit() {
     do_throw("Unexpected error.");
   }
   for (let placeInfo of placesResult.results) {
-    Assert.ok(await promiseIsURIVisited(place.uri));
+    Assert.ok(await PlacesUtils.history.hasVisits(place.uri));
 
     // Check mozIPlaceInfo properties.
     Assert.ok(place.uri.equals(placeInfo.uri));
@@ -693,7 +693,7 @@ add_task(async function test_properties_saved() {
         new VisitInfo(transitionType),
       ],
     };
-    Assert.equal(false, await promiseIsURIVisited(place.uri));
+    Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
     places.push(place);
   }
 
@@ -704,7 +704,7 @@ add_task(async function test_properties_saved() {
   }
   for (let placeInfo of placesResult.results) {
     let uri = placeInfo.uri;
-    Assert.ok(await promiseIsURIVisited(uri));
+    Assert.ok(await PlacesUtils.history.hasVisits(uri));
     let visit = placeInfo.visits[0];
     print("TEST-INFO | test_properties_saved | updatePlaces callback for " +
           "transition type " + visit.transitionType);
@@ -771,7 +771,7 @@ add_task(async function test_guid_saved() {
     ],
   };
   do_check_valid_places_guid(place.guid);
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
@@ -779,7 +779,7 @@ add_task(async function test_guid_saved() {
   }
   let placeInfo = placesResult.results[0];
   let uri = placeInfo.uri;
-  Assert.ok(await promiseIsURIVisited(uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(uri));
   Assert.equal(placeInfo.guid, place.guid);
   do_check_guid_for_uri(uri, place.guid);
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -799,8 +799,8 @@ add_task(async function test_referrer_saved() {
     },
   ];
   places[1].visits[0].referrerURI = places[0].uri;
-  Assert.equal(false, await promiseIsURIVisited(places[0].uri));
-  Assert.equal(false, await promiseIsURIVisited(places[1].uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(places[0].uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(places[1].uri));
 
   let resultCount = 0;
   let placesResult = await promiseUpdatePlaces(places);
@@ -809,7 +809,7 @@ add_task(async function test_referrer_saved() {
   }
   for (let placeInfo of placesResult.results) {
     let uri = placeInfo.uri;
-    Assert.ok(await promiseIsURIVisited(uri));
+    Assert.ok(await PlacesUtils.history.hasVisits(uri));
     let visit = placeInfo.visits[0];
 
     // We need to insert all of our visits before we can test conditions.
@@ -847,7 +847,7 @@ add_task(async function test_guid_change_saved() {
       new VisitInfo(),
     ],
   };
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
@@ -874,7 +874,7 @@ add_task(async function test_title_change_saved() {
       new VisitInfo(),
     ],
   };
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
@@ -921,7 +921,7 @@ add_task(async function test_no_title_does_not_clear_title() {
       new VisitInfo(),
     ],
   };
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
@@ -948,7 +948,7 @@ add_task(async function test_title_change_notifies() {
       new VisitInfo(),
     ],
   };
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   let silentObserver =
     new TitleChangedObserver(place.uri, "DO NOT WANT", function() {
@@ -1015,7 +1015,7 @@ add_task(async function test_visit_notifies() {
       new VisitInfo(),
     ],
   };
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
 
   function promiseVisitObserver(aPlace) {
     return new Promise((resolve, reject) => {
@@ -1160,13 +1160,13 @@ add_task(async function test_ignore_errors() {
     ],
   };
 
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(placeInfo.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
@@ -1176,7 +1176,7 @@ add_task(async function test_ignore_errors() {
     guid: placeInfo.guid,
   };
 
-  Assert.equal(false, await promiseIsURIVisited(badPlace.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(badPlace.uri));
   placesResult = await promiseUpdatePlaces(badPlace, {ignoreErrors: true});
   if (placesResult.results.length > 0) {
     do_throw("Unexpected success.");
@@ -1220,13 +1220,13 @@ add_task(async function test_ignore_results_and_errors() {
     ],
   };
 
-  Assert.equal(false, await promiseIsURIVisited(place.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(place.uri));
   let placesResult = await promiseUpdatePlaces(place);
   if (placesResult.errors.length > 0) {
     do_throw("Unexpected error.");
   }
   let placeInfo = placesResult.results[0];
-  Assert.ok(await promiseIsURIVisited(placeInfo.uri));
+  Assert.ok(await PlacesUtils.history.hasVisits(placeInfo.uri));
 
   let badPlace = {
     uri: NetUtil.newURI(TEST_DOMAIN + "test_duplicate_guid_fails_second"),
@@ -1245,7 +1245,7 @@ add_task(async function test_ignore_results_and_errors() {
     badPlace,
   ];
 
-  Assert.equal(false, await promiseIsURIVisited(badPlace.uri));
+  Assert.equal(false, await PlacesUtils.history.hasVisits(badPlace.uri));
   placesResult = await promiseUpdatePlaces(allPlaces, {ignoreErrors: true, ignoreResults: true});
   Assert.equal(placesResult.errors.length, 0,
                "Should have seen 0 errors because we disabled reporting.");

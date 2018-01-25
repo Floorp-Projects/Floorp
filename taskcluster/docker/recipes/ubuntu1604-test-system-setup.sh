@@ -2,7 +2,7 @@
 
 set -ve
 
-test `whoami` == 'root'
+test "$(whoami)" == 'root'
 
 mkdir -p /setup
 cd /setup
@@ -87,17 +87,20 @@ apt_packages+=('python-pip')
 apt-get update
 # This allows ubuntu-desktop to be installed without human interaction
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y -f ${apt_packages[@]}
+apt-get install -y -f "${apt_packages[@]}"
 
 dpkg-reconfigure locales
 
+# shellcheck source=taskcluster/docker/recipes/common.sh
 . /setup/common.sh
+# shellcheck source=taskcluster/docker/recipes/install-mercurial.sh
 . /setup/install-mercurial.sh
 
 pip install --upgrade pip
 
 pip install virtualenv
 
+# shellcheck source=taskcluster/docker/recipes/install-node.sh
 . /setup/install-node.sh
 
 # Install custom-built Debian packages.  These come from a set of repositories
@@ -176,4 +179,4 @@ cd /
 rm -rf /setup ~/.ccache ~/.cache ~/.npm
 apt-get clean
 apt-get autoclean
-rm -f $0
+rm -f "$0"

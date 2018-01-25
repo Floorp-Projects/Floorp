@@ -209,7 +209,7 @@ nsRetrievalContextWayland::ConfigureKeyboard(wl_seat_capability caps)
   if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
       mKeyboard = wl_seat_get_keyboard(mSeat);
       wl_keyboard_add_listener(mKeyboard, &keyboard_listener, this);
-  } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
+  } else if (mKeyboard && !(caps & WL_SEAT_CAPABILITY_KEYBOARD)) {
       wl_keyboard_destroy(mKeyboard);
       mKeyboard = nullptr;
   }
@@ -276,9 +276,11 @@ static const struct wl_registry_listener clipboard_registry_listener = {
 };
 
 nsRetrievalContextWayland::nsRetrievalContextWayland(void)
-  : mInitialized(false),
-    mDataDeviceManager(nullptr),
-    mDataOffer(nullptr)
+  : mInitialized(false)
+  , mSeat(nullptr)
+  , mDataDeviceManager(nullptr)
+  , mDataOffer(nullptr)
+  , mKeyboard(nullptr)
 {
     const gchar* charset;
     g_get_charset(&charset);
@@ -292,10 +294,14 @@ nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     mDisplay = sGdkWaylandDisplayGetWlDisplay(gdk_display_get_default());
     wl_registry_add_listener(wl_display_get_registry(mDisplay),
                              &clipboard_registry_listener, this);
+    // Call wl_display_roundtrip() twice to make sure all
+    // callbacks are processed.
     wl_display_roundtrip(mDisplay);
     wl_display_roundtrip(mDisplay);
 
-    // We don't have Wayland support here so just give up
+    // mSeat/mDataDeviceManager should be set now by
+    // gdk_registry_handle_global() as a response to
+    // wl_registry_add_listener() call.
     if (!mDataDeviceManager || !mSeat)
         return;
 
