@@ -1607,6 +1607,15 @@ public:
   const nsRegion& GetWindowOpaqueRegion() {
     return mWindowOpaqueRegion;
   }
+
+  /**
+   * Clears the window opaque region.
+   */
+  void ClearWindowOpaqueRegion()
+  {
+    mWindowOpaqueRegion.SetEmpty();
+  }
+
   void SetGlassDisplayItem(nsDisplayItem* aItem) {
     if (mGlassDisplayItem) {
       // Web pages or extensions could trigger this by using
