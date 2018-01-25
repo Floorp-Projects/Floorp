@@ -29,7 +29,7 @@
     </em:localized>
     
     <em:localized>
-      <Description em:locale="ES-es">
+      <Description em:locale="es-ES">
         <em:name>es-ES Name</em:name>
         <em:description>es-ES Description</em:description>
       </Description>

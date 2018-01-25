@@ -119,7 +119,8 @@ interface mozILocaleService : nsISupports
    *
    * Strategy is one of the three strategies described at the top of this file.
    *
-   * The result list is ordered according to the order of the requested locales.
+   * The result list is canonicalized and ordered according to the order
+   * of the requested locales.
    *
    * (See LocaleService.h for a more C++-friendly version of this.)
    */
