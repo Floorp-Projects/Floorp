@@ -172,7 +172,7 @@ public:
                    JS::MutableHandle<JSObject*> aRetval,
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  nsGenericHTMLElement *GetBody();
+  using nsIDocument::GetBody;
   void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
   mozilla::dom::HTMLSharedElement *GetHead() {
     return static_cast<mozilla::dom::HTMLSharedElement*>(GetHeadElement());
