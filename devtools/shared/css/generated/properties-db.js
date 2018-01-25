@@ -5269,13 +5269,19 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-alt-content",
+      "attr",
       "close-quote",
+      "counter",
+      "counters",
       "inherit",
       "initial",
       "no-close-quote",
       "no-open-quote",
+      "none",
+      "normal",
       "open-quote",
-      "unset"
+      "unset",
+      "url"
     ]
   },
   "counter-increment": {

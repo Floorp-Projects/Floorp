@@ -555,6 +555,13 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-linear-gradient"));
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-radial-gradient"));
   }
+  if (aParserVariant & VARIANT_ATTR) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("attr"));
+  }
+  if (aParserVariant & VARIANT_COUNTER) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("counter"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("counters"));
+  }
 }
 
 /* static */ void
@@ -691,7 +698,6 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
         supported |= VARIANT_LENGTH;
         break;
 
-      case eCSSProperty_content:
       case eCSSProperty_cursor:
         supported |= VARIANT_URL;
         break;
