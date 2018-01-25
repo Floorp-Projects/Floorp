@@ -1773,7 +1773,7 @@ HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
                                         nsAString& aOutColor)
 {
