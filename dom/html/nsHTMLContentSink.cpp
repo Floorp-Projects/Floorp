@@ -328,9 +328,6 @@ SinkContext::DidAddContent(nsIContent* aContent)
       mStack[mStackPos - 1].mNumFlushed <
       mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
-    int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
-    NS_ASSERTION(parent->GetChildAt_Deprecated(childIndex) == aContent,
-                 "Flushing the wrong child.");
     mSink->NotifyInsert(parent, aContent);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
