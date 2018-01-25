@@ -42,6 +42,6 @@ def lintdir():
 
 @pytest.fixture(scope='module')
 def linters(lintdir, request):
-    suffix_filter = getattr(request.module, 'linters', ['.lint.py'])
+    suffix_filter = getattr(request.module, 'linters', ['.yml'])
     return [os.path.join(lintdir, p) for p in os.listdir(lintdir)
             if any(p.endswith(suffix) for suffix in suffix_filter)]
