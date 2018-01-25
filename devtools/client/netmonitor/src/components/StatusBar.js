@@ -38,9 +38,8 @@ function StatusBar({ summary, openStatistics, timingMarkers }) {
   } = timingMarkers;
 
   let countText = count === 0 ? REQUESTS_COUNT_EMPTY :
-    PluralForm.get(
-      count, L10N.getFormatStrWithNumbers("networkMenu.summary.requestsCount", count)
-  );
+    PluralForm.get(count,
+      L10N.getStr("networkMenu.summary.requestsCount2")).replace("#1", count);
   let transferText = L10N.getFormatStrWithNumbers("networkMenu.summary.transferred",
     getFormattedSize(contentSize), getFormattedSize(transferredSize));
   let finishText = L10N.getFormatStrWithNumbers("networkMenu.summary.finish",
