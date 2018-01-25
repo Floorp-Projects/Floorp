@@ -2087,12 +2087,9 @@ XULDocument::PrepareToWalk()
         return NS_OK;
     }
 
-    uint32_t piInsertionPoint = 0;
+    nsINode* nodeToInsertBefore = nsINode::GetFirstChild();
     if (mState != eState_Master) {
-        int32_t indexOfRoot = ComputeIndexOf(GetRootElement());
-        NS_ASSERTION(indexOfRoot >= 0,
-                     "No root content when preparing to walk overlay!");
-        piInsertionPoint = indexOfRoot;
+        nodeToInsertBefore = GetRootElement();
     }
 
     const nsTArray<RefPtr<nsXULPrototypePI> >& processingInstructions =
@@ -2101,7 +2098,7 @@ XULDocument::PrepareToWalk()
     uint32_t total = processingInstructions.Length();
     for (uint32_t i = 0; i < total; ++i) {
         rv = CreateAndInsertPI(processingInstructions[i],
-                               this, piInsertionPoint + i);
+                               this, nodeToInsertBefore);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2145,7 +2142,7 @@ XULDocument::PrepareToWalk()
 
 nsresult
 XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
-                               nsINode* aParent, uint32_t aIndex)
+                               nsINode* aParent, nsINode* aBeforeThis)
 {
     NS_PRECONDITION(aProtoPI, "null ptr");
     NS_PRECONDITION(aParent, "null ptr");
@@ -2156,14 +2153,15 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
 
     nsresult rv;
     if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
-        rv = InsertXMLStylesheetPI(aProtoPI, aParent, aIndex, node);
+        rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, node);
     } else if (aProtoPI->mTarget.EqualsLiteral("xul-overlay")) {
-        rv = InsertXULOverlayPI(aProtoPI, aParent, aIndex, node);
+        rv = InsertXULOverlayPI(aProtoPI, aParent, aBeforeThis, node);
     } else {
         // No special processing, just add the PI to the document.
-        nsCOMPtr<nsIContent> nodeToInsertBefore =
-            aParent->GetChildAt_Deprecated(aIndex);
-        rv = aParent->InsertChildBefore(node, nodeToInsertBefore, false);
+        rv = aParent->InsertChildBefore(node->AsContent(),
+                                        aBeforeThis
+                                          ? aBeforeThis->AsContent() : nullptr,
+                                        false);
     }
 
     return rv;
@@ -2172,7 +2170,7 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
 nsresult
 XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
                                    nsINode* aParent,
-                                   uint32_t aIndex,
+                                   nsINode* aBeforeThis,
                                    nsIContent* aPINode)
 {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aPINode));
@@ -2187,9 +2185,10 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     ssle->SetEnableUpdates(false);
     ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
-    nsCOMPtr<nsIContent> nodeToInsertBefore =
-       aParent->GetChildAt_Deprecated(aIndex);
-    rv = aParent->InsertChildBefore(aPINode, nodeToInsertBefore, false);
+    rv = aParent->InsertChildBefore(aPINode->AsContent(),
+                                    aBeforeThis
+                                      ? aBeforeThis->AsContent() : nullptr,
+                                    false);
     if (NS_FAILED(rv)) return rv;
 
     ssle->SetEnableUpdates(true);
@@ -2216,14 +2215,15 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
 nsresult
 XULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
                                 nsINode* aParent,
-                                uint32_t aIndex,
+                                nsINode* aBeforeThis,
                                 nsIContent* aPINode)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIContent> nodeToInsertBefore =
-       aParent->GetChildAt_Deprecated(aIndex);
-    rv = aParent->InsertChildBefore(aPINode, nodeToInsertBefore, false);
+    rv = aParent->InsertChildBefore(aPINode->AsContent(),
+                                    aBeforeThis
+                                      ? aBeforeThis->AsContent() : nullptr,
+                                    false);
     if (NS_FAILED(rv)) return rv;
 
     // xul-overlay PI is special only in prolog
@@ -2709,8 +2709,7 @@ XULDocument::ResumeWalk()
 
                 if (parent) {
                     // an inline script could have removed the root element
-                    rv = CreateAndInsertPI(piProto, parent,
-                                           parent->GetChildCount());
+                    rv = CreateAndInsertPI(piProto, parent, nullptr);
                     NS_ENSURE_SUCCESS(rv, rv);
                 }
             }
