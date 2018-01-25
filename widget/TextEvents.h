@@ -228,6 +228,19 @@ public:
     return IsKeyEventOnPlugin(mMessage);
   }
 
+  bool IsInputtingText() const
+  {
+    // NOTE: On some keyboard layout, some characters are inputted with Control
+    //       key or Alt key, but at that time, widget unset the modifier flag
+    //       from eKeyPress event.
+    return mMessage == eKeyPress &&
+           mCharCode &&
+           !(mModifiers & (MODIFIER_ALT |
+                           MODIFIER_CONTROL |
+                           MODIFIER_META |
+                           MODIFIER_OS));
+  }
+
   virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eKeyboardEventClass,
