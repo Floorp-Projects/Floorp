@@ -12,16 +12,16 @@ const data = {
       [["en"], ["en"], ["en"]],
       [["en-US"], ["en-US"], ["en-US"]],
       [["en-Latn-US"], ["en-Latn-US"], ["en-Latn-US"]],
-      [["en-Latn-US-mac"], ["en-Latn-US-mac"], ["en-Latn-US-mac"]],
+      [["en-Latn-US-windows"], ["en-Latn-US-windows"], ["en-Latn-US-windows"]],
       [["fr-FR"], ["de", "it", "fr-FR"], ["fr-FR"]],
       [["fr", "pl", "de-DE"], ["pl", "en-US", "de-DE"], ["pl", "de-DE"]],
     ],
     "available as range": [
       [["en-US"], ["en"], ["en"]],
       [["en-Latn-US"], ["en-US"], ["en-US"]],
-      [["en-US-mac"], ["en-US"], ["en-US"]],
+      [["en-US-windows"], ["en-US"], ["en-US"]],
       [["fr-CA", "de-DE"], ["fr", "it", "de"], ["fr", "de"]],
-      [["ja-JP-mac"], ["ja"], ["ja"]],
+      [["ja-JP-windows"], ["ja"], ["ja"]],
       [["en-Latn-GB", "en-Latn-IN"], ["en-IN", "en-GB"], ["en-GB", "en-IN"]],
     ],
     "should match on likely subtag": [
@@ -38,36 +38,27 @@ const data = {
     "should match likelySubtag region over other regions": [
       [["en-CA"], ["en-ZA", "en-GB", "en-US"], ["en-US", "en-ZA", "en-GB"]],
     ],
-    "should match on a requested locale as a range": [
-      [["en-*-US"], ["en-US"], ["en-US"]],
-      [["en-Latn-US-*"], ["en-Latn-US"], ["en-Latn-US"]],
-      [["en-*-US-*"], ["en-US"], ["en-US"]],
-    ],
     "should match cross-region": [
       [["en"], ["en-US"], ["en-US"]],
       [["en-US"], ["en-GB"], ["en-GB"]],
       [["en-Latn-US"], ["en-Latn-GB"], ["en-Latn-GB"]],
-      // This is a cross-region check, because the requested Locale
-      // is really lang: en, script: *, region: undefined
-      [["en-*"], ["en-US"], ["en-US"]],
     ],
     "should match cross-variant": [
-      [["en-US-mac"], ["en-US-win"], ["en-US-win"]],
+      [["en-US-linux"], ["en-US-windows"], ["en-US-windows"]],
     ],
     "should prioritize properly": [
       // exact match first
-      [["en-US"], ["en-US-mac", "en", "en-US"], ["en-US", "en", "en-US-mac"]],
+      [["en-US"], ["en-US-windows", "en", "en-US"], ["en-US", "en", "en-US-windows"]],
       // available as range second
       [["en-Latn-US"], ["en-GB", "en-US"], ["en-US", "en-GB"]],
       // likely subtags third
       [["en"], ["en-Cyrl-US", "en-Latn-US"], ["en-Latn-US"]],
       // variant range fourth
-      [["en-US-mac"], ["en-US-win", "en-GB-mac"], ["en-US-win", "en-GB-mac"]],
+      [["en-US-macos"], ["en-US-windows", "en-GB-macos"], ["en-US-windows", "en-GB-macos"]],
       // regional range fifth
-      [["en-US-mac"], ["en-GB-win"], ["en-GB-win"]],
-    ],
-    "should prioritize properly (extra tests)": [
+      [["en-US-macos"], ["en-GB-windows"], ["en-GB-windows"]],
       [["en-US"], ["en-GB", "en"], ["en", "en-GB"]],
+      [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"], ["fr-FR-windows", "de-DE"]],
     ],
     "should handle default locale properly": [
       [["fr"], ["de", "it"], []],
@@ -76,16 +67,19 @@ const data = {
       [["fr", "de-DE"], ["de-DE", "fr-CA"], "en-US", ["fr-CA", "de-DE", "en-US"]],
     ],
     "should handle all matches on the 1st higher than any on the 2nd": [
-      [["fr-CA-mac", "de-DE"], ["de-DE", "fr-FR-win"], ["fr-FR-win", "de-DE"]],
+      [["fr-CA-macos", "de-DE"], ["de-DE", "fr-FR-windows"], ["fr-FR-windows", "de-DE"]],
     ],
     "should handle cases and underscores": [
       [["fr_FR"], ["fr-FR"], ["fr-FR"]],
-      [["fr_fr"], ["fr-fr"], ["fr-fr"]],
-      [["fr_Fr"], ["fr-fR"], ["fr-fR"]],
+      [["fr_fr"], ["fr-fr"], ["fr-FR"]],
+      [["fr_Fr"], ["fr-fR"], ["fr-FR"]],
       [["fr_lAtN_fr"], ["fr-Latn-FR"], ["fr-Latn-FR"]],
-      [["fr_FR"], ["fr_FR"], ["fr_FR"]],
-      [["fr-FR"], ["fr_FR"], ["fr_FR"]],
-      [["fr_Cyrl_FR_mac"], ["fr_Cyrl_fr-mac"], ["fr_Cyrl_fr-mac"]],
+      [["fr_FR"], ["fr_FR"], ["fr-FR"]],
+      [["fr-FR"], ["fr_FR"], ["fr-FR"]],
+      [["fr_Cyrl_FR_macos"], ["fr_Cyrl_fr-macos"], ["fr-Cyrl-FR-macos"]],
+    ],
+    "should handle mozilla specific 3-letter variants": [
+      [["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"], ["ja-JP-mac", "de-DE"]],
     ],
     "should not crash on invalid input": [
       [null, ["fr-FR"], []],

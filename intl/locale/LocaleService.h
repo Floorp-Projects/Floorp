@@ -247,8 +247,8 @@ public:
    */
   bool IsAppLocaleRTL();
 
-  static bool LanguagesMatch(const nsCString& aRequested,
-                             const nsCString& aAvailable);
+  static bool LanguagesMatch(const nsACString& aRequested,
+                             const nsACString& aAvailable);
 
   bool IsServer();
 

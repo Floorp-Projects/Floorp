@@ -5,6 +5,9 @@
 
 #include "mozilla/intl/MozLocale.h"
 
+#include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
+
 #include "unicode/uloc.h"
 
 using namespace mozilla::intl;
@@ -13,134 +16,174 @@ using namespace mozilla::intl;
  * Note: The file name is `MozLocale` to avoid compilation problems on case-insensitive
  * Windows. The class name is `Locale`.
  */
-Locale::Locale(const nsCString& aLocale, bool aRange)
-  : mLocaleStr(aLocale)
+Locale::Locale(const nsACString& aLocale)
 {
-  int32_t partNum = 0;
+  int32_t position = 0;
+
+  if (!IsASCII(aLocale)) {
+    mIsValid = false;
+    return;
+  }
 
   nsAutoCString normLocale(aLocale);
   normLocale.ReplaceChar('_', '-');
 
-  for (const nsACString& part : normLocale.Split('-')) {
-    switch (partNum) {
-      case 0:
-        if (part.EqualsLiteral("*") ||
-            part.Length() == 2 || part.Length() == 3) {
-          mLanguage.Assign(part);
-        }
-        break;
-      case 1:
-        if (part.EqualsLiteral("*") || part.Length() == 4) {
-          mScript.Assign(part);
-          break;
-        }
-
-        // fallover to region case
-        partNum++;
-        MOZ_FALLTHROUGH;
-      case 2:
-        if (part.EqualsLiteral("*") || part.Length() == 2) {
-          mRegion.Assign(part);
-        }
-        break;
-      case 3:
-        if (part.EqualsLiteral("*") || (part.Length() >= 3 && part.Length() <= 8)) {
-          mVariant.Assign(part);
-        }
-        break;
+  /**
+   * BCP47 language tag:
+   *
+   * langtag = language            2*3ALPHA
+   *           ["-" extlang]       3ALPHA *2("-" 3ALPHA)
+   *           ["-" script]        4ALPHA
+   *           ["-" region]        2ALPHA / 3DIGIT
+   *           *("-" variant)      5*8alphanum / (DIGIT 3alphanum)
+   *           *("-" extension)    [0-9a-wy-z] 1*("-" (1*8alphanum))
+   *           ["-" privateuse]    x 1*("-" (1*8alphanum))
+   *
+   * This class currently supports a subset of the full BCP47 language tag
+   * with a single extension of allowing variants to be 3ALPHA to support
+   * `ja-JP-mac` code:
+   *
+   * langtag = language            2*3ALPHA
+   *           ["-" script]        4ALPHA
+   *           ["-" region]        2ALPHA
+   *           *("-" variant)      3*8alphanum
+   *
+   * The `position` variable represents the currently expected section of the tag
+   * and intentionally skips positions (like `extlang`) which may be added later.
+   */
+  for (const nsACString& subTag : normLocale.Split('-')) {
+    auto slen = subTag.Length();
+    if (position == 0) {
+      if (slen < 2 || slen > 3) {
+        mIsValid = false;
+        return;
+      }
+      mLanguage = subTag;
+      ToLowerCase(mLanguage);
+      position = 2;
+    } else if (position <= 2 && slen == 4) {
+      mScript = subTag;
+      ToLowerCase(mScript);
+      mScript.Replace(0, 1, ToUpperCase(mScript[0]));
+      position = 3;
+    } else if (position <= 3 && slen == 2) {
+      mRegion = subTag;
+      ToUpperCase(mRegion);
+      position = 4;
+    } else if (position <= 4 && slen >= 3 && slen <= 8) {
+      // we're quirky here because we allow for variant to be 3 char long.
+      // BCP47 requires variants to be 5-8 char long at lest.
+      //
+      // We do this to support the `ja-JP-mac` quirk that we have.
+      nsAutoCString lcSubTag(subTag);
+      ToLowerCase(lcSubTag);
+      mVariants.InsertElementSorted(lcSubTag);
+      position = 4;
     }
-    partNum++;
   }
-
-  if (aRange) {
-    if (mLanguage.IsEmpty()) {
-      mLanguage.AssignLiteral("*");
-    }
-    if (mScript.IsEmpty()) {
-      mScript.AssignLiteral("*");
-    }
-    if (mRegion.IsEmpty()) {
-      mRegion.AssignLiteral("*");
-    }
-    if (mVariant.IsEmpty()) {
-      mVariant.AssignLiteral("*");
-    }
-  }
-}
-
-static bool
-SubtagMatches(const nsCString& aSubtag1, const nsCString& aSubtag2)
-{
-  return aSubtag1.EqualsLiteral("*") ||
-         aSubtag2.EqualsLiteral("*") ||
-         aSubtag1.Equals(aSubtag2, nsCaseInsensitiveCStringComparator());
 }
 
 bool
-Locale::Matches(const Locale& aLocale) const
+Locale::IsValid()
 {
-  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
-         SubtagMatches(mScript, aLocale.mScript) &&
-         SubtagMatches(mRegion, aLocale.mRegion) &&
-         SubtagMatches(mVariant, aLocale.mVariant);
+  return mIsValid;
+}
+
+const nsCString
+Locale::AsString()
+{
+  nsCString tag;
+
+  if (!mIsValid) {
+    tag.AppendLiteral("und");
+    return tag;
+  }
+
+  tag.Append(mLanguage);
+
+  if (!mScript.IsEmpty()) {
+    tag.AppendLiteral("-");
+    tag.Append(mScript);
+  }
+
+  if (!mRegion.IsEmpty()) {
+    tag.AppendLiteral("-");
+    tag.Append(mRegion);
+  }
+
+  for (const auto& variant : mVariants) {
+    tag.AppendLiteral("-");
+    tag.Append(variant);
+  }
+  return tag;
+}
+
+const nsACString&
+Locale::GetLanguage() const
+{
+  return mLanguage;
+}
+
+const nsACString&
+Locale::GetScript() const
+{
+  return mScript;
+}
+
+const nsACString&
+Locale::GetRegion() const
+{
+  return mRegion;
+}
+
+const nsTArray<nsCString>&
+Locale::GetVariants() const
+{
+  return mVariants;
 }
 
 bool
-Locale::LanguageMatches(const Locale& aLocale) const
+Locale::Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const
 {
-  return SubtagMatches(mLanguage, aLocale.mLanguage) &&
-         SubtagMatches(mScript, aLocale.mScript);
-}
+  if ((!aThisRange || !mLanguage.IsEmpty()) &&
+      (!aOtherRange || !aOther.mLanguage.IsEmpty()) &&
+      !mLanguage.Equals(aOther.mLanguage)) {
+    return false;
+  }
 
-void
-Locale::SetVariantRange()
-{
-  mVariant.AssignLiteral("*");
-}
-
-void
-Locale::SetRegionRange()
-{
-  mRegion.AssignLiteral("*");
+  if ((!aThisRange || !mScript.IsEmpty()) &&
+      (!aOtherRange || !aOther.mScript.IsEmpty()) &&
+      !mScript.Equals(aOther.mScript)) {
+    return false;
+  }
+  if ((!aThisRange || !mRegion.IsEmpty()) &&
+      (!aOtherRange || !aOther.mRegion.IsEmpty()) &&
+      !mRegion.Equals(aOther.mRegion)) {
+    return false;
+  }
+  if ((!aThisRange || !mVariants.IsEmpty()) &&
+      (!aOtherRange || !aOther.mVariants.IsEmpty()) &&
+      mVariants != aOther.mVariants) {
+    return false;
+  }
+  return true;
 }
 
 bool
 Locale::AddLikelySubtags()
 {
-  return AddLikelySubtagsForLocale(mLocaleStr);
-}
-
-bool
-Locale::AddLikelySubtagsWithoutRegion()
-{
-  nsAutoCString locale(mLanguage);
-
-  if (!mScript.IsEmpty()) {
-    locale.Append("-");
-    locale.Append(mScript);
-  }
-
-  // We don't add variant here because likelySubtag doesn't care about it.
-
-  return AddLikelySubtagsForLocale(locale);
-}
-
-bool
-Locale::AddLikelySubtagsForLocale(const nsACString& aLocale)
-{
   const int32_t kLocaleMax = 160;
   char maxLocale[kLocaleMax];
-  nsAutoCString locale(aLocale);
 
   UErrorCode status = U_ZERO_ERROR;
-  uloc_addLikelySubtags(locale.get(), maxLocale, kLocaleMax, &status);
+  uloc_addLikelySubtags(AsString().get(), maxLocale, kLocaleMax, &status);
 
   if (U_FAILURE(status)) {
     return false;
   }
 
   nsDependentCString maxLocStr(maxLocale);
-  Locale loc = Locale(maxLocStr, false);
+  Locale loc = Locale(maxLocStr);
 
   if (loc == *this) {
     return false;
@@ -154,4 +197,16 @@ Locale::AddLikelySubtagsForLocale(const nsACString& aLocale)
   // provide it and we want to preserve the range
 
   return true;
+}
+
+void
+Locale::ClearVariants()
+{
+  mVariants.Clear();
+}
+
+void
+Locale::ClearRegion()
+{
+  mRegion.Truncate();
 }
