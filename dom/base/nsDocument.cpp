@@ -6897,7 +6897,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       if (!title) {
         return NS_OK;
       }
-      rootElement->InsertChildAt_Deprecated(title, 0, true);
+      rootElement->InsertChildBefore(title, rootElement->GetFirstChild(), true);
     }
   } else if (rootElement->IsHTMLElement()) {
     if (!title) {
