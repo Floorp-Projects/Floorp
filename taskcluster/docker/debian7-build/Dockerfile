@@ -32,10 +32,14 @@ CMD ["/bin/bash", "--login"]
 RUN for s in debian_wheezy debian_wheezy-updates debian_wheezy-backports debian-security_wheezy/updates; do \
       echo "deb http://snapshot.debian.org/archive/${s%_*}/20171210T214726Z/ ${s#*_} main"; \
     done > /etc/apt/sources.list && \
-    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99check-valid-until
+    ( echo 'quiet "true";'; \
+      echo 'APT::Get::Assume-Yes "true";'; \
+      echo 'APT::Install-Recommends "false";'; \
+      echo 'Acquire::Check-Valid-Until "false";'; \
+    ) > /etc/apt/apt.conf.d/99taskcluster
 
-RUN apt-get update -q && \
-    apt-get install -yyq --no-install-recommends \
+RUN apt-get update && \
+    apt-get install \
       apt-transport-https \
       ca-certificates
 
@@ -50,8 +54,8 @@ RUN dpkg --add-architecture $ARCH
 # Ideally, we wouldn't need gcc-multilib and the extra linux-libc-dev,
 # but the latter is required to make the former installable, and the former
 # because of bug 1409276.
-RUN apt-get update -q && \
-    apt-get install -yyq --no-install-recommends \
+RUN apt-get update && \
+    apt-get install \
       autoconf2.13 \
       automake \
       bzip2 \
