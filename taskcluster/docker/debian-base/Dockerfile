@@ -42,9 +42,11 @@ RUN apt-get update && \
       ca-certificates
 
 COPY setup_packages.sh /usr/local/sbin/
+COPY cloud-mirror-workaround.sh /usr/local/sbin/
 
 # %ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $DOCKER_IMAGE_PACKAGES && \
+    echo 'dir::bin::methods::https "/usr/local/sbin/cloud-mirror-workaround.sh";' > /etc/apt/apt.conf.d/99cloud-mirror-workaround && \
     apt-get update && \
     apt-get install \
       git \
