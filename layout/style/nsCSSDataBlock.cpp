@@ -95,7 +95,11 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
       }
     }
 
-    aValue.StartImageLoad(aDocument, CORSMode::CORS_NONE);
+    CORSMode mode =
+      nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOAD_USE_CORS) ?
+      CORSMode::CORS_ANONYMOUS :
+      CORSMode::CORS_NONE;
+    aValue.StartImageLoad(aDocument, mode);
     if (aForTokenStream && aContext) {
       CSSVariableImageTable::Add(aContext, aProperty,
                                  aValue.GetImageStructValue());
