@@ -58,6 +58,7 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
   {
     stack: [
       "descriptionHeightWorkaround@resource:///modules/PanelMultiView.jsm",
+      "set current@resource:///modules/PanelMultiView.jsm",
       "hideAllViewsExcept@resource:///modules/PanelMultiView.jsm",
     ],
 
