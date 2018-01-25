@@ -13,6 +13,29 @@
 <body>
 <div id="log"></div>
 <script>
-fetch_tests_from_worker(new Worker("worker_performance_observer.js"));
+const worker = new Worker("worker_performance_observer.js");
+
+promise_test(t => {
+  let found = false;
+  return new Promise(resolve => {
+    SpecialPowers.registerConsoleListener(msg => {
+      if (msg.errorMessage === "Ignoring unsupported entryTypes: invalid.") {
+        found = true;
+        resolve();
+      }
+    });
+    worker.addEventListener("error", resolve);
+    worker.addEventListener("message", function(event) {
+      if (event.data.type === "complete") {
+        resolve();
+      }
+    });
+  }).then(() => {
+    SpecialPowers.postConsoleSentinel();
+    assert_true(found, "got the expected console warning");
+  });
+}, "Console warnings about invalid types should be logged during the tests");
+
+fetch_tests_from_worker(worker);
 </script>
 </body>
