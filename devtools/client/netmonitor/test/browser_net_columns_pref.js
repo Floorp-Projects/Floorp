@@ -7,11 +7,11 @@
  * Tests if visible columns are properly saved
  */
 
-add_task(function* () {
+add_task(async function () {
   Services.prefs.setCharPref("devtools.netmonitor.visibleColumns",
     '["status", "contentSize", "waterfall"]');
 
-  let { monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document } = monitor.panelWin;
@@ -21,8 +21,8 @@ add_task(function* () {
   ok(document.querySelector("#requests-list-contentSize-button"),
      "Content size column should be shown");
 
-  yield hideColumn(monitor, "status");
-  yield hideColumn(monitor, "contentSize");
+  await hideColumn(monitor, "status");
+  await hideColumn(monitor, "contentSize");
 
   let visibleColumns = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")
@@ -33,7 +33,7 @@ add_task(function* () {
   ok(!visibleColumns.includes("contentSize"),
     "Pref should be synced for contentSize");
 
-  yield showColumn(monitor, "status");
+  await showColumn(monitor, "status");
 
   visibleColumns = JSON.parse(
     Services.prefs.getCharPref("devtools.netmonitor.visibleColumns")

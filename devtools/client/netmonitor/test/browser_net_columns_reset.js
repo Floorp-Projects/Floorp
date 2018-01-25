@@ -6,8 +6,8 @@
 /**
  * Tests reset column menu item
  */
-add_task(function* () {
-  let { monitor } = yield initNetMonitor(SIMPLE_URL);
+add_task(async function () {
+  let { monitor } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
   let { document, parent, windowRequire } = monitor.panelWin;
@@ -15,8 +15,8 @@ add_task(function* () {
 
   let prefBefore = Prefs.visibleColumns;
 
-  hideColumn(monitor, "status");
-  hideColumn(monitor, "waterfall");
+  await hideColumn(monitor, "status");
+  await hideColumn(monitor, "waterfall");
 
   EventUtils.sendMouseEvent({ type: "contextmenu" },
     document.querySelector("#requests-list-contentSize-button"));
