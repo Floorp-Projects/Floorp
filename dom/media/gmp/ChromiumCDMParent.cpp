@@ -12,6 +12,7 @@
 #include "GMPContentChild.h"
 #include "GMPContentParent.h"
 #include "GMPLog.h"
+#include "GMPService.h"
 #include "GMPUtils.h"
 #include "MediaPrefs.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
@@ -44,17 +45,42 @@ bool
 ChromiumCDMParent::Init(ChromiumCDMCallback* aCDMCallback,
                         bool aAllowDistinctiveIdentifier,
                         bool aAllowPersistentState,
-                        nsIEventTarget* aMainThread)
+                        nsIEventTarget* aMainThread,
+                        nsCString& aOutFailureReason)
 {
-  GMP_LOG("ChromiumCDMParent::Init(this=%p)", this);
+  GMP_LOG("ChromiumCDMParent::Init(this=%p) shutdown=%d abormalShutdown=%d "
+          "actorDestroyed=%d",
+          this,
+          mIsShutdown,
+          mAbnormalShutdown,
+          mActorDestroyed);
   if (!aCDMCallback || !aMainThread) {
+    aOutFailureReason = nsPrintfCString("ChromiumCDMParent::Init() failed "
+                                        "nullCallback=%d nullMainThread=%d",
+                                        !aCDMCallback,
+                                        !aMainThread);
     GMP_LOG("ChromiumCDMParent::Init(this=%p) failure since aCDMCallback(%p) or"
             " aMainThread(%p) is nullptr", this, aCDMCallback, aMainThread);
     return false;
   }
   mCDMCallback = aCDMCallback;
   mMainThread = aMainThread;
-  return SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState);
+
+  if (SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState)) {
+    return true;
+  }
+
+  RefPtr<gmp::GeckoMediaPluginService> service =
+    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+  bool xpcomWillShutdown = service && service->XPCOMWillShutdownReceived();
+  aOutFailureReason = nsPrintfCString(
+    "ChromiumCDMParent::Init() failed "
+    "shutdown=%d cdmCrash=%d actorDestroyed=%d browserShutdown=%d",
+    mIsShutdown,
+    mAbnormalShutdown,
+    mActorDestroyed,
+    xpcomWillShutdown);
+  return false;
 }
 
 void
@@ -865,11 +891,11 @@ ChromiumCDMParent::ActorDestroy(ActorDestroyReason aWhy)
     mContentParent->ChromiumCDMDestroyed(this);
     mContentParent = nullptr;
   }
-  bool abnormalShutdown = (aWhy == AbnormalShutdown);
-  if (abnormalShutdown && callback) {
+  mAbnormalShutdown = (aWhy == AbnormalShutdown);
+  if (mAbnormalShutdown && callback) {
     callback->Terminated();
   }
-  MaybeDisconnect(abnormalShutdown);
+  MaybeDisconnect(mAbnormalShutdown);
 }
 
 RefPtr<MediaDataDecoder::InitPromise>

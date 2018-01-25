@@ -43,7 +43,8 @@ public:
   bool Init(ChromiumCDMCallback* aCDMCallback,
             bool aAllowDistinctiveIdentifier,
             bool aAllowPersistentState,
-            nsIEventTarget* aMainThread);
+            nsIEventTarget* aMainThread,
+            nsCString& aOutFailureReason);
 
   void CreateSession(uint32_t aCreateSessionToken,
                      uint32_t aSessionType,
@@ -182,6 +183,7 @@ protected:
   bool mIsShutdown = false;
   bool mVideoDecoderInitialized = false;
   bool mActorDestroyed = false;
+  bool mAbnormalShutdown = false;
 
   // The H.264 decoder in Widevine CDM versions 970 and later output in decode
   // order rather than presentation order, so we reorder in presentation order
