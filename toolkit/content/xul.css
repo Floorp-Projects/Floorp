@@ -169,6 +169,14 @@ iframe {
   display: inline;
 }
 
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  browser,
+  editor,
+  iframe {
+    display: block;
+  }
+}
+
 browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
 }
