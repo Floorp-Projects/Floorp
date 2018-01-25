@@ -57,7 +57,7 @@
     },
     # Don't include output dirs
     {
-      'regexp' : '.*/(Debug|Release|sconsbuild|out|xcodebuild)/',
+      'regexp' : '.*/(Debug|Release|out|xcodebuild)/',
       'include' : 0,
     },
     # Don't include third-party source
@@ -89,7 +89,7 @@
     },
     {
       'stat' : '100.0 * files_instrumented / files_executable',
-      'format' : '*RESULT FilesInstrumentedPercent: files_instrumented_percent= %g',
+      'format' : '*RESULT FilesInstrumentedPercent: files_instrumented_percent= %g percent',
     },
     {
       'stat' : 'lines_executable',
@@ -111,16 +111,16 @@
     },
     {
       'stat' : '100.0 * lines_covered / lines_executable',
-      'format' : '*RESULT PercentCovered: percent_covered= %g',
+      'format' : '*RESULT PercentCovered: percent_covered= %g percent',
     },
     {
       'stat' : '100.0 * lines_covered / lines_executable',
-      'format' : '*RESULT PercentCoveredSource: percent_covered_source= %g',
+      'format' : '*RESULT PercentCoveredSource: percent_covered_source= %g percent',
       'group' : 'source',
     },
     {
       'stat' : '100.0 * lines_covered / lines_executable',
-      'format' : '*RESULT PercentCoveredTest: percent_covered_test= %g',
+      'format' : '*RESULT PercentCoveredTest: percent_covered_test= %g percent',
       'group' : 'test',
     },
   ],

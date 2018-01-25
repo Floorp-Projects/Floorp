@@ -945,7 +945,9 @@ function openConnection(options) {
     Services.storage.openAsyncDatabase(file, dbOptions, (status, connection) => {
       if (!connection) {
         log.warn(`Could not open connection to ${path}: ${status}`);
-        reject(new Error(`Could not open connection to ${path}: ${status}`));
+        let error = new Error(`Could not open connection to ${path}: ${status}`);
+        error.status = status;
+        reject(error);
         return;
       }
       log.info("Connection opened");
@@ -1177,7 +1179,7 @@ OpenedConnection.prototype = Object.freeze({
         if (result == null) {
           return 0;
         }
-        return JSON.stringify(result[0].getInt32(0));
+        return result[0].getInt32(0);
       }
     );
   },
