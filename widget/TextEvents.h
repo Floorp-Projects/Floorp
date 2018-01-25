@@ -241,6 +241,16 @@ public:
                            MODIFIER_OS));
   }
 
+  bool IsInputtingLineBreak() const
+  {
+    return mMessage == eKeyPress &&
+           mKeyNameIndex == KEY_NAME_INDEX_Enter &&
+           !(mModifiers & (MODIFIER_ALT |
+                           MODIFIER_CONTROL |
+                           MODIFIER_META |
+                           MODIFIER_OS));
+  }
+
   virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eKeyboardEventClass,
