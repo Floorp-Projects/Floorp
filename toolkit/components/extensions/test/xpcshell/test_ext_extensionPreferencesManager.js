@@ -280,3 +280,48 @@ add_task(async function test_preference_manager() {
 
   await promiseShutdownManager();
 });
+
+add_task(async function test_preference_manager_set_when_disabled() {
+  await promiseStartupManager();
+
+  let id = "@set-disabled-pref";
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: {gecko: {id}},
+    },
+  });
+
+  await extension.startup();
+
+  await ExtensionSettingsStore.initialize();
+  ExtensionPreferencesManager.addSetting("some-pref", {
+    pref_names: ["foo"],
+    setCallback(value) {
+      return {foo: value};
+    },
+  });
+
+  // We want to test that ExtensionPreferencesManager.setSetting() will enable a
+  // disabled setting so we will manually add and disable it in
+  // ExtensionSettingsStore.
+  await ExtensionSettingsStore.addSetting(
+    id, "prefs", "some-pref", "my value", () => "default");
+
+  let item = ExtensionSettingsStore.getSetting("prefs", "some-pref");
+  equal(item.value, "my value", "The value is set");
+
+  ExtensionSettingsStore.disable(id, "prefs", "some-pref");
+
+  item = ExtensionSettingsStore.getSetting("prefs", "some-pref");
+  equal(item.initialValue, "default", "The value is back to default");
+
+  await ExtensionPreferencesManager.setSetting(id, "some-pref", "new value");
+
+  item = ExtensionSettingsStore.getSetting("prefs", "some-pref");
+  equal(item.value, "new value", "The value is set again");
+
+  await extension.unload();
+
+  await promiseShutdownManager();
+});
