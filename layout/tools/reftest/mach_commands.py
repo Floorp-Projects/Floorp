@@ -137,7 +137,7 @@ class ReftestRunner(MozbuildObject):
         args.printDeviceInfo = False
 
         from mozrunner.devices.android_device import grant_runtime_permissions, get_adb_path
-        grant_runtime_permissions(self)
+        grant_runtime_permissions(self, args.app)
 
         if not args.adb_path:
             args.adb_path = get_adb_path(self)

@@ -290,15 +290,16 @@
 @BINPATH@/components/EditorUtils.manifest
 @BINPATH@/components/EditorUtils.js
 
-#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/extensions.manifest
+@BINPATH@/components/addonManager.js
+@BINPATH@/components/nsBlocklistService.js
+
+#ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/utils.manifest
 @BINPATH@/components/simpleServices.js
-@BINPATH@/components/addonManager.js
 @BINPATH@/components/amContentHandler.js
-@BINPATH@/components/amInstallTrigger.js
 @BINPATH@/components/amWebAPI.js
-@BINPATH@/components/nsBlocklistService.js
+@BINPATH@/components/amInstallTrigger.js
 #ifndef RELEASE_OR_BETA
 @BINPATH@/components/TabSource.js
 #endif
@@ -314,9 +315,10 @@
 @BINPATH@/components/nsUpdateService.js
 @BINPATH@/components/nsUpdateServiceStub.js
 #endif
+#endif
+
 @BINPATH@/components/nsUpdateTimerManager.manifest
 @BINPATH@/components/nsUpdateTimerManager.js
-#endif
 
 @BINPATH@/components/pluginGlue.manifest
 @BINPATH@/components/ProcessSingleton.manifest
