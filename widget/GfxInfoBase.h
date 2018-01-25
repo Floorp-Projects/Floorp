@@ -63,7 +63,9 @@ public:
   NS_IMETHOD GetUsingGPUProcess(bool *aOutValue) override;
   NS_IMETHOD GetWebRenderEnabled(bool* aWebRenderEnabled) override;
   NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;
+  NS_IMETHOD GetUsesTiling(bool* aUsesTiling) override;
   NS_IMETHOD GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled) override;
+  NS_IMETHOD GetOffMainThreadPaintWorkerCount(int32_t* aOffMainThreadPaintWorkerCount) override;
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.

@@ -1354,6 +1354,11 @@ CacheFileIOManager::ShutdownInternal()
     mTrashDirEnumerator = nullptr;
   }
 
+  if (mContextEvictor) {
+    mContextEvictor->Shutdown();
+    mContextEvictor = nullptr;
+  }
+
   return NS_OK;
 }
 

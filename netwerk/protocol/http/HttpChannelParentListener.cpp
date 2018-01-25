@@ -8,6 +8,8 @@
 #include "HttpLog.h"
 
 #include "HttpChannelParentListener.h"
+#include "mozilla/dom/ServiceWorkerInterceptController.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/Unused.h"
 #include "nsIAuthPrompt.h"
@@ -19,6 +21,8 @@
 #include "nsQueryObject.h"
 
 using mozilla::Unused;
+using mozilla::dom::ServiceWorkerInterceptController;
+using mozilla::dom::ServiceWorkerParentInterceptEnabled;
 
 namespace mozilla {
 namespace net {
@@ -33,6 +37,10 @@ HttpChannelParentListener::HttpChannelParentListener(HttpChannelParent* aInitial
 {
   LOG(("HttpChannelParentListener::HttpChannelParentListener [this=%p, next=%p]",
        this, aInitialChannel));
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    mInterceptController = new ServiceWorkerInterceptController();
+  }
 }
 
 HttpChannelParentListener::~HttpChannelParentListener()
@@ -278,6 +286,12 @@ HttpChannelParentListener::ShouldPrepareForIntercept(nsIURI* aURI,
                                                      nsIChannel* aChannel,
                                                      bool* aShouldIntercept)
 {
+  // If parent-side interception is enabled just forward to the real
+  // network controler.
+  if (mInterceptController) {
+    return mInterceptController->ShouldPrepareForIntercept(aURI, aChannel,
+                                                           aShouldIntercept);
+  }
   *aShouldIntercept = mShouldIntercept;
   return NS_OK;
 }
@@ -327,6 +341,12 @@ public:
 NS_IMETHODIMP
 HttpChannelParentListener::ChannelIntercepted(nsIInterceptedChannel* aChannel)
 {
+  // If parent-side interception is enabled just forward to the real
+  // network controler.
+  if (mInterceptController) {
+    return mInterceptController->ChannelIntercepted(aChannel);
+  }
+
   // Its possible for the child-side interception to complete and tear down
   // the actor before we even get this parent-side interception notification.
   // In this case we want to let the interception succeed, but then immediately

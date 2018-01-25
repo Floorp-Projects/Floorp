@@ -12,6 +12,7 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -142,6 +143,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.initialRwin(), a.blockAuthPrompt(),
                        a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent(), a.contentTypeHint(),
+                       a.corsMode(), a.redirectMode(), a.fetchCacheMode(),
                        a.channelId(), a.contentWindowId(), a.preferredAlternativeType(),
                        a.topLevelOuterContentWindowId(),
                        a.launchServiceWorkerStart(),
@@ -480,6 +482,9 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                aSuspendAfterSynthesizeResponse,
                                  const bool&                aAllowStaleCacheContent,
                                  const nsCString&           aContentTypeHint,
+                                 const uint32_t&            aCorsMode,
+                                 const uint32_t&            aRedirectMode,
+                                 const uint32_t&            aFetchCacheMode,
                                  const uint64_t&            aChannelId,
                                  const uint64_t&            aContentWindowId,
                                  const nsCString&           aPreferredAlternativeType,
@@ -535,6 +540,11 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }
+
+  // Set attributes needed to create a FetchEvent from this channel.
+  httpChannel->SetCorsMode(aCorsMode);
+  httpChannel->SetRedirectMode(aRedirectMode);
+  httpChannel->SetFetchCacheMode(aFetchCacheMode);
 
   // Set the channelId allocated in child to the parent instance
   httpChannel->SetChannelId(aChannelId);
@@ -666,7 +676,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
       rv = httpChannel->OverrideSecurityInfo(secInfo);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-  } else {
+  } else if (!ServiceWorkerParentInterceptEnabled()) {
     nsLoadFlags newLoadFlags;
     httpChannel->GetLoadFlags(&newLoadFlags);
     newLoadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
@@ -1481,9 +1491,12 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
   }
 
-  nsCOMPtr<nsIEncodedChannel> encodedChannel = do_QueryInterface(aRequest);
-  if (encodedChannel)
-    encodedChannel->SetApplyConversion(false);
+  // Propagate whether or not conversion should occur from the parent-side
+  // channel to the child-side channel.  Then disable the parent-side
+  // conversion so that it only occurs in the child.
+  bool applyConversion = true;
+  Unused << chan->GetApplyConversion(&applyConversion);
+  chan->SetApplyConversion(false);
 
   // Keep the cache entry for future use in RecvSetCacheTokenCachedCharset().
   // It could be already released by nsHttpChannel at that time.
@@ -1558,7 +1571,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
                           cacheKeyValue,
                           altDataType,
                           altDataLen,
-                          ipcController))
+                          ipcController,
+                          applyConversion))
   {
     rv = NS_ERROR_UNEXPECTED;
   }

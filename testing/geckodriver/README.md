@@ -21,7 +21,7 @@ the [Testing :: GeckoDriver] component.
 
 [WebDriver protocol]: http://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [Firefox remote protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette
-[change log]: https://github.com/mozilla/geckodriver/blob/master/CHANGES.md
+[change log]: https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md
 [Releases]: https://github.com/mozilla/geckodriver/releases
 [supported platforms]: #supported-firefoxen
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/
@@ -90,6 +90,7 @@ geckodriver supports a number of [capabilities]:
   <td>Boolean initially set to false,
    indicating the session will not implicitly trust untrusted
    or self-signed TLS certificates on navigation.
+  <td>
  </tr>
 
  <tr>
@@ -104,6 +105,7 @@ geckodriver supports a number of [capabilities]:
    waiting for the <code>complete</code> ready state;
    or "<code>none</code>",
    which will return immediately after starting navigation.
+  <td>
  </tr>
 
  <tr>
@@ -199,8 +201,7 @@ geckodriver supports a number of [capabilities]:
 Firefox capabilities
 ====================
 
-geckodriver also supports capabilities with the `moz:` prefix, which can
-be used to define Firefox-specific capabilities.
+geckodriver has a few capabilities that are specific to Firefox.
 
 moz:firefoxOptions
 ------------------
@@ -598,10 +599,10 @@ the built executable with `./mach geckodriver -- --other --flags`.
 
 [Rust]: https://www.rust-lang.org/
 [Mozilla]: https://www.mozilla.org/en-US/
-[webdriver crate]: https://github.com/mozilla/webdriver-rust
-[commands]: https://docs.rs/webdriver/0.25.0/webdriver/command/index.html
-[responses]: https://docs.rs/webdriver/0.25.0/webdriver/response/index.html
-[errors]: https://docs.rs/webdriver/0.25.0/webdriver/error/enum.ErrorStatus.html
+[webdriver crate]: https://crates.io/crates/webdriver
+[commands]: https://docs.rs/webdriver/newest/webdriver/command/index.html
+[responses]: https://docs.rs/webdriver/newest/webdriver/response/index.html
+[errors]: https://docs.rs/webdriver/newest/webdriver/error/enum.ErrorStatus.html
 [Marionette protocol]: https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/Protocol
 [WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
 [FirefoxDriver]: https://github.com/SeleniumHQ/selenium/wiki/FirefoxDriver

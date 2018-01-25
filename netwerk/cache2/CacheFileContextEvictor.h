@@ -37,6 +37,7 @@ private:
 
 public:
   nsresult Init(nsIFile *aCacheDirectory);
+  void Shutdown();
 
   // Returns number of contexts that are being evicted.
   uint32_t ContextsCount();
