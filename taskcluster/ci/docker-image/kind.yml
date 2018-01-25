@@ -25,38 +25,39 @@ jobs:
     symbol: I(db)
   valgrind-build:
     symbol: I(vb)
+  debian7-base:
+    symbol: I(deb7-base)
+    definition: debian-base
+    args:
+      DIST: wheezy
+      BASE_TAG: '20171210'
+      SNAPSHOT: '20171210T214726Z'
+    packages:
+      - deb7-git
+      - deb7-make
+      - deb7-mercurial
+      - deb7-python
+      - deb7-xz-utils
   toolchain-build:
     symbol: I(toolchain)
+    parent: debian7-base
     packages:
       - deb7-cmake
-      - deb7-git
-      - deb7-make
-      - deb7-mercurial
       - deb7-ninja
-      - deb7-python
-      - deb7-xz-utils
   debian7-amd64-build:
     symbol: I(deb7)
+    parent: debian7-base
     definition: debian7-build
     packages:
-      - deb7-git
-      - deb7-make
-      - deb7-mercurial
-      - deb7-python
       - deb7-valgrind
-      - deb7-xz-utils
     args:
       ARCH: amd64
   debian7-i386-build:
     symbol: I(deb7-32)
+    parent: debian7-base
     definition: debian7-build
     packages:
-      - deb7-git
-      - deb7-make
-      - deb7-mercurial
-      - deb7-python
       - deb7-valgrind
-      - deb7-xz-utils
     args:
       ARCH: i386
   lint:
