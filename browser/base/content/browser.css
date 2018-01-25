@@ -68,7 +68,6 @@ toolbar[customizable="true"] {
 }
 
 panelmultiview {
-  -moz-box-align: start;
   -moz-binding: url("chrome://browser/content/customizableui/panelUI.xml#panelmultiview");
 }
 
