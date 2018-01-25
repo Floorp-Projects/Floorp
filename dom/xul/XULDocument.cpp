@@ -2161,7 +2161,9 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
         rv = InsertXULOverlayPI(aProtoPI, aParent, aIndex, node);
     } else {
         // No special processing, just add the PI to the document.
-        rv = aParent->InsertChildAt_Deprecated(node, aIndex, false);
+        nsCOMPtr<nsIContent> nodeToInsertBefore =
+            aParent->GetChildAt_Deprecated(aIndex);
+        rv = aParent->InsertChildBefore(node, nodeToInsertBefore, false);
     }
 
     return rv;
@@ -2185,7 +2187,9 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     ssle->SetEnableUpdates(false);
     ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
-    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
+    nsCOMPtr<nsIContent> nodeToInsertBefore =
+       aParent->GetChildAt_Deprecated(aIndex);
+    rv = aParent->InsertChildBefore(aPINode, nodeToInsertBefore, false);
     if (NS_FAILED(rv)) return rv;
 
     ssle->SetEnableUpdates(true);
@@ -2217,7 +2221,9 @@ XULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
 {
     nsresult rv;
 
-    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
+    nsCOMPtr<nsIContent> nodeToInsertBefore =
+       aParent->GetChildAt_Deprecated(aIndex);
+    rv = aParent->InsertChildBefore(aPINode, nodeToInsertBefore, false);
     if (NS_FAILED(rv)) return rv;
 
     // xul-overlay PI is special only in prolog
@@ -3984,13 +3990,15 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
         free(str);
 
         if (content) {
-            int32_t pos = aParent->ComputeIndexOf(content);
-
-            if (pos != -1) {
-                pos = isInsertAfter ? pos + 1 : pos;
-                nsresult rv = aParent->InsertChildAt_Deprecated(aChild, pos, aNotify);
-                if (NS_FAILED(rv))
+            if (content->GetParent() == aParent) {
+                nsIContent* nodeToInsertBefore =
+                  isInsertAfter ? content->GetNextSibling() : content;
+                nsresult rv = aParent->InsertChildBefore(aChild,
+                                                         nodeToInsertBefore,
+                                                         aNotify);
+                if (NS_FAILED(rv)) {
                     return rv;
+                }
 
                 wasInserted = true;
             }
@@ -4010,7 +4018,10 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
             // appending.
             if (NS_SUCCEEDED(rv) && pos > 0 &&
                 uint32_t(pos - 1) <= aParent->GetChildCount()) {
-                rv = aParent->InsertChildAt_Deprecated(aChild, pos - 1, aNotify);
+                nsIContent* nodeToInsertBefore =
+                    aParent->GetChildAt_Deprecated(pos - 1);
+                rv = aParent->InsertChildBefore(aChild, nodeToInsertBefore,
+                                                aNotify);
                 if (NS_SUCCEEDED(rv))
                     wasInserted = true;
                 // If the insertion fails, then we should still
