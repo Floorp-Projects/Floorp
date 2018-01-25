@@ -24,6 +24,7 @@ import mozpack.path as mozpath
 from .context import FinalTargetValue
 
 from collections import defaultdict, OrderedDict
+import itertools
 
 from ..util import (
     group_unified_files,
@@ -232,116 +233,121 @@ class Defines(BaseDefines):
 class HostDefines(BaseDefines):
     pass
 
-class IPDLFile(ContextDerived):
-    """Describes an individual .ipdl source file."""
+class WebIDLCollection(ContextDerived):
+    """Collects WebIDL info referenced during the build."""
 
-    __slots__ = (
-        'basename',
-    )
-
-    def __init__(self, context, path):
+    def __init__(self, context):
         ContextDerived.__init__(self, context)
+        self.sources = set()
+        self.generated_sources = set()
+        self.generated_events_sources = set()
+        self.preprocessed_sources = set()
+        self.test_sources = set()
+        self.preprocessed_test_sources = set()
+        self.example_interfaces = set()
 
-        self.basename = path
+    def all_regular_sources(self):
+        return self.sources | self.generated_sources | \
+            self.generated_events_sources | self.preprocessed_sources
 
-class PreprocessedIPDLFile(ContextDerived):
-    """Describes an individual .ipdl source file that requires preprocessing."""
+    def all_regular_basenames(self):
+        return [mozpath.basename(source) for source in self.all_regular_sources()]
 
-    __slots__ = (
-        'basename',
-    )
+    def all_regular_stems(self):
+        return [mozpath.splitext(b)[0] for b in self.all_regular_basenames()]
 
-    def __init__(self, context, path):
+    def all_regular_bindinggen_stems(self):
+        for stem in self.all_regular_stems():
+            yield '%sBinding' % stem
+
+        for source in self.generated_events_sources:
+            yield mozpath.splitext(mozpath.basename(source))[0]
+
+    def all_regular_cpp_basenames(self):
+        for stem in self.all_regular_bindinggen_stems():
+            yield '%s.cpp' % stem
+
+    def all_test_sources(self):
+        return self.test_sources | self.preprocessed_test_sources
+
+    def all_test_basenames(self):
+        return [mozpath.basename(source) for source in self.all_test_sources()]
+
+    def all_test_stems(self):
+        return [mozpath.splitext(b)[0] for b in self.all_test_basenames()]
+
+    def all_test_cpp_basenames(self):
+        return ['%sBinding.cpp' % s for s in self.all_test_stems()]
+
+    def all_static_sources(self):
+        return self.sources | self.generated_events_sources | \
+            self.test_sources
+
+    def all_non_static_sources(self):
+        return self.generated_sources | self.all_preprocessed_sources()
+
+    def all_non_static_basenames(self):
+        return [mozpath.basename(s) for s in self.all_non_static_sources()]
+
+    def all_preprocessed_sources(self):
+        return self.preprocessed_sources | self.preprocessed_test_sources
+
+    def all_sources(self):
+        return set(self.all_regular_sources()) | set(self.all_test_sources())
+
+    def all_basenames(self):
+        return [mozpath.basename(source) for source in self.all_sources()]
+
+    def all_stems(self):
+        return [mozpath.splitext(b)[0] for b in self.all_basenames()]
+
+    def generated_events_basenames(self):
+        return [mozpath.basename(s) for s in self.generated_events_sources]
+
+    def generated_events_stems(self):
+        return [mozpath.splitext(b)[0] for b in self.generated_events_basenames()]
+
+
+class IPDLCollection(ContextDerived):
+    """Collects IPDL files during the build."""
+
+    def __init__(self, context):
         ContextDerived.__init__(self, context)
+        self.sources = set()
+        self.preprocessed_sources = set()
 
-        self.basename = path
+    def all_sources(self):
+        return self.sources | self.preprocessed_sources
 
-class WebIDLFile(ContextDerived):
-    """Describes an individual .webidl source file."""
+    def all_regular_sources(self):
+        return self.sources
 
-    __slots__ = (
-        'basename',
-    )
+    def all_preprocessed_sources(self):
+        return self.preprocessed_sources
 
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
+    def all_generated_sources(self):
+        sorted_ipdl_sources = list(sorted(self.all_sources()))
 
-        self.basename = path
+        def files_from(ipdl):
+            base = mozpath.basename(ipdl)
+            root, ext = mozpath.splitext(base)
 
-class GeneratedEventWebIDLFile(ContextDerived):
-    """Describes an individual .webidl source file."""
+            # Both .ipdl and .ipdlh become .cpp files
+            files = ['%s.cpp' % root]
+            if ext == '.ipdl':
+                # .ipdl also becomes Child/Parent.cpp files
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
 
-    __slots__ = (
-        'basename',
-    )
+        return list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
 
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.basename = path
-
-class TestWebIDLFile(ContextDerived):
-    """Describes an individual test-only .webidl source file."""
-
-    __slots__ = (
-        'basename',
-    )
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.basename = path
-
-class PreprocessedTestWebIDLFile(ContextDerived):
-    """Describes an individual test-only .webidl source file that requires
-    preprocessing."""
-
-    __slots__ = (
-        'basename',
-    )
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.basename = path
-
-class PreprocessedWebIDLFile(ContextDerived):
-    """Describes an individual .webidl source file that requires preprocessing."""
-
-    __slots__ = (
-        'basename',
-    )
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.basename = path
-
-class GeneratedWebIDLFile(ContextDerived):
-    """Describes an individual .webidl source file that is generated from
-    build rules."""
-
-    __slots__ = (
-        'basename',
-    )
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.basename = path
-
-
-class ExampleWebIDLInterface(ContextDerived):
-    """An individual WebIDL interface to generate."""
-
-    __slots__ = (
-        'name',
-    )
-
-    def __init__(self, context, name):
-        ContextDerived.__init__(self, context)
-
-        self.name = name
+    @property
+    def unified_source_mapping(self):
+        return list(group_unified_files(self.all_generated_sources(),
+                                        unified_prefix='UnifiedProtocols',
+                                        unified_suffix='cpp',
+                                        files_per_unified_file=16))
 
 
 class LinkageWrongKindError(Exception):
