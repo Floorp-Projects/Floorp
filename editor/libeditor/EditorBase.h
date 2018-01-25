@@ -67,6 +67,7 @@ class EditAggregateTransaction;
 class EditTransactionBase;
 class ErrorResult;
 class HTMLEditor;
+class IMEContentObserver;
 class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
@@ -76,6 +77,7 @@ class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
 class TextEditor;
+class TextInputListener;
 class TextServicesDocument;
 enum class EditAction : int32_t;
 
@@ -251,6 +253,18 @@ public:
 
   // nsIEditor methods
   NS_DECL_NSIEDITOR
+
+  /**
+   * Set or unset TextInputListener.  If setting non-nullptr when the editor
+   * already has a TextInputListener, this will crash in debug build.
+   */
+  void SetTextInputListener(TextInputListener* aTextInputListener);
+
+  /**
+   * Set or unset IMEContentObserver.  If setting non-nullptr when the editor
+   * already has an IMEContentObserver, this will crash in debug build.
+   */
+  void SetIMEContentObserver(IMEContentObserver* aIMEContentObserver);
 
 public:
   virtual bool IsModifiableNode(nsINode* aNode);
@@ -1406,6 +1420,10 @@ protected:
   RefPtr<TextComposition> mComposition;
 
   RefPtr<TextEditRules> mRules;
+
+  RefPtr<TextInputListener> mTextInputListener;
+
+  RefPtr<IMEContentObserver> mIMEContentObserver;
 
   // Listens to all low level actions on the doc.
   typedef AutoTArray<OwningNonNull<nsIEditActionListener>, 5>

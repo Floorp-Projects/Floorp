@@ -1642,7 +1642,7 @@ HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
 /**
  * Paste a plaintext quotation.
  */
-NS_IMETHODIMP
+nsresult
 HTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
 {
   // Get Clipboard Service
@@ -1799,7 +1799,7 @@ HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
 // This differs from its corresponding method in TextEditor
 // in that here, quoted material is enclosed in a <pre> tag
 // in order to preserve the original line wrapping.
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                        bool aAddCites,
                                        nsIDOMNode** aNodeInserted)
