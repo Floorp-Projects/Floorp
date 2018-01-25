@@ -85,11 +85,16 @@ typedef struct {
 } ToggleGTKMetrics;
 
 typedef struct {
-  bool initialized;
   MozGtkSize minSizeWithBorderMargin;
   gint iconXPosition;
   gint iconYPosition;
 } ToolbarButtonGTKMetrics;
+
+#define TOOLBAR_BUTTONS 4
+typedef struct {
+  bool initialized;
+  ToolbarButtonGTKMetrics button[TOOLBAR_BUTTONS];
+} ToolbarGTKMetrics;
 
 typedef enum {
   MOZ_GTK_STEPPER_DOWN        = 1 << 0,
@@ -305,10 +310,14 @@ typedef enum {
   MOZ_GTK_HEADER_BAR,
   /* Paints a GtkHeaderBar in maximized state */
   MOZ_GTK_HEADER_BAR_MAXIMIZED,
-  /* Paints GtkHeaderBar title buttons */
+  /* Paints GtkHeaderBar title buttons.
+   * Keep the order here as MOZ_GTK_HEADER_BAR_BUTTON_* are processed
+   * as an array from MOZ_GTK_HEADER_BAR_BUTTON_CLOSE to the last one.
+   */
   MOZ_GTK_HEADER_BAR_BUTTON_CLOSE,
   MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE,
   MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE,
+  MOZ_GTK_HEADER_BAR_BUTTON_RESTORE,
 
   MOZ_GTK_WIDGET_NODE_COUNT
 } WidgetNodeType;
@@ -563,6 +572,7 @@ moz_gtk_get_tab_thickness(WidgetNodeType aNodeType);
 /**
  * Get ToolbarButtonGTKMetrics for recent theme.
  */
-const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics();
+const ToolbarButtonGTKMetrics*
+GetToolbarButtonMetrics(WidgetNodeType aWidgetType);
 
 #endif

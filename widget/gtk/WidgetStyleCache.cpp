@@ -568,6 +568,52 @@ CreateHeaderBar(WidgetNodeType aWidgetType)
   return headerbar;
 }
 
+static void
+LoadWidgetIconPixbuf(GtkWidget* aWidgetIcon)
+{
+  GtkStyleContext* style = gtk_widget_get_style_context(aWidgetIcon);
+
+  const gchar *iconName;
+  GtkIconSize gtkIconSize;
+  gtk_image_get_icon_name(GTK_IMAGE(aWidgetIcon), &iconName, &gtkIconSize);
+
+  gint iconWidth, iconHeight;
+  gtk_icon_size_lookup(gtkIconSize, &iconWidth, &iconHeight);
+
+  /* This is available since Gtk+ 3.10 as well as GtkHeaderBar */
+  static auto sGtkIconThemeLookupIconForScalePtr =
+    (GtkIconInfo* (*)(GtkIconTheme *, const gchar *, gint, gint, GtkIconLookupFlags))
+    dlsym(RTLD_DEFAULT, "gtk_icon_theme_lookup_icon_for_scale");
+
+  GtkIconInfo *gtkIconInfo =
+    sGtkIconThemeLookupIconForScalePtr(gtk_icon_theme_get_default(),
+                                       iconName,
+                                       iconWidth,
+                                       1, /* TODO: scale for HiDPI */
+                                       (GtkIconLookupFlags)0);
+
+  if (!gtkIconInfo) {
+    // We miss the icon, nothing to do here.
+    return;
+  }
+
+  gboolean unused;
+  GdkPixbuf *iconPixbuf =
+    gtk_icon_info_load_symbolic_for_context(gtkIconInfo, style,
+                                            &unused, nullptr);
+  g_object_unref(G_OBJECT(gtkIconInfo));
+
+  g_object_set_data_full(G_OBJECT(aWidgetIcon), "MozillaIconPixbuf", iconPixbuf,
+                        (GDestroyNotify)g_object_unref);
+}
+
+GdkPixbuf*
+GetWidgetIconPixbuf(GtkWidget* aWidgetIcon)
+{
+  return (GdkPixbuf*)g_object_get_data(G_OBJECT(aWidgetIcon),
+                                       "MozillaIconPixbuf");
+}
+
 // TODO - Also return style for buttons located at Maximized toolbar.
 static GtkWidget*
 CreateHeaderBarButton(WidgetNodeType aWidgetType)
@@ -581,19 +627,42 @@ CreateHeaderBarButton(WidgetNodeType aWidgetType)
   GtkStyleContext* style = gtk_widget_get_style_context(widget);
   gtk_style_context_add_class(style, "titlebutton");
 
+  GtkWidget *image = nullptr;
   switch (aWidgetType) {
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
       gtk_style_context_add_class(style, "close");
+      image = gtk_image_new_from_icon_name("window-close-symbolic",
+                                          GTK_ICON_SIZE_MENU);
       break;
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
       gtk_style_context_add_class(style, "minimize");
+      image = gtk_image_new_from_icon_name("window-minimize-symbolic",
+                                           GTK_ICON_SIZE_MENU);
       break;
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
       gtk_style_context_add_class(style, "maximize");
+      image = gtk_image_new_from_icon_name("window-maximize-symbolic",
+                                           GTK_ICON_SIZE_MENU);
+      break;
+    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
+      gtk_style_context_add_class(style, "maximize");
+      image = gtk_image_new_from_icon_name("window-restore-symbolic",
+                                           GTK_ICON_SIZE_MENU);
       break;
     default:
       break;
   }
+
+  gtk_widget_set_valign(widget, GTK_ALIGN_CENTER);
+  g_object_set(image, "use-fallback", TRUE, NULL);
+  gtk_container_add(GTK_CONTAINER (widget), image);
+
+  // We bypass GetWidget() here by explicit sWidgetStorage[] update so
+  // invalidate the style as well as GetWidget() does.
+  style = gtk_widget_get_style_context(image);
+  gtk_style_context_invalidate(style);
+
+  LoadWidgetIconPixbuf(image);
 
   return widget;
 }
@@ -686,6 +755,7 @@ CreateWidget(WidgetNodeType aWidgetType)
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
       return CreateHeaderBarButton(aWidgetType);
     default:
       /* Not implemented */

@@ -25,7 +25,7 @@ static gboolean notebook_has_tab_gap;
 static ScrollbarGTKMetrics sScrollbarMetrics[2];
 static ToggleGTKMetrics sCheckboxMetrics;
 static ToggleGTKMetrics sRadioMetrics;
-static ToolbarButtonGTKMetrics sToolbarButtonMetrics;
+static ToolbarGTKMetrics sToolbarMetrics;
 
 #define ARROW_UP      0
 #define ARROW_DOWN    G_PI
@@ -180,7 +180,7 @@ moz_gtk_refresh()
     sScrollbarMetrics[GTK_ORIENTATION_VERTICAL].initialized = false;
     sCheckboxMetrics.initialized = false;
     sRadioMetrics.initialized = false;
-    sToolbarButtonMetrics.initialized = false;
+    sToolbarMetrics.initialized = false;
 }
 
 gint
@@ -304,51 +304,65 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
     return MOZ_GTK_SUCCESS;
 }
 
-const ToolbarButtonGTKMetrics*
-GetToolbarButtonMetrics()
+static void
+InitToolbarButtonMetrics(ToolbarButtonGTKMetrics *aButtonMetrics,
+                         WidgetNodeType aWidgetType)
 {
-    if (!sToolbarButtonMetrics.initialized) {
-        GtkStyleContext* style = GetStyleContext(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+    GtkStyleContext* style = GetStyleContext(aWidgetType);
 
-        gint iconWidth, iconHeight;
-        if (!gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, &iconHeight)) {
-            NS_WARNING("Failed to get Gtk+ icon size for titlebar button!");
+    gint iconWidth, iconHeight;
+    if (!gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &iconWidth, &iconHeight)) {
+        NS_WARNING("Failed to get Gtk+ icon size for titlebar button!");
 
-            // Use some reasonable fallback size
-            iconWidth = 16;
-            iconHeight = 16;
-        }
-
-        gint width = 0, height = 0;
-        if (gtk_check_version(3, 20, 0) == nullptr) {
-            gtk_style_context_get(style,  gtk_style_context_get_state(style),
-                                  "min-width", &width,
-                                  "min-height", &height, NULL);
-        }
-
-        // Cover cases when min-width/min-height is not set, it's invalid
-        // or we're running on Gtk+ < 3.20.
-        if (width < iconWidth)
-            width = iconWidth;
-        if (height < iconHeight)
-            height = iconHeight;
-
-        gint left = 0, top = 0, right = 0, bottom = 0;
-        moz_gtk_add_margin_border_padding(style, &left, &top, &right, &bottom);
-
-        width += left + right;
-        height += top + bottom;
-        sToolbarButtonMetrics.minSizeWithBorderMargin.width = width;
-        sToolbarButtonMetrics.minSizeWithBorderMargin.height = height;
-
-        // Get border size from gap between icon and button sizes.
-        // Buton size is calculated as min-width/height + border/padding.
-        sToolbarButtonMetrics.iconXPosition = (width - iconWidth) / 2;
-        sToolbarButtonMetrics.iconYPosition = (height - iconHeight) / 2;
-        sToolbarButtonMetrics.initialized = true;
+        // Use some reasonable fallback size
+        iconWidth = 16;
+        iconHeight = 16;
     }
 
-    return &sToolbarButtonMetrics;
+    gint width = 0, height = 0;
+    if (gtk_check_version(3, 20, 0) == nullptr) {
+        gtk_style_context_get(style,  gtk_style_context_get_state(style),
+                              "min-width", &width,
+                              "min-height", &height, NULL);
+    }
+
+    // Cover cases when min-width/min-height is not set, it's invalid
+    // or we're running on Gtk+ < 3.20.
+    if (width < iconWidth)
+        width = iconWidth;
+    if (height < iconHeight)
+        height = iconHeight;
+
+    gint left = 0, top = 0, right = 0, bottom = 0;
+    moz_gtk_add_margin_border_padding(style, &left, &top, &right, &bottom);
+
+    width += left + right;
+    height += top + bottom;
+    aButtonMetrics->minSizeWithBorderMargin.width = width;
+    aButtonMetrics->minSizeWithBorderMargin.height = height;
+
+    // Get border size from gap between icon and button sizes.
+    // Buton size is calculated as min-width/height + border/padding.
+    aButtonMetrics->iconXPosition = (width - iconWidth) / 2;
+    aButtonMetrics->iconYPosition = (height - iconHeight) / 2;
+}
+
+const ToolbarButtonGTKMetrics*
+GetToolbarButtonMetrics(WidgetNodeType aWidgetType)
+{
+    if (!sToolbarMetrics.initialized) {
+        for (int i = 0; i < TOOLBAR_BUTTONS; i++) {
+            InitToolbarButtonMetrics(sToolbarMetrics.button + i,
+                WidgetNodeType(int(MOZ_GTK_HEADER_BAR_BUTTON_CLOSE) + i));
+        }
+        sToolbarMetrics.initialized = true;
+    }
+
+    int buttonIndex = (aWidgetType - MOZ_GTK_HEADER_BAR_BUTTON_CLOSE);
+    NS_ASSERTION(buttonIndex >= 0 &&
+                 buttonIndex <= TOOLBAR_BUTTONS,
+                 "GetToolbarButtonMetrics(): Wrong titlebar button!");
+    return sToolbarMetrics.button + buttonIndex;
 }
 
 static gint
@@ -422,11 +436,33 @@ moz_gtk_button_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 moz_gtk_header_bar_button_paint(cairo_t *cr, GdkRectangle* rect,
                                 GtkWidgetState* state,
-                                GtkReliefStyle relief, GtkWidget* widget,
+                                GtkReliefStyle relief,
+                                WidgetNodeType aWidgetType,
                                 GtkTextDirection direction)
 {
+    GtkWidget *widget = GetWidget(aWidgetType);
     InsetByMargin(rect, gtk_widget_get_style_context(widget));
-    return moz_gtk_button_paint(cr, rect, state, relief, widget, direction);
+    moz_gtk_button_paint(cr, rect, state, relief, widget, direction);
+
+    GtkWidget* iconWidget = gtk_bin_get_child(GTK_BIN(widget));
+    GdkPixbuf* pixbuf = GetWidgetIconPixbuf(iconWidget);
+
+    if (pixbuf) {
+        GtkStyleContext* style = gtk_widget_get_style_context(iconWidget);
+        GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+
+        gtk_style_context_save(style);
+        gtk_style_context_set_state(style, state_flags);
+
+        const ToolbarButtonGTKMetrics *metrics =
+            GetToolbarButtonMetrics(aWidgetType);
+
+        gtk_render_icon(style, cr, pixbuf,
+                        metrics->iconXPosition, metrics->iconYPosition);
+        gtk_style_context_restore(style);
+    }
+
+    return MOZ_GTK_SUCCESS;
 }
 
 static gint
@@ -2337,15 +2373,6 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
             moz_gtk_add_border_padding(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
-    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
-    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
-    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
-        {
-            style = GetStyleContext(widget);
-            moz_gtk_add_margin_border_padding(style, left, top, right, bottom);
-            return MOZ_GTK_SUCCESS;
-        }
-
     /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON_LABEL:
     case MOZ_GTK_RADIOBUTTON_LABEL:
@@ -2365,6 +2392,10 @@ moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_MENUSEPARATOR:
+    case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
     /* These widgets have no borders.*/
     case MOZ_GTK_INNER_SPIN_BUTTON:
     case MOZ_GTK_SPINBUTTON:
@@ -2872,9 +2903,10 @@ moz_gtk_widget_paint(WidgetNodeType widget, cairo_t *cr,
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE:
     case MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE:
+    case MOZ_GTK_HEADER_BAR_BUTTON_RESTORE:
         return moz_gtk_header_bar_button_paint(cr, rect, state,
                                                (GtkReliefStyle) flags,
-                                               GetWidget(widget),
+                                               widget,
                                                direction);
         break;
     case MOZ_GTK_CHECKBUTTON:
