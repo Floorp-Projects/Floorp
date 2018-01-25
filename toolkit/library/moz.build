@@ -92,8 +92,10 @@ SOURCES += [
 SOURCES['StaticXULComponentsStart.cpp'].no_pgo = True
 
 # Don't let LTO reorder StaticXULComponentsStart.o.
-if '-flto' in CONFIG['OS_CXXFLAGS']:
-    SOURCES['StaticXULComponentsStart.cpp'].flags += ['-fno-lto']
+for f in CONFIG['OS_CXXFLAGS']:
+    if f.startswith('-flto'):
+        SOURCES['StaticXULComponentsStart.cpp'].flags += ['-fno-lto']
+        break
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
