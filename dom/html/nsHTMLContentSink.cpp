@@ -396,7 +396,9 @@ SinkContext::Node::Add(nsIContent *child)
   if (mInsertionPoint != -1) {
     NS_ASSERTION(mNumFlushed == mContent->GetChildCount(),
                  "Inserting multiple children without flushing.");
-    mContent->InsertChildAt_Deprecated(child, mInsertionPoint++, false);
+    nsCOMPtr<nsIContent> nodeToInsertBefore =
+      mContent->GetChildAt_Deprecated(mInsertionPoint++);
+    mContent->InsertChildBefore(child, nodeToInsertBefore, false);
   } else {
     mContent->AppendChildTo(child, false);
   }
