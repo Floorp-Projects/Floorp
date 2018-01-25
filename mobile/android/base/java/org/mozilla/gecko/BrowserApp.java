@@ -35,6 +35,8 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -272,7 +274,7 @@ public class BrowserApp extends GeckoApp
     // See: Bug 1358554
     private boolean mShowingToolbarChromeForActionBar;
 
-    private static class MenuItemInfo {
+    private static class MenuItemInfo implements Parcelable {
         public int id;
         public String label;
         public boolean checkable;
@@ -281,10 +283,79 @@ public class BrowserApp extends GeckoApp
         public boolean visible = true;
         public int parent;
         public boolean added;   // So we can re-add after a locale change.
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(id);
+            dest.writeString(label);
+            dest.writeInt(checkable ? 1 : 0);
+            dest.writeInt(checked ? 1 : 0);
+            dest.writeInt(enabled ? 1 : 0);
+            dest.writeInt(visible ? 1 : 0);
+            dest.writeInt(parent);
+            dest.writeInt(added ? 1 : 0);
+        }
+
+        public static final Parcelable.Creator<MenuItemInfo> CREATOR
+                = new Parcelable.Creator<MenuItemInfo>() {
+            @Override
+            public MenuItemInfo createFromParcel(Parcel source) {
+                return new MenuItemInfo(source);
+            }
+
+            @Override
+            public MenuItemInfo[] newArray(int size) {
+                return new MenuItemInfo[size];
+            }
+        };
+
+        private MenuItemInfo(Parcel source) {
+            id = source.readInt();
+            label = source.readString();
+            checkable = source.readInt() != 0;
+            checked = source.readInt() != 0;
+            enabled = source.readInt() != 0;
+            visible = source.readInt() != 0;
+            parent = source.readInt();
+            added = source.readInt() != 0;
+        }
+
+        public MenuItemInfo() { }
     }
 
     private static class BrowserActionItemInfo extends MenuItemInfo {
         public String uuid;
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeString(uuid);
+        }
+
+        public static final Parcelable.Creator<BrowserActionItemInfo> CREATOR
+                = new Parcelable.Creator<BrowserActionItemInfo>() {
+            @Override
+            public BrowserActionItemInfo createFromParcel(Parcel source) {
+                return new BrowserActionItemInfo(source);
+            }
+
+            @Override
+            public BrowserActionItemInfo[] newArray(int size) {
+                return new BrowserActionItemInfo[size];
+            }
+        };
+
+        private BrowserActionItemInfo(Parcel source) {
+            super(source);
+            uuid = source.readString();
+        }
+
+        public BrowserActionItemInfo() { }
     }
 
     // The types of guest mode dialogs we show.
