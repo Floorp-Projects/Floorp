@@ -73,9 +73,7 @@ RUN apt-get update && \
       wget \
       xz-utils \
       yasm \
-      zip \
-    && \
-    apt-get clean
+      zip
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
 COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
@@ -132,9 +130,7 @@ USER root
 RUN apt-get install \
       libgconf2-4 \
       libgnome2-0 \
-      openjdk-8-jdk-headless \
-    && \
-    apt-get clean
+      openjdk-8-jdk-headless
 
 ENV NEXUS_VERSION=2.12.0-01 \
     NEXUS_SHA1SUM=1a9aaad8414baffe0a2fd46eed1f41b85f4049e6 \
