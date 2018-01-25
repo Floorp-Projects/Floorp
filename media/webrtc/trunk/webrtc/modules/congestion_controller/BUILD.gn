@@ -44,7 +44,6 @@ rtc_static_library("congestion_controller") {
 
   deps = [
     "../..:webrtc_common",
-    "../../base:rtc_base",
     "../../base:rtc_base_approved",
     "../../base:rtc_numerics",
     "../../system_wrappers",
@@ -54,4 +53,10 @@ rtc_static_library("congestion_controller") {
     "../rtp_rtcp",
     "../utility",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "../../base:rtc_base",
+    ]
+  }
 }
