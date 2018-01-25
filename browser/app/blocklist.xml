@@ -1,18 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <blocklist lastupdate="1500496563565" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
-    <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i398" id="{377e5d4d-77e5-476a-8716-7e70a9272da0}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i698" id="{6b2a75c8-6e2e-4267-b955-43e25b54e575}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="i1231" id="youtube@downloader.yt">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -136,6 +124,10 @@
     <emItem blockID="i320" id="torntv@torntv.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="2d4fe65b-6c02-4461-baa8-dda52e688cf6" id="/^({618baeb9-e694-4c7b-9328-69f35b6a8839}|{b91fcda4-88b0-4a10-9015-9365e5340563}|{04150f98-2d7c-4ae2-8979-f5baa198a577}|{4b1050c6-9139-4126-9331-30a836e75db9}|{1e6f5a54-2c4f-4597-aa9e-3e278c617d38}|{e73854da-9503-423b-ab27-fafea2fbf443}|{a2427e23-d349-4b25-b5b8-46960b218079}|{f92c1155-97b3-40f4-9d5b-7efa897524bb}|{c8e14311-4b2d-4eb0-9a6b-062c6912f50e}|{45621564-b408-4c29-8515-4cf1f26e4bc3}|{27380afd-f42a-4c25-b57d-b9012e0d5d48})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i524" id="/^({4e988b08-8c51-45c1-8d74-73e0c8724579}|{93ec97bf-fe43-4bca-a735-5c5d6a0a40c4}|{aed63b38-7428-4003-a052-ca6834d8bad3}|{0b5130a9-cc50-4ced-99d5-cda8cc12ae48}|{C4CFC0DE-134F-4466-B2A2-FF7C59A8BFAD})$/">
       <prefs/>
@@ -526,6 +518,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="2.0.6" severity="1"/>
     </emItem>
+    <emItem blockID="750aa293-3742-46b5-8761-51536afecaef" id="/^({30972e0a-f613-4c46-8c87-2e59878e7180}|{0599211f-6314-4bf9-854b-84cb18da97f8}|{4414af84-1e1f-449b-ac85-b79f812eb69b}|{2a8bec00-0ab0-4b4d-bd3d-4f59eada8fd8}|{bea8866f-01f8-49e9-92cd-61e96c05d288}|{046258c9-75c5-429d-8d5b-386cfbadc39d}|{c5d359ff-ae01-4f67-a4f7-bf234b5afd6e}|{fdc0601f-1fbb-40a5-84e1-8bbe96b22502}|{85349ea6-2b5d-496a-9379-d4be82c2c13d}|{640c40e5-a881-4d16-a4d0-6aa788399dd2}|{d42328e1-9749-46ba-b35c-cce85ddd4ace})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i768" id="{f2548724-373f-45fe-be6a-3a85e87b7711}">
       <prefs>
         <pref>browser.startup.homepage</pref>
@@ -721,6 +717,10 @@
     <emItem blockID="i17" id="{3252b9ae-c69a-4eaf-9502-dc9c1f6c009e}">
       <prefs/>
       <versionRange minVersion="2.2" maxVersion="2.2" severity="1"/>
+    </emItem>
+    <emItem blockID="9a3fd797-0ab8-4286-9a1b-2b6c97f9075b" id="/^({4dac7c77-e117-4cae-a9f0-6bd89e9e26ab}|{cc689da4-203f-4a0c-a7a6-a00a5abe74c5}|{0eb4672d-58a6-4230-b74c-50ca3716c4b0}|{06a71249-ef35-4f61-b2c8-85c3c6ee5617}|{5280684d-f769-43c9-8eaa-fb04f7de9199}|{c2341a34-a3a0-4234-90cf-74df1db0aa49}|{85e31e7e-3e3a-42d3-9b7b-0a2ff1818b33}|{b5a35d05-fa28-41b5-ae22-db1665f93f6b}|{1bd8ba17-b3ed-412e-88db-35bc4d8771d7}|{a18087bb-4980-4349-898c-ca1b7a0e59cd}|{488e190b-d1f6-4de8-bffb-0c90cc805b62})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i109" id="{392e123b-b691-4a5e-b52f-c4c1027e749c}">
       <prefs/>
@@ -1246,6 +1246,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="5c092b0d-7205-43a1-aa75-b7a42372fb52" id="/^({2bb68b03-b528-4133-9fc4-4980fbb4e449}|{231e58ac-0f3c-460b-bb08-0e589360bec7}|{a506c5af-0f95-4107-86f8-3de05e2794c9}|{8886a262-1c25-490b-b797-2e750dd9f36b}|{65072bef-041f-492e-8a51-acca2aaeac70}|{6fa41039-572b-44a4-acd4-01fdaebf608d}|{87ba49bd-daba-4071-aedf-4f32a7e63dbe}|{95d58338-ba6a-40c8-93fd-05a34731dc0e}|{4cbef3f0-4205-4165-8871-2844f9737602}|{1855d130-4893-4c79-b4aa-cbdf6fee86d3}|{87dcb9bf-3a3e-4b93-9c85-ba750a55831a})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="8088b39a-3e6d-4a17-a22f-3f95c0464bd6" id="{5b0f6d3c-10fd-414c-a135-dffd26d7de0f}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1397,6 +1401,10 @@
     <emItem blockID="i752" id="savingsslider@mybrowserbar.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="aae78cd5-6b26-472e-ab2d-db4105911250" id="/^({f6df4ef7-14bd-43b5-90c9-7bd02943789c}|{ccb7b5d6-a567-40a2-9686-a097a8b583dd}|{9b8df895-fcdd-452a-8c46-da5be345b5bc}|{5cf77367-b141-4ba4-ac2a-5b2ca3728e81}|{ada56fe6-f6df-4517-9ed0-b301686a34cc}|{95c7ae97-c87e-4827-a2b7-7b9934d7d642}|{e7b978ae-ffc2-4998-a99d-0f4e2f24da82}|{115a8321-4414-4f4c-aee6-9f812121b446}|{bf153de7-cdf2-4554-af46-29dabfb2aa2d}|{179710ba-0561-4551-8e8d-1809422cb09f}|{9d592fd5-e655-461a-9b28-9eba85d4c97f})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i77" id="{fa277cfc-1d75-4949-a1f9-4ac8e41b2dfd}">
       <prefs/>
@@ -1680,6 +1688,10 @@
     <emItem blockID="i348" id="{13c9f1f9-2322-4d5c-81df-6d4bf8476ba4}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="c92f2a05-73eb-454e-9583-f6d2382d8bca" id="/^({abec23c3-478f-4a5b-8a38-68ccd500ec42}|{a83c1cbb-7a41-41e7-a2ae-58efcb4dc2e4}|{62237447-e365-487e-8fc3-64ddf37bdaed}|{b12cfdc7-3c69-43cb-a3fb-38981b68a087}|{1a927d5b-42e7-4407-828a-fdc441d0daae}|{dd1cb0ec-be2a-432b-9c90-d64c824ac371}|{82c8ced2-e08c-4d6c-a12b-3e8227d7fc2a}|{87c552f9-7dbb-421b-8deb-571d4a2d7a21})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="595e0e53-b76b-4188-a160-66f29c636094" id="@68eba425-7a05-4d62-82b1-1d6d5a51716b">
       <prefs/>
@@ -2024,6 +2036,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="a29aed6f-6546-4fa2-8131-df5c9a5427af" id="/^({d03b6b0f-4d44-4666-a6d6-f16ad9483593}|{767d394a-aa77-40c9-9365-c1916b4a2f84}|{a0ce2605-b5fc-4265-aa65-863354e85058}|{b7f366fa-6c66-46bf-8df2-797c5e52859f}|{4ad16913-e5cb-4292-974c-d557ef5ec5bb}|{3c3ef2a3-0440-4e77-9e3c-1ca8d48f895c}|{543f7503-3620-4f41-8f9e-c258fdff07e9}|{98363f8b-d070-47b6-acc6-65b80acac4f3}|{5af74f5a-652b-4b83-a2a9-f3d21c3c0010}|{484e0ba4-a20b-4404-bb1b-b93473782ae0}|{b99847d6-c932-4b52-9650-af83c9dae649})$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i656" id="hdv@vovcacik.addons.mozilla.org">
       <prefs/>
       <versionRange minVersion="102.0" maxVersion="102.0" severity="3"/>
@@ -2171,6 +2187,18 @@
         </targetApplication>
       </versionRange>
     </emItem>
+    <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i398" id="{377e5d4d-77e5-476a-8716-7e70a9272da0}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i698" id="{6b2a75c8-6e2e-4267-b955-43e25b54e575}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p416">
@@ -2282,7 +2310,7 @@
       <versionRange maxVersion="*" minVersion="0"/>
     </pluginItem>
     <pluginItem blockID="33147281-45b2-487e-9fea-f66c6517252d">
-      <match exp="Java\(TM\) Platform SE 8 U(7[6-9]|[8-9]\d|1([0-3]\d|40))(\s[^\d\._U]|$)" name="name"/>
+      <match exp="Java\(TM\) Platform SE 8 U(7[6-9]|[8-9]\d|1([0-5]\d|60))(\s[^\d\._U]|$)" name="name"/>
       <match exp="npjp2\.dll" name="filename"/>
       <infoURL>https://java.com/</infoURL>
       <versionRange severity="0" vulnerabilitystatus="1"/>
@@ -2624,7 +2652,7 @@
       <versionRange severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="ab59635e-2e93-423a-9d57-871dde8ae675">
-      <match exp="Java(\(TM\))? Plug-in 11\.(7[6-9]|[8-9]\d|1([0-3]\d|40))(\.\d+)?([^\d\._]|$)" name="name"/>
+      <match exp="Java(\(TM\))? Plug-in 11\.(7[6-9]|[8-9]\d|1([0-5]\d|60))(\.\d+)?([^\d\._]|$)" name="name"/>
       <match exp="libnpjp2\.so" name="filename"/>
       <infoURL>https://java.com/</infoURL>
       <versionRange severity="0" vulnerabilitystatus="1"/>
@@ -2884,7 +2912,7 @@
     <pluginItem blockID="f24ffd6f-e02b-4cf4-91d9-d54cd793e4bf">
       <match exp="JavaAppletPlugin\.plugin" name="filename"/>
       <infoURL>https://java.com/</infoURL>
-      <versionRange maxVersion="Java 8 Update 140" minVersion="Java 8 Update" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="Java 8 Update 160" minVersion="Java 8 Update" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p906">
       <match exp="Java\(TM\) Platform SE 7 U(4[5-9]|(5|6)\d|7[0-8])(\s[^\d\._U]|$)" name="name"/>
