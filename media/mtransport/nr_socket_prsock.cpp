@@ -252,7 +252,7 @@ static StaticRefPtr<SingletonThreadHolder> sThread;
 
 static void ClearSingletonOnShutdown()
 {
-  ClearOnShutdown(&sThread, ShutdownPhase::ShutdownThreads);
+  ClearOnShutdown(&sThread, ShutdownPhase::ShutdownLoaders);
 }
 #endif
 
