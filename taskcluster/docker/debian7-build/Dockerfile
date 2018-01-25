@@ -98,9 +98,7 @@ RUN apt-get update && \
       libpulse-dev:$ARCH \
       libx11-xcb-dev:$ARCH \
       libxss-dev:$ARCH \
-      libxt-dev:$ARCH \
-    && \
-    apt-get clean
+      libxt-dev:$ARCH
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 COPY topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py

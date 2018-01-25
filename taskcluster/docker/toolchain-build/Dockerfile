@@ -80,9 +80,7 @@ RUN apt-get update && \
       wget \
       xz-utils \
       zip \
-      zlib1g-dev \
-    && \
-    apt-get clean
+      zlib1g-dev
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 COPY topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
