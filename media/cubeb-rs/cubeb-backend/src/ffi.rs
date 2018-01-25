@@ -37,23 +37,77 @@ pub struct cubeb_layout_map {
     layout: ffi::cubeb_channel_layout
 }
 
+pub type InitFn =
+    unsafe extern fn(context: *mut *mut ffi::cubeb, context_name: *const c_char) -> c_int;
+pub type GetBackendIdFn =
+    unsafe extern fn(context: *mut ffi::cubeb) -> *const c_char;
+pub type GetMaxChannelCountFn =
+    unsafe extern fn(context: *mut ffi::cubeb, max_channels: *mut u32) -> c_int;
+pub type GetMinLatencyFn =
+    unsafe extern fn(context: *mut ffi::cubeb,
+                     params: ffi::cubeb_stream_params,
+                     latency_ms: *mut u32) -> c_int;
+pub type GetPreferredSampleRateFn =
+    unsafe extern fn(context: *mut ffi::cubeb, rate: *mut u32) -> c_int;
+pub type GetPreferredChannelLayoutFn =
+    unsafe extern fn(context: *mut ffi::cubeb, layout: *mut ffi::cubeb_channel_layout) -> c_int;
+pub type EnumerateDevicesFn =
+    unsafe extern fn(context: *mut ffi::cubeb, devtype: ffi::cubeb_device_type,
+                     collection: *mut ffi::cubeb_device_collection) -> c_int;
+pub type DeviceCollectionDestroyFn =
+    unsafe extern fn(context: *mut ffi::cubeb,
+                     collection: *mut ffi::cubeb_device_collection) -> c_int;
+pub type DestroyFn =
+    unsafe extern "C" fn(context: *mut ffi::cubeb);
+pub type StreamInitFn =
+    unsafe extern fn(context: *mut ffi::cubeb,
+                     stream: *mut *mut ffi::cubeb_stream,
+                     stream_name: *const c_char,
+                     input_device: ffi::cubeb_devid,
+                     input_stream_params: *const ffi::cubeb_stream_params,
+                     output_device: ffi::cubeb_devid,
+                     output_stream_params: *const ffi::cubeb_stream_params,
+                     latency: u32,
+                     data_callback: ffi::cubeb_data_callback,
+                     state_callback: ffi::cubeb_state_callback,
+                     user_ptr: *mut c_void) -> c_int;
+pub type StreamDestroyFn =
+    unsafe extern "C" fn(stream: *mut ffi::cubeb_stream);
+pub type StreamStartFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream) -> c_int;
+pub type StreamStopFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream) -> c_int;
+pub type StreamResetDefaultDeviceFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream) -> c_int;
+pub type StreamGetPositionFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream, position: *mut u64) -> c_int;
+pub type StreamGetLatencyFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream, latency: *mut u32) -> c_int;
+pub type StreamSetVolumeFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream, volumes: f32) -> c_int;
+pub type StreamSetPanningFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream, panning: f32) -> c_int;
+pub type StreamGetCurrentDeviceFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream,
+                     device: *mut *const ffi::cubeb_device) -> c_int;
+pub type StreamDeviceDestroyFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream,
+                     device: *const ffi::cubeb_device) -> c_int;
+pub type StreamRegisterDeviceChangedCallbackFn =
+    unsafe extern fn(stream: *mut ffi::cubeb_stream,
+                     device_changed_callback: ffi::cubeb_device_changed_callback) -> c_int;
+pub type RegisterDeviceCollectionChangedFn =
+    unsafe extern fn(context: *mut ffi::cubeb,
+                     devtype: ffi::cubeb_device_type,
+                     callback: ffi::cubeb_device_collection_changed_callback,
+                     user_ptr: *mut c_void) -> c_int;
+
 #[repr(C)]
 pub struct Ops {
-    pub init: Option<
-        unsafe extern fn(context: *mut *mut ffi::cubeb,
-                         context_name: *const c_char)
-                         -> c_int>,
-    pub get_backend_id: Option<
-        unsafe extern fn(context: *mut ffi::cubeb) -> *const c_char>,
-    pub get_max_channel_count: Option<
-        unsafe extern fn(context: *mut ffi::cubeb,
-                         max_channels: *mut u32)
-                         -> c_int>,
-    pub get_min_latency: Option<
-        unsafe extern fn(context: *mut ffi::cubeb,
-                         params: ffi::cubeb_stream_params,
-                         latency_ms: *mut u32)
-                         -> c_int>,
+    pub init: Option<InitFn>,
+    pub get_backend_id: Option<GetBackendIdFn>,
+    pub get_max_channel_count: Option<GetMaxChannelCountFn>,
+    pub get_min_latency: Option<GetMinLatencyFn>,
     pub get_preferred_sample_rate: Option<
         unsafe extern fn(context: *mut ffi::cubeb, rate: *mut u32) -> c_int>,
     pub get_preferred_channel_layout: Option<
@@ -70,19 +124,7 @@ pub struct Ops {
                          collection: *mut ffi::cubeb_device_collection)
                          -> c_int>,
     pub destroy: Option<unsafe extern "C" fn(context: *mut ffi::cubeb)>,
-    pub stream_init: Option<
-        unsafe extern fn(context: *mut ffi::cubeb,
-                         stream: *mut *mut ffi::cubeb_stream,
-                         stream_name: *const c_char,
-                         input_device: ffi::cubeb_devid,
-                         input_stream_params: *const ffi::cubeb_stream_params,
-                         output_device: ffi::cubeb_devid,
-                         output_stream_params: *const ffi::cubeb_stream_params,
-                         latency: u32,
-                         data_callback: ffi::cubeb_data_callback,
-                         state_callback: ffi::cubeb_state_callback,
-                         user_ptr: *mut c_void)
-                         -> c_int>,
+    pub stream_init: Option<StreamInitFn>,
     pub stream_destroy: Option<unsafe extern "C" fn(stream: *mut ffi::cubeb_stream)>,
     pub stream_start: Option<
         unsafe extern fn(stream: *mut ffi::cubeb_stream) -> c_int>,
@@ -118,11 +160,7 @@ pub struct Ops {
                          ffi::cubeb_device_changed_callback)
                          -> c_int>,
     pub register_device_collection_changed: Option<
-        unsafe extern fn(context: *mut ffi::cubeb,
-                         devtype: ffi::cubeb_device_type,
-                         callback: ffi::cubeb_device_collection_changed_callback,
-                         user_ptr: *mut c_void)
-                             -> c_int>
+            RegisterDeviceCollectionChangedFn>
 }
 
 #[repr(C)]
@@ -154,18 +192,10 @@ cubeb_enum! {
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct cubeb_channel_map {
     pub channels: c_uint,
     pub map: [cubeb_channel; CHANNEL_MAX as usize]
-}
-
-impl Clone for cubeb_channel_map {
-    /// Returns a deep copy of the value.
-    #[inline]
-    fn clone(&self) -> Self {
-        *self
-    }
 }
 
 impl Debug for cubeb_channel_map {

@@ -87,13 +87,21 @@ cubeb_enum! {
     }
 }
 
+cubeb_enum! {
+    pub enum cubeb_stream_prefs: c_int {
+        CUBEB_STREAM_PREF_NONE     = 0x00,
+        CUBEB_STREAM_PREF_LOOPBACK = 0x01,
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct cubeb_stream_params {
     pub format: cubeb_sample_format,
     pub rate: c_uint,
     pub channels: c_uint,
-    pub layout: cubeb_channel_layout
+    pub layout: cubeb_channel_layout,
+    pub prefs: cubeb_stream_prefs
 }
 
 #[repr(C)]
@@ -222,7 +230,7 @@ mod test {
         use super::cubeb_stream_params;
         assert_eq!(
             size_of::<cubeb_stream_params>(),
-            16usize,
+            20usize,
             concat!("Size of: ", stringify!(cubeb_stream_params))
         );
         assert_eq!(
@@ -268,6 +276,16 @@ mod test {
                 stringify!(cubeb_stream_params),
                 "::",
                 stringify!(layout)
+            )
+        );
+        assert_eq!(
+            unsafe { &(*(0 as *const cubeb_stream_params)).prefs as *const _ as usize },
+            16usize,
+            concat!(
+                "Alignment of field: ",
+                stringify!(cubeb_stream_params),
+                "::",
+                stringify!(prefs)
             )
         );
     }
