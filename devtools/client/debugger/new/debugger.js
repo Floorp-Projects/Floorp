@@ -10073,117 +10073,13 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_197__;
 /* 205 */,
 /* 206 */,
 /* 207 */,
-/* 208 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseIsArguments = __webpack_require__(209),
-    isObjectLike = __webpack_require__(14);
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/** Built-in value references. */
-var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-
-/**
- * Checks if `value` is likely an `arguments` object.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an `arguments` object,
- *  else `false`.
- * @example
- *
- * _.isArguments(function() { return arguments; }());
- * // => true
- *
- * _.isArguments([1, 2, 3]);
- * // => false
- */
-var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsArguments : function(value) {
-  return isObjectLike(value) && hasOwnProperty.call(value, 'callee') &&
-    !propertyIsEnumerable.call(value, 'callee');
-};
-
-module.exports = isArguments;
-
-
-/***/ }),
-/* 209 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseGetTag = __webpack_require__(6),
-    isObjectLike = __webpack_require__(14);
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]';
-
-/**
- * The base implementation of `_.isArguments`.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an `arguments` object,
- */
-function baseIsArguments(value) {
-  return isObjectLike(value) && baseGetTag(value) == argsTag;
-}
-
-module.exports = baseIsArguments;
-
-
-/***/ }),
+/* 208 */,
+/* 209 */,
 /* 210 */,
 /* 211 */,
 /* 212 */,
 /* 213 */,
-/* 214 */
-/***/ (function(module, exports) {
-
-/** Used as references for various `Number` constants. */
-var MAX_SAFE_INTEGER = 9007199254740991;
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This method is loosely based on
- * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- * @example
- *
- * _.isLength(3);
- * // => true
- *
- * _.isLength(Number.MIN_VALUE);
- * // => false
- *
- * _.isLength(Infinity);
- * // => false
- *
- * _.isLength('3');
- * // => false
- */
-function isLength(value) {
-  return typeof value == 'number' &&
-    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-module.exports = isLength;
-
-
-/***/ }),
+/* 214 */,
 /* 215 */,
 /* 216 */,
 /* 217 */,
@@ -10757,51 +10653,7 @@ module.exports = escapeRegExp;
 /* 294 */,
 /* 295 */,
 /* 296 */,
-/* 297 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var castPath = __webpack_require__(69),
-    isArguments = __webpack_require__(208),
-    isArray = __webpack_require__(70),
-    isIndex = __webpack_require__(117),
-    isLength = __webpack_require__(214),
-    toKey = __webpack_require__(111);
-
-/**
- * Checks if `path` exists on `object`.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array|string} path The path to check.
- * @param {Function} hasFunc The function to check properties.
- * @returns {boolean} Returns `true` if `path` exists, else `false`.
- */
-function hasPath(object, path, hasFunc) {
-  path = castPath(path, object);
-
-  var index = -1,
-      length = path.length,
-      result = false;
-
-  while (++index < length) {
-    var key = toKey(path[index]);
-    if (!(result = object != null && hasFunc(object, key))) {
-      break;
-    }
-    object = object[key];
-  }
-  if (result || ++index != length) {
-    return result;
-  }
-  length = object == null ? 0 : object.length;
-  return !!length && isLength(length) && isIndex(key, length) &&
-    (isArray(object) || isArguments(object));
-}
-
-module.exports = hasPath;
-
-
-/***/ }),
+/* 297 */,
 /* 298 */,
 /* 299 */,
 /* 300 */,
@@ -10811,72 +10663,8 @@ module.exports = hasPath;
 /* 304 */,
 /* 305 */,
 /* 306 */,
-/* 307 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseHas = __webpack_require__(308),
-    hasPath = __webpack_require__(297);
-
-/**
- * Checks if `path` is a direct property of `object`.
- *
- * @static
- * @since 0.1.0
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @param {Array|string} path The path to check.
- * @returns {boolean} Returns `true` if `path` exists, else `false`.
- * @example
- *
- * var object = { 'a': { 'b': 2 } };
- * var other = _.create({ 'a': _.create({ 'b': 2 }) });
- *
- * _.has(object, 'a');
- * // => true
- *
- * _.has(object, 'a.b');
- * // => true
- *
- * _.has(object, ['a', 'b']);
- * // => true
- *
- * _.has(other, 'a');
- * // => false
- */
-function has(object, path) {
-  return object != null && hasPath(object, path, baseHas);
-}
-
-module.exports = has;
-
-
-/***/ }),
-/* 308 */
-/***/ (function(module, exports) {
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * The base implementation of `_.has` without support for deep paths.
- *
- * @private
- * @param {Object} [object] The object to query.
- * @param {Array|string} key The key to check.
- * @returns {boolean} Returns `true` if `key` exists, else `false`.
- */
-function baseHas(object, key) {
-  return object != null && hasOwnProperty.call(object, key);
-}
-
-module.exports = baseHas;
-
-
-/***/ }),
+/* 307 */,
+/* 308 */,
 /* 309 */,
 /* 310 */,
 /* 311 */,
@@ -14137,7 +13925,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 /* 960 */
 /***/ (function(module, exports) {
 
-module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\ngotoLineModal.key=CmdOrCtrl+Shift+;\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
+module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUri2): This is the text that appears in the\n# context menu to copy the source URI of file open.\ncopySourceUri2=Copy source URI\ncopySourceUri2.accesskey=u\n\n# LOCALIZATION NOTE (setDirectoryRoot): This is the text that appears in the\n# context menu to set a directory as root directory\nsetDirectoryRoot.label=Set directory root\nsetDirectoryRoot.accesskey=r\n\n# LOCALIZATION NOTE (copyFunction): This is the text that appears in the\n# context menu to copy the function the user selected\ncopyFunction.label=Copy function\ncopyFunction.accesskey=F\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy stack trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step in %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step out %S\n\n# LOCALIZATION NOTE (pauseButtonItem): The label that is displayed for the dropdown pause\n# list item when the debugger is in a running state.\npauseButtonItem=Pause on Next Statement\n\n# LOCALIZATION NOTE (ignoreExceptionsItem): The pause on exceptions button description\n# when the debugger will not pause on exceptions.\nignoreExceptionsItem=Ignore exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptionsItem): The pause on exceptions dropdown\n# item shown when a user is adding a new breakpoint.\npauseOnUncaughtExceptionsItem=Pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptionsItem): The pause on exceptions button description\n# when the debugger will pause on all exceptions.\npauseOnExceptionsItem=Pause on all exceptions\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display.\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (functionSearch.key): A key shortcut to open the\n# modal for searching functions in a file.\nfunctionSearch.key=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE (toggleBreakpoint.key): A key shortcut to toggle\n# breakpoints.\ntoggleBreakpoint.key=CmdOrCtrl+B\n\n# LOCALIZATION NOTE (toggleCondPanel.key): A key shortcut to toggle\n# the conditional breakpoint panel.\ntoggleCondPanel.key=CmdOrCtrl+Shift+B\n\n# LOCALIZATION NOTE (stepOut.key): A key shortcut to\n# step out.\nstepOut.key=Shift+F11\n\n# LOCALIZATION NOTE (shortcuts.header.editor): Sections header in\n# the shortcuts modal for keyboard shortcuts related to editing.\nshortcuts.header.editor=Editor\n\n# LOCALIZATION NOTE (shortcuts.header.stepping): Sections header in\n# the shortcuts modal for keyboard shortcuts related to stepping.\nshortcuts.header.stepping=Stepping\n\n# LOCALIZATION NOTE (shortcuts.header.search): Sections header in\n# the shortcuts modal for keyboard shortcuts related to search.\nshortcuts.header.search=Search\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (projectTextSearch.noResults): The center pane Text Search\n# message when the query did not match any text of all files in a project.\nprojectTextSearch.noResults=No results found\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf2.label=Enable\nbreakpointMenuItem.enableSelf2.accesskey=E\nbreakpointMenuItem.disableSelf2.label=Disable\nbreakpointMenuItem.disableSelf2.accesskey=D\nbreakpointMenuItem.deleteSelf2.label=Remove\nbreakpointMenuItem.deleteSelf2.accesskey=R\nbreakpointMenuItem.enableOthers2.label=Enable others\nbreakpointMenuItem.enableOthers2.accesskey=o\nbreakpointMenuItem.disableOthers2.label=Disable others\nbreakpointMenuItem.disableOthers2.accesskey=s\nbreakpointMenuItem.deleteOthers2.label=Remove others\nbreakpointMenuItem.deleteOthers2.accesskey=h\nbreakpointMenuItem.enableAll2.label=Enable all\nbreakpointMenuItem.enableAll2.accesskey=b\nbreakpointMenuItem.disableAll2.label=Disable all\nbreakpointMenuItem.disableAll2.accesskey=k\nbreakpointMenuItem.deleteAll2.label=Remove all\nbreakpointMenuItem.deleteAll2.accesskey=a\nbreakpointMenuItem.removeCondition2.label=Remove condition\nbreakpointMenuItem.removeCondition2.accesskey=c\nbreakpointMenuItem.addCondition2.label=Add condition\nbreakpointMenuItem.addCondition2.accesskey=A\nbreakpointMenuItem.editCondition2.label=Edit condition\nbreakpointMenuItem.editCondition2.accesskey=n\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\nbreakpointMenuItem.removeCondition.label=Remove breakpoint condition\nbreakpointMenuItem.removeCondition.accesskey=c\nbreakpointMenuItem.editCondition.label=Edit breakpoint condition\nbreakpointMenuItem.editCondition.accesskey=n\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (editor.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=No results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.continueToHere.label): Editor gutter context\n# menu item for jumping to a new paused location\neditor.continueToHere.label=Continue to here\neditor.continueToHere.accesskey=H\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable breakpoint\neditor.disableBreakpoint.accesskey=D\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add conditional breakpoint\neditor.addConditionalBreakpoint.accesskey=c\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.close): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\neditor.jumpToMappedLocation1.accesskey=m\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable framework grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable framework grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add watch expression\n# LOCALIZATION NOTE (expressions.errorMsg): Error text for expression\n# input element\nexpressions.errorMsg=Invalid expression…\nexpressions.label=Add watch expression\nexpressions.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close other tabs\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty print source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed source\n\n# LOCALIZATION NOTE (sourceFooter.mappedSource): Text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSource=(From %S)\n\n# LOCALIZATION NOTE (sourceFooter.mappedSourceTooltip): Tooltip text associated\n# with a mapped source. %S is replaced by the source map origin.\nsourceFooter.mappedSourceTooltip=(Source mapped from %S)\n\n# LOCALIZATION NOTE (sourceFooter.codeCoverage): Text associated\n# with a code coverage button\nsourceFooter.codeCoverage=Code coverage\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (outline.header): Outline left sidebar header\noutline.header=Outline\n\n# LOCALIZATION NOTE (outline.noFunctions): Outline text when there are no functions to display\noutline.noFunctions=No functions\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (welcome.searchFunction): Label displayed in the welcome\n# panel. %S is replaced by the keyboard shortcut to search for functions.\nwelcome.searchFunction=%S to search for functions in file\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults2): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (wasmIsNotAvailable): The text that is displayed in the\n# script editor when the WebAssembly source is not available.\nwasmIsNotAvailable=Please refresh to debug this module\n\n# LOCALIZATION NOTE (errorLoadingText3): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText3=Error loading this URI: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesDomNodeValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(gotoLineModal.placeholder): The placeholder\n# text displayed when the user searches for specific lines in a file\ngotoLineModal.placeholder=Go to line…\ngotoLineModal.key=CmdOrCtrl+Shift+;\ngotoLineModal.title=Go to a line number in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\nsymbolSearch.search.functionsPlaceholder.title=Search for a function in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\nsymbolSearch.search.variablesPlaceholder.title=Search for a variable in a file\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n\n# LOCALIZATION NOTE (anonymous): The text that is displayed when the\n# display name is null.\nanonymous=(anonymous)\n\n# LOCALIZATION NOTE (shortcuts.toggleBreakpoint): text describing\n# keyboard shortcut action for toggling breakpoint\nshortcuts.toggleBreakpoint=Toggle Breakpoint\nshortcuts.toggleBreakpoint.accesskey=B\n\n# LOCALIZATION NOTE (shortcuts.toggleCondPanel): text describing\n# keyboard shortcut action for toggling conditional panel keyboard\nshortcuts.toggleCondPanel=Toggle Conditional Panel\n\n# LOCALIZATION NOTE (shortcuts.pauseOrResume): text describing\n# keyboard shortcut action for pause of resume\nshortcuts.pauseOrResume=Pause/Resume\n\n# LOCALIZATION NOTE (shortcuts.stepOver): text describing\n# keyboard shortcut action for stepping over\nshortcuts.stepOver=Step Over\n\n# LOCALIZATION NOTE (shortcuts.stepIn): text describing\n# keyboard shortcut action for stepping in\nshortcuts.stepIn=Step In\n\n# LOCALIZATION NOTE (shortcuts.stepOut): text describing\n# keyboard shortcut action for stepping out\nshortcuts.stepOut=Step Out\n\n# LOCALIZATION NOTE (shortcuts.fileSearch): text describing\n# keyboard shortcut action for source file search\nshortcuts.fileSearch=Source File Search\n\n# LOCALIZATION NOTE (shortcuts.searchAgain): text describing\n# keyboard shortcut action for searching again\nshortcuts.searchAgain=Search Again\n\n# LOCALIZATION NOTE (shortcuts.projectSearch): text describing\n# keyboard shortcut action for full project search\nshortcuts.projectSearch=Full Project Search\n\n# LOCALIZATION NOTE (shortcuts.functionSearch): text describing\n# keyboard shortcut action for function search\nshortcuts.functionSearch=Function Search\n\n# LOCALIZATION NOTE (shortcuts.buttonName): text describing\n# keyboard shortcut button text\nshortcuts.buttonName=Keyboard shortcuts\n"
 
 /***/ }),
 /* 961 */,
@@ -14778,12 +14566,7 @@ module.exports = "<svg enable-background=\"new 0 0 800 800\" id=\"GUIDE\" versio
 /* 1149 */,
 /* 1150 */,
 /* 1151 */,
-/* 1152 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
-
-/***/ }),
+/* 1152 */,
 /* 1153 */
 /***/ (function(module, exports) {
 
@@ -16163,12 +15946,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 1314 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1314 */,
 /* 1315 */,
 /* 1316 */
 /***/ (function(module, exports) {
@@ -16176,12 +15954,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 1317 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 1317 */,
 /* 1318 */
 /***/ (function(module, exports) {
 
@@ -16480,9 +16253,12 @@ module.exports = _extends({}, expressions, sources, pause, debuggee, breakpoints
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
 const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
 const tokenSplitRegex = /(\s|\'|\"|\\)+/;
+const ELLIPSIS = "\u2026";
+const dom = __webpack_require__(1758);
+const { span } = dom;
+
 /**
  * Returns true if the given object is a grip (see RDP protocol)
  */
@@ -16525,8 +16301,8 @@ const escapeRegexp = new RegExp("[" +
 "\x7f-\x9f" +
 // BOM
 "\ufeff" +
-// Replacement characters and non-characters.
-"\ufffc-\uffff" +
+// Specials, except for the replacement character.
+"\ufff0-\ufffc\ufffe\uffff" +
 // Surrogates.
 "\ud800-\udfff" +
 // Mathematical invisibles.
@@ -16611,11 +16387,7 @@ function cropMultipleLines(text, limit) {
   return escapeNewLines(cropString(text, limit));
 }
 
-function rawCropString(text, limit, alternativeText) {
-  if (!alternativeText) {
-    alternativeText = "\u2026";
-  }
-
+function rawCropString(text, limit, alternativeText = ELLIPSIS) {
   // Crop the string only if a limit is actually specified.
   if (!limit || limit <= 0) {
     return text;
@@ -16728,7 +16500,7 @@ function wrapRender(renderMethod) {
       return renderMethod.call(this, props);
     } catch (e) {
       console.error(e);
-      return React.DOM.span({
+      return span({
         className: "objectBox objectBox-failure",
         title: "This object could not be rendered, " + "please file a bug on bugzilla.mozilla.org"
       },
@@ -16810,18 +16582,13 @@ function getGripPreviewItems(grip) {
  * @return {boolean}
  */
 function getGripType(object, noGrip) {
-  let type = typeof object;
-  if (type == "object" && object instanceof String) {
-    type = "string";
-  } else if (object && type == "object" && object.type && noGrip !== true) {
-    type = object.type;
+  if (noGrip || Object(object) !== object) {
+    return typeof object;
   }
-
-  if (isGrip(object)) {
-    type = object.class;
+  if (object.type === "object") {
+    return object.class;
   }
-
-  return type;
+  return object.type;
 }
 
 /**
@@ -16878,7 +16645,8 @@ module.exports = {
   maybeEscapePropertyName,
   getGripPreviewItems,
   getGripType,
-  tokenSplitRegex
+  tokenSplitRegex,
+  ELLIPSIS
 };
 
 /***/ }),
@@ -17191,7 +16959,7 @@ function getSourcePath(url) {
  * the function returns amount of bytes.
  */
 function getSourceLineCount(source) {
-  if (source.isWasm) {
+  if (source.isWasm && !source.error) {
     const { binary } = source.text;
     return binary.length;
   }
@@ -18336,7 +18104,7 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSearchTabs = exports.getSourceTabs = exports.getSources = undefined;
+exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getSources = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18356,6 +18124,7 @@ exports.getSourceByURL = getSourceByURL;
 exports.getGeneratedSource = getGeneratedSource;
 exports.getPendingSelectedLocation = getPendingSelectedLocation;
 exports.getPrettySource = getPrettySource;
+exports.hasPrettySource = hasPrettySource;
 exports.getSourceInSources = getSourceInSources;
 
 var _immutable = __webpack_require__(146);
@@ -18636,6 +18405,10 @@ function getPrettySource(state, id) {
   return getSourceByURL(state, (0, _source.getPrettySourceURL)(source.get("url")));
 }
 
+function hasPrettySource(state, id) {
+  return !!getPrettySource(state, id);
+}
+
 function getSourceByUrlInSources(sources, url) {
   if (!url) {
     return null;
@@ -18653,8 +18426,6 @@ const getSources = exports.getSources = (0, _reselect.createSelector)(getSources
 const getTabs = (0, _reselect.createSelector)(getSourcesState, sources => sources.tabs);
 
 const getSourceTabs = exports.getSourceTabs = (0, _reselect.createSelector)(getTabs, getSources, (tabs, sources) => tabs.filter(tab => getSourceByUrlInSources(sources, tab)));
-
-const getSearchTabs = exports.getSearchTabs = (0, _reselect.createSelector)(getTabs, getSources, (tabs, sources) => tabs.filter(tab => !getSourceByUrlInSources(sources, tab)));
 
 const getSourcesForTabs = exports.getSourcesForTabs = (0, _reselect.createSelector)(getSourceTabs, getSources, (tabs, sources) => {
   return tabs.map(tab => getSourceByUrlInSources(sources, tab)).filter(source => source);
@@ -19298,24 +19069,23 @@ const arrowBtn = (onClick, type, className, tooltip) => {
     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class SearchInput extends _react.Component {
+  constructor(...args) {
+    var _temp;
+
+    return _temp = super(...args), this.shouldShowErrorEmoji = () => {
+      const { count, query, showErrorEmoji } = this.props;
+      return count === 0 && query.trim() !== "" && showErrorEmoji;
+    }, _temp;
+  }
 
   componentDidMount() {
-    this.$input.focus();
-    if (this.$input.value != "") {
-      this.$input.setSelectionRange(this.$input.value.length + 1, this.$input.value.length + 1);
+    if (this.$input) {
+      const input = this.$input;
+      input.focus();
+      if (input.value != "") {
+        input.setSelectionRange(input.value.length + 1, input.value.length + 1);
+      }
     }
-  }
-
-  componentDidUpdate() {
-    this.$input.focus();
-    if (this.$input.value != "") {
-      this.$input.setSelectionRange(this.$input.value.length + 1, this.$input.value.length + 1);
-    }
-  }
-
-  shouldShowErrorEmoji() {
-    const { count, query, showErrorEmoji } = this.props;
-    return count === 0 && query.trim() !== "" && !showErrorEmoji;
   }
 
   renderSvg() {
@@ -19656,14 +19426,15 @@ function collapseLastFrames(frames) {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   maybeEscapePropertyName,
   wrapRender
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Property for Obj (local JS objects), Grip (remote JS objects)
@@ -19672,18 +19443,18 @@ const { span } = React.DOM;
  */
 PropRep.propTypes = {
   // Property name.
-  name: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.object]).isRequired,
+  name: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
   // Equal character rendered between property name and value.
-  equal: React.PropTypes.string,
+  equal: PropTypes.string,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func,
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func,
   // Normally a PropRep will quote a property name that isn't valid
   // when unquoted; but this flag can be used to suppress the
   // quoting.
-  suppressQuotes: React.PropTypes.bool
+  suppressQuotes: PropTypes.bool
 };
 
 /**
@@ -19870,6 +19641,16 @@ EventEmitter.prototype = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Ast reducer
+ * @module reducers/ast
+ */
+
 exports.initialState = initialState;
 exports.getSymbols = getSymbols;
 exports.hasSymbols = hasSymbols;
@@ -19891,15 +19672,6 @@ var _makeRecord2 = _interopRequireDefault(_makeRecord);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-/**
- * Ast reducer
- * @module reducers/ast
- */
 
 function initialState() {
   return (0, _makeRecord2.default)({
@@ -19951,24 +19723,9 @@ function update(state = initialState(), action) {
           return state.set("preview", null);
         }
 
-        const {
-          expression,
-          location,
-          result,
-          tokenPos,
-          cursorPos,
-          extra
-        } = action.value;
-
-        return state.set("preview", {
-          updating: false,
-          expression,
-          location,
-          result,
-          tokenPos,
-          cursorPos,
-          extra
-        });
+        return state.set("preview", _extends({}, action.value, {
+          updating: false
+        }));
       }
 
     case "RESUME":
@@ -20285,6 +20042,7 @@ exports.formatKeyShortcut = formatKeyShortcut;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.copyToTheClipboard = copyToTheClipboard;
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -20303,8 +20061,6 @@ function copyToTheClipboard(string) {
   document.execCommand("copy", false, null);
   document.removeEventListener("copy", doCopy);
 }
-
-exports.copyToTheClipboard = copyToTheClipboard;
 
 /***/ }),
 /* 1389 */
@@ -20612,7 +20368,7 @@ exports.join = join;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedFrame = exports.getLoadedObjects = exports.State = undefined;
+exports.getSelectedFrame = exports.getAllPopupObjectProperties = exports.State = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20629,9 +20385,7 @@ exports.getPauseReason = getPauseReason;
 exports.isStepping = isStepping;
 exports.isPaused = isPaused;
 exports.isEvaluatingExpression = isEvaluatingExpression;
-exports.getLoadedObject = getLoadedObject;
-exports.hasLoadingObjects = hasLoadingObjects;
-exports.getObjectProperties = getObjectProperties;
+exports.getPopupObjectProperties = getPopupObjectProperties;
 exports.getIsWaitingOnBreak = getIsWaitingOnBreak;
 exports.getShouldPauseOnExceptions = getShouldPauseOnExceptions;
 exports.getShouldIgnoreCaughtExceptions = getShouldIgnoreCaughtExceptions;
@@ -20647,8 +20401,6 @@ exports.getChromeScopes = getChromeScopes;
 var _reselect = __webpack_require__(993);
 
 var _prefs = __webpack_require__(226);
-
-var _lodash = __webpack_require__(2);
 
 const State = exports.State = () => ({
   why: null,
@@ -20714,31 +20466,16 @@ function update(state = State(), action) {
         selectedFrameId: action.frame.id
       });
 
-    case "LOAD_OBJECT_PROPERTIES":
-      if (action.status === "start") {
-        return _extends({}, state, {
-          loadedObjects: _extends({}, state.loadedObjects, {
-            [action.objectId]: {}
-          })
-        });
+    case "SET_POPUP_OBJECT_PROPERTIES":
+      if (!action.properties) {
+        return _extends({}, state);
       }
 
-      if (action.status === "done") {
-        if (!action.value) {
-          return _extends({}, state);
-        }
-
-        const ownProperties = action.value.ownProperties;
-        const ownSymbols = action.value.ownSymbols || [];
-        const prototype = action.value.prototype;
-
-        return _extends({}, state, {
-          loadedObjects: _extends({}, state.loadedObjects, {
-            [action.objectId]: { ownProperties, prototype, ownSymbols }
-          })
-        });
-      }
-      break;
+      return _extends({}, state, {
+        loadedObjects: _extends({}, state.loadedObjects, {
+          [action.objectId]: action.properties
+        })
+      });
 
     case "CONNECT":
       return _extends({}, State(), { debuggeeUrl: action.url });
@@ -20787,7 +20524,7 @@ function update(state = State(), action) {
 
 const getPauseState = state => state.pause;
 
-const getLoadedObjects = exports.getLoadedObjects = (0, _reselect.createSelector)(getPauseState, pauseWrapper => pauseWrapper.loadedObjects);
+const getAllPopupObjectProperties = exports.getAllPopupObjectProperties = (0, _reselect.createSelector)(getPauseState, pauseWrapper => pauseWrapper.loadedObjects);
 
 function getPauseReason(state) {
   return state.pause.why;
@@ -20805,17 +20542,8 @@ function isEvaluatingExpression(state) {
   return state.pause.command === "expression";
 }
 
-function getLoadedObject(state, objectId) {
-  return getLoadedObjects(state)[objectId];
-}
-
-function hasLoadingObjects(state) {
-  const objects = getLoadedObjects(state);
-  return Object.values(objects).some(_lodash.isEmpty);
-}
-
-function getObjectProperties(state, parentId) {
-  return getLoadedObjects(state).filter(obj => obj.parentId == parentId);
+function getPopupObjectProperties(state, objectId) {
+  return getAllPopupObjectProperties(state)[objectId];
 }
 
 function getIsWaitingOnBreak(state) {
@@ -22005,7 +21733,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class ManagedTree extends _react.Component {
   constructor(props) {
-    super();
+    super(props);
 
     this.setExpanded = (item, isExpanded, shouldIncludeChildren) => {
       const expandItem = i => {
@@ -22016,7 +21744,7 @@ class ManagedTree extends _react.Component {
           expanded.delete(path);
         }
       };
-      const expanded = this.state.expanded;
+      const { expanded } = this.state;
       expandItem(item);
 
       if (shouldIncludeChildren) {
@@ -22060,31 +21788,29 @@ class ManagedTree extends _react.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const listItems = nextProps.listItems;
-    if (listItems && listItems != this.props.listItems && listItems.length) {
-      this.expandListItems(listItems);
+    const { listItems, highlightItems, focused } = this.props;
+    if (nextProps.listItems && nextProps.listItems != listItems && nextProps.listItems.length) {
+      this.expandListItems(nextProps.listItems);
     }
 
-    const highlightItems = nextProps.highlightItems;
-    if (highlightItems && highlightItems != this.props.highlightItems && highlightItems.length) {
-      this.highlightItem(highlightItems);
+    if (nextProps.highlightItems && nextProps.highlightItems != highlightItems && nextProps.highlightItems.length) {
+      this.highlightItem(nextProps.highlightItems);
     }
 
-    if (nextProps.focused && nextProps.focused !== this.props.focused) {
+    if (nextProps.focused && nextProps.focused !== focused) {
       this.focusItem(nextProps.focused);
     }
   }
 
   expandListItems(listItems) {
-    const expanded = this.state.expanded;
+    const { expanded } = this.state;
     listItems.forEach(item => expanded.add(this.props.getPath(item)));
     this.focusItem(listItems[0]);
     this.setState({ expanded });
   }
 
   highlightItem(highlightItems) {
-    const expanded = this.state.expanded;
-
+    const { expanded } = this.state;
     // This file is visible, so we highlight it.
     if (expanded.has(this.props.getPath(highlightItems[0]))) {
       this.focusItem(highlightItems[0]);
@@ -22098,24 +21824,20 @@ class ManagedTree extends _react.Component {
 
   render() {
     const { expanded, focusedItem } = this.state;
-
-    const overrides = {
-      isExpanded: item => expanded.has(this.props.getPath(item)),
-      focused: focusedItem,
-      getKey: this.props.getPath,
-      onExpand: item => this.setExpanded(item, true, false),
-      onCollapse: item => this.setExpanded(item, false, false),
-      onFocus: this.focusItem,
-      renderItem: (...args) => this.props.renderItem(...args, {
-        setExpanded: this.setExpanded
-      })
-    };
-
-    const props = _extends({}, this.props, overrides);
     return _react2.default.createElement(
       "div",
       { className: "managed-tree" },
-      _react2.default.createElement(_devtoolsComponents.Tree, props)
+      _react2.default.createElement(_devtoolsComponents.Tree, _extends({}, this.props, {
+        isExpanded: item => expanded.has(this.props.getPath(item)),
+        focused: focusedItem,
+        getKey: this.props.getPath,
+        onExpand: item => this.setExpanded(item, true, false),
+        onCollapse: item => this.setExpanded(item, false, false),
+        onFocus: this.focusItem,
+        renderItem: (...args) => this.props.renderItem(...args, {
+          setExpanded: this.setExpanded
+        })
+      }))
     );
   }
 }
@@ -22318,12 +22040,7 @@ __webpack_require__(1321);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-class PaneToggleButton extends _react.Component {
-  shouldComponentUpdate(nextProps) {
-    const { collapsed, horizontal } = this.props;
-
-    return horizontal !== nextProps.horizontal || collapsed !== nextProps.collapsed;
-  }
+class PaneToggleButton extends _react.PureComponent {
 
   render() {
     const { position, collapsed, horizontal, handleClick } = this.props;
@@ -22334,7 +22051,7 @@ class PaneToggleButton extends _react.Component {
       {
         className: (0, _classnames2.default)("toggle-button", position, {
           collapsed,
-          vertical: horizontal != null ? !horizontal : false
+          vertical: !horizontal
         }),
         onClick: () => handleClick(position, collapsed),
         title: title
@@ -22346,6 +22063,9 @@ class PaneToggleButton extends _react.Component {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+PaneToggleButton.defaultProps = {
+  horizontal: false
+};
 exports.default = PaneToggleButton;
 
 /***/ }),
@@ -22362,7 +22082,7 @@ exports.default = PaneToggleButton;
 const { MODE } = __webpack_require__(1357);
 const { REPS, getRep } = __webpack_require__(1372);
 const ObjectInspector = __webpack_require__(1585);
-const ObjectInspectorUtils = __webpack_require__(1452);
+const ObjectInspectorUtils = __webpack_require__(1938);
 
 const {
   parseURLEncodedText,
@@ -22395,7 +22115,8 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
+
 // Dependencies
 const {
   isGrip,
@@ -22403,8 +22124,9 @@ const {
 } = __webpack_require__(1353);
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders generic grip. Grip is client representation
@@ -22412,15 +22134,15 @@ const { span } = React.DOM;
  * for this rep component.
  */
 GripRep.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  isInterestingProp: React.PropTypes.func,
-  title: React.PropTypes.string,
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func,
-  noGrip: React.PropTypes.bool
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  isInterestingProp: PropTypes.func,
+  title: PropTypes.string,
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func,
+  noGrip: PropTypes.bool
 };
 
 const DEFAULT_TITLE = "Object";
@@ -22706,20 +22428,27 @@ module.exports = Grip;
 "use strict";
 
 
+var _svgInlineReact = __webpack_require__(1763);
+
+var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const React = __webpack_require__(0);
-const InlineSVG = __webpack_require__(1789);
+const PropTypes = __webpack_require__(20);
+
 
 const svg = {
-  "arrow": __webpack_require__(1152),
-  "open-inspector": __webpack_require__(1153)
+  "open-inspector": __webpack_require__(1153),
+  "jump-definition": __webpack_require__(2012)
 };
 
 Svg.propTypes = {
-  className: React.PropTypes.string
+  className: PropTypes.string
 };
 
 function Svg(name, props) {
@@ -22734,7 +22463,7 @@ function Svg(name, props) {
     className = "";
   }
   props = Object.assign({}, props, { className, src: svg[name] });
-  return React.createElement(InlineSVG, props);
+  return React.createElement(_svgInlineReact2.default, props);
 }
 
 module.exports = Svg;
@@ -24392,7 +24121,7 @@ function searchSources(query) {
     dispatch(updateSearchStatus(_projectTextSearch.statusType.fetching));
     await dispatch((0, _sources.loadAllSources)());
     const sources = (0, _selectors.getSources)(getState());
-    const validSources = sources.valueSeq().filter(source => (0, _source.isLoaded)(source) && !(0, _source.isThirdParty)(source));
+    const validSources = sources.valueSeq().filter(source => (0, _source.isLoaded)(source) && !(0, _selectors.hasPrettySource)(getState(), source.get("id")) && !(0, _source.isThirdParty)(source));
     for (const source of validSources) {
       await dispatch(searchSource(source.get("id"), query));
     }
@@ -24520,11 +24249,17 @@ function loadSourceText(source) {
     }
 
     requests.set(id, deferred.promise);
-    await dispatch({
-      type: "LOAD_SOURCE_TEXT",
-      sourceId: id,
-      [_promise.PROMISE]: loadSource(source, { sourceMaps, client })
-    });
+    try {
+      await dispatch({
+        type: "LOAD_SOURCE_TEXT",
+        sourceId: id,
+        [_promise.PROMISE]: loadSource(source, { sourceMaps, client })
+      });
+    } catch (e) {
+      deferred.resolve();
+      requests.delete(id);
+      return;
+    }
 
     const newSource = (0, _selectors.getSource)(getState(), source.get("id")).toJS();
 
@@ -24553,7 +24288,7 @@ function loadSourceText(source) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.showLoading = exports.showSourceText = exports.updateDocument = exports.updateLineNumberFormat = exports.resetLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.hasDocument = exports.setDocument = exports.getDocument = undefined;
+exports.showLoading = exports.showErrorMessage = exports.showSourceText = exports.clearEditor = exports.updateDocument = exports.updateLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.hasDocument = exports.setDocument = exports.getDocument = undefined;
 
 var _source = __webpack_require__(1356);
 
@@ -24615,6 +24350,14 @@ function updateDocument(editor, source) {
   updateLineNumberFormat(editor, sourceId);
 }
 
+function clearEditor(editor) {
+  const doc = editor.createDocument();
+  editor.replaceDocument(doc);
+  editor.setText("");
+  editor.setMode({ name: "text" });
+  resetLineNumberFormat(editor);
+}
+
 function showLoading(editor) {
   if (hasDocument("loading")) {
     return;
@@ -24625,6 +24368,20 @@ function showLoading(editor) {
   editor.replaceDocument(doc);
   editor.setText(L10N.getStr("loadingText"));
   editor.setMode({ name: "text" });
+}
+
+function showErrorMessage(editor, msg) {
+  let error;
+  if (msg.includes("WebAssembly binary source is not available")) {
+    error = L10N.getStr("wasmIsNotAvailable");
+  } else {
+    error = L10N.getFormatStr("errorLoadingText3", msg);
+  }
+  const doc = editor.createDocument();
+  editor.replaceDocument(doc);
+  editor.setText(error);
+  editor.setMode({ name: "text" });
+  resetLineNumberFormat(editor);
 }
 
 function setEditorText(editor, source) {
@@ -24675,10 +24432,11 @@ exports.setDocument = setDocument;
 exports.hasDocument = hasDocument;
 exports.removeDocument = removeDocument;
 exports.clearDocuments = clearDocuments;
-exports.resetLineNumberFormat = resetLineNumberFormat;
 exports.updateLineNumberFormat = updateLineNumberFormat;
 exports.updateDocument = updateDocument;
+exports.clearEditor = clearEditor;
 exports.showSourceText = showSourceText;
+exports.showErrorMessage = showErrorMessage;
 exports.showLoading = showLoading;
 
 /***/ }),
@@ -25348,7 +25106,7 @@ exports.default = PreviewFunction;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 const {
   containsURL,
@@ -25358,28 +25116,31 @@ const {
   rawCropString,
   sanitizeString,
   wrapRender,
-  tokenSplitRegex
+  tokenSplitRegex,
+  ELLIPSIS
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { a, span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { a, span } = dom;
 
 /**
  * Renders a string. String value is enclosed within quotes.
  */
 StringRep.propTypes = {
-  useQuotes: React.PropTypes.bool,
-  escapeWhitespace: React.PropTypes.bool,
-  style: React.PropTypes.object,
-  object: React.PropTypes.string.isRequired,
-  member: React.PropTypes.any,
-  cropLimit: React.PropTypes.number,
-  openLink: React.PropTypes.func,
-  omitLinkHref: React.PropTypes.bool
+  useQuotes: PropTypes.bool,
+  escapeWhitespace: PropTypes.bool,
+  style: PropTypes.object,
+  object: PropTypes.string.isRequired,
+  member: PropTypes.any,
+  cropLimit: PropTypes.number,
+  openLink: PropTypes.func,
+  className: PropTypes.string,
+  omitLinkHref: PropTypes.bool
 };
 
 function StringRep(props) {
   let {
+    className,
     cropLimit,
     object: text,
     member,
@@ -25390,7 +25151,11 @@ function StringRep(props) {
     omitLinkHref = true
   } = props;
 
-  let config = { className: "objectBox objectBox-string" };
+  const classNames = ["objectBox", "objectBox-string"];
+  if (className) {
+    classNames.push(className);
+  }
+  let config = { className: classNames.join(" ") };
   if (style) {
     config.style = style;
   }
@@ -25401,43 +25166,121 @@ function StringRep(props) {
     text = sanitizeString(text);
   }
 
-  if ((!member || !member.open) && cropLimit) {
-    text = rawCropString(text, cropLimit);
-  }
-
+  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
   if (!containsURL(text)) {
+    if (shouldCrop) {
+      text = rawCropString(text, cropLimit);
+    }
     return span(config, text);
   }
 
-  const items = [];
+  return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+}
+
+/**
+ * Get an array of the elements representing the string, cropped if needed,
+ * with actual links.
+ *
+ * @param {String} text: The actual string to linkify.
+ * @param {Integer | null} cropLimit
+ * @param {Boolean} omitLinkHref: Do not create an href attribute if true.
+ * @param {Function} openLink: Function handling the link opening.
+ * @returns {Array<String|ReactElement>}
+ */
+function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
+  const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
+  const startCropIndex = cropLimit ? halfLimit : null;
+  const endCropIndex = cropLimit ? text.length - halfLimit : null;
 
   // As we walk through the tokens of the source string, we make sure to preserve
   // the original whitespace that separated the tokens.
-  let tokens = text.split(tokenSplitRegex);
-  let textIndex = 0;
-  let tokenStart;
-  tokens.forEach((token, i) => {
-    tokenStart = text.indexOf(token, textIndex);
+  let currentIndex = 0;
+  const items = [];
+  for (let token of text.split(tokenSplitRegex)) {
     if (isURL(token)) {
-      items.push(text.slice(textIndex, tokenStart));
-      textIndex = tokenStart + token.length;
+      // Let's grab all the non-url strings before the link.
+      const tokenStart = text.indexOf(token, currentIndex);
+      let nonUrlText = text.slice(currentIndex, tokenStart);
+      nonUrlText = getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex);
+      if (nonUrlText) {
+        items.push(nonUrlText);
+      }
 
-      items.push(a({
-        className: "url",
-        title: token,
-        href: omitLinkHref === true ? null : token,
-        draggable: false,
-        onClick: openLink ? e => {
-          e.preventDefault();
-          openLink(token);
-        } : null
-      }, token));
+      // Update the index to match the beginning of the token.
+      currentIndex = tokenStart;
+
+      let linkText = getCroppedString(token, currentIndex, startCropIndex, endCropIndex);
+      if (linkText) {
+        items.push(a({
+          className: "url",
+          title: token,
+          href: omitLinkHref === true ? null : token,
+          draggable: false,
+          onClick: openLink ? e => {
+            e.preventDefault();
+            openLink(token);
+          } : null
+        }, linkText));
+      }
+
+      currentIndex = tokenStart + token.length;
     }
-  });
+  }
 
-  // Clean up any non-URL text at the end of the source string.
-  items.push(text.slice(textIndex, text.length));
-  return span(config, ...items);
+  // Clean up any non-URL text at the end of the source string,
+  // i.e. not handled in the loop.
+  if (currentIndex !== text.length) {
+    let nonUrlText = text.slice(currentIndex, text.length);
+    if (currentIndex < endCropIndex) {
+      const cutIndex = endCropIndex - currentIndex;
+      nonUrlText = nonUrlText.substring(cutIndex);
+    }
+    items.push(nonUrlText);
+  }
+
+  return items;
+}
+
+/**
+ * Returns a cropped substring given an offset, start and end crop indices in a parent
+ * string.
+ *
+ * @param {String} text: The substring to crop.
+ * @param {Integer} offset: The offset corresponding to the index at which the substring
+ *                          is in the parent string.
+ * @param {Integer|null} startCropIndex: the index where the start of the crop should
+ *                                       happen in the parent string.
+ * @param {Integer|null} endCropIndex: the index where the end of the crop should happen
+ *                                     in the parent string
+ * @returns {String|null} The cropped substring, or null if the text is completly cropped.
+ */
+function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
+  if (!startCropIndex) {
+    return text;
+  }
+
+  const start = offset;
+  const end = offset + text.length;
+
+  const shouldBeVisible = !(start >= startCropIndex && end <= endCropIndex);
+  if (!shouldBeVisible) {
+    return null;
+  }
+
+  const shouldCropEnd = start < startCropIndex && end > startCropIndex;
+  const shouldCropStart = start < endCropIndex && end > endCropIndex;
+  if (shouldCropEnd) {
+    const cutIndex = startCropIndex - start;
+    return text.substring(0, cutIndex) + ELLIPSIS + (shouldCropStart ? text.substring(endCropIndex - start) : "");
+  }
+
+  if (shouldCropStart) {
+    // The string should be cropped at the beginning.
+    const cutIndex = endCropIndex - start;
+    return text.substring(cutIndex);
+  }
+
+  return text;
 }
 
 function supportsObject(object, noGrip = false) {
@@ -25463,18 +25306,17 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const dom = __webpack_require__(1758);
+const PropTypes = __webpack_require__(20);
 const {
   wrapRender
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
+const { span } = dom;
 
-const ModePropType = React.PropTypes.oneOf(
+const ModePropType = PropTypes.oneOf(
 // @TODO Change this to Object.values once it's supported in Node's version of V8
 Object.keys(MODE).map(key => MODE[key]));
-
-// Shortcuts
-const DOM = React.DOM;
 
 /**
  * Renders an array. The array is enclosed by left and right bracket
@@ -25482,7 +25324,7 @@ const DOM = React.DOM;
  */
 ArrayRep.propTypes = {
   mode: ModePropType,
-  object: React.PropTypes.array.isRequired
+  object: PropTypes.array.isRequired
 };
 
 function ArrayRep(props) {
@@ -25502,7 +25344,7 @@ function ArrayRep(props) {
     if (isEmpty) {
       items = [];
     } else {
-      items = [DOM.span({
+      items = [span({
         className: "more-ellipsis",
         title: "more…"
       }, "…")];
@@ -25513,12 +25355,12 @@ function ArrayRep(props) {
     brackets = needSpace(items.length > 0);
   }
 
-  return DOM.span({
-    className: "objectBox objectBox-array" }, DOM.span({
+  return span({
+    className: "objectBox objectBox-array" }, span({
     className: "arrayLeftBracket"
-  }, brackets.left), ...items, DOM.span({
+  }, brackets.left), ...items, span({
     className: "arrayRightBracket"
-  }, brackets.right), DOM.span({
+  }, brackets.right), span({
     className: "arrayProperties",
     role: "group" }));
 }
@@ -25546,7 +25388,7 @@ function arrayIterator(props, array, max) {
   }
 
   if (array.length > max) {
-    items.push(DOM.span({
+    items.push(span({
       className: "more-ellipsis",
       title: "more…"
     }, "…"));
@@ -25559,8 +25401,8 @@ function arrayIterator(props, array, max) {
  * Renders array item. Individual values are separated by a comma.
  */
 ItemRep.propTypes = {
-  object: React.PropTypes.any.isRequired,
-  delim: React.PropTypes.string.isRequired,
+  object: PropTypes.any.isRequired,
+  delim: PropTypes.string.isRequired,
   mode: ModePropType
 };
 
@@ -25572,10 +25414,14 @@ function ItemRep(props) {
     delim,
     mode
   } = props;
-  return DOM.span({}, Rep(Object.assign({}, props, {
+  return span({}, Rep(Object.assign({}, props, {
     object: object,
     mode: mode
   })), delim);
+}
+
+function getLength(object) {
+  return object.length;
 }
 
 function supportsObject(object) {
@@ -25590,7 +25436,8 @@ maxLengthMap.set(MODE.LONG, 10);
 module.exports = {
   rep: wrapRender(ArrayRep),
   supportsObject,
-  maxLengthMap
+  maxLengthMap,
+  getLength
 };
 
 /***/ }),
@@ -25639,7 +25486,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   getGripType,
   isGrip,
@@ -25647,21 +25494,21 @@ const {
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders an array. The array is enclosed by left and right bracket
  * and the max number of rendered items depends on the current mode.
  */
 GripArray.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  provider: React.PropTypes.object,
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  provider: PropTypes.object,
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function GripArray(props) {
@@ -25679,20 +25526,30 @@ function GripArray(props) {
   if (mode === MODE.TINY) {
     let objectLength = getLength(object);
     let isEmpty = objectLength === 0;
-    if (isEmpty) {
-      items = [];
-    } else {
-      items = [span({
+    let ellipsis;
+    if (!isEmpty) {
+      ellipsis = span({
         className: "more-ellipsis",
         title: "more…"
-      }, "…")];
+      }, "…");
+    }
+
+    let title;
+    if (object.class != "Array") {
+      title = object.class + " ";
     }
     brackets = needSpace(false);
-  } else {
-    let max = maxLengthMap.get(mode);
-    items = arrayIterator(props, object, max);
-    brackets = needSpace(items.length > 0);
+    return span({
+      "data-link-actor-id": object.actor,
+      className: "objectBox objectBox-array" }, title, span({
+      className: "arrayLeftBracket"
+    }, brackets.left), ellipsis, span({
+      className: "arrayRightBracket"
+    }, brackets.right));
   }
+  let max = maxLengthMap.get(mode);
+  items = arrayIterator(props, object, max);
+  brackets = needSpace(items.length > 0);
 
   let title = getTitle(props, object);
 
@@ -25831,7 +25688,8 @@ maxLengthMap.set(MODE.LONG, 10);
 module.exports = {
   rep: wrapRender(GripArray),
   supportsObject,
-  maxLengthMap
+  maxLengthMap,
+  getLength
 };
 
 /***/ }),
@@ -25846,9 +25704,10 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 // Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 const {
   wrapRender
 } = __webpack_require__(1353);
@@ -25858,12 +25717,12 @@ const { MODE } = __webpack_require__(1357);
  * Renders an map entry. A map entry is represented by its key, a column and its value.
  */
 GripMapEntry.propTypes = {
-  object: React.PropTypes.object,
+  object: PropTypes.object,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function GripMapEntry(props) {
@@ -25912,526 +25771,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 1452 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const get = __webpack_require__(67);
-const has = __webpack_require__(307);
-const { maybeEscapePropertyName } = __webpack_require__(1353);
-const ArrayRep = __webpack_require__(1448);
-const GripArrayRep = __webpack_require__(1450);
-const GripMapEntryRep = __webpack_require__(1451);
-
-const NODE_TYPES = {
-  BUCKET: Symbol("[n…n]"),
-  DEFAULT_PROPERTIES: Symbol("[default properties]"),
-  ENTRIES: Symbol("<entries>"),
-  GET: Symbol("<get>"),
-  GRIP: Symbol("GRIP"),
-  MAP_ENTRY_KEY: Symbol("<key>"),
-  MAP_ENTRY_VALUE: Symbol("<value>"),
-  PROMISE_REASON: Symbol("<reason>"),
-  PROMISE_STATE: Symbol("<state>"),
-  PROMISE_VALUE: Symbol("<value>"),
-  SET: Symbol("<set>"),
-  PROTOTYPE: Symbol("__proto__")
-};
-
-let WINDOW_PROPERTIES = {};
-
-if (typeof window === "object") {
-  WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
-}
-
-const SAFE_PATH_PREFIX = "##-";
-
-function getType(item) {
-  return item.type;
-}
-
-function getValue(item) {
-  if (has(item, "contents.value")) {
-    return get(item, "contents.value");
-  }
-
-  if (has(item, "contents.getterValue")) {
-    return get(item, "contents.getterValue", undefined);
-  }
-
-  if (nodeHasAccessors(item)) {
-    return item.contents;
-  }
-
-  return undefined;
-}
-
-function nodeIsBucket(item) {
-  return getType(item) === NODE_TYPES.BUCKET;
-}
-
-function nodeIsEntries(item) {
-  return getType(item) === NODE_TYPES.ENTRIES;
-}
-
-function nodeIsMapEntry(item) {
-  return GripMapEntryRep.supportsObject(getValue(item));
-}
-
-function nodeHasChildren(item) {
-  return Array.isArray(item.contents) || nodeIsBucket(item);
-}
-
-function nodeIsObject(item) {
-  const value = getValue(item);
-  return value && value.type === "object";
-}
-
-function nodeIsArrayLike(item) {
-  const value = getValue(item);
-  return GripArrayRep.supportsObject(value) || ArrayRep.supportsObject(value);
-}
-
-function nodeIsFunction(item) {
-  const value = getValue(item);
-  return value && value.class === "Function";
-}
-
-function nodeIsOptimizedOut(item) {
-  const value = getValue(item);
-  return !nodeHasChildren(item) && value && value.optimizedOut;
-}
-
-function nodeIsMissingArguments(item) {
-  const value = getValue(item);
-  return !nodeHasChildren(item) && value && value.missingArguments;
-}
-
-function nodeHasProperties(item) {
-  return !nodeHasChildren(item) && nodeIsObject(item);
-}
-
-function nodeIsPrimitive(item) {
-  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeIsEntries(item) && !nodeIsMapEntry(item) && !nodeHasAccessors(item);
-}
-
-function nodeIsDefaultProperties(item) {
-  return getType(item) === NODE_TYPES.DEFAULT_PROPERTIES;
-}
-
-function isDefaultWindowProperty(name) {
-  return WINDOW_PROPERTIES.includes(name);
-}
-
-function nodeIsPromise(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class == "Promise";
-}
-
-function nodeIsPrototype(item) {
-  return getType(item) === NODE_TYPES.PROTOTYPE;
-}
-
-function nodeIsWindow(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class == "Window";
-}
-
-function nodeIsGetter(item) {
-  return getType(item) === NODE_TYPES.GET;
-}
-
-function nodeIsSetter(item) {
-  return getType(item) === NODE_TYPES.SET;
-}
-
-function nodeHasAccessors(item) {
-  return !!getNodeGetter(item) || !!getNodeSetter(item);
-}
-
-function nodeSupportsBucketing(item) {
-  return nodeIsArrayLike(item) || nodeIsEntries(item);
-}
-
-function nodeHasEntries(item) {
-  const value = getValue(item);
-  if (!value) {
-    return false;
-  }
-
-  return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet";
-}
-
-function nodeHasAllEntriesInPreview(item) {
-  const { preview } = getValue(item) || {};
-  if (!preview) {
-    return false;
-  }
-
-  const {
-    entries,
-    items,
-    length,
-    size
-  } = preview;
-
-  return entries ? entries.length === size : items.length === length;
-}
-
-function makeNodesForPromiseProperties(item) {
-  const { promiseState: { reason, value, state } } = getValue(item);
-
-  const properties = [];
-
-  if (state) {
-    properties.push(createNode(item, "<state>", `${item.path}/${SAFE_PATH_PREFIX}state`, { value: state }, NODE_TYPES.PROMISE_STATE));
-  }
-
-  if (reason) {
-    properties.push(createNode(item, "<reason>", `${item.path}/${SAFE_PATH_PREFIX}reason`, { value: reason }, NODE_TYPES.PROMISE_REASON));
-  }
-
-  if (value) {
-    properties.push(createNode(item, "<value>", `${item.path}/${SAFE_PATH_PREFIX}value`, { value: value }, NODE_TYPES.PROMISE_VALUE));
-  }
-
-  return properties;
-}
-
-function makeNodesForEntries(item) {
-  const { path } = item;
-  const { preview } = getValue(item);
-  const nodeName = "<entries>";
-  const entriesPath = `${path}/${SAFE_PATH_PREFIX}entries`;
-
-  if (nodeHasAllEntriesInPreview(item)) {
-    let entriesNodes = [];
-    if (preview.entries) {
-      entriesNodes = preview.entries.map(([key, value], index) => {
-        return createNode(item, index, `${entriesPath}/${index}`, {
-          value: GripMapEntryRep.createGripMapEntry(key, value)
-        });
-      });
-    } else if (preview.items) {
-      entriesNodes = preview.items.map((value, index) => {
-        return createNode(item, index, `${entriesPath}/${index}`, { value });
-      });
-    }
-    return createNode(item, nodeName, entriesPath, entriesNodes, NODE_TYPES.ENTRIES);
-  }
-  return createNode(item, nodeName, entriesPath, null, NODE_TYPES.ENTRIES);
-}
-
-function makeNodesForMapEntry(item) {
-  const nodeValue = getValue(item);
-  if (!nodeValue || !nodeValue.preview) {
-    return [];
-  }
-
-  const { key, value } = nodeValue.preview;
-  const path = item.path;
-
-  return [createNode(item, "<key>", `${path}/##key`, { value: key }, NODE_TYPES.MAP_ENTRY_KEY), createNode(item, "<value>", `${path}/##value`, { value }, NODE_TYPES.MAP_ENTRY_VALUE)];
-}
-
-function getNodeGetter(item) {
-  return get(item, "contents.get", undefined);
-}
-
-function getNodeSetter(item) {
-  return get(item, "contents.set", undefined);
-}
-
-function makeNodesForAccessors(item) {
-  const accessors = [];
-
-  const getter = getNodeGetter(item);
-  if (getter && getter.type !== "undefined") {
-    accessors.push(createNode(item, "<get>", `${item.path}/${SAFE_PATH_PREFIX}get`, { value: getter }, NODE_TYPES.GET));
-  }
-
-  const setter = getNodeSetter(item);
-  if (setter && setter.type !== "undefined") {
-    accessors.push(createNode(item, "<set>", `${item.path}/${SAFE_PATH_PREFIX}set`, { value: setter }, NODE_TYPES.SET));
-  }
-
-  return accessors;
-}
-
-function sortProperties(properties) {
-  return properties.sort((a, b) => {
-    // Sort numbers in ascending order and sort strings lexicographically
-    const aInt = parseInt(a, 10);
-    const bInt = parseInt(b, 10);
-
-    if (isNaN(aInt) || isNaN(bInt)) {
-      return a > b ? 1 : -1;
-    }
-
-    return aInt - bInt;
-  });
-}
-
-function makeNumericalBuckets(propertiesNames, parent, ownProperties, startIndex = 0) {
-  const parentPath = parent.path;
-  const numProperties = propertiesNames.length;
-
-  // We want to have at most a hundred slices.
-  const bucketSize = 10 ** Math.max(2, Math.ceil(Math.log10(numProperties)) - 2);
-  const numBuckets = Math.ceil(numProperties / bucketSize);
-
-  let buckets = [];
-  for (let i = 1; i <= numBuckets; i++) {
-    const minKey = (i - 1) * bucketSize;
-    const maxKey = Math.min(i * bucketSize - 1, numProperties - 1);
-
-    if (maxKey === minKey) {
-      const name = propertiesNames[maxKey];
-      buckets.push(createNode(parent, name, `${parentPath}/${name}`, ownProperties[name]));
-    } else {
-      const minIndex = startIndex + minKey;
-      const maxIndex = startIndex + maxKey;
-      const bucketKey = `${SAFE_PATH_PREFIX}bucket_${minIndex}-${maxIndex}`;
-      const bucketName = `[${minIndex}…${maxIndex}]`;
-
-      const bucketRoot = createNode(parent, bucketName, `${parentPath}/${bucketKey}`, [], NODE_TYPES.BUCKET);
-
-      const bucketProperties = propertiesNames.slice(minKey, maxKey + 1);
-      let bucketNodes;
-      if (bucketProperties.length <= 100) {
-        bucketNodes = bucketProperties.map(name => createNode(bucketRoot, name, `${parentPath}/${bucketKey}/${name}`, ownProperties[name]));
-      } else {
-        bucketNodes = makeNumericalBuckets(bucketProperties, bucketRoot, ownProperties, minIndex);
-      }
-      setNodeChildren(bucketRoot, bucketNodes);
-      buckets.push(bucketRoot);
-    }
-  }
-  return buckets;
-}
-
-function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
-  const parentPath = parent.path;
-
-  const userPropertiesNames = [];
-  const defaultProperties = [];
-
-  propertiesNames.forEach(name => {
-    if (isDefaultWindowProperty(name)) {
-      defaultProperties.push(name);
-    } else {
-      userPropertiesNames.push(name);
-    }
-  });
-
-  let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
-
-  if (defaultProperties.length > 0) {
-    const defaultPropertiesNode = createNode(parent, "[default properties]", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
-
-    const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
-    nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
-  }
-  return nodes;
-}
-
-function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
-  const parentPath = parent.path;
-  return propertiesNames.map(name => createNode(parent, maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
-}
-
-function makeNodesForProperties(objProps, parent) {
-  const {
-    ownProperties = {},
-    ownSymbols,
-    prototype,
-    safeGetterValues
-  } = objProps;
-
-  const parentPath = parent.path;
-  const parentValue = getValue(parent);
-
-  let allProperties = Object.assign({}, ownProperties, safeGetterValues);
-
-  // Ignore properties that are neither non-concrete nor getters/setters.
-  const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => allProperties[name].hasOwnProperty("value") || allProperties[name].hasOwnProperty("getterValue") || allProperties[name].hasOwnProperty("get") || allProperties[name].hasOwnProperty("set"));
-
-  const numProperties = propertiesNames.length;
-
-  let nodes = [];
-  if (nodeSupportsBucketing(parent) && numProperties > 100) {
-    nodes = makeNumericalBuckets(propertiesNames, parent, allProperties);
-  } else if (parentValue && parentValue.class == "Window") {
-    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
-  } else {
-    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
-  }
-
-  if (Array.isArray(ownSymbols)) {
-    ownSymbols.forEach((ownSymbol, index) => {
-      nodes.push(createNode(parent, ownSymbol.name, `${parentPath}/${SAFE_PATH_PREFIX}symbol-${index}`, ownSymbol.descriptor));
-    }, this);
-  }
-
-  if (nodeIsPromise(parent)) {
-    nodes.push(...makeNodesForPromiseProperties(parent));
-  }
-
-  if (nodeHasEntries(parent)) {
-    nodes.push(makeNodesForEntries(parent));
-  }
-
-  // Add the prototype if it exists and is not null
-  if (prototype && prototype.type !== "null") {
-    nodes.push(createNode(parent, "__proto__", `${parentPath}/__proto__`, { value: prototype }, NODE_TYPES.PROTOTYPE));
-  }
-
-  return nodes;
-}
-
-function createNode(parent, name, path, contents, type = NODE_TYPES.GRIP) {
-  if (contents === undefined) {
-    return null;
-  }
-
-  // The path is important to uniquely identify the item in the entire
-  // tree. This helps debugging & optimizes React's rendering of large
-  // lists. The path will be separated by property name,
-  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
-  // for the inner object.
-  return {
-    parent,
-    name,
-    path,
-    contents,
-    type
-  };
-}
-
-function setNodeChildren(node, children) {
-  node.contents = children;
-  return node;
-}
-
-function getChildren(options) {
-  const {
-    actors = {},
-    getObjectEntries,
-    getObjectProperties,
-    item
-  } = options;
-  // Nodes can either have children already, or be an object with
-  // properties that we need to go and fetch.
-  if (nodeHasAccessors(item)) {
-    return makeNodesForAccessors(item);
-  }
-
-  if (nodeIsMapEntry(item)) {
-    return makeNodesForMapEntry(item);
-  }
-
-  if (nodeHasChildren(item)) {
-    return item.contents;
-  }
-
-  if (!nodeHasProperties(item) && !nodeIsEntries(item)) {
-    return [];
-  }
-
-  // Because we are dynamically creating the tree as the user
-  // expands it (not precalculated tree structure), we cache child
-  // arrays. This not only helps performance, but is necessary
-  // because the expanded state depends on instances of nodes
-  // being the same across renders. If we didn't do this, each
-  // node would be a new instance every render.
-  const key = item.path;
-  if (actors && actors[key]) {
-    return actors[key];
-  }
-
-  if (nodeIsBucket(item)) {
-    return item.contents.children;
-  }
-
-  let loadedProps;
-  if (nodeIsEntries(item)) {
-    // If `item` is an <entries> node, we need to get the entries
-    // matching the parent node actor.
-    const parent = getParent(item);
-    loadedProps = getObjectEntries(get(getValue(parent), "actor", undefined));
-  } else {
-    loadedProps = getObjectProperties(get(getValue(item), "actor", undefined));
-  }
-
-  const {
-    ownProperties,
-    ownSymbols,
-    safeGetterValues,
-    prototype
-  } = loadedProps || {};
-
-  if (!ownProperties && !ownSymbols && !safeGetterValues && !prototype) {
-    return [];
-  }
-
-  let children = makeNodesForProperties(loadedProps, item);
-  actors[key] = children;
-  return children;
-}
-
-function getParent(item) {
-  return item.parent;
-}
-
-module.exports = {
-  createNode,
-  getChildren,
-  getParent,
-  getValue,
-  makeNodesForEntries,
-  makeNodesForPromiseProperties,
-  makeNodesForProperties,
-  nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
-  nodeHasChildren,
-  nodeHasEntries,
-  nodeHasProperties,
-  nodeIsDefaultProperties,
-  nodeIsEntries,
-  nodeIsFunction,
-  nodeIsGetter,
-  nodeIsMapEntry,
-  nodeIsMissingArguments,
-  nodeIsObject,
-  nodeIsOptimizedOut,
-  nodeIsPrimitive,
-  nodeIsPromise,
-  nodeIsPrototype,
-  nodeIsSetter,
-  nodeIsWindow,
-  nodeSupportsBucketing,
-  setNodeChildren,
-  sortProperties,
-  NODE_TYPES,
-  // Export for testing purpose.
-  SAFE_PATH_PREFIX
-};
-
-/***/ }),
+/* 1452 */,
 /* 1453 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -29772,7 +29112,7 @@ exports.onConnect = onConnect;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.clientEvents = exports.clientCommands = undefined;
+exports.clientEvents = exports.clientCommands = exports.createObjectClient = undefined;
 exports.onConnect = onConnect;
 
 var _commands = __webpack_require__(1501);
@@ -29781,10 +29121,20 @@ var _events = __webpack_require__(1506);
 
 var _prefs = __webpack_require__(226);
 
+let DebuggerClient; /* This Source Code Form is subject to the terms of the Mozilla Public
+                     * License, v. 2.0. If a copy of the MPL was not distributed with this
+                     * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function createObjectClient(grip) {
+  return DebuggerClient.createObjectClient(grip);
+}
+
 async function onConnect(connection, actions) {
   const {
     tabConnection: { tabTarget, threadClient, debuggerClient }
   } = connection;
+
+  DebuggerClient = debuggerClient;
 
   if (!tabTarget || !threadClient || !debuggerClient) {
     return { bpClients: {} };
@@ -29829,10 +29179,9 @@ async function onConnect(connection, actions) {
   }
 
   return { bpClients };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
+exports.createObjectClient = createObjectClient;
 exports.clientCommands = _commands.clientCommands;
 exports.clientEvents = _events.clientEvents;
 
@@ -30939,7 +30288,7 @@ var _devtoolsSplitter = __webpack_require__(1440);
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
 
-var _ProjectSearch = __webpack_require__(1538);
+var _ProjectSearch = __webpack_require__(2009);
 
 var _ProjectSearch2 = _interopRequireDefault(_ProjectSearch);
 
@@ -32693,370 +32042,8 @@ class Draggable extends Component {
 module.exports = Draggable;
 
 /***/ }),
-/* 1538 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = __webpack_require__(1189);
-
-var _redux = __webpack_require__(3);
-
-var _actions = __webpack_require__(1354);
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _TextSearch = __webpack_require__(1539);
-
-var _TextSearch2 = _interopRequireDefault(_TextSearch);
-
-var _selectors = __webpack_require__(1352);
-
-__webpack_require__(1317);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-class ProjectSearch extends _react.Component {
-
-  constructor(props) {
-    super(props);
-    this.toggleProjectTextSearch = this.toggleProjectTextSearch.bind(this);
-  }
-
-  componentDidMount() {
-    const shortcuts = this.context.shortcuts;
-
-    shortcuts.on(L10N.getStr("projectTextSearch.key"), this.toggleProjectTextSearch);
-  }
-
-  componentWillUnmount() {
-    const shortcuts = this.context.shortcuts;
-    shortcuts.off(L10N.getStr("projectTextSearch.key"), this.toggleProjectTextSearch);
-  }
-
-  toggleProjectTextSearch(key, e) {
-    const { closeActiveSearch, setActiveSearch } = this.props;
-    if (e) {
-      e.preventDefault();
-    }
-
-    if (this.isProjectSearchEnabled()) {
-      return closeActiveSearch();
-    }
-    return setActiveSearch("project");
-  }
-
-  isProjectSearchEnabled() {
-    return this.props.activeSearch === "project";
-  }
-
-  renderTextSearch() {
-    const {
-      sources,
-      results,
-      status,
-      searchSources,
-      closeProjectSearch,
-      selectLocation,
-      textSearchQuery
-    } = this.props;
-
-    return _react2.default.createElement(_TextSearch2.default, {
-      sources: sources,
-      results: results.toJS(),
-      status: status,
-      searchSources: searchSources,
-      closeProjectSearch: closeProjectSearch,
-      selectLocation: selectLocation,
-      query: textSearchQuery
-    });
-  }
-
-  render() {
-    if (!this.isProjectSearchEnabled()) {
-      return null;
-    }
-
-    return _react2.default.createElement(
-      "div",
-      { className: "search-container" },
-      this.renderTextSearch()
-    );
-  }
-}
-ProjectSearch.contextTypes = {
-  shortcuts: _propTypes2.default.object
-};
-
-exports.default = (0, _reactRedux.connect)(state => ({
-  sources: (0, _selectors.getSources)(state),
-  activeSearch: (0, _selectors.getActiveSearch)(state),
-  results: (0, _selectors.getTextSearchResults)(state),
-  textSearchQuery: (0, _selectors.getTextSearchQuery)(state),
-  status: (0, _selectors.getTextSearchStatus)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ProjectSearch);
-
-/***/ }),
-/* 1539 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-var _propTypes = __webpack_require__(20);
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _classnames = __webpack_require__(175);
-
-var _classnames2 = _interopRequireDefault(_classnames);
-
-var _Svg = __webpack_require__(1359);
-
-var _Svg2 = _interopRequireDefault(_Svg);
-
-var _ManagedTree = __webpack_require__(1404);
-
-var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
-
-var _SearchInput = __webpack_require__(1379);
-
-var _SearchInput2 = _interopRequireDefault(_SearchInput);
-
-__webpack_require__(1314);
-
-var _sourcesTree = __webpack_require__(1442);
-
-var _highlight = __webpack_require__(1547);
-
-var _projectTextSearch = __webpack_require__(1424);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-class TextSearch extends _react.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      inputValue: this.props.query || ""
-    };
-
-    this.focusedItem = null;
-    this.inputFocused = false;
-
-    this.inputOnChange = this.inputOnChange.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-    this.onEnterPress = this.onEnterPress.bind(this);
-    this.selectMatchItem = this.selectMatchItem.bind(this);
-  }
-
-  componentDidMount() {
-    const shortcuts = this.context.shortcuts;
-    shortcuts.on("Enter", this.onEnterPress);
-  }
-
-  componentWillUnmount() {
-    const shortcuts = this.context.shortcuts;
-    shortcuts.off("Enter", this.onEnterPress);
-  }
-
-  selectMatchItem(matchItem) {
-    this.props.selectLocation(_extends({}, matchItem));
-  }
-
-  getResults() {
-    const { results } = this.props;
-    return results.filter(result => result.filepath && result.matches.length > 0);
-  }
-
-  getResultCount() {
-    const results = this.getResults();
-    return results.reduce((count, file) => count + (file.matches ? file.matches.length : 0), 0);
-  }
-
-  onKeyDown(e) {
-    if (e.key === "Escape") {
-      return;
-    }
-
-    e.stopPropagation();
-
-    if (e.key !== "Enter") {
-      return;
-    }
-    this.focusedItem = null;
-    this.props.searchSources(this.state.inputValue);
-  }
-
-  onEnterPress() {
-    if (this.focusedItem && !this.inputFocused) {
-      const { setExpanded, file, expanded, match } = this.focusedItem;
-      if (setExpanded) {
-        setExpanded(file, !expanded);
-      } else {
-        this.selectMatchItem(match);
-      }
-    }
-  }
-
-  inputOnChange(e) {
-    const inputValue = e.target.value;
-    this.setState({ inputValue });
-  }
-
-  renderFile(file, focused, expanded, setExpanded) {
-    if (focused) {
-      this.focusedItem = { setExpanded, file, expanded };
-    }
-
-    const matchesLength = file.matches.length;
-    const matches = ` (${matchesLength} match${matchesLength > 1 ? "es" : ""})`;
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: (0, _classnames2.default)("file-result", { focused }),
-        key: file.sourceId,
-        onClick: e => setExpanded(file, !expanded)
-      },
-      _react2.default.createElement(_Svg2.default, { name: "arrow", className: (0, _classnames2.default)({ expanded }) }),
-      _react2.default.createElement("img", { className: "file" }),
-      _react2.default.createElement(
-        "span",
-        { className: "file-path" },
-        (0, _sourcesTree.getRelativePath)(file.filepath)
-      ),
-      _react2.default.createElement(
-        "span",
-        { className: "matches-summary" },
-        matches
-      )
-    );
-  }
-
-  renderMatch(match, focused) {
-    if (focused) {
-      this.focusedItem = { match };
-    }
-    return _react2.default.createElement(
-      "div",
-      {
-        className: (0, _classnames2.default)("result", { focused }),
-        onClick: () => setTimeout(() => this.selectMatchItem(match), 50)
-      },
-      _react2.default.createElement(
-        "span",
-        { className: "line-number", key: match.line },
-        match.line
-      ),
-      this.renderMatchValue(match)
-    );
-  }
-
-  renderMatchValue(lineMatch) {
-    return (0, _highlight.highlightMatches)(lineMatch);
-  }
-
-  renderResults() {
-    const results = this.getResults().filter(result => result.matches.length > 0);
-
-    const { status } = this.props;
-
-    function getFilePath(item, index) {
-      return item.filepath ? `${item.sourceId}-${index}` : `${item.sourceId}-${item.line}-${item.column}-${index}`;
-    }
-
-    const renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
-      return item.filepath ? this.renderFile(item, focused, expanded, setExpanded) : this.renderMatch(item, focused);
-    };
-    if (results.length && status === _projectTextSearch.statusType.done) {
-      return _react2.default.createElement(_ManagedTree2.default, {
-        getRoots: () => results,
-        getChildren: file => file.matches || [],
-        itemHeight: 24,
-        autoExpand: 1,
-        autoExpandDepth: 1,
-        getParent: item => null,
-        getPath: getFilePath,
-        renderItem: renderItem
-      });
-    } else if (this.props.query && !results.length || status === _projectTextSearch.statusType.fetching) {
-      return _react2.default.createElement(
-        "div",
-        { className: "no-result-msg absolute-center" },
-        L10N.getStr("projectTextSearch.noResults")
-      );
-    }
-  }
-
-  renderInput() {
-    const resultCount = this.getResultCount();
-
-    return _react2.default.createElement(_SearchInput2.default, {
-      query: this.state.inputValue,
-      count: resultCount,
-      placeholder: L10N.getStr("projectTextSearch.placeholder"),
-      size: "big",
-      summaryMsg: this.props.query !== "" ? L10N.getFormatStr("sourceSearch.resultsSummary1", resultCount) : "",
-      onChange: e => this.inputOnChange(e),
-      onFocus: () => this.inputFocused = true,
-      onBlur: () => this.inputFocused = false,
-      onKeyDown: e => this.onKeyDown(e),
-      handleClose: this.props.closeProjectSearch,
-      ref: "searchInput"
-    });
-  }
-
-  render() {
-    const { searchBottomBar } = this.props;
-    return _react2.default.createElement(
-      "div",
-      { className: "project-text-search" },
-      _react2.default.createElement(
-        "div",
-        { className: "header" },
-        this.renderInput(),
-        searchBottomBar
-      ),
-      this.renderResults()
-    );
-  }
-}
-
-exports.default = TextSearch;
-TextSearch.contextTypes = {
-  shortcuts: _propTypes2.default.object
-};
-
-/***/ }),
+/* 1538 */,
+/* 1539 */,
 /* 1540 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -34043,53 +33030,7 @@ function createTree(sources, debuggeeUrl, projectRoot) {
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
-/* 1547 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.highlightMatches = highlightMatches;
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function highlightMatches(lineMatch) {
-  const { value, column, match } = lineMatch;
-  const len = match.length;
-
-  return _react2.default.createElement(
-    "span",
-    { className: "line-value" },
-    _react2.default.createElement(
-      "span",
-      { className: "line-match", key: 0 },
-      value.slice(0, column)
-    ),
-    _react2.default.createElement(
-      "span",
-      { className: "query-match", key: 1 },
-      value.substr(column, len)
-    ),
-    _react2.default.createElement(
-      "span",
-      { className: "line-match", key: 2 },
-      value.slice(column + len, value.length)
-    )
-  );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-// Maybe reuse file search's functions?
-
-/***/ }),
+/* 1547 */,
 /* 1548 */,
 /* 1549 */,
 /* 1550 */,
@@ -34861,8 +33802,8 @@ const cssVars = {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Editor extends _react.PureComponent {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.onToggleBreakpoint = (key, e) => {
       e.preventDefault();
@@ -35181,7 +34122,7 @@ class Editor extends _react.PureComponent {
     }
 
     if (!selectedSource) {
-      return this.showMessage("");
+      return this.clearEditor();
     }
 
     if (!(0, _source.isLoaded)(selectedSource)) {
@@ -35189,20 +34130,29 @@ class Editor extends _react.PureComponent {
     }
 
     if (selectedSource.get("error")) {
-      return this.showMessage(selectedSource.get("error"));
+      return this.showErrorMessage(selectedSource.get("error"));
     }
     if (selectedSource) {
       return (0, _editor.showSourceText)(this.state.editor, selectedSource.toJS(), symbols);
     }
   }
 
-  showMessage(msg) {
+  clearEditor() {
     const { editor } = this.state;
     if (!editor) {
       return;
     }
 
-    (0, _editor.resetLineNumberFormat)(editor);
+    (0, _editor.clearEditor)(editor);
+  }
+
+  showErrorMessage(msg) {
+    const { editor } = this.state;
+    if (!editor) {
+      return;
+    }
+
+    (0, _editor.showErrorMessage)(editor, msg);
   }
 
   getInlineEditorStyles() {
@@ -35253,7 +34203,7 @@ class Editor extends _react.PureComponent {
       _react2.default.createElement(_HighlightLine2.default, null),
       _react2.default.createElement(_EmptyLines2.default, { editor: editor }),
       _react2.default.createElement(_Breakpoints2.default, { editor: editor }),
-      _react2.default.createElement(_Preview2.default, { editor: editor }),
+      _react2.default.createElement(_Preview2.default, { editor: editor, editorRef: this.$editorWrapper }),
       ";",
       _react2.default.createElement(_Footer2.default, { editor: editor, horizontal: horizontal }),
       _react2.default.createElement(_HighlightLines2.default, { editor: editor }),
@@ -35283,7 +34233,8 @@ class Editor extends _react.PureComponent {
       {
         className: (0, _classnames2.default)("editor-wrapper", {
           "coverage-on": coverageOn
-        })
+        }),
+        ref: c => this.$editorWrapper = c
       },
       this.renderSearchBar(),
       _react2.default.createElement("div", {
@@ -35692,7 +34643,8 @@ class SearchBar extends _react.Component {
     };
 
     this.renderSearchModifiers = () => {
-      const { modifiers, toggleFileSearchModifier } = this.props;
+      const { modifiers, toggleFileSearchModifier, query } = this.props;
+      const { doSearch } = this;
 
       function SearchModBtn({ modVal, className, svgName, tooltip }) {
         const preppedClass = (0, _classnames2.default)(className, {
@@ -35702,7 +34654,10 @@ class SearchBar extends _react.Component {
           "button",
           {
             className: preppedClass,
-            onClick: () => toggleFileSearchModifier(modVal),
+            onClick: () => {
+              toggleFileSearchModifier(modVal);
+              doSearch(query);
+            },
             title: tooltip
           },
           _react2.default.createElement(_Svg2.default, { name: svgName })
@@ -35976,9 +34931,8 @@ var _editor = __webpack_require__(1358);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Preview extends _react.PureComponent {
-
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
     this.onMouseOver = e => {
       const { target } = e;
@@ -36050,6 +35004,7 @@ class Preview extends _react.PureComponent {
     return _react2.default.createElement(_Popup2.default, {
       value: value,
       editor: this.props.editor,
+      editorRef: this.props.editorRef,
       range: editorRange,
       expression: expression,
       popoverPos: cursorPos,
@@ -36063,7 +35018,7 @@ class Preview extends _react.PureComponent {
 
 const {
   addExpression,
-  loadObjectProperties,
+  setPopupObjectProperties,
   updatePreview,
   clearPreview
 } = _actions2.default;
@@ -36074,7 +35029,7 @@ exports.default = (0, _reactRedux.connect)(state => ({
   selectedFrameVisible: (0, _selectors.isSelectedFrameVisible)(state)
 }), {
   addExpression,
-  loadObjectProperties,
+  setPopupObjectProperties,
   updatePreview,
   clearPreview
 })(Preview);
@@ -36123,37 +35078,52 @@ var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
+var _firefox = __webpack_require__(1500);
+
 __webpack_require__(1328);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { REPS: { Rep }, MODE, ObjectInspectorUtils } = _devtoolsReps2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                               * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                               * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+const { REPS: { Rep }, MODE, ObjectInspector, ObjectInspectorUtils } = _devtoolsReps2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const { ObjectInspector } = _devtoolsReps2.default;
-const { getChildren } = ObjectInspectorUtils;
+const {
+  createNode,
+  getChildren,
+  getValue,
+  nodeIsPrimitive
+} = ObjectInspectorUtils.node;
+const { loadItemProperties } = ObjectInspectorUtils.loadProperties;
 
 class Popup extends _react.Component {
 
-  componentDidMount() {
+  async componentWillMount() {
     const {
-      loadObjectProperties,
-      loadedObjects,
       value,
-      editor,
-      range
+      expression,
+      setPopupObjectProperties,
+      popupObjectProperties
     } = this.props;
+    const root = createNode(null, expression, expression, { value });
 
-    this.marker = (0, _editor.markText)(editor, "preview-selection", range);
+    if (!nodeIsPrimitive(root) && value && value.actor && !popupObjectProperties[value.actor]) {
+      const onLoadItemProperties = loadItemProperties(root, _firefox.createObjectClient);
+      if (onLoadItemProperties !== null) {
+        const properties = await onLoadItemProperties;
+        setPopupObjectProperties(value, properties);
+      }
+    }
+  }
+
+  componentDidMount() {
+    const { value, editor, range } = this.props;
 
     if (!value || !value.type == "object") {
       return;
     }
 
-    if (value.actor && !loadedObjects[value.actor]) {
-      loadObjectProperties(value);
-    }
+    this.marker = (0, _editor.markText)(editor, "preview-selection", range);
   }
 
   componentWillUnmount() {
@@ -36162,13 +35132,30 @@ class Popup extends _react.Component {
     }
   }
 
-  getChildren(root, getObjectProperties) {
-    const actors = {};
+  getRoot() {
+    const { expression, value } = this.props;
+
+    return {
+      name: expression,
+      path: expression,
+      contents: { value }
+    };
+  }
+
+  getChildren() {
+    const { popupObjectProperties } = this.props;
+
+    const root = this.getRoot();
+    const value = getValue(root);
+    const actor = value ? value.actor : null;
+    const loadedRootProperties = popupObjectProperties[actor];
+    if (!loadedRootProperties) {
+      return null;
+    }
 
     const children = getChildren({
-      getObjectProperties,
-      actors,
-      item: root
+      item: root,
+      loadedProperties: new Map([[root.path, loadedRootProperties]])
     });
 
     if (children.length > 0) {
@@ -36178,10 +35165,14 @@ class Popup extends _react.Component {
     return null;
   }
 
-  renderFunctionPreview(value, root) {
-    const { selectSourceURL } = this.props;
-    const { location } = value;
+  renderFunctionPreview() {
+    const { selectSourceURL, value } = this.props;
 
+    if (!value) {
+      return null;
+    }
+
+    const { location } = value;
     return _react2.default.createElement(
       "div",
       {
@@ -36214,7 +35205,7 @@ class Popup extends _react.Component {
     );
   }
 
-  renderImmutable(immutable, roots) {
+  renderImmutable(immutable) {
     const immutableHeader = immutable.type || "Immutable";
 
     const header = _react2.default.createElement(
@@ -36228,10 +35219,7 @@ class Popup extends _react.Component {
       )
     );
 
-    roots = [{
-      path: "entries",
-      contents: { value: immutable.entries }
-    }];
+    const roots = [createNode(null, "entries", "entries", { value: immutable.entries })];
 
     return _react2.default.createElement(
       "div",
@@ -36241,23 +35229,27 @@ class Popup extends _react.Component {
     );
   }
 
-  renderObjectPreview(expression, root, extra) {
-    const { loadedObjects } = this.props;
-    const { extra: { react, immutable } } = this.props;
-    const getObjectProperties = id => loadedObjects[id];
-    const roots = this.getChildren(root, getObjectProperties);
-    const grip = root.contents.value;
+  renderObjectPreview() {
+    const root = this.getRoot();
 
-    if (!roots) {
+    if (nodeIsPrimitive(root)) {
       return null;
     }
+
+    const roots = this.getChildren();
+    if (!Array.isArray(roots) || roots.length === 0) {
+      return null;
+    }
+
+    const { extra: { react, immutable } } = this.props;
+    const grip = getValue(root);
 
     if ((0, _preview.isReactComponent)(grip)) {
       return this.renderReact(react, roots);
     }
 
     if ((0, _preview.isImmutable)(grip)) {
-      return this.renderImmutable(immutable, roots);
+      return this.renderImmutable(immutable);
     }
 
     return _react2.default.createElement(
@@ -36281,8 +35273,7 @@ class Popup extends _react.Component {
   }
 
   renderObjectInspector(roots) {
-    const { loadObjectProperties, loadedObjects, openLink } = this.props;
-    const getObjectProperties = id => loadedObjects[id];
+    const { openLink } = this.props;
 
     return _react2.default.createElement(ObjectInspector, {
       roots: roots,
@@ -36290,30 +35281,25 @@ class Popup extends _react.Component {
       disableWrap: true,
       disabledFocus: true,
       openLink: openLink,
-      getObjectProperties: getObjectProperties,
-      loadObjectProperties: loadObjectProperties
-      // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
-      , getObjectEntries: actor => {},
-      loadObjectEntries: grip => {}
+      createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
     });
   }
 
-  renderPreview(expression, value, extra) {
-    const root = {
-      name: expression,
-      path: expression,
-      contents: { value }
-    };
+  renderPreview() {
+    const { value } = this.props;
+    if (!value) {
+      return null;
+    }
 
     if (value.class === "Function") {
-      return this.renderFunctionPreview(value, root);
+      return this.renderFunctionPreview();
     }
 
     if (value.type === "object") {
       return _react2.default.createElement(
         "div",
         null,
-        this.renderObjectPreview(expression, root, extra)
+        this.renderObjectPreview()
       );
     }
 
@@ -36329,13 +35315,22 @@ class Popup extends _react.Component {
   }
 
   render() {
-    const { popoverPos, onClose, value, expression, extra } = this.props;
+    const { popoverPos, onClose, value, editorRef } = this.props;
     const type = this.getPreviewType(value);
+
+    if (value && value.type === "object" && !this.getChildren()) {
+      return null;
+    }
 
     return _react2.default.createElement(
       _Popover2.default,
-      { targetPosition: popoverPos, onMouseLeave: onClose, type: type },
-      this.renderPreview(expression, value, extra)
+      {
+        targetPosition: popoverPos,
+        onMouseLeave: onClose,
+        type: type,
+        editorRef: editorRef
+      },
+      this.renderPreview()
     );
   }
 }
@@ -36345,17 +35340,17 @@ const {
   addExpression,
   selectSourceURL,
   selectLocation,
-  loadObjectProperties,
+  setPopupObjectProperties,
   openLink
 } = _actions2.default;
 
 exports.default = (0, _reactRedux.connect)(state => ({
-  loadedObjects: (0, _selectors.getLoadedObjects)(state)
+  popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
 }), {
   addExpression,
   selectSourceURL,
   selectLocation,
-  loadObjectProperties,
+  setPopupObjectProperties,
   openLink
 })(Popup);
 
@@ -36371,15 +35366,13 @@ exports.default = (0, _reactRedux.connect)(state => ({
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
-
 const {
   getGripType,
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders undefined value
@@ -36390,7 +35383,7 @@ const Undefined = function () {
 
 function supportsObject(object, noGrip = false) {
   if (noGrip === true) {
-    return false;
+    return object === undefined;
   }
 
   return object && object.type && object.type == "undefined" || getGripType(object, noGrip) == "undefined";
@@ -36415,12 +35408,9 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
-
 const { wrapRender } = __webpack_require__(1353);
-
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders null value
@@ -36431,7 +35421,7 @@ function Null(props) {
 
 function supportsObject(object, noGrip = false) {
   if (noGrip === true) {
-    return false;
+    return object === null;
   }
 
   if (object && object.type && object.type == "null") {
@@ -36460,26 +35450,27 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   escapeString,
   sanitizeString,
   isGrip,
   wrapRender
 } = __webpack_require__(1353);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a long string grip.
  */
 LongStringRep.propTypes = {
-  useQuotes: React.PropTypes.bool,
-  escapeWhitespace: React.PropTypes.bool,
-  style: React.PropTypes.object,
-  cropLimit: React.PropTypes.number.isRequired,
-  member: React.PropTypes.string,
-  object: React.PropTypes.object.isRequired
+  useQuotes: PropTypes.bool,
+  escapeWhitespace: PropTypes.bool,
+  style: PropTypes.object,
+  cropLimit: PropTypes.number.isRequired,
+  member: PropTypes.string,
+  object: PropTypes.object.isRequired
 };
 
 function LongStringRep(props) {
@@ -36536,21 +35527,21 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 const {
   getGripType,
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a number
  */
 Number.propTypes = {
-  object: React.PropTypes.oneOfType([React.PropTypes.object, React.PropTypes.number, React.PropTypes.bool]).isRequired
+  object: PropTypes.oneOfType([PropTypes.object, PropTypes.number, PropTypes.bool]).isRequired
 };
 
 function Number(props) {
@@ -36588,14 +35579,15 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   wrapRender
 } = __webpack_require__(1353);
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 const DEFAULT_TITLE = "Object";
 
@@ -36604,10 +35596,10 @@ const DEFAULT_TITLE = "Object";
  * properties enclosed in curly brackets.
  */
 ObjectRep.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  title: React.PropTypes.string
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  title: PropTypes.string
 };
 
 function ObjectRep(props) {
@@ -36659,94 +35651,35 @@ function safePropIterator(props, object, max) {
 }
 
 function propIterator(props, object, max) {
-  let isInterestingProp = (type, value) => {
-    // Do not pick objects, it could cause recursion.
-    return type == "boolean" || type == "number" || type == "string" && value;
-  };
-
   // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=945377
   if (Object.prototype.toString.call(object) === "[object Generator]") {
     object = Object.getPrototypeOf(object);
   }
 
-  // Object members with non-empty values are preferred since it gives the
-  // user a better overview of the object.
-  let interestingObject = getFilteredObject(object, max, isInterestingProp);
+  const elements = [];
+  const unimportantProperties = [];
+  let propertiesNumber = 0;
+  const propertiesNames = Object.keys(object);
 
-  if (Object.keys(interestingObject).length < max) {
-    // There are not enough props yet (or at least, not enough props to
-    // be able to know whether we should print "more…" or not).
-    // Let's display also empty members and functions.
-    interestingObject = Object.assign({}, interestingObject, getFilteredObject(object, max - Object.keys(interestingObject).length, (type, value) => !isInterestingProp(type, value)));
-  }
+  const pushPropRep = (name, value) => {
+    elements.push(PropRep(Object.assign({}, props, {
+      key: name,
+      mode: MODE.TINY,
+      name,
+      object: value,
+      equal: ": "
+    })));
+    propertiesNumber++;
 
-  let propsArray = getPropsArray(interestingObject, props);
-  if (Object.keys(object).length > max) {
-    propsArray.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
-  }
-
-  return unfoldProps(propsArray);
-}
-
-function unfoldProps(items) {
-  return items.reduce((res, item, index) => {
-    if (Array.isArray(item)) {
-      res = res.concat(item);
-    } else {
-      res.push(item);
+    if (propertiesNumber < propertiesNames.length) {
+      elements.push(", ");
     }
-
-    // Interleave commas between elements
-    if (index !== items.length - 1) {
-      res.push(", ");
-    }
-    return res;
-  }, []);
-}
-
-/**
- * Get an array of components representing the properties of the object
- *
- * @param {Object} object
- * @param {Object} props
- * @return {Array} Array of PropRep.
- */
-function getPropsArray(object, props) {
-  let propsArray = [];
-
-  if (!object) {
-    return propsArray;
-  }
-
-  // Hardcode tiny mode to avoid recursive handling.
-  let mode = MODE.TINY;
-  const objectKeys = Object.keys(object);
-  return objectKeys.map((name, i) => PropRep(Object.assign({}, props, {
-    mode,
-    name,
-    object: object[name],
-    equal: ": "
-  })));
-}
-
-/**
- * Get a copy of the object filtered by a given predicate.
- *
- * @param {Object} object.
- * @param {Number} max The maximum length of keys array.
- * @param {Function} filter Filter the props you want.
- * @return {Object} the filtered object.
- */
-function getFilteredObject(object, max, filter) {
-  let filteredObject = {};
+  };
 
   try {
-    for (let name in object) {
-      if (Object.keys(filteredObject).length >= max) {
-        return filteredObject;
+    for (let name of propertiesNames) {
+      if (propertiesNumber >= max) {
+        break;
       }
 
       let value;
@@ -36756,15 +35689,50 @@ function getFilteredObject(object, max, filter) {
         continue;
       }
 
-      let t = typeof value;
-      if (filter(t, value)) {
-        filteredObject[name] = value;
+      // Object members with non-empty values are preferred since it gives the
+      // user a better overview of the object.
+      if (isInterestingProp(value)) {
+        pushPropRep(name, value);
+      } else {
+        // If the property is not important, put its name on an array for later use.
+        unimportantProperties.push(name);
       }
     }
   } catch (err) {
     console.error(err);
   }
-  return filteredObject;
+
+  if (propertiesNumber < max) {
+    for (let name of unimportantProperties) {
+      if (propertiesNumber >= max) {
+        break;
+      }
+
+      let value;
+      try {
+        value = object[name];
+      } catch (exc) {
+        continue;
+      }
+
+      pushPropRep(name, value);
+    }
+  }
+
+  if (propertiesNumber < propertiesNames.length) {
+    elements.push(span({
+      key: "more",
+      className: "more-ellipsis",
+      title: ", more…"
+    }, "…"));
+  }
+
+  return elements;
+}
+
+function isInterestingProp(value) {
+  const type = typeof value;
+  return type == "boolean" || type == "number" || type == "string" && value;
 }
 
 function supportsObject(object) {
@@ -36789,21 +35757,21 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 const {
   getGripType,
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a symbol.
  */
 SymbolRep.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function SymbolRep(props) {
@@ -36813,7 +35781,10 @@ function SymbolRep(props) {
   } = props;
   let { name } = object;
 
-  return span({ className }, `Symbol(${name || ""})`);
+  return span({
+    className,
+    "data-link-actor-id": object.actor
+  }, `Symbol(${name || ""})`);
 }
 
 function supportsObject(object, noGrip = false) {
@@ -36838,21 +35809,21 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 const {
   getGripType,
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a Infinity object
  */
 InfinityRep.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function InfinityRep(props) {
@@ -36886,15 +35857,13 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
-
 const {
   getGripType,
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a NaN object
@@ -36925,22 +35894,21 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const dom = __webpack_require__(1758);
+const PropTypes = __webpack_require__(20);
 const {
   wrapRender
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const {
-  span
-} = React.DOM;
+const { span } = dom;
+
 /**
  * Renders an object. An object is represented by a list of its
  * properties enclosed in curly brackets.
  */
 Accessor.propTypes = {
-  object: React.PropTypes.object.isRequired,
-  mode: React.PropTypes.oneOf(Object.values(MODE))
+  object: PropTypes.object.isRequired,
+  mode: PropTypes.oneOf(Object.values(MODE))
 };
 
 function Accessor(props) {
@@ -36996,7 +35964,9 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 // Reps
 const {
@@ -37006,14 +35976,11 @@ const {
 } = __webpack_require__(1353);
 const { rep: StringRep } = __webpack_require__(1447);
 
-// Shortcuts
-const { span } = React.DOM;
-
 /**
  * Renders DOM attribute
  */
 Attribute.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function Attribute(props) {
@@ -37024,8 +35991,8 @@ function Attribute(props) {
 
   return span({
     "data-link-actor-id": object.actor,
-    className: "objectLink-Attr"
-  }, span({ className: "attrTitle" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ object: value }));
+    className: "objectBox-Attr"
+  }, span({ className: "attrName" }, getTitle(object)), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
 }
 
 function getTitle(grip) {
@@ -37058,7 +36025,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37067,14 +36034,14 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Used to render JS built-in Date() object.
  */
 DateTime.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function DateTime(props) {
@@ -37125,7 +36092,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37135,34 +36102,34 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders DOM document object.
  */
 Document.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function Document(props) {
   let grip = props.object;
-
+  const location = getLocation(grip);
   return span({
     "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-object"
-  }, getTitle(grip), span({ className: "objectPropValue" }, getLocation(grip)));
+    className: "objectBox objectBox-document"
+  }, getTitle(grip), location ? " " : null, location ? span({ className: "location" }, location) : null);
 }
 
 function getLocation(grip) {
   let location = grip.preview.location;
-  return location ? getURLDisplayString(location) : "";
+  return location ? getURLDisplayString(location) : null;
 }
 
 function getTitle(grip) {
   return span({
     className: "objectTitle"
-  }, grip.class + " ");
+  }, grip.class);
 }
 
 // Registration
@@ -37192,7 +36159,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37207,12 +36174,12 @@ const { rep } = __webpack_require__(1409);
  * Renders DOM event objects.
  */
 Event.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function Event(props) {
@@ -37299,7 +36266,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37309,20 +36276,41 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
+const Svg = __webpack_require__(1410);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
+
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
 /**
  * This component represents a template for Function objects.
  */
 FunctionRep.propTypes = {
-  object: React.PropTypes.object.isRequired,
-  parameterNames: React.PropTypes.array
+  object: PropTypes.object.isRequired,
+  parameterNames: PropTypes.array,
+  onViewSourceInDebugger: PropTypes.func
 };
 
 function FunctionRep(props) {
-  let grip = props.object;
+  let {
+    object: grip,
+    onViewSourceInDebugger
+  } = props;
+
+  let jumpToDefinitionButton;
+  if (onViewSourceInDebugger && grip.location && grip.location.url && !IGNORED_SOURCE_URLS.includes(grip.location.url)) {
+    jumpToDefinitionButton = Svg("jump-definition", {
+      element: "a",
+      draggable: false,
+      title: "Jump to definition",
+      onClick: e => {
+        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
+        e.stopPropagation();
+        onViewSourceInDebugger(grip.location);
+      }
+    });
+  }
 
   return span({
     "data-link-actor-id": grip.actor,
@@ -37330,7 +36318,7 @@ function FunctionRep(props) {
     // Set dir="ltr" to prevent function parentheses from
     // appearing in the wrong direction
     dir: "ltr"
-  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")");
+  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
 }
 
 function getTitle(grip, props) {
@@ -37357,8 +36345,40 @@ function getTitle(grip, props) {
   }, title);
 }
 
-function getFunctionName(grip, props) {
-  let name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
+// Decodes an anonymous naming scheme that
+// spider monkey implements based on "Naming Anonymous JavaScript Functions"
+// http://johnjbarton.github.io/nonymous/index.html
+const objectProperty = /([\w\d]+)$/;
+const arrayProperty = /\[(.*?)\]$/;
+const functionProperty = /([\w\d]+)[\/\.<]*?$/;
+const annonymousProperty = /([\w\d]+)\(\^\)$/;
+
+function getFunctionName(grip, props = {}) {
+  let { functionName } = props;
+  let name;
+
+  if (functionName) {
+    let end = functionName.length - 1;
+    functionName = functionName.startsWith('"') && functionName.endsWith('"') ? functionName.substring(1, end) : functionName;
+  }
+
+  if (grip.displayName != undefined && functionName != undefined && grip.displayName != functionName) {
+    name = functionName + ":" + grip.displayName;
+  } else {
+    name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
+
+    const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
+
+    scenarios.some(reg => {
+      const match = reg.exec(name);
+      if (match) {
+        name = match[1];
+        return true;
+      }
+      return false;
+    });
+  }
+
   return cropString(name, 100);
 }
 
@@ -37390,7 +36410,9 @@ function supportsObject(grip, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(FunctionRep),
-  supportsObject
+  supportsObject,
+  // exported for testing purpose.
+  getFunctionName
 };
 
 /***/ }),
@@ -37405,7 +36427,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 // Dependencies
 const {
   getGripType,
@@ -37415,19 +36437,20 @@ const {
 
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a DOM Promise object.
  */
 PromiseRep.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function PromiseRep(props) {
@@ -37514,7 +36537,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37523,17 +36546,20 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
+const dom = __webpack_require__(1758);
+const { span } = dom;
+
 /**
  * Renders a grip object with regular expression.
  */
 RegExp.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function RegExp(props) {
   let { object } = props;
 
-  return React.DOM.span({
+  return span({
     "data-link-actor-id": object.actor,
     className: "objectBox objectBox-regexp regexpSource"
   }, getSource(object));
@@ -37570,7 +36596,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37580,14 +36606,14 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a grip representing CSSStyleSheet
  */
 StyleSheet.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function StyleSheet(props) {
@@ -37638,7 +36664,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   isGrip,
   cropString,
@@ -37647,17 +36673,16 @@ const {
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
 const nodeConstants = __webpack_require__(1449);
-
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders DOM comment node.
  */
 CommentNode.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
 };
 
 function CommentNode(props) {
@@ -37705,30 +36730,31 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Utils
 const {
   isGrip,
   wrapRender
 } = __webpack_require__(1353);
+const { rep: StringRep } = __webpack_require__(1447);
 const { MODE } = __webpack_require__(1357);
 const nodeConstants = __webpack_require__(1449);
 const Svg = __webpack_require__(1410);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders DOM element node.
  */
 ElementNode.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function ElementNode(props) {
@@ -37778,16 +36804,16 @@ function ElementNode(props) {
 function getElements(grip, mode) {
   let { attributes, nodeName } = grip.preview;
   const nodeNameElement = span({
-    className: "tag-name theme-fg-color3"
+    className: "tag-name"
   }, nodeName);
 
   if (mode === MODE.TINY) {
     let elements = [nodeNameElement];
     if (attributes.id) {
-      elements.push(span({ className: "attr-name theme-fg-color2" }, `#${attributes.id}`));
+      elements.push(span({ className: "attrName" }, `#${attributes.id}`));
     }
     if (attributes.class) {
-      elements.push(span({ className: "attr-name theme-fg-color2" }, attributes.class.replace(/(^\s+)|(\s+$)/g, "").split(" ").map(cls => `.${cls}`).join("")));
+      elements.push(span({ className: "attrName" }, attributes.class.trim().split(/\s+/).map(cls => `.${cls}`).join("")));
     }
     return elements;
   }
@@ -37802,12 +36828,12 @@ function getElements(grip, mode) {
   }
   const attributeElements = attributeKeys.reduce((arr, name, i, keys) => {
     let value = attributes[name];
-    let attribute = span({}, span({ className: "attr-name theme-fg-color2" }, `${name}`), `="`, span({ className: "attr-value theme-fg-color6" }, `${value}`), `"`);
+    let attribute = span({}, span({ className: "attrName" }, name), span({ className: "attrEqual" }, "="), StringRep({ className: "attrValue", object: value }));
 
     return arr.concat([" ", attribute]);
   }, []);
 
-  return ["<", nodeNameElement, ...attributeElements, ">"];
+  return [span({ className: "angleBracket" }, "<"), nodeNameElement, ...attributeElements, span({ className: "angleBracket" }, ">")];
 }
 
 // Registration
@@ -37836,7 +36862,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -37847,19 +36873,19 @@ const {
 const { MODE } = __webpack_require__(1357);
 const Svg = __webpack_require__(1410);
 
-// Shortcuts
-const DOM = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders DOM #text node.
  */
 TextNode.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func
 };
 
 function TextNode(props) {
@@ -37903,10 +36929,10 @@ function TextNode(props) {
   }
 
   if (mode === MODE.TINY) {
-    return DOM.span(baseConfig, getTitle(grip), inspectIcon);
+    return span(baseConfig, getTitle(grip), inspectIcon);
   }
 
-  return DOM.span(baseConfig, getTitle(grip), DOM.span({ className: "nodeValue" }, " ", `"${getTextContent(grip)}"`), inspectIcon);
+  return span(baseConfig, getTitle(grip), span({ className: "nodeValue" }, " ", `"${getTextContent(grip)}"`), inspectIcon);
 }
 
 function getTextContent(grip) {
@@ -37915,7 +36941,7 @@ function getTextContent(grip) {
 
 function getTitle(grip) {
   const title = "#text";
-  return DOM.span({}, title);
+  return span({}, title);
 }
 
 // Registration
@@ -37945,7 +36971,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 // Utils
 const {
   getGripType,
@@ -37954,22 +36980,37 @@ const {
 } = __webpack_require__(1353);
 const { MODE } = __webpack_require__(1357);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders Error objects.
  */
 ErrorRep.propTypes = {
-  object: React.PropTypes.object.isRequired,
+  object: PropTypes.object.isRequired,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key]))
 };
 
 function ErrorRep(props) {
   let object = props.object;
   let preview = object.preview;
-  let name = preview && preview.name ? preview.name : "Error";
+
+  let name;
+  if (preview && preview.name && preview.kind) {
+    switch (preview.kind) {
+      case "Error":
+        name = preview.name;
+        break;
+      case "DOMException":
+        name = preview.kind;
+        break;
+      default:
+        throw new Error("Unknown preview kind for the Error rep.");
+    }
+  } else {
+    name = "Error";
+  }
 
   let content = props.mode === MODE.TINY ? name : `${name}: ${preview.message}`;
 
@@ -37993,7 +37034,7 @@ function supportsObject(object, noGrip = false) {
   if (noGrip === true || !isGrip(object)) {
     return false;
   }
-  return object.preview && getGripType(object, noGrip) === "Error";
+  return object.preview && getGripType(object, noGrip) === "Error" || object.class === "DOMException";
 }
 
 // Exports from this module
@@ -38014,7 +37055,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -38026,16 +37067,16 @@ const {
 
 const { MODE } = __webpack_require__(1357);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a grip representing a window.
  */
 WindowRep.propTypes = {
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  object: React.PropTypes.object.isRequired
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  object: PropTypes.object.isRequired
 };
 
 function WindowRep(props) {
@@ -38053,12 +37094,12 @@ function WindowRep(props) {
     return span(config, getTitle(object));
   }
 
-  return span(config, getTitle(object), " ", span({ className: "objectPropValue" }, getLocation(object)));
+  return span(config, getTitle(object), " ", span({ className: "location" }, getLocation(object)));
 }
 
 function getTitle(object) {
   let title = object.displayClass || object.class || "Window";
-  return span({ className: "objectBoxTitle" }, title);
+  return span({ className: "objectTitle" }, title);
 }
 
 function getLocation(object) {
@@ -38092,7 +37133,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -38100,22 +37141,24 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const String = __webpack_require__(1447).rep;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a grip object with textual data.
  */
 ObjectWithText.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function ObjectWithText(props) {
   let grip = props.object;
   return span({
     "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-" + getType(grip)
-  }, span({ className: "objectPropValue" }, getDescription(grip)));
+    className: "objectTitle objectBox objectBox-" + getType(grip)
+  }, getType(grip), " ", getDescription(grip));
 }
 
 function getType(grip) {
@@ -38123,7 +37166,9 @@ function getType(grip) {
 }
 
 function getDescription(grip) {
-  return "\"" + grip.preview.text + "\"";
+  return String({
+    object: grip.preview.text
+  });
 }
 
 // Registration
@@ -38153,7 +37198,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // ReactJS
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 
 // Reps
 const {
@@ -38162,14 +37207,14 @@ const {
   wrapRender
 } = __webpack_require__(1353);
 
-// Shortcuts
-const { span } = React.DOM;
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders a grip object with URL data.
  */
 ObjectWithURL.propTypes = {
-  object: React.PropTypes.object.isRequired
+  object: PropTypes.object.isRequired
 };
 
 function ObjectWithURL(props) {
@@ -38219,29 +37264,30 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const React = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
 const {
   isGrip,
   wrapRender
 } = __webpack_require__(1353);
 const PropRep = __webpack_require__(1381);
 const { MODE } = __webpack_require__(1357);
-// Shortcuts
-const { span } = React.DOM;
+
+const dom = __webpack_require__(1758);
+const { span } = dom;
 
 /**
  * Renders an map. A map is represented by a list of its
  * entries enclosed in curly brackets.
  */
 GripMap.propTypes = {
-  object: React.PropTypes.object,
+  object: PropTypes.object,
   // @TODO Change this to Object.values once it's supported in Node's version of V8
-  mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
-  isInterestingEntry: React.PropTypes.func,
-  onDOMNodeMouseOver: React.PropTypes.func,
-  onDOMNodeMouseOut: React.PropTypes.func,
-  onInspectIconClick: React.PropTypes.func,
-  title: React.PropTypes.string
+  mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+  isInterestingEntry: PropTypes.func,
+  onDOMNodeMouseOver: PropTypes.func,
+  onDOMNodeMouseOut: PropTypes.func,
+  onInspectIconClick: PropTypes.func,
+  title: PropTypes.string
 };
 
 function GripMap(props) {
@@ -38302,7 +37348,7 @@ function entriesIterator(props, object, max) {
   }
 
   let entries = getEntries(props, mapEntries, indexes);
-  if (entries.length < object.preview.size) {
+  if (entries.length < getLength(object)) {
     // There are some undisplayed entries. Then display "…".
     entries.push(span({
       key: "more",
@@ -38391,6 +37437,10 @@ function getEntriesIndexes(entries, max, filter) {
   }, []);
 }
 
+function getLength(grip) {
+  return grip.preview.size || 0;
+}
+
 function supportsObject(grip, noGrip = false) {
   if (noGrip === true || !isGrip(grip)) {
     return false;
@@ -38406,7 +37456,8 @@ maxLengthMap.set(MODE.LONG, 10);
 module.exports = {
   rep: wrapRender(GripMap),
   supportsObject,
-  maxLengthMap
+  maxLengthMap,
+  getLength
 };
 
 /***/ }),
@@ -38416,22 +37467,25 @@ module.exports = {
 "use strict";
 
 
+var _devtoolsComponents = __webpack_require__(2013);
+
+var _devtoolsComponents2 = _interopRequireDefault(_devtoolsComponents);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
-  Component,
-  createFactory,
-  DOM: dom,
-  PropTypes
-} = __webpack_require__(0);
+const { Component, createFactory } = __webpack_require__(0);
+const PropTypes = __webpack_require__(20);
+const dom = __webpack_require__(1758);
 
-const Tree = createFactory(__webpack_require__(1441).Tree);
+const Tree = createFactory(_devtoolsComponents2.default.Tree);
 __webpack_require__(1325);
 
 const classnames = __webpack_require__(175);
-const Svg = __webpack_require__(1410);
+
 const {
   REPS: {
     Rep,
@@ -38442,25 +37496,30 @@ const {
   MODE
 } = __webpack_require__(1357);
 
+const Utils = __webpack_require__(1938);
+
 const {
   getChildren,
+  getClosestGripNode,
   getParent,
   getValue,
   nodeHasAccessors,
-  nodeHasAllEntriesInPreview,
   nodeHasProperties,
   nodeIsDefaultProperties,
-  nodeIsEntries,
+  nodeIsFunction,
   nodeIsGetter,
   nodeIsMapEntry,
-  nodeIsFunction,
   nodeIsMissingArguments,
   nodeIsOptimizedOut,
   nodeIsPrimitive,
   nodeIsPrototype,
   nodeIsSetter,
   nodeIsWindow
-} = __webpack_require__(1452);
+} = Utils.node;
+
+const {
+  loadItemProperties
+} = Utils.loadProperties;
 
 // This implements a component that renders an interactive inspector
 // for looking at JavaScript objects. It expects descriptions of
@@ -38490,13 +37549,16 @@ const {
 // children.
 
 class ObjectInspector extends Component {
-  constructor() {
+  constructor(props) {
     super();
+    this.cachedNodes = new Map();
 
-    this.actors = {};
     this.state = {
-      expandedKeys: new Set(),
-      focusedItem: null
+      actors: new Set(),
+      expandedPaths: new Set(),
+      focusedItem: null,
+      loadedProperties: props.loadedProperties || new Map(),
+      loading: new Map()
     };
 
     const self = this;
@@ -38508,17 +37570,43 @@ class ObjectInspector extends Component {
     self.getRoots = this.getRoots.bind(this);
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    const {
+      expandedPaths,
+      loadedProperties
+    } = this.state;
+
+    if (this.props.roots !== nextProps.roots) {
+      // Since the roots changed, we assume the properties did as well. Thus we can clear
+      // the cachedNodes to avoid bugs and memory leaks.
+      this.cachedNodes.clear();
+      return true;
+    }
+
+    return expandedPaths.size !== nextState.expandedPaths.size || loadedProperties.size !== nextState.loadedProperties.size || [...expandedPaths].some(key => !nextState.expandedPaths.has(key));
+  }
+
+  componentWillUnmount() {
+    const { releaseActor } = this.props;
+    if (typeof releaseActor !== "function") {
+      return;
+    }
+
+    const { actors } = this.state;
+    for (let actor of actors) {
+      releaseActor(actor);
+    }
+  }
+
   getChildren(item) {
     const {
-      getObjectEntries,
-      getObjectProperties
-    } = this.props;
-    const { actors } = this;
+      loadedProperties
+    } = this.state;
+    const { cachedNodes } = this;
 
     return getChildren({
-      getObjectEntries,
-      getObjectProperties,
-      actors,
+      loadedProperties,
+      cachedNodes,
       item
     });
   }
@@ -38531,37 +37619,68 @@ class ObjectInspector extends Component {
     return item.path;
   }
 
-  setExpanded(item, expand) {
-    const { expandedKeys } = this.state;
-    const key = this.getKey(item);
-
-    if (expand === true) {
-      expandedKeys.add(key);
-    } else {
-      expandedKeys.delete(key);
+  /**
+   * This function is responsible for expanding/collapsing a given node,
+   * which also means that it will check if we need to fetch properties,
+   * entries, prototype and symbols for the said node. If we do, it will call
+   * the appropriate ObjectClient functions, and change the state of the component
+   * with the results it gets from those functions.
+   */
+  async setExpanded(item, expand) {
+    if (nodeIsPrimitive(item)) {
+      return;
     }
 
-    this.setState({ expandedKeys });
+    const {
+      loadedProperties
+    } = this.state;
+
+    const key = this.getKey(item);
+
+    this.setState((prevState, props) => {
+      const newPaths = new Set(prevState.expandedPaths);
+      if (expand === true) {
+        newPaths.add(key);
+      } else {
+        newPaths.delete(key);
+      }
+      return {
+        expandedPaths: newPaths
+      };
+    });
 
     if (expand === true) {
-      const {
-        getObjectProperties,
-        getObjectEntries,
-        loadObjectProperties,
-        loadObjectEntries
-      } = this.props;
+      const gripItem = getClosestGripNode(item);
+      const value = getValue(gripItem);
+      const path = item.path;
 
-      const value = getValue(item);
-      const parent = getParent(item);
-      const parentValue = getValue(parent);
-      const parentActor = parentValue ? parentValue.actor : null;
+      const onItemPropertiesLoaded = loadItemProperties(item, this.props.createObjectClient, loadedProperties);
+      if (onItemPropertiesLoaded !== null) {
+        this.setState((prevState, props) => {
+          const nextLoading = new Map(prevState.loading);
+          nextLoading.set(path, onItemPropertiesLoaded);
+          return {
+            loading: nextLoading
+          };
+        });
 
-      if (nodeHasProperties(item) && value && !getObjectProperties(value.actor)) {
-        loadObjectProperties(value);
-      }
+        const properties = await onItemPropertiesLoaded;
 
-      if (nodeIsEntries(item) && !nodeHasAllEntriesInPreview(parent) && parentActor && !getObjectEntries(parentActor)) {
-        loadObjectEntries(parentValue);
+        this.setState((prevState, props) => {
+          const nextLoading = new Map(prevState.loading);
+          nextLoading.delete(path);
+
+          const isRoot = this.props.roots.some(root => {
+            const rootValue = getValue(root);
+            return rootValue && rootValue.actor === value.actor;
+          });
+
+          return {
+            actors: isRoot ? prevState.actors : new Set(prevState.actors).add(value.actor),
+            loadedProperties: new Map(prevState.loadedProperties).set(path, properties),
+            loading: nextLoading
+          };
+        });
       }
     }
   }
@@ -38601,15 +37720,15 @@ class ObjectInspector extends Component {
       if (depth > 0) {
         repsProp.mode = this.props.mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
       }
+      if (expanded) {
+        repsProp.mode = MODE.TINY;
+      }
 
       objectValue = this.renderGrip(item, repsProp);
     }
 
     const hasLabel = label !== null && typeof label !== "undefined";
     const hasValue = typeof objectValue !== "undefined";
-
-    const SINGLE_INDENT_WIDTH = 15;
-    const indentWidth = (depth + (isPrimitive ? 1 : 0)) * SINGLE_INDENT_WIDTH;
 
     const {
       onDoubleClick,
@@ -38622,13 +37741,12 @@ class ObjectInspector extends Component {
         focused,
         lessen: !expanded && (nodeIsDefaultProperties(item) || nodeIsPrototype(item) || dimTopLevelWindow === true && nodeIsWindow(item) && depth === 0)
       }),
-      style: {
-        marginLeft: indentWidth
-      },
-      onClick: isPrimitive === false ? e => {
+      onClick: e => {
         e.stopPropagation();
-        this.setExpanded(item, !expanded);
-      } : null,
+        if (isPrimitive === false) {
+          this.setExpanded(item, !expanded);
+        }
+      },
       onDoubleClick: onDoubleClick ? e => {
         e.stopPropagation();
         onDoubleClick(item, {
@@ -38637,11 +37755,7 @@ class ObjectInspector extends Component {
           expanded
         });
       } : null
-    }, isPrimitive === false ? Svg("arrow", {
-      className: classnames({
-        expanded: expanded
-      })
-    }) : null, hasLabel ? dom.span({
+    }, arrow, hasLabel ? dom.span({
       className: "object-label",
       onClick: onLabelClick ? event => {
         event.stopPropagation();
@@ -38652,7 +37766,7 @@ class ObjectInspector extends Component {
           setExpanded: this.setExpanded
         });
       } : null
-    }, label) : null, hasLabel && hasValue ? dom.span({ className: "object-delimiter" }, " : ") : null, hasValue ? objectValue : null);
+    }, label) : null, hasLabel && hasValue ? dom.span({ className: "object-delimiter" }, ": ") : null, hasValue ? objectValue : null);
   }
 
   renderGrip(item, props) {
@@ -38675,7 +37789,7 @@ class ObjectInspector extends Component {
     } = this.props;
 
     const {
-      expandedKeys,
+      expandedPaths,
       focusedItem
     } = this.state;
 
@@ -38691,14 +37805,16 @@ class ObjectInspector extends Component {
     return Tree({
       className: classnames({
         inline,
-        nowrap: disableWrap
+        nowrap: disableWrap,
+        "object-inspector": true
       }),
       autoExpandAll,
       autoExpandDepth,
       disabledFocus,
       itemHeight,
 
-      isExpanded: item => expandedKeys.has(this.getKey(item)),
+      isExpanded: item => expandedPaths.has(this.getKey(item)),
+      isExpandable: item => nodeIsPrimitive(item) === false,
       focused: focusedItem,
 
       getRoots: this.getRoots,
@@ -38724,10 +37840,9 @@ ObjectInspector.propTypes = {
   disableWrap: PropTypes.bool,
   inline: PropTypes.bool,
   roots: PropTypes.array,
-  getObjectProperties: PropTypes.func.isRequired,
-  loadObjectProperties: PropTypes.func.isRequired,
   itemHeight: PropTypes.number,
   mode: PropTypes.oneOf(Object.values(MODE)),
+  createObjectClient: PropTypes.func.isRequired,
   onFocus: PropTypes.func,
   onDoubleClick: PropTypes.func,
   onLabelClick: PropTypes.func
@@ -38750,10 +37865,6 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(4);
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -38766,14 +37877,28 @@ __webpack_require__(1327);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-class Popover extends _react.Component {
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-  constructor() {
-    super();
-    this.onMouseLeave = this.onMouseLeave.bind(this);
+class Popover extends _react.Component {
+  constructor(props) {
+    super(props);
+
+    this.onMouseLeave = e => {
+      const { onMouseLeave } = this.props;
+      if (/^(bracket-arrow|gap)$/.test(e.currentTarget.className)) {
+        return;
+      }
+
+      onMouseLeave();
+    };
+
     this.state = {
       left: 0,
-      top: 0
+      top: 0,
+      targetMid: 0,
+      orientation: "up"
     };
   }
 
@@ -38803,35 +37928,36 @@ class Popover extends _react.Component {
   }
 
   getPopoverCoords() {
-    const popover = _reactDom2.default.findDOMNode(this);
-    const popoverRect = popover.getBoundingClientRect();
+    if (this.$popover && this.props.editorRef) {
+      const popover = this.$popover;
+      const editor = this.props.editorRef;
+      const popoverRect = popover.getBoundingClientRect();
+      const editorRect = editor.getBoundingClientRect();
+      const targetRect = this.props.targetPosition;
+      const popoverLeft = this.calculateLeft(targetRect, editorRect, popoverRect);
+      const orientation = this.calculateVerticalOrientation(targetRect, editorRect, popoverRect);
+      const top = orientation == "down" ? targetRect.bottom : targetRect.top - popoverRect.height;
 
-    const editor = document.querySelector(".editor-wrapper");
-    const editorRect = editor.getBoundingClientRect();
+      const targetMid = targetRect.left - popoverLeft + targetRect.width / 2 - 8;
 
-    const targetRect = this.props.targetPosition;
-
-    const popoverLeft = this.calculateLeft(targetRect, editorRect, popoverRect);
-    const orientation = this.calculateVerticalOrientation(targetRect, editorRect, popoverRect);
-    const top = orientation == "down" ? targetRect.bottom : targetRect.top - popoverRect.height;
-
-    const targetMid = targetRect.left - popoverLeft + targetRect.width / 2 - 8;
-
-    return { left: popoverLeft, top, orientation, targetMid };
+      return { left: popoverLeft, top, orientation, targetMid };
+    }
+    return { left: 0, top: 0, orientation: "down", targetMid: 0 };
   }
 
   getTooltipCoords() {
-    const tooltip = _reactDom2.default.findDOMNode(this);
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const targetRect = this.props.targetPosition;
+    if (this.$tooltip && this.props.editorRef) {
+      const tooltip = this.$tooltip;
+      const editor = this.props.editorRef;
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const editorRect = editor.getBoundingClientRect();
+      const targetRect = this.props.targetPosition;
+      const left = this.calculateLeft(targetRect, editorRect, tooltipRect);
+      const top = targetRect.top - tooltipRect.height;
 
-    const editor = document.querySelector(".editor-wrapper");
-    const editorRect = editor.getBoundingClientRect();
-
-    const left = this.calculateLeft(targetRect, editorRect, tooltipRect);
-    const top = targetRect.top - tooltipRect.height;
-
-    return { left, top, orientation: "up", targetMid: 0 };
+      return { left, top, orientation: "up", targetMid: 0 };
+    }
+    return { left: 0, top: 0, orientation: "up", targetMid: 0 };
   }
 
   getChildren() {
@@ -38856,16 +37982,6 @@ class Popover extends _react.Component {
     return _react2.default.createElement(_BracketArrow2.default, arrowProps);
   }
 
-  onMouseLeave(e) {
-    const { onMouseLeave } = this.props;
-
-    if (e.target.className.match(/(bracket-arrow|gap)/)) {
-      return;
-    }
-
-    onMouseLeave();
-  }
-
   renderPopover() {
     const { top, left, orientation, targetMid } = this.state;
     const arrow = this.getPopoverArrow(orientation, targetMid);
@@ -38875,7 +37991,8 @@ class Popover extends _react.Component {
       {
         className: (0, _classnames2.default)("popover", { up: orientation === "up" }),
         onMouseLeave: this.onMouseLeave,
-        style: { top, left }
+        style: { top, left },
+        ref: c => this.$popover = c
       },
       arrow,
       this.getChildren()
@@ -38891,7 +38008,8 @@ class Popover extends _react.Component {
       {
         className: "tooltip",
         onMouseLeave: onMouseLeave,
-        style: { top, left }
+        style: { top, left },
+        ref: c => this.$tooltip = c
       },
       this.getChildren()
     );
@@ -38906,9 +38024,7 @@ class Popover extends _react.Component {
 
     return this.renderPopover();
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 Popover.defaultProps = {
   onMouseLeave: () => {},
@@ -40503,7 +39619,7 @@ class SecondaryPanes extends _react.Component {
     return {
       header: L10N.getStr("scopes.header"),
       className: "scopes-pane",
-      component: Scopes,
+      component: _react2.default.createElement(Scopes, null),
       opened: _prefs.prefs.scopesVisible,
       onToggle: opened => {
         _prefs.prefs.scopesVisible = opened;
@@ -40516,7 +39632,7 @@ class SecondaryPanes extends _react.Component {
       header: L10N.getStr("watchExpressions.header"),
       className: "watch-expressions-pane",
       buttons: this.watchExpressionHeaderButtons(),
-      component: _Expressions2.default,
+      component: _react2.default.createElement(_Expressions2.default, null),
       opened: _prefs.prefs.expressionsVisible,
       onToggle: opened => {
         _prefs.prefs.expressionsVisible = opened;
@@ -40528,7 +39644,7 @@ class SecondaryPanes extends _react.Component {
     return {
       header: L10N.getStr("callStack.header"),
       className: "call-stack-pane",
-      component: _Frames2.default,
+      component: _react2.default.createElement(_Frames2.default, null),
       opened: _prefs.prefs.callStackVisible,
       onToggle: opened => {
         _prefs.prefs.callStackVisible = opened;
@@ -40540,7 +39656,7 @@ class SecondaryPanes extends _react.Component {
     return {
       header: L10N.getStr("workersHeader"),
       className: "workers-pane",
-      component: _Workers2.default,
+      component: _react2.default.createElement(_Workers2.default, null),
       opened: _prefs.prefs.workersVisible,
       onToggle: opened => {
         _prefs.prefs.workersVisible = opened;
@@ -40553,7 +39669,7 @@ class SecondaryPanes extends _react.Component {
       header: L10N.getStr("breakpoints.header"),
       className: "breakpoints-pane",
       buttons: [this.breakpointDropdown(), this.renderBreakpointsToggle()],
-      component: _Breakpoints2.default,
+      component: _react2.default.createElement(_Breakpoints2.default, null),
       opened: _prefs.prefs.breakpointsVisible,
       onToggle: opened => {
         _prefs.prefs.breakpointsVisible = opened;
@@ -40602,7 +39718,7 @@ class SecondaryPanes extends _react.Component {
       items.push({
         header: L10N.getStr("eventListenersHeader"),
         className: "event-listeners-pane",
-        component: _EventListeners2.default
+        component: _react2.default.createElement(_EventListeners2.default, null)
       });
     }
 
@@ -40927,6 +40043,8 @@ var _selectors = __webpack_require__(1352);
 
 var _expressions = __webpack_require__(1437);
 
+var _firefox = __webpack_require__(1500);
+
 var _Close = __webpack_require__(1374);
 
 var _Close2 = _interopRequireDefault(_Close);
@@ -40934,6 +40052,10 @@ var _Close2 = _interopRequireDefault(_Close);
 __webpack_require__(1335);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Expressions extends _react.PureComponent {
 
@@ -40989,8 +40111,8 @@ class Expressions extends _react.PureComponent {
 
   shouldComponentUpdate(nextProps, nextState) {
     const { editing, inputValue } = this.state;
-    const { expressions, expressionError, loadedObjects } = this.props;
-    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || loadedObjects !== nextProps.loadedObjects || editing !== nextState.editing || inputValue !== nextState.inputValue;
+    const { expressions, expressionError } = this.props;
+    return expressions !== nextProps.expressions || expressionError !== nextProps.expressionError || editing !== nextState.editing || inputValue !== nextState.inputValue;
   }
 
   componentDidUpdate() {
@@ -41019,12 +40141,7 @@ class Expressions extends _react.PureComponent {
   }
 
   renderExpression(expression, index) {
-    const {
-      expressionError,
-      loadObjectProperties,
-      loadedObjects,
-      openLink
-    } = this.props;
+    const { expressionError, openLink } = this.props;
     const { editing, editIndex } = this.state;
     const { input, updating } = expression;
     const isEditingExpr = editing && editIndex === index;
@@ -41057,11 +40174,7 @@ class Expressions extends _react.PureComponent {
           disabledFocus: true,
           onDoubleClick: (items, options) => this.editExpression(expression, index, options),
           openLink: openLink,
-          getObjectProperties: id => loadedObjects[id],
-          loadObjectProperties: loadObjectProperties
-          // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
-          , getObjectEntries: actor => {},
-          loadObjectEntries: grip => {}
+          createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
         }),
         _react2.default.createElement(
           "div",
@@ -41135,14 +40248,11 @@ class Expressions extends _react.PureComponent {
       this.renderNewExpressionInput()
     );
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 exports.default = (0, _reactRedux.connect)(state => ({
   expressions: (0, _selectors.getExpressions)(state),
-  expressionError: (0, _selectors.getExpressionError)(state),
-  loadedObjects: (0, _selectors.getLoadedObjects)(state)
+  expressionError: (0, _selectors.getExpressionError)(state)
 }), _actions2.default)(Expressions);
 
 /***/ }),
@@ -41793,7 +40903,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 class Accordion extends _react.Component {
   constructor(props) {
-    super();
+    super(props);
 
     this.renderContainer = (item, i) => {
       const { opened } = item;
@@ -41812,14 +40922,11 @@ class Accordion extends _react.Component {
             item.buttons
           ) : null
         ),
-        opened ? _react2.default.createElement(
+        opened && _react2.default.createElement(
           "div",
-          {
-            className: "_content",
-            style: { display: opened ? "block" : "none" }
-          },
-          (0, _react.createElement)(item.component, item.componentProps || {})
-        ) : null
+          { className: "_content" },
+          (0, _react.cloneElement)(item.component, item.componentProps || {})
+        )
       );
     };
 
@@ -41828,8 +40935,6 @@ class Accordion extends _react.Component {
       created: []
     };
   }
-
-  componentWillReceiveProps(nextProps) {}
 
   handleHeaderClick(i) {
     const item = this.props.items[i];
@@ -42412,6 +41517,8 @@ var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
 
+var _firefox = __webpack_require__(1500);
+
 var _selectors = __webpack_require__(1352);
 
 var _scopes = __webpack_require__(1792);
@@ -42421,10 +41528,6 @@ var _devtoolsReps = __webpack_require__(1408);
 __webpack_require__(1296);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Scopes extends _react.PureComponent {
   constructor(props, ...args) {
@@ -42451,7 +41554,7 @@ class Scopes extends _react.PureComponent {
   }
 
   render() {
-    const { isPaused, loadObjectProperties, loadedObjects } = this.props;
+    const { isPaused } = this.props;
     const { scopes } = this.state;
 
     if (scopes) {
@@ -42462,14 +41565,10 @@ class Scopes extends _react.PureComponent {
           roots: scopes,
           autoExpandAll: false,
           autoExpandDepth: 1,
-          getObjectProperties: id => loadedObjects[id],
-          loadObjectProperties: loadObjectProperties,
           disableWrap: true,
           disabledFocus: true,
-          dimTopLevelWindow: true
-          // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
-          , getObjectEntries: actor => {},
-          loadObjectEntries: grip => {}
+          dimTopLevelWindow: true,
+          createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
         })
       );
     }
@@ -42483,7 +41582,9 @@ class Scopes extends _react.PureComponent {
       )
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 exports.default = (0, _reactRedux.connect)(state => {
   const selectedFrame = (0, _selectors.getSelectedFrame)(state);
@@ -42492,8 +41593,7 @@ exports.default = (0, _reactRedux.connect)(state => {
     selectedFrame,
     isPaused: (0, _selectors.isPaused)(state),
     why: (0, _selectors.getPauseReason)(state),
-    frameScopes: frameScopes,
-    loadedObjects: (0, _selectors.getLoadedObjects)(state)
+    frameScopes: frameScopes
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Scopes);
 
@@ -42660,25 +41760,21 @@ var _selectors = __webpack_require__(1352);
 
 var _ui = __webpack_require__(1439);
 
+var _tabs = __webpack_require__(1941);
+
 var _source = __webpack_require__(1356);
-
-var _classnames = __webpack_require__(175);
-
-var _classnames2 = _interopRequireDefault(_classnames);
 
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-var _Close = __webpack_require__(1374);
-
-var _Close2 = _interopRequireDefault(_Close);
-
-var _devtoolsContextmenu = __webpack_require__(1413);
-
 var _lodash = __webpack_require__(2);
 
 __webpack_require__(1344);
+
+var _Tab = __webpack_require__(2018);
+
+var _Tab2 = _interopRequireDefault(_Tab);
 
 var _PaneToggle = __webpack_require__(1407);
 
@@ -42692,88 +41788,46 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/*
- * Finds the hidden tabs by comparing the tabs' top offset.
- * hidden tabs will have a great top offset.
- *
- * @param sourceTabs Immutable.list
- * @param sourceTabEls HTMLCollection
- *
- * @returns Immutable.list
- */
-function getHiddenTabs(sourceTabs, sourceTabEls) {
-  sourceTabEls = [].slice.call(sourceTabEls);
-  function getTopOffset() {
-    const topOffsets = sourceTabEls.map(t => t.getBoundingClientRect().top);
-    return Math.min(...topOffsets);
-  }
-
-  function hasTopOffset(el) {
-    // adding 10px helps account for cases where the tab might be offset by
-    // styling such as selected tabs which don't have a border.
-    const tabTopOffset = getTopOffset();
-    return el.getBoundingClientRect().top > tabTopOffset + 10;
-  }
-
-  return sourceTabs.filter((tab, index) => {
-    const element = sourceTabEls[index];
-    return element && hasTopOffset(element);
-  });
-}
-
-/**
- * Clipboard function taken from
- * https://dxr.mozilla.org/mozilla-central/source/devtools/shared/platform/content/clipboard.js
- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function copyToTheClipboard(string) {
-  const doCopy = function (e) {
-    e.clipboardData.setData("text/plain", string);
-    e.preventDefault();
-  };
-
-  document.addEventListener("copy", doCopy);
-  document.execCommand("copy", false, null);
-  document.removeEventListener("copy", doCopy);
-}
-
-class SourceTabs extends _react.PureComponent {
+class Tabs extends _react.PureComponent {
 
   constructor(props) {
     super(props);
-    this.state = {
-      dropdownShown: false,
-      hiddenSourceTabs: I.List()
+
+    this.renderDropdownSource = source => {
+      const { selectSource } = this.props;
+      const filename = (0, _source.getFilename)(source.toJS());
+
+      const onClick = () => selectSource(source.get("id"));
+      return _react2.default.createElement(
+        "li",
+        { key: source.get("id"), onClick: onClick },
+        _react2.default.createElement("img", { className: `dropdown-icon ${this.getIconClass(source)}` }),
+        filename
+      );
     };
 
-    this.onTabContextMenu = this.onTabContextMenu.bind(this);
-    this.showContextMenu = this.showContextMenu.bind(this);
-    this.updateHiddenSourceTabs = this.updateHiddenSourceTabs.bind(this);
-    this.toggleSourcesDropdown = this.toggleSourcesDropdown.bind(this);
-    this.renderDropdownSource = this.renderDropdownSource.bind(this);
-    this.renderTabs = this.renderTabs.bind(this);
-    this.renderSourceTab = this.renderSourceTab.bind(this);
-    this.renderSearchTab = this.renderSearchTab.bind(this);
-    this.renderDropDown = this.renderDropdown.bind(this);
-    this.renderStartPanelToggleButton = this.renderStartPanelToggleButton.bind(this);
-    this.renderEndPanelToggleButton = this.renderEndPanelToggleButton.bind(this);
+    this.state = {
+      dropdownShown: false,
+      hiddenTabs: I.List()
+    };
 
     this.onResize = (0, _lodash.debounce)(() => {
-      this.updateHiddenSourceTabs();
+      this.updateHiddenTabs();
     });
   }
 
   componentDidUpdate(prevProps) {
     if (!(prevProps === this.props)) {
-      this.updateHiddenSourceTabs();
+      this.updateHiddenTabs();
     }
   }
 
   componentDidMount() {
-    this.updateHiddenSourceTabs();
+    this.updateHiddenTabs();
     window.addEventListener("resize", this.onResize);
   }
 
@@ -42781,137 +41835,23 @@ class SourceTabs extends _react.PureComponent {
     window.removeEventListener("resize", this.onResize);
   }
 
-  onTabContextMenu(event, tab) {
-    event.preventDefault();
-    this.showContextMenu(event, tab);
-  }
-
-  showContextMenu(e, tab) {
-    const {
-      closeTab,
-      closeTabs,
-      sourceTabs,
-      showSource,
-      togglePrettyPrint
-    } = this.props;
-
-    const closeTabLabel = L10N.getStr("sourceTabs.closeTab");
-    const closeOtherTabsLabel = L10N.getStr("sourceTabs.closeOtherTabs");
-    const closeTabsToEndLabel = L10N.getStr("sourceTabs.closeTabsToEnd");
-    const closeAllTabsLabel = L10N.getStr("sourceTabs.closeAllTabs");
-    const revealInTreeLabel = L10N.getStr("sourceTabs.revealInTree");
-    const copyLinkLabel = L10N.getStr("copySourceUri2");
-    const prettyPrintLabel = L10N.getStr("sourceTabs.prettyPrint");
-
-    const closeTabKey = L10N.getStr("sourceTabs.closeTab.accesskey");
-    const closeOtherTabsKey = L10N.getStr("sourceTabs.closeOtherTabs.accesskey");
-    const closeTabsToEndKey = L10N.getStr("sourceTabs.closeTabsToEnd.accesskey");
-    const closeAllTabsKey = L10N.getStr("sourceTabs.closeAllTabs.accesskey");
-    const revealInTreeKey = L10N.getStr("sourceTabs.revealInTree.accesskey");
-    const copyLinkKey = L10N.getStr("copySourceUri2.accesskey");
-    const prettyPrintKey = L10N.getStr("sourceTabs.prettyPrint.accesskey");
-
-    const tabs = sourceTabs.map(t => t.get("id"));
-    const otherTabs = sourceTabs.filter(t => t.get("id") !== tab);
-    const sourceTab = sourceTabs.find(t => t.get("id") == tab);
-    const tabURLs = sourceTabs.map(thisTab => thisTab.get("url"));
-    const otherTabURLs = otherTabs.map(thisTab => thisTab.get("url"));
-
-    if (!sourceTab) {
-      return;
-    }
-
-    const isPrettySource = (0, _source.isPretty)(sourceTab);
-
-    const closeTabMenuItem = {
-      id: "node-menu-close-tab",
-      label: closeTabLabel,
-      accesskey: closeTabKey,
-      disabled: false,
-      click: () => closeTab(sourceTab.get("url"))
-    };
-
-    const closeOtherTabsMenuItem = {
-      id: "node-menu-close-other-tabs",
-      label: closeOtherTabsLabel,
-      accesskey: closeOtherTabsKey,
-      disabled: false,
-      click: () => closeTabs(otherTabURLs)
-    };
-
-    const closeTabsToEndMenuItem = {
-      id: "node-menu-close-tabs-to-end",
-      label: closeTabsToEndLabel,
-      accesskey: closeTabsToEndKey,
-      disabled: false,
-      click: () => {
-        const tabIndex = tabs.findIndex(t => t == tab);
-        closeTabs(tabURLs.filter((t, i) => i > tabIndex));
-      }
-    };
-
-    const closeAllTabsMenuItem = {
-      id: "node-menu-close-all-tabs",
-      label: closeAllTabsLabel,
-      accesskey: closeAllTabsKey,
-      disabled: false,
-      click: () => closeTabs(tabURLs)
-    };
-
-    const showSourceMenuItem = {
-      id: "node-menu-show-source",
-      label: revealInTreeLabel,
-      accesskey: revealInTreeKey,
-      disabled: false,
-      click: () => showSource(tab)
-    };
-
-    const copySourceUri2 = {
-      id: "node-menu-copy-source-url",
-      label: copyLinkLabel,
-      accesskey: copyLinkKey,
-      disabled: false,
-      click: () => copyToTheClipboard(sourceTab.get("url"))
-    };
-
-    const prettyPrint = {
-      id: "node-menu-pretty-print",
-      label: prettyPrintLabel,
-      accesskey: prettyPrintKey,
-      disabled: false,
-      click: () => togglePrettyPrint(sourceTab.get("id"))
-    };
-
-    const items = [{ item: closeTabMenuItem }, { item: closeOtherTabsMenuItem, hidden: () => tabs.size === 1 }, {
-      item: closeTabsToEndMenuItem,
-      hidden: () => tabs.some((t, i) => t === tab && tabs.size - 1 === i)
-    }, { item: closeAllTabsMenuItem }, { item: { type: "separator" } }, { item: copySourceUri2 }];
-
-    if (!isPrettySource) {
-      items.push({ item: showSourceMenuItem });
-      items.push({ item: prettyPrint });
-    }
-
-    (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
-  }
-
   /*
    * Updates the hiddenSourceTabs state, by
    * finding the source tabs which are wrapped and are not on the top row.
    */
-  updateHiddenSourceTabs() {
+  updateHiddenTabs() {
     if (!this.refs.sourceTabs) {
       return;
     }
-    const { selectedSource, sourceTabs, moveTab } = this.props;
+    const { selectedSource, tabSources, moveTab } = this.props;
     const sourceTabEls = this.refs.sourceTabs.children;
-    const hiddenSourceTabs = getHiddenTabs(sourceTabs, sourceTabEls);
+    const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
 
-    if ((0, _ui.isVisible)() && hiddenSourceTabs.indexOf(selectedSource) !== -1) {
+    if ((0, _ui.isVisible)() && hiddenTabs.indexOf(selectedSource) !== -1) {
       return moveTab(selectedSource.get("url"), 0);
     }
 
-    this.setState({ hiddenSourceTabs });
+    this.setState({ hiddenTabs });
   }
 
   toggleSourcesDropdown(e) {
@@ -42930,127 +41870,29 @@ class SourceTabs extends _react.PureComponent {
     return "file";
   }
 
-  renderDropdownSource(source) {
-    const { selectSource } = this.props;
-    const filename = (0, _source.getFilename)(source.toJS());
-
-    const onClick = () => selectSource(source.get("id"));
-    return _react2.default.createElement(
-      "li",
-      { key: source.get("id"), onClick: onClick },
-      _react2.default.createElement("img", { className: `dropdown-icon ${this.getIconClass(source)}` }),
-      filename
-    );
-  }
-
   renderTabs() {
-    const { sourceTabs } = this.props;
-    if (!sourceTabs) {
+    const { tabSources } = this.props;
+    if (!tabSources) {
       return;
     }
 
     return _react2.default.createElement(
       "div",
       { className: "source-tabs", ref: "sourceTabs" },
-      sourceTabs.map(this.renderSourceTab)
-    );
-  }
-
-  isProjectSearchEnabled() {
-    return this.props.activeSearch === "project";
-  }
-
-  isSourceSearchEnabled() {
-    return this.props.activeSearch === "source";
-  }
-
-  renderSearchTab(source) {
-    const { closeTab, closeActiveSearch, setActiveSearch } = this.props;
-
-    function tabName(tab) {
-      return `${tab} search results`;
-    }
-
-    function onClickClose(ev) {
-      ev.stopPropagation();
-      closeActiveSearch();
-      closeTab(source);
-    }
-    const className = (0, _classnames2.default)("source-tab", {
-      active: this.isProjectSearchEnabled() || this.isSourceSearchEnabled(),
-      pretty: false
-    });
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: className,
-        key: source,
-        onClick: () => setActiveSearch(source),
-        onContextMenu: e => this.onTabContextMenu(e, source),
-        title: tabName(source)
-      },
-      _react2.default.createElement(
-        "div",
-        { className: "filename" },
-        tabName(source)
-      ),
-      _react2.default.createElement(_Close2.default, {
-        handleClick: onClickClose,
-        tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
-      })
-    );
-  }
-
-  renderSourceTab(source) {
-    const { selectedSource, selectSource, closeTab } = this.props;
-    const filename = (0, _source.getFilename)(source.toJS());
-    const active = selectedSource && source.get("id") == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
-    const isPrettyCode = (0, _source.isPretty)(source);
-    const sourceAnnotation = this.getSourceAnnotation(source);
-
-    function onClickClose(ev) {
-      ev.stopPropagation();
-      closeTab(source.get("url"));
-    }
-
-    const className = (0, _classnames2.default)("source-tab", {
-      active,
-      pretty: isPrettyCode
-    });
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: className,
-        key: source.get("id"),
-        onClick: () => selectSource(source.get("id")),
-        onContextMenu: e => this.onTabContextMenu(e, source.get("id")),
-        title: (0, _source.getFileURL)(source.toJS())
-      },
-      sourceAnnotation,
-      _react2.default.createElement(
-        "div",
-        { className: "filename" },
-        filename
-      ),
-      _react2.default.createElement(_Close2.default, {
-        handleClick: onClickClose,
-        tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
-      })
+      tabSources.map((source, index) => _react2.default.createElement(_Tab2.default, { key: index, source: source }))
     );
   }
 
   renderDropdown() {
-    const hiddenSourceTabs = this.state.hiddenSourceTabs;
-    if (!hiddenSourceTabs || hiddenSourceTabs.size == 0) {
+    const hiddenTabs = this.state.hiddenTabs;
+    if (!hiddenTabs || hiddenTabs.size == 0) {
       return null;
     }
 
     const Panel = _react2.default.createElement(
       "ul",
       null,
-      hiddenSourceTabs.map(this.renderDropdownSource)
+      hiddenTabs.map(this.renderDropdownSource)
     );
 
     return _react2.default.createElement(_Dropdown2.default, { panel: Panel, icon: "»" });
@@ -43065,31 +41907,17 @@ class SourceTabs extends _react.PureComponent {
   }
 
   renderEndPanelToggleButton() {
-    if (!this.props.horizontal) {
+    const { horizontal, endPanelCollapsed, togglePaneCollapse } = this.props;
+    if (!horizontal) {
       return;
     }
 
     return _react2.default.createElement(_PaneToggle2.default, {
       position: "end",
-      collapsed: !this.props.endPanelCollapsed,
-      handleClick: this.props.togglePaneCollapse,
-      horizontal: this.props.horizontal
+      collapsed: !endPanelCollapsed,
+      handleClick: togglePaneCollapse,
+      horizontal: horizontal
     });
-  }
-
-  getSourceAnnotation(source) {
-    const sourceId = source.get("id");
-    const sourceMetaData = this.props.sourceTabsMetaData[sourceId];
-
-    if (sourceMetaData && sourceMetaData.isReactComponent) {
-      return _react2.default.createElement("img", { className: "react" });
-    }
-    if ((0, _source.isPretty)(source)) {
-      return _react2.default.createElement("img", { className: "prettyPrint" });
-    }
-    if (source.get("isBlackBoxed")) {
-      return _react2.default.createElement("img", { className: "blackBox" });
-    }
   }
 
   render() {
@@ -43105,22 +41933,11 @@ class SourceTabs extends _react.PureComponent {
 }
 
 exports.default = (0, _reactRedux.connect)(state => {
-  const sourceTabs = (0, _selectors.getSourcesForTabs)(state);
-  const sourceTabsMetaData = {};
-  sourceTabs.forEach(source => {
-    const sourceId = source ? source.get("id") : "";
-    sourceTabsMetaData[sourceId] = (0, _selectors.getSourceMetaData)(state, sourceId);
-  });
-
   return {
     selectedSource: (0, _selectors.getSelectedSource)(state),
-    searchTabs: (0, _selectors.getSearchTabs)(state),
-    sourceTabs: sourceTabs,
-    activeSearch: (0, _selectors.getActiveSearch)(state),
-    searchOn: (0, _selectors.getActiveSearch)(state) === "source",
-    sourceTabsMetaData: sourceTabsMetaData
+    tabSources: (0, _selectors.getSourcesForTabs)(state)
   };
-}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(SourceTabs);
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tabs);
 
 /***/ }),
 /* 1615 */
@@ -43132,6 +41949,7 @@ exports.default = (0, _reactRedux.connect)(state => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Dropdown = undefined;
 
 var _react = __webpack_require__(0);
 
@@ -43146,23 +41964,20 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Dropdown extends _react.Component {
-
   constructor(props) {
     super(props);
+
+    this.toggleDropdown = e => {
+      this.setState({
+        dropdownShown: !this.state.dropdownShown
+      });
+    };
+
     this.state = {
       dropdownShown: false
     };
 
     this.toggleDropdown = this.toggleDropdown.bind(this);
-    this.renderPanel = this.renderPanel.bind(this);
-    this.renderButton = this.renderButton.bind(this);
-    this.renderMask = this.renderMask.bind(this);
-  }
-
-  toggleDropdown(e) {
-    this.setState({
-      dropdownShown: !this.state.dropdownShown
-    });
   }
 
   renderPanel() {
@@ -43204,6 +42019,7 @@ class Dropdown extends _react.Component {
   }
 }
 
+exports.Dropdown = Dropdown;
 exports.default = Dropdown;
 
 /***/ }),
@@ -43663,12 +42479,12 @@ Object.defineProperty(exports, "mapFrames", {
   }
 });
 
-var _loadObjectProperties = __webpack_require__(1644);
+var _setPopupObjectProperties = __webpack_require__(2008);
 
-Object.defineProperty(exports, "loadObjectProperties", {
+Object.defineProperty(exports, "setPopupObjectProperties", {
   enumerable: true,
   get: function () {
-    return _loadObjectProperties.loadObjectProperties;
+    return _setPopupObjectProperties.setPopupObjectProperties;
   }
 });
 
@@ -43865,46 +42681,7 @@ function breakOnNext() {
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
-/* 1644 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.loadObjectProperties = loadObjectProperties;
-
-var _promise = __webpack_require__(1653);
-
-var _selectors = __webpack_require__(1352);
-
-/**
- * @memberof actions/pause
- * @static
- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function loadObjectProperties(object) {
-  return ({ dispatch, client, getState }) => {
-    const objectId = object.actor || object.objectId;
-
-    if ((0, _selectors.getLoadedObject)(getState(), objectId)) {
-      return;
-    }
-
-    dispatch({
-      type: "LOAD_OBJECT_PROPERTIES",
-      objectId,
-      [_promise.PROMISE]: client.getProperties(object)
-    });
-  };
-}
-
-/***/ }),
+/* 1644 */,
 /* 1645 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44747,7 +43524,7 @@ exports.log = log;
 
 var _devtoolsConfig = __webpack_require__(1355);
 
-const blacklist = ["LOAD_OBJECT_PROPERTIES", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS"];
+const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS"];
 
 function cloneAction(action) {
   action = action || {};
@@ -46039,7 +44816,9 @@ __webpack_require__(1788);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; } /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                              * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                              * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const CommandBarButton = props => {
   const { children, className, pressed = false } = props,
@@ -48039,207 +46818,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 1789 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-var _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];for (var key in source) {
-            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                target[key] = source[key];
-            }
-        }
-    }return target;
-};
-
-var _createClass = function () {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }return function (Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-    };
-}();
-
-var _get = function get(_x, _x2, _x3) {
-    var _again = true;_function: while (_again) {
-        var object = _x,
-            property = _x2,
-            receiver = _x3;_again = false;if (object === null) object = Function.prototype;var desc = Object.getOwnPropertyDescriptor(object, property);if (desc === undefined) {
-            var parent = Object.getPrototypeOf(object);if (parent === null) {
-                return undefined;
-            } else {
-                _x = parent;_x2 = property;_x3 = receiver;_again = true;desc = parent = undefined;continue _function;
-            }
-        } else if ('value' in desc) {
-            return desc.value;
-        } else {
-            var getter = desc.get;if (getter === undefined) {
-                return undefined;
-            }return getter.call(receiver);
-        }
-    }
-};
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
-
-function _objectWithoutProperties(obj, keys) {
-    var target = {};for (var i in obj) {
-        if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
-    }return target;
-}
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError('Cannot call a class as a function');
-    }
-}
-
-function _inherits(subClass, superClass) {
-    if (typeof superClass !== 'function' && superClass !== null) {
-        throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
-    }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var DOMParser = typeof window !== 'undefined' && window.DOMParser;
-var process = process || {};
-process.env = process.env || {};
-var parserAvailable = typeof DOMParser !== 'undefined' && DOMParser.prototype != null && DOMParser.prototype.parseFromString != null;
-
-function isParsable(src) {
-    // kinda naive but meh, ain't gonna use full-blown parser for this
-    return parserAvailable && typeof src === 'string' && src.trim().substr(0, 4) === '<svg';
-}
-
-// parse SVG string using `DOMParser`
-function parseFromSVGString(src) {
-    var parser = new DOMParser();
-    return parser.parseFromString(src, "image/svg+xml");
-}
-
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-function switchSVGAttrToReactProp(propName) {
-    switch (propName) {
-        case 'class':
-            return 'className';
-        default:
-            return propName;
-    }
-}
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    _createClass(InlineSVG, null, [{
-        key: 'defaultProps',
-        value: {
-            element: 'i',
-            raw: false,
-            src: ''
-        },
-        enumerable: true
-    }, {
-        key: 'propTypes',
-        value: {
-            src: _react2['default'].PropTypes.string.isRequired,
-            element: _react2['default'].PropTypes.string,
-            raw: _react2['default'].PropTypes.bool
-        },
-        enumerable: true
-    }]);
-
-    function InlineSVG(props) {
-        _classCallCheck(this, InlineSVG);
-
-        _get(Object.getPrototypeOf(InlineSVG.prototype), 'constructor', this).call(this, props);
-        this._extractSVGProps = this._extractSVGProps.bind(this);
-    }
-
-    // Serialize `Attr` objects in `NamedNodeMap`
-
-    _createClass(InlineSVG, [{
-        key: '_serializeAttrs',
-        value: function _serializeAttrs(map) {
-            var ret = {};
-            var prop = undefined;
-            for (var i = 0; i < map.length; i++) {
-                prop = switchSVGAttrToReactProp(map[i].name);
-                ret[prop] = map[i].value;
-            }
-            return ret;
-        }
-
-        // get <svg /> element props
-    }, {
-        key: '_extractSVGProps',
-        value: function _extractSVGProps(src) {
-            var map = parseFromSVGString(src).documentElement.attributes;
-            return map.length > 0 ? this._serializeAttrs(map) : null;
-        }
-
-        // get content inside <svg> element.
-    }, {
-        key: '_stripSVG',
-        value: function _stripSVG(src) {
-            return parseFromSVGString(src).documentElement.innerHTML;
-        }
-    }, {
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = undefined,
-                __html = undefined,
-                svgProps = undefined;
-            var _props = this.props;
-            var element = _props.element;
-            var raw = _props.raw;
-            var src = _props.src;
-
-            var otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true && isParsable(src)) {
-                Element = 'svg';
-                svgProps = this._extractSVGProps(src);
-                __html = this._stripSVG(src);
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2['default'].createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2['default'].Component);
-
-exports['default'] = InlineSVG;
-module.exports = exports['default'];
-
-/***/ }),
+/* 1789 */,
 /* 1790 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -49160,9 +47739,7 @@ var _prettyPrint = __webpack_require__(1798);
 
 var _sources = __webpack_require__(1797);
 
-var _source2 = __webpack_require__(1356);
-
-var _prefs = __webpack_require__(226);
+var _source = __webpack_require__(1356);
 
 var _selectors = __webpack_require__(1352);
 
@@ -49220,10 +47797,10 @@ function checkSelectedSource(source) {
     }
 
     const pendingUrl = pendingLocation.url;
-    const rawPendingUrl = (0, _source2.getRawSourceURL)(pendingUrl);
+    const rawPendingUrl = (0, _source.getRawSourceURL)(pendingUrl);
 
     if (rawPendingUrl === source.url) {
-      if ((0, _source2.isPrettyURL)(pendingUrl)) {
+      if ((0, _source.isPrettyURL)(pendingUrl)) {
         return await dispatch((0, _prettyPrint.togglePrettyPrint)(source.id));
       }
 
@@ -49259,20 +47836,8 @@ function checkPendingBreakpoints(sourceId) {
  * @static
  */
 function newSource(source) {
-  return async ({ dispatch, getState }) => {
-    const _source = (0, _selectors.getSource)(getState(), source.id);
-    if (_source) {
-      return;
-    }
-
-    dispatch({ type: "ADD_SOURCE", source });
-
-    if (_prefs.prefs.clientSourceMapsEnabled) {
-      dispatch(loadSourceMap(source));
-    }
-
-    dispatch(checkSelectedSource(source));
-    dispatch(checkPendingBreakpoints(source.id));
+  return async ({ dispatch }) => {
+    await dispatch(newSources([source]));
   };
 }
 
@@ -49843,6 +48408,2565 @@ function isReactComponent(result) {
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 256 247\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" preserveAspectRatio=\"xMidYMid\"><defs><radialGradient cx=\"78.7636112%\" cy=\"37.8476394%\" fx=\"78.7636112%\" fy=\"37.8476394%\" r=\"89.8725577%\" id=\"radialGradient-1\"><stop stop-color=\"#F80090\" offset=\"0%\"></stop><stop stop-color=\"#4D008E\" offset=\"100%\"></stop></radialGradient><radialGradient cx=\"68.7389016%\" cy=\"4.39833672%\" fx=\"68.7389016%\" fy=\"4.39833672%\" r=\"81.7284786%\" id=\"radialGradient-2\"><stop stop-color=\"#57008E\" offset=\"0%\"></stop><stop stop-color=\"#5C008E\" offset=\"29.1746283%\"></stop><stop stop-color=\"#F80090\" offset=\"100%\"></stop></radialGradient><linearGradient x1=\"18.2386532%\" y1=\"0%\" x2=\"81.1591125%\" y2=\"84.3374763%\" id=\"linearGradient-3\"><stop stop-color=\"#F70090\" offset=\"0%\"></stop><stop stop-color=\"#E50090\" offset=\"66.9712865%\"></stop><stop stop-color=\"#D6008F\" stop-opacity=\"0.2\" offset=\"82.7147533%\"></stop><stop stop-color=\"#C10090\" stop-opacity=\"0\" offset=\"100%\"></stop></linearGradient><linearGradient x1=\"64.9060589%\" y1=\"71.5585538%\" x2=\"44.2897699%\" y2=\"50%\" id=\"linearGradient-4\"><stop stop-color=\"#B2008F\" stop-opacity=\"0.151340138\" offset=\"0%\"></stop><stop stop-color=\"#F70090\" stop-opacity=\"0.4\" offset=\"40.0350765%\"></stop><stop stop-color=\"#F60090\" stop-opacity=\"0.891668\" offset=\"64.8995536%\"></stop><stop stop-color=\"#FF0090\" offset=\"100%\"></stop></linearGradient></defs><g><path d=\"M16.6852208,157.125328 C3.56690702,87.3798324 38.2363025,20.1145078 117.808706,11.1662199 C106.835616,-0.558801732 91.8452087,-0.646905628 84.9481697,0.779380087 C72.770288,4.66044372 73.1525932,12.540855 59.3390152,22.7199675 C45.6064437,30.5634307 38.7094156,24.5568182 28.7057455,32.6879515 C18.7234849,40.7583874 25.6888528,59.2851732 21.5022823,62.8870857 C17.3464381,70.0905489 4.45500952,76.5077264 2.10834286,85.6062545 C0.168948918,97.2420641 7.37241212,105.553752 7.09535584,115.527778 C7.92652468,123.839467 -1.17920693,128.539449 0.129052814,135.275796 C4.0477368,146.281025 11.600845,152.904887 15.1615723,155.958047 C15.9781085,156.533531 16.8404881,157.95083 16.6852208,157.125328 L16.6852208,157.125328 Z\" fill=\"#FF0090\"></path><path d=\"M158.275491,60.578542 C155.368486,60.578542 153.011422,58.2214776 153.011422,55.3144727 C153.011422,52.4074679 155.368486,50.0504035 158.275491,50.0504035 C161.182496,50.0504035 163.53956,52.4074679 163.53956,55.3144727 C163.53956,58.2214776 161.182496,60.578542 158.275491,60.578542 L158.275491,60.578542 Z M19.7566405,164.732808 C7.1500258,104.116773 46.1602355,53.4676156 121.704062,78.4026805 C166.031404,104.334594 221.793282,102.646102 224.307422,85.8832 C230.514061,65.7878769 196.047681,24.3767065 144.515214,13.5715117 C42.2814476,-6.37654026 -12.8335943,104.116774 19.7566405,164.732808 L19.7566405,164.732808 Z\" fill=\"url(#radialGradient-1)\"></path><path d=\"M187.458604,171.493257 C202.639072,173.137863 217.048769,169.494573 230.402327,158.61014 C210.228197,181.112651 185.002777,192.426521 156.059262,195.505171 C169.878829,207.254019 183.20579,212.546348 195.955366,210.281136 C160.528734,220.05679 130.847947,209.296529 94.7424273,173.340673 C92.8517347,183.020022 103.074741,198.100667 113.611745,207.727264 C52.4742909,181.221845 47.1143627,98.6544556 121.66531,78.3442237 C44.3844415,41.214641 0.686373501,113.357693 22.1558444,172.485931 C43.1623368,218.026693 99.1402667,253.085223 160.492163,245.3753 C190.292928,241.7251 234.79401,221.178935 252.973664,172.485931 C240.160919,183.983766 217.257941,193.997836 207.037617,194.765984 C241.628648,177.478781 260.301586,148.103896 255.060336,107.955387 C247.895106,125.013742 238.441392,138.114625 226.616076,147.112305 C251.735653,107.955387 247.425219,87.716426 228.832526,65.4732398 C242.131228,102.044668 224.928249,142.633967 187.458604,171.493257 L187.458604,171.493257 Z\" fill=\"url(#radialGradient-2)\"></path><path d=\"M169.707072,213.625541 C167.082407,213.13513 175.656929,217.098842 159.079366,212.710316 C142.501804,208.32179 125.622502,204.092744 94.7424273,173.340673 C92.8517347,183.020022 103.074741,198.100667 113.611745,207.727264 C142.056275,227.564927 122.711866,218.286797 166.051946,233.269481 C169.52976,226.346862 169.707072,220.195346 169.707072,213.625541 L169.707072,213.625541 Z\" fill=\"url(#linearGradient-3)\"></path><path d=\"M114.601372,57.8510108 C114.601372,57.8510108 118.369452,52.2893628 119.836219,49.7810251 C121.633641,46.7072319 124.393939,41.104618 124.393939,41.104618 C124.393939,41.104618 95.389611,31.6417749 88.2716448,30.4871665 C66.1450215,36.2308801 66.0645022,45.5009559 78.435065,59.690116 C79.8114806,61.2693368 114.601372,57.8510108 114.601372,57.8510108 L114.601372,57.8510108 Z\" fill=\"url(#linearGradient-4)\"></path></g></svg>"
+
+/***/ }),
+/* 1809 */,
+/* 1810 */,
+/* 1811 */,
+/* 1812 */,
+/* 1813 */,
+/* 1814 */,
+/* 1815 */,
+/* 1816 */,
+/* 1817 */,
+/* 1818 */,
+/* 1819 */,
+/* 1820 */,
+/* 1821 */,
+/* 1822 */,
+/* 1823 */,
+/* 1824 */,
+/* 1825 */,
+/* 1826 */,
+/* 1827 */,
+/* 1828 */,
+/* 1829 */,
+/* 1830 */,
+/* 1831 */,
+/* 1832 */,
+/* 1833 */,
+/* 1834 */,
+/* 1835 */,
+/* 1836 */,
+/* 1837 */,
+/* 1838 */,
+/* 1839 */,
+/* 1840 */,
+/* 1841 */,
+/* 1842 */,
+/* 1843 */,
+/* 1844 */,
+/* 1845 */,
+/* 1846 */,
+/* 1847 */,
+/* 1848 */,
+/* 1849 */,
+/* 1850 */,
+/* 1851 */,
+/* 1852 */,
+/* 1853 */,
+/* 1854 */,
+/* 1855 */,
+/* 1856 */,
+/* 1857 */,
+/* 1858 */,
+/* 1859 */,
+/* 1860 */,
+/* 1861 */,
+/* 1862 */,
+/* 1863 */,
+/* 1864 */,
+/* 1865 */,
+/* 1866 */,
+/* 1867 */,
+/* 1868 */,
+/* 1869 */,
+/* 1870 */,
+/* 1871 */,
+/* 1872 */,
+/* 1873 */,
+/* 1874 */,
+/* 1875 */,
+/* 1876 */,
+/* 1877 */,
+/* 1878 */,
+/* 1879 */,
+/* 1880 */,
+/* 1881 */,
+/* 1882 */,
+/* 1883 */,
+/* 1884 */,
+/* 1885 */,
+/* 1886 */,
+/* 1887 */,
+/* 1888 */,
+/* 1889 */,
+/* 1890 */,
+/* 1891 */,
+/* 1892 */,
+/* 1893 */,
+/* 1894 */,
+/* 1895 */,
+/* 1896 */,
+/* 1897 */,
+/* 1898 */,
+/* 1899 */,
+/* 1900 */,
+/* 1901 */,
+/* 1902 */,
+/* 1903 */,
+/* 1904 */,
+/* 1905 */,
+/* 1906 */,
+/* 1907 */,
+/* 1908 */,
+/* 1909 */,
+/* 1910 */,
+/* 1911 */,
+/* 1912 */,
+/* 1913 */,
+/* 1914 */,
+/* 1915 */,
+/* 1916 */,
+/* 1917 */,
+/* 1918 */,
+/* 1919 */,
+/* 1920 */,
+/* 1921 */,
+/* 1922 */,
+/* 1923 */,
+/* 1924 */,
+/* 1925 */,
+/* 1926 */,
+/* 1927 */,
+/* 1928 */,
+/* 1929 */,
+/* 1930 */,
+/* 1931 */,
+/* 1932 */,
+/* 1933 */,
+/* 1934 */,
+/* 1935 */,
+/* 1936 */,
+/* 1937 */,
+/* 1938 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const client = __webpack_require__(1939);
+const loadProperties = __webpack_require__(2017);
+const node = __webpack_require__(1940);
+
+module.exports = {
+  client,
+  loadProperties,
+  node
+};
+
+/***/ }),
+/* 1939 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+async function enumIndexedProperties(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumProperties({ ignoreNonIndexedProperties: true });
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumIndexedProperties", e);
+    return {};
+  }
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+async function enumNonIndexedProperties(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumProperties({ ignoreIndexedProperties: true });
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumNonIndexedProperties", e);
+    return {};
+  }
+}
+
+async function enumEntries(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumEntries();
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumEntries", e);
+    return {};
+  }
+}
+
+async function enumSymbols(objectClient, start, end) {
+  try {
+    const { iterator } = await objectClient.enumSymbols();
+    const response = await iteratorSlice(iterator, start, end);
+    return response;
+  } catch (e) {
+    console.error("Error in enumSymbols", e);
+    return {};
+  }
+}
+
+async function getPrototype(objectClient) {
+  if (typeof objectClient.getPrototype !== "function") {
+    console.error("objectClient.getPrototype is not a function");
+    return Promise.resolve({});
+  }
+  return objectClient.getPrototype();
+}
+
+function iteratorSlice(iterator, start, end) {
+  start = start || 0;
+  const count = end ? end - start + 1 : iterator.count;
+  return iterator.slice(start, count);
+}
+
+module.exports = {
+  enumEntries,
+  enumIndexedProperties,
+  enumNonIndexedProperties,
+  enumSymbols,
+  getPrototype
+};
+
+/***/ }),
+/* 1940 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const { get, has } = __webpack_require__(2);
+const { maybeEscapePropertyName } = __webpack_require__(1353);
+const ArrayRep = __webpack_require__(1448);
+const GripArrayRep = __webpack_require__(1450);
+const GripMap = __webpack_require__(1584);
+const GripMapEntryRep = __webpack_require__(1451);
+
+const MAX_NUMERICAL_PROPERTIES = 100;
+
+const NODE_TYPES = {
+  BUCKET: Symbol("[n…n]"),
+  DEFAULT_PROPERTIES: Symbol("[default properties]"),
+  ENTRIES: Symbol("<entries>"),
+  GET: Symbol("<get>"),
+  GRIP: Symbol("GRIP"),
+  MAP_ENTRY_KEY: Symbol("<key>"),
+  MAP_ENTRY_VALUE: Symbol("<value>"),
+  PROMISE_REASON: Symbol("<reason>"),
+  PROMISE_STATE: Symbol("<state>"),
+  PROMISE_VALUE: Symbol("<value>"),
+  PROXY_HANDLER: Symbol("<handler>"),
+  PROXY_TARGET: Symbol("<target>"),
+  SET: Symbol("<set>"),
+  PROTOTYPE: Symbol("__proto__")
+};
+
+let WINDOW_PROPERTIES = {};
+
+if (typeof window === "object") {
+  WINDOW_PROPERTIES = Object.getOwnPropertyNames(window);
+}
+
+const SAFE_PATH_PREFIX = "##-";
+
+function getType(item) {
+  return item.type;
+}
+
+function getValue(item) {
+  if (has(item, "contents.value")) {
+    return get(item, "contents.value");
+  }
+
+  if (has(item, "contents.getterValue")) {
+    return get(item, "contents.getterValue", undefined);
+  }
+
+  if (nodeHasAccessors(item)) {
+    return item.contents;
+  }
+
+  return undefined;
+}
+
+function nodeIsBucket(item) {
+  return getType(item) === NODE_TYPES.BUCKET;
+}
+
+function nodeIsEntries(item) {
+  return getType(item) === NODE_TYPES.ENTRIES;
+}
+
+function nodeIsMapEntry(item) {
+  return GripMapEntryRep.supportsObject(getValue(item));
+}
+
+function nodeHasChildren(item) {
+  return Array.isArray(item.contents);
+}
+
+function nodeIsObject(item) {
+  const value = getValue(item);
+  return value && value.type === "object";
+}
+
+function nodeIsArrayLike(item) {
+  const value = getValue(item);
+  return GripArrayRep.supportsObject(value) || ArrayRep.supportsObject(value);
+}
+
+function nodeIsFunction(item) {
+  const value = getValue(item);
+  return value && value.class === "Function";
+}
+
+function nodeIsOptimizedOut(item) {
+  const value = getValue(item);
+  return !nodeHasChildren(item) && value && value.optimizedOut;
+}
+
+function nodeIsMissingArguments(item) {
+  const value = getValue(item);
+  return !nodeHasChildren(item) && value && value.missingArguments;
+}
+
+function nodeHasProperties(item) {
+  return !nodeHasChildren(item) && nodeIsObject(item);
+}
+
+function nodeIsPrimitive(item) {
+  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeIsEntries(item) && !nodeIsMapEntry(item) && !nodeHasAccessors(item) && !nodeIsBucket(item);
+}
+
+function nodeIsDefaultProperties(item) {
+  return getType(item) === NODE_TYPES.DEFAULT_PROPERTIES;
+}
+
+function isDefaultWindowProperty(name) {
+  return WINDOW_PROPERTIES.includes(name);
+}
+
+function nodeIsPromise(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class == "Promise";
+}
+
+function nodeIsProxy(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class == "Proxy";
+}
+
+function nodeIsPrototype(item) {
+  return getType(item) === NODE_TYPES.PROTOTYPE;
+}
+
+function nodeIsWindow(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class == "Window";
+}
+
+function nodeIsGetter(item) {
+  return getType(item) === NODE_TYPES.GET;
+}
+
+function nodeIsSetter(item) {
+  return getType(item) === NODE_TYPES.SET;
+}
+
+function nodeHasAccessors(item) {
+  return !!getNodeGetter(item) || !!getNodeSetter(item);
+}
+
+function nodeSupportsNumericalBucketing(item) {
+  // We exclude elements with entries since it's the <entries> node
+  // itself that can have buckets.
+  return nodeIsArrayLike(item) && !nodeHasEntries(item) || nodeIsEntries(item) || nodeIsBucket(item);
+}
+
+function nodeHasEntries(item) {
+  const value = getValue(item);
+  if (!value) {
+    return false;
+  }
+
+  return value.class === "Map" || value.class === "Set" || value.class === "WeakMap" || value.class === "WeakSet";
+}
+
+function nodeHasAllEntriesInPreview(item) {
+  const { preview } = getValue(item) || {};
+  if (!preview) {
+    return false;
+  }
+
+  const {
+    entries,
+    items,
+    length,
+    size
+  } = preview;
+
+  if (!entries && !items) {
+    return false;
+  }
+
+  return entries ? entries.length === size : items.length === length;
+}
+
+function nodeNeedsNumericalBuckets(item) {
+  return nodeSupportsNumericalBucketing(item) && getNumericalPropertiesCount(item) > MAX_NUMERICAL_PROPERTIES;
+}
+
+function makeNodesForPromiseProperties(item) {
+  const { promiseState: { reason, value, state } } = getValue(item);
+
+  const properties = [];
+
+  if (state) {
+    properties.push(createNode(item, "<state>", `${item.path}/${SAFE_PATH_PREFIX}state`, { value: state }, NODE_TYPES.PROMISE_STATE));
+  }
+
+  if (reason) {
+    properties.push(createNode(item, "<reason>", `${item.path}/${SAFE_PATH_PREFIX}reason`, { value: reason }, NODE_TYPES.PROMISE_REASON));
+  }
+
+  if (value) {
+    properties.push(createNode(item, "<value>", `${item.path}/${SAFE_PATH_PREFIX}value`, { value: value }, NODE_TYPES.PROMISE_VALUE));
+  }
+
+  return properties;
+}
+
+function makeNodesForProxyProperties(item) {
+  const {
+    proxyHandler,
+    proxyTarget
+  } = getValue(item);
+
+  return [createNode(item, "<target>", `${item.path}/${SAFE_PATH_PREFIX}target`, { value: proxyTarget }, NODE_TYPES.PROXY_TARGET), createNode(item, "<handler>", `${item.path}/${SAFE_PATH_PREFIX}handler`, { value: proxyHandler }, NODE_TYPES.PROXY_HANDLER)];
+}
+
+function makeNodesForEntries(item) {
+  const { path } = item;
+  const nodeName = "<entries>";
+  const entriesPath = `${path}/${SAFE_PATH_PREFIX}entries`;
+
+  if (nodeHasAllEntriesInPreview(item)) {
+    let entriesNodes = [];
+    const { preview } = getValue(item);
+    if (preview.entries) {
+      entriesNodes = preview.entries.map(([key, value], index) => {
+        return createNode(item, index, `${entriesPath}/${index}`, {
+          value: GripMapEntryRep.createGripMapEntry(key, value)
+        });
+      });
+    } else if (preview.items) {
+      entriesNodes = preview.items.map((value, index) => {
+        return createNode(item, index, `${entriesPath}/${index}`, { value });
+      });
+    }
+    return createNode(item, nodeName, entriesPath, entriesNodes, NODE_TYPES.ENTRIES);
+  }
+  return createNode(item, nodeName, entriesPath, null, NODE_TYPES.ENTRIES);
+}
+
+function makeNodesForMapEntry(item) {
+  const nodeValue = getValue(item);
+  if (!nodeValue || !nodeValue.preview) {
+    return [];
+  }
+
+  const { key, value } = nodeValue.preview;
+  const path = item.path;
+
+  return [createNode(item, "<key>", `${path}/##key`, { value: key }, NODE_TYPES.MAP_ENTRY_KEY), createNode(item, "<value>", `${path}/##value`, { value }, NODE_TYPES.MAP_ENTRY_VALUE)];
+}
+
+function getNodeGetter(item) {
+  return get(item, "contents.get", undefined);
+}
+
+function getNodeSetter(item) {
+  return get(item, "contents.set", undefined);
+}
+
+function makeNodesForAccessors(item) {
+  const accessors = [];
+
+  const getter = getNodeGetter(item);
+  if (getter && getter.type !== "undefined") {
+    accessors.push(createNode(item, "<get>", `${item.path}/${SAFE_PATH_PREFIX}get`, { value: getter }, NODE_TYPES.GET));
+  }
+
+  const setter = getNodeSetter(item);
+  if (setter && setter.type !== "undefined") {
+    accessors.push(createNode(item, "<set>", `${item.path}/${SAFE_PATH_PREFIX}set`, { value: setter }, NODE_TYPES.SET));
+  }
+
+  return accessors;
+}
+
+function sortProperties(properties) {
+  return properties.sort((a, b) => {
+    // Sort numbers in ascending order and sort strings lexicographically
+    const aInt = parseInt(a, 10);
+    const bInt = parseInt(b, 10);
+
+    if (isNaN(aInt) || isNaN(bInt)) {
+      return a > b ? 1 : -1;
+    }
+
+    return aInt - bInt;
+  });
+}
+
+function makeNumericalBuckets(parent) {
+  const parentPath = parent.path;
+  const numProperties = getNumericalPropertiesCount(parent);
+
+  // We want to have at most a hundred slices.
+  const bucketSize = 10 ** Math.max(2, Math.ceil(Math.log10(numProperties)) - 2);
+  const numBuckets = Math.ceil(numProperties / bucketSize);
+
+  let buckets = [];
+  for (let i = 1; i <= numBuckets; i++) {
+    const minKey = (i - 1) * bucketSize;
+    const maxKey = Math.min(i * bucketSize - 1, numProperties - 1);
+    const startIndex = nodeIsBucket(parent) ? parent.meta.startIndex : 0;
+    const minIndex = startIndex + minKey;
+    const maxIndex = startIndex + maxKey;
+    const bucketKey = `${SAFE_PATH_PREFIX}bucket_${minIndex}-${maxIndex}`;
+    const bucketName = `[${minIndex}…${maxIndex}]`;
+
+    buckets.push(createNode(parent, bucketName, `${parentPath}/${bucketKey}`, null, NODE_TYPES.BUCKET, {
+      startIndex: minIndex,
+      endIndex: maxIndex
+    }));
+  }
+  return buckets;
+}
+
+function makeDefaultPropsBucket(propertiesNames, parent, ownProperties) {
+  const parentPath = parent.path;
+
+  const userPropertiesNames = [];
+  const defaultProperties = [];
+
+  propertiesNames.forEach(name => {
+    if (isDefaultWindowProperty(name)) {
+      defaultProperties.push(name);
+    } else {
+      userPropertiesNames.push(name);
+    }
+  });
+
+  let nodes = makeNodesForOwnProps(userPropertiesNames, parent, ownProperties);
+
+  if (defaultProperties.length > 0) {
+    const defaultPropertiesNode = createNode(parent, "[default properties]", `${parentPath}/${SAFE_PATH_PREFIX}default`, null, NODE_TYPES.DEFAULT_PROPERTIES);
+
+    const defaultNodes = defaultProperties.map((name, index) => createNode(defaultPropertiesNode, maybeEscapePropertyName(name), `${parentPath}/${SAFE_PATH_PREFIX}bucket${index}/${name}`, ownProperties[name]));
+    nodes.push(setNodeChildren(defaultPropertiesNode, defaultNodes));
+  }
+  return nodes;
+}
+
+function makeNodesForOwnProps(propertiesNames, parent, ownProperties) {
+  const parentPath = parent.path;
+  return propertiesNames.map(name => createNode(parent, maybeEscapePropertyName(name), `${parentPath}/${name}`, ownProperties[name]));
+}
+
+function makeNodesForProperties(objProps, parent) {
+  const {
+    ownProperties = {},
+    ownSymbols,
+    prototype,
+    safeGetterValues
+  } = objProps;
+
+  const parentPath = parent.path;
+  const parentValue = getValue(parent);
+
+  let allProperties = Object.assign({}, ownProperties, safeGetterValues);
+
+  // Ignore properties that are neither non-concrete nor getters/setters.
+  const propertiesNames = sortProperties(Object.keys(allProperties)).filter(name => {
+    if (!allProperties[name]) {
+      return false;
+    }
+
+    const properties = Object.getOwnPropertyNames(allProperties[name]);
+    return properties.some(property => ["value", "getterValue", "get", "set"].includes(property));
+  });
+
+  let nodes = [];
+  if (parentValue && parentValue.class == "Window") {
+    nodes = makeDefaultPropsBucket(propertiesNames, parent, allProperties);
+  } else {
+    nodes = makeNodesForOwnProps(propertiesNames, parent, allProperties);
+  }
+
+  if (Array.isArray(ownSymbols)) {
+    ownSymbols.forEach((ownSymbol, index) => {
+      nodes.push(createNode(parent, ownSymbol.name, `${parentPath}/${SAFE_PATH_PREFIX}symbol-${index}`, ownSymbol.descriptor || null));
+    }, this);
+  }
+
+  if (nodeIsPromise(parent)) {
+    nodes.push(...makeNodesForPromiseProperties(parent));
+  }
+
+  if (nodeHasEntries(parent)) {
+    nodes.push(makeNodesForEntries(parent));
+  }
+
+  // Add the prototype if it exists and is not null
+  if (prototype && prototype.type !== "null") {
+    nodes.push(makeNodeForPrototype(objProps, parent));
+  }
+
+  return nodes;
+}
+
+function makeNodeForPrototype(objProps, parent) {
+  const {
+    prototype
+  } = objProps || {};
+
+  // Add the prototype if it exists and is not null
+  if (prototype && prototype.type !== "null") {
+    return createNode(parent, "__proto__", `${parent.path}/__proto__`, { value: prototype }, NODE_TYPES.PROTOTYPE);
+  }
+
+  return null;
+}
+
+function createNode(parent, name, path, contents, type = NODE_TYPES.GRIP, meta) {
+  if (contents === undefined) {
+    return null;
+  }
+
+  // The path is important to uniquely identify the item in the entire
+  // tree. This helps debugging & optimizes React's rendering of large
+  // lists. The path will be separated by property name,
+  // i.e. `{ foo: { bar: { baz: 5 }}}` will have a path of `foo/bar/baz`
+  // for the inner object.
+  return {
+    parent,
+    name,
+    path,
+    contents,
+    type,
+    meta
+  };
+}
+
+function setNodeChildren(node, children) {
+  node.contents = children;
+  return node;
+}
+
+function getChildren(options) {
+  const {
+    cachedNodes,
+    loadedProperties = new Map(),
+    item
+  } = options;
+
+  const key = item.path;
+  if (cachedNodes && cachedNodes.has(key)) {
+    return cachedNodes.get(key);
+  }
+
+  const loadedProps = loadedProperties.get(key);
+  const {
+    ownProperties,
+    ownSymbols,
+    safeGetterValues,
+    prototype
+  } = loadedProps || {};
+  const hasLoadedProps = ownProperties || ownSymbols || safeGetterValues || prototype;
+
+  // Because we are dynamically creating the tree as the user
+  // expands it (not precalculated tree structure), we cache child
+  // arrays. This not only helps performance, but is necessary
+  // because the expanded state depends on instances of nodes
+  // being the same across renders. If we didn't do this, each
+  // node would be a new instance every render.
+  // If the node needs properties, we only add children to
+  // the cache if the properties are loaded.
+  const addToCache = children => {
+    if (cachedNodes) {
+      cachedNodes.set(item.path, children);
+    }
+    return children;
+  };
+
+  // Nodes can either have children already, or be an object with
+  // properties that we need to go and fetch.
+  if (nodeHasChildren(item)) {
+    return addToCache(item.contents);
+  }
+
+  if (nodeHasAccessors(item)) {
+    return addToCache(makeNodesForAccessors(item));
+  }
+
+  if (nodeIsMapEntry(item)) {
+    return addToCache(makeNodesForMapEntry(item));
+  }
+
+  if (nodeIsProxy(item)) {
+    const nodes = makeNodesForProxyProperties(item);
+    const protoNode = makeNodeForPrototype(loadedProps, item);
+    if (protoNode) {
+      return addToCache(nodes.concat(protoNode));
+    }
+    return nodes;
+  }
+
+  if (nodeNeedsNumericalBuckets(item)) {
+    const bucketNodes = makeNumericalBuckets(item);
+    // Even if we have numerical buckets, we might have loaded non indexed properties,
+    // like length for example.
+    if (hasLoadedProps) {
+      return addToCache(bucketNodes.concat(makeNodesForProperties(loadedProps, item)));
+    }
+
+    // We don't cache the result here so we can have the prototype, properties and symbols
+    // when they are loaded.
+    return bucketNodes;
+  }
+
+  if (!nodeIsEntries(item) && !nodeIsBucket(item) && !nodeHasProperties(item)) {
+    return [];
+  }
+
+  if (!hasLoadedProps) {
+    return [];
+  }
+
+  return addToCache(makeNodesForProperties(loadedProps, item));
+}
+
+function getParent(item) {
+  return item.parent;
+}
+
+function getNumericalPropertiesCount(item) {
+  if (nodeIsBucket(item)) {
+    return item.meta.endIndex - item.meta.startIndex + 1;
+  }
+
+  const value = getValue(getClosestGripNode(item));
+  if (!value) {
+    return 0;
+  }
+
+  if (GripArrayRep.supportsObject(value)) {
+    return GripArrayRep.getLength(value);
+  }
+
+  if (GripMap.supportsObject(value)) {
+    return GripMap.getLength(value);
+  }
+
+  // TODO: We can also have numerical properties on Objects, but at the
+  // moment we don't have a way to distinguish them from non-indexed properties,
+  // as they are all computed in a ownPropertiesLength property.
+
+  return 0;
+}
+
+function getClosestGripNode(item) {
+  const type = getType(item);
+  if (type !== NODE_TYPES.BUCKET && type !== NODE_TYPES.DEFAULT_PROPERTIES && type !== NODE_TYPES.ENTRIES) {
+    return item;
+  }
+
+  const parent = getParent(item);
+  if (!parent) {
+    return null;
+  }
+
+  return getClosestGripNode(parent);
+}
+
+function getClosestNonBucketNode(item) {
+  const type = getType(item);
+
+  if (type !== NODE_TYPES.BUCKET) {
+    return item;
+  }
+
+  const parent = getParent(item);
+  if (!parent) {
+    return null;
+  }
+
+  return getClosestNonBucketNode(parent);
+}
+
+module.exports = {
+  createNode,
+  getChildren,
+  getClosestGripNode,
+  getClosestNonBucketNode,
+  getParent,
+  getNumericalPropertiesCount,
+  getValue,
+  makeNodesForEntries,
+  makeNodesForPromiseProperties,
+  makeNodesForProperties,
+  makeNumericalBuckets,
+  nodeHasAccessors,
+  nodeHasAllEntriesInPreview,
+  nodeHasChildren,
+  nodeHasEntries,
+  nodeHasProperties,
+  nodeIsBucket,
+  nodeIsDefaultProperties,
+  nodeIsEntries,
+  nodeIsFunction,
+  nodeIsGetter,
+  nodeIsMapEntry,
+  nodeIsMissingArguments,
+  nodeIsObject,
+  nodeIsOptimizedOut,
+  nodeIsPrimitive,
+  nodeIsPromise,
+  nodeIsPrototype,
+  nodeIsProxy,
+  nodeIsSetter,
+  nodeIsWindow,
+  nodeNeedsNumericalBuckets,
+  nodeSupportsNumericalBucketing,
+  setNodeChildren,
+  sortProperties,
+  NODE_TYPES,
+  // Export for testing purpose.
+  SAFE_PATH_PREFIX
+};
+
+/***/ }),
+/* 1941 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getHiddenTabs = getHiddenTabs;
+exports.getSourceAnnotation = getSourceAnnotation;
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _source = __webpack_require__(1356);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/*
+ * Finds the hidden tabs by comparing the tabs' top offset.
+ * hidden tabs will have a great top offset.
+ *
+ * @param sourceTabs Immutable.list
+ * @param sourceTabEls HTMLCollection
+ *
+ * @returns Immutable.list
+ */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function getHiddenTabs(sourceTabs, sourceTabEls) {
+  sourceTabEls = [].slice.call(sourceTabEls);
+  function getTopOffset() {
+    const topOffsets = sourceTabEls.map(t => t.getBoundingClientRect().top);
+    return Math.min(...topOffsets);
+  }
+
+  function hasTopOffset(el) {
+    // adding 10px helps account for cases where the tab might be offset by
+    // styling such as selected tabs which don't have a border.
+    const tabTopOffset = getTopOffset();
+    return el.getBoundingClientRect().top > tabTopOffset + 10;
+  }
+
+  return sourceTabs.filter((tab, index) => {
+    const element = sourceTabEls[index];
+    return element && hasTopOffset(element);
+  });
+}
+
+function getSourceAnnotation(source, getMetaData) {
+  const sourceId = source.get("id");
+  const sourceMetaData = getMetaData(sourceId);
+
+  if (sourceMetaData && sourceMetaData.isReactComponent) {
+    return _react2.default.createElement("img", { className: "react" });
+  }
+  if ((0, _source.isPretty)(source)) {
+    return _react2.default.createElement("img", { className: "prettyPrint" });
+  }
+  if (source.get("isBlackBoxed")) {
+    return _react2.default.createElement("img", { className: "blackBox" });
+  }
+}
+
+/***/ }),
+/* 1942 */,
+/* 1943 */,
+/* 1944 */,
+/* 1945 */,
+/* 1946 */,
+/* 1947 */,
+/* 1948 */,
+/* 1949 */,
+/* 1950 */,
+/* 1951 */,
+/* 1952 */,
+/* 1953 */,
+/* 1954 */,
+/* 1955 */,
+/* 1956 */,
+/* 1957 */,
+/* 1958 */,
+/* 1959 */,
+/* 1960 */,
+/* 1961 */,
+/* 1962 */,
+/* 1963 */,
+/* 1964 */,
+/* 1965 */,
+/* 1966 */,
+/* 1967 */,
+/* 1968 */,
+/* 1969 */,
+/* 1970 */,
+/* 1971 */,
+/* 1972 */,
+/* 1973 */,
+/* 1974 */,
+/* 1975 */,
+/* 1976 */,
+/* 1977 */,
+/* 1978 */,
+/* 1979 */,
+/* 1980 */,
+/* 1981 */,
+/* 1982 */,
+/* 1983 */,
+/* 1984 */,
+/* 1985 */,
+/* 1986 */,
+/* 1987 */,
+/* 1988 */,
+/* 1989 */,
+/* 1990 */,
+/* 1991 */,
+/* 1992 */,
+/* 1993 */,
+/* 1994 */,
+/* 1995 */,
+/* 1996 */,
+/* 1997 */,
+/* 1998 */,
+/* 1999 */,
+/* 2000 */,
+/* 2001 */,
+/* 2002 */,
+/* 2003 */,
+/* 2004 */,
+/* 2005 */,
+/* 2006 */,
+/* 2007 */,
+/* 2008 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setPopupObjectProperties = setPopupObjectProperties;
+
+var _selectors = __webpack_require__(1352);
+
+/**
+ * @memberof actions/pause
+ * @static
+ */
+function setPopupObjectProperties(object, properties) {
+  return ({ dispatch, client, getState }) => {
+    const objectId = object.actor || object.objectId;
+
+    if ((0, _selectors.getPopupObjectProperties)(getState(), object.actor)) {
+      return;
+    }
+
+    dispatch({
+      type: "SET_POPUP_OBJECT_PROPERTIES",
+      objectId,
+      properties
+    });
+  };
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/***/ }),
+/* 2009 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ProjectSearch = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+var _propTypes = __webpack_require__(20);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(1189);
+
+var _classnames = __webpack_require__(175);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _redux = __webpack_require__(3);
+
+var _actions = __webpack_require__(1354);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _projectSearch = __webpack_require__(2010);
+
+var _projectTextSearch = __webpack_require__(1424);
+
+var _sourcesTree = __webpack_require__(1442);
+
+var _selectors = __webpack_require__(1352);
+
+var _Svg = __webpack_require__(1359);
+
+var _Svg2 = _interopRequireDefault(_Svg);
+
+var _ManagedTree = __webpack_require__(1404);
+
+var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
+
+var _SearchInput = __webpack_require__(1379);
+
+var _SearchInput2 = _interopRequireDefault(_SearchInput);
+
+__webpack_require__(2011);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getFilePath(item, index) {
+  return item.type === "RESULT" ? `${item.sourceId}-${index || "$"}` : `${item.sourceId}-${item.line}-${item.column}-${index || "$"}`;
+}
+
+class ProjectSearch extends _react.Component {
+  constructor(props) {
+    super(props);
+
+    this.toggleProjectTextSearch = (key, e) => {
+      const { closeProjectSearch, setActiveSearch } = this.props;
+      if (e) {
+        e.preventDefault();
+      }
+
+      if (this.isProjectSearchEnabled()) {
+        return closeProjectSearch();
+      }
+      return setActiveSearch("project");
+    };
+
+    this.isProjectSearchEnabled = () => this.props.activeSearch === "project";
+
+    this.selectMatchItem = matchItem => {
+      this.props.selectLocation(_extends({}, matchItem));
+    };
+
+    this.getResults = () => {
+      const { results } = this.props;
+      return results.toJS().map(result => _extends({
+        type: "RESULT"
+      }, result, {
+        matches: result.matches.map(m => _extends({ type: "MATCH" }, m))
+      })).filter(result => result.filepath && result.matches.length > 0);
+    };
+
+    this.getResultCount = () => this.getResults().reduce((count, file) => count + file.matches.length, 0);
+
+    this.onKeyDown = e => {
+      if (e.key === "Escape") {
+        return;
+      }
+
+      e.stopPropagation();
+
+      if (e.key !== "Enter") {
+        return;
+      }
+      this.focusedItem = null;
+      this.props.searchSources(this.state.inputValue);
+    };
+
+    this.onEnterPress = () => {
+      if (this.focusedItem && !this.state.inputFocused) {
+        const { setExpanded, file, expanded, match } = this.focusedItem;
+        if (setExpanded) {
+          setExpanded(file, !expanded);
+        } else if (match) {
+          this.selectMatchItem(match);
+        }
+      }
+    };
+
+    this.inputOnChange = e => {
+      const inputValue = e.target.value;
+      this.setState({ inputValue });
+    };
+
+    this.renderFile = (file, focused, expanded, setExpanded) => {
+      if (focused) {
+        this.focusedItem = { setExpanded, file, expanded };
+      }
+
+      const matchesLength = file.matches.length;
+      const matches = ` (${matchesLength} match${matchesLength > 1 ? "es" : ""})`;
+
+      return _react2.default.createElement(
+        "div",
+        {
+          className: (0, _classnames2.default)("file-result", { focused }),
+          key: file.sourceId,
+          onClick: e => setExpanded(file, !expanded)
+        },
+        _react2.default.createElement(_Svg2.default, { name: "arrow", className: (0, _classnames2.default)({ expanded }) }),
+        _react2.default.createElement("img", { className: "file" }),
+        _react2.default.createElement(
+          "span",
+          { className: "file-path" },
+          (0, _sourcesTree.getRelativePath)(file.filepath)
+        ),
+        _react2.default.createElement(
+          "span",
+          { className: "matches-summary" },
+          matches
+        )
+      );
+    };
+
+    this.renderMatch = (match, focused) => {
+      if (focused) {
+        this.focusedItem = { match };
+      }
+      return _react2.default.createElement(
+        "div",
+        {
+          className: (0, _classnames2.default)("result", { focused }),
+          onClick: () => setTimeout(() => this.selectMatchItem(match), 50)
+        },
+        _react2.default.createElement(
+          "span",
+          { className: "line-number", key: match.line },
+          match.line
+        ),
+        (0, _projectSearch.highlightMatches)(match)
+      );
+    };
+
+    this.renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
+      if (item.type === "RESULT") {
+        return this.renderFile(item, focused, expanded, setExpanded);
+      }
+      return this.renderMatch(item, focused);
+    };
+
+    this.renderResults = () => {
+      const results = this.getResults();
+      const { status } = this.props;
+      if (results.length && status === _projectTextSearch.statusType.done) {
+        return _react2.default.createElement(_ManagedTree2.default, {
+          getRoots: () => results,
+          getChildren: file => file.matches || [],
+          itemHeight: 24,
+          autoExpandAll: true,
+          autoExpandDepth: 1,
+          getParent: item => null,
+          getPath: getFilePath,
+          renderItem: this.renderItem
+        });
+      }
+      if (status === _projectTextSearch.statusType.fetching || this.props.query && !results.length) {
+        return _react2.default.createElement(
+          "div",
+          { className: "no-result-msg absolute-center" },
+          L10N.getStr("projectTextSearch.noResults")
+        );
+      }
+    };
+
+    this.renderSummary = () => this.props.query !== "" ? L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount()) : "";
+
+    this.state = {
+      inputValue: this.props.query || "",
+      inputFocused: false
+    };
+  }
+
+  componentDidMount() {
+    const { shortcuts } = this.context;
+
+    shortcuts.on(L10N.getStr("projectTextSearch.key"), this.toggleProjectTextSearch);
+    shortcuts.on("Enter", this.onEnterPress);
+  }
+
+  componentWillUnmount() {
+    const { shortcuts } = this.context;
+    shortcuts.off(L10N.getStr("projectTextSearch.key"), this.toggleProjectTextSearch);
+    shortcuts.off("Enter", this.onEnterPress);
+  }
+
+  renderInput() {
+    return _react2.default.createElement(_SearchInput2.default, {
+      query: this.state.inputValue,
+      count: this.getResultCount(),
+      placeholder: L10N.getStr("projectTextSearch.placeholder"),
+      size: "big",
+      summaryMsg: this.renderSummary(),
+      onChange: this.inputOnChange,
+      onFocus: () => this.setState({ inputFocused: true }),
+      onBlur: () => this.setState({ inputFocused: false }),
+      onKeyDown: this.onKeyDown,
+      handleClose: this.props.closeProjectSearch,
+      ref: "searchInput"
+    });
+  }
+
+  render() {
+    if (!this.isProjectSearchEnabled()) {
+      return null;
+    }
+
+    return _react2.default.createElement(
+      "div",
+      { className: "search-container" },
+      _react2.default.createElement(
+        "div",
+        { className: "project-text-search" },
+        _react2.default.createElement(
+          "div",
+          { className: "header" },
+          this.renderInput()
+        ),
+        this.renderResults()
+      )
+    );
+  }
+}
+exports.ProjectSearch = ProjectSearch;
+ProjectSearch.contextTypes = {
+  shortcuts: _propTypes2.default.object
+};
+
+exports.default = (0, _reactRedux.connect)(state => ({
+  sources: (0, _selectors.getSources)(state),
+  activeSearch: (0, _selectors.getActiveSearch)(state),
+  results: (0, _selectors.getTextSearchResults)(state),
+  query: (0, _selectors.getTextSearchQuery)(state),
+  status: (0, _selectors.getTextSearchStatus)(state)
+}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ProjectSearch);
+
+/***/ }),
+/* 2010 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.highlightMatches = highlightMatches;
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function highlightMatches(lineMatch) {
+  const { value, column, match } = lineMatch;
+  const len = match.length;
+
+  return _react2.default.createElement(
+    "span",
+    { className: "line-value" },
+    _react2.default.createElement(
+      "span",
+      { className: "line-match", key: 0 },
+      value.slice(0, column)
+    ),
+    _react2.default.createElement(
+      "span",
+      { className: "query-match", key: 1 },
+      value.substr(column, len)
+    ),
+    _react2.default.createElement(
+      "span",
+      { className: "line-match", key: 2 },
+      value.slice(column + len, value.length)
+    )
+  );
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// Maybe reuse file search's functions?
+
+/***/ }),
+/* 2011 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 2012 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><g stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" stroke-linecap=\"round\"><g id=\"arrow\" transform=\"translate(1.000000, 3.000000)\"><path d=\"M4.5,0.5 L6.5,2.5\"></path><path d=\"M4.5,2.5 L6.5,4.5\" transform=\"translate(5.500000, 3.500000) scale(1, -1) translate(-5.500000, -3.500000) \"></path><path d=\"M6.00090144,2.5 C4.67806937,2.5 3.67938478,2.5 3.00484766,2.5 C1.99304199,2.5 1.01049805,3.5168457 0.993840144,4.52403846 C0.988750751,4.54723808 0.988750751,5.87097168 0.993840144,8.49523926\" id=\"Path-2\" stroke-linejoin=\"round\"></path></g><g id=\"content-lines\" transform=\"translate(9.000000, 2.000000)\"><path d=\"M1.5,3.5 L5.5,3.5\"></path><path d=\"M0.5,1.5 L5.5,1.5\"></path><path d=\"M0.5,5.5 L5.5,5.5\"></path></g></g></svg>"
+
+/***/ }),
+/* 2013 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _tree = __webpack_require__(2014);
+
+var _tree2 = _interopRequireDefault(_tree);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  Tree: _tree2.default
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/***/ }),
+/* 2014 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDomFactories = __webpack_require__(1758);
+
+var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
+
+var _propTypes = __webpack_require__(20);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _svgInlineReact = __webpack_require__(1763);
+
+var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
+
+var _arrow = __webpack_require__(2015);
+
+var _arrow2 = _interopRequireDefault(_arrow);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const { Component, createFactory, createElement } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+__webpack_require__(2016);
+
+const AUTO_EXPAND_DEPTH = 0; // depth
+
+/**
+ * An arrow that displays whether its node is expanded (▼) or collapsed
+ * (▶). When its node has no children, it is hidden.
+ */
+class ArrowExpander extends Component {
+  static get propTypes() {
+    return {
+      expanded: _propTypes2.default.bool
+    };
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.props.expanded !== nextProps.expanded;
+  }
+
+  render() {
+    const {
+      expanded
+    } = this.props;
+
+    const classNames = ["arrow"];
+    if (expanded) {
+      classNames.push("expanded");
+    }
+    return createElement(_svgInlineReact2.default, {
+      className: classNames.join(" "),
+      src: _arrow2.default
+    });
+  }
+}
+
+const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
+
+class TreeNode extends Component {
+  static get propTypes() {
+    return {
+      id: _propTypes2.default.any.isRequired,
+      index: _propTypes2.default.number.isRequired,
+      depth: _propTypes2.default.number.isRequired,
+      focused: _propTypes2.default.bool.isRequired,
+      expanded: _propTypes2.default.bool.isRequired,
+      item: _propTypes2.default.any.isRequired,
+      isExpandable: _propTypes2.default.bool.isRequired,
+      onClick: _propTypes2.default.func,
+      renderItem: _propTypes2.default.func.isRequired
+    };
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.item !== nextProps.item || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
+  }
+
+  render() {
+    const {
+      depth,
+      id,
+      item,
+      focused,
+      expanded,
+      renderItem,
+      isExpandable
+    } = this.props;
+
+    const arrow = isExpandable ? ArrowExpanderFactory({
+      item,
+      expanded
+    }) : null;
+
+    let ariaExpanded;
+    if (this.props.isExpandable) {
+      ariaExpanded = false;
+    }
+    if (this.props.expanded) {
+      ariaExpanded = true;
+    }
+
+    const indents = Array.from({ length: depth }).fill(treeIndent);
+    let items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
+
+    return _reactDomFactories2.default.div({
+      id,
+      className: "tree-node" + (focused ? " focused" : ""),
+      onClick: this.props.onClick,
+      role: "treeitem",
+      "aria-level": depth,
+      "aria-expanded": ariaExpanded,
+      "data-expandable": this.props.isExpandable
+    }, ...items);
+  }
+}
+
+const ArrowExpanderFactory = createFactory(ArrowExpander);
+const TreeNodeFactory = createFactory(TreeNode);
+
+/**
+ * Create a function that calls the given function `fn` only once per animation
+ * frame.
+ *
+ * @param {Function} fn
+ * @returns {Function}
+ */
+function oncePerAnimationFrame(fn) {
+  let animationId = null;
+  let argsToPass = null;
+  return function (...args) {
+    argsToPass = args;
+    if (animationId !== null) {
+      return;
+    }
+
+    animationId = requestAnimationFrame(() => {
+      fn.call(this, ...argsToPass);
+      animationId = null;
+      argsToPass = null;
+    });
+  };
+}
+
+/**
+ * A generic tree component. See propTypes for the public API.
+ *
+ * This tree component doesn't make any assumptions about the structure of your
+ * tree data. Whether children are computed on demand, or stored in an array in
+ * the parent's `_children` property, it doesn't matter. We only require the
+ * implementation of `getChildren`, `getRoots`, `getParent`, and `isExpanded`
+ * functions.
+ *
+ * This tree component is well tested and reliable. See the tests in ./tests
+ * and its usage in the performance and memory panels in mozilla-central.
+ *
+ * This tree component doesn't make any assumptions about how to render items in
+ * the tree. You provide a `renderItem` function, and this component will ensure
+ * that only those items whose parents are expanded and which are visible in the
+ * viewport are rendered. The `renderItem` function could render the items as a
+ * "traditional" tree or as rows in a table or anything else. It doesn't
+ * restrict you to only one certain kind of tree.
+ *
+ * The tree comes with basic styling for the indent, the arrow, as well as hovered
+ * and focused styles which can be override in CSS.
+ *
+ * ### Example Usage
+ *
+ * Suppose we have some tree data where each item has this form:
+ *
+ *     {
+ *       id: Number,
+ *       label: String,
+ *       parent: Item or null,
+ *       children: Array of child items,
+ *       expanded: bool,
+ *     }
+ *
+ * Here is how we could render that data with this component:
+ *
+ *     class MyTree extends Component {
+ *       static get propTypes() {
+ *         // The root item of the tree, with the form described above.
+ *         return {
+ *           root: PropTypes.object.isRequired
+ *         };
+ *       },
+ *
+ *       render() {
+ *         return Tree({
+ *           itemHeight: 20, // px
+ *
+ *           getRoots: () => [this.props.root],
+ *
+ *           getParent: item => item.parent,
+ *           getChildren: item => item.children,
+ *           getKey: item => item.id,
+ *           isExpanded: item => item.expanded,
+ *
+ *           renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+ *             let className = "my-tree-item";
+ *             if (isFocused) {
+ *               className += " focused";
+ *             }
+ *             return dom.div({
+ *               className,
+ *             },
+ *               arrow,
+ *               // And here is the label for this item.
+ *               dom.span({ className: "my-tree-item-label" }, item.label)
+ *             );
+ *           },
+ *
+ *           onExpand: item => dispatchExpandActionToRedux(item),
+ *           onCollapse: item => dispatchCollapseActionToRedux(item),
+ *         });
+ *       }
+ *     }
+ */
+class Tree extends Component {
+  static get propTypes() {
+    return {
+      // Required props
+
+      // A function to get an item's parent, or null if it is a root.
+      //
+      // Type: getParent(item: Item) -> Maybe<Item>
+      //
+      // Example:
+      //
+      //     // The parent of this item is stored in its `parent` property.
+      //     getParent: item => item.parent
+      getParent: _propTypes2.default.func.isRequired,
+
+      // A function to get an item's children.
+      //
+      // Type: getChildren(item: Item) -> [Item]
+      //
+      // Example:
+      //
+      //     // This item's children are stored in its `children` property.
+      //     getChildren: item => item.children
+      getChildren: _propTypes2.default.func.isRequired,
+
+      // A function which takes an item and ArrowExpander component instance and
+      // returns a component, or text, or anything else that React considers
+      // renderable.
+      //
+      // Type: renderItem(item: Item,
+      //                  depth: Number,
+      //                  isFocused: Boolean,
+      //                  arrow: ReactComponent,
+      //                  isExpanded: Boolean) -> ReactRenderable
+      //
+      // Example:
+      //
+      //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+      //       let className = "my-tree-item";
+      //       if (isFocused) {
+      //         className += " focused";
+      //       }
+      //       return dom.div(
+      //         {
+      //           className,
+      //           style: { marginLeft: depth * 10 + "px" }
+      //         },
+      //         arrow,
+      //         dom.span({ className: "my-tree-item-label" }, item.label)
+      //       );
+      //     },
+      renderItem: _propTypes2.default.func.isRequired,
+
+      // A function which returns the roots of the tree (forest).
+      //
+      // Type: getRoots() -> [Item]
+      //
+      // Example:
+      //
+      //     // In this case, we only have one top level, root item. You could
+      //     // return multiple items if you have many top level items in your
+      //     // tree.
+      //     getRoots: () => [this.props.rootOfMyTree]
+      getRoots: _propTypes2.default.func.isRequired,
+
+      // A function to get a unique key for the given item. This helps speed up
+      // React's rendering a *TON*.
+      //
+      // Type: getKey(item: Item) -> String
+      //
+      // Example:
+      //
+      //     getKey: item => `my-tree-item-${item.uniqueId}`
+      getKey: _propTypes2.default.func.isRequired,
+
+      // A function to get whether an item is expanded or not. If an item is not
+      // expanded, then it must be collapsed.
+      //
+      // Type: isExpanded(item: Item) -> Boolean
+      //
+      // Example:
+      //
+      //     isExpanded: item => item.expanded,
+      isExpanded: _propTypes2.default.func.isRequired,
+
+      // Optional props
+
+      // The currently focused item, if any such item exists.
+      focused: _propTypes2.default.any,
+
+      // Handle when a new item is focused.
+      onFocus: _propTypes2.default.func,
+
+      // The depth to which we should automatically expand new items.
+      autoExpandDepth: _propTypes2.default.number,
+      // Should auto expand all new items or just the new items under the first
+      // root item.
+      autoExpandAll: _propTypes2.default.bool,
+
+      // Note: the two properties below are mutually exclusive. Only one of the
+      // label properties is necessary.
+      // ID of an element whose textual content serves as an accessible label for
+      // a tree.
+      labelledby: _propTypes2.default.string,
+      // Accessibility label for a tree widget.
+      label: _propTypes2.default.string,
+
+      // Optional event handlers for when items are expanded or collapsed. Useful
+      // for dispatching redux events and updating application state, maybe lazily
+      // loading subtrees from a worker, etc.
+      //
+      // Type:
+      //     onExpand(item: Item)
+      //     onCollapse(item: Item)
+      //
+      // Example:
+      //
+      //     onExpand: item => dispatchExpandActionToRedux(item)
+      onExpand: _propTypes2.default.func,
+      onCollapse: _propTypes2.default.func,
+      isExpandable: _propTypes2.default.func,
+      // Additional classes to add to the root element.
+      className: _propTypes2.default.string,
+      // style object to be applied to the root element.
+      style: _propTypes2.default.object
+    };
+  }
+
+  static get defaultProps() {
+    return {
+      autoExpandDepth: AUTO_EXPAND_DEPTH,
+      autoExpandAll: true
+    };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      seen: new Set()
+    };
+
+    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
+    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
+    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
+    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
+    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
+
+    this._autoExpand = this._autoExpand.bind(this);
+    this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
+    this._dfs = this._dfs.bind(this);
+    this._dfsFromRoots = this._dfsFromRoots.bind(this);
+    this._focus = this._focus.bind(this);
+    this._scrollNodeIntoView = this._scrollNodeIntoView.bind(this);
+    this._onBlur = this._onBlur.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
+    this._nodeIsExpandable = this._nodeIsExpandable.bind(this);
+  }
+
+  componentDidMount() {
+    this._autoExpand();
+    if (this.props.focused) {
+      this._scrollNodeIntoView(this.props.focused);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this._autoExpand();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.focused !== this.props.focused) {
+      this._scrollNodeIntoView(this.props.focused);
+    }
+  }
+
+  _autoExpand() {
+    if (!this.props.autoExpandDepth) {
+      return;
+    }
+
+    // Automatically expand the first autoExpandDepth levels for new items. Do
+    // not use the usual DFS infrastructure because we don't want to ignore
+    // collapsed nodes.
+    const autoExpand = (item, currentDepth) => {
+      if (currentDepth >= this.props.autoExpandDepth || this.state.seen.has(item)) {
+        return;
+      }
+
+      this.props.onExpand(item);
+      this.state.seen.add(item);
+
+      const children = this.props.getChildren(item);
+      const length = children.length;
+      for (let i = 0; i < length; i++) {
+        autoExpand(children[i], currentDepth + 1);
+      }
+    };
+
+    const roots = this.props.getRoots();
+    const length = roots.length;
+    if (this.props.autoExpandAll) {
+      for (let i = 0; i < length; i++) {
+        autoExpand(roots[i], 0);
+      }
+    } else if (length != 0) {
+      autoExpand(roots[0], 0);
+    }
+  }
+
+  _preventArrowKeyScrolling(e) {
+    switch (e.key) {
+      case "ArrowUp":
+      case "ArrowDown":
+      case "ArrowLeft":
+      case "ArrowRight":
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.nativeEvent) {
+          if (e.nativeEvent.preventDefault) {
+            e.nativeEvent.preventDefault();
+          }
+          if (e.nativeEvent.stopPropagation) {
+            e.nativeEvent.stopPropagation();
+          }
+        }
+    }
+  }
+
+  /**
+   * Perform a pre-order depth-first search from item.
+   */
+  _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
+    traversal.push({ item, depth: _depth });
+
+    if (!this.props.isExpanded(item)) {
+      return traversal;
+    }
+
+    const nextDepth = _depth + 1;
+
+    if (nextDepth > maxDepth) {
+      return traversal;
+    }
+
+    const children = this.props.getChildren(item);
+    const length = children.length;
+    for (let i = 0; i < length; i++) {
+      this._dfs(children[i], maxDepth, traversal, nextDepth);
+    }
+
+    return traversal;
+  }
+
+  /**
+   * Perform a pre-order depth-first search over the whole forest.
+   */
+  _dfsFromRoots(maxDepth = Infinity) {
+    const traversal = [];
+
+    const roots = this.props.getRoots();
+    const length = roots.length;
+    for (let i = 0; i < length; i++) {
+      this._dfs(roots[i], maxDepth, traversal);
+    }
+
+    return traversal;
+  }
+
+  /**
+   * Expands current row.
+   *
+   * @param {Object} item
+   * @param {Boolean} expandAllChildren
+   */
+  _onExpand(item, expandAllChildren) {
+    if (this.props.onExpand) {
+      this.props.onExpand(item);
+
+      if (expandAllChildren) {
+        const children = this._dfs(item);
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+          this.props.onExpand(children[i].item);
+        }
+      }
+    }
+  }
+
+  /**
+   * Collapses current row.
+   *
+   * @param {Object} item
+   */
+  _onCollapse(item) {
+    if (this.props.onCollapse) {
+      this.props.onCollapse(item);
+    }
+  }
+
+  /**
+   * Sets the passed in item to be the focused item.
+   *
+   * @param {Object|undefined} item
+   *        The item to be focused, or undefined to focus no item.
+   *
+   * @param {Object|undefined} options
+   *        An options object which can contain:
+   *          - dir: "up" or "down" to indicate if we should scroll the element to the
+   *                 top or the bottom of the scrollable container when the element is
+   *                 off canvas.
+   */
+  _focus(item, options) {
+    this._scrollNodeIntoView(item, options);
+    if (this.props.onFocus) {
+      this.props.onFocus(item);
+    }
+  }
+
+  /**
+   * Sets the passed in item to be the focused item.
+   *
+   * @param {Object|undefined} item
+   *        The item to be scrolled to.
+   *
+   * @param {Object|undefined} options
+   *        An options object which can contain:
+   *          - dir: "up" or "down" to indicate if we should scroll the element to the
+   *                 top or the bottom of the scrollable container when the element is
+   *                 off canvas.
+   */
+  _scrollNodeIntoView(item, options = {}) {
+    if (item !== undefined) {
+      const treeElement = this.treeRef;
+      const element = document.getElementById(this.props.getKey(item));
+      if (element) {
+        const { top, bottom } = element.getBoundingClientRect();
+        const closestScrolledParent = node => {
+          if (node == null) {
+            return null;
+          }
+
+          if (node.scrollHeight > node.clientHeight) {
+            return node;
+          }
+          return closestScrolledParent(node.parentNode);
+        };
+        const scrolledParent = closestScrolledParent(treeElement);
+        const isVisible = !scrolledParent || top >= 0 && bottom <= scrolledParent.clientHeight;
+
+        if (!isVisible) {
+          let scrollToTop = !options.alignTo && top < 0 || options.alignTo === "top";
+          element.scrollIntoView(scrollToTop);
+        }
+      }
+    }
+  }
+
+  /**
+   * Sets the state to have no focused item.
+   */
+  _onBlur() {
+    this._focus(undefined);
+  }
+
+  /**
+   * Handles key down events in the tree's container.
+   *
+   * @param {Event} e
+   */
+  _onKeyDown(e) {
+    if (this.props.focused == null) {
+      return;
+    }
+
+    // Allow parent nodes to use navigation arrows with modifiers.
+    if (e.altKey || e.ctrlKey || e.shiftKey || e.metaKey) {
+      return;
+    }
+
+    this._preventArrowKeyScrolling(e);
+
+    switch (e.key) {
+      case "ArrowUp":
+        this._focusPrevNode();
+        return;
+
+      case "ArrowDown":
+        this._focusNextNode();
+        return;
+
+      case "ArrowLeft":
+        if (this.props.isExpanded(this.props.focused) && this._nodeIsExpandable(this.props.focused)) {
+          this._onCollapse(this.props.focused);
+        } else {
+          this._focusParentNode();
+        }
+        return;
+
+      case "ArrowRight":
+        if (this._nodeIsExpandable(this.props.focused) && !this.props.isExpanded(this.props.focused)) {
+          this._onExpand(this.props.focused);
+        } else {
+          this._focusNextNode();
+        }
+    }
+  }
+
+  /**
+   * Sets the previous node relative to the currently focused item, to focused.
+   */
+  _focusPrevNode() {
+    // Start a depth first search and keep going until we reach the currently
+    // focused node. Focus the previous node in the DFS, if it exists. If it
+    // doesn't exist, we're at the first node already.
+
+    let prev;
+
+    const traversal = this._dfsFromRoots();
+    const length = traversal.length;
+    for (let i = 0; i < length; i++) {
+      const item = traversal[i].item;
+      if (item === this.props.focused) {
+        break;
+      }
+      prev = item;
+    }
+    if (prev === undefined) {
+      return;
+    }
+
+    this._focus(prev, { alignTo: "top" });
+  }
+
+  /**
+   * Handles the down arrow key which will focus either the next child
+   * or sibling row.
+   */
+  _focusNextNode() {
+    // Start a depth first search and keep going until we reach the currently
+    // focused node. Focus the next node in the DFS, if it exists. If it
+    // doesn't exist, we're at the last node already.
+    const traversal = this._dfsFromRoots();
+    const length = traversal.length;
+    let i = 0;
+
+    while (i < length) {
+      if (traversal[i].item === this.props.focused) {
+        break;
+      }
+      i++;
+    }
+
+    if (i + 1 < traversal.length) {
+      this._focus(traversal[i + 1].item, { alignTo: "bottom" });
+    }
+  }
+
+  /**
+   * Handles the left arrow key, going back up to the current rows'
+   * parent row.
+   */
+  _focusParentNode() {
+    const parent = this.props.getParent(this.props.focused);
+    if (!parent) {
+      this._focusPrevNode(this.props.focused);
+      return;
+    }
+
+    const traversal = this._dfsFromRoots();
+    const length = traversal.length;
+    let parentIndex = 0;
+    for (; parentIndex < length; parentIndex++) {
+      if (traversal[parentIndex].item === parent) {
+        break;
+      }
+    }
+
+    this._focus(parent, { alignTo: "top" });
+  }
+
+  _nodeIsExpandable(item) {
+    return this.props.isExpandable ? this.props.isExpandable(item) : !!this.props.getChildren(item).length;
+  }
+
+  render() {
+    const traversal = this._dfsFromRoots();
+    const {
+      focused
+    } = this.props;
+
+    const nodes = traversal.map((v, i) => {
+      const { item, depth } = traversal[i];
+      const key = this.props.getKey(item, i);
+      return TreeNodeFactory({
+        key,
+        id: key,
+        index: i,
+        item,
+        depth,
+        renderItem: this.props.renderItem,
+        focused: focused === item,
+        expanded: this.props.isExpanded(item),
+        isExpandable: this._nodeIsExpandable(item),
+        onExpand: this._onExpand,
+        onCollapse: this._onCollapse,
+        onClick: e => {
+          this._focus(item);
+          if (this.props.isExpanded(item)) {
+            this.props.onCollapse(item);
+          } else {
+            this.props.onExpand(item, e.altKey);
+          }
+        }
+      });
+    });
+
+    const style = Object.assign({}, this.props.style || {}, {
+      padding: 0,
+      margin: 0
+    });
+
+    return _reactDomFactories2.default.div({
+      className: `tree ${this.props.className ? this.props.className : ""}`,
+      ref: el => {
+        this.treeRef = el;
+      },
+      role: "tree",
+      tabIndex: "0",
+      onKeyDown: this._onKeyDown,
+      onKeyPress: this._preventArrowKeyScrolling,
+      onKeyUp: this._preventArrowKeyScrolling,
+      onFocus: ({ nativeEvent }) => {
+        if (focused || !nativeEvent || !this.treeRef) {
+          return;
+        }
+
+        let { explicitOriginalTarget } = nativeEvent;
+        // Only set default focus to the first tree node if the focus came
+        // from outside the tree (e.g. by tabbing to the tree from other
+        // external elements).
+        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
+          this._focus(traversal[0].item);
+        }
+      },
+      onBlur: this._onBlur,
+      onClick: () => {
+        // Focus should always remain on the tree container itself.
+        this.treeRef.focus();
+      },
+      "aria-label": this.props.label,
+      "aria-labelledby": this.props.labelledby,
+      "aria-activedescendant": focused && this.props.getKey(focused),
+      style
+    }, nodes);
+  }
+}
+
+exports.default = Tree;
+
+/***/ }),
+/* 2015 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8 13.4c-.5 0-.9-.2-1.2-.6L.4 5.2C0 4.7-.1 4.3.2 3.7S1 3 1.6 3h12.8c.6 0 1.2.1 1.4.7.3.6.2 1.1-.2 1.6l-6.4 7.6c-.3.4-.7.5-1.2.5z\"></path></svg>"
+
+/***/ }),
+/* 2016 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 2017 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const {
+  enumEntries,
+  enumIndexedProperties,
+  enumNonIndexedProperties,
+  getPrototype,
+  enumSymbols
+} = __webpack_require__(1939);
+
+const {
+  getClosestGripNode,
+  getClosestNonBucketNode,
+  getValue,
+  nodeHasAccessors,
+  nodeHasAllEntriesInPreview,
+  nodeHasProperties,
+  nodeIsBucket,
+  nodeIsDefaultProperties,
+  nodeIsEntries,
+  nodeIsMapEntry,
+  nodeIsPrimitive,
+  nodeIsProxy,
+  nodeNeedsNumericalBuckets
+} = __webpack_require__(1940);
+
+function loadItemProperties(item, createObjectClient, loadedProperties) {
+  const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
+
+  let objectClient;
+  const getObjectClient = () => {
+    if (objectClient) {
+      return objectClient;
+    }
+
+    const gripItem = getClosestGripNode(item);
+    const value = getValue(gripItem);
+    return createObjectClient(value);
+  };
+
+  let loadingPromises = [];
+  if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
+    loadingPromises.push(enumIndexedProperties(getObjectClient(), start, end));
+  }
+
+  if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
+    loadingPromises.push(enumNonIndexedProperties(getObjectClient(), start, end));
+  }
+
+  if (shouldLoadItemEntries(item, loadedProperties)) {
+    loadingPromises.push(enumEntries(getObjectClient(), start, end));
+  }
+
+  if (shouldLoadItemPrototype(item, loadedProperties)) {
+    loadingPromises.push(getPrototype(getObjectClient()));
+  }
+
+  if (shouldLoadItemSymbols(item, loadedProperties)) {
+    loadingPromises.push(enumSymbols(getObjectClient(), start, end));
+  }
+
+  if (loadingPromises.length === 0) {
+    return null;
+  }
+
+  return Promise.all(loadingPromises).then(responses => responses.reduce((accumulator, res) => {
+    // Let's loop through the responses to build a single response object.
+    Object.entries(res).forEach(([k, v]) => {
+      if (accumulator.hasOwnProperty(k)) {
+        if (Array.isArray(accumulator[k])) {
+          accumulator[k].push(...v);
+        } else if (typeof accumulator[k] === "object") {
+          accumulator[k] = Object.assign({}, accumulator[k], v);
+        }
+      } else {
+        accumulator[k] = v;
+      }
+    });
+    return accumulator;
+  }, {}));
+}
+
+function shouldLoadItemIndexedProperties(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeNeedsNumericalBuckets(item) && !nodeIsEntries(getClosestNonBucketNode(item))
+  // The data is loaded when expanding the window node.
+  && !nodeIsDefaultProperties(item);
+}
+
+function shouldLoadItemNonIndexedProperties(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeHasProperties(gripItem) && !loadedProperties.has(item.path) && !nodeIsProxy(item) && !nodeIsEntries(getClosestNonBucketNode(item)) && !nodeIsBucket(item)
+  // The data is loaded when expanding the window node.
+  && !nodeIsDefaultProperties(item);
+}
+
+function shouldLoadItemEntries(item, loadedProperties = new Map()) {
+  const gripItem = getClosestGripNode(item);
+  const value = getValue(gripItem);
+
+  return value && nodeIsEntries(getClosestNonBucketNode(item)) && !nodeHasAllEntriesInPreview(gripItem) && !loadedProperties.has(item.path) && !nodeNeedsNumericalBuckets(item);
+}
+
+function shouldLoadItemPrototype(item, loadedProperties = new Map()) {
+  const value = getValue(item);
+
+  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item);
+}
+
+function shouldLoadItemSymbols(item, loadedProperties = new Map()) {
+  const value = getValue(item);
+
+  return value && !loadedProperties.has(item.path) && !nodeIsBucket(item) && !nodeIsMapEntry(item) && !nodeIsEntries(item) && !nodeIsDefaultProperties(item) && !nodeHasAccessors(item) && !nodeIsPrimitive(item) && !nodeIsProxy(item);
+}
+
+module.exports = {
+  loadItemProperties,
+  shouldLoadItemEntries,
+  shouldLoadItemIndexedProperties,
+  shouldLoadItemNonIndexedProperties,
+  shouldLoadItemPrototype,
+  shouldLoadItemSymbols
+};
+
+/***/ }),
+/* 2018 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(1189);
+
+var _redux = __webpack_require__(3);
+
+var _devtoolsContextmenu = __webpack_require__(1413);
+
+var _Close = __webpack_require__(1374);
+
+var _Close2 = _interopRequireDefault(_Close);
+
+var _actions = __webpack_require__(1354);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _source = __webpack_require__(1356);
+
+var _clipboard = __webpack_require__(1388);
+
+var _tabs = __webpack_require__(1941);
+
+var _selectors = __webpack_require__(1352);
+
+var _classnames = __webpack_require__(175);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Tab extends _react.PureComponent {
+  constructor(...args) {
+    var _temp;
+
+    return _temp = super(...args), this.onTabContextMenu = (event, tab) => {
+      event.preventDefault();
+      this.showContextMenu(event, tab);
+    }, _temp;
+  }
+
+  showContextMenu(e, tab) {
+    const {
+      closeTab,
+      closeTabs,
+      tabSources,
+      showSource,
+      togglePrettyPrint
+    } = this.props;
+
+    const closeTabLabel = L10N.getStr("sourceTabs.closeTab");
+    const closeOtherTabsLabel = L10N.getStr("sourceTabs.closeOtherTabs");
+    const closeTabsToEndLabel = L10N.getStr("sourceTabs.closeTabsToEnd");
+    const closeAllTabsLabel = L10N.getStr("sourceTabs.closeAllTabs");
+    const revealInTreeLabel = L10N.getStr("sourceTabs.revealInTree");
+    const copyLinkLabel = L10N.getStr("copySourceUri2");
+    const prettyPrintLabel = L10N.getStr("sourceTabs.prettyPrint");
+
+    const closeTabKey = L10N.getStr("sourceTabs.closeTab.accesskey");
+    const closeOtherTabsKey = L10N.getStr("sourceTabs.closeOtherTabs.accesskey");
+    const closeTabsToEndKey = L10N.getStr("sourceTabs.closeTabsToEnd.accesskey");
+    const closeAllTabsKey = L10N.getStr("sourceTabs.closeAllTabs.accesskey");
+    const revealInTreeKey = L10N.getStr("sourceTabs.revealInTree.accesskey");
+    const copyLinkKey = L10N.getStr("copySourceUri2.accesskey");
+    const prettyPrintKey = L10N.getStr("sourceTabs.prettyPrint.accesskey");
+
+    const otherTabs = tabSources.filter(t => t.get("id") !== tab);
+    const sourceTab = tabSources.find(t => t.get("id") == tab);
+    const tabURLs = tabSources.map(t => t.get("url"));
+    const otherTabURLs = otherTabs.map(t => t.get("url"));
+
+    if (!sourceTab) {
+      return;
+    }
+
+    const isPrettySource = (0, _source.isPretty)(sourceTab);
+
+    const closeTabMenuItem = {
+      id: "node-menu-close-tab",
+      label: closeTabLabel,
+      accesskey: closeTabKey,
+      disabled: false,
+      click: () => closeTab(sourceTab.get("url"))
+    };
+
+    const closeOtherTabsMenuItem = {
+      id: "node-menu-close-other-tabs",
+      label: closeOtherTabsLabel,
+      accesskey: closeOtherTabsKey,
+      disabled: false,
+      click: () => closeTabs(otherTabURLs)
+    };
+
+    const closeTabsToEndMenuItem = {
+      id: "node-menu-close-tabs-to-end",
+      label: closeTabsToEndLabel,
+      accesskey: closeTabsToEndKey,
+      disabled: false,
+      click: () => {
+        const tabIndex = tabSources.findIndex(t => t == tab);
+        closeTabs(tabURLs.filter((t, i) => i > tabIndex));
+      }
+    };
+
+    const closeAllTabsMenuItem = {
+      id: "node-menu-close-all-tabs",
+      label: closeAllTabsLabel,
+      accesskey: closeAllTabsKey,
+      disabled: false,
+      click: () => closeTabs(tabURLs)
+    };
+
+    const showSourceMenuItem = {
+      id: "node-menu-show-source",
+      label: revealInTreeLabel,
+      accesskey: revealInTreeKey,
+      disabled: false,
+      click: () => showSource(sourceTab)
+    };
+
+    const copySourceUri2 = {
+      id: "node-menu-copy-source-url",
+      label: copyLinkLabel,
+      accesskey: copyLinkKey,
+      disabled: false,
+      click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.get("url"))
+    };
+
+    const prettyPrint = {
+      id: "node-menu-pretty-print",
+      label: prettyPrintLabel,
+      accesskey: prettyPrintKey,
+      disabled: false,
+      click: () => togglePrettyPrint(sourceTab.get("id"))
+    };
+
+    const items = [{ item: closeTabMenuItem }, { item: closeOtherTabsMenuItem, hidden: () => tabSources.size === 1 }, {
+      item: closeTabsToEndMenuItem,
+      hidden: () => tabSources.some((t, i) => t === tab && tabSources.size - 1 === i)
+    }, { item: closeAllTabsMenuItem }, { item: { type: "separator" } }, { item: copySourceUri2 }];
+
+    if (!isPrettySource) {
+      items.push({ item: showSourceMenuItem });
+      items.push({ item: prettyPrint });
+    }
+
+    (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
+  }
+
+  isProjectSearchEnabled() {
+    return this.props.activeSearch === "project";
+  }
+
+  isSourceSearchEnabled() {
+    return this.props.activeSearch === "source";
+  }
+
+  render() {
+    const {
+      selectedSource,
+      selectSource,
+      closeTab,
+      source,
+      getMetaData
+    } = this.props;
+    const src = source.toJS();
+    const filename = (0, _source.getFilename)(src);
+    const sourceId = source.get("id");
+    const active = selectedSource && sourceId == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
+    const isPrettyCode = (0, _source.isPretty)(source);
+    const sourceAnnotation = (0, _tabs.getSourceAnnotation)(source, getMetaData);
+
+    function onClickClose(ev) {
+      ev.stopPropagation();
+      closeTab(source.get("url"));
+    }
+
+    const className = (0, _classnames2.default)("source-tab", {
+      active,
+      pretty: isPrettyCode
+    });
+
+    return _react2.default.createElement(
+      "div",
+      {
+        className: className,
+        key: sourceId,
+        onClick: () => selectSource(sourceId),
+        onContextMenu: e => this.onTabContextMenu(e, sourceId),
+        title: (0, _source.getFileURL)(src)
+      },
+      sourceAnnotation,
+      _react2.default.createElement(
+        "div",
+        { className: "filename" },
+        filename
+      ),
+      _react2.default.createElement(_Close2.default, {
+        handleClick: onClickClose,
+        tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
+      })
+    );
+  }
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+exports.default = (0, _reactRedux.connect)(state => {
+  return {
+    tabSources: (0, _selectors.getSourcesForTabs)(state),
+    selectedSource: (0, _selectors.getSelectedSource)(state),
+    getMetaData: sourceId => (0, _selectors.getSourceMetaData)(state, sourceId),
+    activeSearch: (0, _selectors.getActiveSearch)(state)
+  };
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
 
 /***/ })
 /******/ ]);
