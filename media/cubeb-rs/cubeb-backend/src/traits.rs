@@ -23,6 +23,7 @@ pub trait Context {
         &self,
         collection: *mut ffi::cubeb_device_collection,
     );
+    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     fn stream_init(
         &self,
         stream_name: Option<&CStr>,
