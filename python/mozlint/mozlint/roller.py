@@ -18,6 +18,7 @@ from mozversioncontrol import get_repository_object, MissingUpstreamRepo, Invali
 
 from .errors import LintersNotConfigured
 from .parser import Parser
+from .pathutils import findobject
 from .types import supported_types
 
 
@@ -71,7 +72,8 @@ class LintRoller(object):
         self.lintargs['root'] = root
 
         # linters that return non-zero
-        self.failed = None
+        self.failed = set()
+        self.root = root
 
     def read(self, paths):
         """Parse one or more linters and add them to the registry.
@@ -83,6 +85,32 @@ class LintRoller(object):
 
         for path in paths:
             self.linters.extend(self.parse(path))
+
+    def setup(self):
+        """Run setup for applicable linters"""
+        if not self.linters:
+            raise LintersNotConfigured
+
+        failed = set()
+        for linter in self.linters:
+            if 'setup' not in linter:
+                continue
+
+            try:
+                res = findobject(linter['setup'])(self.root)
+            except Exception:
+                traceback.print_exc()
+                res = 1
+
+            if res:
+                failed.add(linter['name'])
+
+        if failed:
+            print("error: problem with lint setup, skipping {}".format(', '.join(sorted(failed))))
+            self.linters = [l for l in self.linters if l['name'] not in failed]
+            self.failed.update(failed)
+            return 1
+        return 0
 
     def _generate_jobs(self, paths, num_procs):
         """A job is of the form (<linter:dict>, <paths:list>)."""
@@ -102,6 +130,9 @@ class LintRoller(object):
         :return: A dictionary with file names as the key, and a list of
                  :class:`~result.ResultContainer`s as the value.
         """
+        if not self.linters:
+            raise LintersNotConfigured
+
         # Need to use a set in case vcs operations specify the same file
         # more than once.
         paths = paths or set()
@@ -109,9 +140,6 @@ class LintRoller(object):
             paths = set([paths])
         elif isinstance(paths, (list, tuple)):
             paths = set(paths)
-
-        if not self.linters:
-            raise LintersNotConfigured
 
         if not self.vcs and (workdir or outgoing):
             print("error: '{}' is not a known repository, can't use "
@@ -149,11 +177,10 @@ class LintRoller(object):
             # ignore SIGINT in parent so we can still get partial results
             # from child processes. These should shutdown quickly anyway.
             orig_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
-            self.failed = []
             for future in futures:
                 results, failed = future.result()
                 if failed:
-                    self.failed.extend(failed)
+                    self.failed.update(set(failed))
                 for k, v in results.iteritems():
                     all_results[k].extend(v)
 
