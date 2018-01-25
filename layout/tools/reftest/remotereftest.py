@@ -284,6 +284,11 @@ class RemoteReftest(RefTest):
         # reftest pages at 1.0 zoom, rather than zooming to fit the CSS viewport.
         prefs["apz.allow_zooming"] = False
 
+        if options.totalChunks:
+            prefs['reftest.totalChunks'] = options.totalChunks
+        if options.thisChunk:
+            prefs['reftest.thisChunk'] = options.thisChunk
+
         # Set the extra prefs.
         profile.set_preferences(prefs)
 
