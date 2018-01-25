@@ -32,6 +32,8 @@ CMD ["/bin/bash", "--login"]
 # Set apt sources list to a snapshot.
 COPY sources.list /etc/apt/
 
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99check-valid-until
+
 # rsync is required for l10n single locale repacks.  less, screen, and
 # vim, help debugging interactive tasks in Task Cluster.
 # git and openssh-client are used to upload GeckoView javadoc to Github.
