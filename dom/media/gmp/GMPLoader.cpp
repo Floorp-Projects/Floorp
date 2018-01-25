@@ -89,7 +89,8 @@ GMPLoader::Load(const char* aUTF8LibPath,
                 const GMPPlatformAPI* aPlatformAPI,
                 GMPAdapter* aAdapter)
 {
-  if (mSandboxStarter && !mSandboxStarter->Start(aUTF8LibPath)) {
+  if (!getenv("MOZ_DISABLE_GMP_SANDBOX") && mSandboxStarter &&
+      !mSandboxStarter->Start(aUTF8LibPath)) {
     return false;
   }
 
