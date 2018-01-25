@@ -25,14 +25,24 @@ export DOCKER_SOCKET=/var/run/docker.proxy
 socat UNIX-LISTEN:$DOCKER_SOCKET,fork,group=worker,mode=0775 UNIX-CLIENT:/var/run/docker.sock </dev/null &
 trap "kill $!" EXIT
 
+LOAD_COMMAND=
+if [ -n "$DOCKER_IMAGE_PARENT" ]; then
+    test -n "$DOCKER_IMAGE_PARENT_TASK" || raise_error "DOCKER_IMAGE_PARENT_TASK must be provided."
+    LOAD_COMMAND="\
+      /builds/worker/checkouts/gecko/mach taskcluster-load-image \
+      --task-id \"$DOCKER_IMAGE_PARENT_TASK\" \
+      -t \"$DOCKER_IMAGE_PARENT\" && "
+fi
+
 # Build image
 run-task \
   --vcs-checkout "/builds/worker/checkouts/gecko" \
   --sparse-profile build/sparse-profiles/docker-image \
   -- \
+  sh -x -c "$LOAD_COMMAND \
   /builds/worker/checkouts/gecko/mach taskcluster-build-image \
-  -t "$IMAGE_NAME:$HASH" \
-  "$IMAGE_NAME"
+  -t \"$IMAGE_NAME:$HASH\" \
+  \"$IMAGE_NAME\""
 
 # Create artifact folder (note that this must occur after run-task)
 mkdir -p /builds/worker/workspace/artifacts
