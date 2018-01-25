@@ -472,7 +472,9 @@ var dataProviders = {
       DWriteEnabled: "directWriteEnabled",
       DWriteVersion: "directWriteVersion",
       cleartypeParameters: "clearTypeParameters",
+      UsesTiling: "usesTiling",
       OffMainThreadPaintEnabled: "offMainThreadPaintEnabled",
+      OffMainThreadPaintWorkerCount: "offMainThreadPaintWorkerCount",
     };
 
     for (let prop in gfxInfoProps) {

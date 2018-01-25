@@ -96,7 +96,7 @@ public:
         return false;
       }
       mSVGView->mTransforms = new nsSVGAnimatedTransformList();
-      if (NS_FAILED(mSVGView->mTransforms->SetBaseValueString(aParams, mRoot))) {
+      if (NS_FAILED(mSVGView->mTransforms->SetBaseValueString(aParams))) {
         return false;
       }
     } else if (IsMatchingParameter(aToken, NS_LITERAL_STRING("zoomAndPan"))) {
