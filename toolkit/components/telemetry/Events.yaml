@@ -12,7 +12,7 @@ navigation:
     notification_emails:
       - "past@mozilla.com"
       - "dzeber@mozilla.com"
-    expiry_version: "65.0"
+    expiry_version: "65"
     extra_keys:
       engine: The id of the search engine used.
 
@@ -46,7 +46,7 @@ telemetry.test:
     notification_emails: ["telemetry-client-dev@mozilla.com"]
     record_in_processes: ["main"]
     description: This is a test entry with an expired version.
-    expiry_version: "3.6"
+    expiry_version: "3"
   not_expired_optout:
     objects: ["object1"]
     bug_numbers: [1286606]
@@ -54,7 +54,7 @@ telemetry.test:
     description: This is an opt-out test entry with unexpired date and version.
     release_channel_collection: opt-out
     record_in_processes: ["main"]
-    expiry_version: "999.0"
+    expiry_version: "999"
   main_only:
     objects: ["object1"]
     bug_numbers: [1313326]
