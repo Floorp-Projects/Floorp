@@ -11,6 +11,7 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/TypeTraits.h"
 
 #include <math.h>
@@ -384,37 +385,10 @@ ToIntWidth(double d)
     static_assert(mozilla::IsSigned<ResultType>::value,
                   "ResultType must be a signed type");
 
-    constexpr ResultType MaxValue = (1ULL << (CHAR_BIT * sizeof(ResultType) - 1)) - 1;
-    constexpr ResultType MinValue = -MaxValue - 1;
-
     using UnsignedResult = typename mozilla::MakeUnsigned<ResultType>::Type;
     UnsignedResult u = ToUintWidth<UnsignedResult>(d);
 
-    // The algorithm below was originally provided here:
-    // https://stackoverflow.com/questions/13150449/efficient-unsigned-to-signed-cast-avoiding-implementation-defined-behavior
-
-    // If the value is in the non-negative signed range, just cast.
-    if (u <= UnsignedResult(MaxValue))
-        return static_cast<ResultType>(u);
-
-    // If the value will be negative, compute its delta from the first number
-    // past the max signed integer, then add that to the minimum signed value.
-    //
-    // At the low end: if |u| is the maximum signed value plus one, then it has
-    // the same mathematical value as |MinValue| cast to unsigned form.  The
-    // delta is zero, so the signed form of |u| is |MinValue| -- exactly the
-    // result of adding zero delta to |MinValue|.
-    //
-    // At the high end: if |u| is the maximum *unsigned* value, then it has all
-    // bits set.  |MinValue| cast to unsigned form is purely the high bit set.
-    // So the delta is all bits but high set -- exactly |MaxValue|.  And as
-    // |MinValue = -MaxValue - 1|, we have |MaxValue + (-MaxValue - 1)| to
-    // equal -1.
-    //
-    // Thus the delta below is in signed range, the corresponding cast is safe,
-    // and this computation produces values spanning [MinValue, 0): exactly the
-    // desired range of all negative signed integers.
-    return static_cast<ResultType>(u - UnsignedResult(MinValue)) + MinValue;
+    return mozilla::WrapToSigned(u);
 }
 
 } // namespace detail
