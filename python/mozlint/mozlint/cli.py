@@ -78,6 +78,11 @@ class MozlintParser(ArgumentParser):
           'help': "Each file containing lint errors will be opened in $EDITOR one after "
                   "the other."
           }],
+        [['--setup'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Bootstrap linter dependencies without running any of the linters."
+          }],
         [['extra_args'],
          {'nargs': REMAINDER,
           'help': "Extra arguments that will be forwarded to the underlying linter.",
@@ -139,7 +144,8 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **lintargs):
+def run(paths, linters, fmt, outgoing, workdir, edit,
+        setup=False, list_linters=False, **lintargs):
     from mozlint import LintRoller, formatters
     from mozlint.editor import edit_results
 
@@ -152,6 +158,11 @@ def run(paths, linters, fmt, outgoing, workdir, edit, list_linters=None, **linta
 
     lint = LintRoller(**lintargs)
     lint.read(find_linters(linters))
+
+    # Always run bootstrapping, but return early if --setup was passed in.
+    ret = lint.setup()
+    if setup:
+        return ret
 
     # run all linters
     results = lint.roll(paths, outgoing=outgoing, workdir=workdir)

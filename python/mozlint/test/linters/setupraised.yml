@@ -1,0 +1,9 @@
+---
+SetupRaisedLinter:
+    description: It's bad to have the string foobar in js files.
+    include:
+        - files
+    type: external
+    extensions: ['.js', '.jsm']
+    payload: external:external
+    setup: external:setupraised
