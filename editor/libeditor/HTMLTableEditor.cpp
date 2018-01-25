@@ -87,7 +87,7 @@ public:
   }
 };
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
                        int32_t aRowSpan,
                        int32_t aColSpan,
@@ -154,7 +154,7 @@ HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
   return InsertNode(*newCell, pointToInsert.AsRaw());
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::SetColSpan(nsIDOMElement* aCell,
                        int32_t aColSpan)
 {
@@ -164,7 +164,7 @@ HTMLEditor::SetColSpan(nsIDOMElement* aCell,
   return SetAttribute(aCell, NS_LITERAL_STRING("colspan"), newSpan);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::SetRowSpan(nsIDOMElement* aCell,
                        int32_t aRowSpan)
 {
@@ -987,7 +987,7 @@ HTMLEditor::DeleteTableCellContents()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::DeleteCellContents(nsIDOMElement* aCell)
 {
   NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
@@ -1089,7 +1089,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::DeleteColumn(nsIDOMElement* aTable,
                          int32_t aColIndex)
 {
@@ -1266,7 +1266,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
 }
 
 // Helper that doesn't batch or change the selection
-NS_IMETHODIMP
+nsresult
 HTMLEditor::DeleteRow(nsIDOMElement* aTable,
                       int32_t aRowIndex)
 {
@@ -1795,7 +1795,7 @@ HTMLEditor::CopyCellBackgroundColor(nsIDOMElement* destCell,
   return SetAttribute(destCell, bgcolor, color);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::SplitCellIntoColumns(nsIDOMElement* aTable,
                                  int32_t aRowIndex,
                                  int32_t aColIndex,
@@ -1843,7 +1843,7 @@ HTMLEditor::SplitCellIntoColumns(nsIDOMElement* aTable,
   return CopyCellBackgroundColor(newCell, cell);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::SplitCellIntoRows(nsIDOMElement* aTable,
                               int32_t aRowIndex,
                               int32_t aColIndex,
@@ -2308,7 +2308,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
                        nsCOMPtr<nsIDOMElement> aCellToMerge,
                        bool aDeleteCellToMerge)
@@ -2360,7 +2360,7 @@ HTMLEditor::MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell,
 }
 
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::FixBadRowSpan(nsIDOMElement* aTable,
                           int32_t aRowIndex,
                           int32_t& aNewRowCount)
@@ -2425,7 +2425,7 @@ HTMLEditor::FixBadRowSpan(nsIDOMElement* aTable,
   return GetTableSize(aTable, &aNewRowCount, &colCount);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::FixBadColSpan(nsIDOMElement* aTable,
                           int32_t aColIndex,
                           int32_t& aNewColCount)
@@ -2785,7 +2785,7 @@ HTMLEditor::GetCellAt(nsIDOMElement* aTable,
 }
 
 // When all you want are the rowspan and colspan (not exposed in nsITableEditor)
-NS_IMETHODIMP
+nsresult
 HTMLEditor::GetCellSpansAt(nsIDOMElement* aTable,
                            int32_t aRowIndex,
                            int32_t aColIndex,
