@@ -146,7 +146,7 @@ with Files("tests/WebCryptoAPI/**"):
 with Files("tests/WebIDL/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
-with Files("tests/XMLHttpRequest/**"):
+with Files("tests/xhr/**"):
     BUG_COMPONENT = ("Core", "DOM")
 
 with Files("tests/accelerometer/**"):
