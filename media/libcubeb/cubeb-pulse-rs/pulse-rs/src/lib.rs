@@ -370,7 +370,7 @@ impl SubscriptionEvent {
     }
 
     pub fn event_type(self) -> SubscriptionEventType {
-        unsafe { ::std::mem::transmute(((self.0 & ffi::PA_SUBSCRIPTION_EVENT_TYPE_MASK) >> 4)) }
+        unsafe { ::std::mem::transmute((self.0 & ffi::PA_SUBSCRIPTION_EVENT_TYPE_MASK) >> 4) }
     }
 }
 
