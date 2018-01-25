@@ -34,7 +34,7 @@ fn cubeb_channel_to_pa_channel(channel: cubeb::Channel) -> pa_channel_position_t
         PA_CHANNEL_POSITION_LFE           // CHANNEL_LFE
     ];
 
-    let idx: i32 = channel.into();
+    let idx: i32 = channel;
     MAP[idx as usize]
 }
 
@@ -89,6 +89,7 @@ impl<'ctx> Drop for Stream<'ctx> {
 }
 
 impl<'ctx> Stream<'ctx> {
+    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     pub fn new(context: &'ctx Context,
                stream_name: &CStr,
                input_device: cubeb::DeviceId,
@@ -114,10 +115,8 @@ impl<'ctx> Stream<'ctx> {
                 let readable_size: i32 = s.readable_size()
                     .and_then(|s| Ok(s as i32))
                     .unwrap_or(-1);
-                if readable_size > 0 {
-                    if unsafe { s.peek(buffer, size).is_err() } {
-                        return -1;
-                    }
+                if readable_size > 0 && unsafe { s.peek(buffer, size).is_err() } {
+                    return -1;
                 }
                 readable_size
             }
@@ -230,7 +229,6 @@ impl<'ctx> Stream<'ctx> {
                         return Err(e);
                     },
                 }
-
             }
 
             // Set up input stream
@@ -258,7 +256,6 @@ impl<'ctx> Stream<'ctx> {
                         return Err(e);
                     },
                 }
-
             }
 
             let r = if stm.wait_until_ready() {
@@ -309,31 +306,25 @@ impl<'ctx> Stream<'ctx> {
 
         self.context.mainloop.lock();
         {
-            match self.output_stream.take() {
-                Some(stm) => {
-                    if !self.drain_timer.is_null() {
-                        /* there's no pa_rttime_free, so use this instead. */
-                        self.context
-                            .mainloop
-                            .get_api()
-                            .time_free(self.drain_timer);
-                    }
-                    stm.clear_state_callback();
-                    stm.clear_write_callback();
-                    let _ = stm.disconnect();
-                    stm.unref();
-                },
-                _ => {},
+            if let Some(stm) = self.output_stream.take() {
+                if !self.drain_timer.is_null() {
+                    /* there's no pa_rttime_free, so use this instead. */
+                    self.context
+                        .mainloop
+                        .get_api()
+                        .time_free(self.drain_timer);
+                }
+                stm.clear_state_callback();
+                stm.clear_write_callback();
+                let _ = stm.disconnect();
+                stm.unref();
             }
 
-            match self.input_stream.take() {
-                Some(stm) => {
-                    stm.clear_state_callback();
-                    stm.clear_read_callback();
-                    let _ = stm.disconnect();
-                    stm.unref();
-                },
-                _ => {},
+            if let Some(stm) = self.input_stream.take() {
+                stm.clear_state_callback();
+                stm.clear_read_callback();
+                let _ = stm.disconnect();
+                stm.unref();
             }
         }
         self.context.mainloop.unlock();
@@ -416,7 +407,7 @@ impl<'ctx> Stream<'ctx> {
             Some(ref stm) => {
                 match stm.get_latency() {
                     Ok(StreamLatency::Positive(r_usec)) => {
-                        let latency = (r_usec * self.output_sample_spec.rate as pa_usec_t / PA_USEC_PER_SEC) as u32;
+                        let latency = (r_usec * pa_usec_t::from(self.output_sample_spec.rate) / PA_USEC_PER_SEC) as u32;
                         Ok(latency)
                     },
                     Ok(_) => {
@@ -451,8 +442,8 @@ impl<'ctx> Stream<'ctx> {
                         self.volume = volume;
                     } else {
                         let channels = stm.get_sample_spec().channels;
-                        let vol = pulse::sw_volume_from_linear(volume as f64);
-                        cvol.set(channels as u32, vol);
+                        let vol = pulse::sw_volume_from_linear(f64::from(volume));
+                        cvol.set(u32::from(channels), vol);
 
                         let index = stm.get_index();
 
@@ -563,6 +554,10 @@ impl<'ctx> Stream<'ctx> {
                    stream_params: &cubeb::StreamParams,
                    stream_name: &CStr)
                    -> Result<pulse::Stream> {
+
+        if stream_params.prefs == cubeb::StreamPrefs::STREAM_PREF_LOOPBACK {
+            return Err(cubeb::ERROR_NOT_SUPPORTED);
+        }
 
         fn to_pulse_format(format: cubeb::SampleFormat) -> pulse::SampleFormat {
             match format {
@@ -689,6 +684,7 @@ impl<'ctx> Stream<'ctx> {
         true
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
     fn trigger_user_callback(&mut self, input_data: *const c_void, nbytes: usize) {
         fn drained_cb(a: &pulse::MainloopApi, e: *mut pa_time_event, _tv: &pulse::TimeVal, u: *mut c_void) {
             let stm = unsafe { &mut *(u as *mut Stream) };
