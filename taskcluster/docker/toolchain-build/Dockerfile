@@ -43,8 +43,6 @@ RUN for task in $DOCKER_IMAGE_PACKAGES; do \
       echo "deb [trusted=yes] https://queue.taskcluster.net/v1/task/$task/runs/0/artifacts/public/build/ debian/" >> /etc/apt/sources.list; \
     done
 
-RUN dpkg --add-architecture i386
-
 RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
     apt-get install -yyq --no-install-recommends \
       autoconf \
@@ -61,17 +59,14 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       libbz2-dev \
       libssl-dev \
       libtool \
-      libx11-dev:i386 \
       make \
       mercurial \
       ninja-build \
       p7zip-full \
       procps \
-      python-dev \
       python-pip \
       python-setuptools \
       python-virtualenv \
-      scons \
       subversion \
       tar \
       unzip \
