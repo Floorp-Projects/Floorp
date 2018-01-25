@@ -966,8 +966,8 @@ FxAccountsInternal.prototype = {
         if (userData.keyFetchToken) {
           this.fetchAndUnwrapKeys(userData.keyFetchToken).then(
             (dataWithKeys) => {
-              if (DERIVED_KEYS_NAMES.some(k => !userData[k])) {
-                const missing = DERIVED_KEYS_NAMES.filter(k => !userData[k]);
+              if (DERIVED_KEYS_NAMES.some(k => !dataWithKeys[k])) {
+                const missing = DERIVED_KEYS_NAMES.filter(k => !dataWithKeys[k]);
                 currentState.whenKeysReadyDeferred.reject(
                   new Error(`user data missing: ${missing.join(", ")}`)
                 );
