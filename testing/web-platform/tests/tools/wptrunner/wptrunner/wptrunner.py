@@ -307,8 +307,7 @@ def main():
         return start(**kwargs)
     except Exception:
         if kwargs["pdb"]:
-            import pdb
-            import traceback
+            import pdb, traceback
             print traceback.format_exc()
             pdb.post_mortem()
         else:

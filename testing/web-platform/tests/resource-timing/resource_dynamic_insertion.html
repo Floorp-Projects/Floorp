@@ -10,27 +10,27 @@
 <script src="resources/webperftestharness.js"></script>
 <script src="resources/webperftestharnessextension.js"></script>
 <script>
-// Explicitly test the namespace before we start testing.
+// explicitly test the namespace before we start testing
 test_namespace("getEntriesByType");
 
 
-let iframe;
+var iframe;
 function setup_iframe() {
     iframe = document.getElementById('frameContext');
-    const d = iframe.contentWindow.document;
-    const body = d.createElement('body');
+    var d = iframe.contentWindow.document;
+    var body = d.createElement('body');
     d.getElementsByTagName('html')[0].appendChild(body);
 
-    const style = d.createElement('link');
+    var style = d.createElement('link');
     style.rel = 'stylesheet';
     style.href = 'resource_timing_test0.css';
     body.appendChild(style);
 
-    const image = d.createElement('img');
+    var image = d.createElement('img');
     image.src = 'resource_timing_test0.png';
     body.appendChild(image);
 
-    const subframe = d.createElement('iframe');
+    var subframe = d.createElement('iframe');
     subframe.src = 'inject_resource_test.html';
     body.appendChild(subframe);
 }
@@ -39,13 +39,13 @@ function onload_test() {
       done();
       return;
     }
-    const context = new PerformanceContext(iframe.contentWindow.performance);
-    const entries = context.getEntriesByType('resource');
+    var context = new PerformanceContext(iframe.contentWindow.performance);
+    var entries = context.getEntriesByType('resource');
 
-    const index = window.location.pathname.lastIndexOf('/');
-    const pathname = window.location.pathname.substring(0, index) + '/';
+    var index = window.location.pathname.lastIndexOf('/');
+    var pathname = window.location.pathname.substring(0, index) + '/';
 
-    let expected_entries = { };
+    var expected_entries = { };
     expected_entries[ pathname + 'resources/resource_timing_test0.css' ] = 'link',
     expected_entries[ pathname + 'resources/resource_timing_test0.png' ] = 'img',
     expected_entries[ pathname + 'resources/inject_resource_test.html' ] = 'iframe',

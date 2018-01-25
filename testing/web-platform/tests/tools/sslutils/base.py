@@ -1,3 +1,9 @@
+def get_logger(name="ssl"):
+    logger = structured.get_default_logger(name)
+    if logger is None:
+        logger = structured.structuredlog.StructuredLogger(name)
+    return logger
+
 class NoSSLEnvironment(object):
     ssl_enabled = False
 

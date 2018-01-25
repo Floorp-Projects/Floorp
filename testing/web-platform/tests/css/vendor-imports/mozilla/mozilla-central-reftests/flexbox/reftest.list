@@ -174,7 +174,6 @@
 # Tests for the order in which we paint flex items
 == flexbox-paint-ordering-001.xhtml flexbox-paint-ordering-001-ref.xhtml
 == flexbox-paint-ordering-002.xhtml flexbox-paint-ordering-002-ref.xhtml
-== flexbox-paint-ordering-003.html  flexbox-paint-ordering-003-ref.html
 
 # Tests for "display:flex" on root node
 == flexbox-root-node-001a.html flexbox-root-node-001-ref.html
@@ -214,7 +213,3 @@
 == flexbox-single-line-clamp-1.html flexbox-single-line-clamp-1-ref.html
 == flexbox-single-line-clamp-2.html flexbox-single-line-clamp-2-ref.html
 == flexbox-single-line-clamp-3.html flexbox-single-line-clamp-3-ref.html
-
-# Flexbox as an absolute containing block.
-== position-absolute-containing-block-001.html position-absolute-containing-block-001-ref.html
-== position-absolute-containing-block-002.html position-absolute-containing-block-002-ref.html
