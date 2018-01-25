@@ -945,8 +945,8 @@ public:
 
   LayoutDeviceIntRegion GetWindowDraggingRegion() const;
 
-  void RemoveModifiedWindowDraggingRegion();
-  void ClearWindowDraggingRegion();
+  void RemoveModifiedWindowRegions();
+  void ClearRetainedWindowRegions();
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -1730,6 +1730,48 @@ public:
     mHitTestIsForVisibility = aHitTestIsForVisibility;
   }
 
+  /**
+   * Represents a region composed of frame/rect pairs.
+   * WeakFrames are used to track whether a rect still belongs to the region.
+   * Modified frames and rects are removed and re-added to the region if needed.
+   * nsDisplayLayerEventRegions::FrameRects implements the same functionality
+   * with nsIFrames.
+   */
+  struct WeakFrameRegion {
+    std::vector<WeakFrame> mFrames;
+    nsTArray<pixman_box32_t> mRects;
+
+    void Add(nsIFrame* aFrame, const nsRect& aRect)
+    {
+      mFrames.emplace_back(aFrame);
+      mRects.AppendElement(nsRegion::RectToBox(aRect));
+    }
+
+    void Add(nsIFrame* aFrame, const mozilla::gfx::IntRect& aRect)
+    {
+      mFrames.emplace_back(aFrame);
+      mRects.AppendElement(nsRegion::RectToBox(aRect));
+    }
+
+    void Clear()
+    {
+      mFrames.clear();
+      mRects.Clear();
+    }
+
+    typedef mozilla::gfx::ArrayView<pixman_box32_t> BoxArrayView;
+
+    nsRegion ToRegion() const
+    {
+      return nsRegion(BoxArrayView(mRects));
+    }
+
+    LayoutDeviceIntRegion ToLayoutDeviceIntRegion() const
+    {
+      return LayoutDeviceIntRegion(BoxArrayView(mRects));
+    }
+  };
+
 private:
   bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame);
 
@@ -1857,15 +1899,18 @@ private:
   nsRect                         mVisibleRect;
   nsRect                         mDirtyRect;
   nsRegion                       mWindowExcludeGlassRegion;
+
+  // Tracked regions used for retained display list.
+  WeakFrameRegion                mRetainedWindowDraggingRegion;
+  WeakFrameRegion                mRetainedWindowNoDraggingRegion;
+
+  // Optimized versions for non-retained display list.
+  LayoutDeviceIntRegion          mWindowDraggingRegion;
+  LayoutDeviceIntRegion          mWindowNoDraggingRegion;
+
+  // Window opaque region is calculated during layer building.
   nsRegion                       mWindowOpaqueRegion;
 
-  std::vector<WeakFrame>         mWindowDraggingFrames;
-  nsTArray<pixman_box32_t>       mWindowDraggingRects;
-  LayoutDeviceIntRegion          mWindowDraggingRegion;
-
-  std::vector<WeakFrame>         mWindowNoDraggingFrames;
-  nsTArray<pixman_box32_t>       mWindowNoDraggingRects;
-  LayoutDeviceIntRegion          mWindowNoDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   // A temporary list that we append scroll info items to while building
