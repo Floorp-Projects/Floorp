@@ -31,9 +31,10 @@ CMD ["/bin/bash", "--login"]
 # Set apt sources list to a snapshot.
 RUN for s in debian_wheezy debian_wheezy-updates debian-security_wheezy/updates; do \
       echo "deb http://snapshot.debian.org/archive/${s%_*}/20171210T214726Z/ ${s#*_} main"; \
-    done > /etc/apt/sources.list
+    done > /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99check-valid-until
 
-RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
+RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
       apt-transport-https \
       ca-certificates
@@ -43,7 +44,7 @@ RUN for task in $DOCKER_IMAGE_PACKAGES; do \
       echo "deb [trusted=yes] https://queue.taskcluster.net/v1/task/$task/runs/0/artifacts/public/build/ debian/" >> /etc/apt/sources.list; \
     done
 
-RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
+RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
       autoconf \
       automake \
