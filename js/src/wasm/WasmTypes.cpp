@@ -888,3 +888,18 @@ wasm::LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode 
 
     return &codeRanges[match];
 }
+
+UniqueTlsData
+wasm::CreateTlsData(uint32_t globalDataLength)
+{
+    MOZ_ASSERT(globalDataLength % gc::SystemPageSize() == 0);
+
+    void* allocatedBase = js_calloc(TlsDataAlign + offsetof(TlsData, globalArea) + globalDataLength);
+    if (!allocatedBase)
+        return nullptr;
+
+    auto* tlsData = reinterpret_cast<TlsData*>(AlignBytes(uintptr_t(allocatedBase), TlsDataAlign));
+    tlsData->allocatedBase = allocatedBase;
+
+    return UniqueTlsData(tlsData);
+}

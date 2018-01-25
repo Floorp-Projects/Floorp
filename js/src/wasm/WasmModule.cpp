@@ -1155,8 +1155,8 @@ Module::instantiate(JSContext* cx,
     if (!instantiateTable(cx, &table, &tables))
         return false;
 
-    auto globalSegment = GlobalSegment::create(metadata().globalDataLength);
-    if (!globalSegment) {
+    UniqueTlsData tlsData = CreateTlsData(metadata().globalDataLength);
+    if (!tlsData) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -1215,7 +1215,7 @@ Module::instantiate(JSContext* cx,
     instance.set(WasmInstanceObject::create(cx,
                                             code,
                                             Move(debug),
-                                            Move(globalSegment),
+                                            Move(tlsData),
                                             memory,
                                             Move(tables),
                                             funcImports,
