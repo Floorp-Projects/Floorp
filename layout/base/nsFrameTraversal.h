@@ -18,7 +18,8 @@ nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                               bool aVisual,
                               bool aLockInScrollView,
                               bool aFollowOOFs,
-                              bool aSkipPopupChecks);
+                              bool aSkipPopupChecks,
+                              bool aSkipShadow);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
