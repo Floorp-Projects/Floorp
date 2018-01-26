@@ -224,10 +224,9 @@ private:
   //
 
 public:
-  // Returns the time of the first sample.
-  double StreamJSON(const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
-                    const mozilla::TimeStamp& aProcessStartTime,
-                    double aSinceTime);
+  void StreamJSON(const ProfileBuffer& aBuffer, SpliceableJSONWriter& aWriter,
+                  const mozilla::TimeStamp& aProcessStartTime,
+                  double aSinceTime);
 
   // Call this method when the JS entries inside the buffer are about to
   // become invalid, i.e., just before JS shutdown.
@@ -320,7 +319,6 @@ private:
   // FlushSamplesAndMarkers should be called to save them. These are spliced
   // into the final stream.
   mozilla::UniquePtr<char[]> mSavedStreamedSamples;
-  double mFirstSavedStreamedSampleTime;
   mozilla::UniquePtr<char[]> mSavedStreamedMarkers;
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
@@ -394,10 +392,8 @@ StreamSamplesAndMarkers(const char* aName, int aThreadId,
                         const TimeStamp& aRegisterTime,
                         const TimeStamp& aUnregisterTime,
                         double aSinceTime,
-                        double* aOutFirstSampleTime,
                         JSContext* aContext,
                         char* aSavedStreamedSamples,
-                        double aFirstSavedStreamedSampleTime,
                         char* aSavedStreamedMarkers,
                         UniqueStacks& aUniqueStacks);
 
