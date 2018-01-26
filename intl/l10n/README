@@ -1,0 +1,17 @@
+The content of this directory is partially sourced from the fluent.js project.
+
+The following files are affected:
+ - MessageContext.jsm
+ - Localization.jsm
+ - DOMLocalization.jsm
+ - l10n.js
+
+At the moment, the tool used to produce those files in fluent.js repository, doesn't
+fully align with how the code is structured here, so we perform a manual adjustments
+mostly around header and footer.
+
+The result difference is stored in `./fluent.js.patch` file which can be used to
+approximate the changes needed to be applied on the output of the 
+fluent.js/fluent-gecko's make.
+
+In b.m.o. bug 1434434 we will try to reduce this difference to zero. 
