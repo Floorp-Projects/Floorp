@@ -221,15 +221,18 @@ pub enum GpuCacheUpdate {
     },
 }
 
+#[must_use]
 #[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct GpuCacheUpdateList {
-    // The current height of the texture. The render thread
-    // should resize the texture if required.
+    /// The frame current update list was generated from.
+    pub frame_id: FrameId,
+    /// The current height of the texture. The render thread
+    /// should resize the texture if required.
     pub height: u32,
-    // List of updates to apply.
+    /// List of updates to apply.
     pub updates: Vec<GpuCacheUpdate>,
-    // A flat list of GPU blocks that are pending upload
-    // to GPU memory.
+    /// A flat list of GPU blocks that are pending upload
+    /// to GPU memory.
     pub blocks: Vec<GpuBlockData>,
 }
 
@@ -595,9 +598,9 @@ impl GpuCache {
     /// End the frame. Return the list of updates to apply to the
     /// device specific cache texture.
     pub fn end_frame(
-        &mut self,
+        &self,
         profile_counters: &mut GpuCacheProfileCounters,
-    ) -> GpuCacheUpdateList {
+    ) -> FrameId {
         profile_counters
             .allocated_rows
             .set(self.texture.rows.len());
@@ -607,8 +610,13 @@ impl GpuCache {
         profile_counters
             .saved_blocks
             .set(self.saved_block_count);
+        self.frame_id
+    }
 
+    /// Extract the pending updates from the cache.
+    pub fn extract_updates(&mut self) -> GpuCacheUpdateList {
         GpuCacheUpdateList {
+            frame_id: self.frame_id,
             height: self.texture.height,
             updates: mem::replace(&mut self.texture.updates, Vec::new()),
             blocks: mem::replace(&mut self.texture.pending_blocks, Vec::new()),

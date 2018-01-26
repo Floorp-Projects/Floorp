@@ -153,6 +153,7 @@ void main(void) {
     vec4 edge_distances;
     vec4 color0, color1;
     vec2 color_delta;
+    vec4 edge_mask;
 
     // TODO(gw): Now that all border styles are supported, the switch
     //           statement below can be tidied up quite a bit.
@@ -180,6 +181,7 @@ void main(void) {
             color_delta = vec2(1.0);
             vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[0].xy,
                                                               border.widths.xy)) ? 1.0 : 0.0;
+            edge_mask = vec4(1.0, 1.0, 0.0, 0.0);
             break;
         }
         case 1: {
@@ -206,6 +208,7 @@ void main(void) {
             color_delta = vec2(1.0, -1.0);
             vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[0].zw,
                                                               border.widths.zy)) ? 1.0 : 0.0;
+            edge_mask = vec4(0.0, 1.0, 1.0, 0.0);
             break;
         }
         case 2: {
@@ -232,6 +235,7 @@ void main(void) {
             color_delta = vec2(-1.0);
             vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[1].xy,
                                                               border.widths.zw)) ? 1.0 : 0.0;
+            edge_mask = vec4(0.0, 0.0, 1.0, 1.0);
             break;
         }
         case 3: {
@@ -258,6 +262,7 @@ void main(void) {
             color_delta = vec2(-1.0, 1.0);
             vIsBorderRadiusLessThanBorderWidth = any(lessThan(border.radii[1].zw,
                                                               border.widths.xw)) ? 1.0 : 0.0;
+            edge_mask = vec4(1.0, 0.0, 0.0, 1.0);
             break;
         }
     }
@@ -301,7 +306,7 @@ void main(void) {
     VertexInfo vi = write_transform_vertex(segment_rect,
                                            prim.local_rect,
                                            prim.local_clip_rect,
-                                           vec4(1.0),
+                                           edge_mask,
                                            prim.z,
                                            prim.scroll_node,
                                            prim.task);

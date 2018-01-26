@@ -24,7 +24,10 @@ impl CaptureConfig {
         CaptureConfig {
             root,
             bits,
-            pretty: ser::PrettyConfig::default(),
+            pretty: ser::PrettyConfig {
+                enumerate_arrays: true,
+                .. ser::PrettyConfig::default()
+            },
         }
     }
 
