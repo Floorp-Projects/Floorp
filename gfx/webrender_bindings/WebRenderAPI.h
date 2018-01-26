@@ -76,7 +76,7 @@ public:
   void AddExternalImage(ImageKey key,
                         const ImageDescriptor& aDescriptor,
                         ExternalImageId aExtID,
-                        WrExternalImageBufferType aBufferType,
+                        wr::WrExternalImageBufferType aBufferType,
                         uint8_t aChannelIndex = 0);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
@@ -203,6 +203,8 @@ public:
   uint32_t GetMaxTextureSize() const { return mMaxTextureSize; }
   bool GetUseANGLE() const { return mUseANGLE; }
   layers::SyncHandle GetSyncHandle() const { return mSyncHandle; }
+
+  void Capture();
 
 protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId, uint32_t aMaxTextureSize, bool aUseANGLE, layers::SyncHandle aSyncHandle)
