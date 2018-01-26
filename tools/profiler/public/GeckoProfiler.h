@@ -492,8 +492,7 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
 // Returns false if the profiler is inactive.
 bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                            double aSinceTime = 0,
-                                           bool aIsShuttingDown = false,
-                                           mozilla::TimeStamp* aOutFirstSampleTime = nullptr);
+                                           bool aIsShuttingDown = false);
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.

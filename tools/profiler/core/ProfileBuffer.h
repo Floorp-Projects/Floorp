@@ -51,8 +51,7 @@ public:
   static const size_t kMaxFrameKeyLength = 512;
 
   bool StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                           double aSinceTime, double* aOutFirstSampleTime,
-                           JSContext* cx,
+                           double aSinceTime, JSContext* cx,
                            UniqueStacks& aUniqueStacks) const;
   bool StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
