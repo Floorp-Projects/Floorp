@@ -14,10 +14,6 @@
 #define JS_HAS_TOSOURCE         1       /* has Object/Array toSource method */
 #define JS_HAS_UNEVAL           1       /* has uneval() top-level function */
 
-#ifndef NIGHTLY_BUILD
-#define JS_HAS_EXPR_CLOSURES    1       /* has function (formals) listexpr */
-#endif
-
 /*
  * Feature for Object.prototype.__{define,lookup}{G,S}etter__ legacy support;
  * support likely to be made opt-in at some future time.
