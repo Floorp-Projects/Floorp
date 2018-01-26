@@ -9,8 +9,6 @@ let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_STYLO_ENABLED = "layout.css.servo.enabled";
-
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
   "resource:///modules/PageActions.jsm");
 
@@ -18,6 +16,10 @@ XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {
   return Services.strings.createBundle(
     "chrome://webcompat-reporter/locale/webcompat.properties");
 });
+
+// Gather values for prefs we want to appear in reports.
+let prefs = {};
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "layout.css.servo.enabled", "layout.css.servo.enabled", false);
 
 let WebCompatReporter = {
   get endpoint() {
@@ -79,14 +81,14 @@ let WebCompatReporter = {
     const FRAMESCRIPT = "chrome://webcompat-reporter/content/wc-frame.js";
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     const WEBCOMPAT_ORIGIN = new win.URL(WebCompatReporter.endpoint).origin;
-    let styloEnabled = Services.prefs.getBoolPref(PREF_STYLO_ENABLED, false);
 
     let params = new URLSearchParams();
     params.append("url", `${tabData.url}`);
     params.append("src", "desktop-reporter");
-    if (styloEnabled) {
-        params.append("details", "layout.css.servo.enabled: true");
-        params.append("label", "type-stylo");
+    params.append("details", JSON.stringify(prefs));
+
+    if (prefs["layout.css.servo.enabled"]) {
+      params.append("label", "type-stylo");
     }
 
     let tab = gBrowser.loadOneTab(
