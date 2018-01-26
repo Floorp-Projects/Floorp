@@ -23,27 +23,45 @@ from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS
 RELEASE_PROMOTION_CONFIG = {
     'promote_fennec': {
         'target_tasks_method': 'promote_fennec',
+        'product': 'fennec',
     },
     'ship_fennec': {
         'target_tasks_method': 'ship_fennec',
+        'product': 'fennec',
     },
     'promote_firefox': {
         'target_tasks_method': 'promote_firefox',
+        'product': 'firefox',
     },
     'push_firefox': {
         'target_tasks_method': 'push_firefox',
+        'product': 'firefox',
     },
     'ship_firefox': {
         'target_tasks_method': 'ship_firefox',
+        'product': 'firefox',
+    },
+    'promote_firefox_rc': {
+        'target_tasks_method': 'promote_firefox',
+        'product': 'firefox',
+        'desktop_release_type': 'rc',
+    },
+    'ship_firefox_rc': {
+        'target_tasks_method': 'ship_firefox',
+        'product': 'firefox',
+        'desktop_release_type': 'rc',
     },
     'promote_devedition': {
         'target_tasks_method': 'promote_devedition',
+        'product': 'devedition',
     },
     'push_devedition': {
         'target_tasks_method': 'push_devedition',
+        'product': 'devedition',
     },
     'ship_devedition': {
         'target_tasks_method': 'ship_devedition',
+        'product': 'devedition',
     },
 }
 
@@ -60,25 +78,8 @@ UPTAKE_MONITORING_PLATFORMS_FLAVORS = (
 
 PARTIAL_UPDATES_FLAVORS = UPTAKE_MONITORING_PLATFORMS_FLAVORS + (
     'promote_firefox',
+    'promote_firefox_rc',
     'promote_devedition',
-)
-
-DESKTOP_RELEASE_TYPE_FLAVORS = (
-    'promote_firefox',
-    'push_firefox',
-    'ship_firefox',
-    'promote_devedition',
-    'push_devedition',
-    'ship_devedition',
-)
-
-
-VALID_DESKTOP_RELEASE_TYPES = (
-    'beta',
-    'devedition',
-    'esr',
-    'release',
-    'rc',
 )
 
 
@@ -127,12 +128,6 @@ def is_release_promotion_available(parameters):
                 'description': 'The flavor of release promotion to perform.',
                 'enum': sorted(RELEASE_PROMOTION_CONFIG.keys()),
             },
-            'target_tasks_method': {
-                'type': 'string',
-                'title': 'target task method',
-                'description': ('Optional: the target task method to use to generate '
-                                'the new graph.'),
-            },
             'rebuild_kinds': {
                 'type': 'array',
                 'description': ('Optional: an array of kinds to ignore from the previous '
@@ -150,9 +145,19 @@ def is_release_promotion_available(parameters):
                     'type': 'string',
                 },
             },
+            'version': {
+                'type': 'string',
+                'description': ('Optional: override the version for release promotion. '
+                                "Occasionally we'll land a taskgraph fix in a later "
+                                'commit, but want to act on a build from a previous '
+                                'commit. If a version bump has landed in the meantime, '
+                                'relying on the in-tree version will break things.'),
+                'default': '',
+            },
             'next_version': {
                 'type': 'string',
-                'description': 'Next version.',
+                'description': ('Next version. Required in the following flavors: '
+                                '{}'.format(sorted(VERSION_BUMP_FLAVORS))),
                 'default': '',
             },
 
@@ -169,7 +174,8 @@ def is_release_promotion_available(parameters):
             #   }
             'partial_updates': {
                 'type': 'object',
-                'description': 'Partial updates.',
+                'description': ('Partial updates. Required in the following flavors: '
+                                '{}'.format(sorted(PARTIAL_UPDATES_FLAVORS))),
                 'default': {},
                 'additionalProperties': {
                     'type': 'object',
@@ -207,11 +213,6 @@ def is_release_promotion_available(parameters):
                 'default': [],
             },
 
-            'desktop_release_type': {
-                'type': 'string',
-                'default': '',
-            },
-
             'release_eta': {
                 'type': 'string',
                 'default': '',
@@ -222,8 +223,9 @@ def is_release_promotion_available(parameters):
 )
 def release_promotion_action(parameters, input, task_group_id, task_id, task):
     release_promotion_flavor = input['release_promotion_flavor']
+    promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
     release_history = {}
-    desktop_release_type = None
+    product = promotion_config['product']
 
     next_version = str(input.get('next_version') or '')
     if release_promotion_flavor in VERSION_BUMP_FLAVORS:
@@ -234,12 +236,7 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
                 "targets." % ', '.join(VERSION_BUMP_FLAVORS)
             )
 
-    if release_promotion_flavor in DESKTOP_RELEASE_TYPE_FLAVORS:
-        desktop_release_type = input.get('desktop_release_type', None)
-        if desktop_release_type not in VALID_DESKTOP_RELEASE_TYPES:
-            raise Exception("`desktop_release_type` must be one of: %s" %
-                            ", ".join(VALID_DESKTOP_RELEASE_TYPES))
-
+    if product in ('firefox', 'devedition'):
         if release_promotion_flavor in PARTIAL_UPDATES_FLAVORS:
             partial_updates = json.dumps(input.get('partial_updates', {}))
             if partial_updates == "{}":
@@ -247,9 +244,7 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
                     "`partial_updates` property needs to be provided for %s "
                     "targets." % ', '.join(PARTIAL_UPDATES_FLAVORS)
                 )
-            balrog_prefix = 'Firefox'
-            if desktop_release_type == 'devedition':
-                balrog_prefix = 'Devedition'
+            balrog_prefix = product.title()
             os.environ['PARTIAL_UPDATES'] = partial_updates
             release_history = populate_release_history(
                 balrog_prefix, parameters['project'],
@@ -267,9 +262,8 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
 
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
 
-    target_tasks_method = input.get(
-        'target_tasks_method',
-        promotion_config['target_tasks_method'].format(project=parameters['project'])
+    target_tasks_method = promotion_config['target_tasks_method'].format(
+        project=parameters['project']
     )
     rebuild_kinds = input.get(
         'rebuild_kinds', promotion_config.get('rebuild_kinds', [])
@@ -309,8 +303,10 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
     parameters['build_number'] = int(input['build_number'])
     parameters['next_version'] = next_version
     parameters['release_history'] = release_history
-    parameters['desktop_release_type'] = desktop_release_type
+    parameters['desktop_release_type'] = promotion_config.get('desktop_release_type', '')
     parameters['release_eta'] = input.get('release_eta', '')
+    if input['version']:
+        parameters['version'] = input['version']
 
     # make parameters read-only
     parameters = Parameters(**parameters)
