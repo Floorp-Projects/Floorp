@@ -7,6 +7,7 @@
 #include "Compatibility.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
 
 #include "nsDataHashtable.h"
@@ -48,7 +49,7 @@ typedef UniquePtr<OBJECT_DIRECTORY_INFORMATION, ByteArrayDeleter> ObjDirInfoPtr;
 // search completion.
 template <typename ComparatorFnT>
 static bool
-FindNamedObject(ComparatorFnT aComparator)
+FindNamedObject(const ComparatorFnT& aComparator)
 {
   // We want to enumerate every named kernel object in our session. We do this
   // by opening a directory object using a path constructed using the session
@@ -187,7 +188,12 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
   // asking the kernel to take a snapshot of all the handles on the system;
   // the size of the required buffer may fluctuate between successive calls.
   while (true) {
-    handleInfoBuf = MakeUnique<char[]>(handleInfoBufLen);
+    // These allocations can be hundreds of megabytes on some computers, so
+    // we should use fallible new here.
+    handleInfoBuf = MakeUniqueFallible<char[]>(handleInfoBufLen);
+    if (!handleInfoBuf) {
+      return Nothing();
+    }
 
     ntStatus = ::NtQuerySystemInformation(
                  (SYSTEM_INFORMATION_CLASS) SystemExtendedHandleInformation,
@@ -294,7 +300,6 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
       remotePid = Some(pid);
     }
   }
-
 
   if (!remotePid) {
     return Nothing();
