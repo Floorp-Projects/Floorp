@@ -113,11 +113,17 @@ function* checkEventsForNode(test, inspector, testActor) {
          "attribute[" + j + "] matches for " + cssSelector);
     }
 
+    is(header.classList.contains("content-expanded"), false,
+        "We are not in expanded state");
+
     // Make sure the header is not hidden by scrollbars before clicking.
     header.scrollIntoView();
 
     EventUtils.synthesizeMouseAtCenter(header, {}, type.ownerGlobal);
     yield tooltip.once("event-tooltip-ready");
+
+    is(header.classList.contains("content-expanded"), true,
+        "We are in expanded state and icon changed");
 
     let editor = tooltip.eventTooltip._eventEditors.get(contentBox).editor;
     testDiff(editor.getText(), expected[i].handler,

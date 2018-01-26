@@ -16,7 +16,7 @@ import unittest
 import mozunit
 
 from mozprofile.cli import MozProfileCLI
-from mozprofile.prefs import Preferences
+from mozprofile.prefs import Preferences, PreferencesReadError
 from mozprofile.profile import Profile
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -304,6 +304,17 @@ user_pref("webgl.force-enabled", true);
 
             commandline = ["--preferences", f.name]
             self.compare_generated(_prefs, commandline)
+
+    def test_json_datatypes(self):
+        # minPercent is at 30.1 to test if non-integer data raises an exception
+        json = """{"zoom.minPercent": 30.1, "zoom.maxPercent": 300}"""
+
+        with mozfile.NamedTemporaryFile(suffix='.json') as f:
+            f.write(json)
+            f.flush()
+
+            with self.assertRaises(PreferencesReadError):
+                Preferences.read_json(f._path)
 
     def test_prefs_write(self):
         """test that the Preferences.write() method correctly serializes preferences"""

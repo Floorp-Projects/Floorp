@@ -120,10 +120,10 @@ FileDescriptorFile::GetPath(nsAString& aRetVal)
   return mFile->GetPath(aRetVal);
 }
 
-NS_IMETHODIMP
-FileDescriptorFile::GetNativePath(nsACString& aRetVal)
+PathString
+FileDescriptorFile::NativePath()
 {
-  return mFile->GetNativePath(aRetVal);
+  return mFile->NativePath();
 }
 
 NS_IMETHODIMP
@@ -148,6 +148,12 @@ NS_IMETHODIMP
 FileDescriptorFile::GetFollowLinks(bool* aFollowLinks)
 {
   return mFile->GetFollowLinks(aFollowLinks);
+}
+
+NS_IMETHODIMP
+FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
+{
+  return mFile->GetPersistentDescriptor(aPersistentDescriptor);
 }
 
 //-----------------------------------------------------------------------------
@@ -222,12 +228,6 @@ FileDescriptorFile::AppendRelativePath(const nsAString& aNode)
 
 NS_IMETHODIMP
 FileDescriptorFile::AppendRelativeNativePath(const nsACString& aFragment)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
