@@ -7,6 +7,7 @@
 #define mozilla_HTMLEditor_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/StyleSheet.h"
@@ -254,6 +255,20 @@ public:
                                           nsAString& outValue);
   nsresult RemoveInlineProperty(nsAtom* aProperty,
                                 nsAtom* aAttribute);
+
+  /**
+   * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
+   * This will crash in debug build if the editor already has an instance
+   * but called with another instance.
+   */
+  void SetComposerCommandsUpdater(
+         ComposerCommandsUpdater* aComposerCommandsUpdater)
+  {
+    MOZ_ASSERT(!aComposerCommandsUpdater || !mComposerCommandsUpdater ||
+               aComposerCommandsUpdater == mComposerCommandsUpdater);
+    mComposerCommandsUpdater = aComposerCommandsUpdater;
+  }
+
 protected:
   virtual ~HTMLEditor();
 
@@ -973,6 +988,7 @@ protected:
 
 protected:
   RefPtr<TypeInState> mTypeInState;
+  RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
   bool mCRInParagraphCreatesParagraph;
 
