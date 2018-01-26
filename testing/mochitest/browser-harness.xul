@@ -63,9 +63,6 @@
     }
   ]]></style>
   <script type="application/javascript"><![CDATA[
-    if (Cc === undefined) {
-    }
-
     var gConfig;
 
     var gDumper = {

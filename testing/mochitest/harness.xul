@@ -27,9 +27,6 @@
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript"><![CDATA[
 
-if (Cc === undefined) {
-}
-
 function loadTests()
 {
   window.removeEventListener("load", loadTests, false);
