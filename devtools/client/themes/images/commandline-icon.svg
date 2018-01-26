@@ -16,10 +16,10 @@
       }
 
       #light-theme-focus:target ~ #light-theme {
-        fill: #4A90E2;
+        fill: #0060DF;
       }
       #dark-theme-focus:target ~ #dark-theme {
-        fill: #00FF7F;
+        fill: #75BFFF;
       }
 
       /* Unfocused states */
