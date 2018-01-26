@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-const inspector = require("devtools/server/actors/inspector/inspector");
+const WalkerActor = require("devtools/server/actors/inspector/walker-actor");
 
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
@@ -21,9 +21,9 @@ window.onload = function () {
 };
 
 const testSummaryLength = 10;
-inspector.setValueSummaryLength(testSummaryLength);
+WalkerActor.setValueSummaryLength(testSummaryLength);
 SimpleTest.registerCleanupFunction(function () {
-  inspector.setValueSummaryLength(inspector.DEFAULT_VALUE_SUMMARY_LENGTH);
+  WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
 });
 
 let gInspectee = null;

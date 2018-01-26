@@ -16,8 +16,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777674
 window.onload = function () {
   const {InspectorFront} =
     require("devtools/shared/fronts/inspector");
-  const {_documentWalker} =
-    require("devtools/server/actors/inspector/inspector");
+  const {DocumentWalker: _documentWalker} =
+    require("devtools/server/actors/inspector/document-walker");
+
   const nodeFilterConstants =
     require("devtools/shared/dom-node-filter-constants");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
