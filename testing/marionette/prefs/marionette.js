@@ -10,6 +10,10 @@
 // It is included in Firefox, but not enabled by default unless the
 // -marionette flag is passed.
 
+// Delay server startup until a modal dialogue has been clicked to
+// allow time for user to set breakpoints in Browser Toolbox.
+pref("marionette.debugging.clicktostart", false);
+
 // Marionette logging verbosity.  Allowed values are "fatal", "error",
 // "warn", "info", "config", "debug", and "trace".
 pref("marionette.log.level", "info");
