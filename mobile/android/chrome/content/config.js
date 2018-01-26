@@ -572,6 +572,15 @@ Pref.prototype = {
     return aValue ? aValue.test(this.name) : true;
   },
 
+  escapeHTML: function(input) {
+    return input.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#x27;")
+                .replace(/\//g, "&#x2F;");
+  },
+
   // Get existing or create new LI node for the pref
   getOrCreateNewLINode: function AC_getOrCreateNewLINode() {
     if (!this.li) {
@@ -600,7 +609,7 @@ Pref.prototype = {
       this.li.unsafeSetInnerHTML(
         "<div class='pref-name' " +
             "onclick='AboutConfig.selectOrToggleBoolPref(event);'>" +
-            this.name +
+            this.escapeHTML(this.name) +
         "</div>" +
         "<div class='pref-item-line'>" +
           "<input class='pref-value' value='' " +
