@@ -128,7 +128,6 @@
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"

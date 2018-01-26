@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsDocument.h"
 #include "nsIHTMLDocument.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "nsTArray.h"
@@ -35,8 +34,7 @@ class HTMLAllCollection;
 } // namespace mozilla
 
 class nsHTMLDocument : public nsDocument,
-                       public nsIHTMLDocument,
-                       public nsIDOMHTMLDocument
+                       public nsIHTMLDocument
 {
 public:
   using nsDocument::SetDocumentURI;
@@ -93,9 +91,6 @@ public:
   using nsDocument::SetTitle;
   using nsDocument::GetLastStyleSheetSet;
   using nsDocument::MozSetImageElement;
-
-  // nsIDOMHTMLDocument interface
-  NS_DECL_NSIDOMHTMLDOCUMENT
 
   mozilla::dom::HTMLAllCollection* All();
 
@@ -403,7 +398,6 @@ protected:
 
 #define NS_HTML_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                        \
     NS_DOCUMENT_INTERFACE_TABLE_BEGIN(_class)                                 \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)                         \
-    NS_INTERFACE_TABLE_ENTRY(_class, nsIDOMHTMLDocument)
+    NS_INTERFACE_TABLE_ENTRY(_class, nsIHTMLDocument)
 
 #endif /* nsHTMLDocument_h___ */
