@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.4.1 */
+/* fluent@0.6.0 */
 
 const { Localization } =
   Components.utils.import("resource://gre/modules/Localization.jsm", {});
@@ -30,7 +30,7 @@ const reOverlay = /<|&#?\w+;/;
  *
  * Source: https://www.w3.org/TR/html5/text-level-semantics.html
  */
-const ALLOWED_ELEMENTS = {
+const LOCALIZABLE_ELEMENTS = {
   'http://www.w3.org/1999/xhtml': [
     'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
     'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u',
@@ -38,12 +38,12 @@ const ALLOWED_ELEMENTS = {
   ],
 };
 
-const ALLOWED_ATTRIBUTES = {
+const LOCALIZABLE_ATTRIBUTES = {
   'http://www.w3.org/1999/xhtml': {
     global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
     a: ['download'],
     area: ['download', 'alt'],
-    // value is special-cased in isAttrNameAllowed
+    // value is special-cased in isAttrNameLocalizable
     input: ['alt', 'placeholder'],
     menuitem: ['label'],
     menu: ['label'],
@@ -92,18 +92,24 @@ function overlayElement(targetElement, translation) {
     }
   }
 
-  if (translation.attrs === null) {
-    return;
-  }
-
   const explicitlyAllowed = targetElement.hasAttribute('data-l10n-attrs')
     ? targetElement.getAttribute('data-l10n-attrs')
       .split(',').map(i => i.trim())
     : null;
 
-  for (const [name, val] of translation.attrs) {
-    if (isAttrNameAllowed(name, targetElement, explicitlyAllowed)) {
-      targetElement.setAttribute(name, val);
+  // Remove localizable attributes which may have been set by a previous
+  // translation.
+  for (const attr of Array.from(targetElement.attributes)) {
+    if (isAttrNameLocalizable(attr.name, targetElement, explicitlyAllowed)) {
+      targetElement.removeAttribute(attr.name);
+    }
+  }
+
+  if (translation.attrs) {
+    for (const [name, val] of translation.attrs) {
+      if (isAttrNameLocalizable(name, targetElement, explicitlyAllowed)) {
+        targetElement.setAttribute(name, val);
+      }
     }
   }
 }
@@ -131,9 +137,11 @@ function overlayElement(targetElement, translation) {
  *
  * @param {DocumentFragment} translationFragment
  * @param {Element} sourceElement
+ * @returns {DocumentFragment}
  * @private
  */
 function sanitizeUsing(translationFragment, sourceElement) {
+  const ownerDocument = translationFragment.ownerDocument;
   // Take one node from translationFragment at a time and check it against
   // the allowed list or try to match it with a corresponding element
   // in the source.
@@ -144,32 +152,29 @@ function sanitizeUsing(translationFragment, sourceElement) {
     }
 
     // If the child is forbidden just take its textContent.
-    if (!isElementAllowed(childNode)) {
-      const text = translationFragment.ownerDocument.createTextNode(
-        childNode.textContent
-      );
+    if (!isElementLocalizable(childNode)) {
+      const text = ownerDocument.createTextNode(childNode.textContent);
       translationFragment.replaceChild(text, childNode);
       continue;
     }
 
-
-    // If a child of the same type exists in sourceElement, use it as the base
-    // for the resultChild.  This also removes the child from sourceElement.
-    const sourceChild = shiftNamedElement(sourceElement, childNode.localName);
-
-    const mergedChild = sourceChild
-      // Shallow-clone the sourceChild to remove all childNodes.
-      ? sourceChild.cloneNode(false)
-      // Create a fresh element as a way to remove all forbidden attributes.
-      : childNode.ownerDocument.createElement(childNode.localName);
+    // Start the sanitization with an empty element.
+    const mergedChild = ownerDocument.createElement(childNode.localName);
 
     // Explicitly discard nested HTML by serializing childNode to a TextNode.
     mergedChild.textContent = childNode.textContent;
 
-    for (const attr of Array.from(childNode.attributes)) {
-      if (isAttrNameAllowed(attr.name, childNode)) {
-        mergedChild.setAttribute(attr.name, attr.value);
-      }
+    // If a child of the same type exists in sourceElement, take its functional
+    // (i.e. non-localizable) attributes. This also removes the child from
+    // sourceElement.
+    const sourceChild = shiftNamedElement(sourceElement, childNode.localName);
+
+    // Find the union of all safe attributes: localizable attributes from
+    // childNode and functional attributes from sourceChild.
+    const safeAttributes = sanitizeAttrsUsing(childNode, sourceChild);
+
+    for (const attr of safeAttributes) {
+      mergedChild.setAttribute(attr.name, attr.value);
     }
 
     translationFragment.replaceChild(mergedChild, childNode);
@@ -183,6 +188,33 @@ function sanitizeUsing(translationFragment, sourceElement) {
 }
 
 /**
+ * Sanitize and merge attributes.
+ *
+ * Only localizable attributes from the translated child element and only
+ * functional attributes from the source child element are considered safe.
+ *
+ * @param {Element} translatedElement
+ * @param {Element} sourceElement
+ * @returns {Array<Attr>}
+ * @private
+ */
+function sanitizeAttrsUsing(translatedElement, sourceElement) {
+  const localizedAttrs = Array.from(translatedElement.attributes).filter(
+    attr => isAttrNameLocalizable(attr.name, translatedElement)
+  );
+
+  if (!sourceElement) {
+    return localizedAttrs;
+  }
+
+  const functionalAttrs = Array.from(sourceElement.attributes).filter(
+    attr => !isAttrNameLocalizable(attr.name, sourceElement)
+  );
+
+  return localizedAttrs.concat(functionalAttrs);
+}
+
+/**
  * Check if element is allowed in the translation.
  *
  * This method is used by the sanitizer when the translation markup contains
@@ -192,8 +224,8 @@ function sanitizeUsing(translationFragment, sourceElement) {
  * @returns {boolean}
  * @private
  */
-function isElementAllowed(element) {
-  const allowed = ALLOWED_ELEMENTS[element.namespaceURI];
+function isElementLocalizable(element) {
+  const allowed = LOCALIZABLE_ELEMENTS[element.namespaceURI];
   return allowed && allowed.includes(element.localName);
 }
 
@@ -213,12 +245,12 @@ function isElementAllowed(element) {
  * @returns {boolean}
  * @private
  */
-function isAttrNameAllowed(name, element, explicitlyAllowed = null) {
+function isAttrNameLocalizable(name, element, explicitlyAllowed = null) {
   if (explicitlyAllowed && explicitlyAllowed.includes(name)) {
     return true;
   }
 
-  const allowed = ALLOWED_ATTRIBUTES[element.namespaceURI];
+  const allowed = LOCALIZABLE_ATTRIBUTES[element.namespaceURI];
   if (!allowed) {
     return false;
   }
@@ -475,7 +507,7 @@ class DOMLocalization extends Localization {
           for (const addedNode of mutation.addedNodes) {
             if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
               if (addedNode.childElementCount) {
-                for (let element of this.getTranslatables(addedNode)) {
+                for (const element of this.getTranslatables(addedNode)) {
                   this.pendingElements.add(element);
                 }
               } else if (addedNode.hasAttribute(L10NID_ATTR_NAME)) {
@@ -487,8 +519,8 @@ class DOMLocalization extends Localization {
       }
     }
 
-    // This fragment allows us to coalesce all pending translations into a single
-    // requestAnimationFrame.
+    // This fragment allows us to coalesce all pending translations
+    // into a single requestAnimationFrame.
     if (this.pendingElements.size > 0) {
       if (this.pendingrAF === null) {
         this.pendingrAF = this.windowElement.requestAnimationFrame(() => {
@@ -499,6 +531,7 @@ class DOMLocalization extends Localization {
       }
     }
   }
+
 
   /**
    * Translate a DOM element or fragment asynchronously using this
