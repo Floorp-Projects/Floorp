@@ -1178,14 +1178,6 @@ nsHTMLDocument::Scripts()
   return mScripts;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetCookie(nsAString& aCookie)
-{
-  ErrorResult rv;
-  GetCookie(aCookie, rv);
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsIChannel>
 nsHTMLDocument::CreateDummyChannelForCookies(nsIURI* aCodebaseURI)
 {
@@ -1265,14 +1257,6 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     // because it assumes that the input is valid.
     UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
   }
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetCookie(const nsAString& aCookie)
-{
-  ErrorResult rv;
-  SetCookie(aCookie, rv);
-  return rv.StealNSResult();
 }
 
 void
