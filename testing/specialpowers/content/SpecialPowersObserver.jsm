@@ -17,9 +17,6 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 Components.utils.importGlobalProperties(["File"]);
 
-if (typeof(Cc) == "undefined") {
-}
-
 const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
 const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
 const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";

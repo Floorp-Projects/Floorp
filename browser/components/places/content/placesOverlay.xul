@@ -18,9 +18,6 @@
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"><![CDATA[
-    // TODO: Bug 406371.
-    // A bunch of browser code depends on us defining these, sad but true :(
-
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
     ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
     ChromeUtils.defineModuleGetter(window,
