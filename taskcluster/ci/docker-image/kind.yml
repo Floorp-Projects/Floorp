@@ -60,6 +60,11 @@ jobs:
       - deb7-valgrind
     args:
       ARCH: i386
+  debian7-mozjs-rust-build:
+    symbol: I(deb7jsrs)
+    parent: debian7-amd64-build
+    packages:
+      - deb7-cmake
   lint:
     symbol: I(lnt)
   debian9-base:
