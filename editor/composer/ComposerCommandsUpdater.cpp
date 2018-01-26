@@ -43,12 +43,23 @@ ComposerCommandsUpdater::~ComposerCommandsUpdater()
   }
 }
 
-NS_IMPL_ISUPPORTS(ComposerCommandsUpdater,
-                  nsISelectionListener,
-                  nsIDocumentStateListener,
-                  nsITransactionListener,
-                  nsITimerCallback,
-                  nsINamed)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ComposerCommandsUpdater)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ComposerCommandsUpdater)
+
+NS_INTERFACE_MAP_BEGIN(ComposerCommandsUpdater)
+  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentStateListener)
+  NS_INTERFACE_MAP_ENTRY(nsITransactionListener)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentStateListener)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(ComposerCommandsUpdater)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(ComposerCommandsUpdater,
+                         mUpdateTimer,
+                         mDOMWindow,
+                         mDocShell)
 
 #if 0
 #pragma mark -
@@ -225,9 +236,11 @@ ComposerCommandsUpdater::DidMerge(nsITransactionManager* aManager,
 nsresult
 ComposerCommandsUpdater::Init(nsPIDOMWindowOuter* aDOMWindow)
 {
-  NS_ENSURE_ARG(aDOMWindow);
-  mDOMWindow = do_GetWeakReference(aDOMWindow);
-  mDocShell = do_GetWeakReference(aDOMWindow->GetDocShell());
+  if (NS_WARN_IF(!aDOMWindow)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  mDOMWindow = aDOMWindow;
+  mDocShell = aDOMWindow->GetDocShell();
   return NS_OK;
 }
 
@@ -344,10 +357,11 @@ ComposerCommandsUpdater::UpdateOneCommand(const char* aCommand)
 bool
 ComposerCommandsUpdater::SelectionIsCollapsed()
 {
-  nsCOMPtr<nsPIDOMWindowOuter> domWindow = do_QueryReferent(mDOMWindow);
-  NS_ENSURE_TRUE(domWindow, true);
+  if (NS_WARN_IF(!mDOMWindow)) {
+    return true;
+  }
 
-  nsCOMPtr<nsISelection> domSelection = domWindow->GetSelection();
+  nsCOMPtr<nsISelection> domSelection = mDOMWindow->GetSelection();
   if (NS_WARN_IF(!domSelection)) {
     return false;
   }
@@ -358,9 +372,11 @@ ComposerCommandsUpdater::SelectionIsCollapsed()
 already_AddRefed<nsPICommandUpdater>
 ComposerCommandsUpdater::GetCommandUpdater()
 {
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
-  NS_ENSURE_TRUE(docShell, nullptr);
-  nsCOMPtr<nsICommandManager> manager = docShell->GetCommandManager();
+  if (NS_WARN_IF(!mDocShell)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsICommandManager> manager = mDocShell->GetCommandManager();
   nsCOMPtr<nsPICommandUpdater> updater = do_QueryInterface(manager);
   return updater.forget();
 }

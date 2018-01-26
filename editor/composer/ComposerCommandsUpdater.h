@@ -8,6 +8,7 @@
 #define mozilla_ComposerCommandsUpdater_h
 
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
+#include "nsCycleCollectionParticipant.h"
 #include "nsIDocumentStateListener.h"
 #include "nsINamed.h"
 #include "nsISelectionListener.h"
@@ -17,9 +18,10 @@
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nscore.h"                     // for NS_IMETHOD, nsresult, etc
 
-class nsPIDOMWindowOuter;
+class nsIDocShell;
 class nsITransaction;
 class nsITransactionManager;
+class nsPIDOMWindowOuter;
 class nsPICommandUpdater;
 
 namespace mozilla {
@@ -34,7 +36,9 @@ public:
   ComposerCommandsUpdater();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ComposerCommandsUpdater,
+                                           nsIDocumentStateListener)
 
   // nsISelectionListener
   NS_DECL_NSISELECTIONLISTENER
@@ -74,9 +78,9 @@ protected:
   void TimerCallback();
 
   nsCOMPtr<nsITimer> mUpdateTimer;
+  nsCOMPtr<nsPIDOMWindowOuter> mDOMWindow;
+  nsCOMPtr<nsIDocShell> mDocShell;
 
-  nsWeakPtr mDOMWindow;
-  nsWeakPtr mDocShell;
   int8_t mDirtyState;
   int8_t mSelectionCollapsed;
   bool mFirstDoOfFirstUndo;
