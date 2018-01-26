@@ -173,7 +173,7 @@ public:
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
   using nsIDocument::GetBody;
-  void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
+  using nsIDocument::SetBody;
   mozilla::dom::HTMLSharedElement *GetHead() {
     return static_cast<mozilla::dom::HTMLSharedElement*>(GetHeadElement());
   }
