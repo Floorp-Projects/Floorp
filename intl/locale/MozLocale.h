@@ -3,62 +3,91 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_intl_Locale_h__
-#define mozilla_intl_Locale_h__
+#ifndef mozilla_intl_MozLocale_h__
+#define mozilla_intl_MozLocale_h__
 
 #include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace intl {
 
 /**
- * Locale object, a BCP47-style tag decomposed into subtags for
- * matching purposes.
+ * Locale class is a core representation of a single locale.
  *
- * If constructed with aRange = true, any missing subtags will be
- * set to "*".
+ * A locale is a data object representing a combination of language, script,
+ * region, variant and a set of regional extension preferences that may further specify
+ * particular user choices like calendar, numbering system, etc.
+ *
+ * A locale can be expressed as a language tag string, like a simple "fr" for French,
+ * or a more specific "sr-Cyrl-RS-u-hc-h12" for Serbian in Russia with a Cyrylic script,
+ * and hour cycle selected to be `h12`.
+ *
+ * The format of the language tag follows BCP47 standard and implements a subset of it.
+ * In the future we expect to extend this class to cover more subtags and extensions.
+ *
+ * BCP47: https://tools.ietf.org/html/bcp47
+ *
+ * The aim of this class it aid in validation, parsing and canonicalization of the
+ * string.
+ *
+ * It allows the user to input any well-formed BCP47 language tag and operate
+ * on its subtags in a canonicalized form.
+ *
+ * It should be used for all operations on language tags, and together with
+ * LocaleService::NegotiateLanguages for language negotiation.
+ *
+ * Example:
+ *
+ *     Locale loc = Locale("de-at");
+ *
+ *     ASSERT_TRUE(loc.GetLanguage().Equals("de"));
+ *     ASSERT_TRUE(loc.GetScript().IsEmpty());
+ *     ASSERT_TRUE(loc.GetRegion().Equals("AT")); // canonicalized to upper case
+ *
  *
  * Note: The file name is `MozLocale` to avoid compilation problems on case-insensitive
  * Windows. The class name is `Locale`.
  */
 class Locale {
   public:
-    Locale(const nsCString& aLocale, bool aRange);
+    explicit Locale(const nsACString& aLocale);
+    explicit Locale(const char* aLocale)
+      : Locale(nsDependentCString(aLocale))
+      { };
 
-    bool Matches(const Locale& aLocale) const;
-    bool LanguageMatches(const Locale& aLocale) const;
+    const nsACString& GetLanguage() const;
+    const nsACString& GetScript() const;
+    const nsACString& GetRegion() const;
+    const nsTArray<nsCString>& GetVariants() const;
 
+    bool IsValid();
+    const nsCString AsString();
 
-    void SetVariantRange();
-    void SetRegionRange();
-
-    // returns false if nothing changed
+    bool Matches(const Locale& aOther, bool aThisRange, bool aOtherRange) const;
     bool AddLikelySubtags();
-    bool AddLikelySubtagsWithoutRegion();
-
-    const nsCString& AsString() const {
-      return mLocaleStr;
-    }
+    void ClearVariants();
+    void ClearRegion();
 
     bool operator== (const Locale& aOther) {
-      const auto& cmp = nsCaseInsensitiveCStringComparator();
-      return mLanguage.Equals(aOther.mLanguage, cmp) &&
-             mScript.Equals(aOther.mScript, cmp) &&
-             mRegion.Equals(aOther.mRegion, cmp) &&
-             mVariant.Equals(aOther.mVariant, cmp);
+      return mLanguage.Equals(aOther.mLanguage) &&
+             mScript.Equals(aOther.mScript) &&
+             mRegion.Equals(aOther.mRegion) &&
+             mVariants == aOther.mVariants;
+
     }
 
   private:
-    const nsCString& mLocaleStr;
-    nsCString mLanguage;
-    nsCString mScript;
-    nsCString mRegion;
-    nsCString mVariant;
-
-    bool AddLikelySubtagsForLocale(const nsACString& aLocale);
+    nsAutoCStringN<3> mLanguage;
+    nsAutoCStringN<4> mScript;
+    nsAutoCStringN<2> mRegion;
+    nsTArray<nsCString> mVariants;
+    bool mIsValid = true;
 };
 
 } // intl
 } // namespace mozilla
 
-#endif /* mozilla_intl_Locale_h__ */
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::intl::Locale)
+
+#endif /* mozilla_intl_MozLocale_h__ */

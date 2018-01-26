@@ -46,7 +46,7 @@ function test() {
   open_preferences(async function tabOpened(aContentWindow) {
     is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
     let dialog = await openAndLoadSubDialog(connectionURL);
-    let dialogClosingPromise = waitForEvent(dialog.document.documentElement, "dialogclosing");
+    let dialogClosingPromise = BrowserTestUtils.waitForEvent(dialog.document.documentElement, "dialogclosing");
 
     ok(dialog, "connection window opened");
     dialog.document.documentElement.acceptDialog();
