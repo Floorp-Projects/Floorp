@@ -38,7 +38,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
 #include "nsIDOMHTMLElement.h"
