@@ -144,6 +144,12 @@ Release Promotion
 ``build_number``
    Specify the release promotion build number.
 
+``version``
+   Specify the version for release tasks.
+
+``app_version``
+   Specify the application version for release tasks. For releases, this is often a less specific version number than ``version``.
+
 ``next_version``
    Specify the next version for version bump tasks.
 
