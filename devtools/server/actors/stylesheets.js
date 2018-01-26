@@ -174,7 +174,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   get safeHref() {
     let href = this.href;
     if (!href) {
-      if (this.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
+      if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
         href = this.ownerNode.location.href;
       } else if (this.ownerNode.ownerDocument &&
                  this.ownerNode.ownerDocument.location) {
@@ -300,7 +300,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     let docHref;
     if (this.ownerNode) {
-      if (this.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
+      if (this.ownerNode.nodeType == this.ownerNode.DOCUMENT_NODE) {
         docHref = this.ownerNode.location.href;
       } else if (this.ownerNode.ownerDocument && this.ownerNode.ownerDocument.location) {
         docHref = this.ownerNode.ownerDocument.location.href;
