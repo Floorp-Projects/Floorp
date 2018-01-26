@@ -391,6 +391,22 @@ class SimdConstant {
     }
 };
 
+enum IntConversionBehavior {
+    // These two try to convert the input to an int32 using ToNumber and
+    // will fail if the resulting int32 isn't strictly equal to the input.
+    IntConversion_Normal,
+    IntConversion_NegativeZeroCheck,
+    // These two will convert the input to an int32 with loss of precision.
+    IntConversion_Truncate,
+    IntConversion_ClampToUint8,
+};
+
+enum IntConversionInputKind {
+    IntConversion_NumbersOnly,
+    IntConversion_NumbersOrBoolsOnly,
+    IntConversion_Any
+};
+
 // The ordering of this enumeration is important: Anything < Value is a
 // specialized type. Furthermore, anything < String has trivial conversion to
 // a number.
