@@ -565,8 +565,8 @@ async function webdriverSendKeysToElement(el, value, a11y) {
   let acc = await a11y.getAccessible(el, true);
   a11y.assertActionable(acc, el);
 
-  interaction.moveCaretToEnd(el);
   el.focus();
+  interaction.moveCaretToEnd(el);
 
   if (el.type == "file") {
     await interaction.uploadFile(el, value);
