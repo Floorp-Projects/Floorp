@@ -29,7 +29,7 @@ public:
 
   nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                   nsIteratorType aType, bool aLockScroll, bool aFollowOOFs,
-                  bool aSkipPopupChecks);
+                  bool aSkipPopupChecks, bool aSkipShadow);
 
 protected:
   virtual ~nsFrameIterator() {}
@@ -94,6 +94,7 @@ protected:
   const bool mLockScroll;
   const bool mFollowOOFs;
   const bool mSkipPopupChecks;
+  const bool mSkipShadow;
   const nsIteratorType mType;
 
 private:
@@ -111,8 +112,10 @@ class nsVisualIterator: public nsFrameIterator
 public:
   nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                    nsIteratorType aType, bool aLockScroll,
-                   bool aFollowOOFs, bool aSkipPopupChecks) :
-  nsFrameIterator(aPresContext, aStart, aType, aLockScroll, aFollowOOFs, aSkipPopupChecks) {}
+                   bool aFollowOOFs, bool aSkipPopupChecks,
+                   bool aSkipShadow) :
+  nsFrameIterator(aPresContext, aStart, aType, aLockScroll,
+                  aFollowOOFs, aSkipPopupChecks, aSkipShadow) {}
 
 protected:
   nsIFrame* GetFirstChildInner(nsIFrame* aFrame) override;
@@ -143,7 +146,8 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                      bool aVisual,
                      bool aLockInScrollView,
                      bool aFollowOOFs,
-                     bool aSkipPopupChecks)
+                     bool aSkipPopupChecks,
+                     bool aSkipShadow)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
@@ -155,10 +159,12 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
   nsCOMPtr<nsIFrameEnumerator> trav;
   if (aVisual) {
     trav = new nsVisualIterator(aPresContext, aStart, aType,
-                                aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                                aLockInScrollView, aFollowOOFs,
+                                aSkipPopupChecks, aSkipShadow);
   } else {
     trav = new nsFrameIterator(aPresContext, aStart, aType,
-                               aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                               aLockInScrollView, aFollowOOFs,
+                               aSkipPopupChecks, aSkipShadow);
   }
   trav.forget(aEnumerator);
   return NS_OK;
@@ -187,7 +193,8 @@ NS_IMETHODIMP
 {
   return NS_NewFrameTraversal(aEnumerator, aPresContext, aStart,
                               static_cast<nsIteratorType>(aType),
-                              aVisual, aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                              aVisual, aLockInScrollView, aFollowOOFs,
+                              aSkipPopupChecks, false /* aSkipShadow */);
 }
 
 // nsFrameIterator implementation
@@ -196,11 +203,13 @@ NS_IMPL_ISUPPORTS(nsFrameIterator, nsIFrameEnumerator)
 
 nsFrameIterator::nsFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                                  nsIteratorType aType, bool aLockInScrollView,
-                                 bool aFollowOOFs, bool aSkipPopupChecks)
+                                 bool aFollowOOFs, bool aSkipPopupChecks,
+                                 bool aSkipShadow)
 : mPresContext(aPresContext),
   mLockScroll(aLockInScrollView),
   mFollowOOFs(aFollowOOFs),
   mSkipPopupChecks(aSkipPopupChecks),
+  mSkipShadow(aSkipShadow),
   mType(aType),
   mStart(aStart),
   mCurrent(aStart),
@@ -402,6 +411,15 @@ nsFrameIterator::GetParentFrameNotPopup(nsIFrame* aFrame)
 nsIFrame*
 nsFrameIterator::GetFirstChild(nsIFrame* aFrame)
 {
+  if (mSkipShadow) {
+    // Skip frames rendered from contents in shadow tree,
+    // primarily for focus navigation
+    nsIContent* content = aFrame->GetContent();
+    if (content && content->GetShadowRoot()) {
+      return nullptr;
+    }
+  }
+
   nsIFrame* result = GetFirstChildInner(aFrame);
   if (mLockScroll && result && result->IsScrollFrame())
     return nullptr;
@@ -417,6 +435,15 @@ nsFrameIterator::GetFirstChild(nsIFrame* aFrame)
 nsIFrame*
 nsFrameIterator::GetLastChild(nsIFrame* aFrame)
 {
+  if (mSkipShadow) {
+    // Skip frames rendered from contents in shadow tree,
+    // primarily for focus navigation
+    nsIContent* content = aFrame->GetContent();
+    if (content && content->GetShadowRoot()) {
+      return nullptr;
+    }
+  }
+
   nsIFrame* result = GetLastChildInner(aFrame);
   if (mLockScroll && result && result->IsScrollFrame())
     return nullptr;

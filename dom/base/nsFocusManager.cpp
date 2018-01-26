@@ -13,8 +13,8 @@
 #include "nsGkAtoms.h"
 #include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
+#include "nsDocument.h"
 #include "nsIContentParent.h"
-#include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMElement.h"
@@ -2603,7 +2603,8 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
                                              false, // aVisual
                                              false, // aLockInScrollView
                                              true,  // aFollowOOFs
-                                             false  // aSkipPopupChecks
+                                             false, // aSkipPopupChecks
+                                             false  // aSkipShadow
                                              );
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3119,7 +3120,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        false, // aVisual
                                        false, // aLockInScrollView
                                        true,  // aFollowOOFs
-                                       aForDocumentNavigation  // aSkipPopupChecks
+                                       aForDocumentNavigation,  // aSkipPopupChecks
+                                       nsDocument::IsShadowDOMEnabled(aRootContent) // aSkipShadow
                                        );
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3408,9 +3410,16 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
     for (nsIContent* child = aParent->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
-      if (childTabIndex > aCurrentTabIndex && childTabIndex != tabIndex) {
-        tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex;
+      MOZ_ASSERT(!child->IsHTMLElement(nsGkAtoms::slot),
+                 "Slots shouldn't appear in light DOM");
+
+      // Skip child's descendants if child is a shadow host, as they are
+      // in the focus navigation scope owned by child's shadow root
+      if (!(nsDocument::IsShadowDOMEnabled(aParent) && child->GetShadowRoot())) {
+        childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
+        if (childTabIndex > aCurrentTabIndex && childTabIndex != tabIndex) {
+          tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex;
+        }
       }
 
       nsAutoString tabIndexStr;
@@ -3429,10 +3438,17 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
     for (nsIContent* child = aParent->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
-      if ((aCurrentTabIndex == 0 && childTabIndex > tabIndex) ||
-          (childTabIndex < aCurrentTabIndex && childTabIndex > tabIndex)) {
-        tabIndex = childTabIndex;
+      MOZ_ASSERT(!child->IsHTMLElement(nsGkAtoms::slot),
+                 "Slots shouldn't appear in light DOM");
+
+      // Skip child's descendants if child is a shadow host, as they are
+      // in the focus navigation scope owned by child's shadow root
+      if (!(nsDocument::IsShadowDOMEnabled(aParent) && child->GetShadowRoot())) {
+        childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
+        if ((aCurrentTabIndex == 0 && childTabIndex > tabIndex) ||
+            (childTabIndex < aCurrentTabIndex && childTabIndex > tabIndex)) {
+          tabIndex = childTabIndex;
+        }
       }
 
       nsAutoString tabIndexStr;

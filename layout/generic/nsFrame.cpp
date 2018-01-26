@@ -8148,7 +8148,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                     false, // aVisual
                                     aPos->mScrollViewStop,
                                     false, // aFollowOOFs
-                                    false  // aSkipPopupChecks
+                                    false, // aSkipPopupChecks
+                                    false  // aSkipShadow
                                     );
       if (NS_FAILED(result))
         return result;
@@ -8245,7 +8246,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                       false, // aVisual
                                       aPos->mScrollViewStop,
                                       false, // aFollowOOFs
-                                      false  // aSkipPopupChecks
+                                      false, // aSkipPopupChecks
+                                      false  // aSkipShadow
                                       );
       }
       while ( !found ){
@@ -9036,7 +9038,8 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
                                   aVisual && presContext->BidiEnabled(),
                                   aScrollViewStop,
                                   true,  // aFollowOOFs
-                                  false  // aSkipPopupChecks
+                                  false, // aSkipPopupChecks
+                                  false  // aSkipShadow
                                   );
     if (NS_FAILED(result))
       return result;
