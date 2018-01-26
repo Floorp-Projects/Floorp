@@ -357,18 +357,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
       viewNode.panelMultiView = this.node;
 
-      let reverse = !!aPreviousView;
-      if (!reverse) {
-        nextPanelView.headerText = viewNode.getAttribute("title") ||
-                                   (aAnchor && aAnchor.getAttribute("label"));
-      }
-
       let previousViewNode = aPreviousView || this._currentSubView;
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
-      let playTransition = (!!previousViewNode && !showingSameView && this._panel.state == "open");
-      let isMainView = viewNode.id == this._mainViewId;
 
       let previousRect = previousViewNode.__lastKnownBoundingRect =
           this._dwu.getBoundsWithoutFlushing(previousViewNode);
@@ -384,16 +376,25 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       }
 
       this._viewShowing = viewNode;
-      // Because the 'mainview' attribute may be out-of-sync, due to view node
-      // reparenting in combination with ephemeral PanelMultiView instances,
-      // this is the best place to correct it (just before showing).
-      nextPanelView.mainview = isMainView;
+
+      let reverse = !!aPreviousView;
+      if (!reverse) {
+        // We are opening a new view, either because we are navigating forward
+        // or because we are showing the main view. Some properties of the view
+        // may vary between panels, so we make sure to update them every time.
+        // Firstly, make sure that the header matches how the view was opened.
+        nextPanelView.headerText = viewNode.getAttribute("title") ||
+                                   (aAnchor && aAnchor.getAttribute("label"));
+        // The main view of a panel can be a subview in another one.
+        let isMainView = viewNode.id == this._mainViewId;
+        nextPanelView.mainview = isMainView;
+        // The constrained width of subviews may also vary between panels.
+        nextPanelView.minMaxWidth = isMainView ? 0 : this._mainViewWidth;
+      }
 
       if (aAnchor) {
         viewNode.classList.add("PanelUI-subView");
       }
-      if (!isMainView && this._mainViewWidth)
-        viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
       if (!showingSameView || !viewNode.hasAttribute("current")) {
         // Emit the ViewShowing event so that the widget definition has a chance
@@ -425,7 +426,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // Now we have to transition the panel. If we've got an older transition
       // still running, make sure to clean it up.
       await this._cleanupTransitionPhase();
-      if (playTransition) {
+      if (!showingSameView && this._panel.state == "open") {
         await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
         nextPanelView.focusSelectedElement();
       } else {
@@ -760,8 +761,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         for (let panelView of this._viewStack.children) {
           if (panelView.nodeName != "children") {
             panelView.__lastKnownBoundingRect = null;
-            panelView.style.removeProperty("min-width");
-            panelView.style.removeProperty("max-width");
           }
         }
         this.window.removeEventListener("keydown", this);
@@ -813,6 +812,20 @@ this.PanelView = class extends this.AssociatedToNode {
     } else if (this.node.hasAttribute("current")) {
       this.dispatchCustomEvent("ViewHiding");
       this.node.removeAttribute("current");
+    }
+  }
+
+  /**
+   * Constrains the width of this view using the "min-width" and "max-width"
+   * styles. Setting this to zero removes the constraints.
+   */
+  set minMaxWidth(value) {
+    let style = this.node.style;
+    if (value) {
+      style.minWidth = style.maxWidth = value + "px";
+    } else {
+      style.removeProperty("min-width");
+      style.removeProperty("max-width");
     }
   }
 
