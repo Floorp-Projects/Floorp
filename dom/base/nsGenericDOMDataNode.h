@@ -6,7 +6,7 @@
 
 /*
  * Base class for DOM Core's nsIDOMComment, nsIDOMDocumentType, nsIDOMText,
- * nsIDOMCDATASection, and nsIDOMProcessingInstruction nodes.
+ * CDATASection, and nsIDOMProcessingInstruction nodes.
  */
 
 #ifndef nsGenericDOMDataNode_h___
