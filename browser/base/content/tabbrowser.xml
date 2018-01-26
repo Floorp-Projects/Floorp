@@ -5970,6 +5970,8 @@
 
           if (Services.prefs.getBoolPref("browser.display.use_system_colors"))
             this.style.backgroundColor = "-moz-default-background-color";
+          else if (Services.prefs.getIntPref("browser.display.document_color_use") == 2)
+            this.style.backgroundColor = Services.prefs.getCharPref("browser.display.background_color");
 
           let messageManager = window.getGroupMessageManager("browsers");
 
