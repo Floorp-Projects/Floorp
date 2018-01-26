@@ -375,6 +375,7 @@ Database::Database()
   , mDatabaseStatus(nsINavHistoryService::DATABASE_STATUS_OK)
   , mClosed(false)
   , mShouldConvertIconPayloads(false)
+  , mShouldVacuumIcons(false)
   , mClientsShutdown(new ClientsShutdownBlocker())
   , mConnectionShutdown(new ConnectionShutdownBlocker(this))
   , mMaxUrlLength(0)
@@ -702,18 +703,18 @@ Database::EnsureFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(conn->Close()));
     });
 
-    int32_t defaultPageSize;
-    rv = conn->GetDefaultPageSize(&defaultPageSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetupDurability(conn, defaultPageSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Enable incremental vacuum for this database. Since it will contain even
     // large blobs and can be cleared with history, it's worth to have it.
     // Note that it will be necessary to manually use PRAGMA incremental_vacuum.
     rv = conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "PRAGMA auto_vacuum = INCREMENTAL"
     ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    int32_t defaultPageSize;
+    rv = conn->GetDefaultPageSize(&defaultPageSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetupDurability(conn, defaultPageSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We are going to update the database, so everything from now on should be
@@ -1090,6 +1091,21 @@ Database::InitSchema(bool* aDatabaseMigrated)
     return NS_OK;
   }
 
+  auto guard = MakeScopeExit([&]() {
+    // This runs at the end of the migration, out of the transaction,
+    // regardless of its success.
+    if (mShouldVacuumIcons) {
+      mShouldVacuumIcons = false;
+      MOZ_ALWAYS_SUCCEEDS(mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "VACUUM favicons"
+      )));
+    }
+    if (mShouldConvertIconPayloads) {
+      mShouldConvertIconPayloads = false;
+      nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
+    }
+  });
+
   // We are going to update the database, so everything from now on should be in
   // a transaction for performances.
   mozStorageTransaction transaction(mMainConn, false);
@@ -1117,14 +1133,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
         // will first have to go through it.
         return NS_ERROR_FILE_CORRUPTED;
       }
-
-      auto guard = MakeScopeExit([&]() {
-        // This runs at the end of the migration, regardless of its success.
-        if (mShouldConvertIconPayloads) {
-          mShouldConvertIconPayloads = false;
-          nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
-        }
-      });
 
       // Firefox 45 ESR uses schema version 30.
 
@@ -1200,6 +1208,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
       }
 
       // Firefox 58 uses schema version 41.
+
+      if (currentSchemaVersion < 42) {
+        rv = MigrateV42Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 60 uses schema version 42.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1950,6 +1965,33 @@ Database::MigrateV41Up() {
   rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DROP TABLE IF EXISTS moz_favicons"));
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV42Up() {
+  MOZ_ASSERT(NS_IsMainThread());
+  // auto_vacuum of the favicons database was broken, we may have to set it again.
+  int32_t vacuum = 0;
+  {
+    nsCOMPtr<mozIStorageStatement> stmt;
+    nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA favicons.auto_vacuum"
+    ), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mozStorageStatementScoper scoper(stmt);
+    bool hasResult = false;
+    if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      vacuum = stmt->AsInt32(0);
+    }
+  }
+  if (vacuum != 2) {
+    nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "PRAGMA favicons.auto_vacuum = INCREMENTAL"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // For the change to be effective, we must vacuum the database.
+    mShouldVacuumIcons = true;
+  }
   return NS_OK;
 }
 
