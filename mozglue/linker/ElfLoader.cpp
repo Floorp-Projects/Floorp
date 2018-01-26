@@ -41,6 +41,12 @@ extern "C" MOZ_EXPORT const void *
 __gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
 #endif
 
+/* Ideally we'd #include <link.h>, but that's a world of pain
+ * Moreover, not all versions of android support it, so we need a weak
+ * reference. */
+extern "C" MOZ_EXPORT int
+dl_iterate_phdr(dl_phdr_cb callback, void *data) __attribute__((weak));
+
 /* Pointer to the PT_DYNAMIC section of the executable or library
  * containing this code. */
 extern "C" Elf::Dyn _DYNAMIC[];
@@ -105,22 +111,36 @@ __wrap_dladdr(void *addr, Dl_info *info)
   return 1;
 }
 
-int
-__wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
+class DlIteratePhdrHelper
 {
-  if (!ElfLoader::Singleton.dbg)
-    return -1;
+public:
+  DlIteratePhdrHelper()
+  {
+    int pipefd[2];
+    valid_pipe = (pipe(pipefd) == 0);
+    read_fd.reset(pipefd[0]);
+    write_fd.reset(pipefd[1]);
+  }
 
-  int pipefd[2];
-  bool valid_pipe = (pipe(pipefd) == 0);
-  AutoCloseFD read_fd(pipefd[0]);
-  AutoCloseFD write_fd(pipefd[1]);
+  int fill_and_call(dl_phdr_cb callback, const void* l_addr,
+                    const char* l_name, void* data);
 
-  for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
-       it < ElfLoader::Singleton.dbg.end(); ++it) {
+private:
+  bool valid_pipe;
+  AutoCloseFD read_fd;
+  AutoCloseFD write_fd;
+};
+
+// This function is called for each shared library iterated over by
+// dl_iterate_phdr, and is used to fill a dl_phdr_info which is then
+// sent through to the dl_iterate_phdr callback.
+int
+DlIteratePhdrHelper::fill_and_call(dl_phdr_cb callback, const void* l_addr,
+                                   const char* l_name, void *data)
+{
     dl_phdr_info info;
-    info.dlpi_addr = reinterpret_cast<Elf::Addr>(it->l_addr);
-    info.dlpi_name = it->l_name;
+    info.dlpi_addr = reinterpret_cast<Elf::Addr>(l_addr);
+    info.dlpi_name = l_name;
     info.dlpi_phdr = nullptr;
     info.dlpi_phnum = 0;
 
@@ -147,7 +167,7 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
       static_assert(sizeof(raw_ehdr) < PIPE_BUF, "PIPE_BUF is too small");
       do {
         // writes are atomic when smaller than PIPE_BUF, per POSIX.1-2008.
-        ret = write(write_fd, it->l_addr, sizeof(raw_ehdr));
+        ret = write(write_fd, l_addr, sizeof(raw_ehdr));
       } while (ret == -1 && errno == EINTR);
       if (ret != sizeof(raw_ehdr)) {
         if (ret == -1 && errno == EFAULT) {
@@ -172,7 +192,7 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
     }
 
     if (valid_pipe && can_read) {
-      const Elf::Ehdr *ehdr = Elf::Ehdr::validate(it->l_addr);
+      const Elf::Ehdr *ehdr = Elf::Ehdr::validate(l_addr);
       if (ehdr) {
         info.dlpi_phdr = reinterpret_cast<const Elf::Phdr *>(
                          reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
@@ -180,7 +200,40 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
       }
     }
 
-    int ret = callback(&info, sizeof(dl_phdr_info), data);
+    return callback(&info, sizeof(dl_phdr_info), data);
+}
+
+int
+__wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
+{
+  DlIteratePhdrHelper helper;
+  AutoLock lock(&ElfLoader::Singleton.handlesMutex);
+
+  if (dl_iterate_phdr) {
+    for (ElfLoader::LibHandleList::reverse_iterator it =
+	   ElfLoader::Singleton.handles.rbegin();
+	 it < ElfLoader::Singleton.handles.rend(); ++it) {
+      BaseElf* elf = (*it)->AsBaseElf();
+      if (!elf) {
+	continue;
+      }
+      int ret = helper.fill_and_call(callback, (*it)->GetBase(),
+				     (*it)->GetPath(), data);
+      if (ret)
+        return ret;
+    }
+    return dl_iterate_phdr(callback, data);
+  }
+
+  /* For versions of Android that don't support dl_iterate_phdr (< 5.0),
+   * we go through the debugger helper data, which is known to be racy, but
+   * there's not much we can do about this :( . */
+  if (!ElfLoader::Singleton.dbg)
+    return -1;
+
+  for (ElfLoader::DebuggerHelper::iterator it = ElfLoader::Singleton.dbg.begin();
+       it < ElfLoader::Singleton.dbg.end(); ++it) {
+    int ret = helper.fill_and_call(callback, it->l_addr, it->l_name, data);
     if (ret)
       return ret;
   }

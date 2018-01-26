@@ -2057,3 +2057,4 @@ test-pref(font.size.systemFontScale,200) == 1412743.html 1412743-ref.html
 == 1424177.html 1424177-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
+== 1432541.html 1432541-ref.html

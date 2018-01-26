@@ -53,7 +53,7 @@ ScrollingLayersHelper::EndBuild()
 void
 ScrollingLayersHelper::BeginList(const StackingContextHelper& aStackingContext)
 {
-  if (aStackingContext.IsReferenceFrame()) {
+  if (aStackingContext.AffectsClipPositioning()) {
     mCacheStack.emplace_back();
   }
   mItemClipStack.emplace_back(nullptr, nullptr);
@@ -65,7 +65,7 @@ ScrollingLayersHelper::EndList(const StackingContextHelper& aStackingContext)
   MOZ_ASSERT(!mItemClipStack.empty());
   mItemClipStack.back().Unapply(mBuilder);
   mItemClipStack.pop_back();
-  if (aStackingContext.IsReferenceFrame()) {
+  if (aStackingContext.AffectsClipPositioning()) {
     mCacheStack.pop_back();
   }
 }

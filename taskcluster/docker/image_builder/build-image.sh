@@ -18,44 +18,34 @@ test -n "$PROJECT"    || raise_error "PROJECT must be provided."
 test -n "$HASH"       || raise_error "Context HASH must be provided."
 test -n "$IMAGE_NAME" || raise_error "IMAGE_NAME must be provided."
 
-# Construct a CONTEXT_FILE
-CONTEXT_FILE=/builds/worker/workspace/context.tar
+# The docker socket is mounted by the taskcluster worker in a way that prevents
+# us changing its permissions to allow the worker user to access it. Create a
+# proxy socket that the worker user can use.
+export DOCKER_SOCKET=/var/run/docker.proxy
+socat UNIX-LISTEN:$DOCKER_SOCKET,fork,group=worker,mode=0775 UNIX-CLIENT:/var/run/docker.sock </dev/null &
+trap "kill $!" EXIT
 
-# Run ./mach taskcluster-build-image with --context-only to build context
+LOAD_COMMAND=
+if [ -n "$DOCKER_IMAGE_PARENT" ]; then
+    test -n "$DOCKER_IMAGE_PARENT_TASK" || raise_error "DOCKER_IMAGE_PARENT_TASK must be provided."
+    LOAD_COMMAND="\
+      /builds/worker/checkouts/gecko/mach taskcluster-load-image \
+      --task-id \"$DOCKER_IMAGE_PARENT_TASK\" \
+      -t \"$DOCKER_IMAGE_PARENT\" && "
+fi
+
+# Build image
 run-task \
   --vcs-checkout "/builds/worker/checkouts/gecko" \
   --sparse-profile build/sparse-profiles/docker-image \
   -- \
+  sh -x -c "$LOAD_COMMAND \
   /builds/worker/checkouts/gecko/mach taskcluster-build-image \
-  --context-only "$CONTEXT_FILE" \
-  "$IMAGE_NAME"
-test -f "$CONTEXT_FILE" || raise_error "Context file wasn't created"
+  -t \"$IMAGE_NAME:$HASH\" \
+  \"$IMAGE_NAME\""
 
 # Create artifact folder (note that this must occur after run-task)
 mkdir -p /builds/worker/workspace/artifacts
-
-# Post context tar-ball to docker daemon
-# This interacts directly with the docker remote API, see:
-# https://docs.docker.com/engine/reference/api/docker_remote_api_v1.18/
-curl -s --fail \
-  -X POST \
-  --header 'Content-Type: application/tar' \
-  --data-binary "@$CONTEXT_FILE" \
-  --unix-socket /var/run/docker.sock "http:/build?t=$IMAGE_NAME:$HASH" \
-  | tee /tmp/docker-build.log \
-  | jq -jr '(.status + .progress, .error | select(. != null) + "\n"), .stream | select(. != null)'
-
-# Exit non-zero if there is error entries in the log
-if result=$(jq -se 'add | .error' /tmp/docker-build.log); then
-  raise_error "Image build failed: ${result}";
-fi
-
-# Sanity check that image was built successfully
-if ! tail -n 1 /tmp/docker-build.log | jq -r '.stream' | grep '^Successfully built' > /dev/null; then
-  echo 'docker-build.log for debugging:';
-  tail -n 50 /tmp/docker-build.log;
-  raise_error "Image build log didn't with 'Successfully built'";
-fi
 
 # Get image from docker daemon (try up to 10 times)
 # This interacts directly with the docker remote API, see:
