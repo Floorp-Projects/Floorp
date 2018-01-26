@@ -524,10 +524,6 @@ protected:
     nsresult
     InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify);
 
-    static
-    nsresult
-    RemoveElement(nsINode* aParent, nsINode* aChild);
-
     /**
      * The current prototype that we are walking to construct the
      * content model.
@@ -553,11 +549,11 @@ protected:
 
     /**
      * Creates a processing instruction based on aProtoPI and inserts
-     * it to the DOM (as the aIndex-th child of aParent).
+     * it to the DOM.
      */
     nsresult
     CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
-                      nsINode* aParent, uint32_t aIndex);
+                      nsINode* aParent, nsINode* aBeforeThis);
 
     /**
      * Inserts the passed <?xml-stylesheet ?> PI at the specified
@@ -571,7 +567,7 @@ protected:
     nsresult
     InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
                           nsINode* aParent,
-                          uint32_t aIndex,
+                          nsINode* aBeforeThis,
                           nsIContent* aPINode);
 
     /**
@@ -581,7 +577,7 @@ protected:
     nsresult
     InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
                        nsINode* aParent,
-                       uint32_t aIndex,
+                       nsINode* aBeforeThis,
                        nsIContent* aPINode);
 
     /**

@@ -407,13 +407,15 @@ var gPrivacyPane = {
       document.getElementById("drmGroup").setAttribute("style", "display: none !important");
     }
 
-    this.initDataCollection();
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      this.initSubmitCrashes();
+    if (AppConstants.MOZ_DATA_REPORTING) {
+      this.initDataCollection();
+      if (AppConstants.MOZ_CRASHREPORTER) {
+        this.initSubmitCrashes();
+      }
+      this.initSubmitHealthReport();
+      setEventListener("submitHealthReportBox", "command",
+        gPrivacyPane.updateSubmitHealthReport);
     }
-    this.initSubmitHealthReport();
-    setEventListener("submitHealthReportBox", "command",
-      gPrivacyPane.updateSubmitHealthReport);
     this._initA11yState();
     let signonBundle = document.getElementById("signonBundle");
     let pkiBundle = document.getElementById("pkiBundle");

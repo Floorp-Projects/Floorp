@@ -321,6 +321,7 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI,
                                 aLoaderPrincipal,
                                 aSecurityFlags,
                                 aContentPolicyType,
+                                nullptr, // PerformanceStorage
                                 aLoadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 

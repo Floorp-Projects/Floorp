@@ -1282,6 +1282,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
+                       nullptr, // PerformanceStorage
                        aLoadGroup);
     if (NS_FAILED(rv)) return rv;
 

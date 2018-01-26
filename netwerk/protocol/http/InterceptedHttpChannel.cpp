@@ -7,7 +7,7 @@
 #include "InterceptedHttpChannel.h"
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
-#include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceStorage.h"
 
 namespace mozilla {
 namespace net {
@@ -212,6 +212,7 @@ InterceptedHttpChannel::FollowSyntheticRedirect()
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                              redirectURI,
                              redirectLoadInfo,
+                             nullptr, // PerformanceStorage
                              nullptr, // aLoadGroup
                              nullptr, // aCallbacks
                              mLoadFlags,
@@ -665,6 +666,7 @@ InterceptedHttpChannel::ResetInterception(void)
   nsresult rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
                                       mURI,
                                       redirectLoadInfo,
+                                      nullptr, // PerformanceStorage
                                       nullptr, // aLoadGroup
                                       nullptr, // aCallbacks
                                       mLoadFlags);
@@ -1075,10 +1077,10 @@ InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
 
   mIsPending = false;
 
-  // Register entry to the Performance resource timing
-  mozilla::dom::Performance* documentPerformance = GetPerformance();
-  if (documentPerformance) {
-    documentPerformance->AddEntry(this, this);
+  // Register entry to the PerformanceStorage resource timing
+  mozilla::dom::PerformanceStorage* performanceStorage = GetPerformanceStorage();
+  if (performanceStorage) {
+    performanceStorage->AddEntry(this, this);
   }
 
   if (mListener) {

@@ -2087,12 +2087,9 @@ XULDocument::PrepareToWalk()
         return NS_OK;
     }
 
-    uint32_t piInsertionPoint = 0;
+    nsINode* nodeToInsertBefore = nsINode::GetFirstChild();
     if (mState != eState_Master) {
-        int32_t indexOfRoot = ComputeIndexOf(GetRootElement());
-        NS_ASSERTION(indexOfRoot >= 0,
-                     "No root content when preparing to walk overlay!");
-        piInsertionPoint = indexOfRoot;
+        nodeToInsertBefore = GetRootElement();
     }
 
     const nsTArray<RefPtr<nsXULPrototypePI> >& processingInstructions =
@@ -2101,7 +2098,7 @@ XULDocument::PrepareToWalk()
     uint32_t total = processingInstructions.Length();
     for (uint32_t i = 0; i < total; ++i) {
         rv = CreateAndInsertPI(processingInstructions[i],
-                               this, piInsertionPoint + i);
+                               this, nodeToInsertBefore);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2145,7 +2142,7 @@ XULDocument::PrepareToWalk()
 
 nsresult
 XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
-                               nsINode* aParent, uint32_t aIndex)
+                               nsINode* aParent, nsINode* aBeforeThis)
 {
     NS_PRECONDITION(aProtoPI, "null ptr");
     NS_PRECONDITION(aParent, "null ptr");
@@ -2156,12 +2153,15 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
 
     nsresult rv;
     if (aProtoPI->mTarget.EqualsLiteral("xml-stylesheet")) {
-        rv = InsertXMLStylesheetPI(aProtoPI, aParent, aIndex, node);
+        rv = InsertXMLStylesheetPI(aProtoPI, aParent, aBeforeThis, node);
     } else if (aProtoPI->mTarget.EqualsLiteral("xul-overlay")) {
-        rv = InsertXULOverlayPI(aProtoPI, aParent, aIndex, node);
+        rv = InsertXULOverlayPI(aProtoPI, aParent, aBeforeThis, node);
     } else {
         // No special processing, just add the PI to the document.
-        rv = aParent->InsertChildAt_Deprecated(node, aIndex, false);
+        rv = aParent->InsertChildBefore(node->AsContent(),
+                                        aBeforeThis
+                                          ? aBeforeThis->AsContent() : nullptr,
+                                        false);
     }
 
     return rv;
@@ -2170,7 +2170,7 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
 nsresult
 XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
                                    nsINode* aParent,
-                                   uint32_t aIndex,
+                                   nsINode* aBeforeThis,
                                    nsIContent* aPINode)
 {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aPINode));
@@ -2185,7 +2185,10 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
     ssle->SetEnableUpdates(false);
     ssle->OverrideBaseURI(mCurrentPrototype->GetURI());
 
-    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
+    rv = aParent->InsertChildBefore(aPINode->AsContent(),
+                                    aBeforeThis
+                                      ? aBeforeThis->AsContent() : nullptr,
+                                    false);
     if (NS_FAILED(rv)) return rv;
 
     ssle->SetEnableUpdates(true);
@@ -2212,12 +2215,15 @@ XULDocument::InsertXMLStylesheetPI(const nsXULPrototypePI* aProtoPI,
 nsresult
 XULDocument::InsertXULOverlayPI(const nsXULPrototypePI* aProtoPI,
                                 nsINode* aParent,
-                                uint32_t aIndex,
+                                nsINode* aBeforeThis,
                                 nsIContent* aPINode)
 {
     nsresult rv;
 
-    rv = aParent->InsertChildAt_Deprecated(aPINode, aIndex, false);
+    rv = aParent->InsertChildBefore(aPINode->AsContent(),
+                                    aBeforeThis
+                                      ? aBeforeThis->AsContent() : nullptr,
+                                    false);
     if (NS_FAILED(rv)) return rv;
 
     // xul-overlay PI is special only in prolog
@@ -2446,6 +2452,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
                            nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS |
                            nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                            nsIContentPolicy::TYPE_OTHER,
+                           nullptr, // PerformanceStorage
                            group);
 
         if (NS_SUCCEEDED(rv)) {
@@ -2702,8 +2709,7 @@ XULDocument::ResumeWalk()
 
                 if (parent) {
                     // an inline script could have removed the root element
-                    rv = CreateAndInsertPI(piProto, parent,
-                                           parent->GetChildCount());
+                    rv = CreateAndInsertPI(piProto, parent, nullptr);
                     NS_ENSURE_SUCCESS(rv, rv);
                 }
             }
@@ -3597,8 +3603,7 @@ XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
         if (attr == nsGkAtoms::removeelement && value.EqualsLiteral("true")) {
             nsCOMPtr<nsINode> parent = aTargetElement->GetParentNode();
             if (!parent) return NS_ERROR_FAILURE;
-            rv = RemoveElement(parent, aTargetElement);
-            if (NS_FAILED(rv)) return rv;
+            parent->RemoveChildNode(aTargetElement, true);
             return NS_OK;
         }
 
@@ -3665,13 +3670,19 @@ XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
                 // non-null ID.
                 rv = Merge(elementInDocument, currContent->AsElement(), aNotify);
                 if (NS_FAILED(rv)) return rv;
-                aOverlayElement->RemoveChildAt_Deprecated(0, false);
+                nsIContent* firstChild = aOverlayElement->GetFirstChild();
+                if (firstChild) {
+                  aOverlayElement->RemoveChildNode(firstChild, false);
+                }
 
                 continue;
             }
         }
 
-        aOverlayElement->RemoveChildAt_Deprecated(0, false);
+        nsIContent* firstChild = aOverlayElement->GetFirstChild();
+        if (firstChild) {
+          aOverlayElement->RemoveChildNode(firstChild, false);
+        }
 
         rv = InsertElement(aTargetElement, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
@@ -3983,13 +3994,15 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
         free(str);
 
         if (content) {
-            int32_t pos = aParent->ComputeIndexOf(content);
-
-            if (pos != -1) {
-                pos = isInsertAfter ? pos + 1 : pos;
-                nsresult rv = aParent->InsertChildAt_Deprecated(aChild, pos, aNotify);
-                if (NS_FAILED(rv))
+            if (content->GetParent() == aParent) {
+                nsIContent* nodeToInsertBefore =
+                  isInsertAfter ? content->GetNextSibling() : content;
+                nsresult rv = aParent->InsertChildBefore(aChild,
+                                                         nodeToInsertBefore,
+                                                         aNotify);
+                if (NS_FAILED(rv)) {
                     return rv;
+                }
 
                 wasInserted = true;
             }
@@ -4009,7 +4022,10 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
             // appending.
             if (NS_SUCCEEDED(rv) && pos > 0 &&
                 uint32_t(pos - 1) <= aParent->GetChildCount()) {
-                rv = aParent->InsertChildAt_Deprecated(aChild, pos - 1, aNotify);
+                nsIContent* nodeToInsertBefore =
+                    aParent->GetChildAt_Deprecated(pos - 1);
+                rv = aParent->InsertChildBefore(aChild, nodeToInsertBefore,
+                                                aNotify);
                 if (NS_SUCCEEDED(rv))
                     wasInserted = true;
                 // If the insertion fails, then we should still
@@ -4023,15 +4039,6 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
     if (!wasInserted) {
         return aParent->AppendChildTo(aChild, aNotify);
     }
-    return NS_OK;
-}
-
-nsresult
-XULDocument::RemoveElement(nsINode* aParent, nsINode* aChild)
-{
-    int32_t nodeOffset = aParent->ComputeIndexOf(aChild);
-
-    aParent->RemoveChildAt_Deprecated(nodeOffset, true);
     return NS_OK;
 }
 

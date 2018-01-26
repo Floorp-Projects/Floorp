@@ -2127,6 +2127,7 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel,
                      nsContentUtils::GetSystemPrincipal(),
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // aPerformanceStorage
                      nullptr,  // aLoadGroup
                      nullptr,
                      loadFlags);
