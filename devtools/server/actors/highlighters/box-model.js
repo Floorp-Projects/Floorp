@@ -18,7 +18,7 @@ const {
   setIgnoreLayoutChanges,
   getCurrentZoom,
  } = require("devtools/shared/layout/utils");
-const inspector = require("devtools/server/actors/inspector");
+const inspector = require("devtools/server/actors/inspector/inspector");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // Note that the order of items in this array is important because it is used

@@ -284,7 +284,7 @@ addTest(function testFrameTraversal() {
 
 addTest(function testLongValue() {
   const testSummaryLength = 10;
-  const inspector = require("devtools/server/actors/inspector");
+  const inspector = require("devtools/server/actors/inspector/inspector");
 
   inspector.setValueSummaryLength(testSummaryLength);
   SimpleTest.registerCleanupFunction(function () {

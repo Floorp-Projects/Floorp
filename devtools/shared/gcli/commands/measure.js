@@ -10,7 +10,7 @@ loader.lazyRequireGetter(this, "CommandState",
   "devtools/shared/gcli/command-state", true);
 
 const l10n = require("gcli/l10n");
-require("devtools/server/actors/inspector");
+require("devtools/server/actors/inspector/inspector");
 const { HighlighterEnvironment } =
   require("devtools/server/actors/highlighters");
 const { MeasuringToolHighlighter } =
