@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_ServiceWorkerRegistrar_h
-#define mozilla_dom_workers_ServiceWorkerRegistrar_h
+#ifndef mozilla_dom_ServiceWorkerRegistrar_h
+#define mozilla_dom_ServiceWorkerRegistrar_h
 
 #include "mozilla/Monitor.h"
 #include "mozilla/Telemetry.h"
@@ -102,4 +102,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_ServiceWorkerRegistrar_h
+#endif // mozilla_dom_ServiceWorkerRegistrar_h

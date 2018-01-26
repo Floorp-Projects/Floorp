@@ -83,7 +83,7 @@
 #include "mozilla/dom/TreeWalker.h"
 
 #include "nsIServiceManager.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "imgLoader.h"
 
 #include "nsCanvasFrame.h"
@@ -5530,7 +5530,7 @@ nsDocument::DispatchContentLoadedEvents()
   }
 
   if (mMaybeServiceWorkerControlled) {
-    using mozilla::dom::workers::ServiceWorkerManager;
+    using mozilla::dom::ServiceWorkerManager;
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       Maybe<ClientInfo> clientInfo = GetClientInfo();

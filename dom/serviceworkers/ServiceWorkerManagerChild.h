@@ -19,7 +19,6 @@ class BackgroundChildImpl;
 } // namespace ipc
 
 namespace dom {
-namespace workers {
 
 class ServiceWorkerManagerChild final : public PServiceWorkerManagerChild
 {
@@ -63,7 +62,6 @@ private:
   bool mShuttingDown;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 

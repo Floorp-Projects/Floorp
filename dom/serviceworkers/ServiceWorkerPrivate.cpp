@@ -40,7 +40,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::PrincipalInfo;
 
@@ -69,7 +70,7 @@ public:
   explicit KeepAliveToken(ServiceWorkerPrivate* aPrivate)
     : mPrivate(aPrivate)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aPrivate);
     mPrivate->AddToken();
   }
@@ -77,7 +78,7 @@ public:
 private:
   ~KeepAliveToken()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mPrivate->ReleaseToken();
   }
 
@@ -91,7 +92,7 @@ ServiceWorkerPrivate::ServiceWorkerPrivate(ServiceWorkerInfo* aInfo)
   , mDebuggerCount(0)
   , mTokenCount(0)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aInfo);
 
   mIdleWorkerTimer = NS_NewTimer();
@@ -138,7 +139,7 @@ public:
     , mDone(false)
 #endif
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   ~CheckScriptEvaluationWithCallback()
@@ -153,7 +154,7 @@ public:
 
     bool fetchHandlerWasAdded = aWorkerPrivate->FetchHandlerWasAdded();
     nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<bool>(
-      "dom::workers::CheckScriptEvaluationWithCallback::ReportFetchFlag",
+      "dom::CheckScriptEvaluationWithCallback::ReportFetchFlag",
       this,
       &CheckScriptEvaluationWithCallback::ReportFetchFlag,
       fetchHandlerWasAdded);
@@ -167,7 +168,7 @@ public:
   void
   ReportFetchFlag(bool aFetchHandlerWasAdded)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mServiceWorkerPrivate->SetHandlesFetch(aFetchHandlerWasAdded);
   }
 
@@ -387,7 +388,7 @@ private:
     MOZ_ASSERT(cx);
 
     RefPtr<nsIRunnable> r =
-      NewRunnableMethod("dom::workers::KeepAliveHandler::MaybeDone",
+      NewRunnableMethod("dom::KeepAliveHandler::MaybeDone",
                         this,
                         &KeepAliveHandler::MaybeDone);
     cx->DispatchToMicroTask(r.forget());
@@ -405,7 +406,7 @@ public:
   RegistrationUpdateRunnable(
     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
     bool aNeedTimeCheck)
-    : Runnable("dom::workers::RegistrationUpdateRunnable")
+    : Runnable("dom::RegistrationUpdateRunnable")
     , mRegistration(aRegistration)
     , mNeedTimeCheck(aNeedTimeCheck)
   {
@@ -434,7 +435,7 @@ public:
                                 KeepAliveToken* aKeepAliveToken)
     : WorkerRunnable(aWorkerPrivate)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aKeepAliveToken);
 
@@ -502,7 +503,7 @@ public:
                             StructuredCloneScope::SameProcessDifferentThread)
     , mClientInfoAndState(aClientInfoAndState)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   bool
@@ -557,7 +558,7 @@ ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
                                        const Sequence<JSObject*>& aTransferable,
                                        const ClientInfoAndState& aClientInfoAndState)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   ErrorResult rv(SpawnWorkerIfNeeded(MessageEvent, nullptr));
   if (NS_WARN_IF(rv.Failed())) {
@@ -642,7 +643,7 @@ public:
       , mEventName(aEventName)
       , mCallback(aCallback)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   bool
@@ -880,7 +881,7 @@ public:
       return;
     }
     nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<uint16_t>(
-      "dom::workers::PushErrorReporter::ReportOnMainThread",
+      "dom::PushErrorReporter::ReportOnMainThread",
       this,
       &PushErrorReporter::ReportOnMainThread,
       aReason);
@@ -890,7 +891,7 @@ public:
 
   void ReportOnMainThread(uint16_t aReason)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIPushErrorReporter> reporter =
       do_GetService("@mozilla.org/push/Service;1");
     if (reporter) {
@@ -916,7 +917,7 @@ public:
       , mMessageId(aMessageId)
       , mData(aData)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
   }
@@ -974,7 +975,7 @@ public:
     WorkerPrivate* aWorkerPrivate, KeepAliveToken* aKeepAliveToken)
       : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
   }
@@ -1219,7 +1220,7 @@ public:
       , mBehavior(aBehavior)
       , mScope(aScope)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
   }
@@ -1389,7 +1390,7 @@ public:
   nsresult
   Init()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIChannel> channel;
     nsresult rv = mInterceptedChannel->GetChannel(getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1553,7 +1554,7 @@ private:
   public:
     explicit ResumeRequest(
       nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
-      : Runnable("dom::workers::FetchEventRunnable::ResumeRequest")
+      : Runnable("dom::FetchEventRunnable::ResumeRequest")
       , mChannel(aChannel)
     {
       mChannel->SetFinishResponseStart(TimeStamp::Now());
@@ -1561,7 +1562,7 @@ private:
 
     NS_IMETHOD Run() override
     {
-      AssertIsOnMainThread();
+      MOZ_ASSERT(NS_IsMainThread());
 
       TimeStamp timeStamp = TimeStamp::Now();
       mChannel->SetHandleFetchEventEnd(timeStamp);
@@ -1698,7 +1699,7 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
                                      const nsAString& aClientId, bool aIsReload)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (NS_WARN_IF(!mInfo || !swm)) {
@@ -1799,7 +1800,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
                                           bool* aNewWorkerCreated,
                                           nsILoadGroup* aLoadGroup)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // Defaults to no new worker created, but if there is one, we'll set the value
   // to true at the end of this function.
@@ -1943,7 +1944,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 void
 ServiceWorkerPrivate::StoreISupports(nsISupports* aSupports)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWorkerPrivate);
   MOZ_ASSERT(!mSupportsArray.Contains(aSupports));
 
@@ -1953,14 +1954,14 @@ ServiceWorkerPrivate::StoreISupports(nsISupports* aSupports)
 void
 ServiceWorkerPrivate::RemoveISupports(nsISupports* aSupports)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   mSupportsArray.RemoveElement(aSupports);
 }
 
 void
 ServiceWorkerPrivate::TerminateWorker()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   mIdleWorkerTimer->Cancel();
   mIdleKeepAliveToken = nullptr;
@@ -1990,7 +1991,7 @@ ServiceWorkerPrivate::TerminateWorker()
 void
 ServiceWorkerPrivate::NoteDeadServiceWorkerInfo()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   mInfo = nullptr;
   TerminateWorker();
 }
@@ -2023,7 +2024,7 @@ public:
 void
 ServiceWorkerPrivate::UpdateState(ServiceWorkerState aState)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mWorkerPrivate) {
     MOZ_DIAGNOSTIC_ASSERT(mPendingFunctionalEvents.IsEmpty());
@@ -2052,7 +2053,7 @@ ServiceWorkerPrivate::UpdateState(ServiceWorkerState aState)
 nsresult
 ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aResult);
 
   if (!mDebuggerCount) {
@@ -2070,7 +2071,7 @@ ServiceWorkerPrivate::GetDebugger(nsIWorkerDebugger** aResult)
 nsresult
 ServiceWorkerPrivate::AttachDebugger()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // When the first debugger attaches to a worker, we spawn a worker if needed,
   // and cancel the idle timeout. The idle timeout should not be reset until
@@ -2090,7 +2091,7 @@ ServiceWorkerPrivate::AttachDebugger()
 nsresult
 ServiceWorkerPrivate::DetachDebugger()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mDebuggerCount) {
     return NS_ERROR_UNEXPECTED;
@@ -2114,7 +2115,7 @@ ServiceWorkerPrivate::DetachDebugger()
 bool
 ServiceWorkerPrivate::IsIdle() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mTokenCount == 0 || (mTokenCount == 1 && mIdleKeepAliveToken);
 }
 
@@ -2164,7 +2165,7 @@ NS_IMPL_ISUPPORTS(ServiceWorkerPrivateTimerCallback, nsITimerCallback, nsINamed)
 void
 ServiceWorkerPrivate::NoteIdleWorkerCallback(nsITimer* aTimer)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(aTimer == mIdleWorkerTimer, "Invalid timer!");
 
@@ -2187,7 +2188,7 @@ ServiceWorkerPrivate::NoteIdleWorkerCallback(nsITimer* aTimer)
 void
 ServiceWorkerPrivate::TerminateWorkerCallback(nsITimer* aTimer)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(aTimer == this->mIdleWorkerTimer, "Invalid timer!");
 
@@ -2234,14 +2235,14 @@ ServiceWorkerPrivate::ResetIdleTimeout()
 void
 ServiceWorkerPrivate::AddToken()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   ++mTokenCount;
 }
 
 void
 ServiceWorkerPrivate::ReleaseToken()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(mTokenCount > 0);
   --mTokenCount;
@@ -2262,7 +2263,7 @@ ServiceWorkerPrivate::ReleaseToken()
 already_AddRefed<KeepAliveToken>
 ServiceWorkerPrivate::CreateEventKeepAliveToken()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWorkerPrivate);
   MOZ_ASSERT(mIdleKeepAliveToken);
   RefPtr<KeepAliveToken> ref = new KeepAliveToken(this);
@@ -2272,7 +2273,7 @@ ServiceWorkerPrivate::CreateEventKeepAliveToken()
 void
 ServiceWorkerPrivate::SetHandlesFetch(bool aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_WARN_IF(!mInfo)) {
     return;
@@ -2281,4 +2282,5 @@ ServiceWorkerPrivate::SetHandlesFetch(bool aValue)
   mInfo->SetHandlesFetch(aValue);
 }
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla

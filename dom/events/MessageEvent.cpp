@@ -8,7 +8,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/workers/bindings/ServiceWorker.h"
+#include "mozilla/dom/ServiceWorker.h"
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "jsapi.h"

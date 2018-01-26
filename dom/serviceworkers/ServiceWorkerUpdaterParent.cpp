@@ -9,7 +9,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 bool
 ServiceWorkerUpdaterParent::Proceed(ServiceWorkerManagerService* aService)
@@ -30,6 +29,5 @@ ServiceWorkerUpdaterParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

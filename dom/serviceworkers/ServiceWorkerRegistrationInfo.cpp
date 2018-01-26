@@ -9,7 +9,8 @@
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 namespace {
 
@@ -23,7 +24,7 @@ public:
     : mRegistration(aRegistration)
     , mSuccess(false)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -35,7 +36,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mRegistration->FinishActivate(mSuccess);
     mRegistration = nullptr;
     return NS_OK;
@@ -105,7 +106,7 @@ NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationInfo, nsIServiceWorkerRegistrationInf
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetPrincipal(nsIPrincipal** aPrincipal)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ADDREF(*aPrincipal = mPrincipal);
   return NS_OK;
 }
@@ -113,7 +114,7 @@ ServiceWorkerRegistrationInfo::GetPrincipal(nsIPrincipal** aPrincipal)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetScope(nsAString& aScope)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   CopyUTF8toUTF16(mScope, aScope);
   return NS_OK;
 }
@@ -121,7 +122,7 @@ ServiceWorkerRegistrationInfo::GetScope(nsAString& aScope)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetScriptSpec(nsAString& aScriptSpec)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorkerInfo> newest = Newest();
   if (newest) {
     CopyUTF8toUTF16(newest->ScriptSpec(), aScriptSpec);
@@ -139,7 +140,7 @@ ServiceWorkerRegistrationInfo::GetUpdateViaCache(uint16_t* aUpdateViaCache)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetLastUpdateTime(PRTime* _retval)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(_retval);
   *_retval = mLastUpdateTime;
   return NS_OK;
@@ -148,7 +149,7 @@ ServiceWorkerRegistrationInfo::GetLastUpdateTime(PRTime* _retval)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetInstallingWorker(nsIServiceWorkerInfo **aResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mInstallingWorker);
   info.forget(aResult);
   return NS_OK;
@@ -157,7 +158,7 @@ ServiceWorkerRegistrationInfo::GetInstallingWorker(nsIServiceWorkerInfo **aResul
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetWaitingWorker(nsIServiceWorkerInfo **aResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mWaitingWorker);
   info.forget(aResult);
   return NS_OK;
@@ -166,7 +167,7 @@ ServiceWorkerRegistrationInfo::GetWaitingWorker(nsIServiceWorkerInfo **aResult)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo **aResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIServiceWorkerInfo> info = do_QueryInterface(mActiveWorker);
   info.forget(aResult);
   return NS_OK;
@@ -175,7 +176,7 @@ ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo **aResult)
 NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::GetWorkerByID(uint64_t aID, nsIServiceWorkerInfo **aResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aResult);
 
   RefPtr<ServiceWorkerInfo> info = GetServiceWorkerInfoById(aID);
@@ -188,7 +189,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::AddListener(
                             nsIServiceWorkerRegistrationInfoListener *aListener)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!aListener || mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
@@ -203,7 +204,7 @@ NS_IMETHODIMP
 ServiceWorkerRegistrationInfo::RemoveListener(
                             nsIServiceWorkerRegistrationInfoListener *aListener)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!aListener || !mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
@@ -217,7 +218,7 @@ ServiceWorkerRegistrationInfo::RemoveListener(
 already_AddRefed<ServiceWorkerInfo>
 ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerInfo> serviceWorker;
   if (mEvaluatingWorker && mEvaluatingWorker->ID() == aId) {
@@ -248,7 +249,7 @@ ServiceWorkerRegistrationInfo::TryToActivateAsync()
 void
 ServiceWorkerRegistrationInfo::TryToActivate()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   bool controlling = IsControllingClients();
   bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
   bool idle = IsIdle();
@@ -279,7 +280,7 @@ ServiceWorkerRegistrationInfo::Activate()
   swm->UpdateClientControllers(this);
 
   nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
-    "dom::workers::ServiceWorkerRegistrationInfo::FinishActivate",
+    "dom::ServiceWorkerRegistrationInfo::FinishActivate",
     this,
     &ServiceWorkerRegistrationInfo::FinishActivate,
     false /* success */);
@@ -323,7 +324,7 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
 void
 ServiceWorkerRegistrationInfo::RefreshLastUpdateCheckTime()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   mLastUpdateTime =
     mCreationTime + static_cast<PRTime>((TimeStamp::Now() -
@@ -334,7 +335,7 @@ ServiceWorkerRegistrationInfo::RefreshLastUpdateCheckTime()
 bool
 ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // For testing.
   if (Preferences::GetBool("dom.serviceWorkers.testUpdateOverOneDay")) {
@@ -359,7 +360,7 @@ void
 ServiceWorkerRegistrationInfo::AsyncUpdateRegistrationStateProperties(WhichServiceWorker aWorker,
                                                                       TransitionType aTransition)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
     // browser shutdown started during this async step
@@ -382,11 +383,11 @@ void
 ServiceWorkerRegistrationInfo::UpdateRegistrationStateProperties(WhichServiceWorker aWorker,
                                                                  TransitionType aTransition)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIRunnable> runnable =
     NewRunnableMethod<WhichServiceWorker, TransitionType>(
-      "dom::workers::ServiceWorkerRegistrationInfo::"
+      "dom::ServiceWorkerRegistrationInfo::"
       "AsyncUpdateRegistrationStateProperties",
       this,
       &ServiceWorkerRegistrationInfo::AsyncUpdateRegistrationStateProperties,
@@ -407,7 +408,7 @@ ServiceWorkerRegistrationInfo::NotifyChromeRegistrationListeners()
 void
 ServiceWorkerRegistrationInfo::MaybeScheduleTimeCheckAndUpdate()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -425,7 +426,7 @@ ServiceWorkerRegistrationInfo::MaybeScheduleTimeCheckAndUpdate()
 void
 ServiceWorkerRegistrationInfo::MaybeScheduleUpdate()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -441,7 +442,7 @@ ServiceWorkerRegistrationInfo::MaybeScheduleUpdate()
 bool
 ServiceWorkerRegistrationInfo::CheckAndClearIfUpdateNeeded()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   bool result = mUpdateState == NeedUpdate ||
                (mUpdateState == NeedTimeCheckAndUpdate &&
@@ -455,28 +456,28 @@ ServiceWorkerRegistrationInfo::CheckAndClearIfUpdateNeeded()
 ServiceWorkerInfo*
 ServiceWorkerRegistrationInfo::GetEvaluating() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mEvaluatingWorker;
 }
 
 ServiceWorkerInfo*
 ServiceWorkerRegistrationInfo::GetInstalling() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mInstallingWorker;
 }
 
 ServiceWorkerInfo*
 ServiceWorkerRegistrationInfo::GetWaiting() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mWaitingWorker;
 }
 
 ServiceWorkerInfo*
 ServiceWorkerRegistrationInfo::GetActive() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mActiveWorker;
 }
 
@@ -501,7 +502,7 @@ ServiceWorkerRegistrationInfo::GetByID(uint64_t aID) const
 void
 ServiceWorkerRegistrationInfo::SetEvaluating(ServiceWorkerInfo* aServiceWorker)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aServiceWorker);
   MOZ_ASSERT(!mEvaluatingWorker);
   MOZ_ASSERT(!mInstallingWorker);
@@ -514,7 +515,7 @@ ServiceWorkerRegistrationInfo::SetEvaluating(ServiceWorkerInfo* aServiceWorker)
 void
 ServiceWorkerRegistrationInfo::ClearEvaluating()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mEvaluatingWorker) {
     return;
@@ -529,7 +530,7 @@ ServiceWorkerRegistrationInfo::ClearEvaluating()
 void
 ServiceWorkerRegistrationInfo::ClearInstalling()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mInstallingWorker) {
     return;
@@ -547,7 +548,7 @@ ServiceWorkerRegistrationInfo::ClearInstalling()
 void
 ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mEvaluatingWorker);
   MOZ_ASSERT(!mInstallingWorker);
 
@@ -559,7 +560,7 @@ ServiceWorkerRegistrationInfo::TransitionEvaluatingToInstalling()
 void
 ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mInstallingWorker);
 
   if (mWaitingWorker) {
@@ -586,7 +587,7 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
 void
 ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aServiceWorker);
 
   // TODO: Assert installing, waiting, and active are nullptr once the SWM
@@ -617,7 +618,7 @@ ServiceWorkerRegistrationInfo::SetActive(ServiceWorkerInfo* aServiceWorker)
 void
 ServiceWorkerRegistrationInfo::TransitionWaitingToActive()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mWaitingWorker);
 
   if (mActiveWorker) {
@@ -670,4 +671,5 @@ ServiceWorkerRegistrationInfo::SetLastUpdateTime(const int64_t aTime)
   mLastUpdateTime = aTime;
 }
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla

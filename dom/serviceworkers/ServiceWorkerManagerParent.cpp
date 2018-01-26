@@ -19,7 +19,6 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
-namespace workers {
 
 namespace {
 
@@ -30,7 +29,7 @@ class RegisterServiceWorkerCallback final : public Runnable
 public:
   RegisterServiceWorkerCallback(const ServiceWorkerRegistrationData& aData,
                                 uint64_t aParentID)
-    : Runnable("dom::workers::RegisterServiceWorkerCallback")
+    : Runnable("dom::RegisterServiceWorkerCallback")
     , mData(aData)
     , mParentID(aParentID)
   {
@@ -75,7 +74,7 @@ public:
   UnregisterServiceWorkerCallback(const PrincipalInfo& aPrincipalInfo,
                                   const nsString& aScope,
                                   uint64_t aParentID)
-    : Runnable("dom::workers::UnregisterServiceWorkerCallback")
+    : Runnable("dom::UnregisterServiceWorkerCallback")
     , mPrincipalInfo(aPrincipalInfo)
     , mScope(aScope)
     , mParentID(aParentID)
@@ -124,7 +123,7 @@ public:
   CheckPrincipalWithCallbackRunnable(already_AddRefed<ContentParent> aParent,
                                      const PrincipalInfo& aPrincipalInfo,
                                      Runnable* aCallback)
-    : Runnable("dom::workers::CheckPrincipalWithCallbackRunnable")
+    : Runnable("dom::CheckPrincipalWithCallbackRunnable")
     , mContentParent(aParent)
     , mPrincipalInfo(aPrincipalInfo)
     , mCallback(aCallback)
@@ -358,6 +357,5 @@ ServiceWorkerManagerParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

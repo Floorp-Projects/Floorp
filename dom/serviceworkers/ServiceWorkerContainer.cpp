@@ -20,17 +20,13 @@
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
-#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
 #include "ServiceWorker.h"
 
 namespace mozilla {
 namespace dom {
-
-using mozilla::dom::workers::ServiceWorkerInfo;
-using mozilla::dom::workers::ServiceWorkerManager;
-using mozilla::dom::workers::ServiceWorkerRegistrationInfo;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerContainer)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -217,7 +213,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   return ret.forget();
 }
 
-already_AddRefed<workers::ServiceWorker>
+already_AddRefed<ServiceWorker>
 ServiceWorkerContainer::GetController()
 {
   if (!mControllerWorker) {
@@ -258,7 +254,7 @@ ServiceWorkerContainer::GetController()
     mControllerWorker = info->GetOrCreateInstance(inner);
   }
 
-  RefPtr<workers::ServiceWorker> ref = mControllerWorker;
+  RefPtr<ServiceWorker> ref = mControllerWorker;
   return ref.forget();
 }
 

@@ -10,7 +10,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorkerUnregisterJob::PushUnsubscribeCallback final :
         public nsIUnsubscribeResultCallback
@@ -21,7 +20,7 @@ public:
   explicit PushUnsubscribeCallback(ServiceWorkerUnregisterJob* aJob)
     : mJob(aJob)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD
@@ -57,7 +56,7 @@ ServiceWorkerUnregisterJob::ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
 bool
 ServiceWorkerUnregisterJob::GetResult() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   return mResult;
 }
 
@@ -68,7 +67,7 @@ ServiceWorkerUnregisterJob::~ServiceWorkerUnregisterJob()
 void
 ServiceWorkerUnregisterJob::AsyncExecute()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (Canceled()) {
     Finish(NS_ERROR_DOM_ABORT_ERR);
@@ -97,7 +96,7 @@ ServiceWorkerUnregisterJob::AsyncExecute()
 void
 ServiceWorkerUnregisterJob::Unregister()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (Canceled() || !swm) {
@@ -146,6 +145,5 @@ ServiceWorkerUnregisterJob::Unregister()
   Finish(NS_OK);
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

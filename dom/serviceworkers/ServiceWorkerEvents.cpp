@@ -24,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "nsQueryObject.h"
+#include "ServiceWorker.h"
 #include "ServiceWorkerManager.h"
 
 #include "mozilla/ErrorResult.h"
@@ -42,7 +43,6 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
@@ -94,13 +94,14 @@ AsyncLog(nsIInterceptedChannel* aInterceptedChannel,
 
 } // anonymous namespace
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 CancelChannelRunnable::CancelChannelRunnable(
   nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
   nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
   nsresult aStatus)
-  : Runnable("dom::workers::CancelChannelRunnable")
+  : Runnable("dom::CancelChannelRunnable")
   , mChannel(aChannel)
   , mRegistration(aRegistration)
   , mStatus(aStatus)
@@ -197,7 +198,7 @@ class FinishResponse final : public Runnable
 
 public:
   explicit FinishResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel)
-    : Runnable("dom::workers::FinishResponse")
+    : Runnable("dom::FinishResponse")
     , mChannel(aChannel)
   {
   }
@@ -205,7 +206,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     nsresult rv = mChannel->FinishSynthesizedResponse();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -283,7 +284,7 @@ public:
                 const nsACString& aScriptSpec,
                 const nsACString& aResponseURLSpec,
                 UniquePtr<RespondWithClosure>&& aClosure)
-    : Runnable("dom::workers::StartResponse")
+    : Runnable("dom::StartResponse")
     , mChannel(aChannel)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
@@ -296,7 +297,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIChannel> underlyingChannel;
     nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
@@ -385,7 +386,7 @@ public:
 
   bool CSPPermitsResponse(nsILoadInfo* aLoadInfo)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aLoadInfo);
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -926,7 +927,7 @@ public:
   void
   ReportOnMainThread()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (!swm) {
       // browser shutdown
@@ -1312,4 +1313,5 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 NS_IMPL_ADDREF_INHERITED(ExtendableMessageEvent, Event)
 NS_IMPL_RELEASE_INHERITED(ExtendableMessageEvent, Event)
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla

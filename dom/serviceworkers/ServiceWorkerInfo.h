@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerinfo_h
-#define mozilla_dom_workers_serviceworkerinfo_h
+#ifndef mozilla_dom_serviceworkerinfo_h
+#define mozilla_dom_serviceworkerinfo_h
 
+#include "MainThreadUtils.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
 #include "mozilla/dom/workers/Workers.h"
 #include "nsIServiceWorkerManager.h"
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorker;
 class ServiceWorkerPrivate;
@@ -106,13 +106,13 @@ public:
 
   bool SkipWaitingFlag() const
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     return mSkipWaitingFlag;
   }
 
   void SetSkipWaitingFlag()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mSkipWaitingFlag = true;
   }
 
@@ -165,14 +165,14 @@ public:
   void
   SetActivateStateUncheckedWithoutEvent(ServiceWorkerState aState)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mDescriptor.SetState(aState);
   }
 
   void
   SetHandlesFetch(bool aHandlesFetch)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch == Unknown);
     mHandlesFetch = aHandlesFetch ? Enabled : Disabled;
   }
@@ -180,7 +180,7 @@ public:
   bool
   HandlesFetch() const
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(mHandlesFetch != Unknown);
     return mHandlesFetch != Disabled;
   }
@@ -236,8 +236,7 @@ public:
   }
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworkerinfo_h
+#endif // mozilla_dom_serviceworkerinfo_h
