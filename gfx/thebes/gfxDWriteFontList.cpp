@@ -934,32 +934,21 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
                                     const uint8_t* aFontData,
                                     uint32_t aLength)
 {
-    nsresult rv;
-    nsAutoString uniqueName;
-    rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
-    if (NS_FAILED(rv)) {
-        free((void*)aFontData);
-        return nullptr;
-    }
-
-    FallibleTArray<uint8_t> newFontData;
-
-    rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
-    free((void*)aFontData);
-
-    if (NS_FAILED(rv)) {
-        return nullptr;
-    }
-    
     RefPtr<IDWriteFontFileStream> fontFileStream;
     RefPtr<IDWriteFontFile> fontFile;
     HRESULT hr =
-      gfxDWriteFontFileLoader::CreateCustomFontFile(newFontData,
+      gfxDWriteFontFileLoader::CreateCustomFontFile(aFontData, aLength,
                                                     getter_AddRefs(fontFile),
                                                     getter_AddRefs(fontFileStream));
-
+    free((void*)aFontData);
     if (FAILED(hr)) {
         NS_WARNING("Failed to create custom font file reference.");
+        return nullptr;
+    }
+
+    nsAutoString uniqueName;
+    nsresult rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
+    if (NS_FAILED(rv)) {
         return nullptr;
     }
 
@@ -968,7 +957,7 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
     UINT32 numFaces;
 
     gfxDWriteFontEntry *entry = 
-        new gfxDWriteFontEntry(uniqueName, 
+        new gfxDWriteFontEntry(uniqueName,
                                fontFile,
                                fontFileStream,
                                aWeight,

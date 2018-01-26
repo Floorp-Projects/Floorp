@@ -135,14 +135,17 @@ public:
 
     /**
      * Creates a IDWriteFontFile and IDWriteFontFileStream from aFontData.
-     * aFontData will be empty on return as it swaps out the data.
+     * The data from aFontData will be copied internally, so the caller
+     * is free to dispose of it once this method returns.
      *
      * @param aFontData the font data for the custom font file
+     * @param aLength length of the font data
      * @param aFontFile out param for the created font file
      * @param aFontFileStream out param for the corresponding stream
      * @return HRESULT of internal calls
      */
-    static HRESULT CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData,
+    static HRESULT CreateCustomFontFile(const uint8_t* aFontData,
+                                        uint32_t aLength,
                                         IDWriteFontFile** aFontFile,
                                         IDWriteFontFileStream** aFontFileStream);
 
