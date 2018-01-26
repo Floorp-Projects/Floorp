@@ -146,19 +146,16 @@ HTMLEditor::~HTMLEditor()
   RefPtr<Selection> selection = GetSelection();
   // if we don't get the selection, just skip this
   if (selection) {
-    nsCOMPtr<nsISelectionListener>listener;
-    listener = do_QueryInterface(mTypeInState);
-    if (listener) {
-      selection->RemoveSelectionListener(listener);
+    if (mTypeInState) {
+      selection->RemoveSelectionListener(mTypeInState);
     }
-    listener = do_QueryInterface(mSelectionListenerP);
-    if (listener) {
-      selection->RemoveSelectionListener(listener);
+    if (mResizerSelectionListener) {
+      selection->RemoveSelectionListener(mResizerSelectionListener);
     }
   }
 
   mTypeInState = nullptr;
-  mSelectionListenerP = nullptr;
+  mResizerSelectionListener = nullptr;
 
   if (mLinkHandler && IsInitialized()) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -202,6 +199,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTypeInState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mComposerCommandsUpdater)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizerSelectionListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopLeftHandle)
@@ -217,7 +215,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizingInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizedObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMouseMotionListenerP)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionListenerP)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizeEventListenerP)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbsolutelyPositionedObject)
@@ -303,7 +300,7 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     mTypeInState = new TypeInState();
 
     // init the selection listener for image resizing
-    mSelectionListenerP = new ResizerSelectionListener(*this);
+    mResizerSelectionListener = new ResizerSelectionListener(*this);
 
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing
@@ -312,14 +309,11 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
 
     RefPtr<Selection> selection = GetSelection();
     if (selection) {
-      nsCOMPtr<nsISelectionListener>listener;
-      listener = do_QueryInterface(mTypeInState);
-      if (listener) {
-        selection->AddSelectionListener(listener);
+      if (mTypeInState) {
+        selection->AddSelectionListener(mTypeInState);
       }
-      listener = do_QueryInterface(mSelectionListenerP);
-      if (listener) {
-        selection->AddSelectionListener(listener);
+      if (mResizerSelectionListener) {
+        selection->AddSelectionListener(mResizerSelectionListener);
       }
     }
   }

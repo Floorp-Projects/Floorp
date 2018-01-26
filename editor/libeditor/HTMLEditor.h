@@ -49,6 +49,7 @@ namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
 class HTMLEditorEventListener;
 class HTMLEditRules;
+class ResizerSelectionListener;
 class TypeInState;
 class WSRunObject;
 enum class EditAction : int32_t;
@@ -989,6 +990,7 @@ protected:
 protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
+  RefPtr<ResizerSelectionListener> mResizerSelectionListener;
 
   bool mCRInParagraphCreatesParagraph;
 
@@ -1072,7 +1074,6 @@ protected:
   nsCOMPtr<Element> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
   int32_t mOriginalX;
