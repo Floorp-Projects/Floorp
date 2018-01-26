@@ -148,3 +148,11 @@ def assert_element_has_focus(target_element):
 
     assert active_element == target_element, (
         "Focussed element is <%s>, not <%s>" % (active_tag, target_tag))
+
+
+def assert_move_to_coordinates(point, target, events):
+    for e in events:
+        if e["type"] != "mousemove":
+            assert e["pageX"] == point["x"]
+            assert e["pageY"] == point["y"]
+            assert e["target"] == target
