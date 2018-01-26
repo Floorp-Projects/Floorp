@@ -585,7 +585,7 @@ nsProfiler::StartGathering(double aSinceTime)
   // Start building up the JSON result and grab the profile from this process.
   mWriter->Start();
   if (!profiler_stream_json_for_this_process(*mWriter, aSinceTime,
-                                             /* aIsShuttingDown */ true,
+                                             /* aIsShuttingDown */ false,
                                              &thisProcessFirstSampleTime)) {
     // The profiler is inactive. This either means that it was inactive even
     // at the time that ProfileGatherer::Start() was called, or that it was
