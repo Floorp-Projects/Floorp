@@ -535,8 +535,7 @@ this.FinderIterator = {
    */
   * _iterateDocument({ caseSensitive, entireWord, word }, window) {
     let doc = window.document;
-    let body = (doc instanceof Ci.nsIDOMHTMLDocument && doc.body) ?
-               doc.body : doc.documentElement;
+    let body = doc.body || doc.documentElement;
 
     if (!body)
       return;
