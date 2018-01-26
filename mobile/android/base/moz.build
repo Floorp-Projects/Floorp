@@ -877,6 +877,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'telemetry/measurements/SearchCountMeasurements.java',
     'telemetry/measurements/SessionMeasurements.java',
     'telemetry/pingbuilders/TelemetryCorePingBuilder.java',
+    'telemetry/pingbuilders/TelemetryCrashPingBuilder.java',
     'telemetry/pingbuilders/TelemetryLocalPingBuilder.java',
     'telemetry/pingbuilders/TelemetryPingBuilder.java',
     'telemetry/pingbuilders/TelemetrySyncEventPingBuilder.java',
