@@ -15,12 +15,12 @@
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsFilteredContentIterator.h"  // for nsFilteredContentIterator
+#include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
 #include "nsIContent.h"                 // for nsIContent, etc
 #include "nsIContentIterator.h"         // for nsIContentIterator
 #include "nsID.h"                       // for NS_GET_IID
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
-#include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIEditor.h"                  // for nsIEditor, etc
@@ -1654,31 +1654,16 @@ TextServicesDocument::GetDocumentContentRootNode()
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDOMDocument);
 
-  if (htmlDoc) {
+  if (doc->IsHTMLOrXHTML()) {
     // For HTML documents, the content root node is the body.
-
-    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-
-    nsresult rv = htmlDoc->GetBody(getter_AddRefs(bodyElement));
-    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!bodyElement)) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(bodyElement);
+    nsCOMPtr<nsINode> node = doc->GetBody();
     return node.forget();
   }
+
   // For non-HTML documents, the content root node will be the document element.
-
-  nsCOMPtr<nsIDOMElement> docElement;
-
-  nsresult rv = mDOMDocument->GetDocumentElement(getter_AddRefs(docElement));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-   return nullptr;
-  }
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(docElement);
+  nsCOMPtr<nsINode> node = doc->GetDocumentElement();
   return node.forget();
 }
 

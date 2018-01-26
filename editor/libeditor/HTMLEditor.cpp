@@ -30,7 +30,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelectionController.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
 
@@ -41,6 +40,7 @@
 #include "nsIMutableArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsFocusManager.h"
@@ -4708,11 +4708,10 @@ HTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIDOMHTMLDocument> domHTMLDocument = do_QueryInterface(document);
-  if (!domHTMLDocument) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return domHTMLDocument->GetBody(aBody);
+  nsCOMPtr<nsIDOMHTMLElement> body =
+    do_QueryInterface(ToSupports(document->GetBody()));
+  body.forget(aBody);
+  return NS_OK;
 }
 
 already_AddRefed<nsINode>

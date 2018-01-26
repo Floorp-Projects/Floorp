@@ -27,12 +27,12 @@
 #include "nsIFrame.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsSubDocumentFrame.h"
+#include "nsGenericHTMLElement.h"
 
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionListener.h"
 #include "mozilla/dom/Selection.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
@@ -41,6 +41,7 @@
 #endif
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StyleSheet.h"
@@ -2730,30 +2731,28 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(mDocument);
-  nsCOMPtr<nsIDOMNode> bodyNode;
-
-  nsresult rv;
-  if (htmldoc)
-  {
-    nsCOMPtr<nsIDOMHTMLElement>bodyElement;
-    rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
-    if (NS_FAILED(rv) || !bodyElement) return rv;
-
-    bodyNode = do_QueryInterface(bodyElement);
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
   }
-  else if (mDocument)
-  {
-    bodyNode = do_QueryInterface(mDocument->GetRootElement());
+
+  nsCOMPtr<nsINode> bodyNode;
+  if (mDocument->IsHTMLOrXHTML()) {
+    // XXXbz why not just do GetBody() for all documents, then GetRootElement()
+    // if GetBody() is null?
+    bodyNode = mDocument->GetBody();
+  }
+  else {
+    bodyNode = mDocument->GetRootElement();
   }
   if (!bodyNode) return NS_ERROR_FAILURE;
 
-  rv = selection->RemoveAllRanges();
+  nsresult rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
   mozilla::dom::Selection::AutoUserInitiated userSelection(selection);
-  rv = selection->SelectAllChildren(bodyNode);
-  return rv;
+  ErrorResult err;
+  selection->SelectAllChildren(*bodyNode, err);
+  return err.StealNSResult();
 }
 
 NS_IMETHODIMP nsDocumentViewer::CopySelection()
