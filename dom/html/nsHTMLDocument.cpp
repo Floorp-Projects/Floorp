@@ -1067,16 +1067,6 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
   rv = NodePrincipal()->SetDomain(newURI);
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetHead(nsISupports** aHead)
-{
-  *aHead = nullptr;
-
-  Element* head = GetHeadElement();
-
-  return head ? CallQueryInterface(head, aHead) : NS_OK;
-}
-
 nsIHTMLCollection*
 nsHTMLDocument::Images()
 {
