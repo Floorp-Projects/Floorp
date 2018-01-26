@@ -65,6 +65,8 @@ LOCAL_INCLUDES += [
     '/xpcom/threads',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 TEST_DIRS += [

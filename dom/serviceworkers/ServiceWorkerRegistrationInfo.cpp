@@ -6,6 +6,9 @@
 
 #include "ServiceWorkerRegistrationInfo.h"
 
+#include "ServiceWorkerManager.h"
+#include "ServiceWorkerPrivate.h"
+
 BEGIN_WORKERS_NAMESPACE
 
 namespace {

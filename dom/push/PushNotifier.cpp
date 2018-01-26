@@ -12,7 +12,7 @@
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
-#include "ServiceWorkerManager.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
