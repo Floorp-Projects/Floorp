@@ -130,7 +130,7 @@ protected:
 
   // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
   // MORE THAN ONE EDITOR PER EDITING SESSION
-  RefPtr<mozilla::ComposerCommandsUpdater> mStateMaintainer;
+  RefPtr<mozilla::ComposerCommandsUpdater> mComposerCommandsUpdater;
 
   // Save the editor type so we can create the editor after loading uri
   nsCString       mEditorType;
