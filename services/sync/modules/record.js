@@ -124,7 +124,7 @@ CryptoWrapper.prototype = {
       throw new Error("Cannot compute HMAC without an HMAC key.");
     }
 
-    return CommonUtils.bytesAsHex(Utils.digestUTF8(this.ciphertext, hasher));
+    return CommonUtils.bytesAsHex(Utils.digestBytes(this.ciphertext, hasher));
   },
 
   /*

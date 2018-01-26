@@ -65,6 +65,7 @@ private:
     nsTArray<timerStruct*> mRootConnectionList;
 
     int32_t mIdleTimeout;
+    bool mEnabled;
 
     // When "clear active logins" is performed, all idle connection are dropped
     // and mSessionId is incremented. When nsFtpState wants to insert idle
