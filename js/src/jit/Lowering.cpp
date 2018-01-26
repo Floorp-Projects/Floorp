@@ -2197,13 +2197,13 @@ LIRGenerator::visitToNumberInt32(MToNumberInt32* convert)
       }
 
       case MIRType::Null:
-        MOZ_ASSERT(convert->conversion() == MacroAssembler::IntConversion_Any);
+        MOZ_ASSERT(convert->conversion() == IntConversion_Any);
         define(new(alloc()) LInteger(0), convert);
         break;
 
       case MIRType::Boolean:
-        MOZ_ASSERT(convert->conversion() == MacroAssembler::IntConversion_Any ||
-                   convert->conversion() == MacroAssembler::IntConversion_NumbersOrBoolsOnly);
+        MOZ_ASSERT(convert->conversion() == IntConversion_Any ||
+                   convert->conversion() == IntConversion_NumbersOrBoolsOnly);
         redefine(convert, opd);
         break;
 
