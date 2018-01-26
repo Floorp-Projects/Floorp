@@ -3,7 +3,7 @@ let { classes: Cc, interfaces: Ci, manager: Cm, results: Cr } = Components;
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
           getService(Ci.nsIServiceWorkerManager);
 
-const URI = "https://example.com/browser/dom/workers/test/serviceworkers/empty.html";
+const URI = "https://example.com/browser/dom/serviceworkers/test/empty.html";
 const MOCK_CID = Components.ID("{2a0f83c4-8818-4914-a184-f1172b4eaaa7}");
 const ALERTS_SERVICE_CONTRACT_ID = "@mozilla.org/alerts-service;1";
 const USER_CONTEXT_ID = 3

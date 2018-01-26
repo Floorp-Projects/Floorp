@@ -39,16 +39,16 @@ function isMulet() {
 var iframe;
 function runTest() {
   iframe = document.querySelector("iframe");
-  iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/register.html";
+  iframe.src = "/tests/dom/serviceworkers/test/fetch/context/register.html";
   window.onmessage = function(e) {
     if (e.data.status == "ok") {
       ok(e.data.result, e.data.message);
     } else if (e.data.status == "todo") {
       todo(e.data.result, e.data.message);
     } else if (e.data.status == "registrationdone") {
-      iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/index.html?" + gTest;
+      iframe.src = "/tests/dom/serviceworkers/test/fetch/context/index.html?" + gTest;
     } else if (e.data.status == "done") {
-      iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/context/unregister.html";
+      iframe.src = "/tests/dom/serviceworkers/test/fetch/context/unregister.html";
     } else if (e.data.status == "unregistrationdone") {
       window.onmessage = null;
       ok(true, "Test finished successfully");

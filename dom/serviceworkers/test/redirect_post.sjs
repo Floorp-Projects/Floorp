@@ -23,7 +23,7 @@ function handleRequest(request, response)
 
   var obj = JSON.parse(body);
   if (currentHop < obj.hops) {
-    var newURL = '/tests/dom/workers/test/serviceworkers/redirect_post.sjs?hop=' +
+    var newURL = '/tests/dom/serviceworkers/test/redirect_post.sjs?hop=' +
                  (1 + currentHop);
     response.setStatusLine(null, 307, 'redirect');
     response.setHeader('Location', newURL);

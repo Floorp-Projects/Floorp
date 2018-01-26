@@ -20,17 +20,17 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/upgrade-insecure/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/upgrade-insecure/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/upgrade-insecure/embedder.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/upgrade-insecure/embedder.html";
       } else if (e.data.status == "protocol") {
         is(e.data.data, "https:", "Correct protocol expected");
       } else if (e.data.status == "image") {
         is(e.data.data, 40, "The image request was upgraded before interception");
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/upgrade-insecure/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/upgrade-insecure/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         SimpleTest.finish();

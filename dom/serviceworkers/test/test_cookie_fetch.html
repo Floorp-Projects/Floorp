@@ -20,7 +20,7 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/cookie/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
@@ -31,11 +31,14 @@
         iframe = document.createElement("iframe");
         document.getElementById("content").appendChild(iframe);
 
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/synth.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/cookie/synth.html";
       } else if (e.data.status == "done") {
-        is(e.data.cookie, "foo=bar", "The synthesized document has access to its cookies");
+        // Note, we can't do an exact is() comparison here since other
+        // tests can leave cookies on the domain.
+        ok(e.data.cookie.includes("foo=bar"),
+           "The synthesized document has access to its cookies");
 
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/cookie/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/cookie/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

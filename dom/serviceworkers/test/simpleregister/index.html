@@ -27,7 +27,7 @@
             }
           });
 
-          navigator.serviceWorker.getRegistration('http://mochi.test:8888/tests/dom/workers/test/serviceworkers/simpleregister/')
+          navigator.serviceWorker.getRegistration('http://mochi.test:8888/tests/dom/serviceworkers/test/simpleregister/')
             .then(function(a) {
             window.parent.postMessage({ type: "check", status: a instanceof ServiceWorkerRegistration,
                                         msg: "getRegistration returns a ServiceWorkerRegistration" }, "*");

@@ -20,7 +20,7 @@
     const Ci = SpecialPowers.Ci;
 
     function checkDomainRegistration(domain, exists) {
-      return testFrame("http://" + domain + "/tests/dom/workers/test/serviceworkers/sanitize/example_check_and_unregister.html").then(function(body) {
+      return testFrame("http://" + domain + "/tests/dom/serviceworkers/test/sanitize/example_check_and_unregister.html").then(function(body) {
         if (body === "FAIL") {
           ok(false, "Error acquiring registration or unregistering for " + domain);
         } else {
@@ -34,7 +34,7 @@
     }
 
     registerSW().then(function() {
-      return testFrame("http://example.com/tests/dom/workers/test/serviceworkers/sanitize/frame.html").then(function(body) {
+      return testFrame("http://example.com/tests/dom/serviceworkers/test/sanitize/frame.html").then(function(body) {
         is(body, "intercepted", "Expected serviceworker to intercept request");
       });
     }).then(function() {
@@ -67,10 +67,10 @@
   }
 
   function registerSW() {
-    return testFrame("http://example.com/tests/dom/workers/test/serviceworkers/sanitize/register.html")
+    return testFrame("http://example.com/tests/dom/serviceworkers/test/sanitize/register.html")
            .then(function(e) {
               // Register for prefixexample.com and then ensure it does not get unregistered.
-              return testFrame("http://prefixexample.com/tests/dom/workers/test/serviceworkers/sanitize/register.html");
+              return testFrame("http://prefixexample.com/tests/dom/serviceworkers/test/sanitize/register.html");
             });
   }
 

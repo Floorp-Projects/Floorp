@@ -25,7 +25,7 @@
   }
 
   navigator.serviceWorker.ready.then(function(swr) {
-    my_ok(swr.scope.match(/serviceworkers\/control$/),
+    my_ok(swr.scope.match(/serviceworkers\/test\/control$/),
           "This page should be controlled by upper level registration");
     my_ok(swr.installing == undefined,
           "Upper level registration should not have a installing worker.");
@@ -44,7 +44,7 @@
               "Installing is serviceworker/controller");
 
         my_ok("scope" in e, "ServiceWorkerRegistration.scope exists.");
-        my_ok(e.scope.match(/serviceworkers\/controller\/$/), "Scope is serviceworker/controller " + e.scope);
+        my_ok(e.scope.match(/serviceworkers\/test\/controller\/$/), "Scope is serviceworker/test/controller " + e.scope);
 
         my_ok("unregister" in e, "ServiceWorkerRegistration.unregister exists.");
 

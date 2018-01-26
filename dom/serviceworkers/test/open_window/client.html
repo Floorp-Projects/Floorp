@@ -14,7 +14,7 @@
 <script class="testbody" type="text/javascript">
 
   window.onload = function() {
-    if (window.location == "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/open_window/client.html") {
+    if (window.location == "http://mochi.test:8888/tests/dom/serviceworkers/test/open_window/client.html") {
       navigator.serviceWorker.ready.then(function(result) {
         navigator.serviceWorker.onmessage = function(event) {
           if (event.data !== "CLOSE") {
@@ -36,7 +36,7 @@
       }
 
       var iframe = document.createElement('iframe');
-      iframe.src = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/open_window/client.html";
+      iframe.src = "http://mochi.test:8888/tests/dom/serviceworkers/test/open_window/client.html";
       document.body.appendChild(iframe);
     }
   }

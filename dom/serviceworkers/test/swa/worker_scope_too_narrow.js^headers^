@@ -1,1 +1,1 @@
-Service-Worker-Allowed: /tests/dom/workers
+Service-Worker-Allowed: /tests/dom/serviceworkers
