@@ -17,10 +17,10 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
 var highlightedNodeFront, highlighterOptions;
 
-add_task(function* () {
-  yield addTab(TEST_URL);
-  let {toolbox, inspector, view} = yield openBoxModelView();
-  yield selectNode("div", inspector);
+add_task(async function () {
+  await addTab(TEST_URL);
+  let {toolbox, inspector, view} = await openBoxModelView();
+  await selectNode("div", inspector);
 
   // Mock the highlighter by replacing the showBoxModel method.
   toolbox.highlighter.showBoxModel = function (nodeFront, options) {
@@ -29,25 +29,29 @@ add_task(function* () {
   };
 
   let elt = view.document.querySelector(".boxmodel-margins");
-  yield testGuideOnLayoutHover(elt, "margin", inspector, view);
+  await testGuideOnLayoutHover(elt, "margin", inspector, view);
 
   elt = view.document.querySelector(".boxmodel-borders");
-  yield testGuideOnLayoutHover(elt, "border", inspector, view);
+  await testGuideOnLayoutHover(elt, "border", inspector, view);
 
   elt = view.document.querySelector(".boxmodel-paddings");
-  yield testGuideOnLayoutHover(elt, "padding", inspector, view);
+  await testGuideOnLayoutHover(elt, "padding", inspector, view);
 
   elt = view.document.querySelector(".boxmodel-content");
-  yield testGuideOnLayoutHover(elt, "content", inspector, view);
+  await testGuideOnLayoutHover(elt, "content", inspector, view);
 });
 
-function* testGuideOnLayoutHover(elt, expectedRegion, inspector) {
+async function testGuideOnLayoutHover(elt, expectedRegion, inspector) {
   info("Synthesizing mouseover on the boxmodel-view");
   EventUtils.synthesizeMouse(elt, 2, 2, {type: "mouseover"},
     elt.ownerDocument.defaultView);
 
   info("Waiting for the node-highlight event from the toolbox");
-  yield inspector.toolbox.once("node-highlight");
+  await inspector.toolbox.once("node-highlight");
+
+  // Wait for the next event tick to make sure the remaining part of the
+  // test is executed after finishing synthesizing mouse event.
+  await new Promise(executeSoon);
 
   is(highlightedNodeFront, inspector.selection.nodeFront,
     "The right nodeFront was highlighted");

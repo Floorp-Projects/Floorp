@@ -35,10 +35,7 @@ function getResultsCount(dbg) {
 
 // Testing project search
 add_task(async function() {
-  Services.prefs.setBoolPref(
-    "devtools.debugger.project-text-search-enabled",
-    true
-  );
+  await pushPref("devtools.debugger.project-text-search-enabled", true);
 
   const dbg = await initDebugger("doc-script-switching.html", "switching-01");
 
@@ -60,11 +57,4 @@ add_task(async function() {
 
   const selectedSource = dbg.selectors.getSelectedSource(dbg.getState());
   ok(selectedSource.get("url").includes("switching-01"));
-});
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(
-    "devtools.debugger.project-text-search-enabled",
-    false
-  );
 });

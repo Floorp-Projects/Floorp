@@ -553,30 +553,44 @@ RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
 }
 
 static void
-TakeAndAddModifiedFramesFromRootFrame(nsTArray<nsIFrame*>& aFrames,
-                                      nsIFrame* aRootFrame)
+TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
+  nsTArray<nsIFrame*>* aModifiedFrames,
+  nsTArray<nsIFrame*>* aFramesWithProps,
+  nsIFrame* aRootFrame)
 {
   MOZ_ASSERT(aRootFrame);
 
   nsTArray<nsIFrame*>* frames =
     aRootFrame->GetProperty(nsIFrame::ModifiedFrameList());
 
-  if (!frames) {
-    return;
-  }
-
-  for (nsIFrame* f : *frames) {
-    if (f) {
-      aFrames.AppendElement(f);
+  if (frames) {
+    for (nsIFrame* f : *frames) {
+      if (f) {
+        aModifiedFrames->AppendElement(f);
+      }
     }
+
+    frames->Clear();
   }
 
-  frames->Clear();
+  frames =
+    aRootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
+
+  if (frames) {
+    for (nsIFrame* f : *frames) {
+      if (f) {
+        aFramesWithProps->AppendElement(f);
+      }
+    }
+
+    frames->Clear();
+  }
 }
 
 struct CbData {
   nsDisplayListBuilder* builder;
-  nsTArray<nsIFrame*> modifiedFrames;
+  nsTArray<nsIFrame*>* modifiedFrames;
+  nsTArray<nsIFrame*>* framesWithProps;
 };
 
 static bool
@@ -614,7 +628,9 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
       nsIFrame* rootFrame = presShell ? presShell->GetRootFrame() : nullptr;
 
       if (rootFrame) {
-        TakeAndAddModifiedFramesFromRootFrame(data->modifiedFrames, rootFrame);
+        TakeAndAddModifiedAndFramesWithPropsFromRootFrame(data->modifiedFrames,
+                                                          data->framesWithProps,
+                                                          rootFrame);
       }
     }
   }
@@ -623,22 +639,28 @@ SubDocEnumCb(nsIDocument* aDocument, void* aData)
   return true;
 }
 
-static nsTArray<nsIFrame*>
-GetModifiedFrames(nsDisplayListBuilder* aBuilder)
+static void
+GetModifiedAndFramesWithProps(nsDisplayListBuilder* aBuilder,
+                              nsTArray<nsIFrame*>* aOutModifiedFrames,
+                              nsTArray<nsIFrame*>* aOutFramesWithProps)
 {
   MOZ_ASSERT(aBuilder->RootReferenceFrame());
 
-  CbData data;
-  data.builder = aBuilder;
-  TakeAndAddModifiedFramesFromRootFrame(data.modifiedFrames, aBuilder->RootReferenceFrame());
+  TakeAndAddModifiedAndFramesWithPropsFromRootFrame(aOutModifiedFrames,
+                                                    aOutFramesWithProps,
+                                                    aBuilder->RootReferenceFrame());
 
   nsIDocument* rootdoc = aBuilder->RootReferenceFrame()->PresContext()->Document();
 
   if (rootdoc) {
+    CbData data = {
+      aBuilder,
+      aOutModifiedFrames,
+      aOutFramesWithProps
+    };
+
     rootdoc->EnumerateSubDocuments(SubDocEnumCb, &data);
   }
-
-  return Move(data.modifiedFrames);
 }
 
 // ComputeRebuildRegion  debugging
@@ -950,12 +972,14 @@ ClearFrameProps(nsTArray<nsIFrame*>& aFrames)
 }
 
 void
-RetainedDisplayListBuilder::ClearModifiedFrameProps()
+RetainedDisplayListBuilder::ClearFramesWithProps()
 {
-  nsTArray<nsIFrame*> modifiedFrames =
-    GetModifiedFrames(&mBuilder);
+  nsTArray<nsIFrame*> modifiedFrames;
+  nsTArray<nsIFrame*> framesWithProps;
+  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames, &framesWithProps);
 
   ClearFrameProps(modifiedFrames);
+  ClearFrameProps(framesWithProps);
 }
 
 bool
@@ -968,8 +992,9 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   mBuilder.EnterPresShell(mBuilder.RootReferenceFrame());
 
-  nsTArray<nsIFrame*> modifiedFrames =
-    GetModifiedFrames(&mBuilder);
+  nsTArray<nsIFrame*> modifiedFrames;
+  nsTArray<nsIFrame*> framesWithProps;
+  GetModifiedAndFramesWithProps(&mBuilder, &modifiedFrames, &framesWithProps);
 
   // Do not allow partial builds if the retained display list is empty, or if
   // ShouldBuildPartial heuristic fails.
@@ -993,7 +1018,6 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   nsRect modifiedDirty;
   AnimatedGeometryRoot* modifiedAGR = nullptr;
-  nsTArray<nsIFrame*> framesWithProps;
   bool merged = false;
   if (shouldBuildPartial &&
       ComputeRebuildRegion(modifiedFrames, &modifiedDirty,

@@ -1735,8 +1735,8 @@ var SessionStoreInternal = {
     }
 
     if (aData != "restart") {
-      // Throw away the previous session on shutdown
-      LastSession.clear();
+      // Throw away the previous session on shutdown without notification
+      LastSession.clear(true);
     }
 
     this._uninit();
@@ -5104,10 +5104,11 @@ var LastSession = {
     this._state = state;
   },
 
-  clear() {
+  clear(silent = false) {
     if (this._state) {
       this._state = null;
-      Services.obs.notifyObservers(null, NOTIFY_LAST_SESSION_CLEARED);
+      if (!silent)
+        Services.obs.notifyObservers(null, NOTIFY_LAST_SESSION_CLEARED);
     }
   }
 };
