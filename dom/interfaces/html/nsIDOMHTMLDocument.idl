@@ -16,22 +16,6 @@ interface nsISelection;
 [uuid(cd31e61f-cfc2-4b91-9385-17b6a2d0633d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-  // If aContentType is not something supported by nsHTMLDocument and
-  // the HTML content sink, trying to write to the document will
-  // probably throw.
-  // Pass aReplace = true to trigger a replacement of the previous
-  // document in session history; pass false for normal history handling.
-  [implicit_jscontext, optional_argc]
-  nsISupports               open([optional] in DOMString aContentTypeOrUrl,
-                                 [optional] in DOMString aReplaceOrName,
-                                 [optional] in DOMString aFeatures);
-  void                      close();
-
-  [implicit_jscontext]
-  void                      write([optional, Null(Stringify)] in DOMString text);
-  [implicit_jscontext]
-  void                      writeln([optional, Null(Stringify)] in DOMString text);
-
   /**
    * Midas additions
    */

@@ -1295,36 +1295,6 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
-                     const nsAString& aReplaceOrName,
-                     const nsAString& aFeatures,
-                     JSContext* cx, uint8_t aOptionalArgCount,
-                     nsISupports** aReturn)
-{
-  // When called with 3 or more arguments, document.open() calls window.open().
-  if (aOptionalArgCount > 2) {
-    ErrorResult rv;
-    *aReturn = Open(cx, aContentTypeOrUrl, aReplaceOrName, aFeatures,
-                    false, rv).take();
-    return rv.StealNSResult();
-  }
-
-  nsString type;
-  if (aOptionalArgCount > 0) {
-    type = aContentTypeOrUrl;
-  } else {
-    type.AssignLiteral("text/html");
-  }
-  nsString replace;
-  if (aOptionalArgCount > 1) {
-    replace = aReplaceOrName;
-  }
-  ErrorResult rv;
-  *aReturn = Open(cx, type, replace, rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsHTMLDocument::Open(JSContext* /* unused */,
                      const nsAString& aURL,
@@ -1717,14 +1687,6 @@ nsHTMLDocument::Clear()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::Close()
-{
-  ErrorResult rv;
-  Close(rv);
-  return rv.StealNSResult();
-}
-
 void
 nsHTMLDocument::Close(ErrorResult& rv)
 {
@@ -1796,7 +1758,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
 {
   // Fast path the common case
   if (aText.Length() == 1) {
-    rv = WriteCommon(cx, aText[0], aNewlineTerminate);
+    WriteCommon(cx, aText[0], aNewlineTerminate, rv);
   } else {
     // XXXbz it would be nice if we could pass all the strings to the parser
     // without having to do all this copying and then ask it to start
@@ -1805,44 +1767,48 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     for (uint32_t i = 0; i < aText.Length(); ++i) {
       text.Append(aText[i]);
     }
-    rv = WriteCommon(cx, text, aNewlineTerminate);
+    WriteCommon(cx, text, aNewlineTerminate, rv);
   }
 }
 
-nsresult
+void
 nsHTMLDocument::WriteCommon(JSContext *cx,
                             const nsAString& aText,
-                            bool aNewlineTerminate)
+                            bool aNewlineTerminate,
+                            ErrorResult& aRv)
 {
   mTooDeepWriteRecursion =
     (mWriteLevel > NS_MAX_DOCUMENT_WRITE_DEPTH || mTooDeepWriteRecursion);
-  NS_ENSURE_STATE(!mTooDeepWriteRecursion);
+  if (NS_WARN_IF(mTooDeepWriteRecursion)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
 
   if (!IsHTMLDocument() || mDisableDocWrite) {
     // No calling document.write*() on XHTML!
 
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
 
   if (ShouldThrowOnDynamicMarkupInsertion()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   if (mParserAborted) {
     // Hixie says aborting the parser doesn't undefine the insertion point.
     // However, since we null out mParser in that case, we track the
     // theoretically defined insertion point using mParserAborted.
-    return NS_OK;
+    return;
   }
 
   // Implement Step 4.1 of:
   // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
   if (ShouldIgnoreOpens()) {
-    return NS_OK;
+    return;
   }
-
-  nsresult rv = NS_OK;
 
   void *key = GenerateParserKey();
   if (mParser && !mParser->IsInsertionPointDefined()) {
@@ -1854,7 +1820,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,
                                       mDocumentURI);
-      return NS_OK;
+      return;
     }
     // The spec doesn't tell us to ignore opens from here, but we need to
     // ensure opens are ignored here.
@@ -1872,17 +1838,16 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,
                                       mDocumentURI);
-      return NS_OK;
+      return;
     }
-    nsCOMPtr<nsISupports> ignored;
-    rv = Open(NS_LITERAL_STRING("text/html"), EmptyString(), EmptyString(), cx,
-              1, getter_AddRefs(ignored));
+    nsCOMPtr<nsIDocument> ignored  = Open(cx, NS_LITERAL_STRING("text/html"),
+                                          EmptyString(), aRv);
 
     // If Open() fails, or if it didn't create a parser (as it won't
     // if the user chose to not discard the current document through
     // onbeforeunload), don't write anything.
-    if (NS_FAILED(rv) || !mParser) {
-      return rv;
+    if (aRv.Failed() || !mParser) {
+      return;
     }
     MOZ_ASSERT(!JS_IsExceptionPending(cx),
                "Open() succeeded but JS exception is pending");
@@ -1908,24 +1873,16 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   // since the concatenation of strings costs more than we like. And
   // why pay that price when we don't need to?
   if (aNewlineTerminate) {
-    rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
+    aRv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
       aText + new_line, key, GetContentTypeInternal(), false);
   } else {
-    rv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
+    aRv = (static_cast<nsHtml5Parser*>(mParser.get()))->Parse(
       aText, key, GetContentTypeInternal(), false);
   }
 
   --mWriteLevel;
 
   mTooDeepWriteRecursion = (mWriteLevel != 0 && mTooDeepWriteRecursion);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::Write(const nsAString& aText, JSContext *cx)
-{
-  return WriteCommon(cx, aText, false);
 }
 
 void
@@ -1933,12 +1890,6 @@ nsHTMLDocument::Write(JSContext* cx, const Sequence<nsString>& aText,
                       ErrorResult& rv)
 {
   WriteCommon(cx, aText, false, rv);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::Writeln(const nsAString& aText, JSContext *cx)
-{
-  return WriteCommon(cx, aText, true);
 }
 
 void
