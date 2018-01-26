@@ -22,7 +22,6 @@
 #include "nsIOutputStream.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsIDOMCDATASection.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"

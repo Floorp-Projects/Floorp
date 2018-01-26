@@ -6086,11 +6086,13 @@ nsIDocument::CreateComment(const nsAString& aData) const
 
 NS_IMETHODIMP
 nsDocument::CreateCDATASection(const nsAString& aData,
-                               nsIDOMCDATASection** aReturn)
+                               nsISupports** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   ErrorResult rv;
-  *aReturn = nsIDocument::CreateCDATASection(aData, rv).take();
+  already_AddRefed<CDATASection> supports =
+    nsIDocument::CreateCDATASection(aData, rv);
+  *aReturn = ToSupports(supports.take());
   return rv.StealNSResult();
 }
 

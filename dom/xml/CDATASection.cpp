@@ -16,8 +16,7 @@ CDATASection::~CDATASection()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(CDATASection, nsGenericDOMDataNode, nsIDOMNode,
-                            nsIDOMCharacterData, nsIDOMText,
-                            nsIDOMCDATASection)
+                            nsIDOMCharacterData, nsIDOMText)
 
 JSObject*
 CDATASection::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
