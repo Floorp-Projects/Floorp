@@ -15,9 +15,9 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'composer'
 
 UNIFIED_SOURCES += [
+    'ComposerCommandsUpdater.cpp',
     'EditorSpellCheck.cpp',
     'nsComposerCommands.cpp',
-    'nsComposerCommandsUpdater.cpp',
     'nsComposerController.cpp',
     'nsComposerDocumentCommands.cpp',
     'nsComposerRegistration.cpp',
@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
 ]
 
 EXPORTS.mozilla += [
+    'ComposerCommandsUpdater.h',
     'EditorSpellCheck.h',
 ]
 
