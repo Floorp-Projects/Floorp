@@ -41,6 +41,8 @@ let webpackConfig = {
           "rewrite-browser-require",
           // Replace all references to loader.lazyRequire() by require()
           "rewrite-lazy-require",
+          // Replace all references to loader.lazyGetter() by require()
+          "rewrite-lazy-getter",
         ],
       }
     ]
@@ -142,11 +144,11 @@ webpackConfig.plugins = mappings.map(([regex, res]) =>
   new NormalModuleReplacementPlugin(regex, res));
 
 const basePath = path.join(__dirname, "../../").replace(/\\/g, "\\\\");
-const baseName = path.basename(__dirname);
 
 let config = toolboxConfig(webpackConfig, getConfig(), {
-  // Exclude to transpile all scripts in devtools/ but not for this folder
-  babelExcludes: new RegExp(`^${basePath}(.(?!${baseName}))*$`)
+  // Exclude to transpile all scripts in devtools/ but not for this folder nor netmonitor.
+  babelExcludes: new RegExp(`^${basePath}(.(?!(webconsole|netmonitor)))*$`),
+  disablePostCSS: true,
 });
 
 // Remove loaders from devtools-launchpad's webpack.config.js

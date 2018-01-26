@@ -4062,8 +4062,9 @@ PresShell::HandlePostedReflowCallbacks(bool aInterruptible)
 bool
 nsIPresShell::IsSafeToFlush() const
 {
-  // Not safe if we are reflowing or in the middle of frame construction
-  if (mIsReflowing || mChangeNestCount) {
+  // Not safe if we are getting torn down, reflowing, or in the middle of frame
+  // construction.
+  if (mIsReflowing || mChangeNestCount || mIsDestroying) {
     return false;
   }
 
@@ -4102,8 +4103,6 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
   FlushType flushType = aFlush.mFlushType;
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
-  MOZ_DIAGNOSTIC_ASSERT(mDocument->HasShellOrBFCacheEntry());
-  MOZ_DIAGNOSTIC_ASSERT(mDocument->GetShell() == this);
 
 #ifdef MOZ_GECKO_PROFILER
   static const EnumeratedArray<FlushType,
@@ -4153,12 +4152,16 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     isSafeToFlush = isSafeToFlush && nsContentUtils::IsSafeToRunScript();
   }
 
-  NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
+  MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying || !isSafeToFlush);
+  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mViewManager);
+  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->HasShellOrBFCacheEntry());
+  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->GetShell() == this);
+
   // Make sure the view manager stays alive.
   RefPtr<nsViewManager> viewManager = mViewManager;
   bool didStyleFlush = false;
   bool didLayoutFlush = false;
-  if (isSafeToFlush && viewManager) {
+  if (isSafeToFlush) {
     // Record that we are in a flush, so that our optimization in
     // nsDocument::FlushPendingNotifications doesn't skip any re-entrant
     // calls to us.  Otherwise, we might miss some needed flushes, since
