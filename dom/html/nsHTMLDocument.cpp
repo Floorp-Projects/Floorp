@@ -900,14 +900,14 @@ nsHTMLDocument::GetDomainURI()
 }
 
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetDomain(nsAString& aDomain)
 {
   nsCOMPtr<nsIURI> uri = GetDomainURI();
 
   if (!uri) {
     SetDOMStringToNull(aDomain);
-    return NS_OK;
+    return;
   }
 
   nsAutoCString hostName;
@@ -919,7 +919,6 @@ nsHTMLDocument::GetDomain(nsAString& aDomain)
     // etc), just return an null string.
     SetDOMStringToNull(aDomain);
   }
-  return NS_OK;
 }
 
 already_AddRefed<nsIURI>
@@ -1032,14 +1031,6 @@ nsHTMLDocument::IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffi
   return true;
 }
 
-
-NS_IMETHODIMP
-nsHTMLDocument::SetDomain(const nsAString& aDomain)
-{
-  ErrorResult rv;
-  SetDomain(aDomain, rv);
-  return rv.StealNSResult();
-}
 
 void
 nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
