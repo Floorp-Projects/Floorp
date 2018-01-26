@@ -358,6 +358,7 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
+      case CacheKind::ToBool:
         MOZ_CRASH("Unsupported IC");
     }
     MOZ_CRASH();

@@ -2095,6 +2095,7 @@ BaselineCacheIRCompiler::init(CacheKind kind)
       case CacheKind::GetProp:
       case CacheKind::TypeOf:
       case CacheKind::GetIterator:
+      case CacheKind::ToBool:
         MOZ_ASSERT(numInputs == 1);
         allocator.initInputLocation(0, R0);
         break;

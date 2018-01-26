@@ -9,6 +9,7 @@
 #include "jit/IonIC.h"
 #include "jit/SharedICHelpers.h"
 
+#include "jsboolinlines.h"
 #include "jscompartmentinlines.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -1221,6 +1222,27 @@ CacheIRCompiler::emitGuardIsObject()
 }
 
 bool
+CacheIRCompiler::emitGuardIsNullOrUndefined()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label success;
+    masm.branchTestNull(Assembler::Equal, input, &success);
+    masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
+
+    masm.bind(&success);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsObjectOrNull()
 {
     ValOperandId inputId = reader.valOperandId();
@@ -2268,6 +2290,98 @@ CacheIRCompiler::emitLoadTypeOfObjectResult()
 
         masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
     }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadInt32TruthyResult()
+{
+    AutoOutputRegister output(*this);
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    Label ifFalse, done;
+    masm.branchTestInt32Truthy(false, val, &ifFalse);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadStringTruthyResult()
+{
+    AutoOutputRegister output(*this);
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+
+    Label ifFalse, done;
+    masm.branch32(Assembler::Equal, Address(str, JSString::offsetOfLength()), Imm32(0), &ifFalse);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadDoubleTruthyResult()
+{
+    AutoOutputRegister output(*this);
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    Label ifFalse, done, failurePopReg;
+
+     // If we're compiling a Baseline IC, FloatReg0 is always available.
+    if (mode_ != Mode::Baseline)
+        masm.push(FloatReg0);
+
+    masm.unboxDouble(val, FloatReg0);
+
+    masm.branchTestDoubleTruthy(false, FloatReg0, &ifFalse);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifFalse);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+
+    if (mode_ != Mode::Baseline)
+        masm.pop(FloatReg0);
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadObjectTruthyResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+
+    Label emulatesUndefined, slowPath, done;
+    masm.branchIfObjectEmulatesUndefined(obj, scratch, &slowPath, &emulatesUndefined);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&emulatesUndefined);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&slowPath);
+    masm.setupUnalignedABICall(scratch);
+    masm.passABIArg(obj);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::EmulatesUndefined));
+    masm.convertBoolToInt32(ReturnReg, ReturnReg);
+    masm.xor32(Imm32(1), ReturnReg);
+    masm.tagValue(JSVAL_TYPE_BOOLEAN, ReturnReg, output.valueReg());
 
     masm.bind(&done);
     return true;
