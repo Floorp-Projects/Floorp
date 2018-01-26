@@ -7,6 +7,7 @@
 DIRS += [
     'emulation',
     'highlighters',
+    'inspector',
     'utils',
     'webconsole',
 ]
@@ -82,9 +83,6 @@ with Files('css-properties.js'):
 
 with Files('csscoverage.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Graphics Commandline and Toolbar')
-
-with Files('inspector.js'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
 
 with Files('memory.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')

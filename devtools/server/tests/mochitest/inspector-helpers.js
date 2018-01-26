@@ -15,7 +15,7 @@ const Services = require("Services");
 // promise is still used in tests using this helper
 const promise = require("promise"); // eslint-disable-line no-unused-vars
 const defer = require("devtools/shared/defer");
-const {_documentWalker} = require("devtools/server/actors/inspector");
+const {_documentWalker} = require("devtools/server/actors/inspector/inspector");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
