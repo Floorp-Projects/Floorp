@@ -6,7 +6,7 @@
 
 DevToolsModules(
   'document-walker.js',
-  'inspector.js',
+  'inspector-actor.js',
   'node-actor.js',
   'utils.js',
   'walker-actor.js',
