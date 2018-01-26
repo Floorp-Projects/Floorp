@@ -689,5 +689,11 @@ WebRenderBridgeChild::DeallocResourceShmem(RefCountedShmem& aShm)
   RefCountedShm::Dealloc(this, aShm);
 }
 
+void
+WebRenderBridgeChild::Capture()
+{
+  this->SendCapture();
+}
+
 } // namespace layers
 } // namespace mozilla
