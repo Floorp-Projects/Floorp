@@ -1855,7 +1855,7 @@ public:
   // Allocation
   //
 
-  // This method may increase the capacity of this array object by the
+  // This method may increase the capacity of this array object to the
   // specified amount.  This method may be called in advance of several
   // AppendElement operations to minimize heap re-allocations.  This method
   // will not reduce the number of elements in this array.
