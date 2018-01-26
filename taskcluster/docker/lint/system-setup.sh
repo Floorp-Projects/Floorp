@@ -10,7 +10,6 @@ mkdir -p /setup
 cd /setup
 
 apt_packages=()
-apt_packages+=('codespell')
 apt_packages+=('curl')
 apt_packages+=('locales')
 apt_packages+=('git')
