@@ -210,6 +210,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(EditorBase)
+ NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
  NS_INTERFACE_MAP_ENTRY(nsIEditor)
  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditor)
@@ -282,6 +283,11 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
   selectionController->SetSelectionFlags(nsISelectionDisplay::DISPLAY_ALL);
 
   MOZ_ASSERT(IsInitialized());
+
+  Selection* selection = GetSelection();
+  if (selection) {
+    selection->AddSelectionListener(this);
+  }
 
   // Make sure that the editor will be destroyed properly
   mDidPreDestroy = false;
@@ -469,6 +475,11 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
 {
   if (mDidPreDestroy)
     return NS_OK;
+
+  Selection* selection = GetSelection();
+  if (selection) {
+    selection->RemoveSelectionListener(this);
+  }
 
   IMEStateManager::OnEditorDestroying(*this);
 
@@ -2111,6 +2122,33 @@ EditorBase::RemoveEditorObserver(nsIEditorObserver* aObserver)
   NS_WARNING_ASSERTION(mEditorObservers.Length() != 1,
     "All nsIEditorObservers have been removed, this editor becomes faster");
   mEditorObservers.RemoveElement(aObserver);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EditorBase::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                   nsISelection* aSelection,
+                                   int16_t aReason)
+{
+  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<Selection> selection = aSelection->AsSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mTextInputListener) {
+    RefPtr<TextInputListener> textInputListener = mTextInputListener;
+    textInputListener->OnSelectionChange(*selection, aReason);
+  }
+
+  if (mIMEContentObserver) {
+    RefPtr<IMEContentObserver> observer = mIMEContentObserver;
+    observer->OnSelectionChange(*selection);
+  }
 
   return NS_OK;
 }

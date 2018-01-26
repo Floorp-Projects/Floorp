@@ -802,6 +802,7 @@ TextInputListener::TextInputListener(nsITextControlElement* aTxtCtrlElement)
   , mHadRedoItems(false)
   , mSettingValue(false)
   , mSetValueChanged(true)
+  , mListeningToSelectionChange(false)
 {
 }
 
@@ -809,29 +810,23 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(TextInputListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TextInputListener)
 
 NS_INTERFACE_MAP_BEGIN(TextInputListener)
-  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(TextInputListener)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_0(TextInputListener)
 
-// BEGIN nsIDOMSelectionListener
-
-NS_IMETHODIMP
-TextInputListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                          nsISelection* aSelection,
-                                          int16_t aReason)
+void
+TextInputListener::OnSelectionChange(Selection& aSelection,
+                                     int16_t aReason)
 {
-  bool collapsed;
-  AutoWeakFrame weakFrame = mFrame;
-
-  if (!aDOMDocument || !aSelection ||
-      NS_FAILED(aSelection->GetIsCollapsed(&collapsed))) {
-    return NS_OK;
+  if (!mListeningToSelectionChange) {
+    return;
   }
+
+  AutoWeakFrame weakFrame = mFrame;
 
   // Fire the select event
   // The specs don't exactly say when we should fire the select event.
@@ -847,6 +842,7 @@ TextInputListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   //          was previously selected, becase technically select all will first collapse
   //          and then extend. Mozilla will never create an event if the selection
   //          collapses to nothing.
+  bool collapsed = aSelection.IsCollapsed();
   if (!collapsed && (aReason & (nsISelectionListener::MOUSEUP_REASON |
                                 nsISelectionListener::KEYPRESS_REASON |
                                 nsISelectionListener::SELECTALL_REASON))) {
@@ -867,21 +863,19 @@ TextInputListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 
   // if the collapsed state did not change, don't fire notifications
   if (collapsed == mSelectionWasCollapsed) {
-    return NS_OK;
+    return;
   }
 
   mSelectionWasCollapsed = collapsed;
 
   if (!weakFrame.IsAlive() ||
       !nsContentUtils::IsFocusedContent(mFrame->GetContent())) {
-    return NS_OK;
+    return;
   }
 
-  return UpdateTextInputCommands(NS_LITERAL_STRING("select"),
-                                 aSelection, aReason);
+  UpdateTextInputCommands(NS_LITERAL_STRING("select"),
+                          &aSelection, aReason);
 }
-
-// END nsIDOMSelectionListener
 
 static void
 DoCommandCallback(Command aCommand, void* aData)
@@ -1263,7 +1257,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
     if (caret) {
       selection->AddSelectionListener(caret);
     }
-    selection->AddSelectionListener(mTextListener);
+    mTextListener->StartToListenToSelectionChange();
   }
 
   // If an editor exists from before, prepare it for usage
@@ -2112,14 +2106,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
 
   if (mSelCon) {
     if (mTextListener) {
-      // FYI: It's safe to use raw pointer for calling
-      //      Selection::RemoveSelectionListener() because it only removes the
-      //      listener from its array.
-      Selection* selection =
-        mSelCon->GetSelection(SelectionType::eNormal);
-      if (selection) {
-        selection->RemoveSelectionListener(mTextListener);
-      }
+      mTextListener->EndListeningToSelectionChange();
     }
 
     mSelCon->SetScrollableFrame(nullptr);

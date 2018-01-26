@@ -186,12 +186,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
- NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
  NS_INTERFACE_MAP_ENTRY(nsIReflowObserver)
  NS_INTERFACE_MAP_ENTRY(nsIScrollObserver)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
- NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
+ NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIReflowObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver)
@@ -476,11 +475,6 @@ IMEContentObserver::ObserveEditableNode()
   }
 
   if (!WasInitializedWithPlugin()) {
-    // Add selection change listener only when this starts to observe
-    // non-plugin content since we cannot detect selection changes in
-    // plugins.
-    nsresult rv = mSelection->AddSelectionListener(this);
-    NS_ENSURE_SUCCESS_VOID(rv);
     // Add text change observer only when this starts to observe
     // non-plugin content since we cannot detect text changes in
     // plugins.
@@ -553,7 +547,6 @@ IMEContentObserver::UnregisterObservers()
   }
 
   if (mSelection) {
-    mSelection->RemoveSelectionListener(this);
     mSelectionData.Clear();
     mFocusedWidget = nullptr;
   }
@@ -716,15 +709,14 @@ IMEContentObserver::GetSelectionAndRoot(nsISelection** aSelection,
   return NS_OK;
 }
 
-nsresult
-IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                           nsISelection* aSelection,
-                                           int16_t aReason)
+void
+IMEContentObserver::OnSelectionChange(Selection& aSelection)
 {
-  int32_t count = 0;
-  nsresult rv = aSelection->GetRangeCount(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (count > 0 && mWidget) {
+  if (!mIsObserving) {
+    return;
+  }
+
+  if (aSelection.RangeCount() && mWidget) {
     bool causedByComposition = IsEditorHandlingEventForComposition();
     bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
     bool duringComposition = IsEditorComposing();
@@ -732,7 +724,6 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                     causedBySelectionEvent,
                                     duringComposition);
   }
-  return NS_OK;
 }
 
 void

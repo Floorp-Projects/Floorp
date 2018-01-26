@@ -30,7 +30,6 @@
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsISelectionListener.h"
 #include "nsITableEditor.h"
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
@@ -39,11 +38,13 @@
 class nsDocumentFragment;
 class nsITransferable;
 class nsIClipboard;
+class nsIDOMDocument;
 class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
 class nsRange;
+class nsISelection;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
@@ -107,6 +108,11 @@ public:
 
   // nsIEditor overrides
   NS_IMETHOD GetPreferredIMEState(widget::IMEState* aState) override;
+
+  // nsISelectionListener overrides
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                    nsISelection* aSelection,
+                                    int16_t aReason) override;
 
   // TextEditor overrides
   NS_IMETHOD BeginningOfDocument() override;
@@ -990,7 +996,6 @@ protected:
 protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
-  RefPtr<ResizerSelectionListener> mResizerSelectionListener;
 
   bool mCRInParagraphCreatesParagraph;
 
