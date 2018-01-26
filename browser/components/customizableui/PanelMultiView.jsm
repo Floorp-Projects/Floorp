@@ -201,7 +201,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       this.node.getElementsByTagName("panelview"),
       node => PanelView.forNode(node)));
     this.openViews = [];
-    this._mainViewHeight = 0;
     this.__transitioning = false;
     this.showingSubView = false;
 
@@ -364,10 +363,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
       let prevPanelView = PanelView.forNode(previousViewNode);
       prevPanelView.captureKnownSize();
-      if (!this._mainViewHeight) {
-        this._mainViewHeight = prevPanelView.knownHeight;
-        this._viewContainer.style.minHeight = this._mainViewHeight + "px";
-      }
 
       this._viewShowing = viewNode;
 
@@ -475,7 +470,9 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     previousViewNode.setAttribute("in-transition", true);
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
-    this._viewContainer.style.height = Math.max(prevPanelView.knownHeight, this._mainViewHeight) + "px";
+    let olderView = reverse ? nextPanelView : prevPanelView;
+    this._viewContainer.style.minHeight = olderView.knownHeight + "px";
+    this._viewContainer.style.height = prevPanelView.knownHeight + "px";
     this._viewContainer.style.width = prevPanelView.knownWidth + "px";
     // Lock the dimensions of the window that hosts the popup panel.
     let rect = this._panel.popupBoxObject.getOuterScreenRect();
@@ -502,8 +499,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       viewNode.setAttribute("in-transition", true);
     } else {
       let oldSibling = viewNode.nextSibling || null;
-      this._offscreenViewStack.style.minHeight =
-        this._viewContainer.style.height;
+      this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
       viewNode.setAttribute("in-transition", true);
 
@@ -550,7 +546,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
-    this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
+    this._viewContainer.style.height = viewRect.height + "px";
     this._viewContainer.style.width = viewRect.width + "px";
     this._panel.removeAttribute("width");
     this._panel.removeAttribute("height");
@@ -760,11 +756,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
-        this._mainViewHeight = 0;
         this._viewContainer.style.removeProperty("min-height");
         this._viewStack.style.removeProperty("max-height");
-        this._viewContainer.style.removeProperty("min-width");
-        this._viewContainer.style.removeProperty("max-width");
+        this._viewContainer.style.removeProperty("width");
+        this._viewContainer.style.removeProperty("height");
 
         this.dispatchCustomEvent("PanelMultiViewHidden");
         break;
