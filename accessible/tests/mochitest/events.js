@@ -2078,7 +2078,7 @@ var gLogger =
       return;
     }
 
-    var containerTagName = document instanceof nsIDOMHTMLDocument ?
+    var containerTagName = ChromeUtils.getClassName(document) == "HTMLDocument" ?
       "div" : "description";
 
     var container = document.createElement(containerTagName);
@@ -2086,7 +2086,7 @@ var gLogger =
       container.setAttribute("style", "padding-left: 10px;");
 
     if (aPreEmphText) {
-      var inlineTagName = document instanceof nsIDOMHTMLDocument ?
+      var inlineTagName = ChromeUtils.getClassName(document) == "HTMLDocument" ?
         "span" : "description";
       var emphElm = document.createElement(inlineTagName);
       emphElm.setAttribute("style", "color: blue;");
