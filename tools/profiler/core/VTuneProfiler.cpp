@@ -39,10 +39,6 @@ VTuneProfiler::Shutdown()
 void
 VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind)
 {
-  if (aKind == TRACING_EVENT) {
-    return;
-  }
-
   string str(aName);
 
   auto iter = mStrings.find(str);
@@ -55,7 +51,9 @@ VTuneProfiler::TraceInternal(const char* aName, TracingKind aKind)
     mStrings.insert({ str, event });
   }
 
-  if (aKind == TRACING_INTERVAL_START) {
+  if (aKind == TRACING_INTERVAL_START || aKind == TRACING_EVENT) {
+    // VTune will consider starts not matched with an end to be single point in time
+    // events.
     __itt_event_start(event);
   } else {
     __itt_event_end(event);

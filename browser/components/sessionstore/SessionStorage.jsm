@@ -206,7 +206,6 @@ var SessionStorageInternal = {
     let usage = window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils)
                       .getStorageUsage(storage);
-    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS").add(usage);
     if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
       return hostData;
     }

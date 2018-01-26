@@ -2,27 +2,65 @@
 <html>
 <script>
 
-const frameText =
+const fetchURL = new URL('dummy.txt', window.location).href;
+
+const frameControllerText =
 `<script>
   let t = navigator.serviceWorker.controller
         ? navigator.serviceWorker.controller.scriptURL
         : null;
-  parent.postMessage(t, "*");
+  parent.postMessage({ data: t }, '*');
 </` + `script>`;
 
-const workerText =
+const frameFetchText =
+`<script>
+  fetch('${fetchURL}', { mode: 'no-cors' }).then(response => {
+    return response.text();
+  }).then(text => {
+    parent.postMessage({ data: text }, '*');
+  }).catch(e => {
+    parent.postMessage({ data: e.message }, '*');
+  });
+</` + `script>`;
+
+const workerControllerText =
 `let t = navigator.serviceWorker.controller
        ? navigator.serviceWorker.controller.scriptURL
        : null;
 self.postMessage(t);`;
 
+const workerFetchText =
+`fetch('${fetchURL}', { mode: 'no-cors' }).then(response => {
+  return response.text();
+}).then(text => {
+  self.postMessage(text);
+}).catch(e => {
+  self.postMessage(e.message);
+});`
+
 function getChildText(opts) {
   if (opts.child === 'iframe') {
-    return frameText;
+    if (opts.check === 'controller') {
+      return frameControllerText;
+    }
+
+    if (opts.check === 'fetch') {
+      return frameFetchText;
+    }
+
+    throw('unexpected feature to check: ' + opts.check);
   }
 
   if (opts.child === 'worker') {
-    return workerText;
+    if (opts.check === 'controller') {
+      return workerControllerText;
+    }
+
+    if (opts.check === 'fetch') {
+      return workerFetchText;
+    }
+
+    throw('unexpected feature to check: ' + opts.check);
   }
 
   throw('unexpected child type ' + opts.child);
