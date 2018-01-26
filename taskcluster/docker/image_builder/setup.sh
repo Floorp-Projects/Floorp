@@ -8,9 +8,7 @@ apt-get update -y
 
 # Install dependencies
 apt-get install -y --no-install-recommends \
-    curl \
-    tar \
-    jq \
+    socat \
     python \
     python-requests \
     python-requests-unixsocket

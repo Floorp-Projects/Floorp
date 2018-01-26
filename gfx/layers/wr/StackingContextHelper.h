@@ -75,13 +75,14 @@ public:
   }
 
   bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
-  bool IsReferenceFrame() const { return !mTransform.IsIdentity(); }
+  bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
 
 private:
   wr::DisplayListBuilder* mBuilder;
   gfx::Matrix4x4 mTransform;
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;
+  bool mAffectsClipPositioning;
 };
 
 } // namespace layers

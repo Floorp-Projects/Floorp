@@ -2021,9 +2021,18 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
+      "COLOR",
+      "calc",
+      "currentColor",
+      "hsl",
+      "hsla",
       "inherit",
       "initial",
       "inset",
+      "none",
+      "rgb",
+      "rgba",
+      "transparent",
       "unset"
     ]
   },
@@ -4869,9 +4878,18 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
+      "COLOR",
+      "calc",
+      "currentColor",
+      "hsl",
+      "hsla",
       "inherit",
       "initial",
       "inset",
+      "none",
+      "rgb",
+      "rgba",
+      "transparent",
       "unset"
     ]
   },
@@ -8838,8 +8856,17 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
+      "COLOR",
+      "calc",
+      "currentColor",
+      "hsl",
+      "hsla",
       "inherit",
       "initial",
+      "none",
+      "rgb",
+      "rgba",
+      "transparent",
       "unset"
     ]
   },
