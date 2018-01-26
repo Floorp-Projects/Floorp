@@ -3120,6 +3120,7 @@ public:
   virtual void UpdateIntersectionObservations() = 0;
   virtual void ScheduleIntersectionObserverNotification() = 0;
   virtual void NotifyIntersectionObservers() = 0;
+  virtual bool HasIntersectionObservers() const = 0;
 
   // Dispatch a runnable related to the document.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,

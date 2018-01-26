@@ -620,6 +620,10 @@ public:
   virtual void UpdateIntersectionObservations() override;
   virtual void ScheduleIntersectionObserverNotification() override;
   virtual void NotifyIntersectionObservers() override;
+  virtual bool HasIntersectionObservers() const override
+  {
+    return !mIntersectionObservers.IsEmpty();
+  }
 
   virtual void NotifyLayerManagerRecreated() override;
 
