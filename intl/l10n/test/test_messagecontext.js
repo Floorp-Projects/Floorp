@@ -14,7 +14,6 @@ function test_methods_presence(MessageContext) {
   const ctx = new MessageContext(["en-US", "pl"]);
   equal(typeof ctx.addMessages, "function");
   equal(typeof ctx.format, "function");
-  equal(typeof ctx.formatToParts, "function");
 }
 
 function test_methods_calling(MessageContext) {
@@ -25,15 +24,10 @@ function test_methods_calling(MessageContext) {
 
   const msg = ctx.getMessage("key");
   equal(ctx.format(msg), "Value");
-  deepEqual(ctx.formatToParts(msg), ["Value"]);
 
   ctx.addMessages("key2 = Hello { $name }");
 
   const msg2 = ctx.getMessage("key2");
   equal(ctx.format(msg2, { name: "Amy" }), "Hello Amy");
-  deepEqual(ctx.formatToParts(msg2), ["Hello ", {
-    value: "name",
-    opts: undefined
-  }]);
   ok(true);
 }

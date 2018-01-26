@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-/* fluent@0.4.1 */
+
+/* fluent@0.6.0 */
 
 /* eslint no-console: ["error", { allow: ["warn", "error"] }] */
 /* global console */
@@ -28,20 +29,43 @@ const { L10nRegistry } = Cu.import("resource://gre/modules/L10nRegistry.jsm", {}
 const LocaleService = Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
 const ObserverService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
 
-/**
+/*
  * CachedIterable caches the elements yielded by an iterable.
  *
  * It can be used to iterate over an iterable many times without depleting the
  * iterable.
  */
 class CachedIterable {
+  /**
+   * Create an `CachedIterable` instance.
+   *
+   * @param {Iterable} iterable
+   * @returns {CachedIterable}
+   */
   constructor(iterable) {
-    if (!(Symbol.asyncIterator in Object(iterable))) {
-      throw new TypeError('Argument must implement the async iteration protocol.');
+    if (Symbol.asyncIterator in Object(iterable)) {
+      this.iterator = iterable[Symbol.asyncIterator]();
+    } else if (Symbol.iterator in Object(iterable)) {
+      this.iterator = iterable[Symbol.iterator]();
+    } else {
+      throw new TypeError('Argument must implement the iteration protocol.');
     }
 
-    this.iterator = iterable[Symbol.asyncIterator]();
     this.seen = [];
+  }
+
+  [Symbol.iterator]() {
+    const { seen, iterator } = this;
+    let cur = 0;
+
+    return {
+      next() {
+        if (seen.length <= cur) {
+          seen.push(iterator.next());
+        }
+        return seen[cur++];
+      }
+    };
   }
 
   [Symbol.asyncIterator]() {
@@ -88,7 +112,7 @@ class L10nError extends Error {
   }
 }
 
-/**
+ /**
  * The default localization strategy for Gecko. It comabines locales
  * available in L10nRegistry, with locales requested by the user to
  * generate the iterator over MessageContexts.
@@ -117,7 +141,7 @@ function defaultGenerateMessages(resourceIds) {
 class Localization {
   /**
    * @param {Array<String>} resourceIds      - List of resource IDs
-   * @param {Function}      generateMessages - Function that returns the
+   * @param {Function}      generateMessages - Function that returns a
    *                                           generator over MessageContexts
    *
    * @returns {Localization}
@@ -185,6 +209,9 @@ class Localization {
 
   /**
    * Retrieve translations corresponding to the passed keys.
+   *
+   * A generalized version of `DOMLocalization.formatValue`. Keys can
+   * either be simple string identifiers or `[id, args]` arrays.
    *
    *     docL10n.formatValues([
    *       ['hello', { who: 'Mary' }],

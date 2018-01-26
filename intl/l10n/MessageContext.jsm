@@ -16,13 +16,15 @@
  */
 
 
-/* fluent@0.4.1 */
+/* fluent@0.6.0 */
 
 /*  eslint no-magic-numbers: [0]  */
 
 const MAX_PLACEABLES = 100;
 
-const identifierRe = new RegExp('[a-zA-Z_][a-zA-Z0-9_-]*', 'y');
+const entryIdentifierRe = /-?[a-zA-Z][a-zA-Z0-9_-]*/y;
+const identifierRe = /[a-zA-Z][a-zA-Z0-9_-]*/y;
+const functionIdentifierRe = /^[A-Z][A-Z_?-]*$/;
 
 /**
  * The `Parser` class is responsible for parsing FTL resources.
@@ -92,7 +94,8 @@ class RuntimeParser {
     const ch = this._source[this._index];
 
     // We don't care about comments or sections at runtime
-    if (ch === '/') {
+    if (ch === '/' ||
+      (ch === '#' && [' ', '#'].includes(this._source[this._index + 1]))) {
       this.skipComment();
       return;
     }
@@ -119,7 +122,7 @@ class RuntimeParser {
     this._index += 1;
 
     this.skipInlineWS();
-    this.getSymbol();
+    this.getVariantName();
     this.skipInlineWS();
 
     if (this._source[this._index] !== ']' ||
@@ -137,61 +140,49 @@ class RuntimeParser {
    * @private
    */
   getMessage() {
-    const id = this.getIdentifier();
-    let attrs = null;
-    let tags = null;
+    const id = this.getEntryIdentifier();
 
     this.skipInlineWS();
 
-    let ch = this._source[this._index];
-
-    let val;
-
-    if (ch === '=') {
+    if (this._source[this._index] === '=') {
       this._index++;
+    }
 
+    this.skipInlineWS();
+
+    const val = this.getPattern();
+
+    if (id.startsWith('-') && val === null) {
+      throw this.error('Expected term to have a value');
+    }
+
+    let attrs = null;
+
+    if (this._source[this._index] === ' ') {
+      const lineStart = this._index;
       this.skipInlineWS();
 
-      val = this.getPattern();
-    } else {
-      this.skipWS();
-    }
-
-    ch = this._source[this._index];
-
-    if (ch === '\n') {
-      this._index++;
-      this.skipInlineWS();
-      ch = this._source[this._index];
-    }
-
-    if (ch === '.') {
-      attrs = this.getAttributes();
-    }
-
-    if (ch === '#') {
-      if (attrs !== null) {
-        throw this.error('Tags cannot be added to a message with attributes.');
+      if (this._source[this._index] === '.') {
+        this._index = lineStart;
+        attrs = this.getAttributes();
       }
-      tags = this.getTags();
     }
 
-    if (tags === null && attrs === null && typeof val === 'string') {
+    if (attrs === null && typeof val === 'string') {
       this.entries[id] = val;
     } else {
-      if (val === undefined) {
-        if (tags === null && attrs === null) {
-          throw this.error(`Expected a value (like: " = value") or
-            an attribute (like: ".key = value")`);
-        }
+      if (val === null && attrs === null) {
+        throw this.error('Expected message to have a value or attributes');
       }
 
-      this.entries[id] = { val };
-      if (attrs) {
-        this.entries[id].attrs = attrs;
+      this.entries[id] = {};
+
+      if (val !== null) {
+        this.entries[id].val = val;
       }
-      if (tags) {
-        this.entries[id].tags = tags;
+
+      if (attrs !== null) {
+        this.entries[id].attrs = attrs;
       }
     }
   }
@@ -221,49 +212,81 @@ class RuntimeParser {
   }
 
   /**
-   * Get Message identifier.
+   * Skip blank lines.
+   *
+   * @private
+   */
+  skipBlankLines() {
+    while (true) {
+      const ptr = this._index;
+
+      this.skipInlineWS();
+
+      if (this._source[this._index] === '\n') {
+        this._index += 1;
+      } else {
+        this._index = ptr;
+        break;
+      }
+    }
+  }
+
+  /**
+   * Get identifier using the provided regex.
+   *
+   * By default this will get identifiers of public messages, attributes and
+   * external arguments (without the $).
    *
    * @returns {String}
    * @private
    */
-  getIdentifier() {
-    identifierRe.lastIndex = this._index;
-
-    const result = identifierRe.exec(this._source);
+  getIdentifier(re = identifierRe) {
+    re.lastIndex = this._index;
+    const result = re.exec(this._source);
 
     if (result === null) {
       this._index += 1;
-      throw this.error('Expected an identifier (starting with [a-zA-Z_])');
+      throw this.error(`Expected an identifier [${re.toString()}]`);
     }
 
-    this._index = identifierRe.lastIndex;
+    this._index = re.lastIndex;
     return result[0];
   }
 
   /**
-   * Get Symbol.
+   * Get identifier of a Message or a Term (staring with a dash).
+   *
+   * @returns {String}
+   * @private
+   */
+  getEntryIdentifier() {
+    return this.getIdentifier(entryIdentifierRe);
+  }
+
+  /**
+   * Get Variant name.
    *
    * @returns {Object}
    * @private
    */
-  getSymbol() {
+  getVariantName() {
     let name = '';
 
     const start = this._index;
     let cc = this._source.charCodeAt(this._index);
 
     if ((cc >= 97 && cc <= 122) || // a-z
-        (cc >= 65 && cc <= 90) ||  // A-Z
-        cc === 95 || cc === 32) {  // _ <space>
+        (cc >= 65 && cc <= 90) || // A-Z
+        cc === 95 || cc === 32) { // _ <space>
       cc = this._source.charCodeAt(++this._index);
     } else {
       throw this.error('Expected a keyword (starting with [a-zA-Z_])');
     }
 
     while ((cc >= 97 && cc <= 122) || // a-z
-           (cc >= 65 && cc <= 90) ||  // A-Z
-           (cc >= 48 && cc <= 57) ||  // 0-9
-           cc === 95 || cc === 45 || cc === 32) {  // _- <space>
+           (cc >= 65 && cc <= 90) || // A-Z
+           (cc >= 48 && cc <= 57) || // 0-9
+           cc === 95 || cc === 45 || cc === 32) { // _- <space>
       cc = this._source.charCodeAt(++this._index);
     }
 
@@ -277,7 +300,7 @@ class RuntimeParser {
 
     name += this._source.slice(start, this._index);
 
-    return { type: 'sym', name };
+    return { type: 'varname', name };
   }
 
   /**
@@ -297,7 +320,7 @@ class RuntimeParser {
       }
 
       if (ch === '\n') {
-        break;
+        throw this.error('Unterminated string expression');
       }
     }
 
@@ -325,21 +348,40 @@ class RuntimeParser {
       eol = this._length;
     }
 
-    const line = start !== eol ?
-      this._source.slice(start, eol) : undefined;
+    const firstLineContent = start !== eol ?
+      this._source.slice(start, eol) : null;
 
-    if (line !== undefined && line.includes('{')) {
+    if (firstLineContent && firstLineContent.includes('{')) {
       return this.getComplexPattern();
     }
 
     this._index = eol + 1;
 
-    if (this._source[this._index] === ' ') {
-      this._index = start;
-      return this.getComplexPattern();
+    this.skipBlankLines();
+
+    if (this._source[this._index] !== ' ') {
+      // No indentation means we're done with this message.
+      return firstLineContent;
     }
 
-    return line;
+    const lineStart = this._index;
+
+    this.skipInlineWS();
+
+    if (this._source[this._index] === '.') {
+      // The pattern is followed by an attribute. Rewind _index to the first
+      // column of the current line as expected by getAttributes.
+      this._index = lineStart;
+      return firstLineContent;
+    }
+
+    if (firstLineContent) {
+      // It's a multiline pattern which started on the same line as the
+      // identifier. Reparse the whole pattern to make sure we get all of it.
+      this._index = start;
+    }
+
+    return this.getComplexPattern();
   }
 
   /**
@@ -361,9 +403,19 @@ class RuntimeParser {
 
     while (this._index < this._length) {
       // This block handles multi-line strings combining strings separated
-      // by new line and `|` character at the beginning of the next one.
+      // by new line.
       if (ch === '\n') {
         this._index++;
+
+        // We want to capture the start and end pointers
+        // around blank lines and add them to the buffer
+        // but only if the blank lines are in the middle
+        // of the string.
+        const blankLinesStart = this._index;
+        this.skipBlankLines();
+        const blankLinesEnd = this._index;
+
+
         if (this._source[this._index] !== ' ') {
           break;
         }
@@ -372,10 +424,12 @@ class RuntimeParser {
         if (this._source[this._index] === '}' ||
             this._source[this._index] === '[' ||
             this._source[this._index] === '*' ||
-            this._source[this._index] === '#' ||
             this._source[this._index] === '.') {
+          this._index = blankLinesEnd;
           break;
         }
+
+        buffer += this._source.substring(blankLinesStart, blankLinesEnd);
 
         if (buffer.length || content.length) {
           buffer += '\n';
@@ -415,7 +469,7 @@ class RuntimeParser {
     }
 
     if (content.length === 0) {
-      return buffer.length ? buffer : undefined;
+      return buffer.length ? buffer : null;
     }
 
     if (buffer.length) {
@@ -462,12 +516,33 @@ class RuntimeParser {
     const ch = this._source[this._index];
 
     if (ch === '}') {
+      if (selector.type === 'attr' && selector.id.name.startsWith('-')) {
+        throw this.error(
+          'Attributes of private messages cannot be interpolated.'
+        );
+      }
+
       return selector;
     }
 
     if (ch !== '-' || this._source[this._index + 1] !== '>') {
       throw this.error('Expected "}" or "->"');
     }
+
+    if (selector.type === 'ref') {
+      throw this.error('Message references cannot be used as selectors.');
+    }
+
+    if (selector.type === 'var') {
+      throw this.error('Variants cannot be used as selectors.');
+    }
+
+    if (selector.type === 'attr' && !selector.id.name.startsWith('-')) {
+      throw this.error(
+        'Attributes of public messages cannot be used as selectors.'
+      );
+    }
+
 
     this._index += 2; // ->
 
@@ -534,6 +609,10 @@ class RuntimeParser {
       this._index++;
       const args = this.getCallArgs();
 
+      if (!functionIdentifierRe.test(literal.name)) {
+        throw this.error('Function names must be all upper-case');
+      }
+
       this._index++;
 
       literal.type = 'fun';
@@ -557,19 +636,18 @@ class RuntimeParser {
   getCallArgs() {
     const args = [];
 
-    if (this._source[this._index] === ')') {
-      return args;
-    }
-
     while (this._index < this._length) {
       this.skipInlineWS();
+
+      if (this._source[this._index] === ')') {
+        return args;
+      }
 
       const exp = this.getSelectorExpression();
 
       // MessageReference in this place may be an entity reference, like:
       // `call(foo)`, or, if it's followed by `:` it will be a key-value pair.
-      if (exp.type !== 'ref' ||
-         exp.namespace !== undefined) {
+      if (exp.type !== 'ref') {
         args.push(exp);
       } else {
         this.skipInlineWS();
@@ -678,9 +756,12 @@ class RuntimeParser {
     const attrs = {};
 
     while (this._index < this._length) {
-      const ch = this._source[this._index];
+      if (this._source[this._index] !== ' ') {
+        break;
+      }
+      this.skipInlineWS();
 
-      if (ch !== '.') {
+      if (this._source[this._index] !== '.') {
         break;
       }
       this._index++;
@@ -689,6 +770,9 @@ class RuntimeParser {
 
       this.skipInlineWS();
 
+      if (this._source[this._index] !== '=') {
+        throw this.error('Expected "="');
+      }
       this._index++;
 
       this.skipInlineWS();
@@ -703,37 +787,10 @@ class RuntimeParser {
         };
       }
 
-      this.skipWS();
+      this.skipBlankLines();
     }
 
     return attrs;
-  }
-
-  /**
-   * Parses a list of Message tags.
-   *
-   * @returns {Array}
-   * @private
-   */
-  getTags() {
-    const tags = [];
-
-    while (this._index < this._length) {
-      const ch = this._source[this._index];
-
-      if (ch !== '#') {
-        break;
-      }
-      this._index++;
-
-      const symbol = this.getSymbol();
-
-      tags.push(symbol.name);
-
-      this.skipWS();
-    }
-
-    return tags;
   }
 
   /**
@@ -796,7 +853,7 @@ class RuntimeParser {
     if ((cc >= 48 && cc <= 57) || cc === 45) {
       literal = this.getNumber();
     } else {
-      literal = this.getSymbol();
+      literal = this.getVariantName();
     }
 
     if (this._source[this._index] !== ']') {
@@ -814,12 +871,9 @@ class RuntimeParser {
    * @private
    */
   getLiteral() {
-    const cc = this._source.charCodeAt(this._index);
-    if ((cc >= 48 && cc <= 57) || cc === 45) {
-      return this.getNumber();
-    } else if (cc === 34) { // "
-      return this.getString();
-    } else if (cc === 36) { // $
+    const cc0 = this._source.charCodeAt(this._index);
+
+    if (cc0 === 36) { // $
       this._index++;
       return {
         type: 'ext',
@@ -827,10 +881,29 @@ class RuntimeParser {
       };
     }
 
-    return {
-      type: 'ref',
-      name: this.getIdentifier()
-    };
+    const cc1 = cc0 === 45 // -
+      // Peek at the next character after the dash.
+      ? this._source.charCodeAt(this._index + 1)
+      // Or keep using the character at the current index.
+      : cc0;
+
+    if ((cc1 >= 97 && cc1 <= 122) || // a-z
+        (cc1 >= 65 && cc1 <= 90)) { // A-Z
+      return {
+        type: 'ref',
+        name: this.getEntryIdentifier()
+      };
+    }
+
+    if ((cc1 >= 48 && cc1 <= 57)) { // 0-9
+      return this.getNumber();
+    }
+
+    if (cc0 === 34) { // "
+      return this.getString();
+    }
+
+    throw this.error('Expected literal');
   }
 
   /**
@@ -844,7 +917,9 @@ class RuntimeParser {
     let eol = this._source.indexOf('\n', this._index);
 
     while (eol !== -1 &&
-      this._source[eol + 1] === '/' && this._source[eol + 2] === '/') {
+      ((this._source[eol + 1] === '/' && this._source[eol + 2] === '/') ||
+       (this._source[eol + 1] === '#' &&
+         [' ', '#'].includes(this._source[eol + 2])))) {
       this._index = eol + 3;
 
       eol = this._source.indexOf('\n', this._index);
@@ -887,8 +962,8 @@ class RuntimeParser {
         const cc = this._source.charCodeAt(start);
 
         if ((cc >= 97 && cc <= 122) || // a-z
-            (cc >= 65 && cc <= 90) ||  // A-Z
-             cc === 95 || cc === 47 || cc === 91) {  // _/[
+            (cc >= 65 && cc <= 90) || // A-Z
+             cc === 47 || cc === 91) { // /[
           this._index = start;
           return;
         }
@@ -923,7 +998,7 @@ function parse(string) {
  * The `FluentType` class is the base of Fluent's type system.
  *
  * Fluent types wrap JavaScript values and store additional configuration for
- * them, which can then be used in the `valueOf` method together with a proper
+ * them, which can then be used in the `toString` method together with a proper
  * `Intl` formatter.
  */
 class FluentType {
@@ -941,28 +1016,31 @@ class FluentType {
   }
 
   /**
-   * Unwrap the instance of `FluentType`.
+   * Unwrap the raw value stored by this `FluentType`.
    *
-   * Unwrapped values are suitable for use outside of the `MessageContext`.
+   * @returns {Any}
+   */
+  valueOf() {
+    return this.value;
+  }
+
+  /**
+   * Format this instance of `FluentType` to a string.
+   *
+   * Formatted values are suitable for use outside of the `MessageContext`.
    * This method can use `Intl` formatters memoized by the `MessageContext`
    * instance passed as an argument.
-   *
-   * In most cases, valueOf returns a string, but it can be overriden
-   * and there are use cases, where the return type is not a string.
-   *
-   * An example is fluent-react which implements a custom `FluentType`
-   * to represent React elements passed as arguments to format().
    *
    * @param   {MessageContext} [ctx]
    * @returns {string}
    */
-  valueOf() {
-    throw new Error('Subclasses of FluentType must implement valueOf.');
+  toString() {
+    throw new Error('Subclasses of FluentType must implement toString.');
   }
 }
 
 class FluentNone extends FluentType {
-  valueOf() {
+  toString() {
     return this.value || '???';
   }
 }
@@ -972,11 +1050,16 @@ class FluentNumber extends FluentType {
     super(parseFloat(value), opts);
   }
 
-  valueOf(ctx) {
-    const nf = ctx._memoizeIntlObject(
-      Intl.NumberFormat, this.opts
-    );
-    return nf.format(this.value);
+  toString(ctx) {
+    try {
+      const nf = ctx._memoizeIntlObject(
+        Intl.NumberFormat, this.opts
+      );
+      return nf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
+    }
   }
 
   /**
@@ -999,16 +1082,21 @@ class FluentDateTime extends FluentType {
     super(new Date(value), opts);
   }
 
-  valueOf(ctx) {
-    const dtf = ctx._memoizeIntlObject(
-      Intl.DateTimeFormat, this.opts
-    );
-    return dtf.format(this.value);
+  toString(ctx) {
+    try {
+      const dtf = ctx._memoizeIntlObject(
+        Intl.DateTimeFormat, this.opts
+      );
+      return dtf.format(this.value);
+    } catch (e) {
+      // XXX Report the error.
+      return this.value;
+    }
   }
 }
 
 class FluentSymbol extends FluentType {
-  valueOf() {
+  toString() {
     return this.value;
   }
 
@@ -1029,9 +1117,6 @@ class FluentSymbol extends FluentType {
         Intl.PluralRules, other.opts
       );
       return this.value === pr.select(other.value);
-    } else if (Array.isArray(other)) {
-      const values = other.map(symbol => symbol.value);
-      return values.includes(this.value);
     }
     return false;
   }
@@ -1052,9 +1137,9 @@ class FluentSymbol extends FluentType {
 
 const builtins = {
   'NUMBER': ([arg], opts) =>
-    new FluentNumber(arg.value, merge(arg.opts, opts)),
+    new FluentNumber(arg.valueOf(), merge(arg.opts, opts)),
   'DATETIME': ([arg], opts) =>
-    new FluentDateTime(arg.value, merge(arg.opts, opts)),
+    new FluentDateTime(arg.valueOf(), merge(arg.opts, opts)),
 };
 
 function merge(argopts, opts) {
@@ -1063,8 +1148,8 @@ function merge(argopts, opts) {
 
 function values(opts) {
   const unwrapped = {};
-  for (const name of Object.keys(opts)) {
-    unwrapped[name] = opts[name].value;
+  for (const [name, opt] of Object.entries(opts)) {
+    unwrapped[name] = opt.valueOf();
   }
   return unwrapped;
 }
@@ -1100,7 +1185,7 @@ function values(opts) {
  *
  * All other expressions (except for `FunctionReference` which is only used in
  * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
- * use the `valueOf` method to convert the instance to a native value.
+ * use the `toString` method to convert the instance to a native value.
  *
  *
  * All functions in this file pass around a special object called `env`.
@@ -1124,27 +1209,6 @@ const MAX_PLACEABLE_LENGTH = 2500;
 // Unicode bidi isolation characters.
 const FSI = '\u2068';
 const PDI = '\u2069';
-
-
-/**
- * Helper for computing the total character length of a placeable.
- *
- * Used in Pattern.
- *
- * @param   {Object} env
- *    Resolver environment object.
- * @param   {Array}  parts
- *    List of parts of a placeable.
- * @returns {Number}
- * @private
- */
-function PlaceableLength(env, parts) {
-  const { ctx } = env;
-  return parts.reduce(
-    (sum, part) => sum + part.valueOf(ctx).length,
-    0
-  );
-}
 
 
 /**
@@ -1186,47 +1250,20 @@ function DefaultMember(env, members, def) {
  */
 function MessageReference(env, {name}) {
   const { ctx, errors } = env;
-  const message = ctx.getMessage(name);
+  const message = name.startsWith('-')
+    ? ctx._terms.get(name)
+    : ctx._messages.get(name);
 
   if (!message) {
-    errors.push(new ReferenceError(`Unknown message: ${name}`));
+    const err = name.startsWith('-')
+      ? new ReferenceError(`Unknown term: ${name}`)
+      : new ReferenceError(`Unknown message: ${name}`);
+    errors.push(err);
     return new FluentNone(name);
   }
 
   return message;
 }
-
-/**
- * Resolve an array of tags.
- *
- * @param   {Object} env
- *    Resolver environment object.
- * @param   {Object} id
- *    The identifier of the message with tags.
- * @param   {String} id.name
- *    The name of the identifier.
- * @returns {Array}
- * @private
- */
-function Tags(env, {name}) {
-  const { ctx, errors } = env;
-  const message = ctx.getMessage(name);
-
-  if (!message) {
-    errors.push(new ReferenceError(`Unknown message: ${name}`));
-    return new FluentNone(name);
-  }
-
-  if (!message.tags) {
-    errors.push(new RangeError(`No tags in message "${name}"`));
-    return new FluentNone(name);
-  }
-
-  return message.tags.map(
-    tag => new FluentSymbol(tag)
-  );
-}
-
 
 /**
  * Resolve a variant expression to the variant object.
@@ -1269,7 +1306,7 @@ function VariantExpression(env, {id, key}) {
     }
   }
 
-  errors.push(new ReferenceError(`Unknown variant: ${keyword.valueOf(ctx)}`));
+  errors.push(new ReferenceError(`Unknown variant: ${keyword.toString(ctx)}`));
   return Type(env, message);
 }
 
@@ -1329,9 +1366,7 @@ function SelectExpression(env, {exp, vars, def}) {
     return DefaultMember(env, vars, def);
   }
 
-  const selector = exp.type === 'ref'
-    ? Tags(env, exp)
-    : Type(env, exp);
+  const selector = Type(env, exp);
   if (selector instanceof FluentNone) {
     return DefaultMember(env, vars, def);
   }
@@ -1361,7 +1396,7 @@ function SelectExpression(env, {exp, vars, def}) {
  * Resolve expression to a Fluent type.
  *
  * JavaScript strings are a special case.  Since they natively have the
- * `valueOf` method they can be used as if they were a Fluent type without
+ * `toString` method they can be used as if they were a Fluent type without
  * paying the cost of creating a instance of one.
  *
  * @param   {Object} env
@@ -1386,7 +1421,7 @@ function Type(env, expr) {
 
 
   switch (expr.type) {
-    case 'sym':
+    case 'varname':
       return new FluentSymbol(expr.name);
     case 'num':
       return new FluentNumber(expr.val);
@@ -1414,7 +1449,7 @@ function Type(env, expr) {
     }
     case undefined: {
       // If it's a node with a value, resolve the value.
-      if (expr.val !== undefined) {
+      if (expr.val !== null && expr.val !== undefined) {
         return Type(env, expr.val);
       }
 
@@ -1449,6 +1484,7 @@ function ExternalArgument(env, {name}) {
 
   const arg = args[name];
 
+  // Return early if the argument already is an instance of FluentType.
   if (arg instanceof FluentType) {
     return arg;
   }
@@ -1524,7 +1560,7 @@ function CallExpression(env, {fun, args}) {
   }
 
   const posargs = [];
-  const keyargs = [];
+  const keyargs = {};
 
   for (const arg of args) {
     if (arg.type === 'narg') {
@@ -1534,8 +1570,12 @@ function CallExpression(env, {fun, args}) {
     }
   }
 
-  // XXX functions should also report errors
-  return callee(posargs, keyargs);
+  try {
+    return callee(posargs, keyargs);
+  } catch (e) {
+    // XXX Report errors.
+    return new FluentNone();
+  }
 }
 
 /**
@@ -1566,26 +1606,20 @@ function Pattern(env, ptn) {
       continue;
     }
 
-    const part = Type(env, elem);
+    const part = Type(env, elem).toString(ctx);
 
     if (ctx._useIsolating) {
       result.push(FSI);
     }
 
-    if (Array.isArray(part)) {
-      const len = PlaceableLength(env, part);
-
-      if (len > MAX_PLACEABLE_LENGTH) {
-        errors.push(
-          new RangeError(
-            'Too many characters in placeable ' +
-            `(${len}, max allowed is ${MAX_PLACEABLE_LENGTH})`
-          )
-        );
-        result.push(new FluentNone());
-      } else {
-        result.push(...part);
-      }
+    if (part.length > MAX_PLACEABLE_LENGTH) {
+      errors.push(
+        new RangeError(
+          'Too many characters in placeable ' +
+          `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`
+        )
+      );
+      result.push(part.slice(MAX_PLACEABLE_LENGTH));
     } else {
       result.push(part);
     }
@@ -1596,13 +1630,11 @@ function Pattern(env, ptn) {
   }
 
   dirty.delete(ptn);
-  return result;
+  return result.join('');
 }
 
 /**
- * Format a translation into an `FluentType`.
- *
- * The return value must be unwrapped via `valueOf` by the caller.
+ * Format a translation into a string.
  *
  * @param   {MessageContext} ctx
  *    A MessageContext instance which will be used to resolve the
@@ -1620,7 +1652,7 @@ function resolve(ctx, args, message, errors = []) {
   const env = {
     ctx, args, errors, dirty: new WeakSet()
   };
-  return Type(env, message);
+  return Type(env, message).toString(ctx);
 }
 
 /**
@@ -1672,6 +1704,7 @@ class MessageContext {
   constructor(locales, { functions = {}, useIsolating = true } = {}) {
     this.locales = Array.isArray(locales) ? locales : [locales];
 
+    this._terms = new Map();
     this._messages = new Map();
     this._functions = functions;
     this._useIsolating = useIsolating;
@@ -1679,7 +1712,7 @@ class MessageContext {
   }
 
   /*
-   * Return an iterator over `[id, message]` pairs.
+   * Return an iterator over public `[id, message]` pairs.
    *
    * @returns {Iterator}
    */
@@ -1701,7 +1734,7 @@ class MessageContext {
    * Return the internal representation of a message.
    *
    * The internal representation should only be used as an argument to
-   * `MessageContext.format` and `MessageContext.formatToParts`.
+   * `MessageContext.format`.
    *
    * @param {string} id - The identifier of the message to check.
    * @returns {Any}
@@ -1731,65 +1764,16 @@ class MessageContext {
   addMessages(source) {
     const [entries, errors] = parse(source);
     for (const id in entries) {
-      this._messages.set(id, entries[id]);
+      if (id.startsWith('-')) {
+        // Identifiers starting with a dash (-) define terms. Terms are private
+        // and cannot be retrieved from MessageContext.
+        this._terms.set(id, entries[id]);
+      } else {
+        this._messages.set(id, entries[id]);
+      }
     }
 
     return errors;
-  }
-
-  /**
-   * Format a message to an array of `FluentTypes` or null.
-   *
-   * Format a raw `message` from the context into an array of `FluentType`
-   * instances which may be used to build the final result.  It may also return
-   * `null` if it has a null value.  `args` will be used to resolve references
-   * to external arguments inside of the translation.
-   *
-   * See the documentation of {@link MessageContext#format} for more
-   * information about error handling.
-   *
-   * In case of errors `format` will try to salvage as much of the translation
-   * as possible and will still return a string.  For performance reasons, the
-   * encountered errors are not returned but instead are appended to the
-   * `errors` array passed as the third argument.
-   *
-   *     ctx.addMessages('hello = Hello, { $name }!');
-   *     const hello = ctx.getMessage('hello');
-   *     ctx.formatToParts(hello, { name: 'Jane' }, []);
-   *     // → ['Hello, ', '\u2068', 'Jane', '\u2069']
-   *
-   * The returned parts need to be formatted via `valueOf` before they can be
-   * used further.  This will ensure all values are correctly formatted
-   * according to the `MessageContext`'s locale.
-   *
-   *     const parts = ctx.formatToParts(hello, { name: 'Jane' }, []);
-   *     const str = parts.map(part => part.valueOf(ctx)).join('');
-   *
-   * @see MessageContext#format
-   * @param   {Object | string}    message
-   * @param   {Object | undefined} args
-   * @param   {Array}              errors
-   * @returns {?Array<FluentType>}
-   */
-  formatToParts(message, args, errors) {
-    // optimize entities which are simple strings with no attributes
-    if (typeof message === 'string') {
-      return [message];
-    }
-
-    // optimize simple-string entities with attributes
-    if (typeof message.val === 'string') {
-      return [message.val];
-    }
-
-    // optimize entities with null values
-    if (message.val === undefined) {
-      return null;
-    }
-
-    const result = resolve(this, args, message, errors);
-
-    return result instanceof FluentNone ? null : result;
   }
 
   /**
@@ -1838,13 +1822,7 @@ class MessageContext {
       return null;
     }
 
-    const result = resolve(this, args, message, errors);
-
-    if (result instanceof FluentNone) {
-      return null;
-    }
-
-    return result.map(part => part.valueOf(this)).join('');
+    return resolve(this, args, message, errors);
   }
 
   _memoizeIntlObject(ctor, opts) {
