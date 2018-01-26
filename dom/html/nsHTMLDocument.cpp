@@ -3206,15 +3206,6 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString& commandID,
   return retval;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
-                                     bool *_retval)
-{
-  ErrorResult rv;
-  *_retval = QueryCommandIndeterm(commandID, rv);
-  return rv.StealNSResult();
-}
-
 bool
 nsHTMLDocument::QueryCommandIndeterm(const nsAString& commandID, ErrorResult& rv)
 {
@@ -3261,14 +3252,6 @@ nsHTMLDocument::QueryCommandIndeterm(const nsAString& commandID, ErrorResult& rv
   bool retval = false;
   cmdParams->GetBooleanValue("state_mixed", &retval);
   return retval;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::QueryCommandState(const nsAString & commandID, bool *_retval)
-{
-  ErrorResult rv;
-  *_retval = QueryCommandState(commandID, rv);
-  return rv.StealNSResult();
 }
 
 bool
@@ -3374,15 +3357,6 @@ nsHTMLDocument::QueryCommandSupported(const nsAString& commandID,
   // commandID is supported if it can be converted to a Midas command
   nsAutoCString cmdToDispatch;
   return ConvertToMidasInternalCommand(commandID, cmdToDispatch);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
-                                  nsAString &_retval)
-{
-  ErrorResult rv;
-  QueryCommandValue(commandID, _retval, rv);
-  return rv.StealNSResult();
 }
 
 void

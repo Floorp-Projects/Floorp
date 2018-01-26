@@ -16,16 +16,6 @@ interface nsISelection;
 [uuid(cd31e61f-cfc2-4b91-9385-17b6a2d0633d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-  // returns true if the command is in a indeterminate state (false otherwise)
-  boolean                   queryCommandIndeterm(in DOMString commandID);
-
-  // returns true if the command has been executed (false otherwise)
-  boolean                   queryCommandState(in DOMString commandID);
-
-  // returns the current value of the document or current selection for command
-  DOMString                 queryCommandValue(in DOMString commandID);
-
-
   // Obsolete APIs
            attribute DOMString            fgColor;
            attribute DOMString            bgColor;
