@@ -175,8 +175,7 @@ protected:
   void UpdateChildCounts() override;
 
   void NotifyInsert(nsIContent* aContent,
-                    nsIContent* aChildContent,
-                    int32_t aIndexInContainer);
+                    nsIContent* aChildContent);
   void NotifyRootInsertion();
 };
 
@@ -329,10 +328,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
       mStack[mStackPos - 1].mNumFlushed <
       mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
-    int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
-    NS_ASSERTION(parent->GetChildAt_Deprecated(childIndex) == aContent,
-                 "Flushing the wrong child.");
-    mSink->NotifyInsert(parent, aContent, childIndex);
+    mSink->NotifyInsert(parent, aContent);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
     FlushTags();
@@ -397,7 +393,9 @@ SinkContext::Node::Add(nsIContent *child)
   if (mInsertionPoint != -1) {
     NS_ASSERTION(mNumFlushed == mContent->GetChildCount(),
                  "Inserting multiple children without flushing.");
-    mContent->InsertChildAt_Deprecated(child, mInsertionPoint++, false);
+    nsCOMPtr<nsIContent> nodeToInsertBefore =
+      mContent->GetChildAt_Deprecated(mInsertionPoint++);
+    mContent->InsertChildBefore(child, nodeToInsertBefore, false);
   } else {
     mContent->AppendChildTo(child, false);
   }
@@ -529,7 +527,7 @@ SinkContext::FlushTags()
           NS_ASSERTION(!(mStackPos > (stackPos + 1)) ||
                        (child == mStack[stackPos + 1].mContent),
                        "Flushing the wrong child.");
-          mSink->NotifyInsert(content, child, childIndex);
+          mSink->NotifyInsert(content, child);
         } else {
           mSink->NotifyAppend(content, mStack[stackPos].mNumFlushed);
         }
@@ -849,7 +847,7 @@ HTMLContentSink::OpenBody()
     uint32_t oldUpdates = mUpdatesInNotification;
     mUpdatesInNotification = 0;
     if (insertionPoint != -1) {
-      NotifyInsert(parent, mBody, insertionPoint - 1);
+      NotifyInsert(parent, mBody);
     } else {
       NotifyAppend(parent, numFlushed);
     }
@@ -947,8 +945,7 @@ HTMLContentSink::CloseHeadContext()
 
 void
 HTMLContentSink::NotifyInsert(nsIContent* aContent,
-                              nsIContent* aChildContent,
-                              int32_t aIndexInContainer)
+                              nsIContent* aChildContent)
 {
   if (aContent && aContent->GetUncomposedDoc() != mDocument) {
     // aContent is not actually in our document anymore.... Just bail out of
@@ -983,9 +980,7 @@ HTMLContentSink::NotifyRootInsertion()
   // document; in those cases we just want to put all the attrs on one
   // tag.
   mNotifiedRootInsertion = true;
-  int32_t index = mDocument->ComputeIndexOf(mRoot);
-  NS_ASSERTION(index != -1, "mRoot not child of document?");
-  NotifyInsert(nullptr, mRoot, index);
+  NotifyInsert(nullptr, mRoot);
 
   // Now update the notification information in all our
   // contexts, since we just inserted the root and notified on

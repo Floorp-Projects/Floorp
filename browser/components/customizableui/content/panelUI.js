@@ -164,19 +164,6 @@ const PanelUI = {
   },
 
   /**
-   * Customize mode extracts the mainView and puts it somewhere else while the
-   * user customizes. Upon completion, this function can be called to put the
-   * panel back to where it belongs in normal browsing mode.
-   *
-   * @param aMainView
-   *        The mainView node to put back into place.
-   */
-  setMainView(aMainView) {
-    this._ensureEventListenersAdded();
-    this.multiView.setMainView(aMainView);
-  },
-
-  /**
    * Opens the menu panel if it's closed, or closes it if it's
    * open.
    *

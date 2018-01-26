@@ -131,6 +131,11 @@ add_task(async function copyURLFromPanel() {
   // does not appear on about:blank for example.)
   let url = "http://example.com/";
   await BrowserTestUtils.withNewTab(url, async () => {
+    // Add action to URL bar.
+    let action = PageActions._builtInActions.find(a => a.id == "copyURL");
+    action.pinnedToUrlbar = true;
+    registerCleanupFunction(() => action.pinnedToUrlbar = false);
+
     // Open the panel and click Copy URL.
     await promisePageActionPanelOpen();
     Assert.ok(true, "page action panel opened");
@@ -147,6 +152,8 @@ add_task(async function copyURLFromPanel() {
     Assert.equal(feedbackPanel.anchorNode.id, "pageActionButton", "Feedback menu should be anchored on the main Page Action button");
     let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
     await feedbackHiddenPromise;
+
+    action.pinnedToUrlbar = false;
   });
 });
 
@@ -170,6 +177,8 @@ add_task(async function copyURLFromURLBar() {
     Assert.equal(panel.anchorNode.id, "pageAction-urlbar-copyURL", "Feedback menu should be anchored on the main URL bar button");
     let feedbackHiddenPromise = promisePanelHidden("pageActionFeedback");
     await feedbackHiddenPromise;
+
+    action.pinnedToUrlbar = false;
   });
 });
 

@@ -726,6 +726,7 @@ ChannelMediaResource::RecreateChannel()
                                                      triggeringPrincipal,
                                                      securityFlags,
                                                      contentPolicyType,
+                                                     nullptr, // aPerformanceStorage
                                                      loadGroup,
                                                      nullptr,  // aCallbacks
                                                      loadFlags);

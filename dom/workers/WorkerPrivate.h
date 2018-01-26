@@ -68,6 +68,7 @@ class ClientSource;
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
+class PerformanceStorage;
 class PromiseNativeHandler;
 class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
@@ -1067,6 +1068,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
 
+  RefPtr<PerformanceStorage> mPerformanceStorage;
+
   JS::UniqueChars mDefaultLocale; // nulled during worker JSContext init
   TimeStamp mKillTime;
   uint32_t mErrorHandlerRecursionCount;
@@ -1511,6 +1514,9 @@ public:
 
   void
   ExecutionReady();
+
+  PerformanceStorage*
+  GetPerformanceStorage();
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,

@@ -285,8 +285,7 @@ nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
     nsHtml5OtherDocUpdate update(foster->OwnerDoc(),
                                  aBuilder->GetDocument());
 
-    uint32_t pos = foster->ComputeIndexOf(aTable);
-    nsresult rv = foster->InsertChildAt_Deprecated(aNode, pos, false);
+    nsresult rv = foster->InsertChildBefore(aNode, aTable, false);
     NS_ENSURE_SUCCESS(rv, rv);
     nsNodeUtils::ContentInserted(foster, aNode);
     return rv;
@@ -676,8 +675,6 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
     nsHtml5OtherDocUpdate update(foster->OwnerDoc(),
                                  aBuilder->GetDocument());
 
-    uint32_t pos = foster->ComputeIndexOf(aTable);
-
     nsIContent* previousSibling = aTable->GetPreviousSibling();
     if (previousSibling && previousSibling->IsNodeOfType(nsINode::eTEXT)) {
       return AppendTextToTextNode(aBuffer,
@@ -692,7 +689,7 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
     rv = text->SetText(aBuffer, aLength, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = foster->InsertChildAt_Deprecated(text, pos, false);
+    rv = foster->InsertChildBefore(text, aTable, false);
     NS_ENSURE_SUCCESS(rv, rv);
     nsNodeUtils::ContentInserted(foster, text);
     return rv;

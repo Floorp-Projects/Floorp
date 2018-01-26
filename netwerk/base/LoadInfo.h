@@ -24,6 +24,7 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 
 namespace dom {
+class PerformanceStorage;
 class XMLHttpRequestMainThread;
 }
 
@@ -166,6 +167,7 @@ private:
   Maybe<mozilla::dom::ClientInfo>               mReservedClientInfo;
   Maybe<mozilla::dom::ClientInfo>               mInitialClientInfo;
   Maybe<mozilla::dom::ServiceWorkerDescriptor>  mController;
+  RefPtr<mozilla::dom::PerformanceStorage>      mPerformanceStorage;
 
   nsWeakPtr                        mLoadingContext;
   nsWeakPtr                        mContextForTopLevelLoad;

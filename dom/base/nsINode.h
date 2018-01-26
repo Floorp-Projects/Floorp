@@ -718,6 +718,29 @@ public:
   }
 
   /**
+   * Insert a content node before another or at the end.
+   * This method handles calling BindToTree on the child appropriately.
+   *
+   * @param aKid the content to insert
+   * @param aBeforeThis an existing node. Use nullptr if you want to
+   *        add aKid at the end.
+   * @param aNotify whether to notify the document (current document for
+   *        nsIContent, and |this| for nsIDocument) that the insert has
+   *        occurred
+   *
+   * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
+   * than one element node as a child of a document.  Doing this will also
+   * assert -- you shouldn't be doing it!  Check with
+   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
+   * one constraint, this doesn't do any checking on whether aKid is a valid
+   * child of |this|.
+   *
+   * @throws NS_ERROR_OUT_OF_MEMORY in some cases (from BindToTree).
+   */
+  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                     bool aNotify) = 0;
+
+  /**
    * Insert a content node at a particular index.  This method handles calling
    * BindToTree on the child appropriately.
    *
