@@ -28,8 +28,6 @@
 #define LOG(args) MOZ_LOG(mLog, mozilla::LogLevel::Debug, args)
 
 // helper methods: forward declarations...
-static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType, 
-                                               nsString& aFileExtension);
 static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
                                                     nsString& aFileExtension);
 
@@ -73,45 +71,6 @@ static nsresult GetExtensionFromWindowsMimeDatabase(const nsACString& aMimeType,
   if (NS_SUCCEEDED(rv))
      regKey->ReadStringValue(NS_LITERAL_STRING("Extension"), aFileExtension);
 
-  return NS_OK;
-}
-
-// We have a serious problem!! I have this content type and the windows registry only gives me
-// helper apps based on extension. Right now, we really don't have a good place to go for 
-// trying to figure out the extension for a particular mime type....One short term hack is to look
-// this information in 4.x (it's stored in the windows regsitry). 
-static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
-                                               nsString& aFileExtension)
-{
-  nsCOMPtr<nsIWindowsRegKey> regKey = 
-    do_CreateInstance("@mozilla.org/windows-registry-key;1");
-  if (!regKey) 
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsresult rv = regKey->
-    Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-         NS_LITERAL_STRING("Software\\Netscape\\Netscape Navigator\\Suffixes"),
-         nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-  if (NS_FAILED(rv))
-    return NS_ERROR_NOT_AVAILABLE;
-   
-  rv = regKey->ReadStringValue(NS_ConvertASCIItoUTF16(aMimeType),
-                               aFileExtension);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  aFileExtension.Insert(char16_t('.'), 0);
-      
-  // this may be a comma separated list of extensions...just take the 
-  // first one for now...
-
-  int32_t pos = aFileExtension.FindChar(char16_t(','));
-  if (pos > 0) {
-    // we have a comma separated list of types...
-    // truncate everything after the first comma (including the comma)
-    aFileExtension.Truncate(pos); 
-  }
-   
   return NS_OK;
 }
 
@@ -496,14 +455,9 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
    */
   if (!aMIMEType.IsEmpty() &&
       !aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM)) {
-    // (1) try to use the windows mime database to see if there is a mapping to a file extension
-    // (2) try to see if we have some left over 4.x registry info we can peek at...
+    // try to use the windows mime database to see if there is a mapping to a file extension
     GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
     LOG(("Windows mime database: extension '%s'\n", fileExtension.get()));
-    if (fileExtension.IsEmpty()) {
-      GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
-      LOG(("4.x Registry: extension '%s'\n", fileExtension.get()));
-    }
   }
   // If we found an extension for the type, do the lookup
   RefPtr<nsMIMEInfoWin> mi;
