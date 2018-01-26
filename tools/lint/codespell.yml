@@ -1,0 +1,14 @@
+---
+codespell:
+    description: Check code for common misspellings
+    include: ['.']
+    exclude:
+        - third_party
+    # List of extensions coming from:
+    # tools/lint/{flake8,eslint}.yml
+    # tools/mach_commands.py (clang-format)
+    # + documentation
+    # + localization files
+    extensions: ['js', 'jsm', 'jsx', 'xml', 'html', 'xhtml', 'cpp', 'c', 'h', 'configure', 'py', 'properties', 'rst']
+    type: external
+    payload: spell:lint
