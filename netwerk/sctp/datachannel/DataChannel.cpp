@@ -436,6 +436,7 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aMa
 
     mSendInterleaved = false;
     mPpidFragmentation = false;
+    mMaxMessageSizeSet = false;
     SetMaxMessageSize(aMaxMessageSizeSet, aMaxMessageSize);
 
     if (!sctp_initialized) {
@@ -600,6 +601,11 @@ void
 DataChannelConnection::SetMaxMessageSize(bool aMaxMessageSizeSet, uint64_t aMaxMessageSize)
 {
   MutexAutoLock lock(mLock); // TODO: Needed?
+
+  if (mMaxMessageSizeSet && !aMaxMessageSizeSet) {
+    // Don't overwrite already set MMS with default values
+    return;
+  }
 
   mMaxMessageSizeSet = aMaxMessageSizeSet;
   mMaxMessageSize = aMaxMessageSize;
