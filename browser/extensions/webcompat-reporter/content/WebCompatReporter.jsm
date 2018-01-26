@@ -6,6 +6,7 @@ this.EXPORTED_SYMBOLS = ["WebCompatReporter"];
 
 let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -19,7 +20,15 @@ XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {
 
 // Gather values for prefs we want to appear in reports.
 let prefs = {};
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.all", "gfx.webrender.all", false);
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.blob-images", "gfx.webrender.blob-images", 2);
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "gfx.webrender.enabled", "gfx.webrender.enabled", false);
+XPCOMUtils.defineLazyPreferenceGetter(prefs, "image.mem.shared", "image.mem.shared", 2);
 XPCOMUtils.defineLazyPreferenceGetter(prefs, "layout.css.servo.enabled", "layout.css.servo.enabled", false);
+
+if (AppConstants.platform == "linux") {
+  XPCOMUtils.defineLazyPreferenceGetter(prefs, "layers.acceleration.force-enabled", "layers.acceleration.force-enabled", false);
+}
 
 let WebCompatReporter = {
   get endpoint() {
@@ -89,6 +98,10 @@ let WebCompatReporter = {
 
     if (prefs["layout.css.servo.enabled"]) {
       params.append("label", "type-stylo");
+    }
+
+    if (prefs["gfx.webrender.all"] || prefs["gfx.webrender.enabled"]) {
+      params.append("label", "type-webrender-enabled");
     }
 
     let tab = gBrowser.loadOneTab(
