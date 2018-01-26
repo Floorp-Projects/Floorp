@@ -18,7 +18,7 @@
 <script class="testbody" type="text/javascript">
 
   function runTest() {
-    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/workers/test/serviceworkers/empty.js")
+    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/serviceworkers/test/empty.js")
       .then(reg => {
         ok(false, "Register should fail");
         SimpleTest.finish();

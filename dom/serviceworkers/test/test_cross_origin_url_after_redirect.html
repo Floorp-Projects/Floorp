@@ -20,14 +20,14 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/requesturl/register.html";
+    iframe.src = "/tests/dom/serviceworkers/test/fetch/requesturl/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/requesturl/index.html";
+        iframe.src = "/tests/dom/serviceworkers/test/fetch/requesturl/index.html";
       } else if (e.data.status == "done") {
-        iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/requesturl/unregister.html";
+        iframe.src = "/tests/dom/serviceworkers/test/fetch/requesturl/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

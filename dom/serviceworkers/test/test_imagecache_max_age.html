@@ -21,12 +21,12 @@
   var framesLoaded = 0;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/imagecache-maxage/register.html";
+    iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/imagecache-maxage/index.html";
+        iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/index.html";
       } else if (e.data.status == "result") {
         switch (++framesLoaded) {
         case 1:
@@ -36,7 +36,7 @@
           is(e.data.width2, 20, "Correct width expected");
           // Wait for 100ms so that the image gets expired.
           setTimeout(function() {
-            iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/imagecache-maxage/index.html?new"
+            iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/index.html?new"
           }, 100);
           break;
         case 2:
@@ -44,7 +44,7 @@
           is(e.data.url2, "image-40px.png", "Correct url expected");
           is(e.data.width, 40, "Correct width expected");
           is(e.data.width2, 40, "Correct width expected");
-          iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/imagecache-maxage/unregister.html";
+          iframe.src = "/tests/dom/serviceworkers/test/fetch/imagecache-maxage/unregister.html";
           break;
         default:
           ok(false, "This should never happen");

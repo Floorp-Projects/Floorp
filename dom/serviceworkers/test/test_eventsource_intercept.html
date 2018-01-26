@@ -75,12 +75,12 @@
       })
       .then(() => {
         info("Going to intercept and test mixed content cors responses");
-        return testFrame("https://example.com/tests/dom/workers/test/serviceworkers/" +
+        return testFrame("https://example.com/tests/dom/serviceworkers/test/" +
                          "eventsource/eventsource_register_worker.html" +
                          "?script=eventsource_mixed_content_cors_response_intercept_worker.js");
       })
       .then(() => {
-        return testFrame("https://example.com/tests/dom/workers/test/serviceworkers/" +
+        return testFrame("https://example.com/tests/dom/serviceworkers/test/" +
                          "eventsource/eventsource_mixed_content_cors_response.html");
       })
       .then(SimpleTest.finish)

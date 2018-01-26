@@ -20,7 +20,7 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/register.html";
     var ios;
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
@@ -40,12 +40,12 @@
         iframe = null;
         SpecialPowers.exactGC(function() {
           iframe = document.createElement("iframe");
-          iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth.html";
+          iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/synth.html";
           document.body.appendChild(iframe);
         });
       } else if (e.data.status == "done-synth") {
         ios.offline = false;
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

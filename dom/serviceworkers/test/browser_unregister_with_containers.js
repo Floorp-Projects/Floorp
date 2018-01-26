@@ -2,7 +2,7 @@
 
 const { interfaces: Ci } = Components;
 
-const BASE_URI = "http://mochi.test:8888/browser/dom/workers/test/serviceworkers/";
+const BASE_URI = "http://mochi.test:8888/browser/dom/serviceworkers/test/";
 const PAGE_URI = BASE_URI + "empty.html";
 const SCOPE = PAGE_URI + "?unregister_with_containers";
 const SW_SCRIPT = BASE_URI + "empty.js";

@@ -54,7 +54,7 @@ navigator.serviceWorker.ready.then(function() {
   parent.postMessage({ status: 'READY' }, '*');
 });
 
-var URL = '/tests/dom/workers/test/serviceworkers/redirect_post.sjs';
+var URL = '/tests/dom/serviceworkers/test/redirect_post.sjs';
 
 addEventListener('message', function(evt) {
   if (evt.data.type = 'TEST') {

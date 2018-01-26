@@ -23,16 +23,16 @@
   function runTest() {
     normalFrame = document.getElementById("normal-frame");
     sandboxFrame = document.getElementById("sandbox-frame");
-    normalFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/register.html";
+    normalFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
         normalFrame.src = "about:blank";
-        sandboxFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/index.html";
+        sandboxFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/index.html";
       } else if (e.data.status == "done") {
         sandboxFrame.src = "about:blank";
-        normalFrame.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/unregister.html";
+        normalFrame.src = "/tests/dom/serviceworkers/test/fetch/sandbox/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         normalFrame.src = "about:blank";
         window.onmessage = null;

@@ -29,7 +29,7 @@ onfetch = function(event) {
         return;
       }
 
-      var url = "http://example.com/tests/dom/workers/test/serviceworkers/xslt/xslt.sjs?" + escape(xslt);
+      var url = "http://example.com/tests/dom/serviceworkers/test/xslt/xslt.sjs?" + escape(xslt);
       event.respondWith(fetch(url, { mode: 'cors' }));
     }
     else if (testType == 'opaque') {
@@ -38,7 +38,7 @@ onfetch = function(event) {
         return;
       }
 
-      var url = "http://example.com/tests/dom/workers/test/serviceworkers/xslt/xslt.sjs?" + escape(xslt);
+      var url = "http://example.com/tests/dom/serviceworkers/test/xslt/xslt.sjs?" + escape(xslt);
       event.respondWith(fetch(url, { mode: 'no-cors' }));
     }
     else {

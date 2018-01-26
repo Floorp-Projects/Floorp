@@ -1,7 +1,7 @@
 var name = 'opaqueInterceptCache';
 
 // Cross origin request to ensure that an opaque response is used
-var prefix = 'http://example.com/tests/dom/workers/test/serviceworkers/'
+var prefix = 'http://example.com/tests/dom/serviceworkers/test/'
 
 self.addEventListener('install', function(event) {
   var request = new Request(prefix + 'notify_loaded.js', { mode: 'no-cors' });

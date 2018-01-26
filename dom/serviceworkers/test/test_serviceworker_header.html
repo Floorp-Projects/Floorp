@@ -18,7 +18,7 @@
 <script class="testbody" type="text/javascript">
 
   function runTest() {
-    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/workers/test/serviceworkers/header_checker.sjs")
+    navigator.serviceWorker.register("http://mochi.test:8888/tests/dom/serviceworkers/test/header_checker.sjs")
       .then(reg => {
         ok(true, "Register should succeed");
         reg.unregister().then(() => SimpleTest.finish());
