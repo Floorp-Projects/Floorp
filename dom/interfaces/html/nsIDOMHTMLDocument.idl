@@ -16,13 +16,6 @@ interface nsISelection;
 [uuid(cd31e61f-cfc2-4b91-9385-17b6a2d0633d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-  // Obsolete APIs
-           attribute DOMString            fgColor;
-           attribute DOMString            bgColor;
-           attribute DOMString            linkColor;
-           attribute DOMString            vlinkColor;
-           attribute DOMString            alinkColor;
-
   void                      clear();
 
 
