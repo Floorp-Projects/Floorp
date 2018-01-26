@@ -10,12 +10,12 @@
 // It is included in Firefox, but not enabled by default unless the
 // -marionette flag is passed.
 
-// Port to start Marionette server on.
-pref("marionette.port", 2828);
-
 // Marionette logging verbosity.  Allowed values are "fatal", "error",
 // "warn", "info", "config", "debug", and "trace".
 pref("marionette.log.level", "info");
+
+// Port to start Marionette server on.
+pref("marionette.port", 2828);
 
 // Sets preferences recommended when using Firefox in automation with
 // Marionette.
