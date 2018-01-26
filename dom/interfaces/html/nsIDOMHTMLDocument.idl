@@ -11,23 +11,8 @@
  *
  * @see <http://www.whatwg.org/html/>
  */
-interface nsISelection;
 
 [uuid(cd31e61f-cfc2-4b91-9385-17b6a2d0633d)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
-  void                      clear();
-
-
-  // DOM Range
-  nsISelection                getSelection();
-
-
-  // More obsolete APIs
-  /**
-   * @deprecated These are old Netscape 4 methods. Do not use,
-   *             the implementation is no-op.
-   */
-  void                      captureEvents();
-  void                      releaseEvents();
 };
