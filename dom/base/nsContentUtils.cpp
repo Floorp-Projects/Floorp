@@ -5220,6 +5220,7 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
   rv = sXMLFragmentSink->FinishFragmentParsing(aReturn);
 
   sXMLFragmentParser->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If this is a chrome-privileged document, sanitize the fragment before
   // returning.
