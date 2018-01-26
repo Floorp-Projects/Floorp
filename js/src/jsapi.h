@@ -1117,6 +1117,7 @@ class JS_PUBLIC_API(ContextOptions) {
 #ifdef FUZZING
         , fuzzing_(false)
 #endif
+        , expressionClosures_(false)
     {
     }
 
@@ -1272,6 +1273,12 @@ class JS_PUBLIC_API(ContextOptions) {
     }
 #endif
 
+    bool expressionClosures() const { return expressionClosures_; }
+    ContextOptions& setExpressionClosures(bool flag) {
+        expressionClosures_ = flag;
+        return *this;
+    }
+
     void disableOptionsForSafeMode() {
         setBaseline(false);
         setIon(false);
@@ -1302,6 +1309,7 @@ class JS_PUBLIC_API(ContextOptions) {
 #ifdef FUZZING
     bool fuzzing_ : 1;
 #endif
+    bool expressionClosures_ : 1;
 
 };
 
@@ -3668,6 +3676,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
         canLazilyParse(true),
         strictOption(false),
         extraWarningsOption(false),
+        expressionClosuresOption(false),
         werrorOption(false),
         asmJSOption(AsmJSOption::Disabled),
         throwOnAsmJSValidationFailureOption(false),
@@ -3702,6 +3711,7 @@ class JS_FRIEND_API(TransitiveCompileOptions)
     bool canLazilyParse;
     bool strictOption;
     bool extraWarningsOption;
+    bool expressionClosuresOption;
     bool werrorOption;
     AsmJSOption asmJSOption;
     bool throwOnAsmJSValidationFailureOption;
