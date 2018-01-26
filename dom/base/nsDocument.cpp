@@ -8580,12 +8580,6 @@ nsDocument::Sanitize()
   }
 }
 
-struct SubDocEnumArgs
-{
-  nsIDocument::nsSubDocEnumFunc callback;
-  void *data;
-};
-
 void
 nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
 {
