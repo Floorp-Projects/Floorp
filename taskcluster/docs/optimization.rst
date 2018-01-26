@@ -31,7 +31,7 @@ Optimizing Target Tasks
 
 In some cases, such as try pushes, tasks in the target task set have been
 explicitly requested and are thus excluded from optimization. In other cases,
-the target task set is almost the entire task graph, so targetted tasks are
+the target task set is almost the entire task graph, so targeted tasks are
 considered for optimization. This behavior is controlled with the
 ``optimize_target_tasks`` parameter.
 
