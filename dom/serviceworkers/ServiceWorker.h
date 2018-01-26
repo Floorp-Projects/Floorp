@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworker_h__
-#define mozilla_dom_workers_serviceworker_h__
+#ifndef mozilla_dom_serviceworker_h__
+#define mozilla_dom_serviceworker_h__
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -15,8 +15,6 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
-
-namespace workers {
 
 class ServiceWorkerInfo;
 class ServiceWorkerManager;
@@ -77,8 +75,7 @@ private:
   const RefPtr<ServiceWorkerInfo> mInfo;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworker_h__
+#endif // mozilla_dom_serviceworker_h__

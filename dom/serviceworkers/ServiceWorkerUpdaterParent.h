@@ -12,7 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorkerManagerService;
 
@@ -29,7 +28,6 @@ private:
   RefPtr<ServiceWorkerManagerService> mService;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 

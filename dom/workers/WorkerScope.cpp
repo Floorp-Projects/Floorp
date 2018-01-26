@@ -46,8 +46,8 @@
 #include "ScriptLoader.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
 
 #ifdef XP_WIN
 #undef PostMessage

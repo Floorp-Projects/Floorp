@@ -18,7 +18,6 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
-namespace workers {
 
 namespace {
 
@@ -110,7 +109,7 @@ ServiceWorkerManagerService::PropagateRegistration(
   // content processes.
   PrincipalInfo pi = aData.principal();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-    "dom::workers::ServiceWorkerManagerService::PropagateRegistration", [pi]() {
+    "dom::ServiceWorkerManagerService::PropagateRegistration", [pi]() {
       nsTArray<ContentParent*> cps;
       ContentParent::GetAll(cps);
       for (auto* cp : cps) {
@@ -293,6 +292,5 @@ ServiceWorkerManagerService::UpdaterActorDestroyed(ServiceWorkerUpdaterParent* a
   MOZ_CRASH("The actor should be found");
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

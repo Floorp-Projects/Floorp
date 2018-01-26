@@ -11,7 +11,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorkerJobQueue::Callback final : public ServiceWorkerJob::Callback
 {
@@ -25,14 +24,14 @@ public:
   explicit Callback(ServiceWorkerJobQueue* aQueue)
     : mQueue(aQueue)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mQueue);
   }
 
   virtual void
   JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mQueue->JobFinished(aJob);
   }
 
@@ -41,14 +40,14 @@ public:
 
 ServiceWorkerJobQueue::~ServiceWorkerJobQueue()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mJobList.IsEmpty());
 }
 
 void
 ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
 
   // XXX There are some corner cases where jobs can double-complete.  Until
@@ -74,7 +73,7 @@ ServiceWorkerJobQueue::JobFinished(ServiceWorkerJob* aJob)
 void
 ServiceWorkerJobQueue::RunJob()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mJobList.IsEmpty());
   MOZ_ASSERT(mJobList[0]->GetState() == ServiceWorkerJob::State::Initial);
 
@@ -84,13 +83,13 @@ ServiceWorkerJobQueue::RunJob()
 
 ServiceWorkerJobQueue::ServiceWorkerJobQueue()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
 ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
   MOZ_ASSERT(!mJobList.Contains(aJob));
 
@@ -114,7 +113,7 @@ ServiceWorkerJobQueue::ScheduleJob(ServiceWorkerJob* aJob)
 void
 ServiceWorkerJobQueue::CancelAll()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   for (RefPtr<ServiceWorkerJob>& job : mJobList) {
     job->Cancel();
@@ -129,6 +128,5 @@ ServiceWorkerJobQueue::CancelAll()
   }
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

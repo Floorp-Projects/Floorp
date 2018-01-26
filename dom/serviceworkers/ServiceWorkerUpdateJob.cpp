@@ -13,7 +13,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 namespace {
 
@@ -121,7 +120,7 @@ public:
     : mJob(aJob)
     , mSuccess(false)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -133,7 +132,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mJob->ContinueUpdateAfterScriptEval(mSuccess);
     mJob = nullptr;
     return NS_OK;
@@ -150,7 +149,7 @@ public:
     : mJob(aJob)
     , mSuccess(false)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -162,7 +161,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     mJob->ContinueAfterInstallEvent(mSuccess);
     mJob = nullptr;
     return NS_OK;
@@ -184,7 +183,7 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerUpdateJob::GetRegistration() const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   RefPtr<ServiceWorkerRegistrationInfo> ref = mRegistration;
   return ref.forget();
 }
@@ -209,7 +208,7 @@ ServiceWorkerUpdateJob::~ServiceWorkerUpdateJob()
 void
 ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRv.Failed());
 
   // Cleanup after a failed installation.  This essentially implements
@@ -245,7 +244,7 @@ ServiceWorkerUpdateJob::FailUpdateJob(nsresult aRv)
 void
 ServiceWorkerUpdateJob::AsyncExecute()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GetType() == Type::Update);
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -288,7 +287,7 @@ ServiceWorkerUpdateJob::AsyncExecute()
 void
 ServiceWorkerUpdateJob::SetRegistration(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(!mRegistration);
   MOZ_ASSERT(aRegistration);
@@ -298,7 +297,7 @@ ServiceWorkerUpdateJob::SetRegistration(ServiceWorkerRegistrationInfo* aRegistra
 void
 ServiceWorkerUpdateJob::Update()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!Canceled());
 
   // SetRegistration() must be called before Update().
@@ -342,7 +341,7 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                          const nsACString& aMaxScope,
                                          nsLoadFlags aLoadFlags)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (NS_WARN_IF(Canceled() || !swm)) {
@@ -461,7 +460,7 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
 void
 ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResult)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (Canceled() || !swm) {
@@ -488,7 +487,7 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
 void
 ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!Canceled());
   MOZ_DIAGNOSTIC_ASSERT(aSWM);
 
@@ -509,7 +508,7 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
   // fire the updatefound event
   nsCOMPtr<nsIRunnable> upr =
     NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
-      "dom::workers::ServiceWorkerManager::"
+      "dom::ServiceWorkerManager::"
       "FireUpdateFoundOnServiceWorkerRegistrations",
       aSWM,
       &ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations,
@@ -519,7 +518,7 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
   // Call ContinueAfterInstallEvent(false) on main thread if the SW
   // script fails to load.
   nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
-    "dom::workers::ServiceWorkerUpdateJob::ContinueAfterInstallEvent",
+    "dom::ServiceWorkerUpdateJob::ContinueAfterInstallEvent",
     this,
     &ServiceWorkerUpdateJob::ContinueAfterInstallEvent,
     false);
@@ -578,6 +577,5 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
   mRegistration->TryToActivateAsync();
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

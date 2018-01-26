@@ -8,7 +8,8 @@
 
 #include "ServiceWorkerScriptCache.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 using mozilla::ipc::PrincipalInfo;
 
@@ -32,7 +33,7 @@ NS_IMPL_ISUPPORTS(ServiceWorkerInfo, nsIServiceWorkerInfo)
 NS_IMETHODIMP
 ServiceWorkerInfo::GetScriptSpec(nsAString& aScriptSpec)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   CopyUTF8toUTF16(mScriptSpec, aScriptSpec);
   return NS_OK;
 }
@@ -40,7 +41,7 @@ ServiceWorkerInfo::GetScriptSpec(nsAString& aScriptSpec)
 NS_IMETHODIMP
 ServiceWorkerInfo::GetCacheName(nsAString& aCacheName)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   aCacheName = mCacheName;
   return NS_OK;
 }
@@ -49,7 +50,7 @@ NS_IMETHODIMP
 ServiceWorkerInfo::GetState(uint16_t* aState)
 {
   MOZ_ASSERT(aState);
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   *aState = static_cast<uint16_t>(State());
   return NS_OK;
 }
@@ -68,7 +69,7 @@ NS_IMETHODIMP
 ServiceWorkerInfo::GetHandlesFetchEvents(bool* aValue)
 {
   MOZ_ASSERT(aValue);
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   *aValue = HandlesFetch();
   return NS_OK;
 }
@@ -76,7 +77,7 @@ ServiceWorkerInfo::GetHandlesFetchEvents(bool* aValue)
 NS_IMETHODIMP
 ServiceWorkerInfo::GetInstalledTime(PRTime* _retval)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(_retval);
   *_retval = mInstalledTime;
   return NS_OK;
@@ -85,7 +86,7 @@ ServiceWorkerInfo::GetInstalledTime(PRTime* _retval)
 NS_IMETHODIMP
 ServiceWorkerInfo::GetActivatedTime(PRTime* _retval)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(_retval);
   *_retval = mActivatedTime;
   return NS_OK;
@@ -94,7 +95,7 @@ ServiceWorkerInfo::GetActivatedTime(PRTime* _retval)
 NS_IMETHODIMP
 ServiceWorkerInfo::GetRedundantTime(PRTime* _retval)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(_retval);
   *_retval = mRedundantTime;
   return NS_OK;
@@ -148,7 +149,7 @@ class ChangeStateUpdater final : public Runnable
 public:
   ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,
                      ServiceWorkerState aState)
-    : Runnable("dom::workers::ChangeStateUpdater")
+    : Runnable("dom::ChangeStateUpdater")
     , mState(aState)
   {
     for (size_t i = 0; i < aInstances.Length(); ++i) {
@@ -181,7 +182,7 @@ private:
 void
 ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 #ifdef DEBUG
   // Any state can directly transition to redundant, but everything else is
   // ordered.
@@ -267,7 +268,7 @@ ServiceWorkerInfo::GetNextID() const
 already_AddRefed<ServiceWorker>
 ServiceWorkerInfo::GetOrCreateInstance(nsPIDOMWindowInner* aWindow)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
   RefPtr<ServiceWorker> ref;
@@ -320,4 +321,5 @@ ServiceWorkerInfo::UpdateRedundantTime()
                                          mCreationTimeStamp).ToMicroseconds());
 }
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla

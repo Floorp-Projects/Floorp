@@ -9,28 +9,21 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
+    'ServiceWorker.h',
     'ServiceWorkerCommon.h',
     'ServiceWorkerContainer.h',
     'ServiceWorkerDescriptor.h',
     'ServiceWorkerEvents.h',
+    'ServiceWorkerInfo.h',
     'ServiceWorkerInterceptController.h',
     'ServiceWorkerIPCUtils.h',
-    'ServiceWorkerRegistrar.h',
-    'ServiceWorkerRegistration.h',
-    'ServiceWorkerUtils.h',
-]
-
-EXPORTS.mozilla.dom.workers += [
-    'ServiceWorkerInfo.h',
     'ServiceWorkerManager.h',
     'ServiceWorkerManagerChild.h',
     'ServiceWorkerManagerParent.h',
+    'ServiceWorkerRegistrar.h',
+    'ServiceWorkerRegistration.h',
     'ServiceWorkerRegistrationInfo.h',
-]
-
-# Stuff needed for the bindings, not really public though.
-EXPORTS.mozilla.dom.workers.bindings += [
-    'ServiceWorker.h',
+    'ServiceWorkerUtils.h',
 ]
 
 UNIFIED_SOURCES += [

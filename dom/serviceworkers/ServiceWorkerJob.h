@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerjob_h
-#define mozilla_dom_workers_serviceworkerjob_h
+#ifndef mozilla_dom_serviceworkerjob_h
+#define mozilla_dom_serviceworkerjob_h
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -18,7 +18,6 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-namespace workers {
 
 class ServiceWorkerJob
 {
@@ -144,8 +143,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJob)
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworkerjob_h
+#endif // mozilla_dom_serviceworkerjob_h

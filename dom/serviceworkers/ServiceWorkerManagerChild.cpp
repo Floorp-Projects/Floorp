@@ -14,7 +14,6 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
-namespace workers {
 
 mozilla::ipc::IPCResult
 ServiceWorkerManagerChild::RecvNotifyRegister(
@@ -117,6 +116,5 @@ ServiceWorkerManagerChild::DeallocPServiceWorkerUpdaterChild(PServiceWorkerUpdat
   return true;
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

@@ -187,7 +187,7 @@ ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOM
   : ServiceWorkerRegistration(aWindow, aScope)
   , mListeningForEvents(false)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   StartListeningForEvents();
 }
@@ -247,7 +247,7 @@ ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhic
 void
 ServiceWorkerRegistrationMainThread::StartListeningForEvents()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mListeningForEvents);
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (swm) {
@@ -259,7 +259,7 @@ ServiceWorkerRegistrationMainThread::StartListeningForEvents()
 void
 ServiceWorkerRegistrationMainThread::StopListeningForEvents()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mListeningForEvents) {
     return;
   }
@@ -274,7 +274,7 @@ ServiceWorkerRegistrationMainThread::StopListeningForEvents()
 already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetInstalling()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mInstallingWorker) {
     mInstallingWorker = GetWorkerReference(WhichServiceWorker::INSTALLING_WORKER);
   }
@@ -286,7 +286,7 @@ ServiceWorkerRegistrationMainThread::GetInstalling()
 already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetWaiting()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mWaitingWorker) {
     mWaitingWorker = GetWorkerReference(WhichServiceWorker::WAITING_WORKER);
   }
@@ -298,7 +298,7 @@ ServiceWorkerRegistrationMainThread::GetWaiting()
 already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetActive()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mActiveWorker) {
     mActiveWorker = GetWorkerReference(WhichServiceWorker::ACTIVE_WORKER);
   }
@@ -316,7 +316,7 @@ ServiceWorkerRegistrationMainThread::UpdateFound()
 void
 ServiceWorkerRegistrationMainThread::TransitionWorker(WhichServiceWorker aWhichOne)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // We assert the worker's previous state because the 'statechange'
   // event is dispatched in a queued runnable.
@@ -334,7 +334,7 @@ ServiceWorkerRegistrationMainThread::TransitionWorker(WhichServiceWorker aWhichO
 void
 ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhichOnes)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (aWhichOnes & WhichServiceWorker::INSTALLING_WORKER) {
     mInstallingWorker = nullptr;
   }
@@ -367,7 +367,7 @@ UpdateInternal(nsIPrincipal* aPrincipal,
                const nsAString& aScope,
                ServiceWorkerUpdateFinishCallback* aCallback)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
 
@@ -392,7 +392,7 @@ public:
                                     Promise* aPromise)
     : mPromise(aWindow, aPromise)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -464,7 +464,7 @@ public:
   explicit WorkerThreadUpdateCallback(PromiseWorkerProxy* aPromiseProxy)
     : mPromiseProxy(aPromiseProxy)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -500,11 +500,11 @@ public:
   }
 };
 
-class UpdateRunnable final : public Runnable
+class SWRUpdateRunnable final : public Runnable
 {
 public:
-  UpdateRunnable(PromiseWorkerProxy* aPromiseProxy, const nsAString& aScope)
-    : Runnable("dom::UpdateRunnable")
+  SWRUpdateRunnable(PromiseWorkerProxy* aPromiseProxy, const nsAString& aScope)
+    : Runnable("dom::SWRUpdateRunnable")
     , mPromiseProxy(aPromiseProxy)
     , mScope(aScope)
   {}
@@ -512,7 +512,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     ErrorResult result;
 
     nsCOMPtr<nsIPrincipal> principal;
@@ -535,7 +535,7 @@ public:
   }
 
 private:
-  ~UpdateRunnable()
+  ~SWRUpdateRunnable()
   {}
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
@@ -559,7 +559,7 @@ public:
   NS_IMETHOD
   UnregisterSucceeded(bool aState) override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     if (RefPtr<Promise> promise = mPromise.Get()) {
       promise->MaybeResolve(aState);
     }
@@ -569,7 +569,7 @@ public:
   NS_IMETHOD
   UnregisterFailed() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     if (RefPtr<Promise> promise = mPromise.Get()) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
@@ -595,7 +595,7 @@ public:
     , mPromiseWorkerProxy(aProxy)
     , mState(aState)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mPromiseWorkerProxy);
   }
 
@@ -629,7 +629,7 @@ public:
   NS_IMETHOD
   UnregisterSucceeded(bool aState) override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     Finish(Some(aState));
     return NS_OK;
   }
@@ -637,7 +637,7 @@ public:
   NS_IMETHOD
   UnregisterFailed() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     Finish(Nothing());
     return NS_OK;
   }
@@ -649,7 +649,7 @@ private:
   void
   Finish(const Maybe<bool>& aState)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     if (!mPromiseWorkerProxy) {
       return;
     }
@@ -690,7 +690,7 @@ public:
   NS_IMETHOD
   Run() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     // XXXnsm: There is a rare chance of this failing if the worker gets
     // destroyed. In that case, unregister() called from a SW is no longer
@@ -727,7 +727,7 @@ public:
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -752,7 +752,7 @@ ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -819,7 +819,7 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
                                                       const NotificationOptions& aOptions,
                                                       ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -852,7 +852,7 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
 already_AddRefed<Promise>
 ServiceWorkerRegistrationMainThread::GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (NS_WARN_IF(!window)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -865,7 +865,7 @@ already_AddRefed<PushManager>
 ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
                                                     ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!mPushManager) {
     nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(GetOwner());
@@ -989,7 +989,7 @@ public:
   void
   StartListeningForEvents()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mListeningForEvents);
     MOZ_ASSERT(mWorkerPrivate);
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
@@ -1003,7 +1003,7 @@ public:
   void
   StopListeningForEvents()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     MOZ_ASSERT(mListeningForEvents);
 
@@ -1027,21 +1027,21 @@ public:
   void
   TransitionWorker(WhichServiceWorker aWhichOne) override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     NS_WARNING("FIXME: Not implemented!");
   }
 
   void
   InvalidateWorkers(WhichServiceWorker aWhichOnes) override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     // FIXME(nsm);
   }
 
   void
   RegistrationRemoved() override
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -1111,7 +1111,7 @@ ServiceWorkerRegistrationWorkerThread::~ServiceWorkerRegistrationWorkerThread()
   MOZ_ASSERT(!mListener);
 }
 
-already_AddRefed<workers::ServiceWorker>
+already_AddRefed<ServiceWorker>
 ServiceWorkerRegistrationWorkerThread::GetInstalling()
 {
   // FIXME(nsm): Will be implemented after Bug 1113522.
@@ -1158,7 +1158,7 @@ ServiceWorkerRegistrationWorkerThread::Update(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<UpdateRunnable> r = new UpdateRunnable(proxy, mScope);
+  RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(proxy, mScope);
   MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 
   return promise.forget();
@@ -1284,7 +1284,7 @@ public:
 void
 WorkerListener::UpdateFound()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   if (mWorkerPrivate) {
     RefPtr<FireUpdateFoundRunnable> r =
       new FireUpdateFoundRunnable(mWorkerPrivate, this);
@@ -1367,7 +1367,7 @@ ServiceWorkerRegistration::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 }
 
 /* static */ already_AddRefed<ServiceWorkerRegistration>
-ServiceWorkerRegistration::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+ServiceWorkerRegistration::CreateForWorker(WorkerPrivate* aWorkerPrivate,
                                            const nsAString& aScope)
 {
   MOZ_ASSERT(aWorkerPrivate);

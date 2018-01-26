@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerevents_h__
-#define mozilla_dom_workers_serviceworkerevents_h__
+#ifndef mozilla_dom_serviceworkerevents_h__
+#define mozilla_dom_serviceworkerevents_h__
 
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Event.h"
@@ -15,7 +15,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
-#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 #include "mozilla/dom/workers/Workers.h"
 
 #include "nsProxyRelease.h"
@@ -25,19 +24,19 @@ class nsIInterceptedChannel;
 
 namespace mozilla {
 namespace dom {
+
 class Blob;
 class Client;
 class MessagePort;
+struct PushEventInit;
 class Request;
 class ResponseOrPromise;
-
-struct PushEventInit;
-} // namespace dom
-} // namespace mozilla
-
-BEGIN_WORKERS_NAMESPACE
-
+class ServiceWorker;
 class ServiceWorkerRegistrationInfo;
+
+// Defined in ServiceWorker.cpp
+bool
+ServiceWorkerVisible(JSContext* aCx, JSObject* aObj);
 
 class CancelChannelRunnable final : public Runnable
 {
@@ -325,6 +324,7 @@ public:
   void GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts);
 };
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla
 
-#endif /* mozilla_dom_workers_serviceworkerevents_h__ */
+#endif /* mozilla_dom_serviceworkerevents_h__ */

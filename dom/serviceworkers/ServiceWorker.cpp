@@ -27,7 +27,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 bool
 ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
@@ -44,7 +43,7 @@ ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
   : DOMEventTargetHelper(aWindow),
     mInfo(aInfo)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aInfo);
 
   // This will update our state too.
@@ -53,7 +52,7 @@ ServiceWorker::ServiceWorker(nsPIDOMWindowInner* aWindow,
 
 ServiceWorker::~ServiceWorker()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   mInfo->RemoveWorker(this);
 }
 
@@ -66,7 +65,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 JSObject*
 ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   return ServiceWorkerBinding::Wrap(aCx, this, aGivenProto);
 }
@@ -116,6 +115,5 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                                                            clientState.ref().ToIPC()));
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

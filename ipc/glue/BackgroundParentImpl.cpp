@@ -23,6 +23,7 @@
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -32,7 +33,6 @@
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/StorageIPC.h"
-#include "mozilla/dom/workers/ServiceWorkerManagerParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -107,7 +107,6 @@ namespace ipc {
 using mozilla::dom::ContentParent;
 using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ServiceWorkerRegistrationData;
-using mozilla::dom::workers::ServiceWorkerManagerParent;
 
 BackgroundParentImpl::BackgroundParentImpl()
 {
@@ -659,8 +658,8 @@ BackgroundParentImpl::AllocPServiceWorkerManagerParent()
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> agent =
-    new dom::workers::ServiceWorkerManagerParent();
+  RefPtr<dom::ServiceWorkerManagerParent> agent =
+    new dom::ServiceWorkerManagerParent();
   return agent.forget().take();
 }
 
@@ -672,8 +671,8 @@ BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> parent =
-    dont_AddRef(static_cast<dom::workers::ServiceWorkerManagerParent*>(aActor));
+  RefPtr<dom::ServiceWorkerManagerParent> parent =
+    dont_AddRef(static_cast<dom::ServiceWorkerManagerParent*>(aActor));
   MOZ_ASSERT(parent);
   return true;
 }

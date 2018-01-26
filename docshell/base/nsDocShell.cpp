@@ -47,12 +47,12 @@
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
 
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
 
 #include "mozilla/net/ReferrerPolicy.h"
 
@@ -229,7 +229,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::workers::ServiceWorkerManager;
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000

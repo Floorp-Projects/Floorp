@@ -112,7 +112,7 @@
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
 #include "mozilla/dom/ServiceWorkerEvents.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
 #include "WorkerHolder.h"
