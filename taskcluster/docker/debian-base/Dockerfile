@@ -34,6 +34,7 @@ RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-sec
       echo 'APT::Get::Assume-Yes "true";'; \
       echo 'APT::Install-Recommends "false";'; \
       echo 'Acquire::Check-Valid-Until "false";'; \
+      echo 'Acquire::Retries "5";'; \
     ) > /etc/apt/apt.conf.d/99taskcluster
 
 RUN apt-get update && \
