@@ -1390,7 +1390,7 @@ nsLayoutUtils::InvalidateForDisplayPortChange(nsIContent* aContent,
     // rect properties on so we can find the frame later to remove the properties.
     frame->SchedulePaint();
 
-    if (!gfxPrefs::LayoutRetainDisplayList()) {
+    if (!nsLayoutUtils::AreRetainedDisplayListsEnabled()) {
       return;
     }
 
@@ -1409,6 +1409,19 @@ nsLayoutUtils::InvalidateForDisplayPortChange(nsIContent* aContent,
       rect = new nsRect();
       frame->SetProperty(nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), rect);
       frame->SetHasOverrideDirtyRegion(true);
+
+      nsIFrame* rootFrame = frame->PresContext()->PresShell()->GetRootFrame();
+      MOZ_ASSERT(rootFrame);
+
+      nsTArray<nsIFrame*>* frames =
+        rootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
+
+      if (!frames) {
+        frames = new nsTArray<nsIFrame*>();
+        rootFrame->SetProperty(nsIFrame::OverriddenDirtyRectFrameList(), frames);
+      }
+
+      frames->AppendElement(frame);
     }
 
     if (aHadDisplayPort) {
@@ -3686,7 +3699,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   // Retained builder exists, but display list retaining is disabled.
   if (!useRetainedBuilder && retainedBuilder) {
     // Clear the modified frames lists and frame properties.
-    retainedBuilder->ClearModifiedFrameProps();
+    retainedBuilder->ClearFramesWithProps();
 
     // Clear the retained display list.
     retainedBuilder->List()->DeleteAll(retainedBuilder->Builder());
