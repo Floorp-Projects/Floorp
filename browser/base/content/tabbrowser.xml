@@ -2567,6 +2567,13 @@
             this._tabListeners.delete(tab);
             this._tabFilters.delete(tab);
 
+            // Reset the findbar and remove it if it is attached to the tab.
+            if (tab._findBar) {
+              tab._findBar.close(true);
+              tab._findBar.remove();
+              delete tab._findBar;
+            }
+
             aBrowser.destroy();
 
             let notificationbox = this.getNotificationBox(aBrowser);
