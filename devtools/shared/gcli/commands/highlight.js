@@ -5,7 +5,7 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-require("devtools/server/actors/inspector/inspector");
+require("devtools/server/actors/inspector/inspector-actor");
 const {HighlighterEnvironment}  = require("devtools/server/actors/highlighters");
 const {BoxModelHighlighter} = require("devtools/server/actors/highlighters/box-model");
 
