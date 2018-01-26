@@ -14,7 +14,7 @@ import yaml
 
 from .generator import TaskGraphGenerator
 from .create import create_tasks
-from .parameters import Parameters
+from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .actions import render_actions_json
@@ -193,6 +193,8 @@ def get_decision_parameters(options):
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
     parameters['build_number'] = 1
+    parameters['version'] = get_version()
+    parameters['app_version'] = get_app_version()
     parameters['next_version'] = None
     parameters['desktop_release_type'] = ''
     parameters['release_eta'] = ''
