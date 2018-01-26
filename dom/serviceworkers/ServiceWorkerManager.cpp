@@ -62,7 +62,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"

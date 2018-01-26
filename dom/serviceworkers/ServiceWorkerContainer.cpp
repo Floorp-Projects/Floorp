@@ -28,6 +28,10 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::dom::workers::ServiceWorkerInfo;
+using mozilla::dom::workers::ServiceWorkerManager;
+using mozilla::dom::workers::ServiceWorkerRegistrationInfo;
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerContainer)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 

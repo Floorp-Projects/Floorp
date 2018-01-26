@@ -32,6 +32,7 @@
 #include "mozilla/dom/ipc/TemporaryIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/StorageIPC.h"
+#include "mozilla/dom/workers/ServiceWorkerManagerParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -51,7 +52,6 @@
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
-#include "ServiceWorkerManagerParent.h"
 
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
 #define ASSERT_UNLESS_FUZZING(...) do { } while (0)

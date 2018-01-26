@@ -8,7 +8,6 @@
 
 #include "ActorsChild.h" // IndexedDB
 #include "BroadcastChannelChild.h"
-#include "ServiceWorkerManagerChild.h"
 #include "FileDescriptorSetChild.h"
 #ifdef MOZ_WEBRTC
 #include "CamerasChild.h"
@@ -34,6 +33,7 @@
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/dom/workers/ServiceWorkerManagerChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
