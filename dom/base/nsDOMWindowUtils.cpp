@@ -4499,12 +4499,3 @@ nsTranslationNodeList::GetLength(uint32_t* aRetVal)
   *aRetVal = mLength;
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDOMWindowUtils::WrCapture()
-{
-  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
-    wrbc->Capture();
-  }
-  return NS_OK;
-}
