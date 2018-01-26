@@ -165,6 +165,8 @@ public:
   /// Do not use this for anything else.
   void DeallocResourceShmem(RefCountedShmem& aShm);
 
+  void Capture();
+
 private:
   friend class CompositorBridgeChild;
 
