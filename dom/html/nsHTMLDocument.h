@@ -238,8 +238,8 @@ public:
   {
     // Deprecated
   }
-  // The XPCOM CaptureEvents works fine for us.
-  // The XPCOM ReleaseEvents works fine for us.
+  void CaptureEvents();
+  void ReleaseEvents();
   // We're picking up GetLocation from Document
   already_AddRefed<mozilla::dom::Location> GetLocation() const
   {

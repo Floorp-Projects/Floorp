@@ -1680,13 +1680,6 @@ nsHTMLDocument::Open(JSContext* cx,
   return kungFuDeathGrip.forget();
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::Clear()
-{
-  // This method has been deprecated
-  return NS_OK;
-}
-
 void
 nsHTMLDocument::Close(ErrorResult& rv)
 {
@@ -2027,26 +2020,16 @@ nsHTMLDocument::Embeds()
   return mEmbeds;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetSelection(nsISelection** aReturn)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*aReturn = nsDocument::GetSelection(rv));
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
+void
 nsHTMLDocument::CaptureEvents()
 {
   WarnOnceAbout(nsIDocument::eUseOfCaptureEvents);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ReleaseEvents()
 {
   WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);
-  return NS_OK;
 }
 
 // Mapped to document.embeds for NS4 compatibility
