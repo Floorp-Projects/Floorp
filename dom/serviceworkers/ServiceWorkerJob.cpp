@@ -12,7 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 ServiceWorkerJob::Type
 ServiceWorkerJob::GetType() const
@@ -41,7 +40,7 @@ ServiceWorkerJob::ResultCallbacksInvoked() const
 bool
 ServiceWorkerJob::IsEquivalentTo(ServiceWorkerJob* aJob) const
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
   return mType == aJob->mType &&
          mScope.Equals(aJob->mScope) &&
@@ -52,7 +51,7 @@ ServiceWorkerJob::IsEquivalentTo(ServiceWorkerJob* aJob) const
 void
 ServiceWorkerJob::AppendResultCallback(Callback* aCallback)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mState != State::Finished);
   MOZ_DIAGNOSTIC_ASSERT(aCallback);
   MOZ_DIAGNOSTIC_ASSERT(mFinalCallback != aCallback);
@@ -64,7 +63,7 @@ ServiceWorkerJob::AppendResultCallback(Callback* aCallback)
 void
 ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aJob);
   MOZ_ASSERT(aJob->mState == State::Initial);
 
@@ -83,7 +82,7 @@ ServiceWorkerJob::StealResultCallbacksFrom(ServiceWorkerJob* aJob)
 void
 ServiceWorkerJob::Start(Callback* aFinalCallback)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mCanceled);
 
   MOZ_DIAGNOSTIC_ASSERT(aFinalCallback);
@@ -115,7 +114,7 @@ ServiceWorkerJob::Start(Callback* aFinalCallback)
 void
 ServiceWorkerJob::Cancel()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mCanceled);
   mCanceled = true;
 }
@@ -132,7 +131,7 @@ ServiceWorkerJob::ServiceWorkerJob(Type aType,
   , mCanceled(false)
   , mResultCallbacksInvoked(false)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPrincipal);
   MOZ_ASSERT(!mScope.IsEmpty());
   // Some job types may have an empty script spec
@@ -140,7 +139,7 @@ ServiceWorkerJob::ServiceWorkerJob(Type aType,
 
 ServiceWorkerJob::~ServiceWorkerJob()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   // Jobs must finish or never be started.  Destroying an actively running
   // job is an error.
   MOZ_ASSERT(mState != State::Started);
@@ -150,7 +149,7 @@ ServiceWorkerJob::~ServiceWorkerJob()
 void
 ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(mState == State::Started);
 
   MOZ_DIAGNOSTIC_ASSERT(!mResultCallbacksInvoked);
@@ -182,7 +181,7 @@ ServiceWorkerJob::InvokeResultCallbacks(nsresult aRv)
 void
 ServiceWorkerJob::Finish(ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // Avoid double-completion because it can result on operating on cleaned
   // up data.  This should not happen, though, so also assert to try to
@@ -238,6 +237,5 @@ ServiceWorkerJob::Finish(nsresult aRv)
   Finish(converted);
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

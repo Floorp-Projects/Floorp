@@ -26,7 +26,7 @@
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
-#include "mozilla/dom/workers/ServiceWorkerRegistrationInfo.h"
+#include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -46,15 +46,12 @@ class PrincipalInfo;
 
 namespace dom {
 
-class ServiceWorkerRegistrar;
-class ServiceWorkerRegistrationListener;
-
-namespace workers {
-
 class ServiceWorkerInfo;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
 class ServiceWorkerPrivate;
+class ServiceWorkerRegistrar;
+class ServiceWorkerRegistrationListener;
 
 class ServiceWorkerUpdateFinishCallback
 {
@@ -492,7 +489,6 @@ private:
                         const nsAString& aBehavior);
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 

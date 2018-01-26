@@ -34,7 +34,8 @@ using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
 namespace serviceWorkerScriptCache {
 
@@ -49,7 +50,7 @@ already_AddRefed<CacheStorage>
 CreateCacheStorage(JSContext* aCx, nsIPrincipal* aPrincipal, ErrorResult& aRv,
                    JS::MutableHandle<JSObject*> aSandbox)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
@@ -109,7 +110,7 @@ public:
     , mIsFromCache(false)
   {
     MOZ_ASSERT(aManager);
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   nsresult
@@ -129,13 +130,13 @@ public:
 
   const nsString& URL() const
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     return mURL;
   }
 
   const nsString& Buffer() const
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     return mBuffer;
   }
 
@@ -173,7 +174,7 @@ public:
 private:
   ~CompareNetwork()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mCC);
   }
 
@@ -231,7 +232,7 @@ public:
     , mInCache(false)
   {
     MOZ_ASSERT(aCN);
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   nsresult
@@ -251,7 +252,7 @@ public:
 
   const nsString& Buffer() const
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     return mBuffer;
   }
 
@@ -264,7 +265,7 @@ public:
 private:
   ~CompareCache()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   void
@@ -301,7 +302,7 @@ public:
     , mPendingCount(0)
     , mAreScriptsEqual(true)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aRegistration);
   }
 
@@ -318,7 +319,7 @@ public:
   CacheStorage*
   CacheStorage_()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mCacheStorage);
     return mCacheStorage;
   }
@@ -330,7 +331,7 @@ public:
                      const nsACString& aMaxScope,
                      nsLoadFlags aLoadFlags)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     if (mState == Finished) {
       return;
     }
@@ -373,7 +374,7 @@ public:
 private:
   ~CompareManager()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mCNList.Length() == 0);
   }
 
@@ -388,7 +389,7 @@ private:
               bool aIsMainScript,
               Cache* const aCache = nullptr)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
 
     MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization ||
                           mState == WaitingForScriptOrComparisonResult);
@@ -560,7 +561,7 @@ private:
   void
   WriteNetworkBufferToNewCache()
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mCNList.Length() != 0);
     MOZ_ASSERT(mCacheStorage);
     MOZ_ASSERT(mNewCacheName.IsEmpty());
@@ -587,7 +588,7 @@ private:
   nsresult
   WriteToCache(JSContext* aCx, Cache* aCache, CompareNetwork* aCN)
   {
-    AssertIsOnMainThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aCache);
     MOZ_ASSERT(aCN);
     MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForOpen);
@@ -686,7 +687,7 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
                            Cache* const aCache)
 {
   MOZ_ASSERT(aPrincipal);
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
@@ -854,7 +855,7 @@ CompareNetwork::CacheFinish(nsresult aRv)
 void
 CompareNetwork::Abort()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState != Finished) {
     mState = Finished;
@@ -873,7 +874,7 @@ CompareNetwork::Abort()
 NS_IMETHODIMP
 CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState == Finished) {
     return NS_OK;
@@ -939,7 +940,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
                                  nsresult aStatus, uint32_t aLen,
                                  const uint8_t* aString)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState == Finished) {
     return NS_OK;
@@ -1058,7 +1059,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
 nsresult
 CompareCache::Initialize(Cache* const aCache, const nsAString& aURL)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCache);
   MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization);
 
@@ -1098,7 +1099,7 @@ CompareCache::Finish(nsresult aStatus, bool aInCache)
 void
 CompareCache::Abort()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState != Finished) {
     mState = Finished;
@@ -1115,7 +1116,7 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
                                nsresult aStatus, uint32_t aLen,
                                const uint8_t* aString)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState == Finished) {
     return aStatus;
@@ -1146,7 +1147,7 @@ CompareCache::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
 void
 CompareCache::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   switch (mState) {
     case Finished:
@@ -1162,7 +1163,7 @@ CompareCache::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 void
 CompareCache::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState != Finished) {
     Finish(NS_ERROR_FAILURE, false);
@@ -1173,7 +1174,7 @@ CompareCache::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 void
 CompareCache::ManageValueResult(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   // The cache returns undefined if the object is not stored.
   if (aValue.isUndefined()) {
@@ -1247,7 +1248,7 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
                            const nsAString& aCacheName,
                            nsILoadGroup* aLoadGroup)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(mPendingCount == 0);
   MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization);
@@ -1306,7 +1307,7 @@ CompareManager::Initialize(nsIPrincipal* aPrincipal,
 void
 CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mCallback);
 
   switch (mState) {
@@ -1340,7 +1341,7 @@ CompareManager::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 void
 CompareManager::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   switch (mState) {
     case Finished:
       return;
@@ -1366,7 +1367,7 @@ CompareManager::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 void
 CompareManager::Fail(nsresult aStatus)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   mCallback->ComparisonResult(aStatus, false /* aIsEqual */,
                               EmptyString(), EmptyCString(), mLoadFlags);
   Cleanup();
@@ -1375,7 +1376,7 @@ CompareManager::Fail(nsresult aStatus)
 void
 CompareManager::Cleanup()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mState != Finished) {
     mState = Finished;
@@ -1396,7 +1397,7 @@ CompareManager::Cleanup()
 nsresult
 PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
   if (aCacheName.IsEmpty()) {
@@ -1454,7 +1455,7 @@ Compare(ServiceWorkerRegistrationInfo* aRegistration,
         const nsAString& aURL, CompareCallback* aCallback,
         nsILoadGroup* aLoadGroup)
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(!aURL.IsEmpty());
@@ -1472,4 +1473,5 @@ Compare(ServiceWorkerRegistrationInfo* aRegistration,
 
 } // namespace serviceWorkerScriptCache
 
-END_WORKERS_NAMESPACE
+} // namespace dom
+} // namespace mozilla

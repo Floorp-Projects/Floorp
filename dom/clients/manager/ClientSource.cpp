@@ -18,9 +18,9 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
-#include "mozilla/dom/workers/bindings/ServiceWorker.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
@@ -29,9 +29,6 @@ namespace mozilla {
 namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
-using mozilla::dom::workers::ServiceWorkerInfo;
-using mozilla::dom::workers::ServiceWorkerManager;
-using mozilla::dom::workers::ServiceWorkerRegistrationInfo;
 using mozilla::dom::workers::WorkerPrivate;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;

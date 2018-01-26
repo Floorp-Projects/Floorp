@@ -16,10 +16,7 @@ namespace dom {
 
 class Promise;
 struct RegistrationOptions;
-
-namespace workers {
 class ServiceWorker;
-} // namespace workers
 
 // Lightweight serviceWorker APIs collection.
 class ServiceWorkerContainer final : public DOMEventTargetHelper
@@ -44,7 +41,7 @@ public:
            const RegistrationOptions& aOptions,
            ErrorResult& aRv);
 
-  already_AddRefed<workers::ServiceWorker>
+  already_AddRefed<ServiceWorker>
   GetController();
 
   already_AddRefed<Promise>
@@ -76,7 +73,7 @@ private:
 
   // This only changes when a worker hijacks everything in its scope by calling
   // claim.
-  RefPtr<workers::ServiceWorker> mControllerWorker;
+  RefPtr<ServiceWorker> mControllerWorker;
 
   RefPtr<Promise> mReadyPromise;
 };
@@ -84,4 +81,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif /* mozilla_dom_workers_serviceworkercontainer_h__ */
+#endif /* mozilla_dom_serviceworkercontainer_h__ */

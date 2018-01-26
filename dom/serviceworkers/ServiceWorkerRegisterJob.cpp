@@ -10,7 +10,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
     nsIPrincipal* aPrincipal,
@@ -26,7 +25,7 @@ ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(
 void
 ServiceWorkerRegisterJob::AsyncExecute()
 {
-  AssertIsOnMainThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (Canceled() || !swm) {
@@ -77,6 +76,5 @@ ServiceWorkerRegisterJob::~ServiceWorkerRegisterJob()
 {
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

@@ -59,7 +59,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"

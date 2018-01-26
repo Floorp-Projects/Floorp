@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerregisterjob_h
-#define mozilla_dom_workers_serviceworkerregisterjob_h
+#ifndef mozilla_dom_serviceworkerregisterjob_h
+#define mozilla_dom_serviceworkerregisterjob_h
 
 #include "ServiceWorkerUpdateJob.h"
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 // The register job.  This implements the steps in the spec Register algorithm,
 // but then uses ServiceWorkerUpdateJob to implement the Update and Install
@@ -34,8 +33,7 @@ private:
   virtual ~ServiceWorkerRegisterJob();
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworkerregisterjob_h
+#endif // mozilla_dom_serviceworkerregisterjob_h

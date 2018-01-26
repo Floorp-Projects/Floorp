@@ -4,15 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerjobqueue_h
-#define mozilla_dom_workers_serviceworkerjobqueue_h
+#ifndef mozilla_dom_serviceworkerjobqueue_h
+#define mozilla_dom_serviceworkerjobqueue_h
 
 #include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorkerJob;
 
@@ -42,8 +41,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue)
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworkerjobqueue_h
+#endif // mozilla_dom_serviceworkerjobqueue_h

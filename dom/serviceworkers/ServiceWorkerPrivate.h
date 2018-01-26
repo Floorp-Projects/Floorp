@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_serviceworkerprivate_h
-#define mozilla_dom_workers_serviceworkerprivate_h
+#ifndef mozilla_dom_serviceworkerprivate_h
+#define mozilla_dom_serviceworkerprivate_h
 
 #include "nsCOMPtr.h"
 #include "WorkerPrivate.h"
@@ -19,17 +19,14 @@ namespace mozilla {
 namespace dom {
 
 class ClientInfoAndState;
-
-namespace workers {
-
+class KeepAliveToken;
 class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
-class KeepAliveToken;
 
 class LifeCycleEventCallback : public Runnable
 {
 public:
-  LifeCycleEventCallback() : Runnable("dom::workers::LifeCycleEventCallback") {}
+  LifeCycleEventCallback() : Runnable("dom::LifeCycleEventCallback") {}
 
   // Called on the worker thread.
   virtual void
@@ -214,7 +211,7 @@ private:
   // The WorkerPrivate object can only be closed by this class or by the
   // RuntimeService class if gecko is shutting down. Closing the worker
   // multiple times is OK, since the second attempt will be a no-op.
-  RefPtr<WorkerPrivate> mWorkerPrivate;
+  RefPtr<workers::WorkerPrivate> mWorkerPrivate;
 
   nsCOMPtr<nsITimer> mIdleWorkerTimer;
 
@@ -234,11 +231,10 @@ private:
 
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
-  nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
+  nsTArray<RefPtr<workers::WorkerRunnable>> mPendingFunctionalEvents;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_workers_serviceworkerprivate_h
+#endif // mozilla_dom_serviceworkerprivate_h

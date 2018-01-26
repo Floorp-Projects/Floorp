@@ -9,7 +9,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 ServiceWorkerUpdaterChild::ServiceWorkerUpdaterChild(GenericPromise* aPromise,
                                                      CancelableRunnable* aSuccessRunnable,
@@ -64,6 +63,5 @@ ServiceWorkerUpdaterChild::ActorDestroy(ActorDestroyReason aWhy)
   mPromiseHolder.DisconnectIfExists();
 }
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla

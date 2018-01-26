@@ -13,7 +13,6 @@
 
 namespace mozilla {
 namespace dom {
-namespace workers {
 
 class ServiceWorkerUpdaterChild final : public PServiceWorkerUpdaterChild
 {
@@ -35,7 +34,6 @@ private:
   RefPtr<CancelableRunnable> mFailureRunnable;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 

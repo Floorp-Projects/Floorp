@@ -26,11 +26,6 @@ class Promise;
 class PushManager;
 class WorkerListener;
 
-namespace workers {
-class ServiceWorker;
-class WorkerPrivate;
-} // namespace workers
-
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
 // updatefound event and invalidating ServiceWorker instances.
 class ServiceWorkerRegistrationListener
@@ -72,13 +67,13 @@ public:
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual already_AddRefed<workers::ServiceWorker>
+  virtual already_AddRefed<ServiceWorker>
   GetInstalling() = 0;
 
-  virtual already_AddRefed<workers::ServiceWorker>
+  virtual already_AddRefed<ServiceWorker>
   GetWaiting() = 0;
 
-  virtual already_AddRefed<workers::ServiceWorker>
+  virtual already_AddRefed<ServiceWorker>
   GetActive() = 0;
 
   virtual void

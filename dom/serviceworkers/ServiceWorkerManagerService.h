@@ -22,11 +22,8 @@ class PrincipalInfo;
 
 namespace dom {
 
-class ServiceWorkerRegistrationData;
-
-namespace workers {
-
 class ServiceWorkerManagerParent;
+class ServiceWorkerRegistrationData;
 class ServiceWorkerUpdaterParent;
 
 class ServiceWorkerManagerService final
@@ -78,7 +75,6 @@ private:
   nsTArray<PendingUpdaterActor> mPendingUpdaterActors;
 };
 
-} // namespace workers
 } // namespace dom
 } // namespace mozilla
 
