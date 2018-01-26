@@ -1917,7 +1917,7 @@ nsHTMLDocument::GetNumFormsSynchronous()
   return mNumForms;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
 {
   aAlinkColor.Truncate();
@@ -1926,22 +1926,18 @@ nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
   if (body) {
     body->GetALink(aAlinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
 {
   HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetALink(aAlinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
 {
   aLinkColor.Truncate();
@@ -1950,22 +1946,18 @@ nsHTMLDocument::GetLinkColor(nsAString& aLinkColor)
   if (body) {
     body->GetLink(aLinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
 {
   HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetLink(aLinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
 {
   aVlinkColor.Truncate();
@@ -1974,22 +1966,18 @@ nsHTMLDocument::GetVlinkColor(nsAString& aVlinkColor)
   if (body) {
     body->GetVLink(aVlinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
 {
   HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetVLink(aVlinkColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetBgColor(nsAString& aBgColor)
 {
   aBgColor.Truncate();
@@ -1998,22 +1986,18 @@ nsHTMLDocument::GetBgColor(nsAString& aBgColor)
   if (body) {
     body->GetBgColor(aBgColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetBgColor(const nsAString& aBgColor)
 {
   HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetBgColor(aBgColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetFgColor(nsAString& aFgColor)
 {
   aFgColor.Truncate();
@@ -2022,19 +2006,15 @@ nsHTMLDocument::GetFgColor(nsAString& aFgColor)
   if (body) {
     body->GetText(aFgColor);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetFgColor(const nsAString& aFgColor)
 {
   HTMLBodyElement* body = GetBodyElement();
   if (body) {
     body->SetText(aFgColor);
   }
-
-  return NS_OK;
 }
 
 

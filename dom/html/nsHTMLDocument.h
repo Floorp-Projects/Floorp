@@ -222,11 +222,16 @@ public:
                              mozilla::dom::CallerType aCallerType);
   void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
                          mozilla::ErrorResult& rv);
-  // The XPCOM Get/SetFgColor work OK for us, since they never throw.
-  // The XPCOM Get/SetLinkColor work OK for us, since they never throw.
-  // The XPCOM Get/SetVLinkColor work OK for us, since they never throw.
-  // The XPCOM Get/SetALinkColor work OK for us, since they never throw.
-  // The XPCOM Get/SetBgColor work OK for us, since they never throw.
+  void GetFgColor(nsAString& aFgColor);
+  void SetFgColor(const nsAString& aFgColor);
+  void GetLinkColor(nsAString& aLinkColor);
+  void SetLinkColor(const nsAString& aLinkColor);
+  void GetVlinkColor(nsAString& aAvlinkColor);
+  void SetVlinkColor(const nsAString& aVlinkColor);
+  void GetAlinkColor(nsAString& aAlinkColor);
+  void SetAlinkColor(const nsAString& aAlinkColor);
+  void GetBgColor(nsAString& aBgColor);
+  void SetBgColor(const nsAString& aBgColor);
   nsIHTMLCollection* Anchors();
   nsIHTMLCollection* Applets();
   void Clear() const
