@@ -26,7 +26,8 @@ public:
   *
   * @param aData Font data
   */
-  gfxDWriteFontFileStream(FallibleTArray<uint8_t> *aData,
+  gfxDWriteFontFileStream(const uint8_t* aData,
+                          uint32_t aLength,
                           uint64_t aFontFileKey);
   ~gfxDWriteFontFileStream();
 
@@ -82,11 +83,16 @@ private:
   uint64_t mFontFileKey;
 };
 
-gfxDWriteFontFileStream::gfxDWriteFontFileStream(FallibleTArray<uint8_t> *aData,
+gfxDWriteFontFileStream::gfxDWriteFontFileStream(const uint8_t* aData,
+                                                 uint32_t aLength,
                                                  uint64_t aFontFileKey)
   : mFontFileKey(aFontFileKey)
 {
-  mData.SwapElements(*aData);
+  // If this fails, mData will remain empty. That's OK: GetFileSize()
+  // will then return 0, etc., and the font just won't load.
+  if (!mData.AppendElements(aData, aLength, mozilla::fallible_t())) {
+    NS_WARNING("Failed to store data in gfxDWriteFontFileStream");
+  }
 }
 
 gfxDWriteFontFileStream::~gfxDWriteFontFileStream()
@@ -151,7 +157,8 @@ gfxDWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
 
 /* static */
 HRESULT
-gfxDWriteFontFileLoader::CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData,
+gfxDWriteFontFileLoader::CreateCustomFontFile(const uint8_t* aFontData,
+                                              uint32_t aLength,
                                               IDWriteFontFile** aFontFile,
                                               IDWriteFontFileStream** aFontFileStream)
 {
@@ -165,7 +172,8 @@ gfxDWriteFontFileLoader::CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData
   }
 
   uint64_t fontFileKey = sNextFontFileKey++;
-  RefPtr<IDWriteFontFileStream> ffsRef = new gfxDWriteFontFileStream(&aFontData, fontFileKey);
+  RefPtr<IDWriteFontFileStream> ffsRef =
+      new gfxDWriteFontFileStream(aFontData, aLength, fontFileKey);
   sFontFileStreams[fontFileKey] = ffsRef;
 
   RefPtr<IDWriteFontFile> fontFile;
