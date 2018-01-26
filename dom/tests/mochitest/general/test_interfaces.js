@@ -1027,47 +1027,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SVGPathElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSeg", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegArcAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegArcRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegClosePath", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoCubicAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoCubicRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoCubicSmoothAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoCubicSmoothRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoQuadraticAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoQuadraticRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoQuadraticSmoothAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegCurvetoQuadraticSmoothRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoHorizontalAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoHorizontalRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoVerticalAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegLinetoVerticalRel", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SVGPathSegList", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegMovetoAbs", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SVGPathSegMovetoRel", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SVGPatternElement", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
