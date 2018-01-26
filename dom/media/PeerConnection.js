@@ -1274,7 +1274,7 @@ class RTCPeerConnection {
     // the local offset, likewise store it for reuse.
     if (cache.tsNowInRtpSourceTime !== undefined) {
       cache.tsNowInRtpSourceTime = this._impl.getNowInRtpSourceReferenceTime();
-      cache.jsTimestamp = new Date().getTime();
+      cache.jsTimestamp = this._win.performance.now() + this._win.performance.timeOrigin;
       cache.timestampOffset = cache.jsTimestamp - cache.tsNowInRtpSourceTime;
     }
     let id = receiver.track.id;
