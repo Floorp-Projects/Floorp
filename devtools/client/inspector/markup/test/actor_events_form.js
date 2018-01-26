@@ -11,7 +11,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {ActorClassWithSpec, Actor, FrontClassWithSpec, Front, generateActorSpec} =
   require("devtools/shared/protocol");
 
-const {NodeActor} = require("devtools/server/actors/inspector/inspector");
+const {NodeActor} = require("devtools/server/actors/inspector/node-actor");
 
 var eventsSpec = generateActorSpec({
   typeName: "eventsFormActor",
