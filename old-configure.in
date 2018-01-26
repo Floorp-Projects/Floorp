@@ -4085,8 +4085,8 @@ dnl ========================================================
 
 MOZ_TREE_CAIRO=1
 MOZ_ARG_ENABLE_BOOL(system-cairo,
-[  --enable-system-cairo   Use system cairo (located with pkgconfig)],
-MOZ_TREE_CAIRO=,
+[ --enable-system-cairo  Obsolete: do not use this option],
+AC_MSG_ERROR(--enable-system-cairo is not supported),
 MOZ_TREE_CAIRO=1 )
 
 MOZ_TREE_PIXMAN=1
@@ -4096,111 +4096,87 @@ MOZ_TREE_PIXMAN=,
 MOZ_TREE_PIXMAN=force,
 MOZ_TREE_PIXMAN=1 )
 
-# System cairo depends on system pixman
-if test "$MOZ_TREE_PIXMAN" = "force"; then
-    if test -z "$MOZ_TREE_CAIRO"; then
-        AC_MSG_ERROR([--disable-system-pixman is incompatible with --enable-system-cairo.])
-    else
-        MOZ_TREE_PIXMAN=1
-    fi
-elif test -z "$MOZ_TREE_CAIRO"; then
-    MOZ_TREE_PIXMAN=
-fi
-
 if test "$MOZ_TREE_PIXMAN"; then
     AC_DEFINE(MOZ_TREE_PIXMAN)
 else
     PKG_CHECK_MODULES(MOZ_PIXMAN, pixman-1 >= 0.19.2)
 fi
 
-if test "$MOZ_TREE_CAIRO"; then
-    MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
-    AC_DEFINE(MOZ_TREE_CAIRO)
+MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
+AC_DEFINE(MOZ_TREE_CAIRO)
 
-    if test "$OS_ARCH" = "WINNT"; then
-        # For now we assume that we will have a uint64_t available through
-        # one of the above headers or mozstdint.h.
-        AC_DEFINE(HAVE_UINT64_T)
-    fi
-
-    # Define macros for cairo-features.h
-    TEE_SURFACE_FEATURE="#define CAIRO_HAS_TEE_SURFACE 1"
-    if test "$MOZ_X11"; then
-        XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
-        XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
-        PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
-    fi
-    if test "$_HAVE_FREETYPE2"; then
-        FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        MOZ_ENABLE_CAIRO_FT=1
-        CAIRO_FT_CFLAGS="$FT2_CFLAGS"
-    fi
-
-    case "$MOZ_WIDGET_TOOLKIT" in
-      cocoa | uikit)
-        QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
-        QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
-        QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
-        ;;
-      windows)
-        WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
-        WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
-        WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-        WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
-        MOZ_ENABLE_D2D_SURFACE=1
-
-        if test "$COMPILE_ENVIRONMENT"; then
-
-          dnl D3D10 Layers depend on D2D Surfaces.
-          if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
-            MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
-          fi
-        fi
-        ;;
-    esac
-    if test "$USE_FC_FREETYPE"; then
-        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
-    fi
-    AC_SUBST(MOZ_ENABLE_CAIRO_FT)
-    AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
-    AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
-
-    AC_SUBST(PS_SURFACE_FEATURE)
-    AC_SUBST(SVG_SURFACE_FEATURE)
-    AC_SUBST(XLIB_SURFACE_FEATURE)
-    AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
-    AC_SUBST(QUARTZ_SURFACE_FEATURE)
-    AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
-    AC_SUBST(WIN32_SURFACE_FEATURE)
-    AC_SUBST(OS2_SURFACE_FEATURE)
-    AC_SUBST(DIRECTFB_SURFACE_FEATURE)
-    AC_SUBST(FT_FONT_FEATURE)
-    AC_SUBST(FC_FONT_FEATURE)
-    AC_SUBST(WIN32_FONT_FEATURE)
-    AC_SUBST(WIN32_DWRITE_FONT_FEATURE)
-    AC_SUBST(WIN32_D2D_SURFACE_FEATURE)
-    AC_SUBST(QUARTZ_FONT_FEATURE)
-    AC_SUBST(PNG_FUNCTIONS_FEATURE)
-    AC_SUBST(QT_SURFACE_FEATURE)
-    AC_SUBST(TEE_SURFACE_FEATURE)
-
-    if test "$MOZ_X11"; then
-        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
-    fi
-
-    CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
-else
-    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
-    MOZ_CAIRO_CFLAGS="$CAIRO_CFLAGS"
-    MOZ_CAIRO_LIBS="$CAIRO_LIBS"
-    PKG_CHECK_MODULES(CAIRO_TEE, cairo-tee >= $CAIRO_VERSION)
-    if test "$MOZ_X11"; then
-        PKG_CHECK_MODULES(CAIRO_XRENDER, cairo-xlib-xrender >= $CAIRO_VERSION)
-        MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS $XLDFLAGS $CAIRO_XRENDER_LIBS"
-        MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_LIBS"
-        MOZ_CAIRO_CFLAGS="$MOZ_CAIRO_CFLAGS $CAIRO_XRENDER_CFLAGS"
-    fi
+if test "$OS_ARCH" = "WINNT"; then
+    # For now we assume that we will have a uint64_t available through
+    # one of the above headers or mozstdint.h.
+    AC_DEFINE(HAVE_UINT64_T)
 fi
+
+# Define macros for cairo-features.h
+TEE_SURFACE_FEATURE="#define CAIRO_HAS_TEE_SURFACE 1"
+if test "$MOZ_X11"; then
+    XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
+    XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
+    PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
+fi
+if test "$_HAVE_FREETYPE2"; then
+    FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
+    MOZ_ENABLE_CAIRO_FT=1
+    CAIRO_FT_CFLAGS="$FT2_CFLAGS"
+fi
+
+case "$MOZ_WIDGET_TOOLKIT" in
+  cocoa | uikit)
+    QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
+    QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
+    QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
+    ;;
+  windows)
+    WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
+    WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
+    WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+    WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
+    MOZ_ENABLE_D2D_SURFACE=1
+
+    if test "$COMPILE_ENVIRONMENT"; then
+
+      dnl D3D10 Layers depend on D2D Surfaces.
+      if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
+        MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
+      fi
+    fi
+    ;;
+esac
+if test "$USE_FC_FREETYPE"; then
+    FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
+fi
+AC_SUBST(MOZ_ENABLE_CAIRO_FT)
+AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
+AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
+
+AC_SUBST(PS_SURFACE_FEATURE)
+AC_SUBST(SVG_SURFACE_FEATURE)
+AC_SUBST(XLIB_SURFACE_FEATURE)
+AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
+AC_SUBST(QUARTZ_SURFACE_FEATURE)
+AC_SUBST(QUARTZ_IMAGE_SURFACE_FEATURE)
+AC_SUBST(WIN32_SURFACE_FEATURE)
+AC_SUBST(OS2_SURFACE_FEATURE)
+AC_SUBST(DIRECTFB_SURFACE_FEATURE)
+AC_SUBST(FT_FONT_FEATURE)
+AC_SUBST(FC_FONT_FEATURE)
+AC_SUBST(WIN32_FONT_FEATURE)
+AC_SUBST(WIN32_DWRITE_FONT_FEATURE)
+AC_SUBST(WIN32_D2D_SURFACE_FEATURE)
+AC_SUBST(QUARTZ_FONT_FEATURE)
+AC_SUBST(PNG_FUNCTIONS_FEATURE)
+AC_SUBST(QT_SURFACE_FEATURE)
+AC_SUBST(TEE_SURFACE_FEATURE)
+
+if test "$MOZ_X11"; then
+    MOZ_CAIRO_OSLIBS="$MOZ_CAIRO_OSLIBS $XLDFLAGS -lXrender"
+fi
+
+CAIRO_FEATURES_H=gfx/cairo/cairo/src/cairo-features.h
 
 case "$MOZ_WIDGET_TOOLKIT" in
 android)
