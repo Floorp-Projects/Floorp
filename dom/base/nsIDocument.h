@@ -1279,6 +1279,8 @@ public:
   // Get the "body" in the sense of document.body: The first <body> or
   // <frameset> that's a child of a root <html>
   nsGenericHTMLElement* GetBody();
+  // Set the "body" in the sense of document.body.
+  void SetBody(nsGenericHTMLElement* aBody, mozilla::ErrorResult& rv);
 
   /**
    * Accessors to the collection of stylesheets owned by this document.
