@@ -343,12 +343,10 @@ nsGenericHTMLElement::GetOffsetRect(CSSIntRect& aRect)
       // frame for the HTML element so we fail to find the body in the
       // parent chain. We want the offset parent in this case to be
       // the body, so we just get the body element from the document.
-
-      nsCOMPtr<nsIDOMHTMLDocument> html_doc(do_QueryInterface(GetComposedDoc()));
-
-      if (html_doc) {
-        offsetParent = static_cast<nsHTMLDocument*>(html_doc.get())->GetBody();
-      }
+      //
+      // We use GetBodyElement() here, not GetBody(), because we don't want to
+      // end up with framesets here.
+      offsetParent = GetComposedDoc()->GetBodyElement();
     }
   }
 
