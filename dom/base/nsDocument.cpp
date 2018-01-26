@@ -8604,6 +8604,27 @@ nsDocument::EnumerateSubDocuments(nsSubDocEnumFunc aCallback, void *aData)
   }
 }
 
+void
+nsDocument::CollectDescendantDocuments(
+  nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
+  nsDocTestFunc aCallback) const
+{
+  if (!mSubDocuments) {
+    return;
+  }
+
+  for (auto iter = mSubDocuments->Iter(); !iter.Done(); iter.Next()) {
+    auto entry = static_cast<SubDocMapEntry*>(iter.Get());
+    const nsIDocument* subdoc = entry->mSubDocument;
+    if (subdoc) {
+      if (aCallback(subdoc)) {
+        aDescendants.AppendElement(entry->mSubDocument);
+      }
+      subdoc->CollectDescendantDocuments(aDescendants, aCallback);
+    }
+  }
+}
+
 #ifdef DEBUG_bryner
 #define DEBUG_PAGE_CACHE
 #endif
