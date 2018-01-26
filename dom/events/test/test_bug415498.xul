@@ -22,9 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
   <script class="testbody" type="application/javascript"><![CDATA[
 
     /** Test for Bug 415498 **/
-    if (Cc === undefined) {
-    }
-
     SimpleTest.waitForExplicitFinish();
 
     var gTestsIterator;

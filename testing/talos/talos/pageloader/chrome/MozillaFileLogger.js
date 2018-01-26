@@ -9,10 +9,6 @@ function dumpLog(msg) {
   MozillaFileLogger.log(msg);
 }
 
-
-if (Cc === undefined) {
-}
-
 const FOSTREAM_CID = "@mozilla.org/network/file-output-stream;1";
 const LF_CID = "@mozilla.org/file/local;1";
 
