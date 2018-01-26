@@ -55,4 +55,4 @@ tasks with scopes for that particular job, by name.  For example, the
     job from using any of the scopes afforded to the cron task itself (the
     ``..cron:*`` scope).  This is simply because the cron task runs arbitrary
     code from the repo, and that code can be easily modified to create tasks
-    with any scopes that it posesses.
+    with any scopes that it possesses.

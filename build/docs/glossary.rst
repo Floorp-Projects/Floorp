@@ -32,7 +32,7 @@ Glossary
        A large part of the build system consists of copying files
        around to appropriate places. We write out special files
        describing the set of required operations so we can process the
-       actions effeciently. These files are install manifests.
+       actions efficiently. These files are install manifests.
 
    clobber build
       A build performed with an initially empty object directory. All
