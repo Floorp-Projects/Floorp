@@ -61,7 +61,7 @@ public:
 
     bool RequiresAATLayout() const { return mRequiresAAT; }
 
-    bool HasVariations();
+    bool HasVariations() override;
     bool IsCFF();
 
     // Return true if the font has a 'trak' table (and we can successfully
