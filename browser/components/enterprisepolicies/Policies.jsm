@@ -37,6 +37,14 @@ this.Policies = {
     }
   },
 
+  "BlockAboutProfiles": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("about:profiles", true);
+      }
+    }
+  },
+
   "DisableAppUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {
