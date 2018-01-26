@@ -123,7 +123,7 @@ HTMLEditor::HideInlineTableEditingUI()
 }
 
 nsresult
-HTMLEditor::DoInlineTableEditingAction(Element& aElement)
+HTMLEditor::DoInlineTableEditingAction(const Element& aElement)
 {
   nsAutoString anonclass;
   aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass, anonclass);

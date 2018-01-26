@@ -472,7 +472,7 @@ public:
    * activation of an inline table editing UI element
    * @param aUIAnonymousElement [IN] the inline table editing UI element
    */
-  nsresult DoInlineTableEditingAction(Element& aUIAnonymousElement);
+  nsresult DoInlineTableEditingAction(const Element& aUIAnonymousElement);
 
 protected:
   class BlobReader final : public nsIEditorBlobListener
