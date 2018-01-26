@@ -41,8 +41,10 @@
          `Synchronization source audio level < 128. (${source.audioLevel})`);
       ok(source.timestamp,
          `Synchronization source has timestamp (${source.timestamp})`);
-      ok(Number.isInteger(source.timestamp),
-        `Synchronization source timestamp is int (${source.timestamp})`);
+      ok(window.performance.now() + window.performance.timeOrigin -
+         source.timestamp < 2500, // This large value is used because sometimes
+                                  // the testing hardware is _very_ slow
+         `Synchronization source timestamp is close to now`);
       is(source.voiceActivityFlag, undefined,
         "Synchronization source unsupported voiceActivity is undefined");
     }
