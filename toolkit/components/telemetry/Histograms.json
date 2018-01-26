@@ -5393,6 +5393,17 @@
     "n_buckets": 20,
     "description": "PLACES: Average size of a place in the database (bytes)"
   },
+  "PLACES_DATABASE_FAVICONS_FILESIZE_MB": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["mak@mozilla.com", "fx-search@mozilla.com"],
+    "bug_numbers": [1346554],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 5,
+    "high": 100,
+    "n_buckets": 10,
+    "description": "PLACES: Favicons database filesize (MB)"
+  },
   "PLACES_EXPIRATION_STEPS_TO_CLEAN2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

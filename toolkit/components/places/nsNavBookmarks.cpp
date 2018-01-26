@@ -2114,11 +2114,9 @@ nsNavBookmarks::ResultNodeForContainer(int64_t aItemId,
 nsresult
 nsNavBookmarks::QueryFolderChildren(
   int64_t aFolderId,
-  nsNavHistoryQueryOptions* aOriginalOptions,
   nsNavHistoryQueryOptions* aOptions,
   nsCOMArray<nsNavHistoryResultNode>* aChildren)
 {
-  NS_ENSURE_ARG_POINTER(aOriginalOptions);
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_ARG_POINTER(aChildren);
 
@@ -2135,12 +2133,19 @@ nsNavBookmarks::QueryFolderChildren(
     "FROM moz_bookmarks b "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "WHERE b.parent = :parent "
+      "AND (NOT :excludeItems OR "
+           "b.type = :folder OR "
+           "h.url_hash BETWEEN hash('place', 'prefix_lo') AND hash('place', 'prefix_hi')) "
     "ORDER BY b.position ASC"
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("parent"), aFolderId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("folder"), TYPE_FOLDER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("excludeItems"), aOptions->ExcludeItems());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(stmt, &rv);
@@ -2149,7 +2154,7 @@ nsNavBookmarks::QueryFolderChildren(
   int32_t index = -1;
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    rv = ProcessFolderNodeRow(row, aOriginalOptions, aOptions, aChildren, index);
+    rv = ProcessFolderNodeRow(row, aOptions, aChildren, index);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2160,13 +2165,11 @@ nsNavBookmarks::QueryFolderChildren(
 nsresult
 nsNavBookmarks::ProcessFolderNodeRow(
   mozIStorageValueArray* aRow,
-  nsNavHistoryQueryOptions* aOriginalOptions,
   nsNavHistoryQueryOptions* aOptions,
   nsCOMArray<nsNavHistoryResultNode>* aChildren,
   int32_t& aCurrentIndex)
 {
   NS_ENSURE_ARG_POINTER(aRow);
-  NS_ENSURE_ARG_POINTER(aOriginalOptions);
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_ARG_POINTER(aChildren);
 
@@ -2189,14 +2192,10 @@ nsNavBookmarks::ProcessFolderNodeRow(
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->RowToResult(aRow, aOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
-
     uint32_t nodeType;
     node->GetType(&nodeType);
-    if ((nodeType == nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
-         aOptions->ExcludeQueries()) ||
-        (nodeType != nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
-         nodeType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER_SHORTCUT &&
-         aOptions->ExcludeItems())) {
+    if (nodeType == nsINavHistoryResultNode::RESULT_TYPE_QUERY &&
+        aOptions->ExcludeQueries()) {
       return NS_OK;
     }
   }
@@ -2217,7 +2216,9 @@ nsNavBookmarks::ProcessFolderNodeRow(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    node = new nsNavHistoryFolderResultNode(title, aOriginalOptions, id);
+    // Don't use options from the parent to build the new folder node, it will
+    // inherit those later when it's inserted in the result.
+    node = new nsNavHistoryFolderResultNode(title, new nsNavHistoryQueryOptions(), id);
 
     rv = aRow->GetUTF8String(kGetChildrenIndex_Guid, node->mBookmarkGuid);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2232,9 +2233,6 @@ nsNavBookmarks::ProcessFolderNodeRow(
   }
   else {
     // This is a separator.
-    if (aOptions->ExcludeItems()) {
-      return NS_OK;
-    }
     node = new nsNavHistorySeparatorResultNode();
 
     node->mItemId = id;
@@ -2260,7 +2258,6 @@ nsNavBookmarks::ProcessFolderNodeRow(
 nsresult
 nsNavBookmarks::QueryFolderChildrenAsync(
   nsNavHistoryFolderResultNode* aNode,
-  int64_t aFolderId,
   mozIStoragePendingStatement** _pendingStmt)
 {
   NS_ENSURE_ARG_POINTER(aNode);
@@ -2279,11 +2276,18 @@ nsNavBookmarks::QueryFolderChildrenAsync(
     "FROM moz_bookmarks b "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "WHERE b.parent = :parent "
+      "AND (NOT :excludeItems OR "
+           "b.type = :folder OR "
+           "h.url_hash BETWEEN hash('place', 'prefix_lo') AND hash('place', 'prefix_hi')) "
     "ORDER BY b.position ASC"
   );
   NS_ENSURE_STATE(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("parent"), aFolderId);
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("parent"), aNode->mTargetFolderItemId);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("folder"), TYPE_FOLDER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("excludeItems"), aNode->mOptions->ExcludeItems());
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
