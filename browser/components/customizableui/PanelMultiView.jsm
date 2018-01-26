@@ -2,9 +2,49 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Allows a popup panel to host multiple subviews. The main view shown when the
+ * panel is opened may slide out to display a subview, which in turn may lead to
+ * other subviews in a cascade menu pattern.
+ *
+ * The <panel> element should contain a <panelmultiview> element. Views are
+ * declared using <panelview> elements that are usually children of the main
+ * <panelmultiview> element, although they don't need to be, as views can also
+ * be imported into the panel from other panels or popup sets.
+ *
+ * The main view can be declared using the mainViewId attribute, and specific
+ * subviews can slide in using the showSubView method. Backwards navigation can
+ * be done using the goBack method or through a button in the subview headers.
+ *
+ * This diagram shows how <panelview> nodes move during navigation:
+ *
+ *   In this <panelmultiview>     In other panels    Action
+ *             ┌───┬───┬───┐        ┌───┬───┐
+ *             │(A)│ B │ C │        │ D │ E │          Open panel
+ *             └───┴───┴───┘        └───┴───┘
+ *         ┌───┬───┬───┐            ┌───┬───┐
+ *         │ A │(C)│ B │            │ D │ E │          Show subview C
+ *         └───┴───┴───┘            └───┴───┘
+ *     ┌───┬───┬───┬───┐            ┌───┐
+ *     │ A │ C │(D)│ B │            │ E │              Show subview D
+ *     └───┴───┴───┴───┘            └───┘
+ *         ┌───┬───┬───┬───┐        ┌───┐
+ *         │ A │(C)│ D │ B │        │ E │              Go back
+ *         └───┴───┴───┴───┘        └───┘
+ *               │
+ *               └── Currently visible view
+ *
+ * If the <panelmultiview> element is "ephemeral", imported subviews will be
+ * moved out again to the element specified by the viewCacheId attribute, so
+ * that the panel element can be removed safely.
+ */
+
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["PanelMultiView"];
+this.EXPORTED_SYMBOLS = [
+  "PanelMultiView",
+  "PanelView",
+];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
@@ -23,136 +63,37 @@ const TRANSITION_PHASES = Object.freeze({
   END: 4
 });
 
-/**
- * Simple implementation of the sliding window pattern; panels are added to a
- * linked list, in-order, and the currently shown panel is remembered using a
- * marker. The marker shifts as navigation between panels is continued, where
- * the panel at index 0 is always the starting point:
- *           ┌────┬────┬────┬────┐
- *           │▓▓▓▓│    │    │    │ Start
- *           └────┴────┴────┴────┘
- *      ┌────┬────┬────┬────┐
- *      │    │▓▓▓▓│    │    │      Forward
- *      └────┴────┴────┴────┘
- * ┌────┬────┬────┬────┐
- * │    │    │▓▓▓▓│    │           Forward
- * └────┴────┴────┴────┘
- *      ┌────┬────┬────┬────┐
- *      │    │▓▓▓▓│    │    │      Back
- *      └────┴────┴────┴────┘
- */
-class SlidingPanelViews extends Array {
-  constructor() {
-    super();
-    this._marker = 0;
-  }
-
-  /**
-   * Get the index that points to the currently selected view.
-   *
-   * @return {Number}
-   */
-  get current() {
-    return this._marker;
-  }
-
-  /**
-   * Setter for the current index, which changes the order of elements and
-   * updates the internal marker for the currently selected view.
-   * We're manipulating the array directly to have it reflect the order of
-   * navigation, instead of continuously growing the array with the next selected
-   * view to keep memory usage within reasonable proportions. With this method,
-   * the data structure grows no larger than the number of panels inside the
-   * panelMultiView.
-   *
-   * @param  {Number} index Index of the item to move to the current position.
-   * @return {Number} The new marker index.
-   */
-  set current(index) {
-    if (index == this._marker) {
-      // Never change a winning team.
-      return index;
-    }
-    if (index == -1 || index > (this.length - 1)) {
-      throw new Error(`SlidingPanelViews :: index ${index} out of bounds`);
-    }
-
-    let view = this.splice(index, 1)[0];
-    if (this._marker > index) {
-      // Correct the current marker if the view-to-select was removed somewhere
-      // before it.
-      --this._marker;
-    }
-    // Then add the view-to-select right after the currently selected view.
-    this.splice(++this._marker, 0, view);
-    return this._marker;
-  }
-
-  /**
-   * Getter for the currently selected view node.
-   *
-   * @return {panelview}
-   */
-  get currentView() {
-    return this[this._marker];
-  }
-
-  /**
-   * Setter for the currently selected view node.
-   *
-   * @param  {panelview} view
-   * @return {Number} Index of the currently selected view.
-   */
-  set currentView(view) {
-    if (!view)
-      return this.current;
-    // This will throw an error if the view could not be found.
-    return this.current = this.indexOf(view);
-  }
-
-  /**
-   * Getter for the previous view, which is always positioned one position after
-   * the current view.
-   *
-   * @return {panelview}
-   */
-  get previousView() {
-    return this[this._marker + 1];
-  }
-
-  /**
-   * Going back is an explicit action on the data structure, moving the marker
-   * one step back.
-   *
-   * @return {Array} A list of two items: the newly selected view and the previous one.
-   */
-  back() {
-    if (this._marker > 0)
-      --this._marker;
-    return [this.currentView, this.previousView];
-  }
-
-  /**
-   * Reset the data structure to its original construct, removing all references
-   * to view nodes.
-   */
-  clear() {
-    this._marker = 0;
-    this.splice(0, this.length);
-  }
-}
+let gNodeToObjectMap = new WeakMap();
+let gMultiLineElementsMap = new WeakMap();
 
 /**
- * This is the implementation of the panelUI.xml XBL binding, moved to this
- * module, to make it easier to fork the logic for the newer photon structure.
- * Goals are:
- * 1. to make it easier to programmatically extend the list of panels,
- * 2. allow for navigation between panels multiple levels deep and
- * 3. maintain the pre-photon structure with as little effort possible.
+ * Allows associating an object to a node lazily using a weak map.
  *
- * @type {PanelMultiView}
+ * Classes deriving from this one may be easily converted to Custom Elements,
+ * although they would lose the ability of being associated lazily.
  */
-this.PanelMultiView = class {
+this.AssociatedToNode = class {
+  constructor(node) {
+    /**
+     * Node associated to this object.
+     */
+    this.node = node;
+  }
+
+  /**
+   * Retrieves the instance associated with the given node, constructing a new
+   * one if necessary. When the last reference to the node is released, the
+   * object instance will be garbage collected as well.
+   */
+  static forNode(node) {
+    let associatedToNode = gNodeToObjectMap.get(node);
+    if (!associatedToNode) {
+      associatedToNode = new this(node);
+      gNodeToObjectMap.set(node, associatedToNode);
+    }
+    return associatedToNode;
+  }
+
   get document() {
     return this.node.ownerDocument;
   }
@@ -161,22 +102,49 @@ this.PanelMultiView = class {
     return this.node.ownerGlobal;
   }
 
+  /**
+   * nsIDOMWindowUtils for the window of this node.
+   */
+  get _dwu() {
+    if (this.__dwu)
+      return this.__dwu;
+    return this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDOMWindowUtils);
+  }
+
+  /**
+   * Dispatches a custom event on this element.
+   *
+   * @param  {String}    eventName Name of the event to dispatch.
+   * @param  {Object}    [detail]  Event detail object. Optional.
+   * @param  {Boolean}   cancelable If the event can be canceled.
+   * @return {Boolean} `true` if the event was canceled by an event handler, `false`
+   *                   otherwise.
+   */
+  dispatchCustomEvent(eventName, detail, cancelable = false) {
+    let event = new this.window.CustomEvent(eventName, {
+      detail,
+      bubbles: true,
+      cancelable,
+    });
+    this.node.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+};
+
+/**
+ * This is associated to <panelmultiview> elements by the panelUI.xml binding.
+ */
+this.PanelMultiView = class extends this.AssociatedToNode {
   get _panel() {
     return this.node.parentNode;
   }
 
-  get showingSubView() {
-    return this._showingSubView;
-  }
   get _mainViewId() {
     return this.node.getAttribute("mainViewId");
   }
-  set _mainViewId(val) {
-    this.node.setAttribute("mainViewId", val);
-    return val;
-  }
   get _mainView() {
-    return this._mainViewId ? this.document.getElementById(this._mainViewId) : null;
+    return this.document.getElementById(this._mainViewId);
   }
 
   get _transitioning() {
@@ -200,20 +168,6 @@ this.PanelMultiView = class {
     return this.node.hasAttribute("ephemeral");
   }
 
-  get panelViews() {
-    if (this._panelViews)
-      return this._panelViews;
-
-    this._panelViews = new SlidingPanelViews();
-    this._panelViews.push(...this.node.getElementsByTagName("panelview"));
-    return this._panelViews;
-  }
-  get _dwu() {
-    if (this.__dwu)
-      return this.__dwu;
-    return this.__dwu = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIDOMWindowUtils);
-  }
   get _screenManager() {
     if (this.__screenManager)
       return this.__screenManager;
@@ -226,13 +180,13 @@ this.PanelMultiView = class {
    *                     dispatched.
    */
   get current() {
-    return this._viewShowing || this._currentSubView;
+    return this.node && (this._viewShowing || this._currentSubView);
   }
   get _currentSubView() {
-    return this.panelViews.currentView;
-  }
-  set _currentSubView(panel) {
-    this.panelViews.currentView = panel;
+    // Peek the top of the stack, but fall back to the main view if the list of
+    // opened views is currently empty.
+    let panelView = this.openViews[this.openViews.length - 1];
+    return (panelView && panelView.node) || this._mainView;
   }
   /**
    * @return {Promise} showSubView() returns a promise, which is kept here for
@@ -241,27 +195,15 @@ this.PanelMultiView = class {
   get currentShowPromise() {
     return this._currentShowPromise || Promise.resolve();
   }
-  get _keyNavigationMap() {
-    if (!this.__keyNavigationMap)
-      this.__keyNavigationMap = new Map();
-    return this.__keyNavigationMap;
-  }
-  get _multiLineElementsMap() {
-    if (!this.__multiLineElementsMap)
-      this.__multiLineElementsMap = new WeakMap();
-    return this.__multiLineElementsMap;
-  }
 
-  constructor(xulNode, testMode = false) {
-    this.node = xulNode;
-    // If `testMode` is `true`, the consumer is only interested in accessing the
-    // methods of this instance. (E.g. in unit tests.)
-    if (testMode)
-      return;
-
-    this._currentSubView = this._subViewObserver = null;
+  connect() {
+    this.knownViews = new Set(Array.from(
+      this.node.getElementsByTagName("panelview"),
+      node => PanelView.forNode(node)));
+    this.openViews = [];
     this._mainViewHeight = 0;
-    this.__transitioning = this._ignoreMutations = this._showingSubView = false;
+    this.__transitioning = false;
+    this.showingSubView = false;
 
     const {document, window} = this;
 
@@ -285,29 +227,17 @@ this.PanelMultiView = class {
     // Set CSS-determined attributes now to prevent a layout flush when we do
     // it when transitioning between panels.
     this._dir = cs.direction;
-    this.setMainView(this.panelViews.currentView);
     this.showMainView();
-
-    this._showingSubView = false;
 
     // Proxy these public properties and methods, as used elsewhere by various
     // parts of the browser, to this instance.
-    ["_mainView", "ignoreMutations", "showingSubView",
-     "_panelViews"].forEach(property => {
-      Object.defineProperty(this.node, property, {
-        enumerable: true,
-        get: () => this[property],
-        set: (val) => this[property] = val
-      });
-    });
-    ["goBack", "descriptionHeightWorkaround", "setMainView", "showMainView",
-     "showSubView"].forEach(method => {
+    ["goBack", "showMainView", "showSubView"].forEach(method => {
       Object.defineProperty(this.node, method, {
         enumerable: true,
         value: (...args) => this[method](...args)
       });
     });
-    ["current", "currentShowPromise"].forEach(property => {
+    ["current", "currentShowPromise", "showingSubView"].forEach(property => {
       Object.defineProperty(this.node, property, {
         enumerable: true,
         get: () => this[property]
@@ -331,7 +261,6 @@ this.PanelMultiView = class {
     }
 
     this._moveOutKids(this._viewStack);
-    this.panelViews.clear();
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
     this._panel.removeEventListener("popuppositioned", this);
@@ -362,87 +291,20 @@ this.PanelMultiView = class {
     }
   }
 
-  _placeSubView(viewNode) {
-    this._viewStack.appendChild(viewNode);
-    if (!this.panelViews.includes(viewNode))
-      this.panelViews.push(viewNode);
-  }
-
-  _setHeader(viewNode, titleText) {
-    // If the header already exists, update or remove it as requested.
-    let header = viewNode.firstChild;
-    if (header && header.classList.contains("panel-header")) {
-      if (titleText) {
-        header.querySelector("label").setAttribute("value", titleText);
-      } else {
-        header.remove();
-      }
-      return;
-    }
-
-    // The header doesn't exist, only create it if needed.
-    if (!titleText) {
-      return;
-    }
-
-    header = this.document.createElement("box");
-    header.classList.add("panel-header");
-
-    let backButton = this.document.createElement("toolbarbutton");
-    backButton.className =
-      "subviewbutton subviewbutton-iconic subviewbutton-back";
-    backButton.setAttribute("closemenu", "none");
-    backButton.setAttribute("tabindex", "0");
-    backButton.setAttribute("tooltip",
-      this.node.getAttribute("data-subviewbutton-tooltip"));
-    backButton.addEventListener("command", () => {
-      // The panelmultiview element may change if the view is reused.
-      viewNode.panelMultiView.goBack();
-      backButton.blur();
-    });
-
-    let label = this.document.createElement("label");
-    label.setAttribute("value", titleText);
-
-    header.append(backButton, label);
-    viewNode.prepend(header);
-  }
-
   goBack() {
-    let [current, previous] = this.panelViews.back();
-    return this.showSubView(current, null, previous);
-  }
-
-  /**
-   * Checks whether it is possible to navigate backwards currently. Returns
-   * false if this is the panelmultiview's mainview, true otherwise.
-   *
-   * @param  {panelview} view View to check, defaults to the currently active view.
-   * @return {Boolean}
-   */
-  _canGoBack(view = this._currentSubView) {
-    return view.id != this._mainViewId;
-  }
-
-  setMainView(aNewMainView) {
-    if (!aNewMainView)
+    if (this.openViews.length < 2) {
+      // This may be called by keyboard navigation or external code when only
+      // the main view is open.
       return;
+    }
 
-    if (this._mainView) {
-      this._mainView.removeAttribute("mainview");
-    }
-    this._mainViewId = aNewMainView.id;
-    aNewMainView.setAttribute("mainview", "true");
-    // If the new main view is not yet in the zeroth position, make sure it's
-    // inserted there.
-    if (aNewMainView.parentNode != this._viewStack &&
-        this._viewStack.firstChild != aNewMainView) {
-      this._viewStack.insertBefore(aNewMainView, this._viewStack.firstChild);
-    }
+    let previous = this.openViews.pop().node;
+    let current = this._currentSubView;
+    this.showSubView(current, null, previous);
   }
 
   showMainView() {
-    if (!this._mainViewId)
+    if (!this.node || !this._mainViewId)
       return Promise.resolve();
 
     return this.showSubView(this._mainView);
@@ -452,31 +314,27 @@ this.PanelMultiView = class {
    * Ensures that all the panelviews, that are currently part of this instance,
    * are hidden, except one specifically.
    *
-   * @param {panelview} [theOne] The panelview DOM node to ensure is visible.
-   *                             Optional.
+   * @param {panelview} [nextPanelView]
+   *        The PanelView object to ensure is visible. Optional.
    */
-  hideAllViewsExcept(theOne = null) {
-    for (let panelview of this._panelViews) {
+  hideAllViewsExcept(nextPanelView = null) {
+    for (let panelView of this.knownViews) {
       // When the panelview was already reparented, don't interfere any more.
-      if (panelview == theOne || !this.node || panelview.panelMultiView != this.node)
+      if (panelView == nextPanelView || !this.node || panelView.node.panelMultiView != this.node)
         continue;
-      if (panelview.hasAttribute("current"))
-        this._dispatchViewEvent(panelview, "ViewHiding");
-      panelview.removeAttribute("current");
+      panelView.current = false;
     }
 
     this._viewShowing = null;
 
-    if (!this.node || !theOne)
+    if (!this.node || !nextPanelView)
       return;
 
-    this._currentSubView = theOne;
-    if (!theOne.hasAttribute("current")) {
-      theOne.setAttribute("current", true);
-      this.descriptionHeightWorkaround(theOne);
-      this._dispatchViewEvent(theOne, "ViewShown");
-    }
-    this._showingSubView = theOne.id != this._mainViewId;
+    if (!this.openViews.includes(nextPanelView))
+      this.openViews.push(nextPanelView);
+
+    nextPanelView.current = true;
+    this.showingSubView = nextPanelView.node.id != this._mainViewId;
   }
 
   showSubView(aViewId, aAnchor, aPreviousView) {
@@ -486,20 +344,23 @@ this.PanelMultiView = class {
       if (!viewNode) {
         viewNode = this.document.getElementById(aViewId);
         if (viewNode) {
-          this._placeSubView(viewNode);
+          this._viewStack.appendChild(viewNode);
         } else {
           throw new Error(`Subview ${aViewId} doesn't exist!`);
         }
       } else if (viewNode.parentNode == this._panelViewCache) {
-        this._placeSubView(viewNode);
+        this._viewStack.appendChild(viewNode);
       }
+
+      let nextPanelView = PanelView.forNode(viewNode);
+      this.knownViews.add(nextPanelView);
 
       viewNode.panelMultiView = this.node;
 
       let reverse = !!aPreviousView;
       if (!reverse) {
-        this._setHeader(viewNode, viewNode.getAttribute("title") ||
-                                  (aAnchor && aAnchor.getAttribute("label")));
+        nextPanelView.headerText = viewNode.getAttribute("title") ||
+                                   (aAnchor && aAnchor.getAttribute("label"));
       }
 
       let previousViewNode = aPreviousView || this._currentSubView;
@@ -509,17 +370,13 @@ this.PanelMultiView = class {
       let playTransition = (!!previousViewNode && !showingSameView && this._panel.state == "open");
       let isMainView = viewNode.id == this._mainViewId;
 
-      let dwu = this._dwu;
       let previousRect = previousViewNode.__lastKnownBoundingRect =
-          dwu.getBoundsWithoutFlushing(previousViewNode);
+          this._dwu.getBoundsWithoutFlushing(previousViewNode);
       // Cache the measures that have the same caching lifetime as the width
       // or height of the main view, i.e. whilst the panel is shown and/ or
       // visible.
       if (!this._mainViewWidth) {
         this._mainViewWidth = previousRect.width;
-        let top = dwu.getBoundsWithoutFlushing(previousViewNode.firstChild || previousViewNode).top;
-        let bottom = dwu.getBoundsWithoutFlushing(previousViewNode.lastChild || previousViewNode).bottom;
-        this._viewVerticalPadding = previousRect.height - (bottom - top);
       }
       if (!this._mainViewHeight) {
         this._mainViewHeight = previousRect.height;
@@ -530,10 +387,7 @@ this.PanelMultiView = class {
       // Because the 'mainview' attribute may be out-of-sync, due to view node
       // reparenting in combination with ephemeral PanelMultiView instances,
       // this is the best place to correct it (just before showing).
-      if (isMainView)
-        viewNode.setAttribute("mainview", true);
-      else
-        viewNode.removeAttribute("mainview");
+      nextPanelView.mainview = isMainView;
 
       if (aAnchor) {
         viewNode.classList.add("PanelUI-subView");
@@ -551,7 +405,7 @@ this.PanelMultiView = class {
             this.blockers.add(promise);
           }
         };
-        let cancel = this._dispatchViewEvent(viewNode, "ViewShowing", aAnchor, detail);
+        let cancel = nextPanelView.dispatchCustomEvent("ViewShowing", detail, true);
         if (detail.blockers.size) {
           try {
             let results = await Promise.all(detail.blockers);
@@ -573,9 +427,9 @@ this.PanelMultiView = class {
       await this._cleanupTransitionPhase();
       if (playTransition) {
         await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
-        this._updateKeyboardFocus(viewNode);
+        nextPanelView.focusSelectedElement();
       } else {
-        this.hideAllViewsExcept(viewNode);
+        this.hideAllViewsExcept(nextPanelView);
       }
     })().catch(e => Cu.reportError(e));
     return this._currentShowPromise;
@@ -607,6 +461,8 @@ this.PanelMultiView = class {
     }
 
     const {window, document} = this;
+
+    let nextPanelView = PanelView.forNode(viewNode);
 
     if (this._autoResizeWorkaroundTimer)
       window.clearTimeout(this._autoResizeWorkaroundTimer);
@@ -657,7 +513,7 @@ this.PanelMultiView = class {
 
       // Now that the subview is visible, we can check the height of the
       // description elements it contains.
-      this.descriptionHeightWorkaround(viewNode);
+      nextPanelView.descriptionHeightWorkaround();
 
       viewRect = await BrowserUtils.promiseLayoutFlushed(this.document, "layout", () => {
         return this._dwu.getBoundsWithoutFlushing(viewNode);
@@ -755,13 +611,16 @@ this.PanelMultiView = class {
     if (details == this._transitionDetails)
       this._transitionDetails = null;
 
+    let nextPanelView = PanelView.forNode(viewNode);
+    let prevPanelView = PanelView.forNode(previousViewNode);
+
     // Do the things we _always_ need to do whenever the transition ends or is
     // interrupted.
-    this.hideAllViewsExcept(viewNode);
+    this.hideAllViewsExcept(nextPanelView);
     previousViewNode.removeAttribute("in-transition");
     viewNode.removeAttribute("in-transition");
     if (reverse)
-      this._resetKeyNavigation(previousViewNode);
+      prevPanelView.clearNavigation();
 
     if (anchor)
       anchor.removeAttribute("open");
@@ -805,35 +664,6 @@ this.PanelMultiView = class {
       await BrowserUtils.promiseLayoutFlushed(this.document, "layout", () => {});
       previousViewNode.style.removeProperty("display");
     }
-  }
-
-  /**
-   * Helper method to emit an event on a panelview, whilst also making sure that
-   * the correct method is called on CustomizableWidget instances.
-   *
-   * @param  {panelview} viewNode  Target of the event to dispatch.
-   * @param  {String}    eventName Name of the event to dispatch.
-   * @param  {DOMNode}   [anchor]  Node where the panel is anchored to. Optional.
-   * @param  {Object}    [detail]  Event detail object. Optional.
-   * @return {Boolean} `true` if the event was canceled by an event handler, `false`
-   *                   otherwise.
-   */
-  _dispatchViewEvent(viewNode, eventName, anchor, detail) {
-    let cancel = false;
-    if (eventName != "PanelMultiViewHidden") {
-      // Don't need to do this for PanelMultiViewHidden event
-      CustomizableUI.ensureSubviewListeners(viewNode);
-    }
-
-    let evt = new this.window.CustomEvent(eventName, {
-      detail,
-      bubbles: true,
-      cancelable: eventName == "ViewShowing"
-    });
-    viewNode.dispatchEvent(evt);
-    if (!cancel)
-      cancel = evt.defaultPrevented;
-    return cancel;
   }
 
   _calculateMaxHeight() {
@@ -882,14 +712,17 @@ this.PanelMultiView = class {
     }
     switch (aEvent.type) {
       case "keydown":
-        this._keyNavigation(aEvent);
+        if (!this._transitioning) {
+          PanelView.forNode(this._currentSubView)
+                   .keyNavigation(aEvent, this._dir);
+        }
         break;
       case "mousemove":
-        this._resetKeyNavigation();
+        this.openViews.forEach(panelView => panelView.clearNavigation());
         break;
       case "popupshowing": {
         this.node.setAttribute("panelopen", "true");
-        if (this.panelViews && !this.node.hasAttribute("disablekeynav")) {
+        if (!this.node.hasAttribute("disablekeynav")) {
           this.window.addEventListener("keydown", this);
           this._panel.addEventListener("mousemove", this);
         }
@@ -915,7 +748,7 @@ this.PanelMultiView = class {
       case "popupshown":
         // Now that the main view is visible, we can check the height of the
         // description elements it contains.
-        this.descriptionHeightWorkaround();
+        PanelView.forNode(this._mainView).descriptionHeightWorkaround();
         break;
       case "popuphidden": {
         // WebExtensions consumers can hide the popup from viewshowing, or
@@ -933,7 +766,8 @@ this.PanelMultiView = class {
         }
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
-        this._resetKeyNavigation();
+        this.openViews.forEach(panelView => panelView.clearNavigation());
+        this.openViews = [];
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
@@ -944,24 +778,208 @@ this.PanelMultiView = class {
         this._viewContainer.style.removeProperty("min-width");
         this._viewContainer.style.removeProperty("max-width");
 
-        this._dispatchViewEvent(this.node, "PanelMultiViewHidden");
+        this.dispatchCustomEvent("PanelMultiViewHidden");
         break;
       }
     }
   }
+};
+
+/**
+ * This is associated to <panelview> elements.
+ */
+this.PanelView = class extends this.AssociatedToNode {
+  /**
+   * The "mainview" attribute is set before the panel is opened when this view
+   * is displayed as the main view, and is removed before the <panelview> is
+   * displayed as a subview. The same view element can be displayed as a main
+   * view and as a subview at different times.
+   */
+  set mainview(value) {
+    if (value) {
+      this.node.setAttribute("mainview", true);
+    } else {
+      this.node.removeAttribute("mainview");
+    }
+  }
+
+  set current(value) {
+    if (value) {
+      if (!this.node.hasAttribute("current")) {
+        this.node.setAttribute("current", true);
+        this.descriptionHeightWorkaround();
+        this.dispatchCustomEvent("ViewShown");
+      }
+    } else if (this.node.hasAttribute("current")) {
+      this.dispatchCustomEvent("ViewHiding");
+      this.node.removeAttribute("current");
+    }
+  }
 
   /**
-   * Based on going up or down, select the previous or next focusable button
-   * in the current view.
+   * Adds a header with the given title, or removes it if the title is empty.
+   */
+  set headerText(value) {
+    // If the header already exists, update or remove it as requested.
+    let header = this.node.firstChild;
+    if (header && header.classList.contains("panel-header")) {
+      if (value) {
+        header.querySelector("label").setAttribute("value", value);
+      } else {
+        header.remove();
+      }
+      return;
+    }
+
+    // The header doesn't exist, only create it if needed.
+    if (!value) {
+      return;
+    }
+
+    header = this.document.createElement("box");
+    header.classList.add("panel-header");
+
+    let backButton = this.document.createElement("toolbarbutton");
+    backButton.className =
+      "subviewbutton subviewbutton-iconic subviewbutton-back";
+    backButton.setAttribute("closemenu", "none");
+    backButton.setAttribute("tabindex", "0");
+    backButton.setAttribute("tooltip",
+      this.node.getAttribute("data-subviewbutton-tooltip"));
+    backButton.addEventListener("command", () => {
+      // The panelmultiview element may change if the view is reused.
+      this.node.panelMultiView.goBack();
+      backButton.blur();
+    });
+
+    let label = this.document.createElement("label");
+    label.setAttribute("value", value);
+
+    header.append(backButton, label);
+    this.node.prepend(header);
+  }
+
+  /**
+   * Also make sure that the correct method is called on CustomizableWidget.
+   */
+  dispatchCustomEvent(...args) {
+    CustomizableUI.ensureSubviewListeners(this.node);
+    return super.dispatchCustomEvent(...args);
+  }
+
+  /**
+   * If the main view or a subview contains wrapping elements, the attribute
+   * "descriptionheightworkaround" should be set on the view to force all the
+   * wrapping "description", "label" or "toolbarbutton" elements to a fixed
+   * height. If the attribute is set and the visibility, contents, or width
+   * of any of these elements changes, this function should be called to
+   * refresh the calculated heights.
    *
-   * @param {Object}  navMap   the navigation keyboard map object for the view
-   * @param {Array}   buttons  an array of focusable buttons to select an item from.
-   * @param {Boolean} isDown   whether we're going down (true) or up (false) in this view.
+   * This may trigger a synchronous layout.
+   */
+  descriptionHeightWorkaround() {
+    if (!this.node.hasAttribute("descriptionheightworkaround")) {
+      // This view does not require the workaround.
+      return;
+    }
+
+    // We batch DOM changes together in order to reduce synchronous layouts.
+    // First we reset any change we may have made previously. The first time
+    // this is called, and in the best case scenario, this has no effect.
+    let items = [];
+    // Non-hidden <label> or <description> elements that also aren't empty
+    // and also don't have a value attribute can be multiline (if their
+    // text content is long enough).
+    let isMultiline = ":not(:-moz-any([hidden],[value],:empty))";
+    let selector = [
+      "description" + isMultiline,
+      "label" + isMultiline,
+      "toolbarbutton[wrap]:not([hidden])",
+    ].join(",");
+    for (let element of this.node.querySelectorAll(selector)) {
+      // Ignore items in hidden containers.
+      if (element.closest("[hidden]")) {
+        continue;
+      }
+      // Take the label for toolbarbuttons; it only exists on those elements.
+      element = element.labelElement || element;
+
+      let bounds = element.getBoundingClientRect();
+      let previous = gMultiLineElementsMap.get(element);
+      // We don't need to (re-)apply the workaround for invisible elements or
+      // on elements we've seen before and haven't changed in the meantime.
+      if (!bounds.width || !bounds.height ||
+          (previous && element.textContent == previous.textContent &&
+                       bounds.width == previous.bounds.width)) {
+        continue;
+      }
+
+      items.push({ element });
+    }
+
+    // Removing the 'height' property will only cause a layout flush in the next
+    // loop below if it was set.
+    for (let item of items) {
+      item.element.style.removeProperty("height");
+    }
+
+    // We now read the computed style to store the height of any element that
+    // may contain wrapping text.
+    for (let item of items) {
+      item.bounds = item.element.getBoundingClientRect();
+    }
+
+    // Now we can make all the necessary DOM changes at once.
+    for (let { element, bounds } of items) {
+      gMultiLineElementsMap.set(element, { bounds, textContent: element.textContent });
+      element.style.height = bounds.height + "px";
+    }
+  }
+
+  /**
+   * Retrieves the button elements that can be used for navigation using the
+   * keyboard, that is all enabled buttons including the back button if visible.
+   *
+   * @return {Array}
+   */
+  getNavigableElements() {
+    let buttons = Array.from(this.node.querySelectorAll(".subviewbutton:not([disabled])"));
+    let dwu = this._dwu;
+    return buttons.filter(button => {
+      let bounds = dwu.getBoundsWithoutFlushing(button);
+      return bounds.width > 0 && bounds.height > 0;
+    });
+  }
+
+  /**
+   * Element that is currently selected with the keyboard, or null if no element
+   * is selected. Since the reference is held weakly, it can become null or
+   * undefined at any time.
+   *
+   * The element is usually, but not necessarily, in the "buttons" property
+   * which in turn is initialized from the getNavigableElements list.
+   */
+  get selectedElement() {
+    return this._selectedElement && this._selectedElement.get();
+  }
+  set selectedElement(value) {
+    if (!value) {
+      delete this._selectedElement;
+    } else {
+      this._selectedElement = Cu.getWeakReference(value);
+    }
+  }
+
+  /**
+   * Based on going up or down, select the previous or next focusable button.
+   *
+   * @param {Boolean} isDown   whether we're going down (true) or up (false).
    *
    * @return {DOMNode} the button we selected.
    */
-  _updateSelectedKeyNav(navMap, buttons, isDown) {
-    let lastSelected = navMap.selected && navMap.selected.get();
+  moveSelection(isDown) {
+    let buttons = this.buttons;
+    let lastSelected = this.selectedElement;
     let newButton = null;
     let maxIdx = buttons.length - 1;
     if (lastSelected) {
@@ -1002,7 +1020,7 @@ this.PanelMultiView = class {
     if (!newButton) {
       newButton = buttons[isDown ? 0 : maxIdx];
     }
-    navMap.selected = Cu.getWeakReference(newButton);
+    this.selectedElement = newButton;
     return newButton;
   }
 
@@ -1019,21 +1037,13 @@ this.PanelMultiView = class {
    *  - The Left key triggers a navigation back to the previous view.
    *
    * @param {KeyEvent} event
+   * @param {String} dir
+   *        Direction for arrow navigation, either "ltr" or "rtl".
    */
-  _keyNavigation(event) {
-    if (this._transitioning)
-      return;
-
-    let view = this._currentSubView;
-    let navMap = this._keyNavigationMap.get(view);
-    if (!navMap) {
-      navMap = {};
-      this._keyNavigationMap.set(view, navMap);
-    }
-
-    let buttons = navMap.buttons;
+  keyNavigation(event, dir) {
+    let buttons = this.buttons;
     if (!buttons || !buttons.length) {
-      buttons = navMap.buttons = this._getNavigableElements(view);
+      buttons = this.buttons = this.getNavigableElements();
       // Set the 'tabindex' attribute on the buttons to make sure they're focussable.
       for (let button of buttons) {
         if (!button.classList.contains("subviewbutton-back") &&
@@ -1058,31 +1068,29 @@ this.PanelMultiView = class {
         stop();
         let isDown = (keyCode == "ArrowDown") ||
                      (keyCode == "Tab" && !event.shiftKey);
-        let button = this._updateSelectedKeyNav(navMap, buttons, isDown);
+        let button = this.moveSelection(isDown);
         button.focus();
         break;
       }
       case "ArrowLeft":
       case "ArrowRight": {
         stop();
-        let dir = this._dir;
         if ((dir == "ltr" && keyCode == "ArrowLeft") ||
             (dir == "rtl" && keyCode == "ArrowRight")) {
-          if (this._canGoBack(view))
-            this.goBack();
+          this.node.panelMultiView.goBack();
           break;
         }
         // If the current button is _not_ one that points to a subview, pressing
         // the arrow key shouldn't do anything.
-        if (!navMap.selected || !navMap.selected.get() ||
-            !navMap.selected.get().classList.contains("subviewbutton-nav")) {
+        let button = this.selectedElement;
+        if (!button || !button.classList.contains("subviewbutton-nav")) {
           break;
         }
         // Fall-through...
       }
       case "Space":
       case "Enter": {
-        let button = navMap.selected && navMap.selected.get();
+        let button = this.selectedElement;
         if (!button)
           break;
         stop();
@@ -1101,129 +1109,24 @@ this.PanelMultiView = class {
   }
 
   /**
-   * Clear all traces of keyboard navigation happening right now.
-   *
-   * @param {panelview} view View to reset the key navigation attributes of.
-   *                         If no view is passed, all navigation attributes for
-   *                         this panelmultiview are cleared.
-   */
-  _resetKeyNavigation(view) {
-    let viewToBlur = view || this._currentSubView;
-    let navMap = this._keyNavigationMap.get(viewToBlur);
-    if (navMap && navMap.selected && navMap.selected.get()) {
-      navMap.selected.get().blur();
-    }
-
-    // We clear the entire key navigation map ONLY if *no* view was passed in.
-    // This happens e.g. when the popup is hidden completely, or the user moves
-    // their mouse.
-    // If a view is passed in, we just delete the map for that view. This happens
-    // when going back from a view (which resets the map for that view only)
-    if (view) {
-      this._keyNavigationMap.delete(view);
-    } else {
-      this._keyNavigationMap.clear();
-    }
-  }
-
-  /**
-   * Retrieve the button elements from a view node that can be used for navigation
-   * using the keyboard; enabled buttons and the back button, if visible.
-   *
-   * @param  {nsIDOMNode} view
-   * @return {Array}
-   */
-  _getNavigableElements(view) {
-    let buttons = Array.from(view.querySelectorAll(".subviewbutton:not([disabled])"));
-    let dwu = this._dwu;
-    return buttons.filter(button => {
-      let bounds = dwu.getBoundsWithoutFlushing(button);
-      return bounds.width > 0 && bounds.height > 0;
-    });
-  }
-
-  /**
    * Focus the last selected element in the view, if any.
-   *
-   * @param {panelview} view the view in which to update keyboard focus.
    */
-  _updateKeyboardFocus(view) {
-    let navMap = this._keyNavigationMap.get(view);
-    if (navMap && navMap.selected && navMap.selected.get()) {
-      navMap.selected.get().focus();
+  focusSelectedElement() {
+    let selected = this.selectedElement;
+    if (selected) {
+      selected.focus();
     }
   }
 
   /**
-   * If the main view or a subview contains wrapping elements, the attribute
-   * "descriptionheightworkaround" should be set on the view to force all the
-   * wrapping "description", "label" or "toolbarbutton" elements to a fixed
-   * height. If the attribute is set and the visibility, contents, or width
-   * of any of these elements changes, this function should be called to
-   * refresh the calculated heights.
-   *
-   * This may trigger a synchronous layout.
-   *
-   * @param viewNode
-   *        Indicates the node to scan for descendant elements. This is the main
-   *        view if omitted.
+   * Clear all traces of keyboard navigation happening right now.
    */
-  descriptionHeightWorkaround(viewNode = this._mainView) {
-    if (!viewNode || !viewNode.hasAttribute("descriptionheightworkaround")) {
-      // This view does not require the workaround.
-      return;
-    }
-
-    // We batch DOM changes together in order to reduce synchronous layouts.
-    // First we reset any change we may have made previously. The first time
-    // this is called, and in the best case scenario, this has no effect.
-    let items = [];
-    // Non-hidden <label> or <description> elements that also aren't empty
-    // and also don't have a value attribute can be multiline (if their
-    // text content is long enough).
-    let isMultiline = ":not(:-moz-any([hidden],[value],:empty))";
-    let selector = [
-      "description" + isMultiline,
-      "label" + isMultiline,
-      "toolbarbutton[wrap]:not([hidden])",
-    ].join(",");
-    for (let element of viewNode.querySelectorAll(selector)) {
-      // Ignore items in hidden containers.
-      if (element.closest("[hidden]")) {
-        continue;
-      }
-      // Take the label for toolbarbuttons; it only exists on those elements.
-      element = element.labelElement || element;
-
-      let bounds = element.getBoundingClientRect();
-      let previous = this._multiLineElementsMap.get(element);
-      // We don't need to (re-)apply the workaround for invisible elements or
-      // on elements we've seen before and haven't changed in the meantime.
-      if (!bounds.width || !bounds.height ||
-          (previous && element.textContent == previous.textContent &&
-                       bounds.width == previous.bounds.width)) {
-        continue;
-      }
-
-      items.push({ element });
-    }
-
-    // Removing the 'height' property will only cause a layout flush in the next
-    // loop below if it was set.
-    for (let item of items) {
-      item.element.style.removeProperty("height");
-    }
-
-    // We now read the computed style to store the height of any element that
-    // may contain wrapping text.
-    for (let item of items) {
-      item.bounds = item.element.getBoundingClientRect();
-    }
-
-    // Now we can make all the necessary DOM changes at once.
-    for (let { element, bounds } of items) {
-      this._multiLineElementsMap.set(element, { bounds, textContent: element.textContent });
-      element.style.height = bounds.height + "px";
+  clearNavigation() {
+    delete this.buttons;
+    let selected = this.selectedElement;
+    if (selected) {
+      selected.blur();
+      this.selectedElement = null;
     }
   }
 };

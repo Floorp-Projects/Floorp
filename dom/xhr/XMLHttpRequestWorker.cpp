@@ -873,7 +873,8 @@ Proxy::Init()
   mXHR = new XMLHttpRequestMainThread();
   mXHR->Construct(mWorkerPrivate->GetPrincipal(), global,
                   mWorkerPrivate->GetBaseURI(),
-                  mWorkerPrivate->GetLoadGroup());
+                  mWorkerPrivate->GetLoadGroup(),
+                  mWorkerPrivate->GetPerformanceStorage());
 
   mXHR->SetParameters(mMozAnon, mMozSystem);
   mXHR->SetClientInfoAndController(mClientInfo, mController);

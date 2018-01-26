@@ -237,7 +237,6 @@ Performance::ClearUserEntries(const Optional<nsAString>& aEntryName,
 void
 Performance::ClearResourceTimings()
 {
-  MOZ_ASSERT(NS_IsMainThread());
   mResourceEntries.Clear();
 }
 
@@ -431,13 +430,14 @@ void
 Performance::InsertResourceEntry(PerformanceEntry* aEntry)
 {
   MOZ_ASSERT(aEntry);
-  MOZ_ASSERT(mResourceEntries.Length() < mResourceTimingBufferSize);
+  MOZ_ASSERT(mResourceEntries.Length() <= mResourceTimingBufferSize);
 
   // We won't add an entry when 'privacy.resistFingerprint' is true.
   if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 
+  // Don't add the entry if the buffer is full
   if (mResourceEntries.Length() >= mResourceTimingBufferSize) {
     return;
   }

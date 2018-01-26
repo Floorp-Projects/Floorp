@@ -285,6 +285,13 @@ Attr::ComputeIndexOf(const nsINode* aPossibleChild) const
 }
 
 nsresult
+Attr::InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                        bool aNotify)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
 Attr::InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
                                bool aNotify)
 {

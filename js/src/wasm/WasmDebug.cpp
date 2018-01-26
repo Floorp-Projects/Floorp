@@ -578,7 +578,7 @@ DebugState::getGlobal(Instance& instance, uint32_t globalIndex, MutableHandleVal
         return true;
     }
 
-    uint8_t* globalData = instance.globalSegment().globalData();
+    uint8_t* globalData = instance.globalData();
     void* dataPtr = globalData + global.offset();
     switch (global.type()) {
       case ValType::I32: {
