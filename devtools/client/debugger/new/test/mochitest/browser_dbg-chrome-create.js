@@ -38,14 +38,13 @@ function onClose() {
 }
 
 registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.debugger.remote-enabled");
   gProcess = null;
 });
 
 add_task(async function() {
   // Windows XP and 8.1 test slaves are terribly slow at this test.
   requestLongerTimeout(5);
-  Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
+  await pushPref("devtools.debugger.remote-enabled", true);
 
   gProcess = await initChromeDebugger();
 

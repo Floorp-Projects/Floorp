@@ -316,6 +316,7 @@ TextPropertyEditor.prototype = {
         multiline: true,
         maxWidth: () => this.container.getBoundingClientRect().width,
         cssProperties: this.cssProperties,
+        cssVariables: this.rule.elementStyle.variables,
       });
 
       this.ruleView.highlighters.on("hover-shape-point", this._onHoverShapePoint);

@@ -9,7 +9,7 @@ add_task(async function() {
 
   await selectSource(dbg, "simple2");
 
-  await waitForElement(dbg, ".CodeMirror");
+  await waitForElementWithSelector(dbg, ".CodeMirror");
   findElementWithSelector(dbg, ".CodeMirror").focus();
 
   // Enter code editor
