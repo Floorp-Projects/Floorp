@@ -32,15 +32,13 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // JSContext. That's because StreamSamplesAndMarkers() only accesses the
   // JSContext when streaming JitReturnAddress entries, and such entries
   // never appear in synchronous samples.
-  double firstSampleTimeIgnored;
   StreamSamplesAndMarkers(mName.get(), mThreadId,
                           *mBuffer.get(), aWriter, aProcessStartTime,
                           /* aRegisterTime */ TimeStamp(),
                           /* aUnregisterTime */ TimeStamp(),
-                          /* aSinceTime */ 0, &firstSampleTimeIgnored,
+                          /* aSinceTime */ 0,
                           /* aContext */ nullptr,
                           /* aSavedStreamedSamples */ nullptr,
-                          /* aFirstSavedStreamedSampleTime */ 0.0,
                           /* aSavedStreamedMarkers */ nullptr,
                           aUniqueStacks);
 }

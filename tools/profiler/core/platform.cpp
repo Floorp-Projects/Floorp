@@ -1643,7 +1643,7 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 }
 #endif
 
-static TimeStamp
+static void
 locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                                              SpliceableJSONWriter& aWriter,
                                              double aSinceTime,
@@ -1676,8 +1676,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
     aWriter.EndObject();
   }
 
-  double firstSampleTime = INFINITY;
-
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
@@ -1687,20 +1685,14 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       if (!info->IsBeingProfiled()) {
         continue;
       }
-      double thisThreadFirstSampleTime =
-        info->StreamJSON(buffer, aWriter,
-                         CorePS::ProcessStartTime(), aSinceTime);
-      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
+      info->StreamJSON(buffer, aWriter, CorePS::ProcessStartTime(), aSinceTime);
     }
 
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
       MOZ_ASSERT(info->IsBeingProfiled());
-      double thisThreadFirstSampleTime =
-        info->StreamJSON(buffer, aWriter,
-                         CorePS::ProcessStartTime(), aSinceTime);
-      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
+      info->StreamJSON(buffer, aWriter, CorePS::ProcessStartTime(), aSinceTime);
     }
 
 #if defined(GP_OS_android)
@@ -1734,20 +1726,12 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // been overwritten due to buffer wraparound by then).
   buffer.AddEntry(ProfileBufferEntry::CollectionStart(collectionStart));
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEnd));
-
-  if (firstSampleTime != INFINITY) {
-    return CorePS::ProcessStartTime() +
-           TimeDuration::FromMilliseconds(firstSampleTime);
-  }
-
-  return TimeStamp();
 }
 
 bool
 profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                       double aSinceTime,
-                                      bool aIsShuttingDown,
-                                      TimeStamp* aOutFirstSampleTime)
+                                      bool aIsShuttingDown)
 {
   LOG("profiler_stream_json_for_this_process");
 
@@ -1759,13 +1743,8 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
     return false;
   }
 
-  TimeStamp firstSampleTime =
-    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
-                                                 aIsShuttingDown);
-
-  if (aOutFirstSampleTime) {
-    *aOutFirstSampleTime = firstSampleTime;
-  }
+  locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
+                                               aIsShuttingDown);
 
   return true;
 }
