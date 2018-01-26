@@ -232,7 +232,8 @@ public:
    *
    * Strategy is one of the three strategies described at the top of this file.
    *
-   * The result list is ordered according to the order of the requested locales.
+   * The result list is canonicalized and ordered according to the order
+   * of the requested locales.
    *
    * (See mozILocaleService.idl for a JS-callable version of this.)
    */
@@ -247,8 +248,8 @@ public:
    */
   bool IsAppLocaleRTL();
 
-  static bool LanguagesMatch(const nsCString& aRequested,
-                             const nsCString& aAvailable);
+  static bool LanguagesMatch(const nsACString& aRequested,
+                             const nsACString& aAvailable);
 
   bool IsServer();
 
