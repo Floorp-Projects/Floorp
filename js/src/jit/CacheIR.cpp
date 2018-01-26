@@ -4143,7 +4143,11 @@ TypeOfIRGenerator::tryAttachPrimitive(ValOperandId valId)
     if (!val_.isPrimitive())
         return false;
 
-    writer.guardType(valId, val_.isNumber() ? JSVAL_TYPE_DOUBLE : val_.extractNonDoubleType());
+    if (val_.isNumber())
+        writer.guardIsNumber(valId);
+    else
+        writer.guardType(valId,  val_.extractNonDoubleType());
+
     writer.loadStringResult(TypeName(js::TypeOfValue(val_), cx_->names()));
     writer.returnFromIC();
 

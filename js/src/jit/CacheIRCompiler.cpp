@@ -1207,6 +1207,25 @@ CacheIRCompiler::emitFailurePath(size_t index)
 }
 
 bool
+CacheIRCompiler::emitGuardIsNumber()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+
+    // Doubles and ints are numbers!
+    if (knownType == JSVAL_TYPE_DOUBLE || knownType == JSVAL_TYPE_INT32)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestNumber(Assembler::NotEqual, input, failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsObject()
 {
     ValOperandId inputId = reader.valOperandId();
@@ -1372,7 +1391,7 @@ CacheIRCompiler::emitGuardType()
         masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
         break;
       case JSVAL_TYPE_DOUBLE:
-        masm.branchTestNumber(Assembler::NotEqual, input, failure->label());
+        masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
         break;
       case JSVAL_TYPE_BOOLEAN:
         masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
