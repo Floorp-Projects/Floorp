@@ -269,8 +269,8 @@ protected:
                                                              nsIURI* aOrigHost);
 
 
-  nsresult WriteCommon(JSContext *cx, const nsAString& aText,
-                       bool aNewlineTerminate);
+  void WriteCommon(JSContext *cx, const nsAString& aText,
+                   bool aNewlineTerminate, mozilla::ErrorResult& aRv);
   // A version of WriteCommon used by WebIDL bindings
   void WriteCommon(JSContext *cx,
                    const mozilla::dom::Sequence<nsString>& aText,
