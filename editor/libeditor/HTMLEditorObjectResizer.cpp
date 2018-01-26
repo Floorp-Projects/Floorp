@@ -71,10 +71,20 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
  * mozilla::ResizerSelectionListener
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS(ResizerSelectionListener, nsISelectionListener)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ResizerSelectionListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ResizerSelectionListener)
+
+NS_INTERFACE_MAP_BEGIN(ResizerSelectionListener)
+  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(ResizerSelectionListener)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(ResizerSelectionListener,
+                         mHTMLEditor)
 
 ResizerSelectionListener::ResizerSelectionListener(HTMLEditor& aHTMLEditor)
-  : mHTMLEditorWeak(&aHTMLEditor)
+  : mHTMLEditor(&aHTMLEditor)
 {
 }
 
@@ -83,12 +93,15 @@ ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                                  nsISelection* aSelection,
                                                  int16_t aReason)
 {
+  if (!mHTMLEditor) {
+    return NS_OK;
+  }
   if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
                   nsISelectionListener::KEYPRESS_REASON |
                   nsISelectionListener::SELECTALL_REASON)) && aSelection) {
     // the selection changed and we need to check if we have to
     // hide and/or redisplay resizing handles
-    RefPtr<HTMLEditor> htmlEditor = mHTMLEditorWeak.get();
+    RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
     if (htmlEditor) {
       htmlEditor->CheckSelectionStateForAnonymousButtons(aSelection);
     }

@@ -7,6 +7,7 @@
 #define HTMLEditorObjectResizerUtils_h
 
 #include "mozilla/HTMLEditor.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
 #include "nsISelectionListener.h"
 #include "nsISupportsImpl.h"
@@ -36,12 +37,15 @@ public:
   explicit ResizerSelectionListener(HTMLEditor& aHTMLEditor);
   void Reset();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ResizerSelectionListener,
+                                           nsISelectionListener)
+
   NS_DECL_NSISELECTIONLISTENER
 
 protected:
-  virtual ~ResizerSelectionListener() {}
-  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
+  virtual ~ResizerSelectionListener() = default;
+  RefPtr<HTMLEditor> mHTMLEditor;
 };
 
 /******************************************************************************
