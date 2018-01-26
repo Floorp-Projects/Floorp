@@ -11,14 +11,14 @@ addEventListener("DOMContentLoaded", function(event) {
   // For error page, internalURL is 'about:neterror?...', and visibleURL
   // is the original URL.
   sendAsyncMessage("browser-test-utils:DOMContentLoadedEvent",
-    {subframe: subframe, internalURL: event.target.documentURI,
+    {subframe, internalURL: event.target.documentURI,
      visibleURL: content.document.location.href});
 }, true);
 
 addEventListener("load", function(event) {
   let subframe = event.target != content.document;
   sendAsyncMessage("browser-test-utils:loadEvent",
-    {subframe: subframe, internalURL: event.target.documentURI,
+    {subframe, internalURL: event.target.documentURI,
      visibleURL: content.document.location.href});
 }, true);
 
