@@ -331,13 +331,6 @@ impl ExternalImageHandler for WrExternalImageHandler {
         let image = (self.lock_func)(self.external_image_obj, id.into(), channel_index);
         ExternalImage {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
-            //uv: UvRect::new(UvPoint::new(image.u0, image.v0), UvSize::new(image.u1, image.v1)),
-            /*
-            u0: image.u0,
-            v0: image.v0,
-            u1: image.u1,
-            v1: image.v1,
-            */
             source: match image.image_type {
                 WrExternalImageType::NativeTexture => ExternalImageSource::NativeTexture(image.handle),
                 WrExternalImageType::RawData => ExternalImageSource::RawData(make_slice(image.buff, image.size)),
@@ -1134,6 +1127,18 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
     index: u32
 ) {
     resources.add_raw_font(key, bytes.flush_into_vec(), index);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_capture(
+    dh: &mut DocumentHandle,
+    path: *const c_char,
+    bits_raw: u32,
+) {
+    let cstr = unsafe { CStr::from_ptr(path) };
+    let path = PathBuf::from(&*cstr.to_string_lossy());
+    let bits = CaptureBits::from_bits(bits_raw as _).unwrap();
+    dh.api.save_capture(path, bits);
 }
 
 #[cfg(target_os = "windows")]
