@@ -874,6 +874,9 @@ var PlacesSearchBox = {
    * Set up the gray text in the search bar as the Places View loads.
    */
   init: function PSB_init() {
+    if (Services.prefs.getBoolPref("browser.urlbar.clickSelectsAll", false)) {
+      this.searchFilter.setAttribute("clickSelectsAll", true);
+    }
     this.updateCollectionTitle();
   },
 
