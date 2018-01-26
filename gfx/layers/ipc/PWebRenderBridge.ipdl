@@ -69,8 +69,6 @@ parent:
   async ClearCachedResources();
   // Schedule a composite if one isn't already scheduled.
   async ForceComposite();
-  // Save the frame capture to disk
-  async Capture();
 
   // These correspond exactly to the equivalent APIs in PLayerTransaction -
   // see those for documentation.
