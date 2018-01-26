@@ -746,6 +746,8 @@ ensureNewlineAtEOF=false
 formatter_profile=_Mozilla
 formatter_settings_version=1
 org.eclipse.cdt.ui.formatterprofiles.version=1
+removeTrailingWhitespace=true
+removeTrailingWhitespaceEditedLines=true
 scalability.numberOfLines=15000
 """
 

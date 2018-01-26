@@ -2836,16 +2836,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(WorkerThreadPrimaryRunnable, Runnable)
 NS_IMETHODIMP
 WorkerThreadPrimaryRunnable::Run()
 {
+  AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
+    "WorkerThreadPrimaryRunnable::Run", OTHER, mWorkerPrivate->ScriptURL());
+
   using mozilla::ipc::BackgroundChild;
-
-  NS_SetCurrentThreadName("DOM Worker");
-
-  nsAutoCString threadName;
-  threadName.AssignLiteral("DOM Worker '");
-  threadName.Append(NS_LossyConvertUTF16toASCII(mWorkerPrivate->ScriptURL()));
-  threadName.Append('\'');
-
-  AUTO_PROFILER_REGISTER_THREAD(threadName.get());
 
   // Note: GetOrCreateForCurrentThread() must be called prior to
   //       mWorkerPrivate->SetThread() in order to avoid accidentally consuming
