@@ -915,11 +915,6 @@ protected:
   mozilla::dom::Element* GetOffsetRect(mozilla::CSSIntRect& aRect);
 
   /**
-   * Returns true if this is the current document's body element
-   */
-  bool IsCurrentBodyElement();
-
-  /**
    * Ensures all editors associated with a subtree are synced, for purposes of
    * spellchecking.
    */

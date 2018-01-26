@@ -2682,26 +2682,6 @@ nsGenericHTMLElement::GetAssociatedEditor()
   return textEditor.forget();
 }
 
-bool
-nsGenericHTMLElement::IsCurrentBodyElement()
-{
-  // TODO Bug 698498: Should this handle the case where GetBody returns a
-  //                  frameset?
-  if (!IsHTMLElement(nsGkAtoms::body)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDocument =
-    do_QueryInterface(GetUncomposedDoc());
-  if (!htmlDocument) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement;
-  htmlDocument->GetBody(getter_AddRefs(htmlElement));
-  return htmlElement == static_cast<HTMLBodyElement*>(this);
-}
-
 // static
 void
 nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
