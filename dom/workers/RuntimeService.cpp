@@ -25,7 +25,7 @@
 #include "nsPIDOMWindow.h"
 
 #include <algorithm>
-#include "BackgroundChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "GeckoProfiler.h"
 #include "jsfriendapi.h"
 #include "mozilla/AbstractThread.h"

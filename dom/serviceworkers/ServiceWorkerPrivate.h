@@ -8,7 +8,6 @@
 #define mozilla_dom_workers_serviceworkerprivate_h
 
 #include "nsCOMPtr.h"
-
 #include "WorkerPrivate.h"
 
 #define NOTIFICATION_CLICK_EVENT_NAME "notificationclick"

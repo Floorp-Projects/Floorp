@@ -53,7 +53,7 @@
 #include "nsThreadUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsXULAppAPI.h"
-#include "ServiceWorkerManager.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"

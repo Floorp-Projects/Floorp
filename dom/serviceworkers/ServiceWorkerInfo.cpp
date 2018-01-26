@@ -10,6 +10,8 @@
 
 BEGIN_WORKERS_NAMESPACE
 
+using mozilla::ipc::PrincipalInfo;
+
 static_assert(nsIServiceWorkerInfo::STATE_PARSED == static_cast<uint16_t>(ServiceWorkerState::Parsed),
               "ServiceWorkerState enumeration value should match state values from nsIServiceWorkerInfo.");
 static_assert(nsIServiceWorkerInfo::STATE_INSTALLING == static_cast<uint16_t>(ServiceWorkerState::Installing),
