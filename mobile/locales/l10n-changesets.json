@@ -201,7 +201,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "a161b0890735"
+        "revision": "1f6e16f96d9d"
     }, 
     "gl": {
         "platforms": [
@@ -459,7 +459,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "928ee18db015"
+        "revision": "0abc1bbb0bd7"
     }, 
     "sv-SE": {
         "platforms": [
