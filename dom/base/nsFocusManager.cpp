@@ -9,6 +9,7 @@
 #include "nsFocusManager.h"
 
 #include "AccessibleCaretEventHub.h"
+#include "ChildIterator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsGkAtoms.h"
 #include "nsGlobalWindow.h"
@@ -50,6 +51,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -3065,6 +3067,127 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
   return NS_OK;
 }
 
+// Helper class to iterate contents in scope by traversing flattened tree
+// in tree order
+class MOZ_STACK_CLASS ScopedContentTraversal
+{
+public:
+  ScopedContentTraversal(nsIContent* aStartContent, nsIContent* aOwner)
+    : mCurrent(aStartContent)
+    , mOwner(aOwner)
+  {
+    MOZ_ASSERT(aStartContent);
+  }
+
+  void Next();
+  void Prev();
+
+  void Reset()
+  {
+    SetCurrent(mOwner);
+  }
+
+  nsIContent* GetCurrent()
+  {
+    return mCurrent;
+  }
+
+private:
+  void SetCurrent(nsIContent* aContent)
+  {
+    mCurrent = aContent;
+  }
+
+  nsIContent* mCurrent;
+  nsIContent* mOwner;
+};
+
+void
+ScopedContentTraversal::Next()
+{
+  MOZ_ASSERT(mCurrent);
+
+  // Get mCurrent's first child if it's in the same scope.
+  if (!(mCurrent->GetShadowRoot() || mCurrent->IsHTMLElement(nsGkAtoms::slot)) ||
+      mCurrent == mOwner) {
+    FlattenedChildIterator iter(mCurrent);
+    nsIContent* child = iter.GetNextChild();
+    if (child) {
+      SetCurrent(child);
+      return;
+    }
+  }
+
+  // If mOwner has no children, END traversal
+  if (mCurrent == mOwner) {
+    SetCurrent(nullptr);
+    return;
+  }
+
+  nsIContent* current = mCurrent;
+  while (1) {
+    // Create parent's iterator and move to current
+    nsIContent* parent = current->GetFlattenedTreeParent();
+    FlattenedChildIterator parentIter(parent);
+    parentIter.Seek(current);
+
+    // Get next sibling of current
+    nsIContent* next = parentIter.GetNextChild();
+    if (next) {
+      SetCurrent(next);
+      return;
+    }
+
+    // If no next sibling and parent is mOwner, END traversal
+    if (parent == mOwner) {
+      SetCurrent(nullptr);
+      return;
+    }
+
+    current = parent;
+  }
+}
+
+void
+ScopedContentTraversal::Prev()
+{
+  MOZ_ASSERT(mCurrent);
+
+  nsIContent* parent;
+  nsIContent* last;
+  if (mCurrent == mOwner) {
+    // Get last child of mOwner
+    FlattenedChildIterator ownerIter(mOwner, false /* aStartAtBeginning */);
+    last = ownerIter.GetPreviousChild();
+
+    parent = last;
+  } else {
+    // Create parent's iterator and move to mCurrent
+    parent = mCurrent->GetFlattenedTreeParent();
+    FlattenedChildIterator parentIter(parent);
+    parentIter.Seek(mCurrent);
+
+    // Get previous sibling
+    last = parentIter.GetPreviousChild();
+  }
+
+  while (last) {
+    parent = last;
+    if (parent->GetShadowRoot() ||
+        parent->IsHTMLElement(nsGkAtoms::slot)) {
+      // Skip contents in other scopes
+      break;
+    }
+
+    // Find last child
+    FlattenedChildIterator iter(parent, false /* aStartAtBeginning */);
+    last = iter.GetPreviousChild();
+  }
+
+  // If parent is mOwner and no previous sibling remains, END traversal
+  SetCurrent(parent == mOwner ? nullptr : parent);
+}
+
 nsresult
 nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        nsIContent* aRootContent,
@@ -3404,18 +3527,16 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
                                 bool aForward)
 {
   int32_t tabIndex, childTabIndex;
+  FlattenedChildIterator iter(aParent);
 
   if (aForward) {
     tabIndex = 0;
-    for (nsIContent* child = aParent->GetFirstChild();
+    for (nsIContent* child = iter.GetNextChild();
          child;
-         child = child->GetNextSibling()) {
-      MOZ_ASSERT(!child->IsHTMLElement(nsGkAtoms::slot),
-                 "Slots shouldn't appear in light DOM");
-
-      // Skip child's descendants if child is a shadow host, as they are
+         child = iter.GetNextChild()) {
+      // Skip child's descendants if child is a shadow host or slot, as they are
       // in the focus navigation scope owned by child's shadow root
-      if (!(nsDocument::IsShadowDOMEnabled(aParent) && child->GetShadowRoot())) {
+      if (!(nsDocument::IsShadowDOMEnabled(aParent) && IsHostOrSlot(child))) {
         childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
         if (childTabIndex > aCurrentTabIndex && childTabIndex != tabIndex) {
           tabIndex = (tabIndex == 0 || childTabIndex < tabIndex) ? childTabIndex : tabIndex;
@@ -3435,15 +3556,12 @@ nsFocusManager::GetNextTabIndex(nsIContent* aParent,
   }
   else { /* !aForward */
     tabIndex = 1;
-    for (nsIContent* child = aParent->GetFirstChild();
+    for (nsIContent* child = iter.GetNextChild();
          child;
-         child = child->GetNextSibling()) {
-      MOZ_ASSERT(!child->IsHTMLElement(nsGkAtoms::slot),
-                 "Slots shouldn't appear in light DOM");
-
-      // Skip child's descendants if child is a shadow host, as they are
+         child = iter.GetNextChild()) {
+      // Skip child's descendants if child is a shadow host or slot, as they are
       // in the focus navigation scope owned by child's shadow root
-      if (!(nsDocument::IsShadowDOMEnabled(aParent) && child->GetShadowRoot())) {
+      if (!(nsDocument::IsShadowDOMEnabled(aParent) && IsHostOrSlot(child))) {
         childTabIndex = GetNextTabIndex(child, aCurrentTabIndex, aForward);
         if ((aCurrentTabIndex == 0 && childTabIndex > tabIndex) ||
             (childTabIndex < aCurrentTabIndex && childTabIndex > tabIndex)) {
