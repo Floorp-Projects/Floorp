@@ -132,7 +132,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "8c3ff6c6f2ca"
+        "revision": "54ef51706904"
     }, 
     "bn-BD": {
         "platforms": [
@@ -177,7 +177,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ca6704c25986"
+        "revision": "c63a8798ac13"
     }, 
     "bs": {
         "platforms": [
@@ -237,7 +237,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "a1fd40554493"
+        "revision": "3c07e513a9db"
     }, 
     "cy": {
         "platforms": [
@@ -252,7 +252,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "33f6e13e28ab"
+        "revision": "cc47816a776a"
     }, 
     "da": {
         "platforms": [
@@ -312,7 +312,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "ea0960b2c6f2"
+        "revision": "1538f85849fd"
     }, 
     "en-GB": {
         "platforms": [
@@ -552,7 +552,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "58c07f216ebc"
+        "revision": "a161b0890735"
     }, 
     "gl": {
         "platforms": [
@@ -657,7 +657,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d064d804a03b"
+        "revision": "56b37816008d"
     }, 
     "hu": {
         "platforms": [
@@ -702,7 +702,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "b53dfa24f023"
+        "revision": "7d4836414a44"
     }, 
     "id": {
         "platforms": [
@@ -747,7 +747,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "4f180ca910ef"
+        "revision": "af1852a8bf36"
     }, 
     "ja": {
         "platforms": [
@@ -760,14 +760,14 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "5ae1b97aac49"
+        "revision": "de2b7e01b630"
     }, 
     "ja-JP-mac": {
         "platforms": [
             "macosx64", 
             "macosx64-devedition"
         ], 
-        "revision": "e16db591b604"
+        "revision": "56b86a8e00a3"
     }, 
     "ka": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "87ebc62a90bb"
+        "revision": "bf9b641ffe01"
     }, 
     "kab": {
         "platforms": [
@@ -1007,7 +1007,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "06427ccb1681"
+        "revision": "e4c15f54eb37"
     }, 
     "ne-NP": {
         "platforms": [
@@ -1097,7 +1097,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "c8e814af1095"
+        "revision": "baf77cb38f74"
     }, 
     "pt-BR": {
         "platforms": [
@@ -1112,7 +1112,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "69cd61246285"
+        "revision": "e4b4cc89ef54"
     }, 
     "pt-PT": {
         "platforms": [
@@ -1127,7 +1127,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "c11608ad5e31"
+        "revision": "17eaf299cc4e"
     }, 
     "rm": {
         "platforms": [
@@ -1217,7 +1217,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "e957dcfb1ac8"
+        "revision": "c9d38db08c14"
     }, 
     "son": {
         "platforms": [
@@ -1397,7 +1397,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "9a89c364ba2c"
+        "revision": "dd10747fcb90"
     }, 
     "xh": {
         "platforms": [
@@ -1427,7 +1427,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d4a4c25d56ac"
+        "revision": "03b3a0ea6c77"
     }, 
     "zh-TW": {
         "platforms": [
@@ -1442,6 +1442,6 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "6e13ef6f06e0"
+        "revision": "b2cb441afcbd"
     }
 }
