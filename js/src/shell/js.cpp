@@ -271,6 +271,7 @@ NewOffThreadJob(JSContext* cx, ScriptKind kind, OffThreadJob::Source&& source)
         return nullptr;
 
     if (!sc->offThreadJobs.append(job.get())) {
+        job->cancel();
         JS_ReportErrorASCII(cx, "OOM adding off-thread job");
         return nullptr;
     }
@@ -370,13 +371,28 @@ DeleteOffThreadJob(JSContext* cx, OffThreadJob* job)
 }
 
 static void
-CancelAllOffThreadJobs(JSContext* cx)
+CancelOffThreadJobsForContext(JSContext* cx)
 {
     // Parse jobs may be blocked waiting on GC.
     gc::FinishGC(cx);
 
-    CancelOffThreadParses(cx->runtime());
+    // Wait for jobs belonging to this context.
+    ShellContext* sc = GetShellContext(cx);
+    while (!sc->offThreadJobs.empty()) {
+        OffThreadJob* job = sc->offThreadJobs.popCopy();
+        job->waitUntilDone(cx);
+        js_delete(job);
+    }
+}
 
+static void
+CancelOffThreadJobsForRuntime(JSContext* cx)
+{
+    // Parse jobs may be blocked waiting on GC.
+    gc::FinishGC(cx);
+
+    // Cancel jobs belonging to this runtime.
+    CancelOffThreadParses(cx->runtime());
     ShellContext* sc = GetShellContext(cx);
     while (!sc->offThreadJobs.empty())
         js_delete(sc->offThreadJobs.popCopy());
@@ -3680,7 +3696,7 @@ WorkerMain(void* arg)
         return;
 
     auto guard = mozilla::MakeScopeExit([&] {
-        CancelAllOffThreadJobs(cx);
+        CancelOffThreadJobsForContext(cx);
         JS_DestroyContext(cx);
         js_delete(sc);
         if (input->siblingContext) {
@@ -9308,7 +9324,7 @@ main(int argc, char** argv, char** envp)
 
     DestructSharedArrayBufferMailbox();
 
-    CancelAllOffThreadJobs(cx);
+    CancelOffThreadJobsForRuntime(cx);
 
     JS_DestroyContext(cx);
     return result;

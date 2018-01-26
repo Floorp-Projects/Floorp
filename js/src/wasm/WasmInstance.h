@@ -30,35 +30,6 @@
 namespace js {
 namespace wasm {
 
-// A wasm GlobalSegment owns the allocated global data for a wasm module.  A
-// module may be compiled multiple times (at multiple tiers) but the compiled
-// representations share the same GlobalSegment.
-
-class GlobalSegment
-{
-    uint32_t globalDataLength_;
-    TlsData* tlsData_;
-
-    GlobalSegment(const GlobalSegment&) = delete;
-    GlobalSegment(GlobalSegment&&) = delete;
-    void operator=(const GlobalSegment&) = delete;
-    void operator=(GlobalSegment&&) = delete;
-
-  public:
-    static UniquePtr<GlobalSegment> create(uint32_t globalDataLength);
-
-    GlobalSegment() { PodZero(this); }
-    ~GlobalSegment();
-
-    TlsData* tlsData() const { return tlsData_; }
-    uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
-    uint32_t globalDataLength() const { return globalDataLength_; }
-
-    size_t sizeOfMisc(MallocSizeOf mallocSizeOf) const;
-};
-
-typedef UniquePtr<GlobalSegment> UniqueGlobalSegment;
-
 // Instance represents a wasm instance and provides all the support for runtime
 // execution of code in the instance. Instances share various immutable data
 // structures with the Module from which they were instantiated and other
@@ -77,7 +48,7 @@ class Instance
     jit::TrampolinePtr              jsJitArgsRectifier_;
     const SharedCode                code_;
     const UniqueDebugState          debug_;
-    const UniqueGlobalSegment       globals_;
+    const UniqueTlsData             tlsData_;
     GCPtrWasmMemoryObject           memory_;
     SharedTableVector               tables_;
     bool                            enterFrameTrapsEnabled_;
@@ -99,7 +70,7 @@ class Instance
              HandleWasmInstanceObject object,
              SharedCode code,
              UniqueDebugState debug,
-             UniqueGlobalSegment globals,
+             UniqueTlsData tlsData,
              HandleWasmMemoryObject memory,
              SharedTableVector&& tables,
              Handle<FunctionVector> funcImports,
@@ -113,7 +84,8 @@ class Instance
     DebugState& debug() { return *debug_; }
     const DebugState& debug() const { return *debug_; }
     const CodeSegment& codeSegment(Tier t) const { return code_->segment(t); }
-    const GlobalSegment& globalSegment() const { return *globals_; }
+    TlsData* tlsData() const { return tlsData_.get(); }
+    uint8_t* globalData() const { return (uint8_t*)&tlsData_->globalArea; }
     uint8_t* codeBase(Tier t) const { return code_->segment(t).base(); }
     const MetadataTier& metadata(Tier t) const { return code_->metadata(t); }
     const Metadata& metadata() const { return code_->metadata(); }
@@ -126,7 +98,6 @@ class Instance
 #ifdef JS_SIMULATOR
     bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
 #endif
-    TlsData* tlsData() const { return globals_->tlsData(); }
 
     static size_t offsetOfJSJitArgsRectifier() { return offsetof(Instance, jsJitArgsRectifier_); }
 

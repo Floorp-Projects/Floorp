@@ -25,6 +25,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsINode
+  virtual nsresult InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                                     bool aNotify) override;
   virtual nsresult InsertChildAt_Deprecated(nsIContent* aKid, uint32_t aIndex,
                                             bool aNotify) override;
   virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;

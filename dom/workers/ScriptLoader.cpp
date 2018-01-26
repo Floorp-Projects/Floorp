@@ -57,6 +57,7 @@
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Response.h"
@@ -110,6 +111,7 @@ nsresult
 ChannelFromScriptURL(nsIPrincipal* principal,
                      nsIURI* baseURI,
                      nsIDocument* parentDoc,
+                     WorkerPrivate* aWorkerPrivate,
                      nsILoadGroup* loadGroup,
                      nsIIOService* ios,
                      nsIScriptSecurityManager* secMan,
@@ -190,6 +192,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        parentDoc,
                        secFlags,
                        contentPolicyType,
+                       nullptr, // aPerformanceStorage
                        loadGroup,
                        nullptr, // aCallbacks
                        aLoadFlags,
@@ -200,6 +203,11 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     MOZ_ASSERT(loadGroup);
     MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(loadGroup, principal));
 
+    RefPtr<PerformanceStorage> performanceStorage;
+    if (aWorkerPrivate && !aIsMainScript) {
+      performanceStorage = aWorkerPrivate->GetPerformanceStorage();
+    }
+
     if (aClientInfo.isSome()) {
       rv = NS_NewChannel(getter_AddRefs(channel),
                          uri,
@@ -208,6 +216,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                          aController,
                          secFlags,
                          contentPolicyType,
+                         performanceStorage,
                          loadGroup,
                          nullptr, // aCallbacks
                          aLoadFlags,
@@ -218,6 +227,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                          principal,
                          secFlags,
                          contentPolicyType,
+                         performanceStorage,
                          loadGroup,
                          nullptr, // aCallbacks
                          aLoadFlags,
@@ -991,7 +1001,8 @@ private:
       // Only top level workers' main script use the document charset for the
       // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
       bool useDefaultEncoding = !(!parentWorker && IsMainWorkerScript());
-      rv = ChannelFromScriptURL(principal, baseURI, parentDoc, loadGroup, ios,
+      rv = ChannelFromScriptURL(principal, baseURI, parentDoc, mWorkerPrivate,
+                                loadGroup, ios,
                                 secMan, loadInfo.mURL,
                                 mClientInfo, mController,
                                 IsMainWorkerScript(),
@@ -2266,8 +2277,8 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   NS_ASSERTION(secMan, "This should never be null!");
 
-  return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
-                              ios, secMan, aScriptURL, aClientInfo,
+  return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, nullptr,
+                              aLoadGroup, ios, secMan, aScriptURL, aClientInfo,
                               Maybe<ServiceWorkerDescriptor>(),
                               true, WorkerScript, aMainScriptContentPolicyType,
                               nsIRequest::LOAD_NORMAL, aDefaultURIEncoding,

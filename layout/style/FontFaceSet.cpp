@@ -657,6 +657,7 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
                                             principal ? principal->get() : nullptr,
                                             nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
                                             nsIContentPolicy::TYPE_FONT,
+                                            nullptr, // PerformanceStorage
                                             loadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 

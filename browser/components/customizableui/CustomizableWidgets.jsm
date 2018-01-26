@@ -14,6 +14,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUITelemetry: "resource:///modules/BrowserUITelemetry.jsm",
+  PanelView: "resource:///modules/PanelMultiView.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   RecentlyClosedTabsAndWindowsMenuUtils: "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm",
@@ -366,8 +367,8 @@ const CustomizableWidgets = [
           }
         }
         this._tabsList.appendChild(fragment);
-        let panelView = this._tabsList.closest("panelview");
-        panelView.panelMultiView.descriptionHeightWorkaround(panelView);
+        PanelView.forNode(this._tabsList.closest("panelview"))
+                 .descriptionHeightWorkaround();
       }).catch(err => {
         Cu.reportError(err);
       }).then(() => {

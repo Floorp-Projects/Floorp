@@ -41,6 +41,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PanelView: "resource:///modules/PanelMultiView.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
@@ -7144,21 +7145,19 @@ var gIdentityHandler = {
     delete this._identityPopupMultiView;
     return this._identityPopupMultiView = document.getElementById("identity-popup-multiView");
   },
+  get _identityPopupMainView() {
+    delete this._identityPopupMainView;
+    return this._identityPopupMainView = document.getElementById("identity-popup-mainView");
+  },
   get _identityPopupContentHosts() {
     delete this._identityPopupContentHosts;
-    let selector = ".identity-popup-host";
-    return this._identityPopupContentHosts = [
-      ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
-      ...document.querySelectorAll(selector)
-    ];
+    return this._identityPopupContentHosts =
+      [...document.querySelectorAll(".identity-popup-host")];
   },
   get _identityPopupContentHostless() {
     delete this._identityPopupContentHostless;
-    let selector = ".identity-popup-hostless";
-    return this._identityPopupContentHostless = [
-      ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
-      ...document.querySelectorAll(selector)
-    ];
+    return this._identityPopupContentHostless =
+      [...document.querySelectorAll(".identity-popup-hostless")];
   },
   get _identityPopupContentOwner() {
     delete this._identityPopupContentOwner;
@@ -7400,7 +7399,8 @@ var gIdentityHandler = {
 
     if (this._identityPopup.state == "open") {
       this.updateSitePermissions();
-      this._identityPopupMultiView.descriptionHeightWorkaround();
+      PanelView.forNode(this._identityPopupMainView)
+               .descriptionHeightWorkaround();
     }
   },
 
@@ -8056,7 +8056,8 @@ var gIdentityHandler = {
       SitePermissions.remove(gBrowser.currentURI, aPermission.id, browser);
 
       this._permissionReloadHint.removeAttribute("hidden");
-      this._identityPopupMultiView.descriptionHeightWorkaround();
+      PanelView.forNode(this._identityPopupMainView)
+               .descriptionHeightWorkaround();
 
       // Set telemetry values for clearing a permission
       let histogram = Services.telemetry.getKeyedHistogramById("WEB_PERMISSION_CLEARED");
