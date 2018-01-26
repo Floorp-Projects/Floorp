@@ -55,6 +55,8 @@ public:
   void GetFormat(nsAString& aFormat);
   void GetMetadata(nsAString& aMetadata);
 
+  void GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult);
+
   bool WrapObject(JSContext* aCx,
                   JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector)
