@@ -1917,6 +1917,15 @@ public:
                                      void *aData) = 0;
 
   /**
+   * Collect all the descendant documents for which |aCalback| returns true.
+   * The callback function must not mutate any state for the given document.
+   */
+  typedef bool (*nsDocTestFunc)(const nsIDocument* aDocument);
+  virtual void CollectDescendantDocuments(
+    nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
+    nsDocTestFunc aCallback) const = 0;
+
+  /**
    * Check whether it is safe to cache the presentation of this document
    * and all of its subdocuments. This method checks the following conditions
    * recursively:
