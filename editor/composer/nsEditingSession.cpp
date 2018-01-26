@@ -7,12 +7,12 @@
 #include <string.h>                     // for nullptr, strcmp
 
 #include "imgIContainer.h"              // for imgIContainer, etc
+#include "mozilla/ComposerCommandsUpdater.h" // for ComposerCommandsUpdater
 #include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/HTMLEditor.h"         // for HTMLEditor
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
-#include "nsComposerCommandsUpdater.h"  // for nsComposerCommandsUpdater
 #include "nsContentUtils.h"
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
 #include "nsEditingSession.h"
@@ -378,7 +378,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
   }
 
   // make the UI state maintainer
-  mStateMaintainer = new nsComposerCommandsUpdater();
+  mStateMaintainer = new ComposerCommandsUpdater();
 
   // now init the state maintainer
   // This allows notification of error state
