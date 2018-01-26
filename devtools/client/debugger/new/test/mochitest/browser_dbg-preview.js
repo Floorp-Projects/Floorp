@@ -18,8 +18,8 @@ function hoverAtPos(dbg, { line, ch }) {
   );
 }
 
-function assertTooltip(dbg, { result, expression }) {
-  const previewEl = findElement(dbg, "tooltip");
+async function assertTooltip(dbg, { result, expression }) {
+  const previewEl = await waitForElement(dbg, "tooltip");
   is(previewEl.innerText, result, "Preview text shown to user");
 
   const preview = dbg.selectors.getPreview(dbg.getState());
@@ -28,10 +28,8 @@ function assertTooltip(dbg, { result, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
-function assertPopup(dbg, { field, value, expression }) {
-  const previewEl = findElement(dbg, "popup");
-  is(previewEl.innerText, "", "Preview text shown to user");
-
+async function assertPopup(dbg, { field, value, expression }) {
+  const previewEl = await waitForElement(dbg, "popup");
   const preview = dbg.selectors.getPreview(dbg.getState());
 
   is(
@@ -58,11 +56,11 @@ add_task(async function() {
   const tooltipPreviewed = waitForDispatch(dbg, "SET_PREVIEW");
   hoverAtPos(dbg, { line: 5, ch: 12 });
   await tooltipPreviewed;
-  assertTooltip(dbg, { result: "3", expression: "result" });
+  await assertTooltip(dbg, { result: "3", expression: "result" });
 
   const popupPreviewed = waitForDispatch(dbg, "SET_PREVIEW");
   hoverAtPos(dbg, { line: 2, ch: 10 });
   await popupPreviewed;
-  assertPopup(dbg, { field: "foo", value: "1", expression: "obj" });
-  assertPopup(dbg, { field: "bar", value: "2", expression: "obj" });
+  await assertPopup(dbg, { field: "foo", value: "1", expression: "obj" });
+  await assertPopup(dbg, { field: "bar", value: "2", expression: "obj" });
 });

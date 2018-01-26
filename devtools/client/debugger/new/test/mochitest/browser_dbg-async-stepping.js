@@ -3,7 +3,7 @@
 
 // Tests async stepping will step over await statements
 add_task(async function test() {
-  Services.prefs.setBoolPref("devtools.debugger.features.async-stepping", true);
+  await pushPref("devtools.debugger.features.async-stepping", true);
   const dbg = await initDebugger("doc-async.html", "async");
 
   await selectSource(dbg, "async");
@@ -17,11 +17,4 @@ add_task(async function test() {
   await stepOver(dbg);
   assertPausedLocation(dbg);
   assertDebugLine(dbg, 9);
-});
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(
-    "devtools.debugger.features.async-stepping",
-    false
-  );
 });

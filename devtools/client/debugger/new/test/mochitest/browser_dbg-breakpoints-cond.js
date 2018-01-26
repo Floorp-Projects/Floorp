@@ -27,7 +27,7 @@ function assertEditorBreakpoint(dbg, line, shouldExist) {
 async function setConditionalBreakpoint(dbg, index, condition) {
   rightClickElement(dbg, "gutter", index);
   selectMenuItem(dbg, 2);
-  await waitForElement(dbg, ".conditional-breakpoint-panel input");
+  await waitForElementWithSelector(dbg, ".conditional-breakpoint-panel input");
   findElementWithSelector(dbg, ".conditional-breakpoint-panel input").focus();
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
