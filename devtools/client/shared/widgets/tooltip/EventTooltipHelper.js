@@ -79,20 +79,6 @@ EventTooltip.prototype = {
       header.className = "event-header devtools-toolbar";
       this.container.appendChild(header);
 
-      if (!listener.hide.debugger) {
-        let debuggerIcon = doc.createElementNS(XHTML_NS, "img");
-        debuggerIcon.className = "event-tooltip-debugger-icon";
-        debuggerIcon.setAttribute("src",
-          "chrome://devtools/skin/images/tool-debugger.svg");
-        let openInDebugger = L10N.getStr("eventsTooltip.openInDebugger");
-        debuggerIcon.setAttribute("title", openInDebugger);
-        header.appendChild(debuggerIcon);
-      } else {
-        let debuggerDiv = doc.createElementNS(XHTML_NS, "div");
-        debuggerDiv.className = "event-tooltip-debugger-spacer";
-        header.appendChild(debuggerDiv);
-      }
-
       if (!listener.hide.type) {
         let eventTypeLabel = doc.createElementNS(XHTML_NS, "span");
         eventTypeLabel.className = "event-tooltip-event-type";
@@ -142,6 +128,16 @@ EventTooltip.prototype = {
       filename.textContent = text;
       filename.setAttribute("title", title);
       header.appendChild(filename);
+
+      if (!listener.hide.debugger) {
+        let debuggerIcon = doc.createElementNS(XHTML_NS, "img");
+        debuggerIcon.className = "event-tooltip-debugger-icon";
+        debuggerIcon.setAttribute("src",
+          "chrome://devtools/skin/images/jump-definition.svg");
+        let openInDebugger = L10N.getStr("eventsTooltip.openInDebugger");
+        debuggerIcon.setAttribute("title", openInDebugger);
+        header.appendChild(debuggerIcon);
+      }
 
       let attributesContainer = doc.createElementNS(XHTML_NS, "div");
       attributesContainer.className = "event-tooltip-attributes-container";
@@ -219,6 +215,7 @@ EventTooltip.prototype = {
     let doc = this._tooltip.doc;
     let header = event.currentTarget;
     let content = header.nextElementSibling;
+    header.classList.toggle("content-expanded");
 
     if (content.hasAttribute("open")) {
       content.removeAttribute("open");

@@ -3552,17 +3552,26 @@ nsLocalFile::SetNativeLeafName(const nsACString& aLeafName)
 }
 
 
-NS_IMETHODIMP
-nsLocalFile::GetNativePath(nsACString& aResult)
+nsString
+nsLocalFile::NativePath()
+{
+  return mWorkingPath;
+}
+
+nsresult
+nsIFile::GetNativePath(nsACString& aResult)
 {
   //NS_WARNING("This API is lossy. Use GetPath !");
-  nsAutoString tmp;
-  nsresult rv = GetPath(tmp);
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_CopyUnicodeToNative(tmp, aResult);
-  }
+  return NS_CopyUnicodeToNative(NativePath(), aResult);
+}
 
-  return rv;
+nsCString
+nsIFile::HumanReadablePath()
+{
+  nsString path;
+  DebugOnly<nsresult> rv = GetPath(path);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_ConvertUTF16toUTF8(path);
 }
 
 

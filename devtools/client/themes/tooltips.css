@@ -268,12 +268,26 @@
   overflow: hidden;
 }
 
+.event-header:before {
+  content: "▶︎";
+  padding-inline-end: 5px;
+}
+
+.event-header.content-expanded:before {
+  content: "▼";
+}
+
 .event-header:first-child {
   border-width: 0;
 }
 
 .event-header:not(:first-child) {
   border-width: 1px 0 0 0;
+}
+
+.event-tooltip-debugger-icon {
+  -moz-context-properties: stroke;
+   stroke: currentColor;
 }
 
 .devtools-tooltip-events-container {
