@@ -49,7 +49,8 @@ class DebianBootstrapper(StyloInstall, BaseBootstrapper):
 
     # Ubuntu and Debian don't often differ, but they do for npm.
     DEBIAN_PACKAGES = [
-        'npm'
+        # Comment the npm package until Debian bring it back
+        # 'npm'
     ]
 
     # These are common packages for building Firefox for Desktop
