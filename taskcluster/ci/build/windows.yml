@@ -650,6 +650,7 @@ win32-mingw32/debug:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 7200
     run:
         using: mozharness
