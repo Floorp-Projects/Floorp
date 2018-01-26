@@ -1,0 +1,492 @@
+diff -uNr ./dist/DOMLocalization.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm
+--- ./dist/DOMLocalization.jsm	2018-01-30 13:46:58.589811108 -0800
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/DOMLocalization.jsm	2018-01-30 13:46:13.613146435 -0800
+@@ -18,7 +18,8 @@
+ 
+ /* fluent@0.6.0 */
+ 
+-import Localization from '../../fluent-dom/src/localization.js';
++const { Localization } =
++  Components.utils.import("resource://gre/modules/Localization.jsm", {});
+ 
+ // Match the opening angle bracket (<) in HTML tags, and HTML entities like
+ // &amp;, &#0038;, &#x0026;.
+@@ -623,36 +624,5 @@
+   }
+ }
+ 
+-/* global L10nRegistry, Services */
+-/**
+- * The default localization strategy for Gecko. It comabines locales
+- * available in L10nRegistry, with locales requested by the user to
+- * generate the iterator over MessageContexts.
+- *
+- * In the future, we may want to allow certain modules to override this
+- * with a different negotitation strategy to allow for the module to
+- * be localized into a different language - for example DevTools.
+- */
+-function defaultGenerateMessages(resourceIds) {
+-  const requestedLocales = Services.locale.getRequestedLocales();
+-  const availableLocales = L10nRegistry.getAvailableLocales();
+-  const defaultLocale = Services.locale.defaultLocale;
+-  const locales = Services.locale.negotiateLanguages(
+-    requestedLocales, availableLocales, defaultLocale,
+-  );
+-  return L10nRegistry.generateContexts(locales, resourceIds);
+-}
+-
+-
+-class GeckoDOMLocalization extends DOMLocalization {
+-  constructor(
+-    windowElement,
+-    resourceIds,
+-    generateMessages = defaultGenerateMessages
+-  ) {
+-    super(windowElement, resourceIds, generateMessages);
+-  }
+-}
+-
+-this.DOMLocalization = GeckoDOMLocalization;
++this.DOMLocalization = DOMLocalization;
+ this.EXPORTED_SYMBOLS = ['DOMLocalization'];
+diff -uNr ./dist/l10n.js /home/zbraniecki/projects/mozilla-unified/intl/l10n/l10n.js
+--- ./dist/l10n.js	2018-01-30 13:46:58.749811101 -0800
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/l10n.js	2018-01-26 20:52:09.106650798 -0800
+@@ -1,7 +1,6 @@
+-/* global Components, document, window */
+ {
+   const { DOMLocalization } =
+-    Components.utils.import('resource://gre/modules/DOMLocalization.jsm');
++    Components.utils.import("resource://gre/modules/DOMLocalization.jsm");
+ 
+   /**
+    * Polyfill for document.ready polyfill.
+diff -uNr ./dist/Localization.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm
+--- ./dist/Localization.jsm	2018-01-30 13:46:58.393144450 -0800
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/Localization.jsm	2018-01-30 13:46:04.593146834 -0800
+@@ -18,92 +18,16 @@
+ 
+ /* fluent@0.6.0 */
+ 
+-/*  eslint no-magic-numbers: [0]  */
+-
+-/* global Intl */
+-
+-/**
+- * The `FluentType` class is the base of Fluent's type system.
+- *
+- * Fluent types wrap JavaScript values and store additional configuration for
+- * them, which can then be used in the `toString` method together with a proper
+- * `Intl` formatter.
+- */
+-
+-/**
+- * @overview
+- *
+- * The FTL resolver ships with a number of functions built-in.
+- *
+- * Each function take two arguments:
+- *   - args - an array of positional args
+- *   - opts - an object of key-value args
+- *
+- * Arguments to functions are guaranteed to already be instances of
+- * `FluentType`.  Functions must return `FluentType` objects as well.
+- */
++/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
++/* global console */
+ 
+-/**
+- * @overview
+- *
+- * The role of the Fluent resolver is to format a translation object to an
+- * instance of `FluentType` or an array of instances.
+- *
+- * Translations can contain references to other messages or external arguments,
+- * conditional logic in form of select expressions, traits which describe their
+- * grammatical features, and can use Fluent builtins which make use of the
+- * `Intl` formatters to format numbers, dates, lists and more into the
+- * context's language.  See the documentation of the Fluent syntax for more
+- * information.
+- *
+- * In case of errors the resolver will try to salvage as much of the
+- * translation as possible.  In rare situations where the resolver didn't know
+- * how to recover from an error it will return an instance of `FluentNone`.
+- *
+- * `MessageReference`, `VariantExpression`, `AttributeExpression` and
+- * `SelectExpression` resolve to raw Runtime Entries objects and the result of
+- * the resolution needs to be passed into `Type` to get their real value.
+- * This is useful for composing expressions.  Consider:
+- *
+- *     brand-name[nominative]
+- *
+- * which is a `VariantExpression` with properties `id: MessageReference` and
+- * `key: Keyword`.  If `MessageReference` was resolved eagerly, it would
+- * instantly resolve to the value of the `brand-name` message.  Instead, we
+- * want to get the message object and look for its `nominative` variant.
+- *
+- * All other expressions (except for `FunctionReference` which is only used in
+- * `CallExpression`) resolve to an instance of `FluentType`.  The caller should
+- * use the `toString` method to convert the instance to a native value.
+- *
+- *
+- * All functions in this file pass around a special object called `env`.
+- * This object stores a set of elements used by all resolve functions:
+- *
+- *  * {MessageContext} ctx
+- *      context for which the given resolution is happening
+- *  * {Object} args
+- *      list of developer provided arguments that can be used
+- *  * {Array} errors
+- *      list of errors collected while resolving
+- *  * {WeakSet} dirty
+- *      Set of patterns already encountered during this resolution.
+- *      This is used to prevent cyclic resolutions.
+- */
++const Cu = Components.utils;
++const Cc = Components.classes;
++const Ci = Components.interfaces;
+ 
+-/**
+- * Message contexts are single-language stores of translations.  They are
+- * responsible for parsing translation resources in the Fluent syntax and can
+- * format translation units (entities) to strings.
+- *
+- * Always use `MessageContext.format` to retrieve translation units from
+- * a context.  Translations can contain references to other entities or
+- * external arguments, conditional logic in form of select expressions, traits
+- * which describe their grammatical features, and can use Fluent builtins which
+- * make use of the `Intl` formatters to format numbers, dates, lists and more
+- * into the context's language.  See the documentation of the Fluent syntax for
+- * more information.
+- */
++const { L10nRegistry } = Cu.import("resource://gre/modules/L10nRegistry.jsm", {});
++const LocaleService = Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
++const ObserverService = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+ 
+ /*
+  * CachedIterable caches the elements yielded by an iterable.
+@@ -170,87 +94,6 @@
+   }
+ }
+ 
+-/*
+- * @overview
+- *
+- * Functions for managing ordered sequences of MessageContexts.
+- *
+- * An ordered iterable of MessageContext instances can represent the current
+- * negotiated fallback chain of languages.  This iterable can be used to find
+- * the best existing translation for a given identifier.
+- *
+- * The mapContext* methods can be used to find the first MessageContext in the
+- * given iterable which contains the translation with the given identifier.  If
+- * the iterable is ordered according to the result of a language negotiation
+- * the returned MessageContext contains the best available translation.
+- *
+- * A simple function which formats translations based on the identifier might
+- * be implemented as follows:
+- *
+- *     formatString(id, args) {
+- *         const ctx = mapContextSync(contexts, id);
+- *
+- *         if (ctx === null) {
+- *             return id;
+- *         }
+- *
+- *         const msg = ctx.getMessage(id);
+- *         return ctx.format(msg, args);
+- *     }
+- *
+- * In order to pass an iterator to mapContext*, wrap it in CachedIterable.
+- * This allows multiple calls to mapContext* without advancing and eventually
+- * depleting the iterator.
+- *
+- *     function *generateMessages() {
+- *         // Some lazy logic for yielding MessageContexts.
+- *         yield *[ctx1, ctx2];
+- *     }
+- *
+- *     const contexts = new CachedIterable(generateMessages());
+- *     const ctx = mapContextSync(contexts, id);
+- *
+- */
+-
+-/*
+- * Synchronously map an identifier or an array of identifiers to the best
+- * `MessageContext` instance(s).
+- *
+- * @param {Iterable} iterable
+- * @param {string|Array<string>} ids
+- * @returns {MessageContext|Array<MessageContext>}
+- */
+-
+-
+-/*
+- * Asynchronously map an identifier or an array of identifiers to the best
+- * `MessageContext` instance(s).
+- *
+- * @param {AsyncIterable} iterable
+- * @param {string|Array<string>} ids
+- * @returns {Promise<MessageContext|Array<MessageContext>>}
+- */
+-
+-/**
+- * Template literal tag for dedenting FTL code.
+- *
+- * Strip the common indent of non-blank lines. Remove blank lines.
+- *
+- * @param {Array<string>} strings
+- */
+-
+-/*
+- * @module fluent
+- * @overview
+- *
+- * `fluent` is a JavaScript implementation of Project Fluent, a localization
+- * framework designed to unleash the expressive power of the natural language.
+- *
+- */
+-
+-/* eslint no-console: ["error", { allow: ["warn", "error"] }] */
+-/* global console */
+-
+ /**
+  * Specialized version of an Error used to indicate errors that are result
+  * of a problem during the localization process.
+@@ -269,6 +112,26 @@
+   }
+ }
+ 
++ /**
++ * The default localization strategy for Gecko. It comabines locales
++ * available in L10nRegistry, with locales requested by the user to
++ * generate the iterator over MessageContexts.
++ *
++ * In the future, we may want to allow certain modules to override this
++ * with a different negotitation strategy to allow for the module to
++ * be localized into a different language - for example DevTools.
++ */
++function defaultGenerateMessages(resourceIds) {
++  const availableLocales = L10nRegistry.getAvailableLocales();
++
++  const requestedLocales = LocaleService.getRequestedLocales();
++  const defaultLocale = LocaleService.defaultLocale;
++  const locales = LocaleService.negotiateLanguages(
++    requestedLocales, availableLocales, defaultLocale,
++  );
++  return L10nRegistry.generateContexts(locales, resourceIds);
++}
++
+ /**
+  * The `Localization` class is a central high-level API for vanilla
+  * JavaScript use of Fluent.
+@@ -283,7 +146,7 @@
+    *
+    * @returns {Localization}
+    */
+-  constructor(resourceIds, generateMessages) {
++  constructor(resourceIds, generateMessages = defaultGenerateMessages) {
+     this.resourceIds = resourceIds;
+     this.generateMessages = generateMessages;
+     this.ctxs = new CachedIterable(this.generateMessages(this.resourceIds));
+@@ -303,7 +166,7 @@
+    */
+   async formatWithFallback(keys, method) {
+     const translations = [];
+-    for (let ctx of this.ctxs) {
++    for await (let ctx of this.ctxs) {
+       // This can operate on synchronous and asynchronous
+       // contexts coming from the iterator.
+       if (typeof ctx.then === 'function') {
+@@ -394,8 +257,38 @@
+     return val;
+   }
+ 
+-  handleEvent() {
+-    this.onLanguageChange();
++  /**
++   * Register observers on events that will trigger cache invalidation
++   */
++  registerObservers() {
++    ObserverService.addObserver(this, 'l10n:available-locales-changed', false);
++    ObserverService.addObserver(this, 'intl:requested-locales-changed', false);
++  }
++
++  /**
++   * Unregister observers on events that will trigger cache invalidation
++   */
++  unregisterObservers() {
++    ObserverService.removeObserver(this, 'l10n:available-locales-changed');
++    ObserverService.removeObserver(this, 'intl:requested-locales-changed');
++  }
++
++  /**
++   * Default observer handler method.
++   *
++   * @param {String} subject
++   * @param {String} topic
++   * @param {Object} data
++   */
++  observe(subject, topic, data) {
++    switch (topic) {
++      case 'l10n:available-locales-changed':
++      case 'intl:requested-locales-changed':
++        this.onLanguageChange();
++        break;
++      default:
++        break;
++    }
+   }
+ 
+   /**
+@@ -538,7 +431,8 @@
+       hasErrors = true;
+     }
+ 
+-    if (messageErrors.length && typeof console !== 'undefined') {
++    if (messageErrors.length) {
++      const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
+       messageErrors.forEach(error => console.warn(error));
+     }
+   });
+@@ -546,45 +440,5 @@
+   return hasErrors;
+ }
+ 
+-/* global Components */
+-/* eslint no-unused-vars: 0 */
+-
+-const Cu = Components.utils;
+-const Cc = Components.classes;
+-const Ci = Components.interfaces;
+-
+-const { L10nRegistry } =
+-  Cu.import('resource://gre/modules/L10nRegistry.jsm', {});
+-const ObserverService =
+-  Cc['@mozilla.org/observer-service;1'].getService(Ci.nsIObserverService);
+-const { Services } =
+-  Cu.import('resource://gre/modules/Services.jsm', {});
+-
+-
+-/**
+- * The default localization strategy for Gecko. It comabines locales
+- * available in L10nRegistry, with locales requested by the user to
+- * generate the iterator over MessageContexts.
+- *
+- * In the future, we may want to allow certain modules to override this
+- * with a different negotitation strategy to allow for the module to
+- * be localized into a different language - for example DevTools.
+- */
+-function defaultGenerateMessages(resourceIds) {
+-  const requestedLocales = Services.locale.getRequestedLocales();
+-  const availableLocales = L10nRegistry.getAvailableLocales();
+-  const defaultLocale = Services.locale.defaultLocale;
+-  const locales = Services.locale.negotiateLanguages(
+-    requestedLocales, availableLocales, defaultLocale,
+-  );
+-  return L10nRegistry.generateContexts(locales, resourceIds);
+-}
+-
+-class GeckoLocalization extends Localization {
+-  constructor(resourceIds, generateMessages = defaultGenerateMessages) {
+-    super(resourceIds, generateMessages);
+-  }
+-}
+-
+-this.Localization = GeckoLocalization;
++this.Localization = Localization;
+ this.EXPORTED_SYMBOLS = ['Localization'];
+diff -uNr ./dist/MessageContext.jsm /home/zbraniecki/projects/mozilla-unified/intl/l10n/MessageContext.jsm
+--- ./dist/MessageContext.jsm	2018-01-30 13:46:58.119811129 -0800
++++ /home/zbraniecki/projects/mozilla-unified/intl/l10n/MessageContext.jsm	2018-01-30 13:53:23.036460739 -0800
+@@ -1838,90 +1838,5 @@
+   }
+ }
+ 
+-/*
+- * CachedIterable caches the elements yielded by an iterable.
+- *
+- * It can be used to iterate over an iterable many times without depleting the
+- * iterable.
+- */
+-
+-/*
+- * @overview
+- *
+- * Functions for managing ordered sequences of MessageContexts.
+- *
+- * An ordered iterable of MessageContext instances can represent the current
+- * negotiated fallback chain of languages.  This iterable can be used to find
+- * the best existing translation for a given identifier.
+- *
+- * The mapContext* methods can be used to find the first MessageContext in the
+- * given iterable which contains the translation with the given identifier.  If
+- * the iterable is ordered according to the result of a language negotiation
+- * the returned MessageContext contains the best available translation.
+- *
+- * A simple function which formats translations based on the identifier might
+- * be implemented as follows:
+- *
+- *     formatString(id, args) {
+- *         const ctx = mapContextSync(contexts, id);
+- *
+- *         if (ctx === null) {
+- *             return id;
+- *         }
+- *
+- *         const msg = ctx.getMessage(id);
+- *         return ctx.format(msg, args);
+- *     }
+- *
+- * In order to pass an iterator to mapContext*, wrap it in CachedIterable.
+- * This allows multiple calls to mapContext* without advancing and eventually
+- * depleting the iterator.
+- *
+- *     function *generateMessages() {
+- *         // Some lazy logic for yielding MessageContexts.
+- *         yield *[ctx1, ctx2];
+- *     }
+- *
+- *     const contexts = new CachedIterable(generateMessages());
+- *     const ctx = mapContextSync(contexts, id);
+- *
+- */
+-
+-/*
+- * Synchronously map an identifier or an array of identifiers to the best
+- * `MessageContext` instance(s).
+- *
+- * @param {Iterable} iterable
+- * @param {string|Array<string>} ids
+- * @returns {MessageContext|Array<MessageContext>}
+- */
+-
+-
+-/*
+- * Asynchronously map an identifier or an array of identifiers to the best
+- * `MessageContext` instance(s).
+- *
+- * @param {AsyncIterable} iterable
+- * @param {string|Array<string>} ids
+- * @returns {Promise<MessageContext|Array<MessageContext>>}
+- */
+-
+-/**
+- * Template literal tag for dedenting FTL code.
+- *
+- * Strip the common indent of non-blank lines. Remove blank lines.
+- *
+- * @param {Array<string>} strings
+- */
+-
+-/*
+- * @module fluent
+- * @overview
+- *
+- * `fluent` is a JavaScript implementation of Project Fluent, a localization
+- * framework designed to unleash the expressive power of the natural language.
+- *
+- */
+-
+ this.MessageContext = MessageContext;
+ this.EXPORTED_SYMBOLS = ['MessageContext'];
