@@ -80,9 +80,11 @@ window.onload = function() {
     let docwalker = new _documentWalker(
       gInspectee.querySelector("select"),
       gInspectee.defaultView,
-      nodeFilterConstants.SHOW_ALL,
-      () => {
-        return nodeFilterConstants.FILTER_ACCEPT;
+      {
+        whatToShow: nodeFilterConstants.SHOW_ALL,
+        filter: () => {
+          return nodeFilterConstants.FILTER_ACCEPT;
+        }
       }
     );
     let scrollbar = docwalker.lastChild();
