@@ -846,6 +846,16 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
+  align-self: stretch;
+  margin-left: 1px;
+  padding-inline-start: 4px;
+  border: 1px solid transparent;
+}
+
+.devtools-plaininput:focus {
+  border: 1px solid var(--blue-50);
+  transition: all 0.2s ease-in-out;
+  outline: none;
 }
 
 .webconsole-filterbar-primary .filter-checkbox {
