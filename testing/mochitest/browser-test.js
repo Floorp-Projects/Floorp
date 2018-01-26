@@ -15,7 +15,7 @@ const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
 
 // non-android is bootstrapped by marionette
-if (Services.appinfo.OS == 'Android') {
+if (Services.appinfo.OS == "Android") {
   window.addEventListener("load", function() {
     window.addEventListener("MozAfterPaint", function() {
       setTimeout(testInit, 0);
@@ -29,17 +29,17 @@ var TabDestroyObserver = {
   outstanding: new Set(),
   promiseResolver: null,
 
-  init: function() {
+  init() {
     Services.obs.addObserver(this, "message-manager-close");
     Services.obs.addObserver(this, "message-manager-disconnect");
   },
 
-  destroy: function() {
+  destroy() {
     Services.obs.removeObserver(this, "message-manager-close");
     Services.obs.removeObserver(this, "message-manager-disconnect");
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic == "message-manager-close") {
       this.outstanding.add(subject);
     } else if (topic == "message-manager-disconnect") {
@@ -50,7 +50,7 @@ var TabDestroyObserver = {
     }
   },
 
-  wait: function() {
+  wait() {
     if (!this.outstanding.size) {
       return Promise.resolve();
     }
@@ -230,7 +230,7 @@ function takeInstrumentation() {
       namespaceURI: element.namespaceURI,
       localName: element.localName,
       binding: (binding && binding != "none") ? binding : null,
-    }
+    };
   }
 
   // The selector for just this element
@@ -475,7 +475,7 @@ Tester.prototype = {
   start: function Tester_start() {
     TabDestroyObserver.init();
 
-    //if testOnLoad was not called, then gConfig is not defined
+    // if testOnLoad was not called, then gConfig is not defined
     if (!gConfig)
       gConfig = readConfig();
 
@@ -676,8 +676,7 @@ Tester.prototype = {
           if (isGenerator(result)) {
             this.SimpleTest.ok(false, "Cleanup function returned a generator");
           }
-        }
-        catch (ex) {
+        } catch (ex) {
           this.currentTest.addResult(new testResult({
             name: "Cleanup function threw an exception",
             ex,
@@ -717,7 +716,7 @@ Tester.prototype = {
       this.PromiseTestUtils.assertNoUncaughtRejections();
       this.PromiseTestUtils.assertNoMoreExpectedRejections();
 
-      Object.keys(window).forEach(function (prop) {
+      Object.keys(window).forEach(function(prop) {
         if (parseInt(prop) == prop) {
           // This is a string which when parsed as an integer and then
           // stringified gives the original string.  As in, this is in fact a
@@ -839,8 +838,7 @@ Tester.prototype = {
       // Dump memory stats for main thread.
       if (Cc["@mozilla.org/xre/runtime;1"]
           .getService(Ci.nsIXULRuntime)
-          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
-      {
+          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
         this.MemoryStats.dump(this.currentTestIndex,
                               this.currentTest.path,
                               gConfig.dumpOutputDirectory,
@@ -883,7 +881,7 @@ Tester.prototype = {
         // frames and browser intentionally kept alive until shutdown to
         // eliminate false positives.
         if (gConfig.testRoot == "browser") {
-          //Skip if SeaMonkey
+          // Skip if SeaMonkey
           if (AppConstants.MOZ_APP_NAME != "seamonkey") {
             // Replace the document currently loaded in the browser's sidebar.
             // This will prevent false positives for tests that were the last
@@ -1019,7 +1017,7 @@ Tester.prototype = {
       this.SimpleTest[m] = this[m];
     }, scope);
 
-    //load the tools to work with chrome .jar and remote
+    // load the tools to work with chrome .jar and remote
     try {
       this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", scope);
     } catch (ex) { /* no chrome-harness tools */ }
@@ -1090,7 +1088,7 @@ Tester.prototype = {
                 }));
                 // We timed out, so we've already cleaned up for this test, just get outta here.
                 return;
-              } else {
+              }
                 currentTest.addResult(new testResult({
                   name: "Uncaught exception",
                   pass: this.SimpleTest.isExpectingUncaughtException(),
@@ -1098,7 +1096,7 @@ Tester.prototype = {
                   stack: (typeof ex == "object" && "stack" in ex) ? ex.stack : null,
                   allowFailure: currentTest.allowFailure,
                 }));
-              }
+
             }
             PromiseTestUtils.assertNoUncaughtRejections();
             this.SimpleTest.info("Leaving test " + task.name);
@@ -1129,8 +1127,7 @@ Tester.prototype = {
     // will trigger the next test when it is done.
     if (this.currentTest.scope.__done) {
       this.nextTest();
-    }
-    else {
+    } else {
       var self = this;
       var timeoutExpires = Date.now() + gTimeoutSeconds * 1000;
       var waitUntilAtLeast = timeoutExpires - 1000;
@@ -1178,7 +1175,7 @@ Tester.prototype = {
     }
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIConsoleListener) ||
         aIID.equals(Ci.nsISupports))
       return this;
@@ -1257,6 +1254,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
   if (gConfig.debugOnFailure) {
     // You've hit this line because you requested to break into the
     // debugger upon a testcase failure on your test run.
+    // eslint-disable-next-line no-debugger
     debugger;
   }
 }
@@ -1310,7 +1308,7 @@ function testScope(aTester, aTest, expected) {
 
   this.executeSoon = function test_executeSoon(func) {
     Services.tm.dispatchToMainThread({
-      run: function() {
+      run() {
         func();
       }
     });
@@ -1384,7 +1382,7 @@ function testScope(aTester, aTest, expected) {
     self.__tester.structuredLogger.deactivateBuffering();
     self.registerCleanupFunction(function() {
       self.__tester.structuredLogger.activateBuffering();
-    })
+    });
   };
 
   // If we're running a test that requires unsafe CPOWs, create a
@@ -1479,7 +1477,7 @@ testScope.prototype = {
    *   is(result, "foo");
    * });
    */
-  add_task: function(aFunction) {
+  add_task(aFunction) {
     if (!this.__tasks) {
       this.waitForExplicitFinish();
       this.__tasks = [];

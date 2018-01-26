@@ -35,7 +35,7 @@ function getResolvedURI(url) {
 
   try {
     resolvedURI = resolvedURI.QueryInterface(Ci.nsIJARURI);
-  } catch (ex) {} //not a jar file
+  } catch (ex) {} // not a jar file
 
   return resolvedURI;
 }
@@ -57,24 +57,22 @@ function getChromeDir(resolvedURI) {
   return chromeDir.parent.QueryInterface(Ci.nsIFile);
 }
 
-//used by tests to determine their directory based off window.location.path
+// used by tests to determine their directory based off window.location.path
 function getRootDirectory(path, chromeURI) {
-  if (chromeURI === undefined)
-  {
+  if (chromeURI === undefined) {
     chromeURI = getChromeURI(path);
   }
   var myURL = chromeURI.QueryInterface(Ci.nsIURL);
   var mydir = myURL.directory;
 
-  if (mydir.match('/$') != '/')
-  {
-    mydir += '/';
+  if (mydir.match("/$") != "/") {
+    mydir += "/";
   }
 
   return chromeURI.prePath + mydir;
 }
 
-//used by tests to determine their directory based off window.location.path
+// used by tests to determine their directory based off window.location.path
 function getChromePrePath(path, chromeURI) {
 
   if (chromeURI === undefined) {
@@ -124,19 +122,19 @@ function extractJarToTmp(jar) {
   var fileName = fileHandler.getFileFromURLSpec(jar.JARFile.spec);
   zReader.open(fileName);
 
-  //filepath represents the path in the jar file without the filename
+  // filepath represents the path in the jar file without the filename
   var filepath = "";
-  var parts = jar.JAREntry.split('/');
-  for (var i =0; i < parts.length - 1; i++) {
-    if (parts[i] != '') {
-      filepath += parts[i] + '/';
+  var parts = jar.JAREntry.split("/");
+  for (var i = 0; i < parts.length - 1; i++) {
+    if (parts[i] != "") {
+      filepath += parts[i] + "/";
     }
   }
 
   /* Create dir structure first, no guarantee about ordering of directories and
    * files returned from findEntries.
    */
-  var dirs = zReader.findEntries(filepath + '*/');
+  var dirs = zReader.findEntries(filepath + "*/");
   while (dirs.hasMore()) {
     var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
     // parseInt is used because octal escape sequences cause deprecation warnings
@@ -146,11 +144,11 @@ function extractJarToTmp(jar) {
     }
   }
 
-  //now do the files
+  // now do the files
   var files = zReader.findEntries(filepath + "*");
   while (files.hasMore()) {
     var fname = files.getNext();
-    if (fname.substr(-1) != '/') {
+    if (fname.substr(-1) != "/") {
       var targetFile = buildRelativePath(fname, tmpdir, filepath);
       zReader.extract(fname, targetFile);
     }
@@ -183,7 +181,7 @@ function getTestFilePath(path) {
   }
   // Then walk by the given relative path
   path.split("/")
-      .forEach(function (p) {
+      .forEach(function(p) {
         if (p == "..") {
           file = file.parent;
         } else if (p != ".") {
@@ -197,14 +195,13 @@ function getTestFilePath(path) {
  * Simple utility function to take the directory structure in jarentryname and
  * translate that to a path of a nsIFile.
  */
-function buildRelativePath(jarentryname, destdir, basepath)
-{
-  var baseParts = basepath.split('/');
-  if (baseParts[baseParts.length-1] == '') {
+function buildRelativePath(jarentryname, destdir, basepath) {
+  var baseParts = basepath.split("/");
+  if (baseParts[baseParts.length - 1] == "") {
     baseParts.pop();
   }
 
-  var parts = jarentryname.split('/');
+  var parts = jarentryname.split("/");
 
   var targetFile = Cc["@mozilla.org/file/local;1"]
                    .createInstance(Ci.nsIFile);
@@ -238,7 +235,7 @@ function readConfig(filename) {
 }
 
 function getTestList(params, callback) {
-  var baseurl = 'chrome://mochitests/content';
+  var baseurl = "chrome://mochitests/content";
   if (window.parseQueryString) {
     params = parseQueryString(location.search.substring(1), true);
   }
@@ -258,5 +255,5 @@ function getTestList(params, callback) {
   }
   params = config;
   getTestManifest("http://mochi.test:8888/" + params.manifestFile, params, callback);
-  return;
+
 }

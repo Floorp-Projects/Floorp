@@ -13,7 +13,7 @@ function loadChromeScripts(win) {
   Services.scriptloader.loadSubScript("chrome://mochikit/content/browser-test.js", win);
 }
 
-/////// Android ///////
+// ///// Android ///////
 
 Cu.importGlobalProperties(["TextDecoder"]);
 
@@ -46,25 +46,25 @@ function androidStartup(data, reason) {
   }
 }
 
-/////// Desktop ///////
+// ///// Desktop ///////
 
 var WindowListener = {
   // browser-test.js is only loaded into the first window. Setup that
   // needs to happen in all navigator:browser windows should go here.
-  setupWindow: function(win) {
+  setupWindow(win) {
     win.nativeConsole = win.console;
     ChromeUtils.defineModuleGetter(win, "console",
       "resource://gre/modules/Console.jsm");
   },
 
-  tearDownWindow: function(win) {
+  tearDownWindow(win) {
     if (win.nativeConsole) {
       win.console = win.nativeConsole;
       win.nativeConsole = undefined;
     }
   },
 
-  onOpenWindow: function (win) {
+  onOpenWindow(win) {
     win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
 
     win.addEventListener("load", function() {
@@ -73,14 +73,14 @@ var WindowListener = {
       }
     }, {once: true});
   }
-}
+};
 
 function loadMochitest(e) {
   let flavor = e.detail[0];
   let url = e.detail[1];
 
   let win = Services.wm.getMostRecentWindow("navigator:browser");
-  win.removeEventListener('mochitest-load', loadMochitest);
+  win.removeEventListener("mochitest-load", loadMochitest);
 
   // for mochitest-plain, navigating to the url is all we need
   win.loadURI(url);
@@ -101,7 +101,7 @@ function startup(data, reason) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     // wait for event fired from start_desktop.js containing the
     // suite and url to load
-    win.addEventListener('mochitest-load', loadMochitest);
+    win.addEventListener("mochitest-load", loadMochitest);
   }
 }
 
