@@ -22,14 +22,15 @@
 #include "nsIPrefService.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsGenericHTMLElement.h"
 
 #include "nsIDOMNode.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsTextFragment.h"
@@ -790,11 +791,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> rootContent;
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(doc));
-  if (htmlDoc) {
-    nsCOMPtr<nsIDOMHTMLElement> bodyEl;
-    htmlDoc->GetBody(getter_AddRefs(bodyEl));
-    rootContent = do_QueryInterface(bodyEl);
+  if (doc->IsHTMLOrXHTML()) {
+    rootContent = doc->GetBody();
   }
 
   if (!rootContent)

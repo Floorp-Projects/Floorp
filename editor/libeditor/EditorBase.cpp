@@ -116,10 +116,6 @@
 class nsIOutputStream;
 class nsITransferable;
 
-#ifdef DEBUG
-#include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
-#endif
-
 namespace mozilla {
 
 using namespace dom;
@@ -2388,15 +2384,9 @@ EditorBase::DebugDumpContent()
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIDOMHTMLDocument> domHTMLDocument = do_QueryInterface(document);
-  if (NS_WARN_IF(!domHTMLDocument)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-  domHTMLDocument->GetBody(getter_AddRefs(bodyElement));
-  nsCOMPtr<nsIContent> content = do_QueryInterface(bodyElement);
-  if (content) {
-    content->List();
+  Element* body = document->GetBody();
+  if (body) {
+    body->List();
   }
 #endif
   return NS_OK;
