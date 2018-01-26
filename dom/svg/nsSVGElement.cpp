@@ -621,7 +621,7 @@ nsSVGElement::ParseAttribute(int32_t aNamespaceID,
         // nsSVGAnimatedTransformList is/has been allocated:
         nsSVGAnimatedTransformList *transformList =
           GetAnimatedTransformList(DO_ALLOCATE);
-        rv = transformList->SetBaseValueString(aValue);
+        rv = transformList->SetBaseValueString(aValue, this);
         if (NS_FAILED(rv)) {
           transformList->ClearBaseValue();
         } else {
