@@ -1,0 +1,164 @@
+name: wrench
+version: "0.1"
+author: Vladimir Vukicevic <vladimir@pobox.com>
+about: WebRender testing and debugging utility
+
+args:
+  - precache:
+      short: c
+      long: precache
+      help: Precache shaders
+  - verbose:
+      short: v
+      long: verbose
+      help: Enable verbose display
+  - zoom:
+      short: z
+      long: zoom
+      help: Set zoom factor
+      takes_value: true
+  - debug:
+      short: d
+      long: debug
+      help: Enable debug renderer
+  - shaders:
+      long: shaders
+      help: Override path for shaders
+      takes_value: true
+  - rebuild:
+      short: r
+      long: rebuild
+      help: Rebuild display list from scratch every frame
+  - save:
+      long: save
+      help: 'Save frames, one of: yaml, json, ron, or binary'
+      takes_value: true
+  - no_subpixel_aa:
+      short: a
+      long: no-subpixel-aa
+      help: Disable subpixel aa
+  - slow_subpixel:
+      long: slow-subpixel
+      help: Disable dual source blending
+  - headless:
+      short: h
+      long: headless
+      help: Enable headless rendering
+  - dp_ratio:
+      short: p
+      long: device-pixel-ratio
+      help: Device pixel ratio
+      takes_value: true
+  - size:
+      short: s
+      long: size
+      help: Window size, specified as widthxheight (e.g. 1024x768), in pixels
+      takes_value: true
+  - time:
+      short: t
+      long: time
+      help: Time limit (in seconds)
+      takes_value: true
+  - vsync:
+      long: vsync
+      help: Enable vsync for OpenGL window
+  - no_scissor:
+      long: no-scissor
+      help: Disable scissors when clearing render targets
+  - no_batch:
+      long: no-batch
+      help: Disable batching of instanced draw calls
+
+subcommands:
+    - png:
+        about: render frame described by YAML and save it to a png file
+        args:
+          - surface:
+              short: s
+              long: surface
+              help: 'What rendered surface to save as PNG, one of: screen, gpu-cache'
+              takes_value: true
+          - INPUT:
+              help: The input YAML file
+              required: true
+              index: 1
+    - show:
+        about: show frame(s) described by YAML
+        args:
+          - queue:
+              short: q
+              long: queue
+              help: How many frames to submit to WR ahead of time (default 1)
+              takes_value: true
+          - include:
+              long: include
+              help: Include the given element type. Can be specified multiple times. (rect/image/text/glyphs/border)
+              multiple: true
+              takes_value: true
+          - list-resources:
+              long: list-resources
+              help: List the resources used by this YAML file
+          - watch:
+              short: w
+              long: watch
+              help: Watch the given YAML file, reloading whenever it changes
+          - INPUT:
+              help: The input YAML file
+              required: true
+              index: 1
+    - replay:
+        about: replay binary recording
+        args:
+          - api:
+              long: api
+              help: Reissue Api messsages for each frame
+          - skip-uploads:
+              long: skip-uploads
+              help: Skip re-uploads while reissuing Api messages (BROKEN)
+          - play:
+              long: play
+              help: Play entire recording through, then quit (useful with --save)
+          - INPUT:
+              help: The input binary file or directory
+              required: true
+              index: 1
+    - reftest:
+        about: run reftests
+        args:
+          - fuzz_tolerance:
+              long: fuzzy
+              takes_value: true
+              help: Add a minimum fuzziness tolerance to all tests.
+              required: false
+          - REFTEST:
+              help: a specific reftest or directory to run
+              required: false
+              index: 1
+    - rawtest:
+        about: run rawtests
+    - perf:
+        about: run benchmarks
+        args:
+          - filename:
+              help: name of the file to save benchmarks to
+              required: true
+              index: 1
+    - compare_perf:
+        about: compare two benchmark files
+        args:
+          - first_filename:
+              help: first benchmark file to compare
+              required: true
+              index: 1
+          - second_filename:
+              help: second benchmark file to compare
+              required: true
+              index: 2
+    - load:
+        about: load a capture
+        args:
+          - path:
+              help: directory containing the capture
+              takes_value: true
+              required: true
+              index: 1

@@ -7,6 +7,7 @@ use api::{ExternalImageData, ExternalImageId};
 use api::{ImageFormat, PipelineId};
 use api::DebugCommand;
 use device::TextureFilter;
+use gpu_cache::GpuCacheUpdateList;
 use fxhash::FxHasher;
 use profiler::BackendProfileCounters;
 use std::{usize, i32};
@@ -161,14 +162,15 @@ pub enum ResultMsg {
     DebugCommand(DebugCommand),
     DebugOutput(DebugOutput),
     RefreshShader(PathBuf),
+    UpdateGpuCache(GpuCacheUpdateList),
+    UpdateResources {
+        updates: TextureUpdateList,
+        cancel_rendering: bool,
+    },
     PublishDocument(
         DocumentId,
         RenderedDocument,
         TextureUpdateList,
         BackendProfileCounters,
     ),
-    UpdateResources {
-        updates: TextureUpdateList,
-        cancel_rendering: bool,
-    },
 }
