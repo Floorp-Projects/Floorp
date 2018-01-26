@@ -64,6 +64,7 @@
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceStorageWorker.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -1917,6 +1918,19 @@ WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(nsIChannel* aChannel,
   nsCOMPtr<nsIPrincipal> channelPrincipal;
   nsresult rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(channelPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Every time we call GetChannelResultPrincipal() it will return a different
+  // null principal for a data URL.  We don't want to change the worker's
+  // principal again, though.  Instead just keep the original null principal we
+  // first got from the channel.
+  //
+  // Note, we don't do this by setting principalToInherit on the channel's
+  // load info because we don't yet have the first null principal when we
+  // create the channel.
+  if (mPrincipal && mPrincipal->GetIsNullPrincipal() &&
+                    channelPrincipal->GetIsNullPrincipal()) {
+    channelPrincipal = mPrincipal;
+  }
 
   nsCOMPtr<nsILoadGroup> channelLoadGroup;
   rv = aChannel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
@@ -7197,6 +7211,18 @@ WorkerPrivate::DumpCrashInformation(nsACString& aString)
     aString.Append("|");
     aString.Append(holder->Name());
   }
+}
+
+PerformanceStorage*
+WorkerPrivate::GetPerformanceStorage()
+{
+  AssertIsOnMainThread();
+
+  if (!mPerformanceStorage) {
+    mPerformanceStorage = PerformanceStorageWorker::Create(this);
+  }
+
+  return mPerformanceStorage;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ExternalRunnableWrapper, WorkerRunnable)

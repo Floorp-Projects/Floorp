@@ -99,7 +99,6 @@ typedef float F32x4[4];
 class Code;
 class DebugState;
 class GeneratedSourceMap;
-class GlobalSegment;
 class Memory;
 class Module;
 class Instance;
@@ -1482,15 +1481,6 @@ struct TableDesc
 
 typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
 
-// ExportArg holds the unboxed operands to the wasm entry trampoline which can
-// be called through an ExportFuncPtr.
-
-struct ExportArg
-{
-    uint64_t lo;
-    uint64_t hi;
-};
-
 // TLS data for a single module instance.
 //
 // Every WebAssembly function expects to be passed a hidden TLS pointer argument
@@ -1532,7 +1522,27 @@ struct TlsData
     MOZ_ALIGNED_DECL(char globalArea, 16);
 };
 
-static_assert(offsetof(TlsData, globalArea) % 16 == 0, "aligned");
+static const size_t TlsDataAlign = 16;  // = Simd128DataSize
+static_assert(offsetof(TlsData, globalArea) % TlsDataAlign == 0, "aligned");
+
+struct TlsDataDeleter
+{
+    void operator()(TlsData* tlsData) { js_free(tlsData); }
+};
+
+typedef UniquePtr<TlsData, TlsDataDeleter> UniqueTlsData;
+
+extern UniqueTlsData
+CreateTlsData(uint32_t globalDataLength);
+
+// ExportArg holds the unboxed operands to the wasm entry trampoline which can
+// be called through an ExportFuncPtr.
+
+struct ExportArg
+{
+    uint64_t lo;
+    uint64_t hi;
+};
 
 typedef int32_t (*ExportFuncPtr)(ExportArg* args, TlsData* tls);
 

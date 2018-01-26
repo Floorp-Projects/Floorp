@@ -6810,16 +6810,6 @@
     "kind": "count",
     "description": "Count of messages sent by SessionRestore from child frames to the parent and that cannot be transmitted as they eat up too much memory."
   },
-  "FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "61",
-    "kind": "exponential",
-    "high": 30000000,
-    "n_buckets": 20,
-    "bug_numbers": [1362058],
-    "description": "Session restore: Number of characters in DOM Storage for a tab. Pages without DOM Storage or with an empty DOM Storage are ignored."
-  },
   "FX_SESSION_RESTORE_AUTO_RESTORE_DURATION_UNTIL_EAGER_TABS_RESTORED_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
@@ -7734,7 +7724,7 @@
   "TELEMETRY_TEST_EXPIRED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "4.0a1",
+    "expires_in_version": "4",
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },

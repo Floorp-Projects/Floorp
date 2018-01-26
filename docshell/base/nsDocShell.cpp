@@ -10687,6 +10687,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                aURI,
                                loadInfo,
+                               nullptr,   // PerformanceStorage
                                nullptr,   // loadGroup
                                static_cast<nsIInterfaceRequestor*>(this),
                                loadFlags);
