@@ -81,12 +81,28 @@ add_task(function* runTest() {
         dump(msg + "\n");
       }
     };
+
     const registerCleanupFunction = () => {};
 
     const Cu = Components.utils;
     const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
     const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+    // Copied from shared-head.js:
+    // test_browser_toolbox_debugger.js uses waitForPaused, which relies on waitUntil
+    // which is normally provided by shared-head.js
+    const { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
+    function waitUntil(predicate, interval = 10) {
+      if (predicate()) {
+        return Promise.resolve(true);
+      }
+      return new Promise(resolve => {
+        setTimeout(function () {
+          waitUntil(predicate, interval).then(() => resolve(true));
+        }, interval);
+      });
+    }
   }).toSource().replace(/^\(function \(\) \{|\}\)$/g, "");
   // Stringify testHead's function and remove `(function {` prefix and `})` suffix
   // to ensure inner symbols gets exposed to next pieces of code
