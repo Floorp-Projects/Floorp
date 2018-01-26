@@ -45,6 +45,19 @@ tabbrowser {
   min-height: inherit;
 }
 
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  .tab-stack {
+    /* Needed to allow tabs to shrink to be skinnier than their page-title: */
+    min-width: 0;
+  }
+  .scrollbox-innerbox {
+    /* Needed to prevent tabstrip from growing as wide as the sum of the tabs'
+       page-title widths (when we'd rather have it be as wide as the window and
+       compress the tabs to their minimum size): */
+    max-width: 100%;
+  }
+}
+
 .tabbrowser-tab {
   -moz-appearance: none;
   background-color: transparent;

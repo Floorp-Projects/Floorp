@@ -78,6 +78,7 @@ function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
   Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
   Services.prefs.setBoolPref("devtools.preference.new-panel-enabled", false);
+  Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
 }
 window.addEventListener("load", function () {
   let cmdClose = document.getElementById("toolbox-cmd-close");

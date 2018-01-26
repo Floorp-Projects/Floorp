@@ -10,6 +10,7 @@ import sys
 import traceback
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
+from math import ceil
 from multiprocessing import cpu_count
 from subprocess import CalledProcessError
 
@@ -56,6 +57,7 @@ class LintRoller(object):
                  version control or cwd.
     :param lintargs: Arguments to pass to the underlying linter(s).
     """
+    MAX_PATHS_PER_JOB = 50  # set a max size to prevent command lines that are too long on Windows
 
     def __init__(self, root, **lintargs):
         self.parse = Parser()
@@ -81,6 +83,14 @@ class LintRoller(object):
 
         for path in paths:
             self.linters.extend(self.parse(path))
+
+    def _generate_jobs(self, paths, num_procs):
+        """A job is of the form (<linter:dict>, <paths:list>)."""
+        chunk_size = min(self.MAX_PATHS_PER_JOB, int(ceil(float(len(paths)) / num_procs)))
+        while paths:
+            for linter in self.linters:
+                yield linter, paths[:chunk_size]
+            paths = paths[chunk_size:]
 
     def roll(self, paths=None, outgoing=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
@@ -132,12 +142,10 @@ class LintRoller(object):
         paths = map(os.path.abspath, paths)
 
         num_procs = num_procs or cpu_count()
-        num_procs = min(num_procs, len(self.linters))
-
         all_results = defaultdict(list)
         with ProcessPoolExecutor(num_procs) as executor:
-            futures = [executor.submit(_run_worker, config, paths, **self.lintargs)
-                       for config in self.linters]
+            futures = [executor.submit(_run_worker, config, p, **self.lintargs)
+                       for config, p in self._generate_jobs(paths, num_procs)]
             # ignore SIGINT in parent so we can still get partial results
             # from child processes. These should shutdown quickly anyway.
             orig_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)

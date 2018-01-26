@@ -97,6 +97,18 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
 
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  #tabbrowser-tabs {
+    /* Without this, the tabs container width extends beyond the window width */
+    width: 0;
+  }
+  .tab-stack {
+    /* Without this, pinned tabs get a bit too tall when the tabstrip overflows. */
+    vertical-align: top;
+  }
+}
+
+
 #tabbrowser-tabs:not([overflow="true"]) ~ #alltabs-button,
 #tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,

@@ -400,19 +400,6 @@ private:
                               int64_t* _itemId,
                               nsACString& _guid);
 
-  /**
-   * TArray version of getBookmarksIdForURI for ease of use in C++ code.
-   * Pass in a reference to a TArray; it will get filled with the
-   * resulting list of bookmark IDs.
-   *
-   * @param aURI
-   *        URI to get bookmarks for.
-   * @param aResult
-   *        Array of bookmark ids.
-   */
-  nsresult GetBookmarkIdsForURITArray(nsIURI* aURI,
-                                      nsTArray<int64_t>& aResult);
-
   nsresult GetBookmarksForURI(nsIURI* aURI,
                               nsTArray<BookmarkData>& _bookmarks);
 

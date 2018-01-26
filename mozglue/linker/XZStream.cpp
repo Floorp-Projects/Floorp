@@ -1,6 +1,7 @@
 #include "XZStream.h"
 
 #include <algorithm>
+#include <cstring>
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "Logging.h"

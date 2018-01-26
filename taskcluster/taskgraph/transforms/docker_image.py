@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import re
 
+from collections import deque
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import _run_task_suffix
 from .. import GECKO
@@ -30,6 +31,9 @@ transforms = TransformSequence()
 docker_image_schema = Schema({
     # Name of the docker image.
     Required('name'): basestring,
+
+    # Name of the parent docker image.
+    Optional('parent'): basestring,
 
     # Treeherder symbol.
     Required('symbol'): basestring,
@@ -59,6 +63,23 @@ def validate(config, tasks):
         yield task
 
 
+def order_image_tasks(tasks):
+    """Iterate image tasks in an order where parent images come first."""
+    pending = deque(tasks)
+    emitted = set()
+    while True:
+        try:
+            task = pending.popleft()
+        except IndexError:
+            break
+        parent = task.get('parent')
+        if parent and parent not in emitted:
+            pending.append(task)
+            continue
+        emitted.add(task['name'])
+        yield task
+
+
 @transforms.add
 def fill_template(config, tasks):
     available_packages = {}
@@ -73,12 +94,16 @@ def fill_template(config, tasks):
                 assert DIGEST_RE.match(h)
                 available_packages[name] = h
                 break
-    for task in tasks:
+
+    context_hashes = {}
+
+    for task in order_image_tasks(tasks):
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
         args = task.pop('args', {})
         definition = task.pop('definition', image_name)
         packages = task.pop('packages', [])
+        parent = task.pop('parent', None)
 
         for p in packages:
             if p not in available_packages:
@@ -92,11 +117,14 @@ def fill_template(config, tasks):
         # to packages will be reflected in the docker image hash.
         args['DOCKER_IMAGE_PACKAGES'] = ' '.join('<{}>'.format(p)
                                                  for p in packages)
+        if parent:
+            args['DOCKER_IMAGE_PARENT'] = '{}:{}'.format(parent, context_hashes[parent])
 
         context_path = os.path.join('taskcluster', 'docker', definition)
         context_hash = generate_context_hash(
             GECKO, context_path, image_name, args)
         digest_data = [context_hash]
+        context_hashes[image_name] = context_hash
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -191,6 +219,13 @@ def fill_template(config, tasks):
             for p in sorted(packages):
                 deps[p] = 'packages-{}'.format(p)
                 digest_data.append(available_packages[p])
+
+        if parent:
+            deps = taskdesc.setdefault('dependencies', {})
+            deps[parent] = 'build-docker-image-{}'.format(parent)
+            worker['env']['DOCKER_IMAGE_PARENT_TASK'] = {
+                'task-reference': '<{}>'.format(parent)
+            }
 
         if len(digest_data) > 1:
             kwargs = {'digest_data': digest_data}
