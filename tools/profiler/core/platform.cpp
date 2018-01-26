@@ -1454,7 +1454,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 
 static void
 StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
-                         const TimeStamp& aShutdownTime)
+                         bool aIsShuttingDown)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
@@ -1470,7 +1470,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
   // Write the shutdownTime field. Unlike startTime, shutdownTime is not an
   // absolute time stamp: It's relative to startTime. This is consistent with
   // all other (non-"startTime") times anywhere in the profile JSON.
-  if (aShutdownTime) {
+  if (aIsShuttingDown) {
     aWriter.DoubleProperty("shutdownTime", profiler_time());
   } else {
     aWriter.NullProperty("shutdownTime");
@@ -1661,8 +1661,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // Put meta data
   aWriter.StartObjectProperty("meta");
   {
-    StreamMetaJSCustomObject(aLock, aWriter,
-                             aIsShuttingDown ? TimeStamp::Now() : TimeStamp());
+    StreamMetaJSCustomObject(aLock, aWriter, aIsShuttingDown);
   }
   aWriter.EndObject();
 

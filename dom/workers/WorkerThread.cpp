@@ -93,7 +93,7 @@ already_AddRefed<WorkerThread>
 WorkerThread::Create(const WorkerThreadFriendKey& /* aKey */)
 {
   RefPtr<WorkerThread> thread = new WorkerThread();
-  if (NS_FAILED(thread->Init())) {
+  if (NS_FAILED(thread->Init(NS_LITERAL_CSTRING("DOM Worker")))) {
     NS_WARNING("Failed to create new thread!");
     return nullptr;
   }
