@@ -20,7 +20,6 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
            attribute DOMString            cookie;
 
   readonly attribute nsISupports          head;
-           attribute nsIDOMHTMLElement    body;
 
   // If aContentType is not something supported by nsHTMLDocument and
   // the HTML content sink, trying to write to the document will
