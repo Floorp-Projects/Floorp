@@ -103,6 +103,7 @@ job-template:
                - single_locale/tc_android-api-16.py
       # no default, so we fail on new entries
       options:
+         - revision=$GECKO_HEAD_REV
          - total-chunks=1
          - this-chunk=1
       actions:
