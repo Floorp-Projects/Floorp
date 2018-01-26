@@ -9,7 +9,6 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
-#include "nsISelectionListener.h"
 #include "nsStringFwd.h"
 #include "nsWeakReference.h"
 
@@ -20,8 +19,7 @@ class nsTextControlFrame;
 
 namespace mozilla {
 
-class TextInputListener final : public nsISelectionListener
-                              , public nsIDOMEventListener
+class TextInputListener final : public nsIDOMEventListener
                               , public nsSupportsWeakReference
 {
 public:
@@ -51,10 +49,26 @@ public:
    */
   void OnEditActionHandled();
 
+  /**
+   * OnSelectionChange() is called when selection is changed in the editor.
+   */
+  void OnSelectionChange(Selection& aSelection, int16_t aReason);
+
+  /**
+   * Start to listen or end listening to selection change in the editor.
+   */
+  void StartToListenToSelectionChange()
+  {
+    mListeningToSelectionChange = true;
+  }
+  void EndListeningToSelectionChange()
+  {
+    mListeningToSelectionChange = false;
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TextInputListener,
-                                           nsISelectionListener)
-  NS_DECL_NSISELECTIONLISTENER
+                                           nsIDOMEventListener)
   NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
@@ -90,6 +104,10 @@ protected:
    * |SetValueChanged| to be called.
    */
   bool mSetValueChanged;
+  /**
+   * Whether we're listening to selection change in the editor.
+   */
+  bool mListeningToSelectionChange;
 };
 
 } // namespace mozilla

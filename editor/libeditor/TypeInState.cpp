@@ -36,13 +36,18 @@ using namespace dom;
  * mozilla::TypeInState
  *******************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION(TypeInState, mLastSelectionContainer)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(TypeInState)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(TypeInState)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TypeInState)
-  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_CLASS(TypeInState)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TypeInState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastSelectionContainer)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TypeInState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionContainer)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TypeInState, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TypeInState, Release)
 
 TypeInState::TypeInState()
   : mRelativeFontSize(0)
@@ -73,11 +78,8 @@ TypeInState::UpdateSelState(Selection* aSelection)
                        &mLastSelectionOffset);
 }
 
-
-NS_IMETHODIMP
-TypeInState::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                    nsISelection* aSelection,
-                                    int16_t aReason)
+void
+TypeInState::OnSelectionChange(Selection& aSelection)
 {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
@@ -88,39 +90,34 @@ TypeInState::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   // XXX:
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
-  RefPtr<Selection> selection =
-    aSelection ? aSelection->AsSelection() : nullptr;
 
-  if (aSelection) {
-    int32_t rangeCount = selection->RangeCount();
+  // TODO: We can make this use nsINode instead of nsIDOMNode.
+  if (aSelection.IsCollapsed() && aSelection.RangeCount()) {
+    nsCOMPtr<nsIDOMNode> selNode;
+    int32_t selOffset = 0;
 
-    if (selection->Collapsed() && rangeCount) {
-      nsCOMPtr<nsIDOMNode> selNode;
-      int32_t selOffset = 0;
-
-      nsresult rv =
-        EditorBase::GetStartNodeAndOffset(selection, getter_AddRefs(selNode),
-                                          &selOffset);
-
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (selNode &&
-          selNode == mLastSelectionContainer &&
-          selOffset == mLastSelectionOffset) {
-        // We got a bogus selection changed notification!
-        return NS_OK;
-      }
-
-      mLastSelectionContainer = selNode;
-      mLastSelectionOffset = selOffset;
-    } else {
-      mLastSelectionContainer = nullptr;
-      mLastSelectionOffset = 0;
+    nsresult rv =
+      EditorBase::GetStartNodeAndOffset(&aSelection, getter_AddRefs(selNode),
+                                        &selOffset);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
     }
+
+    if (selNode &&
+        selNode == mLastSelectionContainer &&
+        selOffset == mLastSelectionOffset) {
+      // We got a bogus selection changed notification!
+      return;
+    }
+
+    mLastSelectionContainer = selNode;
+    mLastSelectionOffset = selOffset;
+  } else {
+    mLastSelectionContainer = nullptr;
+    mLastSelectionOffset = 0;
   }
 
   Reset();
-  return NS_OK;
 }
 
 void

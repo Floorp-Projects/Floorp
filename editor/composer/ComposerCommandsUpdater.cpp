@@ -23,7 +23,6 @@
 #include "nsPICommandUpdater.h"         // for nsPICommandUpdater
 #include "nsPIDOMWindow.h"              // for nsPIDOMWindow
 
-class nsIDOMDocument;
 class nsITransaction;
 
 namespace mozilla {
@@ -47,7 +46,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ComposerCommandsUpdater)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ComposerCommandsUpdater)
 
 NS_INTERFACE_MAP_BEGIN(ComposerCommandsUpdater)
-  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentStateListener)
   NS_INTERFACE_MAP_ENTRY(nsITransactionListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
@@ -97,14 +95,6 @@ ComposerCommandsUpdater::NotifyDocumentStateChanged(bool aNowDirty)
 {
   // update document modified. We should have some other notifications for this too.
   return UpdateDirtyState(aNowDirty);
-}
-
-NS_IMETHODIMP
-ComposerCommandsUpdater::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                                nsISelection* aSelection,
-                                                int16_t aReason)
-{
-  return PrimeUpdateTimer();
 }
 
 #if 0

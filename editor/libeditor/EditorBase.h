@@ -26,6 +26,7 @@
 #include "nsIObserver.h"                // for NS_DECL_NSIOBSERVER, etc.
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc.
 #include "nsISelectionController.h"     // for nsISelectionController constants
+#include "nsISelectionListener.h"       // for nsISelectionListener
 #include "nsISupportsImpl.h"            // for EditorBase::Release, etc.
 #include "nsIWeakReferenceUtils.h"      // for nsWeakPtr
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
@@ -188,6 +189,7 @@ enum class SplitAtEdges
  * implementation.
  */
 class EditorBase : public nsIEditor
+                 , public nsISelectionListener
                  , public nsSupportsWeakReference
 {
 public:
@@ -253,6 +255,9 @@ public:
 
   // nsIEditor methods
   NS_DECL_NSIEDITOR
+
+  // nsISelectionListener method
+  NS_DECL_NSISELECTIONLISTENER
 
   /**
    * Set or unset TextInputListener.  If setting non-nullptr when the editor
