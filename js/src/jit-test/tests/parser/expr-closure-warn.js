@@ -2,13 +2,12 @@
 
 var release_or_beta = getBuildConfiguration().release_or_beta;
 
+enableExpressionClosures();
+
 function testWarn(code) {
   if (release_or_beta) {
     // Warning for expression closure is non-release-only (not Release/Beta).
     testPass(code);
-    return;
-  } else {
-    // !!! expression closures are currently completely disabled in Nightly
     return;
   }
 

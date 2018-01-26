@@ -10,7 +10,7 @@ f = Function("");
 assertEq(f.toString(), "function anonymous(\n) {\n\n}");
 f = Function("", "(abc)");
 assertEq(f.toString(), "function anonymous(\n) {\n(abc)\n}");
-if (getBuildConfiguration().release_or_beta) {
-    f = Function("", "return function (a,b) a + b;")();
-    assertEq(f.toString(), "function (a,b) a + b");
-}
+
+enableExpressionClosures();
+f = Function("", "return function (a,b) a + b;")();
+assertEq(f.toString(), "function (a,b) a + b");
