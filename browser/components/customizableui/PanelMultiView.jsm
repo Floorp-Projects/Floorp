@@ -362,16 +362,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
 
-      let previousRect = previousViewNode.__lastKnownBoundingRect =
-          this._dwu.getBoundsWithoutFlushing(previousViewNode);
-      // Cache the measures that have the same caching lifetime as the width
-      // or height of the main view, i.e. whilst the panel is shown and/ or
-      // visible.
-      if (!this._mainViewWidth) {
-        this._mainViewWidth = previousRect.width;
-      }
+      let prevPanelView = PanelView.forNode(previousViewNode);
+      prevPanelView.captureKnownSize();
       if (!this._mainViewHeight) {
-        this._mainViewHeight = previousRect.height;
+        this._mainViewHeight = prevPanelView.knownHeight;
         this._viewContainer.style.minHeight = this._mainViewHeight + "px";
       }
 
@@ -389,7 +383,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         let isMainView = viewNode.id == this._mainViewId;
         nextPanelView.mainview = isMainView;
         // The constrained width of subviews may also vary between panels.
-        nextPanelView.minMaxWidth = isMainView ? 0 : this._mainViewWidth;
+        nextPanelView.minMaxWidth = isMainView ? 0 : prevPanelView.knownWidth;
       }
 
       if (aAnchor) {
@@ -427,7 +421,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // still running, make sure to clean it up.
       await this._cleanupTransitionPhase();
       if (!showingSameView && this._panel.state == "open") {
-        await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
+        await this._transitionViews(previousViewNode, viewNode, reverse, aAnchor);
         nextPanelView.focusSelectedElement();
       } else {
         this.hideAllViewsExcept(nextPanelView);
@@ -449,12 +443,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    *                                     after the transition has finished.
    * @param {Boolean}   reverse          Whether we're navigation back to a
    *                                     previous view or forward to a next view.
-   * @param {Object}    previousRect     Rect object, with the same structure as
-   *                                     a DOMRect, of the `previousViewNode`.
    * @param {Element}   anchor           the anchor for which we're opening
    *                                     a new panelview, if any
    */
-  async _transitionViews(previousViewNode, viewNode, reverse, previousRect, anchor) {
+  async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
     // There's absolutely no need to show off our epic animation skillz when
     // the panel's not even open.
     if (this._panel.state != "open") {
@@ -464,6 +456,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     const {window, document} = this;
 
     let nextPanelView = PanelView.forNode(viewNode);
+    let prevPanelView = PanelView.forNode(previousViewNode);
 
     if (this._autoResizeWorkaroundTimer)
       window.clearTimeout(this._autoResizeWorkaroundTimer);
@@ -482,23 +475,25 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     previousViewNode.setAttribute("in-transition", true);
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
-    this._viewContainer.style.height = Math.max(previousRect.height, this._mainViewHeight) + "px";
-    this._viewContainer.style.width = previousRect.width + "px";
+    this._viewContainer.style.height = Math.max(prevPanelView.knownHeight, this._mainViewHeight) + "px";
+    this._viewContainer.style.width = prevPanelView.knownWidth + "px";
     // Lock the dimensions of the window that hosts the popup panel.
     let rect = this._panel.popupBoxObject.getOuterScreenRect();
     this._panel.setAttribute("width", rect.width);
     this._panel.setAttribute("height", rect.height);
 
     let viewRect;
-    if (reverse && viewNode.__lastKnownBoundingRect) {
+    if (reverse) {
       // Use the cached size when going back to a previous view, but not when
       // reopening a subview, because its contents may have changed.
-      viewRect = viewNode.__lastKnownBoundingRect;
+      viewRect = { width: nextPanelView.knownWidth,
+                   height: nextPanelView.knownHeight };
       viewNode.setAttribute("in-transition", true);
     } else if (viewNode.customRectGetter) {
       // Can't use Object.assign directly with a DOM Rect object because its properties
       // aren't enumerable.
-      let {height, width} = previousRect;
+      let width = prevPanelView.knownWidth;
+      let height = prevPanelView.knownHeight;
       viewRect = Object.assign({height, width}, viewNode.customRectGetter());
       let header = viewNode.firstChild;
       if (header && header.classList.contains("panel-header")) {
@@ -534,7 +529,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     // The 'magic' part: build up the amount of pixels to move right or left.
     let moveToLeft = (this._dir == "rtl" && !reverse) || (this._dir == "ltr" && reverse);
-    let deltaX = previousRect.width;
+    let deltaX = prevPanelView.knownWidth;
     let deepestNode = reverse ? previousViewNode : viewNode;
 
     // With a transition when navigating backwards - user hits the 'back'
@@ -758,11 +753,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
         this.showMainView();
-        for (let panelView of this._viewStack.children) {
-          if (panelView.nodeName != "children") {
-            panelView.__lastKnownBoundingRect = null;
-          }
-        }
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this.openViews.forEach(panelView => panelView.clearNavigation());
@@ -771,7 +761,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
         this._mainViewHeight = 0;
-        this._mainViewWidth = 0;
         this._viewContainer.style.removeProperty("min-height");
         this._viewStack.style.removeProperty("max-height");
         this._viewContainer.style.removeProperty("min-width");
@@ -878,6 +867,19 @@ this.PanelView = class extends this.AssociatedToNode {
   dispatchCustomEvent(...args) {
     CustomizableUI.ensureSubviewListeners(this.node);
     return super.dispatchCustomEvent(...args);
+  }
+
+  /**
+   * Populates the "knownWidth" and "knownHeight" properties with the current
+   * dimensions of the view. These may be zero if the view is invisible.
+   *
+   * These values are relevant during transitions and are retained for backwards
+   * navigation if the view is still open but is invisible.
+   */
+  captureKnownSize() {
+    let rect = this._dwu.getBoundsWithoutFlushing(this.node);
+    this.knownWidth = rect.width;
+    this.knownHeight = rect.height;
   }
 
   /**
