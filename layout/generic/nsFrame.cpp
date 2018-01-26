@@ -1007,6 +1007,22 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
       }
     }
   }
+
+  if (HasOverrideDirtyRegion()) {
+    nsIFrame* rootFrame = PresContext()->PresShell()->GetRootFrame();
+    MOZ_ASSERT(rootFrame);
+
+    nsTArray<nsIFrame*>* frames =
+      rootFrame->GetProperty(nsIFrame::OverriddenDirtyRectFrameList());
+    MOZ_ASSERT(frames);
+
+    for (auto& frame : *frames) {
+      if (frame == this) {
+        frame = nullptr;
+        break;
+      }
+    }
+  }
 }
 
 void
