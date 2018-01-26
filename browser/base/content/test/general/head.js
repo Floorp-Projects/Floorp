@@ -304,22 +304,12 @@ function promiseTabLoaded(aTab) {
  * @param aShouldBeCleared
  *        True if each visit to the URI should be cleared, false otherwise
  */
-function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
-  return new Promise(resolve => {
-    let callbackCount = 0;
-    let niceStr = aShouldBeCleared ? "no longer" : "still";
-    function callbackDone() {
-      if (++callbackCount == aURIs.length)
-        resolve();
-    }
-    aURIs.forEach(function(aURI) {
-      PlacesUtils.asyncHistory.isURIVisited(aURI, function(uri, isVisited) {
-        is(isVisited, !aShouldBeCleared,
-           "history visit " + uri.spec + " should " + niceStr + " exist");
-        callbackDone();
-      });
-    });
-  });
+async function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
+  for (let uri of aURIs) {
+    let visited = await PlacesUtils.history.hasVisits(uri);
+    Assert.equal(visited, !aShouldBeCleared,
+      `history visit ${uri.spec} should ${aShouldBeCleared ? "no longer" : "still"} exist`);
+  }
 }
 
 var FullZoomHelper = {
