@@ -116,8 +116,7 @@ nsContextMenu.prototype = {
         onVideo: this.onVideo,
         onAudio: this.onAudio,
         onCanvas: this.onCanvas,
-        onEditable: this.onEditable,
-        onSpellcheckable: this.onSpellcheckable,
+        onEditableArea: this.onEditableArea,
         onPassword: this.onPassword,
         srcUrl: this.mediaURL,
         frameUrl: gContextMenuContentData ? gContextMenuContentData.docLocation : undefined,
@@ -197,7 +196,7 @@ nsContextMenu.prototype = {
     this.onCompletedImage    = context.onCompletedImage;
     this.onCTPPlugin         = context.onCTPPlugin;
     this.onDRMMedia          = context.onDRMMedia;
-    this.onEditable          = context.onEditable;
+    this.onEditableArea      = context.onEditableArea;
     this.onImage             = context.onImage;
     this.onKeywordField      = context.onKeywordField;
     this.onLink              = context.onLink;
@@ -208,7 +207,6 @@ nsContextMenu.prototype = {
     this.onNumeric           = context.onNumeric;
     this.onPassword          = context.onPassword;
     this.onSaveableLink      = context.onSaveableLink;
-    this.onSpellcheckable    = context.onSpellcheckable;
     this.onTextInput         = context.onTextInput;
     this.onVideo             = context.onVideo;
 
@@ -582,7 +580,7 @@ nsContextMenu.prototype = {
       let count = InlineSpellCheckerUI.addDictionaryListToMenu(dictMenu, dictSep);
       this.showItem(dictSep, count > 0);
       this.showItem("spell-add-dictionaries-main", false);
-    } else if (this.onSpellcheckable) {
+    } else if (this.onEditableArea) {
       // when there is no spellchecker but we might be able to spellcheck
       // add the add to dictionaries item. This will ensure that people
       // with no dictionaries will be able to download them
