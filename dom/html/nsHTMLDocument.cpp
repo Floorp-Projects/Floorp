@@ -2281,7 +2281,7 @@ nsHTMLDocument::GenerateParserKey(void)
   return script;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::GetDesignMode(nsAString& aDesignMode)
 {
   if (HasFlag(NODE_IS_EDITABLE)) {
@@ -2290,7 +2290,6 @@ nsHTMLDocument::GetDesignMode(nsAString& aDesignMode)
   else {
     aDesignMode.AssignLiteral("off");
   }
-  return NS_OK;
 }
 
 void
@@ -2741,16 +2740,6 @@ nsHTMLDocument::EditingStateChanged()
   htmlEditor->SyncRealTimeSpell();
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetDesignMode(const nsAString& aDesignMode)
-{
-  ErrorResult rv;
-  SetDesignMode(aDesignMode, nsContentUtils::GetCurrentJSContext()
-                               ? Some(nsContentUtils::SubjectPrincipal())
-                               : Nothing(), rv);
-  return rv.StealNSResult();
 }
 
 void
