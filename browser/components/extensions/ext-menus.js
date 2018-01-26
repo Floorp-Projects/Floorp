@@ -438,7 +438,7 @@ global.actionContextMenu = function(contextData) {
 
 const contextsMap = {
   onAudio: "audio",
-  onEditable: "editable",
+  onEditableArea: "editable",
   inFrame: "frame",
   onImage: "image",
   onLink: "link",
@@ -488,7 +488,7 @@ function addMenuEventInfo(info, contextData, includeSensitiveData) {
   if (contextData.onBookmark) {
     info.bookmarkId = contextData.bookmarkId;
   }
-  info.editable = contextData.onEditable || false;
+  info.editable = contextData.onEditableArea || contextData.onPassword || false;
   if (includeSensitiveData) {
     if (contextData.onLink) {
       info.linkText = contextData.linkText;
