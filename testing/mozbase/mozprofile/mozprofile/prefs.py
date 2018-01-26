@@ -148,7 +148,7 @@ class Preferences(object):
         else:
             raise PreferencesReadError("Malformed preferences: %s" % path)
         types = (bool, string_types, int)
-        if [i for i in values if not [isinstance(i, j) for j in types]]:
+        if [i for i in values if not any([isinstance(i, j) for j in types])]:
             raise PreferencesReadError("Only bool, string, and int values allowed")
         return prefs
 

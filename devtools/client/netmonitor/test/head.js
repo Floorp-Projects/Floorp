@@ -706,7 +706,7 @@ function testColumnsAlignment(headers, requestList) {
   }
 }
 
-function* hideColumn(monitor, column) {
+async function hideColumn(monitor, column) {
   let { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
@@ -715,13 +715,13 @@ function* hideColumn(monitor, column) {
 
   let onHeaderRemoved = waitForDOM(document, `#requests-list-${column}-button`, 0);
   parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
-  yield onHeaderRemoved;
+  await onHeaderRemoved;
 
   ok(!document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be hidden`);
 }
 
-function* showColumn(monitor, column) {
+async function showColumn(monitor, column) {
   let { document, parent } = monitor.panelWin;
 
   info(`Clicking context-menu item for ${column}`);
@@ -730,7 +730,7 @@ function* showColumn(monitor, column) {
 
   let onHeaderAdded = waitForDOM(document, `#requests-list-${column}-button`, 1);
   parent.document.querySelector(`#request-list-header-${column}-toggle`).click();
-  yield onHeaderAdded;
+  await onHeaderAdded;
 
   ok(document.querySelector(`#requests-list-${column}-button`),
      `Column ${column} should be visible`);
