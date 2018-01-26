@@ -467,10 +467,6 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
     return NS_ERROR_FAILURE;
   }
 
-  rv = selection->AddSelectionListener(mComposerCommandsUpdater);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
   htmlEditor->SetComposerCommandsUpdater(mComposerCommandsUpdater);
 
   // and as a transaction listener
@@ -501,10 +497,6 @@ nsEditingSession::RemoveListenersAndControllers(nsPIDOMWindowOuter* aWindow,
   }
 
   // Remove all the listeners
-  RefPtr<Selection> selection = aHTMLEditor->GetSelection();
-  if (selection) {
-    selection->RemoveSelectionListener(mComposerCommandsUpdater);
-  }
   aHTMLEditor->SetComposerCommandsUpdater(nullptr);
 
   aHTMLEditor->RemoveDocumentStateListener(mComposerCommandsUpdater);

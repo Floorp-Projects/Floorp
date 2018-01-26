@@ -9,7 +9,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsISelectionListener.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -41,19 +40,18 @@ struct PropItem
   ~PropItem();
 };
 
-class TypeInState final : public nsISelectionListener
+class TypeInState final
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(TypeInState)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TypeInState)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TypeInState)
 
   TypeInState();
   void Reset();
 
   nsresult UpdateSelState(dom::Selection* aSelection);
 
-  // nsISelectionListener
-  NS_DECL_NSISELECTIONLISTENER
+  void OnSelectionChange(dom::Selection& aSelection);
 
   void SetProp(nsAtom* aProp, nsAtom* aAttr, const nsAString& aValue);
 
