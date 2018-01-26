@@ -23,8 +23,8 @@
   function register() {
     return Promise.resolve()
       .then(_ => navigator.serviceWorker.register("http://mochi.test:8888/" +
-                                                  "tests/dom/workers/test/" +
-                                                  "serviceworkers/" +
+                                                  "tests/dom/serviceworkers/" +
+                                                  "test/" +
                                                   "bug1290951_worker_main.sjs"))
       .then(r => {
         ok(r, "Should be a registration.");

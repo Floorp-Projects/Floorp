@@ -4,7 +4,7 @@ self.addEventListener('fetch', function (event) {
   var request = event.request;
   var url = new URL(request.url);
 
-  if (url.pathname !== '/tests/dom/workers/test/serviceworkers/eventsource/eventsource.resource') {
+  if (url.pathname !== '/tests/dom/serviceworkers/test/eventsource/eventsource.resource') {
     return;
   }
 

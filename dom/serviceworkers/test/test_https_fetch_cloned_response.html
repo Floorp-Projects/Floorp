@@ -20,7 +20,7 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/clonedresponse/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/clonedresponse/register.html";
     var ios;
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
@@ -29,10 +29,10 @@
         ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                            .getService(SpecialPowers.Ci.nsIIOService);
         ios.offline = true;
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/clonedresponse/index.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/clonedresponse/index.html";
       } else if (e.data.status == "done") {
         ios.offline = false;
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/clonedresponse/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/clonedresponse/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

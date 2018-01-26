@@ -4,7 +4,7 @@ let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
           getService(Ci.nsIServiceWorkerManager);
 
-let EXAMPLE_URL = "https://example.com/chrome/dom/workers/test/serviceworkers/";
+let EXAMPLE_URL = "https://example.com/chrome/dom/serviceworkers/test/";
 
 function waitForIframeLoad(iframe) {
   return new Promise(function (resolve) {

@@ -3,12 +3,12 @@
 const { classes: Cc, interfaces: Ci, results: Cr } = Components;
 
 const BASE_URI =
-  "http://mochi.test:8888/browser/dom/workers/test/serviceworkers/";
+  "http://mochi.test:8888/browser/dom/serviceworkers/test/";
 const emptyDoc = BASE_URI + "empty.html";
 const fakeDoc = BASE_URI + "fake.html";
 const helloDoc = BASE_URI + "hello.html";
 
-const CROSS_URI = "http://example.com/browser/dom/workers/test/serviceworkers/";
+const CROSS_URI = "http://example.com/browser/dom/serviceworkers/test/";
 const crossRedirect = CROSS_URI + "redirect";
 const crossHelloDoc = CROSS_URI + "hello.html";
 

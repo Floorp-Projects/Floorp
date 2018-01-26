@@ -20,20 +20,20 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/origin/https/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/origin/https/register.html";
     var win;
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        win = window.open("https://example.com/tests/dom/workers/test/serviceworkers/fetch/origin/https/index-https.sjs", "mywindow", "width=100,height=100");
+        win = window.open("https://example.com/tests/dom/serviceworkers/test/fetch/origin/https/index-https.sjs", "mywindow", "width=100,height=100");
       } else if (e.data.status == "domain") {
         is(e.data.data, "example.org", "Correct domain expected");
       } else if (e.data.status == "origin") {
         is(e.data.data, "https://example.org", "Correct origin expected");
       } else if (e.data.status == "done") {
         win.close();
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/origin/https/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/origin/https/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

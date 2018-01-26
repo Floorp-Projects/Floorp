@@ -88,10 +88,10 @@ onnotificationclick = function(e) {
   var results = [];
   var promises = [];
 
-  var redirect = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/redirect.sjs?"
-  var redirect_xorigin = "http://example.com/tests/dom/workers/test/serviceworkers/redirect.sjs?"
-  var same_origin = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/open_window/client.html"
-  var different_origin = "http://example.com/tests/dom/workers/test/serviceworkers/open_window/client.html"
+  var redirect = "http://mochi.test:8888/tests/dom/serviceworkers/test/redirect.sjs?"
+  var redirect_xorigin = "http://example.com/tests/dom/serviceworkers/test/redirect.sjs?"
+  var same_origin = "http://mochi.test:8888/tests/dom/serviceworkers/test/open_window/client.html"
+  var different_origin = "http://example.com/tests/dom/serviceworkers/test/open_window/client.html"
 
 
   promises.push(testForUrl("about:blank", "TypeError", null, results));

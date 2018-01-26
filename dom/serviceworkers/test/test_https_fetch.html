@@ -20,7 +20,7 @@
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/register.html";
     var ios;
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
@@ -29,16 +29,16 @@
         ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                            .getService(SpecialPowers.Ci.nsIIOService);
         ios.offline = true;
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/index.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/index.html";
       } else if (e.data.status == "done") {
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth-sw.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/synth-sw.html";
       } else if (e.data.status == "done-synth-sw") {
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth-window.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/synth-window.html";
       } else if (e.data.status == "done-synth-window") {
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/synth.html";
       } else if (e.data.status == "done-synth") {
         ios.offline = false;
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/https/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         ok(true, "Test finished successfully");

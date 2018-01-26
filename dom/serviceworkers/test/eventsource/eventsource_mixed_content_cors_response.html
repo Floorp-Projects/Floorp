@@ -8,7 +8,7 @@
   <title>Bug 1182103 - Test EventSource scenarios with fetch interception</title>
   <script type="text/javascript">
 
-  var prefix = "https://example.com/tests/dom/workers/test/serviceworkers/eventsource/";
+  var prefix = "https://example.com/tests/dom/serviceworkers/test/eventsource/";
 
   function ok(aCondition, aMessage) {
     parent.postMessage({status: "callback", data: "ok", condition: aCondition, message: aMessage}, "*");

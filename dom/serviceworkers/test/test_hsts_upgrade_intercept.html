@@ -21,26 +21,26 @@
   var framesLoaded = 0;
   function runTest() {
     iframe = document.querySelector("iframe");
-    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/register.html";
+    iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/hsts/register.html";
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "registrationdone") {
-        iframe.src = "http://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/index.html";
+        iframe.src = "http://example.com/tests/dom/serviceworkers/test/fetch/hsts/index.html";
       } else if (e.data.status == "protocol") {
         is(e.data.data, "https:", "Correct protocol expected");
         ok(e.data.securityInfoPresent, "Security info present on intercepted value");
         switch (++framesLoaded) {
         case 1:
-          iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/embedder.html";
+          iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/hsts/embedder.html";
           break;
         case 2:
-          iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/image.html";
+          iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/hsts/image.html";
           break;
         }
       } else if (e.data.status == "image") {
         is(e.data.data, 40, "The image request was upgraded before interception");
-        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/unregister.html";
+        iframe.src = "https://example.com/tests/dom/serviceworkers/test/fetch/hsts/unregister.html";
       } else if (e.data.status == "unregistrationdone") {
         window.onmessage = null;
         SpecialPowers.cleanUpSTSData("http://example.com");

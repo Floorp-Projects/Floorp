@@ -1,1 +1,1 @@
-Service-Worker-Allowed: /tests/dom/workers/test/serviceworkers/swa/deep/way/too/specific
+Service-Worker-Allowed: /tests/dom/serviceworkers/test/swa/deep/way/too/specific

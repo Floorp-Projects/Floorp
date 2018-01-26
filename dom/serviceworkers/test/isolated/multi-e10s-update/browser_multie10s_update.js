@@ -6,7 +6,7 @@ const { classes: Cc, interfaces: Ci, results: Cr } = Components;
 // an SW update.
 
 const BASE_URI =
- "http://mochi.test:8888/browser/dom/workers/test/serviceworkers/isolated/multi-e10s-update/";
+ "http://mochi.test:8888/browser/dom/serviceworkers/test/isolated/multi-e10s-update/";
 
 add_task(async function test_update() {
   info("Setting the prefs to having multi-e10s enabled");

@@ -1,4 +1,4 @@
-var prefix = "/tests/dom/workers/test/serviceworkers/fetch/origin/";
+var prefix = "/tests/dom/serviceworkers/test/fetch/origin/";
 
 function addOpaqueRedirect(cache, file) {
   return fetch(new Request(prefix + file, { redirect: "manual" })).then(function(response) {
