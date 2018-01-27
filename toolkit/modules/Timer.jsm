@@ -25,6 +25,9 @@ var gTimerTable = new Map(); // int -> nsITimer
 
 function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
                                  aTarget, aArgs) {
+  if (typeof aCallback !== "function") {
+    throw new Error(`callback is not a function in ${aIsInterval ? "setInterval" : "setTimeout"}`);
+  }
   let id = gNextId++;
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
