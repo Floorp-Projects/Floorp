@@ -50,8 +50,6 @@ const PREF_CONTENT_LISTENER = "marionette.contentListener";
 const PREF_PORT = "marionette.port";
 const PREF_RECOMMENDED = "marionette.prefs.recommended";
 
-const NOTIFY_RUNNING = "remote-active";
-
 // Marionette sets preferences recommended for automation when it starts,
 // unless marionette.prefs.recommended has been set to false.
 // Where noted, some prefs should also be set in the profile passed to
@@ -352,8 +350,6 @@ server.TCPListener = class {
       return;
     }
 
-    Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
-
     if (Preferences.get(PREF_RECOMMENDED)) {
       // set recommended prefs if they are not already user-defined
       for (let [k, v] of RECOMMENDED_PREFS) {
@@ -387,8 +383,6 @@ server.TCPListener = class {
 
     // Shutdown server socket, and no longer listen for new connections
     this.acceptConnections = false;
-
-    Services.obs.notifyObservers(this, NOTIFY_RUNNING);
     this.alive = false;
   }
 
