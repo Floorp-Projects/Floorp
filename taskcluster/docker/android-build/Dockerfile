@@ -1,59 +1,28 @@
-FROM debian:stretch-20170620
+# %ARG DOCKER_IMAGE_PARENT
+FROM $DOCKER_IMAGE_PARENT
 MAINTAINER Nick Alexander <nalexander@mozilla.com>
-
-### Add worker user and setup its workspace.
-RUN mkdir -p /builds && \
-    groupadd -g 500 worker && \
-    useradd -u 500 -g 500 -d /builds/worker -s /bin/bash -m worker && \
-    chown -R worker:worker /builds && \
-    mkdir -p /builds/worker/workspace && \
-    chown -R worker:worker /builds/worker/workspace
-
-# Declare default working folder
-WORKDIR /builds/worker
 
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# Set variables normally configured at login, by the shell' parent process,
-# these are taken from GNU su manual.  Also set DEBIAN_FRONTEND to advise
-# apt-get of our situation.
-ENV HOME=/builds/worker \
-    SHELL=/bin/bash \
-    USER=worker \
-    LOGNAME=worker \
-    HOSTNAME=taskcluster-worker \
-    DEBIAN_FRONTEND=noninteractive
-
-# Set a default command useful for debugging.
-CMD ["/bin/bash", "--login"]
-
-# Set apt sources list to a snapshot.
-COPY sources.list /etc/apt/
-
 # rsync is required for l10n single locale repacks.  less, screen, and
 # vim, help debugging interactive tasks in Task Cluster.
 # git and openssh-client are used to upload GeckoView javadoc to Github.
-RUN apt-get update -q && \
-    apt-get install -yyq --no-install-recommends \
+RUN apt-get update && \
+    apt-get install \
       autoconf2.13 \
       build-essential \
       base-files \
-      ca-certificates \
       ccache \
       cmake \
       curl \
       file \
-      git \
       gnupg \
       less \
-      make \
       openssh-client \
       procps \
-      python \
       python-cryptography \
-      python-dev \
       python-pip \
       python-setuptools \
       python-virtualenv \
@@ -65,42 +34,12 @@ RUN apt-get update -q && \
       uuid \
       vim \
       wget \
-      xz-utils \
       yasm \
-      zip \
-    && \
-    apt-get clean
-
-# %include python/mozbuild/mozbuild/action/tooltool.py
-COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
-
-# %include testing/mozharness/external_tools/robustcheckout.py
-COPY topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
-
-# %include taskcluster/docker/recipes/hgrc
-COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
-
-# %include taskcluster/docker/recipes/common.sh
-COPY topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
-
-# %include taskcluster/docker/recipes/install-mercurial.sh
-COPY topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
-
-# %include taskcluster/docker/recipes/debian-build-system-setup.sh
-COPY topsrcdir/taskcluster/docker/recipes/debian-build-system-setup.sh /setup/system-setup.sh
-
-RUN bash /setup/system-setup.sh
+      zip
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb.
 # %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
-
-# %include taskcluster/docker/recipes/run-task
-COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
-
-# Add pip configuration, among other things.
-# %include taskcluster/docker/recipes/dot-config
-COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 
 # Stubbed out credentials; mozharness looks for this file an issues a WARNING
 # if it's not found, which causes the build to fail.  Note that this needs to
@@ -123,12 +62,10 @@ USER root
 # https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
 
 # Observe missing --no-install-recommends, in order to install glib2.0/gconf/etc.
-RUN apt-get install -yyq \
+RUN apt-get install \
       libgconf2-4 \
       libgnome2-0 \
-      openjdk-8-jdk-headless \
-    && \
-    apt-get clean
+      openjdk-8-jdk-headless
 
 ENV NEXUS_VERSION=2.12.0-01 \
     NEXUS_SHA1SUM=1a9aaad8414baffe0a2fd46eed1f41b85f4049e6 \

@@ -26,7 +26,7 @@ Telemetry extras sent for a successful content download might look like this:
         "content": "25610abb-5dc8-fd75-40e7-990507f010c4"
     }
 
-For failed content downloads an additional ``error`` field contains the error type that occured when downloading the content. The value can be one of:
+For failed content downloads an additional ``error`` field contains the error type that occurred when downloading the content. The value can be one of:
 
 - no_network
 - network_metered

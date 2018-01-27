@@ -356,4 +356,42 @@ this.PlacesTestUtils = Object.freeze({
       PlacesUtils[type].addObserver(proxifiedObserver);
     });
   },
+
+  /**
+   * A debugging helper that dumps the contents of an SQLite table.
+   *
+   * @param {Sqlite.OpenedConnection} db
+   *        The mirror database connection.
+   * @param {String} table
+   *        The table name.
+   */
+  async dumpTable(db, table) {
+    let rows = await db.execute(`SELECT * FROM ${table}`);
+    dump(`Table ${table} contains ${rows.length} rows\n`);
+
+    let results = [];
+    for (let row of rows) {
+      let numColumns = row.numEntries;
+      let rowValues = [];
+      for (let i = 0; i < numColumns; ++i) {
+        switch (row.getTypeOfIndex(i)) {
+          case Ci.mozIStorageValueArray.VALUE_TYPE_NULL:
+            rowValues.push("NULL");
+            break;
+          case Ci.mozIStorageValueArray.VALUE_TYPE_INTEGER:
+            rowValues.push(row.getInt64(i));
+            break;
+          case Ci.mozIStorageValueArray.VALUE_TYPE_FLOAT:
+            rowValues.push(row.getDouble(i));
+            break;
+          case Ci.mozIStorageValueArray.VALUE_TYPE_TEXT:
+            rowValues.push(JSON.stringify(row.getString(i)));
+            break;
+        }
+      }
+      results.push(rowValues.join("\t"));
+    }
+    results.push("\n");
+    dump(results.join("\n"));
+  },
 });

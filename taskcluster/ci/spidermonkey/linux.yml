@@ -41,7 +41,7 @@ sm-rust-bindings-linux64/debug:
         tier: 2
         platform: linux64/debug
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: debian7-mozjs-rust-build}
     run:
         using: spidermonkey-rust-bindings
         spidermonkey-variant: plain

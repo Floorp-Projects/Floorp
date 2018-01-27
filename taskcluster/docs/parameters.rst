@@ -16,7 +16,7 @@ best to find a recent decision task's ``parameters.yml`` file, and modify that
 file if necessary, rather than starting from scratch.  This ensures you have a
 complete set of parameters.
 
-The properties of the parameters object are described here, divided rougly by
+The properties of the parameters object are described here, divided roughly by
 topic.
 
 Push Information

@@ -100,8 +100,8 @@ RotaryTracker.prototype = {
 this.RotaryEngine = function RotaryEngine(service) {
   SyncEngine.call(this, "Rotary", service);
   // Ensure that the engine starts with a clean slate.
-  this.toFetch        = [];
-  this.previousFailed = [];
+  this.toFetch        = new SerializableSet();
+  this.previousFailed = new SerializableSet();
 };
 RotaryEngine.prototype = {
   __proto__: SyncEngine.prototype,

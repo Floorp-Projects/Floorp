@@ -20,7 +20,7 @@ class SecretDecoderRing : public nsISecretDecoderRing
                         , public nsNSSShutDownObject
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISECRETDECODERRING
 
   SecretDecoderRing();

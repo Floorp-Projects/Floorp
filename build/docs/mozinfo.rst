@@ -54,7 +54,7 @@ bits
 
    Universal Mac builds do not have this key defined.
 
-   Unkown processor architectures (see ``processor`` below) may not have
+   Unknown processor architectures (see ``processor`` below) may not have
    this key defined.
 
    Optional.

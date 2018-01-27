@@ -672,12 +672,10 @@
                                 &certmgr.tab.others2;
                                 &certmgr.tab.websites3;
                                 &certmgr.tab.ca;
-                                &certmgr.tab.orphan2;
                                 &certmgr.mine2;
                                 &certmgr.others2;
                                 &certmgr.websites3;
                                 &certmgr.cas2;
-                                &certmgr.orphans2;
                                 &certmgr.certname;
                                 &certmgr.tokenname;
                                 &certmgr.view2.label;
