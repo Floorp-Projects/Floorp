@@ -13,6 +13,7 @@ gfx/skia/
 gfx/vr/openvr/
 gfx/webrender
 gfx/webrender_api
+gfx/wrench/
 gfx/ycbcr/
 intl/hyphenation/hyphen/
 intl/icu/
