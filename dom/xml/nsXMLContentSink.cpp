@@ -16,7 +16,6 @@
 #include "nsIDocShell.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMCDATASection.h"
 #include "DocumentType.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"

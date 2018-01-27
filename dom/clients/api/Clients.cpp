@@ -12,8 +12,8 @@
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIGlobalObject.h"
 #include "nsString.h"
@@ -23,7 +23,6 @@ namespace dom {
 
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::WorkerPrivate;
-using mozilla::dom::workers::ServiceWorkerManager;
 using mozilla::ipc::PrincipalInfo;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Clients);

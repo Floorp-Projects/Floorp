@@ -29,6 +29,7 @@
 #include "mozilla/gfx/HelpersCairo.h"
 
 #include <fontconfig/fcfreetype.h>
+#include <dlfcn.h>
 #include <unistd.h>
 
 #ifdef MOZ_WIDGET_GTK
@@ -44,6 +45,8 @@
 #include "mozilla/SandboxBrokerPolicyFactory.h"
 #include "mozilla/SandboxSettings.h"
 #endif
+
+#include FT_MULTIPLE_MASTERS_H
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1002,6 +1005,60 @@ gfxFontconfigFontEntry::GetFTFace()
         mFTFace = CreateFaceForPattern(mFontPattern);
     }
     return mFTFace;
+}
+
+bool
+gfxFontconfigFontEntry::HasVariations()
+{
+    FT_Face face = GetFTFace();
+    if (face) {
+        return face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS;
+    }
+    return false;
+}
+
+void
+gfxFontconfigFontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes)
+{
+    MOZ_ASSERT(aAxes.IsEmpty());
+    FT_Face face = GetFTFace();
+    if (!face) {
+        return;
+    }
+    typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
+    static GetVarFunc getVar;
+    typedef FT_Error (*DoneVarFunc)(FT_Library, FT_MM_Var*);
+    static DoneVarFunc doneVar;
+    static bool firstTime = true;
+    if (firstTime) {
+        firstTime = false;
+        getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
+        doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
+    }
+    if (!getVar) {
+        return;
+    }
+    FT_MM_Var* mmVar;
+    if (FT_Err_Ok != (*getVar)(face, &mmVar)) {
+        return;
+    }
+    for (unsigned i = 0; i < mmVar->num_axis; i++) {
+        const auto& a = mmVar->axis[i];
+        gfxFontVariationAxis axis;
+        axis.mMinValue = a.minimum / 65536.0;
+        axis.mMaxValue = a.maximum / 65536.0;
+        axis.mDefaultValue = a.def / 65536.0;
+        axis.mTag = a.tag;
+        axis.mName.Assign(NS_ConvertUTF8toUTF16(a.name));
+        aAxes.AppendElement(axis);
+    }
+    // Prior to freetype 2.9, there was no specific function to free the FT_MM_Var,
+    // and the docs just said to use free().
+    if (doneVar) {
+        (*doneVar)(face->glyph->library, mmVar);
+    } else {
+        free(mmVar);
+    }
 }
 
 nsresult
