@@ -93,6 +93,14 @@ dictionary InspectorRGBATuple {
   double a = 1;
 };
 
+dictionary InspectorVariationAxis {
+  required DOMString tag;
+  required DOMString name;
+  required float minValue;
+  required float maxValue;
+  required float defaultValue;
+};
+
 [ChromeOnly]
 interface InspectorFontFace {
   // An indication of how we found this font during font-matching.
@@ -106,6 +114,8 @@ interface InspectorFontFace {
   readonly attribute DOMString CSSFamilyName; // a family name that could be used in CSS font-family
                                               // (not necessarily the actual name that was used,
                                               // due to aliases, generics, localized names, etc)
+
+  [NewObject] sequence<InspectorVariationAxis> getVariationAxes();
 
   // meaningful only when the font is a user font defined using @font-face
   readonly attribute CSSFontFaceRule? rule; // null if no associated @font-face rule

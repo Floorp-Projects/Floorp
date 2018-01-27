@@ -7279,8 +7279,8 @@
   },
   "TELEMETRY_SUCCESSFUL_SEND_PINGS_SIZE_KB": {
     "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "61",
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "66",
     "kind": "exponential",
     "low": 10,
     "high": 1024,
@@ -7290,8 +7290,8 @@
   },
   "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
     "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "61",
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "expires_in_version": "66",
     "kind": "exponential",
     "low": 10,
     "high": 1024,
@@ -7394,9 +7394,9 @@
   },
   "TELEMETRY_SEND_FAILURE_TYPE" : {
     "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
     "bug_numbers": [1367110],
-    "expires_in_version": "61",
+    "expires_in_version": "66",
     "kind": "categorical",
     "labels": [
       "eOK",

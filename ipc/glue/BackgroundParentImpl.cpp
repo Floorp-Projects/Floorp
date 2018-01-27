@@ -23,6 +23,7 @@
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -51,7 +52,6 @@
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
-#include "ServiceWorkerManagerParent.h"
 
 #ifdef DISABLE_ASSERTS_FOR_FUZZING
 #define ASSERT_UNLESS_FUZZING(...) do { } while (0)
@@ -107,7 +107,6 @@ namespace ipc {
 using mozilla::dom::ContentParent;
 using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ServiceWorkerRegistrationData;
-using mozilla::dom::workers::ServiceWorkerManagerParent;
 
 BackgroundParentImpl::BackgroundParentImpl()
 {
@@ -659,8 +658,8 @@ BackgroundParentImpl::AllocPServiceWorkerManagerParent()
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> agent =
-    new dom::workers::ServiceWorkerManagerParent();
+  RefPtr<dom::ServiceWorkerManagerParent> agent =
+    new dom::ServiceWorkerManagerParent();
   return agent.forget().take();
 }
 
@@ -672,8 +671,8 @@ BackgroundParentImpl::DeallocPServiceWorkerManagerParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<dom::workers::ServiceWorkerManagerParent> parent =
-    dont_AddRef(static_cast<dom::workers::ServiceWorkerManagerParent*>(aActor));
+  RefPtr<dom::ServiceWorkerManagerParent> parent =
+    dont_AddRef(static_cast<dom::ServiceWorkerManagerParent*>(aActor));
   MOZ_ASSERT(parent);
   return true;
 }

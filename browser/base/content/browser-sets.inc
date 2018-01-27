@@ -104,6 +104,10 @@
       oncommand="OpenBrowserWindow({private: true});"/>
     <command id="History:UndoCloseTab" oncommand="undoCloseTab();"/>
     <command id="History:UndoCloseWindow" oncommand="undoCloseWindow();"/>
+
+#ifdef NIGHTLY_BUILD
+    <command id="wrCaptureCmd" oncommand="gWebRender.capture();"/>
+#endif
   </commandset>
 
   <commandset id="placesCommands">
@@ -380,6 +384,15 @@
 #expand    <key id="key_selectTab8" oncommand="gBrowser.selectTabAtIndex(7, event);" key="8" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
 #expand    <key id="key_selectLastTab" oncommand="gBrowser.selectTabAtIndex(-1, event);" key="9" modifiers="__NUM_SELECT_TAB_MODIFIER__"/>
 
+#ifdef NIGHTLY_BUILD
+    <key id="key_wrCaptureCmd"
+#ifdef XP_GNOME
+    keycode="VK_3" event="keydown"
+#else
+    key="3"
+#endif
+    command="wrCaptureCmd" modifiers="control,shift"/>
+#endif
   </keyset>
 
 # Used by baseMenuOverlay

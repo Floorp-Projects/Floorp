@@ -11,7 +11,7 @@
 #include "nsLayoutUtils.h"
 #include "nsString.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
 
@@ -164,7 +164,6 @@ ImageCacheKey::GetControlledDocumentToken(nsIDocument* aDocument)
   // documents, we cast the pointer into a void* to avoid dereferencing
   // it (since we only use it for comparisons), and return it.
   void* pointer = nullptr;
-  using dom::workers::ServiceWorkerManager;
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (aDocument && swm) {
     ErrorResult rv;

@@ -438,6 +438,77 @@ protected:
                                        nsIContent** aNextContent);
 
   /**
+   * Returns scope owner of aContent.
+   * A scope owner is either a document root, shadow host, or slot.
+   */
+  nsIContent* FindOwner(nsIContent* aContent);
+
+  /**
+   * Returns true if aContent is a shadow host or slot
+   */
+  bool IsHostOrSlot(nsIContent* aContent);
+
+  /**
+   * Retrieve the next tabbable element in scope owned by aOwner, using
+   * focusability and tabindex to determine the tab order.
+   *
+   * aOwner is the owner of scope to search in.
+   *
+   * aStartContent is the starting point for this call of this method.
+   *
+   * aForward should be true for forward navigation or false for backward
+   * navigation.
+   *
+   * aCurrentTabIndex is the current tabindex.
+   *
+   * aIgnoreTabIndex to ignore the current tabindex and find the element
+   * irrespective or the tab index.
+   *
+   * aSkipOwner to skip owner while searching. The flag is set when caller is
+   * |GetNextTabbableContent| in order to let caller handle owner.
+   *
+   * NOTE:
+   *   Consider the method searches downwards in flattened subtree
+   *   rooted at aOwner.
+   */
+  nsIContent* GetNextTabbableContentInScope(nsIContent* aOwner,
+                                            nsIContent* aStartContent,
+                                            bool aForward,
+                                            int32_t aCurrentTabIndex,
+                                            bool aIgnoreTabIndex,
+                                            bool aSkipOwner);
+
+  /**
+   * Retrieve the next tabbable element in scope including aStartContent
+   * and the scope's ancestor scopes, using focusability and tabindex to
+   * determine the tab order.
+   *
+   * aStartContent an in/out paremeter. It as input is the starting point
+   * for this call of this method; as output it is the shadow host in
+   * light DOM if the next tabbable element is not found in shadow DOM,
+   * in order to continue searching in light DOM.
+   *
+   * aForward should be true for forward navigation or false for backward
+   * navigation.
+   *
+   * aCurrentTabIndex returns tab index of shadow host in light DOM if the
+   * next tabbable element is not found in shadow DOM, in order to continue
+   * searching in light DOM.
+   *
+   * aIgnoreTabIndex to ignore the current tabindex and find the element
+   * irrespective or the tab index.
+   *
+   * NOTE:
+   *   Consider the method searches upwards in all shadow host- or slot-rooted
+   *   flattened subtrees that contains aStartContent as non-root, except
+   *   the flattened subtree rooted at shadow host in light DOM.
+   */
+  nsIContent* GetNextTabbableContentInAncestorScopes(nsIContent** aStartContent,
+                                                     bool aForward,
+                                                     int32_t* aCurrentTabIndex,
+                                                     bool aIgnoreTabIndex);
+
+  /**
    * Retrieve the next tabbable element within a document, using focusability
    * and tabindex to determine the tab order. The element is returned in
    * aResultContent.

@@ -1015,6 +1015,15 @@ WebRenderBridgeParent::RecvForceComposite()
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvCapture()
+{
+  if (!mDestroyed) {
+    mApi->Capture();
+  }
+  return IPC_OK();
+}
+
 already_AddRefed<AsyncPanZoomController>
 WebRenderBridgeParent::GetTargetAPZC(const FrameMetrics::ViewID& aScrollId)
 {

@@ -11,4 +11,12 @@
 
 typedef mozilla::gfx::FontVariation gfxFontVariation;
 
+struct gfxFontVariationAxis {
+    uint32_t mTag;
+    nsString mName;
+    float    mMinValue;
+    float    mMaxValue;
+    float    mDefaultValue;
+};
+
 #endif
