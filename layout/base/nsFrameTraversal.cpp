@@ -112,7 +112,8 @@ public:
   nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart,
                    nsIteratorType aType, bool aLockScroll,
                    bool aFollowOOFs, bool aSkipPopupChecks) :
-  nsFrameIterator(aPresContext, aStart, aType, aLockScroll, aFollowOOFs, aSkipPopupChecks) {}
+  nsFrameIterator(aPresContext, aStart, aType, aLockScroll,
+                  aFollowOOFs, aSkipPopupChecks) {}
 
 protected:
   nsIFrame* GetFirstChildInner(nsIFrame* aFrame) override;
@@ -120,6 +121,29 @@ protected:
 
   nsIFrame* GetNextSiblingInner(nsIFrame* aFrame) override;
   nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame) override;
+};
+
+// Frame iterator that walks only frames of light DOM contents without
+// ancestor assigned to a slot. Primarily for focus navigation.
+class nsLightFrameIterator final : public nsFrameIterator
+{
+public:
+  nsLightFrameIterator(nsPresContext* aPresContext, nsIFrame *aStart,
+                       nsIteratorType aType, bool aLockScroll,
+                       bool aFollowOOFs, bool aSkipPopupChecks) :
+  nsFrameIterator(aPresContext, aStart, aType, aLockScroll,
+                  aFollowOOFs, aSkipPopupChecks) {}
+
+protected:
+  nsIFrame* GetFirstChildInner(nsIFrame* aFrame) override;
+  nsIFrame* GetLastChildInner(nsIFrame* aFrame) override;
+
+  nsIFrame* GetNextSiblingInner(nsIFrame* aFrame) override;
+  nsIFrame* GetPrevSiblingInner(nsIFrame* aFrame) override;
+
+  // Returns true if aFrame's content is in light DOM and has no
+  // ancestor assigned to a slot
+  bool IsLightFrame(nsIFrame* aFrame);
 };
 
 /************IMPLEMENTATIONS**************/
@@ -143,7 +167,8 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                      bool aVisual,
                      bool aLockInScrollView,
                      bool aFollowOOFs,
-                     bool aSkipPopupChecks)
+                     bool aSkipPopupChecks,
+                     bool aSkipShadow)
 {
   if (!aEnumerator || !aStart)
     return NS_ERROR_NULL_POINTER;
@@ -155,10 +180,16 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
   nsCOMPtr<nsIFrameEnumerator> trav;
   if (aVisual) {
     trav = new nsVisualIterator(aPresContext, aStart, aType,
-                                aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                                aLockInScrollView, aFollowOOFs,
+                                aSkipPopupChecks);
+  } else if (aSkipShadow) {
+    trav = new nsLightFrameIterator(aPresContext, aStart, aType,
+                                    aLockInScrollView, aFollowOOFs,
+                                    aSkipPopupChecks);
   } else {
     trav = new nsFrameIterator(aPresContext, aStart, aType,
-                               aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                               aLockInScrollView, aFollowOOFs,
+                               aSkipPopupChecks);
   }
   trav.forget(aEnumerator);
   return NS_OK;
@@ -187,7 +218,8 @@ NS_IMETHODIMP
 {
   return NS_NewFrameTraversal(aEnumerator, aPresContext, aStart,
                               static_cast<nsIteratorType>(aType),
-                              aVisual, aLockInScrollView, aFollowOOFs, aSkipPopupChecks);
+                              aVisual, aLockInScrollView, aFollowOOFs,
+                              aSkipPopupChecks, false /* aSkipShadow */);
 }
 
 // nsFrameIterator implementation
@@ -466,22 +498,26 @@ nsFrameIterator::GetPrevSibling(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsFrameIterator::GetFirstChildInner(nsIFrame* aFrame) {
+nsFrameIterator::GetFirstChildInner(nsIFrame* aFrame)
+{
   return aFrame->PrincipalChildList().FirstChild();
 }
 
 nsIFrame*
-nsFrameIterator::GetLastChildInner(nsIFrame* aFrame) {
+nsFrameIterator::GetLastChildInner(nsIFrame* aFrame)
+{
   return aFrame->PrincipalChildList().LastChild();
 }
 
 nsIFrame*
-nsFrameIterator::GetNextSiblingInner(nsIFrame* aFrame) {
+nsFrameIterator::GetNextSiblingInner(nsIFrame* aFrame)
+{
   return aFrame->GetNextSibling();
 }
 
 nsIFrame*
-nsFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
+nsFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame)
+{
   return aFrame->GetPrevSibling();
 }
 
@@ -511,17 +547,20 @@ nsFrameIterator::IsPopupFrame(nsIFrame* aFrame)
 // nsVisualIterator implementation
 
 nsIFrame*
-nsVisualIterator::GetFirstChildInner(nsIFrame* aFrame) {
+nsVisualIterator::GetFirstChildInner(nsIFrame* aFrame)
+{
   return aFrame->PrincipalChildList().GetNextVisualFor(nullptr);
 }
 
 nsIFrame*
-nsVisualIterator::GetLastChildInner(nsIFrame* aFrame) {
+nsVisualIterator::GetLastChildInner(nsIFrame* aFrame)
+{
   return aFrame->PrincipalChildList().GetPrevVisualFor(nullptr);
 }
 
 nsIFrame*
-nsVisualIterator::GetNextSiblingInner(nsIFrame* aFrame) {
+nsVisualIterator::GetNextSiblingInner(nsIFrame* aFrame)
+{
   nsIFrame* parent = GetParentFrame(aFrame);
   if (!parent)
     return nullptr;
@@ -529,9 +568,73 @@ nsVisualIterator::GetNextSiblingInner(nsIFrame* aFrame) {
 }
 
 nsIFrame*
-nsVisualIterator::GetPrevSiblingInner(nsIFrame* aFrame) {
+nsVisualIterator::GetPrevSiblingInner(nsIFrame* aFrame)
+{
   nsIFrame* parent = GetParentFrame(aFrame);
   if (!parent)
     return nullptr;
   return parent->PrincipalChildList().GetPrevVisualFor(aFrame);
+}
+
+// nsLightFrameIterator implementation
+
+nsIFrame*
+nsLightFrameIterator::GetFirstChildInner(nsIFrame* aFrame)
+{
+  nsIFrame* child = nsFrameIterator::GetFirstChildInner(aFrame);
+  return IsLightFrame(child) ? child : GetNextSiblingInner(child);
+}
+
+nsIFrame*
+nsLightFrameIterator::GetLastChildInner(nsIFrame* aFrame)
+{
+  nsIFrame* child = nsFrameIterator::GetLastChildInner(aFrame);
+  return IsLightFrame(child) ? child : GetPrevSiblingInner(child);
+}
+
+nsIFrame*
+nsLightFrameIterator::GetNextSiblingInner(nsIFrame* aFrame)
+{
+  nsIFrame* sibling;
+  for (sibling = nsFrameIterator::GetNextSiblingInner(aFrame);
+       !IsLightFrame(sibling);
+       sibling = nsFrameIterator::GetNextSiblingInner(sibling));
+  return sibling;
+}
+
+nsIFrame*
+nsLightFrameIterator::GetPrevSiblingInner(nsIFrame* aFrame)
+{
+  nsIFrame* sibling;
+  for (sibling = nsFrameIterator::GetPrevSiblingInner(aFrame);
+       !IsLightFrame(sibling);
+       sibling = nsFrameIterator::GetPrevSiblingInner(sibling));
+  return sibling;
+}
+
+bool
+nsLightFrameIterator::IsLightFrame(nsIFrame* aFrame)
+{
+  if (!aFrame) {
+    return true;
+  }
+
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return true;
+  }
+
+  // Return false if content is in shadow DOM
+  if (content->IsInShadowTree()) {
+    return false;
+  }
+
+  // Return false if some ancestor is assigned to a slot
+  for (; content; content = content->GetParent()) {
+    if (content->GetAssignedSlot()) {
+      return false;
+    }
+  }
+
+  return true;
 }

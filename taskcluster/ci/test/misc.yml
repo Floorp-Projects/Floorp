@@ -70,6 +70,7 @@ test-verify:
         by-test-platform:
             # do not run on ccov; see also the enable_code_coverage transform
             linux64-ccov/.*: []
+            windows10-64-ccov/debug: []
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
     tier:

@@ -8,7 +8,6 @@
 
 #include "ActorsChild.h" // IndexedDB
 #include "BroadcastChannelChild.h"
-#include "ServiceWorkerManagerChild.h"
 #include "FileDescriptorSetChild.h"
 #ifdef MOZ_WEBRTC
 #include "CamerasChild.h"
@@ -32,6 +31,7 @@
 #include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/MessagePortChild.h"
+#include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -383,8 +383,8 @@ BackgroundChildImpl::DeallocPCamerasChild(camera::PCamerasChild *aActor)
 dom::PServiceWorkerManagerChild*
 BackgroundChildImpl::AllocPServiceWorkerManagerChild()
 {
-  RefPtr<dom::workers::ServiceWorkerManagerChild> agent =
-    new dom::workers::ServiceWorkerManagerChild();
+  RefPtr<dom::ServiceWorkerManagerChild> agent =
+    new dom::ServiceWorkerManagerChild();
   return agent.forget().take();
 }
 
@@ -392,8 +392,8 @@ bool
 BackgroundChildImpl::DeallocPServiceWorkerManagerChild(
                                              PServiceWorkerManagerChild* aActor)
 {
-  RefPtr<dom::workers::ServiceWorkerManagerChild> child =
-    dont_AddRef(static_cast<dom::workers::ServiceWorkerManagerChild*>(aActor));
+  RefPtr<dom::ServiceWorkerManagerChild> child =
+    dont_AddRef(static_cast<dom::ServiceWorkerManagerChild*>(aActor));
   MOZ_ASSERT(child);
   return true;
 }

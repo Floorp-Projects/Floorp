@@ -12,7 +12,7 @@
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsXPCOM.h"
-#include "ServiceWorkerManager.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
@@ -25,7 +25,6 @@ namespace mozilla {
 namespace dom {
 
 using workers::AssertIsOnMainThread;
-using workers::ServiceWorkerManager;
 
 PushNotifier::PushNotifier()
 {}
