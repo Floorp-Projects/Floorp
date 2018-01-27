@@ -249,7 +249,7 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     currentPhase = TransitionPhase::Pending;
   }
 
-  AutoTArray<TransitionEventInfo, 3> events;
+  AutoTArray<AnimationEventInfo, 3> events;
 
   auto appendTransitionEvent = [&](EventMessage aMessage,
                                    const StickyTimeDuration& aElapsedTime,
@@ -258,12 +258,12 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     if (aMessage == eTransitionCancel) {
       elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
     }
-    events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
-                                             aMessage,
-                                             TransitionProperty(),
-                                             elapsedTime,
-                                             aTimeStamp,
-                                             this));
+    events.AppendElement(AnimationEventInfo(TransitionProperty(),
+                                            mOwningElement.Target(),
+                                            aMessage,
+                                            elapsedTime,
+                                            aTimeStamp,
+                                            this));
   };
 
   // Handle cancel events first

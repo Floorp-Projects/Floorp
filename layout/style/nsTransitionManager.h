@@ -10,13 +10,10 @@
 #define nsTransitionManager_h_
 
 #include "mozilla/ComputedTiming.h"
-#include "mozilla/ContentEvents.h"
 #include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "AnimationCommon.h"
-#include "nsCSSProps.h"
 
 class nsIGlobalObject;
 class nsStyleContext;
@@ -301,53 +298,14 @@ struct AnimationTypeTraits<dom::CSSTransition>
   }
 };
 
-struct TransitionEventInfo {
-  RefPtr<dom::Element> mElement;
-  RefPtr<dom::Animation> mAnimation;
-  InternalTransitionEvent mEvent;
-  TimeStamp mTimeStamp;
-
-  TransitionEventInfo(const NonOwningAnimationTarget& aTarget,
-                      EventMessage aMessage,
-                      nsCSSPropertyID aProperty,
-                      double aElapsedTime,
-                      const TimeStamp& aTimeStamp,
-                      dom::Animation* aAnimation)
-    : mElement(aTarget.mElement)
-    , mAnimation(aAnimation)
-    , mEvent(true, aMessage)
-    , mTimeStamp(aTimeStamp)
-  {
-    // XXX Looks like nobody initialize WidgetEvent::time
-    mEvent.mPropertyName =
-      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
-    mEvent.mElapsedTime = aElapsedTime;
-    mEvent.mPseudoElement =
-      nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
-  }
-
-  // InternalTransitionEvent doesn't support copy-construction, so we need
-  // to ourselves in order to work with nsTArray
-  TransitionEventInfo(const TransitionEventInfo& aOther)
-    : mElement(aOther.mElement)
-    , mAnimation(aOther.mAnimation)
-    , mEvent(aOther.mEvent)
-    , mTimeStamp(aOther.mTimeStamp)
-  {
-    mEvent.AssignTransitionEventData(aOther.mEvent, false);
-  }
-};
-
 } // namespace mozilla
 
 class nsTransitionManager final
-  : public mozilla::CommonAnimationManager<mozilla::dom::CSSTransition,
-                                           mozilla::TransitionEventInfo>
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>
 {
 public:
   explicit nsTransitionManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager<mozilla::dom::CSSTransition,
-                                      mozilla::TransitionEventInfo>(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSTransition>(aPresContext)
     , mInAnimationOnlyStyleUpdate(false)
   {
   }
