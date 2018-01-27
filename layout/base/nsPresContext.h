@@ -73,6 +73,7 @@ class nsDeviceContext;
 class gfxMissingFontRecorder;
 
 namespace mozilla {
+class AnimationEventDispatcher;
 class EffectCompositor;
 class Encoding;
 class EventStateManager;
@@ -236,6 +237,10 @@ public:
   nsCSSFrameConstructor* FrameConstructor()
     { return PresShell()->FrameConstructor(); }
 
+  mozilla::AnimationEventDispatcher* AnimationEventDispatcher()
+  {
+    return mAnimationEventDispatcher;
+  }
   mozilla::EffectCompositor* EffectCompositor() { return mEffectCompositor; }
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
@@ -1296,6 +1301,7 @@ protected:
                                             // from gfx back to layout.
   RefPtr<mozilla::EventStateManager> mEventManager;
   RefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<mozilla::AnimationEventDispatcher> mAnimationEventDispatcher;
   RefPtr<mozilla::EffectCompositor> mEffectCompositor;
   RefPtr<nsTransitionManager> mTransitionManager;
   RefPtr<nsAnimationManager> mAnimationManager;
