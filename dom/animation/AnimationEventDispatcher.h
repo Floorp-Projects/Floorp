@@ -17,6 +17,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsPresContext;
+class nsRefreshDriver;
 
 namespace mozilla {
 
@@ -100,26 +101,22 @@ public:
   explicit AnimationEventDispatcher(nsPresContext* aPresContext)
     : mPresContext(aPresContext)
     , mIsSorted(true)
+    , mIsObserving(false)
   {
   }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationEventDispatcher)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AnimationEventDispatcher)
 
-  void Disconnect() {
-    mPresContext = nullptr;
-  }
+  void Disconnect();
 
-  void QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
-  {
-    mPendingEvents.AppendElements(Move(aEvents));
-    mIsSorted = false;
-  }
+  void QueueEvents(nsTArray<AnimationEventInfo>&& aEvents);
 
   // This will call SortEvents automatically if it has not already been
   // called.
   void DispatchEvents()
   {
+    mIsObserving = false;
     if (!mPresContext || mPendingEvents.IsEmpty()) {
       return;
     }
@@ -154,7 +151,16 @@ public:
   bool HasQueuedEvents() const { return !mPendingEvents.IsEmpty(); }
 
 private:
+#ifndef DEBUG
   ~AnimationEventDispatcher() = default;
+#else
+  ~AnimationEventDispatcher()
+  {
+    MOZ_ASSERT(!mIsObserving,
+               "AnimationEventDispatcher should have disassociated from "
+               "nsRefreshDriver");
+  }
+#endif
 
   class AnimationEventInfoLessThan
   {
@@ -195,6 +201,7 @@ private:
   typedef nsTArray<AnimationEventInfo> EventArray;
   EventArray mPendingEvents;
   bool mIsSorted;
+  bool mIsObserving;
 };
 
 } // namespace mozilla

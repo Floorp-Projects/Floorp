@@ -241,6 +241,7 @@ public:
   {
     return mAnimationEventDispatcher;
   }
+
   mozilla::EffectCompositor* EffectCompositor() { return mEffectCompositor; }
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
