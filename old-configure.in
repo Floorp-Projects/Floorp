@@ -1991,6 +1991,7 @@ NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 ACCESSIBILITY=1
+MOZ_TIME_MANAGER=
 MOZ_CONTENT_SANDBOX=
 MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
@@ -3804,6 +3805,14 @@ if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
   AC_DEFINE(MOZ_DISABLE_STARTUPCACHE)
 fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
+
+dnl ========================================================
+dnl = Enable Support for Time Manager API
+dnl ========================================================
+if test -n "$MOZ_TIME_MANAGER"; then
+    AC_DEFINE(MOZ_TIME_MANAGER)
+fi
+AC_SUBST(MOZ_TIME_MANAGER)
 
 dnl ========================================================
 dnl = Enable Support for Secure Element API
