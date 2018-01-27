@@ -601,9 +601,9 @@ Livemark.prototype = {
 
     // Update visited status for each entry.
     for (let child of this._children) {
-      history.hasVisits(child.uri, isVisited => {
+      history.hasVisits(child.uri).then(isVisited => {
         this.updateURIVisitedStatus(child.uri, isVisited);
-      });
+      }).catch(Cu.reportError);
     }
 
     return this._children;

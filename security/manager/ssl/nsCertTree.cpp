@@ -483,14 +483,6 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
         addOverrides = true;
       }
       else
-      if (aWantedType == nsIX509Cert::UNKNOWN_CERT
-          && thisCertType == nsIX509Cert::UNKNOWN_CERT) {
-        // This unknown cert was stored without trust.
-        // If there are associated overrides, do not show as unknown.
-        // If there are no associated overrides, display as unknown.
-        wantThisCertIfNoOverrides = true;
-      }
-      else
       if (aWantedType == nsIX509Cert::SERVER_CERT
           && thisCertType == nsIX509Cert::SERVER_CERT) {
         // This server cert is explicitly marked as a web site peer,

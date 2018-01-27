@@ -99,13 +99,15 @@ this.LoginManagerStorage_json.prototype = {
     return this._store._save();
   },
 
-  addLogin(login) {
+  addLogin(login, preEncrypted = false) {
     this._store.ensureDataReady();
 
     // Throws if there are bogus values.
     LoginHelper.checkLoginValues(login);
 
-    let [encUsername, encPassword, encType] = this._encryptLogin(login);
+    let [encUsername, encPassword, encType] = preEncrypted ?
+      [login.username, login.password, this._crypto.defaultEncType] :
+      this._encryptLogin(login);
 
     // Clone the login, so we don't modify the caller's object.
     let loginClone = login.clone();

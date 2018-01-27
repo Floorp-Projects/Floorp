@@ -412,7 +412,7 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
         return;
       }
       let crypto = new OSCrypto();
-
+      let logins = [];
       for (let row of rows) {
         try {
           let origin_url = NetUtil.newURI(row.getResultByName("origin_url"));
@@ -454,10 +454,17 @@ async function GetWindowsPasswordsResource(aProfileFolder) {
               throw new Error("Login data scheme type not supported: " +
                               row.getResultByName("scheme"));
           }
-          MigrationUtils.insertLoginWrapper(loginInfo);
+          logins.push(loginInfo);
         } catch (e) {
           Cu.reportError(e);
         }
+      }
+      try {
+        if (logins.length > 0) {
+          await MigrationUtils.insertLoginsWrapper(logins);
+        }
+      } catch (e) {
+        Cu.reportError(e);
       }
       crypto.finalize();
       aCallback(true);

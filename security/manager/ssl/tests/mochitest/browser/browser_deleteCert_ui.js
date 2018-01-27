@@ -181,16 +181,6 @@ add_task(async function testDeleteCACerts() {
                     expectedImpact);
 });
 
-// Test deleting certs from the "Other" tab.
-add_task(async function testDeleteOtherCerts() {
-  const expectedTitle = "Delete Certificates";
-  const expectedConfirmMsg =
-    "Are you sure you want to delete these certificates?";
-  const expectedImpact = "";
-  await testHelper("orphan_tab", expectedTitle, expectedConfirmMsg,
-                    expectedImpact);
-});
-
 // Test that the right values are returned when the dialog is accepted.
 add_task(async function testAcceptDialogReturnValues() {
   let [win, retVals] = await openDeleteCertConfirmDialog("ca_tab" /* arbitrary */);

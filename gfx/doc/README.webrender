@@ -48,10 +48,12 @@ Option B:
    roughly:
    - Update your mozilla-central checkout to the latest code on mozilla-central.
    - Check out and update the webrender repo to the version you want
-   - Copy over the webrender and webrender_api folders into gfx/. The best way
-     to do this is to simply delete the gfx/webrender and gfx/webrender_api
-     folders and use |cp -R| to copy them in again from the webrender repo. Update
-     the "latest commit" information at the bottom of this file with the version.
+   - Copy over the webrender, webrender_api, and part of the wrench folders into
+     gfx/. The best way to do this is to simply delete the gfx/webrender,
+     gfx/webrender_api, and gfx/wrench folders and use |cp -R| to copy them in
+     again from the webrender repo, and then delete the gfx/wrench/reftests,
+     gfx/wrench/benchmarks, and gfx/wrench/script folders. Update the "latest
+     commit" information at the bottom of this file with the version.
    - If you need to modify webrender_bindings/Cargo.toml file, do so now. Changes
      at this step usually consist of:
      (a) Updating version numbers. Go through the version numbers of ALL the
@@ -175,4 +177,4 @@ Troubleshooting tips:
 -------------------------------------------------------------------------------
 
 The version of WebRender currently in the tree is:
-c0943271eb8c6440a61db37e2f1e84201dcac2e3
+1d8157c71f88d5c673f5d084f02515ab74263814

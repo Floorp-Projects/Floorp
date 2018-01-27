@@ -9,8 +9,8 @@ use api::{LayerRect, MixBlendMode, PipelineId};
 use batch::{AlphaBatcher, ClipBatcher, resolve_image};
 use clip::{ClipStore};
 use clip_scroll_tree::{ClipScrollTree};
-use device::Texture;
-use gpu_cache::{GpuCache, GpuCacheUpdateList};
+use device::{FrameId, Texture};
+use gpu_cache::{GpuCache};
 use gpu_types::{BlurDirection, BlurInstance, BrushInstance, ClipChainRectIndex};
 use gpu_types::{ClipScrollNodeData, ClipScrollNodeIndex};
 use gpu_types::{PrimitiveInstance};
@@ -861,6 +861,7 @@ impl CompositeOps {
 /// and presented to the renderer.
 #[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
 pub struct Frame {
+    //TODO: share the fields with DocumentView struct
     pub window_size: DeviceUintSize,
     pub inner_rect: DeviceUintRect,
     pub background_color: Option<ColorF>,
@@ -874,22 +875,21 @@ pub struct Frame {
     pub clip_chain_local_clip_rects: Vec<LayerRect>,
     pub render_tasks: RenderTaskTree,
 
-    // List of updates that need to be pushed to the
-    // gpu resource cache.
-    pub gpu_cache_updates: Option<GpuCacheUpdateList>,
+    /// The GPU cache frame that the contents of Self depend on
+    pub gpu_cache_frame_id: FrameId,
 
-    // List of textures that we don't know about yet
-    // from the backend thread. The render thread
-    // will use a callback to resolve these and
-    // patch the data structures.
+    /// List of textures that we don't know about yet
+    /// from the backend thread. The render thread
+    /// will use a callback to resolve these and
+    /// patch the data structures.
     pub deferred_resolves: Vec<DeferredResolve>,
 
-    // True if this frame contains any render tasks
-    // that write to the texture cache.
+    /// True if this frame contains any render tasks
+    /// that write to the texture cache.
     pub has_texture_cache_tasks: bool,
 
-    // True if this frame has been drawn by the
-    // renderer.
+    /// True if this frame has been drawn by the
+    /// renderer.
     pub has_been_rendered: bool,
 }
 
