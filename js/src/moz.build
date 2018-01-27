@@ -36,9 +36,7 @@ for stlfile in ['jsarray.*', 'jsbool*', 'jsdate.*', 'jsnum.*', 'json.*', 'jsstr.
     with Files(stlfile):
         BUG_COMPONENT = component_stl
 
-with Files('builtin/Intl*'):
-    BUG_COMPONENT = component_intl
-with Files('builtin/make_intl_data.py'):
+with Files('builtin/intl/*'):
     BUG_COMPONENT = component_intl
 
 
@@ -159,7 +157,14 @@ UNIFIED_SOURCES += [
     'builtin/AtomicsObject.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
-    'builtin/Intl.cpp',
+    'builtin/intl/Collator.cpp',
+    'builtin/intl/CommonFunctions.cpp',
+    'builtin/intl/DateTimeFormat.cpp',
+    'builtin/intl/IntlObject.cpp',
+    'builtin/intl/NumberFormat.cpp',
+    'builtin/intl/PluralRules.cpp',
+    'builtin/intl/RelativeTimeFormat.cpp',
+    'builtin/intl/SharedIntlData.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',
     'builtin/Object.cpp',
@@ -738,9 +743,15 @@ selfhosted.inputs = [
     'builtin/Error.js',
     'builtin/Function.js',
     'builtin/Generator.js',
-    'builtin/Intl.js',
-    'builtin/IntlCurrency.js',
-    'builtin/IntlData.js',
+    'builtin/intl/Collator.js',
+    'builtin/intl/CommonFunctions.js',
+    'builtin/intl/CurrencyDataGenerated.js',
+    'builtin/intl/DateTimeFormat.js',
+    'builtin/intl/IntlObject.js',
+    'builtin/intl/LangTagMappingsGenerated.js',
+    'builtin/intl/NumberFormat.js',
+    'builtin/intl/PluralRules.js',
+    'builtin/intl/RelativeTimeFormat.js',
     'builtin/Iterator.js',
     'builtin/Map.js',
     'builtin/Module.js',

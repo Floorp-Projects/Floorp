@@ -43,7 +43,7 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMDocumentFragment        createDocumentFragment();
   nsIDOMText                    createTextNode(in DOMString data);
   nsIDOMComment                 createComment(in DOMString data);
-  nsIDOMCDATASection            createCDATASection(in DOMString data)
+  nsISupports                   createCDATASection(in DOMString data)
                                   raises(DOMException);
   nsIDOMProcessingInstruction   createProcessingInstruction(in DOMString target, 
                                                             in DOMString data)
