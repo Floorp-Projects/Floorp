@@ -298,11 +298,7 @@ talos-h1:
     try-name: h1
     treeherder-symbol: T(h1)
     max-run-time: 5400
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['try']
-            linux64.*: ['try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
             - --suite=h1
@@ -314,11 +310,7 @@ talos-h2:
     try-name: h2
     treeherder-symbol: T(h2)
     max-run-time: 7200
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['try']
-            linux64.*: ['try']
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
             - --suite=h2
