@@ -1,5 +1,3 @@
-# flake8: noqa
-
 from __future__ import print_function
 
 import argparse

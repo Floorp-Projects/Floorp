@@ -1,4 +1,4 @@
-# /xhr/resources/conditional.py -- to fake a 304 response
+# XMLHttpRequest/resources/conditional.py -- to fake a 304 response
 
 def main(request, response):
     tag = request.GET.first("tag", None)

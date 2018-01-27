@@ -96,15 +96,15 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
         executor_kwargs["reftest_internal"] = kwargs["reftest_internal"]
         executor_kwargs["reftest_screenshot"] = kwargs["reftest_screenshot"]
     if test_type == "wdspec":
-        options = {}
+        fxOptions = {}
         if kwargs["binary"]:
-            options["binary"] = kwargs["binary"]
+            fxOptions["binary"] = kwargs["binary"]
         if kwargs["binary_args"]:
-            options["args"] = kwargs["binary_args"]
-        options["prefs"] = {
+            fxOptions["args"] = kwargs["binary_args"]
+        fxOptions["prefs"] = {
             "network.dns.localDomains": ",".join(hostnames)
         }
-        capabilities["moz:firefoxOptions"] = options
+        capabilities["moz:firefoxOptions"] = fxOptions
     if kwargs["certutil_binary"] is None:
         capabilities["acceptInsecureCerts"] = True
     if capabilities:
@@ -364,7 +364,7 @@ class FirefoxBrowser(Browser):
 
         env[env_var] = (os.path.pathsep.join([certutil_dir, env[env_var]])
                         if env_var in env else certutil_dir).encode(
-                            sys.getfilesystemencoding() or 'utf-8', 'replace')
+                                sys.getfilesystemencoding() or 'utf-8', 'replace')
 
         def certutil(*args):
             cmd = [self.certutil_binary] + list(args)

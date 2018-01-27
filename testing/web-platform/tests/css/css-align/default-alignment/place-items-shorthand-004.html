@@ -14,19 +14,13 @@
     }
 
     test(function() {
-        checkInvalidValues("safe center")
-        checkInvalidValues("unsafe center")
+        checkInvalidValues("center safe")
+        checkInvalidValues("true center")
     }, "Verify overflow keywords are invalid");
 
     test(function() {
         checkInvalidValues("center space-between start")
     }, "Verify fallback values are invalid");
-
-    test(function() {
-        checkInvalidValues("left")
-        checkInvalidValues("left start")
-        checkInvalidValues("right center")
-    }, "Verify 'left' and 'right' values are invalid for block/cross axis alignment");
 
     test(function() {
         checkInvalidValues("10px left")

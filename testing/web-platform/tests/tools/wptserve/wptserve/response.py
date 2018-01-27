@@ -9,8 +9,6 @@ import socket
 from .constants import response_codes
 from .logger import get_logger
 
-from six import string_types, binary_type, text_type
-
 missing = object()
 
 class Response(object):
@@ -402,7 +400,7 @@ class ResponseWriter(object):
             if name.lower() not in self._headers_seen:
                 self.write_header(name, f())
 
-        if (isinstance(self._response.content, string_types) and
+        if (type(self._response.content) in (str, unicode) and
             "content-length" not in self._headers_seen):
             #Would be nice to avoid double-encoding here
             self.write_header("Content-Length", len(self.encode(self._response.content)))
@@ -459,9 +457,9 @@ class ResponseWriter(object):
 
     def encode(self, data):
         """Convert unicode to bytes according to response.encoding."""
-        if isinstance(data, binary_type):
+        if isinstance(data, str):
             return data
-        elif isinstance(data, text_type):
+        elif isinstance(data, unicode):
             return data.encode(self._response.encoding)
         else:
             raise ValueError
