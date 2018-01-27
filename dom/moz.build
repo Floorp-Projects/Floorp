@@ -74,6 +74,7 @@ DIRS += [
     'security',
     'storage',
     'svg',
+    'time',
     'locales',
     'network',
     'permission',

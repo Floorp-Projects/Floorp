@@ -489,6 +489,9 @@ public:
   virtual void DisableOrientationChangeListener() override;
 #endif
 
+  virtual void EnableTimeChangeNotifications() override;
+  virtual void DisableTimeChangeNotifications() override;
+
   bool IsClosedOrClosing() {
     return mCleanedUp;
   }
