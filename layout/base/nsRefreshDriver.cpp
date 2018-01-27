@@ -1602,15 +1602,6 @@ nsRefreshDriver::DispatchPendingEvents()
   }
 }
 
-static bool
-CollectDocuments(nsIDocument* aDocument, void* aDocArray)
-{
-  static_cast<AutoTArray<nsCOMPtr<nsIDocument>, 32>*>(aDocArray)->
-    AppendElement(aDocument);
-  aDocument->EnumerateSubDocuments(CollectDocuments, aDocArray);
-  return true;
-}
-
 void
 nsRefreshDriver::UpdateIntersectionObservations()
 {
