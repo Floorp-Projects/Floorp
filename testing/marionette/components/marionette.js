@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return log;
 });
 
+const PREF_ENABLED = "marionette.enabled";
 const PREF_PORT = "marionette.port";
 const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
 const PREF_LOG_LEVEL = "marionette.log.level";
@@ -151,16 +152,34 @@ class MarionetteComponent {
     log.level = prefs.logLevel;
 
     this.enabled = env.exists(ENV_ENABLED);
+
+    Services.prefs.addObserver(PREF_ENABLED, this);
   }
 
   get running() {
     return this.server && this.server.alive;
   }
 
+  set enabled(value) {
+    Services.prefs.setBoolPref(PREF_ENABLED, value);
+  }
+
+  get enabled() {
+    return Services.prefs.getBoolPref(PREF_ENABLED);
+  }
+
   observe(subject, topic) {
     log.debug(`Received observer notification ${topic}`);
 
     switch (topic) {
+      case "nsPref:changed":
+        if (Services.prefs.getBoolPref(PREF_ENABLED)) {
+          this.init();
+        } else {
+          this.uninit();
+        }
+        break;
+
       case "profile-after-change":
         Services.obs.addObserver(this, "command-line-startup");
         Services.obs.addObserver(this, "sessionstore-windows-restored");
@@ -287,6 +306,7 @@ class MarionetteComponent {
     return XPCOMUtils.generateQI([
       Ci.nsICommandLineHandler,
       Ci.nsIMarionette,
+      Ci.nsIObserver,
     ]);
   }
 }
