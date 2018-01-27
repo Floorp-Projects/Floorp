@@ -275,7 +275,7 @@ In some cases, for convenience, it is possible to set both
 This allows to use ``mylib`` in the ``USE_LIBS`` of another library or
 executable.
 
-When refering to a ``Library`` name building both types of libraries in
+When referring to a ``Library`` name building both types of libraries in
 ``USE_LIBS``, the shared library is chosen to be linked. But sometimes,
 it is wanted to link the static version, in which case the ``Library`` name
 needs to be prefixed with ``static:`` in ``USE_LIBS``

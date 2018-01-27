@@ -620,6 +620,10 @@ public:
   virtual void UpdateIntersectionObservations() override;
   virtual void ScheduleIntersectionObserverNotification() override;
   virtual void NotifyIntersectionObservers() override;
+  virtual bool HasIntersectionObservers() const override
+  {
+    return !mIntersectionObservers.IsEmpty();
+  }
 
   virtual void NotifyLayerManagerRecreated() override;
 
@@ -678,6 +682,9 @@ public:
 
   virtual void EnumerateSubDocuments(nsSubDocEnumFunc aCallback,
                                                  void *aData) override;
+  virtual void CollectDescendantDocuments(
+    nsTArray<nsCOMPtr<nsIDocument>>& aDescendants,
+    nsDocTestFunc aCallback) const override;
 
   virtual bool CanSavePresentation(nsIRequest *aNewRequest) override;
   virtual void Destroy() override;

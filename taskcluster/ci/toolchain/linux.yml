@@ -482,7 +482,7 @@ linux64-upx:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
     run:
         using: toolchain-script
@@ -498,7 +498,7 @@ linux64-wine:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 10800
     run:
         using: toolchain-script
@@ -514,7 +514,7 @@ linux64-mingw32-gcc:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 10800
     run:
         using: toolchain-script
@@ -532,7 +532,7 @@ linux64-mingw32-nsis:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 3600
     run:
         using: toolchain-script
@@ -550,7 +550,7 @@ linux64-mingw32-fxc2:
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: mingw32-build}
         max-run-time: 1800
     run:
         using: toolchain-script

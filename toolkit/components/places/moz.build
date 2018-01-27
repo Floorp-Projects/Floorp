@@ -74,6 +74,7 @@ if CONFIG['MOZ_PLACES']:
         'PlacesSyncUtils.jsm',
         'PlacesTransactions.jsm',
         'PlacesUtils.jsm',
+        'SyncedBookmarksMirror.jsm',
     ]
 
     EXTRA_COMPONENTS += [

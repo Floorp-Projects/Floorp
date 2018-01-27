@@ -320,7 +320,7 @@ client should remember what the expiration events were for an experiment
 and honor them.
 
 The rationale here is that we want to prevent an accidental deletion
-or temporary failure on the server to inadvertantly deactivate
+or temporary failure on the server to inadvertently deactivate
 supposed-to-be-active experiments. We also don't want premature deletion
 of an experiment from the manifest to result in indefinite activation
 periods.

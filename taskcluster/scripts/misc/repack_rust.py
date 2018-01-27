@@ -231,6 +231,14 @@ def fetch_std(manifest, targets):
     return stds
 
 
+def fetch_optional(manifest, pkg, host):
+    try:
+        return fetch_package(manifest, pkg, host)
+    except KeyError:
+        # The package is not available, oh well!
+        return None
+
+
 def tar_for_host(host):
     if 'linux' in host:
         tar_options = 'cJf'
@@ -274,6 +282,7 @@ def repack(host, targets, channel='stable', cargo_channel=None):
     rustc = fetch_package(manifest, 'rustc', host)
     cargo = fetch_package(cargo_manifest, 'cargo', host)
     stds = fetch_std(manifest, targets)
+    rustfmt = fetch_optional(manifest, 'rustfmt-preview', host)
 
     log('Installing packages...')
     install_dir = 'rustc'
@@ -285,6 +294,8 @@ def repack(host, targets, channel='stable', cargo_channel=None):
             raise
     install(os.path.basename(rustc['url']), install_dir)
     install(os.path.basename(cargo['url']), install_dir)
+    if rustfmt:
+        install(os.path.basename(rustfmt['url']), install_dir)
     for std in stds:
         install(os.path.basename(std['url']), install_dir)
         pass

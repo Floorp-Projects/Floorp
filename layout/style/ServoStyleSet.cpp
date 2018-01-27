@@ -1435,7 +1435,11 @@ ServoStyleSet::UpdateStylist()
     // since they are loaded and unloaded synchronously, and they don't have to
     // deal with dynamic content changes.
     Element* root = IsMaster() ? mDocument->GetRootElement() : nullptr;
-    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
+    const ServoElementSnapshotTable* snapshots = nullptr;
+    if (nsPresContext* pc = GetPresContext()) {
+      snapshots = &pc->RestyleManager()->AsServo()->Snapshots();
+    }
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root, snapshots);
   }
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {

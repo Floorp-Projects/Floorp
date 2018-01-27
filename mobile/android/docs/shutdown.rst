@@ -27,7 +27,7 @@ shutdown as well, so as to
 1) provide an immediate visual feedback to the user that Firefox is indeed quitting
 
 2) avoid a state where the UI is still running "normally" while the rendering engine is already
-   shutting down, which could lead to loosing incoming external tabs if they were to arrive within
+   shutting down, which could lead to losing incoming external tabs if they were to arrive within
    that period.
 
 Therefore, shutdown of the native UI was originally started simultaneously with notifying Gecko.

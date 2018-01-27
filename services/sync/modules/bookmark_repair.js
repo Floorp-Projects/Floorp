@@ -194,9 +194,11 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     for (let id of validationInfo.problems.serverMissing) {
       engine.addForWeakUpload(id);
     }
-    let toFetch = engine.toFetch.concat(validationInfo.problems.clientMissing,
-                                        validationInfo.problems.serverDeleted);
-    engine.toFetch = Array.from(new Set(toFetch));
+    engine.toFetch = Utils.setAddAll(
+      Utils.setAddAll(engine.toFetch,
+                      validationInfo.problems.clientMissing),
+      validationInfo.problems.serverDeleted
+    );
     return true;
   }
 

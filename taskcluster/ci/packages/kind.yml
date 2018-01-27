@@ -82,6 +82,22 @@ jobs:
                -e "s/__DATE__/$(date --rfc-2822)/" \
                -e "s/__CODENAME__/wheezy/" debian/changelog
 
+  deb9-mercurial:
+    description: "Modern Mercurial for Debian stretch"
+    treeherder:
+      symbol: Deb9(hg)
+    run:
+      using: debian-package
+      dist: stretch
+      tarball:
+        url: https://www.mercurial-scm.org/release/mercurial-4.4.2.tar.gz
+        sha256: dc2f72caccd6b760226753d48c2f4e8889fe176a6b23ef50775caac55ce28b85
+      pre-build-command: >-
+        cp -r contrib/debian debian &&
+        sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.deb9moz1/" \
+               -e "s/__DATE__/$(date --rfc-2822)/" \
+               -e "s/__CODENAME__/stretch/" debian/changelog
+
   deb7-git:
     description: "Modern git for Debian wheezy"
     treeherder:

@@ -1793,7 +1793,7 @@ impl FrameBuilder {
             }
         }
 
-        let gpu_cache_updates = gpu_cache.end_frame(gpu_cache_profile);
+        let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile);
 
         render_tasks.build();
 
@@ -1811,7 +1811,7 @@ impl FrameBuilder {
             clip_chain_local_clip_rects,
             render_tasks,
             deferred_resolves,
-            gpu_cache_updates: Some(gpu_cache_updates),
+            gpu_cache_frame_id,
             has_been_rendered: false,
             has_texture_cache_tasks,
         }

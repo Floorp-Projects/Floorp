@@ -454,6 +454,9 @@ private:
   // If this is true, keydown and keyup events are dispatched even when there
   // is a composition.
   static bool sDispatchKeyEventsDuringComposition;
+  // If this is true, keypress events for non-printable keys are dispatched only
+  // for event listeners of the system event group in web content.
+  static bool sDispatchKeyPressEventsOnlySystemGroupInContent;
 
   nsresult BeginInputTransactionInternal(
              TextEventDispatcherListener* aListener,
