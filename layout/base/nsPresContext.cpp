@@ -48,6 +48,7 @@
 #include "gfxPlatform.h"
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EventListenerManager.h"
 #include "prenv.h"
@@ -442,8 +443,7 @@ nsPresContext::LastRelease()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnimationManager);
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransitionManager);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnimationEventDispatcher);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // not xpcom
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEffectCompositor);
@@ -457,8 +457,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnimationManager);
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransitionManager);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnimationEventDispatcher);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDeviceContext); // worth bothering?
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEffectCompositor);
@@ -888,6 +887,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mEventManager = new mozilla::EventStateManager();
 
+  mAnimationEventDispatcher = new mozilla::AnimationEventDispatcher(this);
   mEffectCompositor = new mozilla::EffectCompositor(this);
   mTransitionManager = new nsTransitionManager(this);
   mAnimationManager = new nsAnimationManager(this);
@@ -1066,6 +1066,10 @@ nsPresContext::DetachShell()
 
   mShell = nullptr;
 
+  if (mAnimationEventDispatcher) {
+    mAnimationEventDispatcher->Disconnect();
+    mAnimationEventDispatcher = nullptr;
+  }
   if (mEffectCompositor) {
     mEffectCompositor->Disconnect();
     mEffectCompositor = nullptr;

@@ -8,7 +8,6 @@
 #define mozilla_css_AnimationCommon_h
 
 #include "mozilla/AnimationCollection.h"
-#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/Attributes.h" // For MOZ_NON_OWNING_REF
@@ -21,7 +20,6 @@ class nsPresContext;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
-class AnimationEventDispatcher;
 
 namespace dom {
 class Element;
@@ -33,7 +31,6 @@ public:
   explicit CommonAnimationManager(nsPresContext *aPresContext)
     : mPresContext(aPresContext)
   {
-    mEventDispatcher = new AnimationEventDispatcher();
   }
 
   // NOTE:  This can return null after Disconnect().
@@ -70,17 +67,6 @@ public:
     collection->Destroy();
   }
 
-  /**
-   * Add pending events.
-   */
-  void QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
-  {
-    mEventDispatcher->QueueEvents(Move(aEvents));
-  }
-
-  void SortEvents()      { mEventDispatcher->SortEvents(); }
-  void ClearEventQueue() { mEventDispatcher->ClearEventQueue(); }
-
 protected:
   virtual ~CommonAnimationManager()
   {
@@ -101,8 +87,6 @@ protected:
 
   LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
-
-  RefPtr<mozilla::AnimationEventDispatcher> mEventDispatcher;
 };
 
 /**
