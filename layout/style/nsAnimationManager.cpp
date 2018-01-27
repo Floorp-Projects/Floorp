@@ -8,7 +8,6 @@
 #include "nsTransitionManager.h"
 #include "mozilla/dom/CSSAnimationBinding.h"
 
-#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -243,9 +242,9 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
     if (aMessage == eAnimationCancel) {
       elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
     }
-    events.AppendElement(AnimationEventInfo(mAnimationName,
-                                            mOwningElement.Target(),
+    events.AppendElement(AnimationEventInfo(mOwningElement.Target(),
                                             aMessage,
+                                            mAnimationName,
                                             elapsedTime,
                                             aTimeStamp,
                                             this));
@@ -300,7 +299,7 @@ CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime)
   mPreviousIteration = currentIteration;
 
   if (!events.IsEmpty()) {
-    presContext->AnimationEventDispatcher()->QueueEvents(Move(events));
+    presContext->AnimationManager()->QueueEvents(Move(events));
   }
 }
 
@@ -317,6 +316,11 @@ CSSAnimation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 }
 
 ////////////////////////// nsAnimationManager ////////////////////////////
+
+NS_IMPL_CYCLE_COLLECTION(nsAnimationManager, mEventDispatcher)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsAnimationManager, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsAnimationManager, Release)
 
 // Find the matching animation by |aName| in the old list
 // of animations and remove the matched animation from the list.
