@@ -8173,7 +8173,7 @@ protected:
 
   // Subclasses use this override to set the IPDL response value.
   virtual void
-  GetResponse(RequestResponse& aResponse) = 0;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) = 0;
 
 private:
   nsresult
@@ -8237,7 +8237,7 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 
   void
   Cleanup() override;
@@ -8359,7 +8359,7 @@ private:
   GetPreprocessParams(PreprocessParams& aParams) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 };
 
 class ObjectStoreGetKeyRequestOp final
@@ -8385,7 +8385,7 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 };
 
 class ObjectStoreDeleteRequestOp final
@@ -8407,9 +8407,10 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
     aResponse = Move(mResponse);
+    *aResponseSize = 0;
   }
 };
 
@@ -8432,9 +8433,10 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
     aResponse = Move(mResponse);
+    *aResponseSize = 0;
   }
 };
 
@@ -8459,9 +8461,10 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
     aResponse = Move(mResponse);
+    *aResponseSize = sizeof(uint64_t);
   }
 };
 
@@ -8511,7 +8514,7 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 };
 
 class IndexGetKeyRequestOp final
@@ -8536,7 +8539,7 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override;
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override;
 };
 
 class IndexCountRequestOp final
@@ -8561,9 +8564,10 @@ private:
   DoDatabaseWork(DatabaseConnection* aConnection) override;
 
   void
-  GetResponse(RequestResponse& aResponse) override
+  GetResponse(RequestResponse& aResponse, size_t* aResponseSize) override
   {
     aResponse = Move(mResponse);
+    *aResponseSize = sizeof(uint64_t);
   }
 };
 
@@ -25726,8 +25730,22 @@ NormalTransactionOp::SendSuccessResult()
   AssertIsOnOwningThread();
 
   if (!IsActorDestroyed()) {
+    static const size_t kMaxIDBMsgOverhead = 1024 * 1024 * 10; // 10MB
+    const uint32_t maximalSizeFromPref =
+      IndexedDatabaseManager::MaxSerializedMsgSize();
+    MOZ_ASSERT(maximalSizeFromPref > kMaxIDBMsgOverhead);
+    const size_t kMaxMessageSize = maximalSizeFromPref - kMaxIDBMsgOverhead;
+
     RequestResponse response;
-    GetResponse(response);
+    size_t responseSize = kMaxMessageSize;
+    GetResponse(response, &responseSize);
+
+    if (responseSize >= kMaxMessageSize) {
+      nsPrintfCString("The serialized value is too large"
+                      " (size=%zu bytes, max=%zu bytes).",
+                      responseSize, kMaxMessageSize);
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
 
     MOZ_ASSERT(response.type() != RequestResponse::T__None);
 
@@ -26387,14 +26405,17 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 }
 
 void
-ObjectStoreAddOrPutRequestOp::GetResponse(RequestResponse& aResponse)
+ObjectStoreAddOrPutRequestOp::GetResponse(RequestResponse& aResponse,
+                                          size_t* aResponseSize)
 {
   AssertIsOnOwningThread();
 
   if (mOverwrite) {
     aResponse = ObjectStorePutResponse(mResponse);
+    *aResponseSize = mResponse.GetBuffer().Length();
   } else {
     aResponse = ObjectStoreAddResponse(mResponse);
+    *aResponseSize = mResponse.GetBuffer().Length();
   }
 }
 
@@ -26688,12 +26709,14 @@ ObjectStoreGetRequestOp::GetPreprocessParams(PreprocessParams& aParams)
 }
 
 void
-ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
+ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
+                                     size_t* aResponseSize)
 {
   MOZ_ASSERT_IF(mLimit, mResponse.Length() <= mLimit);
 
   if (mGetAll) {
     aResponse = ObjectStoreGetAllResponse();
+    *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
       FallibleTArray<SerializedStructuredCloneReadInfo> fallibleCloneInfos;
@@ -26706,6 +26729,7 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
       for (uint32_t count = mResponse.Length(), index = 0;
            index < count;
            index++) {
+        *aResponseSize += mResponse[index].Size();
         nsresult rv =
           ConvertResponse<false>(mResponse[index], fallibleCloneInfos[index]);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -26724,11 +26748,13 @@ ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse)
   }
 
   aResponse = ObjectStoreGetResponse();
+  *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
     SerializedStructuredCloneReadInfo& serializedInfo =
       aResponse.get_ObjectStoreGetResponse().cloneInfo();
 
+    *aResponseSize += mResponse[0].Size();
     nsresult rv = ConvertResponse<false>(mResponse[0], serializedInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aResponse = rv;
@@ -26834,25 +26860,33 @@ ObjectStoreGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 }
 
 void
-ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse)
+ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
+                                        size_t* aResponseSize)
 {
   MOZ_ASSERT_IF(mLimit, mResponse.Length() <= mLimit);
 
   if (mGetAll) {
     aResponse = ObjectStoreGetAllKeysResponse();
+    *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
       nsTArray<Key>& response =
         aResponse.get_ObjectStoreGetAllKeysResponse().keys();
+
       mResponse.SwapElements(response);
+      for (uint32_t i = 0; i < mResponse.Length(); ++i) {
+        *aResponseSize += mResponse[i].GetBuffer().Length();
+      }
     }
 
     return;
   }
 
   aResponse = ObjectStoreGetKeyResponse();
+  *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
+    *aResponseSize = mResponse[0].GetBuffer().Length();
     aResponse.get_ObjectStoreGetKeyResponse().key() = Move(mResponse[0]);
   }
 }
@@ -27284,12 +27318,14 @@ IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 }
 
 void
-IndexGetRequestOp::GetResponse(RequestResponse& aResponse)
+IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
+                               size_t* aResponseSize)
 {
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
   if (mGetAll) {
     aResponse = IndexGetAllResponse();
+    *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
       FallibleTArray<SerializedStructuredCloneReadInfo> fallibleCloneInfos;
@@ -27303,6 +27339,7 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse)
            index < count;
            index++) {
         StructuredCloneReadInfo& info = mResponse[index];
+        *aResponseSize += info.Size();
 
         SerializedStructuredCloneReadInfo& serializedInfo =
           fallibleCloneInfos[index];
@@ -27335,9 +27372,11 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse)
   }
 
   aResponse = IndexGetResponse();
+  *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
     StructuredCloneReadInfo& info = mResponse[0];
+    *aResponseSize += info.Size();
 
     SerializedStructuredCloneReadInfo& serializedInfo =
       aResponse.get_IndexGetResponse().cloneInfo();
@@ -27467,23 +27506,30 @@ IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
 }
 
 void
-IndexGetKeyRequestOp::GetResponse(RequestResponse& aResponse)
+IndexGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
+                                  size_t* aResponseSize)
 {
   MOZ_ASSERT_IF(!mGetAll, mResponse.Length() <= 1);
 
   if (mGetAll) {
     aResponse = IndexGetAllKeysResponse();
+    *aResponseSize = 0;
 
     if (!mResponse.IsEmpty()) {
       mResponse.SwapElements(aResponse.get_IndexGetAllKeysResponse().keys());
+      for (uint32_t i = 0; i < mResponse.Length(); ++i) {
+        *aResponseSize += mResponse[i].GetBuffer().Length();
+      }
     }
 
     return;
   }
 
   aResponse = IndexGetKeyResponse();
+  *aResponseSize = 0;
 
   if (!mResponse.IsEmpty()) {
+    *aResponseSize = mResponse[0].GetBuffer().Length();
     aResponse.get_IndexGetKeyResponse().key() = Move(mResponse[0]);
   }
 }
