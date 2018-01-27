@@ -27,7 +27,7 @@ web-platform-tests:
     max-run-time: 7200
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     mozharness:
         chunked: true
@@ -73,7 +73,7 @@ web-platform-tests-reftests:
             default: 6
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     mozharness:
         extra-options:
@@ -90,7 +90,7 @@ web-platform-tests-reftests-headless:
             default: 6
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     run-on-projects: []  # disabled pending releng approval
     mozharness:
