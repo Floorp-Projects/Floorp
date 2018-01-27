@@ -234,6 +234,14 @@ partial interface Navigator {
   VRServiceTest requestVRServiceTest();
 };
 
+#ifdef MOZ_TIME_MANAGER
+// nsIDOMMozNavigatorTime
+partial interface Navigator {
+  [Throws, ChromeOnly]
+  readonly attribute MozTimeManager mozTime;
+};
+#endif // MOZ_TIME_MANAGER
+
 callback NavigatorUserMediaSuccessCallback = void (MediaStream stream);
 callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 

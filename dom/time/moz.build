@@ -1,0 +1,32 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+XPIDL_SOURCES += [
+    'nsITimeService.idl',
+]
+
+XPIDL_MODULE = 'dom_time'
+
+EXPORTS.mozilla.dom.time += [
+    'DateCacheCleaner.h',
+    'TimeChangeObserver.h',
+    'TimeManager.h',
+    'TimeService.h',
+]
+
+UNIFIED_SOURCES += [
+    'DateCacheCleaner.cpp',
+    'TimeChangeObserver.cpp',
+    'TimeManager.cpp',
+    'TimeService.cpp',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
