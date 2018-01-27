@@ -5804,9 +5804,6 @@ pref("media.block-autoplay-until-in-foreground", true);
 // Is Stylo CSS support built and enabled?
 // Only define these prefs if Stylo support is actually built in.
 #ifdef MOZ_STYLO
-// XXX: We should flip this pref to true once the blocked_domains is non-empty.
-pref("layout.css.stylo-blocklist.enabled", false);
-pref("layout.css.stylo-blocklist.blocked_domains", "");
 #ifdef MOZ_STYLO_ENABLE
 pref("layout.css.servo.enabled", true);
 #else

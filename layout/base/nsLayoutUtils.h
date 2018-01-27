@@ -2585,15 +2585,6 @@ public:
    * Return whether stylo should be used for a given document principal.
    */
   static bool ShouldUseStylo(nsIPrincipal* aPrincipal);
-
-  /**
-   * Principal-based blocklist for stylo.
-   * Check if aPrincipal is blocked by stylo's blocklist and should fallback to
-   * use Gecko's style backend. Note that using a document's principal rather
-   * than the document URI will let us piggy-back off the existing principal
-   * relationships and symmetries.
-   */
-  static bool IsInStyloBlocklist(nsIPrincipal* aPrincipal);
 #else
   static bool ShouldUseStylo(nsIPrincipal* aPrincipal) {
     return false;
@@ -3119,8 +3110,6 @@ private:
   static bool sTextCombineUprightDigitsEnabled;
 #ifdef MOZ_STYLO
   static bool sStyloEnabled;
-  static bool sStyloBlocklistEnabled;
-  static nsTArray<nsCString>* sStyloBlocklist;
 #endif
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
