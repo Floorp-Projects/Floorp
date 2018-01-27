@@ -14,6 +14,7 @@
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
 #include "AnimationCommon.h"
+#include "nsISupportsImpl.h"
 
 class nsIGlobalObject;
 class nsStyleContext;
@@ -310,8 +311,7 @@ public:
   {
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTransitionManager)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransitionManager)
+  NS_INLINE_DECL_REFCOUNTING(nsTransitionManager)
 
   typedef mozilla::AnimationCollection<mozilla::dom::CSSTransition>
     CSSTransitionCollection;
@@ -361,12 +361,6 @@ public:
 
   bool InAnimationOnlyStyleUpdate() const {
     return mInAnimationOnlyStyleUpdate;
-  }
-
-  void DispatchEvents()
-  {
-    RefPtr<nsTransitionManager> kungFuDeathGrip(this);
-    mEventDispatcher->DispatchEvents(mPresContext);
   }
 
 protected:

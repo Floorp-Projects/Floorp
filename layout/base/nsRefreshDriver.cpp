@@ -25,6 +25,7 @@
 #include "WinUtils.h"
 #endif
 
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/IntegerRange.h"
@@ -1652,16 +1653,7 @@ nsRefreshDriver::DispatchAnimationEvents()
       continue;
     }
 
-    context->TransitionManager()->SortEvents();
-    context->AnimationManager()->SortEvents();
-
-    // Dispatch transition events first since transitions conceptually sit
-    // below animations in terms of compositing order.
-    context->TransitionManager()->DispatchEvents();
-    // Check that the presshell has not been destroyed
-    if (context->GetPresShell()) {
-      context->AnimationManager()->DispatchEvents();
-    }
+    context->AnimationEventDispatcher()->DispatchEvents();
   }
 }
 
