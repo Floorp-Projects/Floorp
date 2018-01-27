@@ -116,22 +116,6 @@ public:
     mIsSorted = false;
   }
 
-  // Sort all pending CSS animation/transition events by scheduled event time
-  // and composite order.
-  // https://drafts.csswg.org/web-animations/#update-animations-and-send-events
-  void SortEvents()
-  {
-    if (mIsSorted) {
-      return;
-    }
-
-    // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is
-    // fixed.
-    std::stable_sort(mPendingEvents.begin(), mPendingEvents.end(),
-                     AnimationEventInfoLessThan());
-    mIsSorted = true;
-  }
-
   // This will call SortEvents automatically if it has not already been
   // called.
   void DispatchEvents()
@@ -190,6 +174,22 @@ private:
       return comparator.LessThan(a.mAnimation, b.mAnimation);
     }
   };
+
+  // Sort all pending CSS animation/transition events by scheduled event time
+  // and composite order.
+  // https://drafts.csswg.org/web-animations/#update-animations-and-send-events
+  void SortEvents()
+  {
+    if (mIsSorted) {
+      return;
+    }
+
+    // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is
+    // fixed.
+    std::stable_sort(mPendingEvents.begin(), mPendingEvents.end(),
+                     AnimationEventInfoLessThan());
+    mIsSorted = true;
+  }
 
   nsPresContext* mPresContext;
   typedef nsTArray<AnimationEventInfo> EventArray;
