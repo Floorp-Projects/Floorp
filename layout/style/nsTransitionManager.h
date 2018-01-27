@@ -366,7 +366,7 @@ public:
   void DispatchEvents()
   {
     RefPtr<nsTransitionManager> kungFuDeathGrip(this);
-    mEventDispatcher.DispatchEvents(mPresContext);
+    mEventDispatcher->DispatchEvents(mPresContext);
   }
 
 protected:

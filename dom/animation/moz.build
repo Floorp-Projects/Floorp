@@ -47,6 +47,7 @@ UNIFIED_SOURCES += [
     'AnimationEffectReadOnly.cpp',
     'AnimationEffectTiming.cpp',
     'AnimationEffectTimingReadOnly.cpp',
+    'AnimationEventDispatcher.cpp',
     'AnimationPerformanceWarning.cpp',
     'AnimationTimeline.cpp',
     'AnimationUtils.cpp',
