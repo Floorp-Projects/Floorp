@@ -323,8 +323,7 @@ struct TransitionEventInfo {
       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
     mEvent.mElapsedTime = aElapsedTime;
     mEvent.mPseudoElement =
-      AnimationCollection<dom::CSSTransition>::PseudoTypeAsString(
-        aTarget.mPseudoType);
+      nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
