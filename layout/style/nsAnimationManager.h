@@ -348,13 +348,6 @@ public:
     mozilla::CSSPseudoElementType aPseudoType,
     const mozilla::ServoStyleContext* aComputedValues);
 
-  /**
-   * Dispatch any pending events.  We accumulate animationend and
-   * animationiteration events only during refresh driver notifications
-   * (and dispatch them at the end of such notifications), but we
-   * accumulate animationstart events at other points when style
-   * contexts are created.
-   */
   void DispatchEvents()
   {
     RefPtr<nsAnimationManager> kungFuDeathGrip(this);
