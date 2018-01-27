@@ -14,8 +14,8 @@
     }
 
     test(function() {
-        checkInvalidValues("safe center")
-        checkInvalidValues("unsafe center")
+        checkInvalidValues("center safe")
+        checkInvalidValues("true center")
     }, "Verify overflow keywords are invalid");
 
     test(function() {
@@ -23,21 +23,15 @@
     }, "Verify fallback values are invalid");
 
     test(function() {
-        checkInvalidValues("left")
-        checkInvalidValues("left start")
-        checkInvalidValues("right center")
-    }, "Verify 'left' and 'right' values are invalid for block/cross axis alignment");
-
-    test(function() {
-        checkInvalidValues("10px end")
-        checkInvalidValues("start 10%")
+        checkInvalidValues("10px left")
+        checkInvalidValues("right 10%")
     }, "Verify numeric values are invalid");
 
     test(function() {
         checkInvalidValues("auto")
         checkInvalidValues("auto right")
         checkInvalidValues("auto auto")
-        checkInvalidValues("start auto")
+        checkInvalidValues("left auto")
     }, "Verify 'auto' values are invalid");
 
     test(function() {

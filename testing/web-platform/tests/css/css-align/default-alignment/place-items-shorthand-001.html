@@ -8,11 +8,10 @@
 <script src="../resources/alignment-parsing-utils.js"></script>
 <div id="log"></div>
 <script>
-    let classes = Object.assign({"Normal":"normal", "Stretch":"stretch"}, selfPositionClasses, baselineClasses);
-    for (var key in classes) {
-        let value = classes[key];
+    var values = ["normal", "stretch"].concat(selfPositionValues, baselineValues);
+    values.forEach(function(value) {
         test(function() {
             checkPlaceShorhandLonghands("place-items", "align-items", "justify-items", value);
         }, "Checking place-items: " + value);
-    }
+    });
 </script>

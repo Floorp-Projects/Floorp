@@ -19,20 +19,15 @@
               test.expectEvent(sourceBuffer, 'update', 'sourceBuffer');
               test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
 
-              assert_false(sourceBuffer.updating, "sourceBuffer.updating");
-
               sourceBuffer.appendBuffer(mediaData);
-
-              assert_true(sourceBuffer.updating, "sourceBuffer.updating");
 
               test.waitForExpectedEvents(function()
               {
-                  assert_false(sourceBuffer.updating, "sourceBuffer.updating");
+                  assert_false(sourceBuffer.updating, "updating");
 
-                  // Truncate the buffered media to about 1 second duration.
-                  sourceBuffer.remove(1, +Infinity);
+                  sourceBuffer.remove(1, Infinity);
 
-                  assert_true(sourceBuffer.updating, "sourceBuffer.updating");
+                  assert_true(sourceBuffer.updating, "updating");
                   test.expectEvent(sourceBuffer, 'updatestart', 'sourceBuffer');
                   test.expectEvent(sourceBuffer, 'update', 'sourceBuffer');
                   test.expectEvent(sourceBuffer, 'updateend', 'sourceBuffer');
@@ -43,7 +38,6 @@
                   assert_false(sourceBuffer.updating, "updating");
                   assert_greater_than(mediaSource.duration, 1, "duration");
 
-                  // Complete truncation of duration to 1 second.
                   mediaSource.duration = 1;
 
                   test.expectEvent(mediaElement, "durationchange");
