@@ -271,6 +271,7 @@ dom/security/test/hsts/**
 dom/security/test/mixedcontentblocker/**
 dom/security/test/sri/**
 dom/security/test/unit/**
+dom/serviceworkers/**
 dom/smil/**
 dom/storage/**
 dom/svg/**

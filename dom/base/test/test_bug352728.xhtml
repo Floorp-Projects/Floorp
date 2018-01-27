@@ -94,7 +94,7 @@ function testCDATASection(aText, aShouldSucceed)
     var types = [ CDATASection, CharacterData, Node ];
     checkTypes(cdataSection, "CDATA section", types);
 
-    var interfaces = [ "nsIDOMCDATASection", "nsIDOMCharacterData",
+    var interfaces = [ "nsIDOMCharacterData",
                        "nsIDOMNode", "nsIDOMEventTarget" ];
     checkInterfaces(cdataSection, "CDATA section", interfaces);
 

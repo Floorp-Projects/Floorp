@@ -189,7 +189,8 @@ public:
 
     bool IsCJKFont();
 
-    bool HasVariations();
+    bool HasVariations() override;
+    void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aAxes) override;
 
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
     bool GetForceGDIClassic() { return mForceGDIClassic; }

@@ -17,11 +17,8 @@ namespace dom {
 struct MessageEventInit;
 class MessagePort;
 class OwningWindowProxyOrMessagePortOrServiceWorker;
-class WindowProxyOrMessagePortOrServiceWorker;
-
-namespace workers {
 class ServiceWorker;
-}
+class WindowProxyOrMessagePortOrServiceWorker;
 
 /**
  * Implements the MessageEvent event, used for cross-document messaging and
@@ -79,7 +76,7 @@ private:
   nsString mLastEventId;
   RefPtr<nsPIDOMWindowOuter> mWindowSource;
   RefPtr<MessagePort> mPortSource;
-  RefPtr<workers::ServiceWorker> mServiceWorkerSource;
+  RefPtr<ServiceWorker> mServiceWorkerSource;
 
   nsTArray<RefPtr<MessagePort>> mPorts;
 };

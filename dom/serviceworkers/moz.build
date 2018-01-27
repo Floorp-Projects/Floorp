@@ -1,0 +1,81 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Service Workers")
+
+# Public stuff.
+EXPORTS.mozilla.dom += [
+    'ServiceWorker.h',
+    'ServiceWorkerCommon.h',
+    'ServiceWorkerContainer.h',
+    'ServiceWorkerDescriptor.h',
+    'ServiceWorkerEvents.h',
+    'ServiceWorkerInfo.h',
+    'ServiceWorkerInterceptController.h',
+    'ServiceWorkerIPCUtils.h',
+    'ServiceWorkerManager.h',
+    'ServiceWorkerManagerChild.h',
+    'ServiceWorkerManagerParent.h',
+    'ServiceWorkerRegistrar.h',
+    'ServiceWorkerRegistration.h',
+    'ServiceWorkerRegistrationInfo.h',
+    'ServiceWorkerUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'ServiceWorker.cpp',
+    'ServiceWorkerContainer.cpp',
+    'ServiceWorkerDescriptor.cpp',
+    'ServiceWorkerEvents.cpp',
+    'ServiceWorkerInfo.cpp',
+    'ServiceWorkerInterceptController.cpp',
+    'ServiceWorkerJob.cpp',
+    'ServiceWorkerJobQueue.cpp',
+    'ServiceWorkerManager.cpp',
+    'ServiceWorkerManagerChild.cpp',
+    'ServiceWorkerManagerParent.cpp',
+    'ServiceWorkerManagerService.cpp',
+    'ServiceWorkerPrivate.cpp',
+    'ServiceWorkerRegisterJob.cpp',
+    'ServiceWorkerRegistrar.cpp',
+    'ServiceWorkerRegistration.cpp',
+    'ServiceWorkerRegistrationInfo.cpp',
+    'ServiceWorkerScriptCache.cpp',
+    'ServiceWorkerUnregisterJob.cpp',
+    'ServiceWorkerUpdateJob.cpp',
+    'ServiceWorkerUpdaterChild.cpp',
+    'ServiceWorkerUpdaterParent.cpp',
+    'ServiceWorkerUtils.cpp',
+]
+
+IPDL_SOURCES += [
+    'IPCServiceWorkerDescriptor.ipdlh',
+    'PServiceWorkerManager.ipdl',
+    'PServiceWorkerUpdater.ipdl',
+    'ServiceWorkerRegistrarTypes.ipdlh',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/workers',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'test/chrome.ini',
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser.ini',
+    'test/isolated/multi-e10s-update/browser.ini',
+]

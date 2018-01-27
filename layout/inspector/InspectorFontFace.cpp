@@ -189,5 +189,30 @@ InspectorFontFace::GetMetadata(nsAString& aMetadata)
   }
 }
 
+void
+InspectorFontFace::GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult)
+{
+  if (!mFontEntry->HasVariations()) {
+    return;
+  }
+  AutoTArray<gfxFontVariationAxis,4> axes;
+  mFontEntry->GetVariationAxes(axes);
+  MOZ_ASSERT(!axes.IsEmpty());
+  for (auto a : axes) {
+    // Turn the uint32_t OpenType tag into a 4-ASCII-character string
+    nsAutoStringN<4> tag;
+    tag.AppendPrintf("%c%c%c%c", (a.mTag >> 24) & 0xff,
+                                 (a.mTag >> 16) & 0xff,
+                                 (a.mTag >> 8) & 0xff,
+                                 a.mTag & 0xff);
+    InspectorVariationAxis& axis = *aResult.AppendElement();
+    axis.mTag = tag;
+    axis.mName = a.mName;
+    axis.mMinValue = a.mMinValue;
+    axis.mMaxValue = a.mMaxValue;
+    axis.mDefaultValue = a.mDefaultValue;
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
