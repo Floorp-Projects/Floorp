@@ -226,6 +226,7 @@ HelperAppLauncherDialog.prototype = {
       doubleTapButton: newButtonOrder ? 1 : 0
     }, (data) => {
       if (data.button < 0) {
+        aLauncher.cancel(Cr.NS_BINDING_ABORTED);
         return;
       }
 
