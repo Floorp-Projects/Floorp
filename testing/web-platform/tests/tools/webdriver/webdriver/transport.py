@@ -4,7 +4,6 @@ import urlparse
 
 import error
 
-from six import text_type
 
 """Implements HTTP transport for the WebDriver wire protocol."""
 
@@ -136,7 +135,7 @@ class HTTPWireProtocol(object):
         except ValueError:
             raise ValueError("Failed to encode request body as JSON:\n"
                 "%s" % json.dumps(body, indent=2))
-        if isinstance(payload, text_type):
+        if isinstance(payload, unicode):
             payload = body.encode("utf-8")
 
         if headers is None:

@@ -52,8 +52,8 @@ function performChromiumSetup() {
       // problem for the new tests that do not use setBluetoothFakeAdapter().
       // TODO(crbug.com/569709): Remove once setBluetoothFakeAdapter is no
       // longer used.
-      .then(() => typeof setBluetoothFakeAdapter === 'undefined' ?
-          undefined : setBluetoothFakeAdapter(''));
+      .then(() => setBluetoothFakeAdapter ? setBluetoothFakeAdapter('')
+                                          : undefined);
 }
 
 
@@ -218,34 +218,20 @@ var gatt_errors_tests = [{
       'NotSupportedError')
 }];
 
-// Waits until the document has finished loading.
-function waitForDocumentReady() {
-  return new Promise(resolve => {
-    if (document.readyState === 'complete') {
-      resolve();
-    }
-
-    window.addEventListener('load', () => {
-      resolve();
-    }, {once: true});
-  });
-}
-
 function callWithTrustedClick(callback) {
-  return waitForDocumentReady()
-    .then(() => new Promise(resolve => {
-      let button = document.createElement('button');
-      button.textContent = 'click to continue test';
-      button.style.display = 'block';
-      button.style.fontSize = '20px';
-      button.style.padding = '10px';
-      button.onclick = () => {
-        document.body.removeChild(button);
-        resolve(callback());
-      };
-      document.body.appendChild(button);
-      test_driver.click(button);
-    }));
+  return new Promise(resolve => {
+    let button = document.createElement('button');
+    button.textContent = 'click to continue test';
+    button.style.display = 'block';
+    button.style.fontSize = '20px';
+    button.style.padding = '10px';
+    button.onclick = () => {
+      document.body.removeChild(button);
+      resolve(callback());
+    };
+    document.body.appendChild(button);
+    test_driver.click(button);
+  });
 }
 
 // Calls requestDevice() in a context that's 'allowed to show a popup'.
@@ -687,14 +673,7 @@ function getHealthThermometerDeviceWithServicesDiscovered(options) {
       code: HCI_SUCCESS,
     }))
     .then(() => new Promise(resolve => {
-      let src = '/bluetooth/resources/health-thermometer-iframe.html';
-      // TODO(509038): Can be removed once LayoutTests/bluetooth/* that use
-      // health-thermometer-iframe.html have been moved to
-      // LayoutTests/external/wpt/bluetooth/*
-      if (window.location.pathname.includes('/LayoutTests/')) {
-        src = '../../../external/wpt/bluetooth/resources/health-thermometer-iframe.html';
-      }
-      iframe.src = src;
+      iframe.src = '../../../resources/bluetooth/health-thermometer-iframe.html';
       document.body.appendChild(iframe);
       iframe.addEventListener('load', resolve);
     }))
