@@ -19,6 +19,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
+#include "prenv.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -376,6 +377,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 private:
   SandboxBrokerClient* mBroker;
   ContentProcessSandboxParams mParams;
+  bool mAllowSysV;
 
   bool BelowLevel(int aLevel) const {
     return mParams.mLevel < aLevel;
@@ -594,6 +596,7 @@ public:
                        ContentProcessSandboxParams&& aParams)
     : mBroker(aBroker)
     , mParams(Move(aParams))
+    , mAllowSysV(PR_GetEnv("MOZ_SANDBOX_ALLOW_SYSV") != nullptr)
     { }
 
   ~ContentSandboxPolicy() override = default;
@@ -660,8 +663,10 @@ public:
     case SEMGET:
     case SEMCTL:
     case SEMOP:
-    case MSGGET:
-      return Some(Allow());
+      if (mAllowSysV) {
+        return Some(Allow());
+      }
+      return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     }
