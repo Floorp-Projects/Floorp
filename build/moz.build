@@ -114,8 +114,8 @@ OBJDIR_FILES += ['/.ycm_extra_conf.py']
 if CONFIG['MOZ_VALGRIND']:
     OBJDIR_FILES._valgrind += [
         'valgrind/cross-architecture.sup',
-        'valgrind/i386-redhat-linux-gnu.sup',
-        'valgrind/x86_64-redhat-linux-gnu.sup',
+        'valgrind/i386-pc-linux-gnu.sup',
+        'valgrind/x86_64-pc-linux-gnu.sup',
     ]
 
 if CONFIG['MOZ_ARTIFACT_BUILDS']:
