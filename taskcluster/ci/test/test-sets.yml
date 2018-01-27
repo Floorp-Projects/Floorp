@@ -70,8 +70,6 @@ talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
-    - talos-h1
-    - talos-h2
 
 awsy:
     - awsy
@@ -120,8 +118,6 @@ linux-qr-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
-    - talos-h1
-    - talos-h2
 
 linux-qr-tests:
     - cppunit
@@ -210,8 +206,6 @@ windows-talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
-    - talos-h1
-    - talos-h2
 
 windows-talos-stylo-disabled:
     - talos-chrome-stylo-disabled
