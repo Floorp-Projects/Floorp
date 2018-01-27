@@ -68,34 +68,27 @@ const ENV_ENABLED = "MOZ_MARIONETTE";
 // pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
-const {PREF_STRING, PREF_BOOL, PREF_INT, PREF_INVALID} = Ci.nsIPrefBranch;
 
 function getPrefVal(pref) {
-  let prefType = Services.prefs.getPrefType(pref);
-  let prefValue;
-  switch (prefType) {
+  const {PREF_STRING, PREF_BOOL, PREF_INT, PREF_INVALID} = Ci.nsIPrefBranch;
+
+  let type = Services.prefs.getPrefType(pref);
+  switch (type) {
     case PREF_STRING:
-      prefValue = Services.prefs.getStringPref(pref);
-      break;
+      return Services.prefs.getStringPref(pref);
 
     case PREF_BOOL:
-      prefValue = Services.prefs.getBoolPref(pref);
-      break;
+      return Services.prefs.getBoolPref(pref);
 
     case PREF_INT:
-      prefValue = Services.prefs.getIntPref(pref);
-      break;
+      return Services.prefs.getIntPref(pref);
 
     case PREF_INVALID:
-      prefValue = undefined;
-      break;
+      return undefined;
 
     default:
-      throw new TypeError(`Unexpected preference type (${prefType}) for ` +
-                          `${pref}`);
+      throw new TypeError(`Unexpected preference type (${type}) for ${pref}`);
   }
-
-  return prefValue;
 }
 
 // Get preference value of |preferred|, falling back to |fallback|
