@@ -46,6 +46,9 @@ const ENV_ENABLED = "MOZ_MARIONETTE";
 // pref being set to 4444.
 const ENV_PRESERVE_PREFS = "MOZ_MARIONETTE_PREF_STATE_ACROSS_RESTARTS";
 
+const isRemote = Services.appinfo.processType ==
+    Services.appinfo.PROCESS_TYPE_CONTENT;
+
 const LogLevel = {
   get(level) {
     let levels = new Map([
@@ -137,7 +140,7 @@ const prefs = {
   },
 };
 
-class MarionetteComponent {
+class MarionetteMainProcess {
   constructor() {
     this.server = null;
 
@@ -154,6 +157,7 @@ class MarionetteComponent {
     this.enabled = env.exists(ENV_ENABLED);
 
     Services.prefs.addObserver(PREF_ENABLED, this);
+    Services.ppmm.addMessageListener("Marionette:IsRunning", this);
   }
 
   get running() {
@@ -166,6 +170,17 @@ class MarionetteComponent {
 
   get enabled() {
     return Services.prefs.getBoolPref(PREF_ENABLED);
+  }
+
+  receiveMessage({name}) {
+    switch (name) {
+      case "Marionette:IsRunning":
+        return this.running;
+
+      default:
+        log.warn("Unknown IPC message to main process: " + name);
+        return null;
+    }
   }
 
   observe(subject, topic) {
@@ -311,14 +326,38 @@ class MarionetteComponent {
   }
 }
 
+class MarionetteContentProcess {
+  get running() {
+    let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
+    if (reply.length == 0) {
+      log.warn("No reply from main process");
+      return false;
+    }
+    return reply[0];
+  }
+
+  get QueryInterface() {
+    return XPCOMUtils.generateQI([Ci.nsIMarionette]);
+  }
+}
+
 const MarionetteFactory = {
+  instance_: null,
+
   createInstance(outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
 
-    let marionette = new MarionetteComponent();
-    return marionette.QueryInterface(iid);
+    if (!this.instance_) {
+      if (isRemote) {
+        this.instance_ = new MarionetteContentProcess();
+      } else {
+        this.instance_ = new MarionetteMainProcess();
+      }
+    }
+
+    return this.instance_.QueryInterface(iid);
   },
 };
 
