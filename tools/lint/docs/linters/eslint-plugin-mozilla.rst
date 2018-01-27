@@ -71,8 +71,8 @@ can be used instead.
 balanced-listeners
 ------------------
 
-Checks that for every occurence of 'addEventListener' or 'on' there is an
-occurence of 'removeEventListener' or 'off' with the same event name.
+Checks that for every occurrence of 'addEventListener' or 'on' there is an
+occurrence of 'removeEventListener' or 'off' with the same event name.
 
 import-browser-window-globals
 -----------------------------

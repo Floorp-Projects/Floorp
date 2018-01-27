@@ -152,6 +152,8 @@ void main(void) {
     bool color_flip;
 
     RectWithSize segment_rect;
+    vec4 edge_mask;
+
     switch (sub_part) {
         case 0: {
             segment_rect.p0 = vec2(corners.tl_outer.x, corners.tl_inner.y);
@@ -165,6 +167,7 @@ void main(void) {
                               segment_rect.size.y,
                               segment_rect.p0.y,
                               segment_rect.p0.x + 0.5 * segment_rect.size.x);
+            edge_mask = vec4(1.0, 0.0, 1.0, 0.0);
             break;
         }
         case 1: {
@@ -179,6 +182,7 @@ void main(void) {
                               segment_rect.size.x,
                               segment_rect.p0.x,
                               segment_rect.p0.y + 0.5 * segment_rect.size.y);
+            edge_mask = vec4(0.0, 1.0, 0.0, 1.0);
             break;
         }
         case 2: {
@@ -193,6 +197,7 @@ void main(void) {
                               segment_rect.size.y,
                               segment_rect.p0.y,
                               segment_rect.p0.x + 0.5 * segment_rect.size.x);
+            edge_mask = vec4(1.0, 0.0, 1.0, 0.0);
             break;
         }
         case 3: {
@@ -207,6 +212,7 @@ void main(void) {
                               segment_rect.size.x,
                               segment_rect.p0.x,
                               segment_rect.p0.y + 0.5 * segment_rect.size.y);
+            edge_mask = vec4(0.0, 1.0, 0.0, 1.0);
             break;
         }
     }
@@ -219,7 +225,7 @@ void main(void) {
     VertexInfo vi = write_transform_vertex(segment_rect,
                                            prim.local_rect,
                                            prim.local_clip_rect,
-                                           vec4(1.0),
+                                           edge_mask,
                                            prim.z,
                                            prim.scroll_node,
                                            prim.task);

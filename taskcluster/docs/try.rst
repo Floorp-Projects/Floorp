@@ -2,10 +2,10 @@ Try
 ===
 
 "Try" is a way to "try out" a proposed change safely before review, without
-officialy landing it.  This functionality has been around for a *long* time in
+officially landing it.  This functionality has been around for a *long* time in
 various forms, and can sometimes show its age.
 
-Access to "push to try" is typically avilable to a much larger group of
+Access to "push to try" is typically available to a much larger group of
 developers than those who can land changes in integration and release branches.
 Specifically, try pushes are allowed for anyone with `SCM Level`_ 1, while
 integration branches are at SCM level 3.

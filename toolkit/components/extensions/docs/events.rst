@@ -34,7 +34,7 @@ code such as:
 .. code-block:: js
 
    browser.myapi.onSomething.addListener(param1 => {
-     console.log(`Something happend: ${param1}`);
+     console.log(`Something happened: ${param1}`);
    });
 
 Note that the schema syntax looks similar to that for a function,

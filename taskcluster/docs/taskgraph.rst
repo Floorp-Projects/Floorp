@@ -152,7 +152,7 @@ As part of the execution of the Gecko decision task we generate a
 ``public/runnable-jobs.json.gz`` file. It contains a subset of all the data
 contained within the ``full-task-graph.json``.
 
-This file has the minimum ammount of data needed by Treeherder to show all
+This file has the minimum amount of data needed by Treeherder to show all
 tasks that can be scheduled on a push.
 
 

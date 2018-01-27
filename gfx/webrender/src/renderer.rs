@@ -1656,6 +1656,8 @@ pub struct Renderer {
     render_task_texture: VertexDataTexture,
     gpu_cache_texture: CacheTexture,
 
+    gpu_cache_frame_id: FrameId,
+
     pipeline_epoch_map: FastHashMap<PipelineId, Epoch>,
 
     // Manages and resolves source textures IDs to real texture IDs.
@@ -2313,6 +2315,7 @@ impl Renderer {
             cpu_profiles: VecDeque::new(),
             gpu_profiles: VecDeque::new(),
             gpu_cache_texture,
+            gpu_cache_frame_id: FrameId::new(0),
             texture_cache_upload_pbo,
             texture_resolver,
             renderer_errors: Vec::new(),
@@ -2368,19 +2371,17 @@ impl Renderer {
     /// Should be called before `render()`, as texture cache updates are done here.
     pub fn update(&mut self) {
         profile_scope!("update");
-
         // Pull any pending results and return the most recent.
         while let Ok(msg) = self.result_rx.try_recv() {
             match msg {
                 ResultMsg::PublishDocument(
                     document_id,
-                    mut doc,
+                    doc,
                     texture_update_list,
                     profile_counters,
                 ) => {
                     //TODO: associate `document_id` with target window
                     self.pending_texture_updates.push(texture_update_list);
-                    self.pending_gpu_cache_updates.extend(doc.frame.gpu_cache_updates.take());
                     self.backend_profile_counters = profile_counters;
 
                     // Update the list of available epochs for use during reftests.
@@ -2403,6 +2404,9 @@ impl Renderer {
                         }
                         None => self.active_documents.push((document_id, doc)),
                     }
+                }
+                ResultMsg::UpdateGpuCache(list) => {
+                    self.pending_gpu_cache_updates.push(list);
                 }
                 ResultMsg::UpdateResources {
                     updates,
@@ -2753,7 +2757,6 @@ impl Renderer {
         framebuffer_size: Option<DeviceUintSize>
     ) -> Result<RendererStats, Vec<RendererError>> {
         profile_scope!("render");
-
         if self.active_documents.is_empty() {
             self.last_time = precise_time_ns();
             return Ok(RendererStats::empty());
@@ -2844,6 +2847,7 @@ impl Renderer {
 
             for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
                 self.prepare_gpu_cache(frame);
+                assert!(frame.gpu_cache_frame_id <= self.gpu_cache_frame_id);
 
                 self.draw_tile_frame(
                     frame,
@@ -2896,6 +2900,7 @@ impl Renderer {
             }
         }
 
+        self.backend_profile_counters.reset();
         self.profile_counters.reset();
         self.profile_counters.frame_counter.inc();
 
@@ -2931,6 +2936,7 @@ impl Renderer {
         let gpu_cache_height = self.gpu_cache_texture.get_height();
         if gpu_cache_height != 0 &&  GPU_CACHE_RESIZE_TEST {
             self.pending_gpu_cache_updates.push(GpuCacheUpdateList {
+                frame_id: FrameId::new(0),
                 height: gpu_cache_height,
                 blocks: vec![[1f32; 4].into()],
                 updates: Vec::new(),
@@ -2955,6 +2961,9 @@ impl Renderer {
 
         for update_list in self.pending_gpu_cache_updates.drain(..) {
             assert!(update_list.height <= max_requested_height);
+            if update_list.frame_id > self.gpu_cache_frame_id {
+                self.gpu_cache_frame_id = update_list.frame_id
+            }
             self.gpu_cache_texture
                 .update(&mut self.device, &update_list);
         }
@@ -4089,6 +4098,7 @@ impl Renderer {
             .expect("Found external image, but no handler set!");
 
         let mut list = GpuCacheUpdateList {
+            frame_id: FrameId::new(0),
             height: self.gpu_cache_texture.get_height(),
             blocks: Vec::new(),
             updates: Vec::new(),

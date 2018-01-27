@@ -20,7 +20,7 @@ together.
 Breakpad
    Breakpad is a library and set of tools to make collecting process
    information (notably dumps from crashes) easy. Breakpad is a 3rd
-   party project (originaly developed by Google) that is imported into
+   party project (originally developed by Google) that is imported into
    the tree.
 
 Dump files

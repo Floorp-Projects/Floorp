@@ -9,7 +9,6 @@
 <?xul-overlay href="chrome://pippki/content/OthersOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/WebSitesOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/CAOverlay.xul"?>
-<?xul-overlay href="chrome://pippki/content/OrphanOverlay.xul"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://pippki/locale/certManager.dtd">
 
@@ -34,14 +33,12 @@
         <tab id="others_tab" label="&certmgr.tab.others2;"/>
         <tab id="websites_tab" label="&certmgr.tab.websites3;"/>
         <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
-        <tab id="orphan_tab" label="&certmgr.tab.orphan2;"/>
       </tabs>
       <tabpanels flex="1">
         <vbox id="myCerts" flex="1"/>
         <vbox id="othersCerts" flex="1"/>
         <vbox id="webCerts" flex="1"/>
         <vbox id="CACerts" flex="1"/>
-        <vbox id="OrphanCerts" flex="1"/>
       </tabpanels>
     </tabbox>
 

@@ -469,7 +469,7 @@ Structure:
     "gc": {
       "random": [
         {
-          // "completed" or "aborted" if an OOM occured.
+          // "completed" or "aborted" if an OOM occurred.
           "status": "completed",
           // Timestamps are in milliseconds since startup. All the times here
           // are wall-clock times, which may not be monotonically increasing.
