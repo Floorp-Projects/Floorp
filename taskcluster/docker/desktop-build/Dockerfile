@@ -60,12 +60,14 @@ RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-ADD           oauth.txt /builds/worker/
+# %include taskcluster/docker/recipes/oauth.txt
+COPY topsrcdir/taskcluster/docker/recipes/oauth.txt /builds/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
-ADD           buildprops.json /builds/worker/
+# %include taskcluster/docker/recipes/buildprops.json
+COPY topsrcdir/taskcluster/docker/recipes/buildprops.json /builds/worker/
 
 # Move installation to base centos6-build image once Bug 1272629 is fixed
 # Install the screen package here to use with xvfb.
