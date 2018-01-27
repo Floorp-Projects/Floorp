@@ -62,12 +62,10 @@ nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
     domWrapper->InternalBaseValListWillChangeLengthTo(mBaseVal.Length());
   } else {
     mIsAttrSet = true;
-    // If we set this flag to false, we're indicating that aSVGElement's frames
-    // will need reconstructing to account for stacking context changes.
-    // If aSVGElement doesn't have any frames, then that's clearly unnecessary,
-    // so in that case we set the flag to true.
-    mHadTransformBeforeLastBaseValChange =
-      !aSVGElement->GetPrimaryFrame() || hadTransform;
+    // We only need to reconstruct the frame for aSVGElement if it already
+    // exists and the stacking context changes because a transform is created.
+    mRequiresFrameReconstruction =
+      aSVGElement->GetPrimaryFrame() && !hadTransform;
   }
   return rv;
 }
@@ -75,7 +73,7 @@ nsSVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
 void
 nsSVGAnimatedTransformList::ClearBaseValue()
 {
-  mHadTransformBeforeLastBaseValChange = HasTransform();
+  mRequiresFrameReconstruction = !HasTransform();
 
   SVGAnimatedTransformList *domWrapper =
     SVGAnimatedTransformList::GetDOMWrapperIfExists(this);
