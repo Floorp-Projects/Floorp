@@ -143,9 +143,9 @@ HelperAppLauncherDialog.prototype = {
           let hasPermission = yield RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE);
           if (hasPermission) {
             this._downloadWithAndroidDownloadManager(aLauncher);
-            aLauncher.cancel(Cr.NS_BINDING_ABORTED);
           }
         } finally {
+          aLauncher.cancel(Cr.NS_BINDING_ABORTED);
         }
       }.bind(this)).catch(Cu.reportError);
       return;
