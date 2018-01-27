@@ -137,7 +137,6 @@ const prefs = {
 
 class MarionetteComponent {
   constructor() {
-    this.running = false;
     this.server = null;
 
     // holds reference to ChromeWindow
@@ -154,6 +153,10 @@ class MarionetteComponent {
     if (this.enabled) {
       log.info(`Enabled via ${ENV_ENABLED}`);
     }
+  }
+
+  get running() {
+    return this.server && this.server.alive;
   }
 
   // Handle -marionette flag
@@ -271,7 +274,6 @@ class MarionetteComponent {
         listener.start();
         log.info(`Listening on port ${listener.port}`);
         this.server = listener;
-        this.running = true;
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
         Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
@@ -280,11 +282,9 @@ class MarionetteComponent {
   }
 
   uninit() {
-    if (!this.running) {
-      return;
+    if (this.running) {
+      this.server.stop();
     }
-    this.server.stop();
-    this.running = false;
   }
 
   get QueryInterface() {
