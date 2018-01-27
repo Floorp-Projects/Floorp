@@ -564,6 +564,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
     return PlacesUtils.withConnectionWrapper(
       "BookmarkSyncUtils: pushChanges", async function(db) {
         let skippedCount = 0;
+        let weakCount = 0;
         let updateParams = [];
 
         for (let recordId in changeRecords) {
@@ -576,6 +577,12 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
               synced: { required: true },
             }
           );
+
+          // Skip weakly uploaded records.
+          if (!changeRecord.counter) {
+            weakCount++;
+            continue;
+          }
 
           // Sync sets the `synced` flag for reconciled or successfully
           // uploaded items. If upload failed, ignore the change; we'll
@@ -617,7 +624,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         }
 
         BookmarkSyncLog.debug(`pushChanges: Processed change records`,
-                              { skipped: skippedCount,
+                              { weak: weakCount,
+                                skipped: skippedCount,
                                 updated: updateParams.length });
       }
     );
@@ -1024,14 +1032,14 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   },
 
   /**
-   * Returns `undefined` if no sensible timestamp could be found.
+   * Returns `0` if no sensible timestamp could be found.
    * Otherwise, returns the earliest sensible timestamp between `existingMillis`
    * and `serverMillis`.
    */
   ratchetTimestampBackwards(existingMillis, serverMillis, lowerBound = BookmarkSyncUtils.EARLIEST_BOOKMARK_TIMESTAMP) {
     const possible = [+existingMillis, +serverMillis].filter(n => !isNaN(n) && n > lowerBound);
     if (!possible.length) {
-      return undefined;
+      return 0;
     }
     return Math.min(...possible);
   },

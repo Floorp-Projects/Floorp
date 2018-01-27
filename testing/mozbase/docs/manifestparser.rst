@@ -259,12 +259,12 @@ There is a two- or three-layered approach to the manifestparser
 architecture, depending on your needs:
 
 1. ManifestParser: this is a generic parser for .ini manifests that
-facilitates the `[include:]` logic and the inheritence of
+facilitates the `[include:]` logic and the inheritance of
 metadata. Despite the internal variable being called `self.tests`
 (an oversight), this layer has nothing in particular to do with tests.
 
 2. TestManifest: this is a harness-agnostic integration layer that is
-test-specific. TestManifest faciliates `skip-if` logic.
+test-specific. TestManifest facilitates `skip-if` logic.
 
 3. Optionally, a harness will have an integration layer than inherits
 from TestManifest if more harness-specific customization is desired at

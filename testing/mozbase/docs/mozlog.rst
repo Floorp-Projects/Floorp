@@ -190,7 +190,7 @@ harness that loads JavaScript-based tests in a browser. Each url
 loaded would be a single test, with corresponding ``test_start`` and
 ``test_end`` messages. If there can be more than one JS-defined test
 on a page, however, it it useful to track the results of those tests
-seperately. Therefore each of those tests is a subtest, and one
+separately. Therefore each of those tests is a subtest, and one
 ``test_status`` message must be generated for each subtest result.
 
 Subtests must have a name that is unique within their parent test.
@@ -401,7 +401,7 @@ More Complete Example
 ---------------------
 
 This example shows a complete toy testharness set up to used
-structured logging. It is avaliable as `structured_example.py <_static/structured_example.py>`_:
+structured logging. It is available as `structured_example.py <_static/structured_example.py>`_:
 
 .. literalinclude:: _static/structured_example.py
 

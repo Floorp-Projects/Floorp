@@ -152,7 +152,7 @@ which can be useful while developing a new API.
 Implementing a function in a child process
 ------------------------------------------
 Most functions are implemented in the main process, but there are
-occassionally reasons to implement a function in a child process, such as:
+occasionally reasons to implement a function in a child process, such as:
 
 - The function has one or more parameters of a type that cannot be automatically
   sent to the main process using the structured clone algorithm.

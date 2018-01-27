@@ -83,11 +83,6 @@ function onLoad() {
       confirm = bundle.getString("deleteEmailCertConfirm");
       impact = bundle.getString("deleteEmailCertImpactDesc");
       break;
-    case "orphan_tab":
-      title = bundle.getString("deleteOrphanCertTitle");
-      confirm = bundle.getString("deleteOrphanCertConfirm");
-      impact = "";
-      break;
     default:
       return;
   }

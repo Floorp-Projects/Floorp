@@ -1588,6 +1588,28 @@ CollectDocuments(nsIDocument* aDocument, void* aDocArray)
 }
 
 void
+nsRefreshDriver::UpdateIntersectionObservations()
+{
+  AutoTArray<nsCOMPtr<nsIDocument>, 32> documents;
+
+  if (mPresContext->Document()->HasIntersectionObservers()) {
+    documents.AppendElement(mPresContext->Document());
+  }
+
+  mPresContext->Document()->CollectDescendantDocuments(
+    documents,
+    [](const nsIDocument* document) -> bool {
+      return document->HasIntersectionObservers();
+    });
+
+  for (uint32_t i = 0; i < documents.Length(); ++i) {
+    nsIDocument* doc = documents[i];
+    doc->UpdateIntersectionObservations();
+    doc->ScheduleIntersectionObserverNotification();
+  }
+}
+
+void
 nsRefreshDriver::DispatchAnimationEvents()
 {
   if (!mPresContext) {
@@ -1955,13 +1977,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
 #endif
 
-  AutoTArray<nsCOMPtr<nsIDocument>, 32> documents;
-  CollectDocuments(mPresContext->Document(), &documents);
-  for (uint32_t i = 0; i < documents.Length(); ++i) {
-    nsIDocument* doc = documents[i];
-    doc->UpdateIntersectionObservations();
-    doc->ScheduleIntersectionObserverNotification();
-  }
+  UpdateIntersectionObservations();
 
   /*
    * Perform notification to imgIRequests subscribed to listen

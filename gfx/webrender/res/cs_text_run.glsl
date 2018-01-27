@@ -6,6 +6,7 @@
 
 varying vec3 vUv;
 flat varying vec4 vColor;
+flat varying vec4 vStRect;
 
 #ifdef WR_VERTEX_SHADER
 // Draw a text run to a cache target. These are always
@@ -41,12 +42,18 @@ void main(void) {
 
     vUv = vec3(mix(st0, st1, aPosition.xy), res.layer);
     vColor = prim.task.color;
+
+    // We clamp the texture coordinates to the half-pixel offset from the borders
+    // in order to avoid sampling outside of the texture area.
+    vec2 half_texel = vec2(0.5) / texture_size;
+    vStRect = vec4(min(st0, st1) + half_texel, max(st0, st1) - half_texel);
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
 void main(void) {
-    float a = texture(sColor0, vUv).a;
+    vec2 uv = clamp(vUv.xy, vStRect.xy, vStRect.zw);
+    float a = texture(sColor0, vec3(uv, vUv.z)).a;
     oFragColor = vColor * a;
 }
 #endif
