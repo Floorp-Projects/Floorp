@@ -34,42 +34,6 @@ class ServoStyleContext;
 enum class CSSPseudoElementType : uint8_t;
 struct NonOwningAnimationTarget;
 
-struct AnimationEventInfo {
-  RefPtr<dom::Element> mElement;
-  RefPtr<dom::Animation> mAnimation;
-  InternalAnimationEvent mEvent;
-  TimeStamp mTimeStamp;
-
-  AnimationEventInfo(const NonOwningAnimationTarget& aTarget,
-                     EventMessage aMessage,
-                     nsAtom* aAnimationName,
-                     double aElapsedTime,
-                     const TimeStamp& aTimeStamp,
-                     dom::Animation* aAnimation)
-    : mElement(aTarget.mElement)
-    , mAnimation(aAnimation)
-    , mEvent(true, aMessage)
-    , mTimeStamp(aTimeStamp)
-  {
-    // XXX Looks like nobody initialize WidgetEvent::time
-    aAnimationName->ToString(mEvent.mAnimationName);
-    mEvent.mElapsedTime = aElapsedTime;
-    mEvent.mPseudoElement =
-      nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
-  }
-
-  // InternalAnimationEvent doesn't support copy-construction, so we need
-  // to ourselves in order to work with nsTArray
-  AnimationEventInfo(const AnimationEventInfo& aOther)
-    : mElement(aOther.mElement)
-    , mAnimation(aOther.mAnimation)
-    , mEvent(true, aOther.mEvent.mMessage)
-    , mTimeStamp(aOther.mTimeStamp)
-  {
-    mEvent.AssignAnimationEventData(aOther.mEvent, false);
-  }
-};
-
 namespace dom {
 
 class CSSAnimation final : public Animation
@@ -310,13 +274,11 @@ struct AnimationTypeTraits<dom::CSSAnimation>
 } /* namespace mozilla */
 
 class nsAnimationManager final
-  : public mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation,
-                                           mozilla::AnimationEventInfo>
+  : public mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>
 {
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
-    : mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation,
-                                      mozilla::AnimationEventInfo>(aPresContext)
+    : mozilla::CommonAnimationManager<mozilla::dom::CSSAnimation>(aPresContext)
   {
   }
 
