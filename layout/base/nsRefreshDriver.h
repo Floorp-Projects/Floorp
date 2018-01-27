@@ -397,8 +397,9 @@ private:
   void EnsureTimerStarted(EnsureTimerStartedFlags aFlags = eNone);
   void StopTimer();
 
+  bool HasObservers() const;
   uint32_t ObserverCount() const;
-  uint32_t ImageRequestCount() const;
+  bool HasImageRequests() const;
   ObserverArray& ArrayFor(mozilla::FlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
