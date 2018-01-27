@@ -486,6 +486,12 @@ MatchPattern::WrapObject(JSContext* aCx, JS::HandleObject aGivenProto)
   return MatchPatternBinding::Wrap(aCx, this, aGivenProto);
 }
 
+/* static */ bool
+MatchPattern::MatchesAllURLs(const URLInfo& aURL)
+{
+  RefPtr<AtomSet> permittedSchemes = AtomSet::Get<PERMITTED_SCHEMES>();
+  return permittedSchemes->Contains(aURL.Scheme());
+}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MatchPattern, mPath, mParent)
 
