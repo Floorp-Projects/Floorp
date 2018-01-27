@@ -8,7 +8,7 @@
  */
 
 [Constructor(DOMString type, FetchEventInit eventInitDict),
- Func="mozilla::dom::workers::ServiceWorkerVisible",
+ Func="ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
   [SameObject] readonly attribute Request request;

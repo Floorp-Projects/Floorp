@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_fontVariationsAPI.css"?>
+<window title="Test for font variation axis API"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function RunTest() {
+  // Ensure we're running with font-variations enabled
+  SpecialPowers.pushPrefEnv(
+    {'set': [['layout.css.font-variations.enabled', true],
+             ['gfx.downloadable_fonts.keep_variation_tables', true],
+             ['gfx.downloadable_fonts.otl_validation', false]]},
+    function() {
+      // Which platform are we on?
+      const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+      const kIsMac = navigator.platform.indexOf("Mac") == 0;
+      const kIsWin = navigator.platform.indexOf("Win") == 0;
+
+      // Until bug 1433098 is fixed, Windows fails to return axis names
+      const nameTest = kIsWin ? todo : is;
+
+      // If it's an older macOS version (pre-Sierra), we don't expect the
+      // @font-face examples to work, so just skip them.
+      const kIsOldMac = navigator.oscpu.substr(navigator.oscpu.lastIndexOf(".") + 1) < 12;
+
+      var rng = document.createRange();
+      var elem, fonts, f;
+
+      // We allow for some "fuzz" on non-integer axis values, given the
+      // conversions between fixed-point and floating-point representations.
+      const kEpsilon = 0.001;
+
+      // First test element uses Arial, which has no variations
+      elem = document.getElementById("test1");
+      rng.selectNode(elem);
+      fonts = InspectorUtils.getUsedFontFaces(rng);
+      is(fonts.length, 1, "number of fonts: " + fonts.length);
+      f = fonts[0];
+      var axes = f.getVariationAxes();
+      is(axes.length, 0, "no variations");
+
+      if (!(kIsMac && kIsOldMac)) {
+        // Libre Franklin font should have a single axis: Weight.
+        elem = document.getElementById("test2");
+        elem.style.display = "block";
+        rng.selectNode(elem);
+        fonts = InspectorUtils.getUsedFontFaces(rng);
+        is(fonts.length, 1, "number of fonts: " + fonts.length);
+        f = fonts[0];
+        is(f.name, "Libre Franklin", "font name: " + f.name);
+        axes = f.getVariationAxes();
+        is(axes.length, 1, "number of variation axes: " + axes.length);
+        for (var i = 0; i < axes.length; ++i) {
+          var v = axes[i];
+          switch (v.tag) {
+          case "wght":
+            nameTest(v.name, "Weight", "name of wght axis: " + v.name);
+            is(v.minValue, 40, "minimum weight: " + v.minValue);
+            is(v.maxValue, 200, "maximum weight: " + v.maxValue);
+            is(v.defaultValue, 40, "default weight: " + v.defaultValue);
+            break;
+          default:
+            ok(false, "unexpected axis: " + v.tag);
+            break;
+          }
+        }
+
+        // Gingham font should have two axes: Weight and Width.
+        elem = document.getElementById("test3");
+        elem.style.display = "block";
+        rng.selectNode(elem);
+        fonts = InspectorUtils.getUsedFontFaces(rng);
+        is(fonts.length, 1, "number of fonts");
+        f = fonts[0];
+        is(f.name, "Gingham Regular", "font name: " + f.name);
+        axes = f.getVariationAxes();
+        is(axes.length, 2, "number of variation axes");
+        for (var i = 0; i < axes.length; ++i) {
+          var v = axes[i];
+          switch (v.tag) {
+          case "wght":
+            nameTest(v.name, "Weight", "name of wght axis: " + v.name);
+            is(v.minValue, 300, "minimum weight: " + v.minValue);
+            is(v.maxValue, 700, "maximum weight: " + v.maxValue);
+            is(v.defaultValue, 300, "default weight: " + v.defaultValue);
+            break;
+          case "wdth":
+            nameTest(v.name, "Width", "name of wdth axis: " + v.name);
+            is(v.minValue, 1, "minimum width: " + v.minValue);
+            is(v.maxValue, 150, "maximum width: " + v.maxValue);
+            is(v.defaultValue, 1, "default width: " + v.defaultValue);
+            break;
+          default:
+            ok(false, "unexpected axis: " + v.tag);
+            break;
+          }
+        }
+      }
+
+      if (kIsMac) {
+        // Only applies on macOS, where the Skia font is present
+        // by default, and has Weight and Width axes.
+        elem = document.getElementById("test4");
+        rng.selectNode(elem);
+        fonts = InspectorUtils.getUsedFontFaces(rng);
+        is(fonts.length, 1, "number of fonts: " + fonts.length);
+        f = fonts[0];
+        is(f.name, "Skia", "font name: " + f.name);
+        axes = f.getVariationAxes();
+        is(axes.length, 2, "number of variation axes: " + axes.length);
+        for (var i = 0; i < axes.length; ++i) {
+          var v = axes[i];
+          switch (v.tag) {
+          case "wght":
+            is(v.name, "Weight", "name of wght axis: " + v.name);
+            isfuzzy(v.minValue, 0.48, kEpsilon, "minimum weight: " + v.minValue);
+            isfuzzy(v.maxValue, 3.20, kEpsilon, "maximum weight: " + v.maxValue);
+            is(v.defaultValue, 1.0, "default weight: " + v.defaultValue);
+            break;
+          case "wdth":
+            is(v.name, "Width", "name of wdth axis: " + v.name);
+            isfuzzy(v.minValue, 0.62, kEpsilon, "minimum width: " + v.minValue);
+            isfuzzy(v.maxValue, 1.30, kEpsilon, "maximum width: " + v.maxValue);
+            is(v.defaultValue, 1.0, "default width: " + v.defaultValue);
+            break;
+          default:
+            ok(false, "unexpected axis: " + v.tag);
+            break;
+          }
+        }
+      }
+
+      SimpleTest.finish();
+    }
+  );
+}
+
+  ]]>
+  </script>
+
+  <!-- html:body contains elements the test will inspect -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1323743"
+     target="_blank">Mozilla Bug 1323743</a>
+
+    <!-- Using a non-variation font -->
+    <div id="test1">Hello world</div>
+
+    <!-- This element uses a variation font loaded with @font-face.
+         display:none used here to ensure loading of the webfont is deferred until
+         after we have set prefs required to preserve the variation tables. -->
+    <div id="test2" style="display:none">Hello world</div>
+
+    <!-- This element also uses a variation font loaded with @font-face. -->
+    <div id="test3" style="display:none">Hello world</div>
+
+    <!-- For macOS only, we also test with the system-installed Skia font -->
+    <div id="test4">Hello world</div>
+  </body>
+
+</window>

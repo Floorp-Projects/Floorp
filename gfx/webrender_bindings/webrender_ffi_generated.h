@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.3.3 */
+/* Generated with cbindgen:0.4.0 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -973,6 +973,12 @@ extern bool is_in_render_thread();
 
 WR_INLINE
 const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_capture(DocumentHandle *aDh,
+                    const char *aPath,
+                    uint32_t aBitsRaw)
 WR_FUNC;
 
 WR_INLINE

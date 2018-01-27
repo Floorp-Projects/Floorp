@@ -35,7 +35,7 @@
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
-#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/MozPromise.h"
 #include "nsPrintfCString.h"
@@ -53,6 +53,7 @@
 using mozilla::OriginAttributes;
 using mozilla::dom::ChromeUtils;
 using mozilla::dom::ContentParent;
+using mozilla::dom::ServiceWorkerManager;
 using mozilla::dom::TabContext;
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
@@ -61,7 +62,6 @@ using mozilla::net::PTCPServerSocketParent;
 using mozilla::dom::TCPServerSocketParent;
 using mozilla::net::PUDPSocketParent;
 using mozilla::dom::UDPSocketParent;
-using mozilla::dom::workers::ServiceWorkerManager;
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::OptionalPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;

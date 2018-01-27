@@ -11,7 +11,6 @@
 #include "nsIDOMAnimationEvent.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
-#include "nsIDOMCDATASection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDOMClientRectList.h"
@@ -90,7 +89,6 @@
 #include "mozilla/dom/AnimationEventBinding.h"
 #include "mozilla/dom/BeforeUnloadEventBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
-#include "mozilla/dom/CDATASectionBinding.h"
 #include "mozilla/dom/CharacterDataBinding.h"
 #include "mozilla/dom/DOMRectBinding.h"
 #include "mozilla/dom/DOMRectListBinding.h"
@@ -241,7 +239,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(AnimationEvent),
   DEFINE_SHIM(BeforeUnloadEvent),
   DEFINE_SHIM(CanvasRenderingContext2D),
-  DEFINE_SHIM(CDATASection),
   DEFINE_SHIM(CharacterData),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRect, DOMRectReadOnly),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMClientRectList, DOMRectList),
