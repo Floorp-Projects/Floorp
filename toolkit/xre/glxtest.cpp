@@ -105,7 +105,7 @@ x_error_handler(Display *, XErrorEvent *ev)
 
 
 // glxtest is declared inside extern "C" so that the name is not mangled.
-// The name is used in build/valgrind/x86_64-redhat-linux-gnu.sup to suppress
+// The name is used in build/valgrind/x86_64-pc-linux-gnu.sup to suppress
 // memory leak errors because we run it inside a short lived fork and we don't
 // care about leaking memory
 extern "C" {

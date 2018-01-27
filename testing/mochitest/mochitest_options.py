@@ -96,10 +96,10 @@ def get_default_valgrind_suppression_files():
     rv = []
     if mozinfo.os == "linux":
         if mozinfo.processor == "x86_64":
-            rv.append(os.path.join(supps_path, "x86_64-redhat-linux-gnu.sup"))
+            rv.append(os.path.join(supps_path, "x86_64-pc-linux-gnu.sup"))
             rv.append(os.path.join(supps_path, "cross-architecture.sup"))
         elif mozinfo.processor == "x86":
-            rv.append(os.path.join(supps_path, "i386-redhat-linux-gnu.sup"))
+            rv.append(os.path.join(supps_path, "i386-pc-linux-gnu.sup"))
             rv.append(os.path.join(supps_path, "cross-architecture.sup"))
 
     return rv
