@@ -21,8 +21,6 @@ jobs:
     symbol: I(ib)
   desktop1604-test:
     symbol: I(dt16t)
-  desktop-build:
-    symbol: I(db)
   debian7-base:
     symbol: I(deb7-base)
     definition: debian-base
