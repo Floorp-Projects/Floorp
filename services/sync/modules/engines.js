@@ -842,6 +842,9 @@ SyncEngine.prototype = {
     if (!json.ids) {
       json.ids = [];
     }
+    // The set serializes the same way as an array, but offers more efficient
+    // methods of manipulation.
+    json.ids = new SerializableSet(json.ids);
     return json;
   },
 
@@ -892,6 +895,12 @@ SyncEngine.prototype = {
   /*
    * lastSync is a timestamp in server time.
    */
+  async getLastSync() {
+    return this.lastSync;
+  },
+  async setLastSync(lastSync) {
+    this.lastSync = lastSync;
+  },
   get lastSync() {
     return this._lastSync;
   },
@@ -911,6 +920,9 @@ SyncEngine.prototype = {
   },
 
   set toFetch(ids) {
+    if (ids.constructor.name != "SerializableSet") {
+      throw new Error("Bug: Attempted to set toFetch to something that isn't a SerializableSet");
+    }
     this._toFetchStorage.data = { ids };
     this._toFetchStorage.saveSoon();
   },
@@ -919,7 +931,12 @@ SyncEngine.prototype = {
     this._previousFailedStorage.ensureDataReady();
     return this._previousFailedStorage.data.ids;
   },
+
   set previousFailed(ids) {
+    if (ids.constructor.name != "SerializableSet") {
+      throw new Error(
+        "Bug: Attempted to set previousFailed to something that isn't a SerializableSet");
+    }
     this._previousFailedStorage.data = { ids };
     this._previousFailedStorage.saveSoon();
   },
@@ -1018,13 +1035,7 @@ SyncEngine.prototype = {
     // the end of a sync, or after an error, we add all objects remaining in
     // this._modified to the tracker.
     this.lastSyncLocal = Date.now();
-    let initialChanges;
-    if (this.lastSync) {
-      initialChanges = await this.pullNewChanges();
-    } else {
-      this._log.debug("First sync, uploading all items");
-      initialChanges = await this.pullAllChanges();
-    }
+    let initialChanges = await this.pullChanges();
     this._modified.replace(initialChanges);
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
@@ -1036,6 +1047,15 @@ SyncEngine.prototype = {
 
     // Keep track of what to delete at the end of sync
     this._delete = {};
+  },
+
+  async pullChanges() {
+    let lastSync = await this.getLastSync();
+    if (lastSync) {
+      return this.pullNewChanges();
+    }
+    this._log.debug("First sync, uploading all items");
+    return this.pullAllChanges();
   },
 
   /**
@@ -1069,8 +1089,9 @@ SyncEngine.prototype = {
     this._log.trace("Downloading & applying server changes");
 
     let newitems = this.itemSource();
+    let lastSync = await this.getLastSync();
 
-    newitems.newer = this.lastSync;
+    newitems.newer = lastSync;
     newitems.full  = true;
 
     let downloadLimit = Infinity;
@@ -1100,13 +1121,13 @@ SyncEngine.prototype = {
     // reconciled => number of items that were reconciled.
     let count = {applied: 0, failed: 0, newFailed: 0, reconciled: 0};
     let recordsToApply = [];
-    let failedInCurrentSync = [];
+    let failedInCurrentSync = new SerializableSet();
 
     let oldestModified = this.lastModified;
     let downloadedIDs = new Set();
 
     // Stage 1: Fetch new records from the server, up to the download limit.
-    if (this.lastModified == null || this.lastModified > this.lastSync) {
+    if (this.lastModified == null || this.lastModified > lastSync) {
       let { response, records } = await newitems.getBatched(this.downloadBatchSize);
       if (!response.success) {
         response.failureCode = ENGINE_DOWNLOAD_FAIL;
@@ -1124,7 +1145,7 @@ SyncEngine.prototype = {
 
         let { shouldApply, error } = await this._maybeReconcile(record);
         if (error) {
-          failedInCurrentSync.push(record.id);
+          failedInCurrentSync.add(record.id);
           count.failed++;
           continue;
         }
@@ -1136,7 +1157,7 @@ SyncEngine.prototype = {
       }
 
       let failedToApply = await this._applyRecords(recordsToApply);
-      failedInCurrentSync.push(...failedToApply);
+      Utils.setAddAll(failedInCurrentSync, failedToApply);
 
       // `applied` is a bit of a misnomer: it counts records that *should* be
       // applied, so it also includes records that we tried to apply and failed.
@@ -1153,7 +1174,7 @@ SyncEngine.prototype = {
     if (downloadedIDs.size == downloadLimit) {
       let guidColl = this.itemSource();
 
-      guidColl.newer = this.lastSync;
+      guidColl.newer = lastSync;
       guidColl.older = oldestModified;
       guidColl.sort  = "oldest";
 
@@ -1165,14 +1186,15 @@ SyncEngine.prototype = {
       // that in case the Sync server doesn't support `older` (bug 1316110).
       let remainingIDs = guids.obj.filter(id => !downloadedIDs.has(id));
       if (remainingIDs.length > 0) {
-        this.toFetch = Utils.arrayUnion(this.toFetch, remainingIDs);
+        this.toFetch = Utils.setAddAll(this.toFetch, remainingIDs);
       }
     }
 
     // Fast-foward the lastSync timestamp since we have backlogged the
     // remaining items.
-    if (this.lastSync < this.lastModified) {
-      this.lastSync = this.lastModified;
+    if (lastSync < this.lastModified) {
+      lastSync = this.lastModified;
+      await this.setLastSync(lastSync);
     }
 
     // Stage 3: Backfill records from the backlog, and those that failed to
@@ -1180,8 +1202,9 @@ SyncEngine.prototype = {
     // download limit, to prevent a large backlog for one engine from blocking
     // the others. We'll keep processing the backlog on subsequent engine syncs.
     let failedInPreviousSync = this.previousFailed;
-    let idsToBackfill = Utils.arrayUnion(this.toFetch.slice(0, downloadLimit),
-      failedInPreviousSync);
+    let idsToBackfill = Array.from(
+      Utils.setAddAll(Utils.subsetOfSize(this.toFetch, downloadLimit),
+                      failedInPreviousSync));
 
     // Note that we intentionally overwrite the previously failed list here.
     // Records that fail to decrypt or apply in two consecutive syncs are likely
@@ -1230,20 +1253,22 @@ SyncEngine.prototype = {
       count.failed += failedToApply.length;
       count.applied += backfilledRecordsToApply.length;
 
-      this.toFetch = Utils.arraySub(this.toFetch, ids);
-      this.previousFailed = Utils.arrayUnion(this.previousFailed, failedInBackfill);
+      this.toFetch = Utils.setDeleteAll(this.toFetch, ids);
+      this.previousFailed = Utils.setAddAll(this.previousFailed, failedInBackfill);
 
-      if (this.lastSync < this.lastModified) {
-        this.lastSync = this.lastModified;
+      if (lastSync < this.lastModified) {
+        lastSync = this.lastModified;
+        await this.setLastSync(lastSync);
       }
     }
 
-    count.newFailed = this.previousFailed.reduce((count, engine) => {
-      if (failedInPreviousSync.indexOf(engine) == -1) {
-        count++;
+    count.newFailed = 0;
+    for (let item of this.previousFailed) {
+      if (!failedInPreviousSync.has(item)) {
+        ++count.newFailed;
       }
-      return count;
-    }, 0);
+    }
+
     count.succeeded = Math.max(0, count.applied - count.failed);
     this._log.info(["Records:",
                     count.applied, "applied,",
@@ -1611,6 +1636,7 @@ SyncEngine.prototype = {
 
       let failed = [];
       let successful = [];
+      let lastSync = await this.getLastSync();
       let handleResponse = async (resp, batchOngoing = false) => {
         // Note: We don't want to update this.lastSync, or this._modified until
         // the batch is complete, however we want to remember success/failure
@@ -1629,11 +1655,8 @@ SyncEngine.prototype = {
           // Nothing to do yet
           return;
         }
-        // Advance lastSync since we've finished the batch.
-        let modified = resp.headers["x-weave-timestamp"];
-        if (modified > this.lastSync) {
-          this.lastSync = modified;
-        }
+        let serverModifiedTime = parseFloat(resp.headers["x-weave-timestamp"]);
+
         if (failed.length && this._log.level <= Log.Level.Debug) {
           this._log.debug("Records that will be uploaded again because "
                           + "the server couldn't store them: "
@@ -1646,14 +1669,20 @@ SyncEngine.prototype = {
           this._modified.delete(id);
         }
 
-        await this._onRecordsWritten(successful, failed);
+        await this._onRecordsWritten(successful, failed, serverModifiedTime);
+
+        // Advance lastSync since we've finished the batch.
+        if (serverModifiedTime > lastSync) {
+          lastSync = serverModifiedTime;
+          await this.setLastSync(lastSync);
+        }
 
         // clear for next batch
         failed.length = 0;
         successful.length = 0;
       };
 
-      let postQueue = up.newPostQueue(this._log, this.lastSync, handleResponse);
+      let postQueue = up.newPostQueue(this._log, lastSync, handleResponse);
 
       for (let id of modifiedIDs) {
         let out;
@@ -1704,7 +1733,7 @@ SyncEngine.prototype = {
     }
   },
 
-  async _onRecordsWritten(succeeded, failed) {
+  async _onRecordsWritten(succeeded, failed, serverModifiedTime) {
     // Implement this method to take specific actions against successfully
     // uploaded records and failed records.
   },
@@ -1811,8 +1840,8 @@ SyncEngine.prototype = {
 
   async _resetClient() {
     this.resetLastSync();
-    this.previousFailed = [];
-    this.toFetch = [];
+    this.previousFailed = new SerializableSet();
+    this.toFetch = new SerializableSet();
     this._needWeakUpload.clear();
   },
 

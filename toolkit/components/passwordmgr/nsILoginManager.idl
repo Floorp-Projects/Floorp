@@ -41,6 +41,20 @@ interface nsILoginManager : nsISupports {
 
 
   /**
+   * Like addLogin, but asynchronous and for many logins.
+   *
+   * @param aLogins
+   *        A JS Array of nsILoginInfos to add.
+   * @return A promise which resolves with a JS Array of cloned logins with
+   *         the guids set.
+   *
+   * Default values for each login's nsILoginMetaInfo properties will be
+   * created. However, if the caller specifies non-default values, they will
+   * be used instead.
+   */
+  jsval addLogins(in jsval aLogins);
+
+  /**
    * Remove a login from the login manager.
    *
    * @param aLogin
