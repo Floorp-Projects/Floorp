@@ -27,7 +27,7 @@ class nsPresContext;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
-template <class EventInfo> class DelayedEventDispatcher;
+template <class EventInfo> class AnimationEventDispatcher;
 
 namespace dom {
 class Element;
@@ -108,7 +108,7 @@ protected:
   LinkedList<AnimationCollection<AnimationType>> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 
-  mozilla::DelayedEventDispatcher<AnimationEventType> mEventDispatcher;
+  mozilla::AnimationEventDispatcher<AnimationEventType> mEventDispatcher;
 };
 
 /**
@@ -180,10 +180,10 @@ private:
 };
 
 template <class EventInfo>
-class DelayedEventDispatcher
+class AnimationEventDispatcher
 {
 public:
-  DelayedEventDispatcher() : mIsSorted(true) { }
+  AnimationEventDispatcher() : mIsSorted(true) { }
 
   void QueueEvents(nsTArray<EventInfo>&& aEvents)
   {
@@ -280,7 +280,7 @@ protected:
 
 template <class EventInfo>
 inline void
-ImplCycleCollectionUnlink(DelayedEventDispatcher<EventInfo>& aField)
+ImplCycleCollectionUnlink(AnimationEventDispatcher<EventInfo>& aField)
 {
   aField.Unlink();
 }
@@ -288,7 +288,7 @@ ImplCycleCollectionUnlink(DelayedEventDispatcher<EventInfo>& aField)
 template <class EventInfo>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            DelayedEventDispatcher<EventInfo>& aField,
+                            AnimationEventDispatcher<EventInfo>& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
