@@ -55,8 +55,7 @@ struct AnimationEventInfo {
     aAnimationName->ToString(mEvent.mAnimationName);
     mEvent.mElapsedTime = aElapsedTime;
     mEvent.mPseudoElement =
-      AnimationCollection<dom::CSSAnimation>::PseudoTypeAsString(
-        aTarget.mPseudoType);
+      nsCSSPseudoElements::PseudoTypeAsString(aTarget.mPseudoType);
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
