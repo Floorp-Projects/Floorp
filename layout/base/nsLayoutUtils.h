@@ -2594,20 +2594,6 @@ public:
    * relationships and symmetries.
    */
   static bool IsInStyloBlocklist(nsIPrincipal* aPrincipal);
-
-  /**
-   * Add aBlockedDomain to the existing stylo blocklist, i.e., sStyloBlocklist.
-   * This function is exposed to nsDOMWindowUtils and only for testing purpose.
-   * So, NEVER use this in any other cases.
-   */
-  static void AddToStyloBlocklist(const nsACString& aBlockedDomain);
-
-  /**
-   * Remove aBlockedDomain from the existing stylo blocklist, i.e., sStyloBlocklist.
-   * This function is exposed to nsDOMWindowUtils and only for testing purpose.
-   * So, NEVER use this in any other cases.
-   */
-  static void RemoveFromStyloBlocklist(const nsACString& aBlockedDomain);
 #else
   static bool ShouldUseStylo(nsIPrincipal* aPrincipal) {
     return false;
