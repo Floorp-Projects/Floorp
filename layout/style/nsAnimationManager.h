@@ -14,6 +14,7 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
+#include "nsISupportsImpl.h"
 
 class nsIGlobalObject;
 class nsStyleContext;
@@ -282,8 +283,7 @@ public:
   {
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsAnimationManager)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsAnimationManager)
+  NS_INLINE_DECL_REFCOUNTING(nsAnimationManager)
 
   typedef mozilla::AnimationCollection<mozilla::dom::CSSAnimation>
     CSSAnimationCollection;
@@ -309,12 +309,6 @@ public:
     mozilla::dom::Element* aElement,
     mozilla::CSSPseudoElementType aPseudoType,
     const mozilla::ServoStyleContext* aComputedValues);
-
-  void DispatchEvents()
-  {
-    RefPtr<nsAnimationManager> kungFuDeathGrip(this);
-    mEventDispatcher->DispatchEvents(mPresContext);
-  }
 
   // Utility function to walk through |aIter| to find the Keyframe with
   // matching offset and timing function but stopping as soon as the offset
