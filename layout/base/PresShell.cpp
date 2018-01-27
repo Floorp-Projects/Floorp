@@ -8,7 +8,6 @@
 
 #include "mozilla/PresShell.h"
 
-#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -1363,7 +1362,7 @@ PresShell::Destroy()
   }
 
   if (mPresContext) {
-    mPresContext->AnimationEventDispatcher()->ClearEventQueue();
+    rd->CancelPendingAnimationEvents(mPresContext->AnimationEventDispatcher());
   }
 
   // Revoke any pending events.  We need to do this and cancel pending reflows

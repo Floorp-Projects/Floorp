@@ -22,6 +22,7 @@
 #include "nsTObserverArray.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
@@ -242,6 +243,24 @@ public:
    * targets any node in aDocument.
    */
   void CancelPendingEvents(nsIDocument* aDocument);
+
+  /**
+   * Queue new animation events to dispatch in next tick.
+   */
+  void ScheduleAnimationEventDispatch(
+    mozilla::AnimationEventDispatcher* aDispatcher)
+  {
+    NS_ASSERTION(!mAnimationEventFlushObservers.Contains(aDispatcher),
+                 "Double-adding animation event flush observer");
+    mAnimationEventFlushObservers.AppendElement(aDispatcher);
+    EnsureTimerStarted();
+  }
+
+  /**
+   * Cancel all pending animation events associated with |aDispatcher|.
+   */
+  void CancelPendingAnimationEvents(
+    mozilla::AnimationEventDispatcher* aDispatcher);
 
   /**
    * Schedule a frame visibility update "soon", subject to the heuristics and
@@ -496,6 +515,8 @@ private:
   nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;
   nsTObserverArray<nsAPostRefreshObserver*> mPostRefreshObservers;
   nsTArray<PendingEvent> mPendingEvents;
+  AutoTArray<mozilla::AnimationEventDispatcher*, 16>
+    mAnimationEventFlushObservers;
 
   void BeginRefreshingImages(RequestTable& aEntries,
                              mozilla::TimeStamp aDesired);
