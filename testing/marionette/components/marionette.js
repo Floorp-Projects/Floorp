@@ -19,9 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return log;
 });
 
-const MARIONETTE_CONTRACT_ID = "@mozilla.org/remote/marionette;1";
-const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
-
 const PREF_PORT = "marionette.port";
 const PREF_PORT_FALLBACK = "marionette.defaultPrefs.port";
 const PREF_LOG_LEVEL = "marionette.log.level";
@@ -138,171 +135,194 @@ const prefs = {
   },
 };
 
-function MarionetteComponent() {
-  this.running = false;
-  this.server = null;
+class MarionetteComponent {
+  constructor() {
+    this.running = false;
+    this.server = null;
 
-  // holds reference to ChromeWindow
-  // used to run GFX sanity tests on Windows
-  this.gfxWindow = null;
+    // holds reference to ChromeWindow
+    // used to run GFX sanity tests on Windows
+    this.gfxWindow = null;
 
-  // indicates that all pending window checks have been completed
-  // and that we are ready to start the Marionette server
-  this.finalUIStartup = false;
+    // indicates that all pending window checks have been completed
+    // and that we are ready to start the Marionette server
+    this.finalUIStartup = false;
 
-  log.level = prefs.logLevel;
+    log.level = prefs.logLevel;
 
-  this.enabled = env.exists(ENV_ENABLED);
-  if (this.enabled) {
-    log.info(`Enabled via ${ENV_ENABLED}`);
+    this.enabled = env.exists(ENV_ENABLED);
+    if (this.enabled) {
+      log.info(`Enabled via ${ENV_ENABLED}`);
+    }
+  }
+
+  // Handle -marionette flag
+  handle(cmdLine) {
+    if (!this.enabled && cmdLine.handleFlag("marionette", false)) {
+      this.enabled = true;
+      log.debug("Enabled via flag");
+    }
+  }
+
+  observe(subject, topic) {
+    log.debug(`Received observer notification ${topic}`);
+
+    switch (topic) {
+      case "profile-after-change":
+        Services.obs.addObserver(this, "command-line-startup");
+        Services.obs.addObserver(this, "sessionstore-windows-restored");
+
+        prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
+        break;
+
+      // In safe mode the command line handlers are getting parsed after the
+      // safe mode dialog has been closed. To allow Marionette to start
+      // earlier, use the CLI startup observer notification for
+      // special-cased handlers, which gets fired before the dialog appears.
+      case "command-line-startup":
+        Services.obs.removeObserver(this, topic);
+        this.handle(subject);
+
+        // We want to suppress the modal dialog that's shown
+        // when starting up in safe-mode to enable testing.
+        if (this.enabled && Services.appinfo.inSafeMode) {
+          Services.obs.addObserver(this, "domwindowopened");
+        }
+
+        break;
+
+      case "domwindowclosed":
+        if (this.gfxWindow === null || subject === this.gfxWindow) {
+          Services.obs.removeObserver(this, topic);
+
+          Services.obs.addObserver(this, "xpcom-shutdown");
+          this.finalUIStartup = true;
+          this.init();
+        }
+        break;
+
+      case "domwindowopened":
+        Services.obs.removeObserver(this, topic);
+        this.suppressSafeModeDialog(subject);
+        break;
+
+      case "sessionstore-windows-restored":
+        Services.obs.removeObserver(this, topic);
+
+        // When Firefox starts on Windows, an additional GFX sanity test
+        // window may appear off-screen.  Marionette should wait for it
+        // to close.
+        let winEn = Services.wm.getEnumerator(null);
+        while (winEn.hasMoreElements()) {
+          let win = winEn.getNext();
+          if (win.document.documentURI == "chrome://gfxsanity/content/sanityparent.html") {
+            this.gfxWindow = win;
+            break;
+          }
+        }
+
+        if (this.gfxWindow) {
+          Services.obs.addObserver(this, "domwindowclosed");
+        } else {
+          Services.obs.addObserver(this, "xpcom-shutdown");
+          this.finalUIStartup = true;
+          this.init();
+        }
+
+        break;
+
+      case "xpcom-shutdown":
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+        this.uninit();
+        break;
+    }
+  }
+
+  suppressSafeModeDialog(win) {
+    win.addEventListener("load", () => {
+      if (win.document.getElementById("safeModeDialog")) {
+        // accept the dialog to start in safe-mode
+        log.debug("Safe mode detected, supressing dialog");
+        win.setTimeout(() => {
+          win.document.documentElement.getButton("accept").click();
+        });
+      }
+    }, {once: true});
+  }
+
+  init() {
+    if (this.running || !this.enabled || !this.finalUIStartup) {
+      return;
+    }
+
+    // wait for delayed startup...
+    Services.tm.idleDispatchToMainThread(async () => {
+      // ... and for startup tests
+      let startupRecorder = Promise.resolve();
+      if ("@mozilla.org/test/startuprecorder;1" in Cc) {
+        startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
+            .getService().wrappedJSObject.done;
+      }
+      await startupRecorder;
+
+      try {
+        ChromeUtils.import("chrome://marionette/content/server.js");
+        let listener = new server.TCPListener(prefs.port);
+        listener.start();
+        log.info(`Listening on port ${listener.port}`);
+        this.server = listener;
+        this.running = true;
+      } catch (e) {
+        log.fatal("Remote protocol server failed to start", e);
+        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+      }
+    });
+  }
+
+  uninit() {
+    if (!this.running) {
+      return;
+    }
+    this.server.stop();
+    this.running = false;
+  }
+
+  get QueryInterface() {
+    return XPCOMUtils.generateQI([
+      Ci.nsICommandLineHandler,
+      Ci.nsIMarionette,
+    ]);
   }
 }
 
-MarionetteComponent.prototype = {
+const MarionetteFactory = {
+  createInstance(outer, iid) {
+    if (outer) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+
+    let marionette = new MarionetteComponent();
+    return marionette.QueryInterface(iid);
+  },
+};
+
+function Marionette() {}
+
+Marionette.prototype = {
   classDescription: "Marionette component",
-  classID: MARIONETTE_CID,
-  contractID: MARIONETTE_CONTRACT_ID,
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsICommandLineHandler,
-    Ci.nsIMarionette,
-  ]),
-  // eslint-disable-next-line camelcase
+  classID: Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}"),
+  contractID: "@mozilla.org/remote/marionette;1",
+
+  /* eslint-disable camelcase */
+  _xpcom_factory: MarionetteFactory,
+
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
     {category: "profile-after-change", service: true},
   ],
+  /* eslint-enable camelcase */
+
   helpInfo: "  --marionette       Enable remote control server.\n",
 };
 
-// Handle -marionette flag
-MarionetteComponent.prototype.handle = function(cmdLine) {
-  if (!this.enabled && cmdLine.handleFlag("marionette", false)) {
-    this.enabled = true;
-    log.debug("Enabled via flag");
-  }
-};
-
-MarionetteComponent.prototype.observe = function(subject, topic) {
-  log.debug(`Received observer notification ${topic}`);
-
-  switch (topic) {
-    case "profile-after-change":
-      Services.obs.addObserver(this, "command-line-startup");
-      Services.obs.addObserver(this, "sessionstore-windows-restored");
-
-      prefs.readFromEnvironment(ENV_PRESERVE_PREFS);
-      break;
-
-    // In safe mode the command line handlers are getting parsed after the
-    // safe mode dialog has been closed. To allow Marionette to start
-    // earlier, use the CLI startup observer notification for
-    // special-cased handlers, which gets fired before the dialog appears.
-    case "command-line-startup":
-      Services.obs.removeObserver(this, topic);
-      this.handle(subject);
-
-      // We want to suppress the modal dialog that's shown
-      // when starting up in safe-mode to enable testing.
-      if (this.enabled && Services.appinfo.inSafeMode) {
-        Services.obs.addObserver(this, "domwindowopened");
-      }
-
-      break;
-
-    case "domwindowclosed":
-      if (this.gfxWindow === null || subject === this.gfxWindow) {
-        Services.obs.removeObserver(this, topic);
-
-        Services.obs.addObserver(this, "xpcom-shutdown");
-        this.finalUIStartup = true;
-        this.init();
-      }
-      break;
-
-    case "domwindowopened":
-      Services.obs.removeObserver(this, topic);
-      this.suppressSafeModeDialog(subject);
-      break;
-
-    case "sessionstore-windows-restored":
-      Services.obs.removeObserver(this, topic);
-
-      // When Firefox starts on Windows, an additional GFX sanity test
-      // window may appear off-screen.  Marionette should wait for it
-      // to close.
-      let winEn = Services.wm.getEnumerator(null);
-      while (winEn.hasMoreElements()) {
-        let win = winEn.getNext();
-        if (win.document.documentURI == "chrome://gfxsanity/content/sanityparent.html") {
-          this.gfxWindow = win;
-          break;
-        }
-      }
-
-      if (this.gfxWindow) {
-        Services.obs.addObserver(this, "domwindowclosed");
-      } else {
-        Services.obs.addObserver(this, "xpcom-shutdown");
-        this.finalUIStartup = true;
-        this.init();
-      }
-
-      break;
-
-    case "xpcom-shutdown":
-      Services.obs.removeObserver(this, "xpcom-shutdown");
-      this.uninit();
-      break;
-  }
-};
-
-MarionetteComponent.prototype.suppressSafeModeDialog = function(win) {
-  win.addEventListener("load", () => {
-    if (win.document.getElementById("safeModeDialog")) {
-      // accept the dialog to start in safe-mode
-      log.debug("Safe mode detected, supressing dialog");
-      win.setTimeout(() => {
-        win.document.documentElement.getButton("accept").click();
-      });
-    }
-  }, {once: true});
-};
-
-MarionetteComponent.prototype.init = function() {
-  if (this.running || !this.enabled || !this.finalUIStartup) {
-    return;
-  }
-
-  // wait for delayed startup...
-  Services.tm.idleDispatchToMainThread(async () => {
-    // ... and for startup tests
-    let startupRecorder = Promise.resolve();
-    if ("@mozilla.org/test/startuprecorder;1" in Cc) {
-      startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
-          .getService().wrappedJSObject.done;
-    }
-    await startupRecorder;
-
-    try {
-      ChromeUtils.import("chrome://marionette/content/server.js");
-      let listener = new server.TCPListener(prefs.port);
-      listener.start();
-      log.info(`Listening on port ${listener.port}`);
-      this.server = listener;
-      this.running = true;
-    } catch (e) {
-      log.fatal("Remote protocol server failed to start", e);
-      Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
-    }
-  });
-};
-
-MarionetteComponent.prototype.uninit = function() {
-  if (!this.running) {
-    return;
-  }
-  this.server.stop();
-  this.running = false;
-};
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MarionetteComponent]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Marionette]);
