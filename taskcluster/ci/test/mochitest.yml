@@ -46,7 +46,7 @@ mochitest:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -102,7 +102,6 @@ mochitest-browser-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows7-32/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -201,7 +200,7 @@ mochitest-clipboard:
     instance-size: xlarge
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     mozharness:
         mochitest-flavor: plain
@@ -234,7 +233,6 @@ mochitest-devtools-chrome:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows7-32/debug: both
             default: true
     mozharness:
         mochitest-flavor: chrome
@@ -266,7 +264,7 @@ mochitest-gpu:
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     mozharness:
         mochitest-flavor: plain
@@ -372,7 +370,7 @@ mochitest-webgl:
             default: 3
     e10s:
         by-test-platform:
-            windows7-32/debug: both
+            linux32/debug: both
             default: true
     loopback-video: true
     max-run-time:
