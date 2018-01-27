@@ -41,7 +41,7 @@ crashtest:
             default: 1
     e10s:
         by-test-platform:
-            windows10-64/debug: both
+            linux32/debug: both
             default: true
     tier:
         by-test-platform:
@@ -72,7 +72,6 @@ jsreftest:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows10-64/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -108,7 +107,7 @@ reftest:
             default: 8
     e10s:
         by-test-platform:
-            windows10-64/debug: both
+            linux32/debug: both
             default: true
     max-run-time:
         by-test-platform:
@@ -162,7 +161,6 @@ reftest-no-accel:
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
-            windows10-64/debug: both
             default: true
     mozharness:
         chunked:
