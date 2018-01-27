@@ -25,6 +25,7 @@ const PREF_LOG_LEVEL = "marionette.log.level";
 const PREF_LOG_LEVEL_FALLBACK = "marionette.logging";
 
 const DEFAULT_LOG_LEVEL = "info";
+const NOTIFY_RUNNING = "remote-active";
 
 // Complements -marionette flag for starting the Marionette server.
 // We also set this if Marionette is running in order to start the server
@@ -272,18 +273,21 @@ class MarionetteComponent {
         ChromeUtils.import("chrome://marionette/content/server.js");
         let listener = new server.TCPListener(prefs.port);
         listener.start();
-        log.info(`Listening on port ${listener.port}`);
         this.server = listener;
       } catch (e) {
         log.fatal("Remote protocol server failed to start", e);
         Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
       }
+
+      Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
+      log.info(`Listening on port ${this.server.port}`);
     });
   }
 
   uninit() {
     if (this.running) {
       this.server.stop();
+      Services.obs.notifyObservers(this, NOTIFY_RUNNING);
     }
   }
 
