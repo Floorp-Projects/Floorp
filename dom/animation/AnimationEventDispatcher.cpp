@@ -7,6 +7,7 @@
 #include "mozilla/AnimationEventDispatcher.h"
 
 #include "mozilla/EventDispatcher.h"
+#include "nsRefreshDriver.h"
 
 namespace mozilla {
 
@@ -25,6 +26,33 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationEventDispatcher, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationEventDispatcher, Release)
+
+void
+AnimationEventDispatcher::Disconnect()
+{
+  if (mIsObserving) {
+    MOZ_ASSERT(mPresContext && mPresContext->RefreshDriver(),
+               "The pres context and the refresh driver should be still "
+               "alive if we haven't disassociated from the refresh driver");
+    mPresContext->RefreshDriver()->CancelPendingAnimationEvents(this);
+    mIsObserving = false;
+  }
+  mPresContext = nullptr;
+}
+
+void
+AnimationEventDispatcher::QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
+{
+  MOZ_ASSERT(mPresContext,
+             "The pres context should be valid");
+
+  mPendingEvents.AppendElements(Move(aEvents));
+  mIsSorted = false;
+  if (!mIsObserving) {
+    mPresContext->RefreshDriver()->ScheduleAnimationEventDispatch(this);
+    mIsObserving = true;
+  }
+}
 
 } // namespace mozilla
 
