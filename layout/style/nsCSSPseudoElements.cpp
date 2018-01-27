@@ -157,19 +157,3 @@ nsCSSPseudoElements::PseudoElementSupportsUserActionState(const Type aType)
   return PseudoElementHasFlags(aType,
                                CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE);
 }
-
-/* static */ nsString
-nsCSSPseudoElements::PseudoTypeAsString(Type aPseudoType)
-{
-  switch (aPseudoType) {
-    case CSSPseudoElementType::before:
-      return NS_LITERAL_STRING("::before");
-    case CSSPseudoElementType::after:
-      return NS_LITERAL_STRING("::after");
-    default:
-      MOZ_ASSERT(aPseudoType == CSSPseudoElementType::NotPseudo,
-                 "Unexpected pseudo type");
-      return EmptyString();
-  }
-}
-
