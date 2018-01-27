@@ -1429,6 +1429,7 @@ nsRefreshDriver::ObserverCount() const
   // changes can trigger transitions which fire events when they complete, and
   // layout changes can affect media queries on child documents, triggering
   // style changes, etc.
+  sum += mAnimationEventFlushObservers.Length();
   sum += mResizeEventFlushObservers.Length();
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
@@ -1452,6 +1453,7 @@ nsRefreshDriver::HasObservers() const
   return mViewManagerFlushIsPending ||
          !mStyleFlushObservers.IsEmpty() ||
          !mLayoutFlushObservers.IsEmpty() ||
+         !mAnimationEventFlushObservers.IsEmpty() ||
          !mResizeEventFlushObservers.IsEmpty() ||
          !mPendingEvents.IsEmpty() ||
          !mFrameRequestCallbackDocs.IsEmpty() ||
@@ -1638,22 +1640,19 @@ nsRefreshDriver::DispatchAnimationEvents()
     return;
   }
 
-  AutoTArray<nsCOMPtr<nsIDocument>, 32> documents;
-  CollectDocuments(mPresContext->Document(), &documents);
+  // Hold all AnimationEventDispatcher in mAnimationEventFlushObservers as
+  // a RefPtr<> array since each AnimationEventDispatcher might be destroyed
+  // during processing the previous dispatcher.
+  size_t len = mAnimationEventFlushObservers.Length();
+  AutoTArray<RefPtr<AnimationEventDispatcher>, 16> dispatchers;
+  RefPtr<AnimationEventDispatcher>* elems = dispatchers.AppendElements(len);
+  for (size_t i = 0; i < len; i++) {
+    elems[i] = mAnimationEventFlushObservers[i];
+  }
+  mAnimationEventFlushObservers.Clear();
 
-  for (uint32_t i = 0; i < documents.Length(); ++i) {
-    nsIDocument* doc = documents[i];
-    nsIPresShell* shell = doc->GetShell();
-    if (!shell) {
-      continue;
-    }
-
-    RefPtr<nsPresContext> context = shell->GetPresContext();
-    if (!context || context->RefreshDriver() != this) {
-      continue;
-    }
-
-    context->AnimationEventDispatcher()->DispatchEvents();
+  for (auto& dispatcher : dispatchers) {
+    dispatcher->DispatchEvents();
   }
 }
 
@@ -2410,6 +2409,14 @@ nsRefreshDriver::CancelPendingEvents(nsIDocument* aDocument)
       mPendingEvents.RemoveElementAt(i);
     }
   }
+}
+
+void
+nsRefreshDriver::CancelPendingAnimationEvents(AnimationEventDispatcher* aDispatcher)
+{
+  MOZ_ASSERT(aDispatcher);
+  aDispatcher->ClearEventQueue();
+  mAnimationEventFlushObservers.RemoveElement(aDispatcher);
 }
 
 /* static */ TimeStamp
