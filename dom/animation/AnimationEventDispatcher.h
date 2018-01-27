@@ -99,6 +99,9 @@ class AnimationEventDispatcher final
 public:
   AnimationEventDispatcher() : mIsSorted(true) { }
 
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationEventDispatcher)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AnimationEventDispatcher)
+
   void QueueEvents(nsTArray<AnimationEventInfo>&& aEvents)
   {
     mPendingEvents.AppendElements(Move(aEvents));
@@ -161,18 +164,9 @@ public:
   }
   bool HasQueuedEvents() const { return !mPendingEvents.IsEmpty(); }
 
-  // Methods for supporting cycle-collection
-  void Traverse(nsCycleCollectionTraversalCallback* aCallback,
-                const char* aName)
-  {
-    for (AnimationEventInfo& info : mPendingEvents) {
-      ImplCycleCollectionTraverse(*aCallback, info.mElement, aName);
-      ImplCycleCollectionTraverse(*aCallback, info.mAnimation, aName);
-    }
-  }
-  void Unlink() { ClearEventQueue(); }
+private:
+  ~AnimationEventDispatcher() = default;
 
-protected:
   class AnimationEventInfoLessThan
   {
   public:
@@ -196,21 +190,6 @@ protected:
   EventArray mPendingEvents;
   bool mIsSorted;
 };
-
-inline void
-ImplCycleCollectionUnlink(AnimationEventDispatcher& aField)
-{
-  aField.Unlink();
-}
-
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            AnimationEventDispatcher& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  aField.Traverse(&aCallback, aName);
-}
 
 } // namespace mozilla
 
