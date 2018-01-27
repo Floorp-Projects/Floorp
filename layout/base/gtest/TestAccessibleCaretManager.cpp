@@ -108,8 +108,8 @@ public:
     bool IsTerminated() const override { return false; }
 
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
-    MOCK_CONST_METHOD1(DispatchCaretStateChangedEvent,
-                       void(CaretChangedReason aReason));
+    MOCK_METHOD1(DispatchCaretStateChangedEvent,
+                 void(CaretChangedReason aReason));
     MOCK_CONST_METHOD1(HasNonEmptyTextContent, bool(nsINode* aNode));
 
   }; // class MockAccessibleCaretManager
