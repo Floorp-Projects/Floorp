@@ -92,7 +92,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__w_pdfjs_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 18);
+/******/ 	return __w_pdfjs_require__(__w_pdfjs_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -107,9 +107,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isSpace = exports.isString = exports.isNum = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
-__w_pdfjs_require__(20);
+__w_pdfjs_require__(21);
 
-var _streams_polyfill = __w_pdfjs_require__(21);
+var _streams_polyfill = __w_pdfjs_require__(22);
 
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 const NativeImageDecoding = {
@@ -3616,7 +3616,7 @@ var _util = __w_pdfjs_require__(0);
 
 var _primitives = __w_pdfjs_require__(1);
 
-var _ccitt_stream = __w_pdfjs_require__(25);
+var _ccitt_stream = __w_pdfjs_require__(26);
 
 var _jbig2_stream = __w_pdfjs_require__(27);
 
@@ -10209,7 +10209,7 @@ var _parser = __w_pdfjs_require__(5);
 
 var _chunked_stream = __w_pdfjs_require__(9);
 
-var _crypto = __w_pdfjs_require__(13);
+var _crypto = __w_pdfjs_require__(14);
 
 var _colorspace = __w_pdfjs_require__(3);
 
@@ -11729,6 +11729,541 @@ exports.FileSpec = FileSpec;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.CCITTFaxDecoder = undefined;
+
+var _util = __w_pdfjs_require__(0);
+
+let CCITTFaxDecoder = function CCITTFaxDecoder() {
+  const ccittEOL = -2;
+  const ccittEOF = -1;
+  const twoDimPass = 0;
+  const twoDimHoriz = 1;
+  const twoDimVert0 = 2;
+  const twoDimVertR1 = 3;
+  const twoDimVertL1 = 4;
+  const twoDimVertR2 = 5;
+  const twoDimVertL2 = 6;
+  const twoDimVertR3 = 7;
+  const twoDimVertL3 = 8;
+  const twoDimTable = [[-1, -1], [-1, -1], [7, twoDimVertL3], [7, twoDimVertR3], [6, twoDimVertL2], [6, twoDimVertL2], [6, twoDimVertR2], [6, twoDimVertR2], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0]];
+  const whiteTable1 = [[-1, -1], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [12, 1984], [12, 2048], [12, 2112], [12, 2176], [12, 2240], [12, 2304], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [12, 2368], [12, 2432], [12, 2496], [12, 2560]];
+  const whiteTable2 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [8, 29], [8, 29], [8, 30], [8, 30], [8, 45], [8, 45], [8, 46], [8, 46], [7, 22], [7, 22], [7, 22], [7, 22], [7, 23], [7, 23], [7, 23], [7, 23], [8, 47], [8, 47], [8, 48], [8, 48], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [7, 20], [7, 20], [7, 20], [7, 20], [8, 33], [8, 33], [8, 34], [8, 34], [8, 35], [8, 35], [8, 36], [8, 36], [8, 37], [8, 37], [8, 38], [8, 38], [7, 19], [7, 19], [7, 19], [7, 19], [8, 31], [8, 31], [8, 32], [8, 32], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [8, 53], [8, 53], [8, 54], [8, 54], [7, 26], [7, 26], [7, 26], [7, 26], [8, 39], [8, 39], [8, 40], [8, 40], [8, 41], [8, 41], [8, 42], [8, 42], [8, 43], [8, 43], [8, 44], [8, 44], [7, 21], [7, 21], [7, 21], [7, 21], [7, 28], [7, 28], [7, 28], [7, 28], [8, 61], [8, 61], [8, 62], [8, 62], [8, 63], [8, 63], [8, 0], [8, 0], [8, 320], [8, 320], [8, 384], [8, 384], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [7, 27], [7, 27], [7, 27], [7, 27], [8, 59], [8, 59], [8, 60], [8, 60], [9, 1472], [9, 1536], [9, 1600], [9, 1728], [7, 18], [7, 18], [7, 18], [7, 18], [7, 24], [7, 24], [7, 24], [7, 24], [8, 49], [8, 49], [8, 50], [8, 50], [8, 51], [8, 51], [8, 52], [8, 52], [7, 25], [7, 25], [7, 25], [7, 25], [8, 55], [8, 55], [8, 56], [8, 56], [8, 57], [8, 57], [8, 58], [8, 58], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [8, 448], [8, 448], [8, 512], [8, 512], [9, 704], [9, 768], [8, 640], [8, 640], [8, 576], [8, 576], [9, 832], [9, 896], [9, 960], [9, 1024], [9, 1088], [9, 1152], [9, 1216], [9, 1280], [9, 1344], [9, 1408], [7, 256], [7, 256], [7, 256], [7, 256], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7]];
+  const blackTable1 = [[-1, -1], [-1, -1], [12, ccittEOL], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [11, 1792], [11, 1792], [12, 1984], [12, 1984], [12, 2048], [12, 2048], [12, 2112], [12, 2112], [12, 2176], [12, 2176], [12, 2240], [12, 2240], [12, 2304], [12, 2304], [11, 1856], [11, 1856], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [11, 1920], [11, 1920], [12, 2368], [12, 2368], [12, 2432], [12, 2432], [12, 2496], [12, 2496], [12, 2560], [12, 2560], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [12, 52], [12, 52], [13, 640], [13, 704], [13, 768], [13, 832], [12, 55], [12, 55], [12, 56], [12, 56], [13, 1280], [13, 1344], [13, 1408], [13, 1472], [12, 59], [12, 59], [12, 60], [12, 60], [13, 1536], [13, 1600], [11, 24], [11, 24], [11, 24], [11, 24], [11, 25], [11, 25], [11, 25], [11, 25], [13, 1664], [13, 1728], [12, 320], [12, 320], [12, 384], [12, 384], [12, 448], [12, 448], [13, 512], [13, 576], [12, 53], [12, 53], [12, 54], [12, 54], [13, 896], [13, 960], [13, 1024], [13, 1088], [13, 1152], [13, 1216], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64]];
+  const blackTable2 = [[8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [11, 23], [11, 23], [12, 50], [12, 51], [12, 44], [12, 45], [12, 46], [12, 47], [12, 57], [12, 58], [12, 61], [12, 256], [10, 16], [10, 16], [10, 16], [10, 16], [10, 17], [10, 17], [10, 17], [10, 17], [12, 48], [12, 49], [12, 62], [12, 63], [12, 30], [12, 31], [12, 32], [12, 33], [12, 40], [12, 41], [11, 22], [11, 22], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [12, 128], [12, 192], [12, 26], [12, 27], [12, 28], [12, 29], [11, 19], [11, 19], [11, 20], [11, 20], [12, 34], [12, 35], [12, 36], [12, 37], [12, 38], [12, 39], [11, 21], [11, 21], [12, 42], [12, 43], [10, 0], [10, 0], [10, 0], [10, 0], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12]];
+  const blackTable3 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [6, 9], [6, 8], [5, 7], [5, 7], [4, 6], [4, 6], [4, 6], [4, 6], [4, 5], [4, 5], [4, 5], [4, 5], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]];
+  function CCITTFaxDecoder(source, options = {}) {
+    if (!source || typeof source.next !== 'function') {
+      throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
+    }
+    this.source = source;
+    this.eof = false;
+    this.encoding = options['K'] || 0;
+    this.eoline = options['EndOfLine'] || false;
+    this.byteAlign = options['EncodedByteAlign'] || false;
+    this.columns = options['Columns'] || 1728;
+    this.rows = options['Rows'] || 0;
+    let eoblock = options['EndOfBlock'];
+    if (eoblock === null || eoblock === undefined) {
+      eoblock = true;
+    }
+    this.eoblock = eoblock;
+    this.black = options['BlackIs1'] || false;
+    this.codingLine = new Uint32Array(this.columns + 1);
+    this.refLine = new Uint32Array(this.columns + 2);
+    this.codingLine[0] = this.columns;
+    this.codingPos = 0;
+    this.row = 0;
+    this.nextLine2D = this.encoding < 0;
+    this.inputBits = 0;
+    this.inputBuf = 0;
+    this.outputBits = 0;
+    this.rowsDone = false;
+    let code1;
+    while ((code1 = this._lookBits(12)) === 0) {
+      this._eatBits(1);
+    }
+    if (code1 === 1) {
+      this._eatBits(12);
+    }
+    if (this.encoding > 0) {
+      this.nextLine2D = !this._lookBits(1);
+      this._eatBits(1);
+    }
+  }
+  CCITTFaxDecoder.prototype = {
+    readNextChar() {
+      if (this.eof) {
+        return -1;
+      }
+      let refLine = this.refLine;
+      let codingLine = this.codingLine;
+      let columns = this.columns;
+      let refPos, blackPixels, bits, i;
+      if (this.outputBits === 0) {
+        if (this.rowsDone) {
+          this.eof = true;
+        }
+        if (this.eof) {
+          return -1;
+        }
+        this.err = false;
+        let code1, code2, code3;
+        if (this.nextLine2D) {
+          for (i = 0; codingLine[i] < columns; ++i) {
+            refLine[i] = codingLine[i];
+          }
+          refLine[i++] = columns;
+          refLine[i] = columns;
+          codingLine[0] = 0;
+          this.codingPos = 0;
+          refPos = 0;
+          blackPixels = 0;
+          while (codingLine[this.codingPos] < columns) {
+            code1 = this._getTwoDimCode();
+            switch (code1) {
+              case twoDimPass:
+                this._addPixels(refLine[refPos + 1], blackPixels);
+                if (refLine[refPos + 1] < columns) {
+                  refPos += 2;
+                }
+                break;
+              case twoDimHoriz:
+                code1 = code2 = 0;
+                if (blackPixels) {
+                  do {
+                    code1 += code3 = this._getBlackCode();
+                  } while (code3 >= 64);
+                  do {
+                    code2 += code3 = this._getWhiteCode();
+                  } while (code3 >= 64);
+                } else {
+                  do {
+                    code1 += code3 = this._getWhiteCode();
+                  } while (code3 >= 64);
+                  do {
+                    code2 += code3 = this._getBlackCode();
+                  } while (code3 >= 64);
+                }
+                this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
+                if (codingLine[this.codingPos] < columns) {
+                  this._addPixels(codingLine[this.codingPos] + code2, blackPixels ^ 1);
+                }
+                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                  refPos += 2;
+                }
+                break;
+              case twoDimVertR3:
+                this._addPixels(refLine[refPos] + 3, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertR2:
+                this._addPixels(refLine[refPos] + 2, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertR1:
+                this._addPixels(refLine[refPos] + 1, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVert0:
+                this._addPixels(refLine[refPos], blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  ++refPos;
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL3:
+                this._addPixelsNeg(refLine[refPos] - 3, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL2:
+                this._addPixelsNeg(refLine[refPos] - 2, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case twoDimVertL1:
+                this._addPixelsNeg(refLine[refPos] - 1, blackPixels);
+                blackPixels ^= 1;
+                if (codingLine[this.codingPos] < columns) {
+                  if (refPos > 0) {
+                    --refPos;
+                  } else {
+                    ++refPos;
+                  }
+                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
+                    refPos += 2;
+                  }
+                }
+                break;
+              case ccittEOF:
+                this._addPixels(columns, 0);
+                this.eof = true;
+                break;
+              default:
+                (0, _util.info)('bad 2d code');
+                this._addPixels(columns, 0);
+                this.err = true;
+            }
+          }
+        } else {
+          codingLine[0] = 0;
+          this.codingPos = 0;
+          blackPixels = 0;
+          while (codingLine[this.codingPos] < columns) {
+            code1 = 0;
+            if (blackPixels) {
+              do {
+                code1 += code3 = this._getBlackCode();
+              } while (code3 >= 64);
+            } else {
+              do {
+                code1 += code3 = this._getWhiteCode();
+              } while (code3 >= 64);
+            }
+            this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
+            blackPixels ^= 1;
+          }
+        }
+        let gotEOL = false;
+        if (this.byteAlign) {
+          this.inputBits &= ~7;
+        }
+        if (!this.eoblock && this.row === this.rows - 1) {
+          this.rowsDone = true;
+        } else {
+          code1 = this._lookBits(12);
+          if (this.eoline) {
+            while (code1 !== ccittEOF && code1 !== 1) {
+              this._eatBits(1);
+              code1 = this._lookBits(12);
+            }
+          } else {
+            while (code1 === 0) {
+              this._eatBits(1);
+              code1 = this._lookBits(12);
+            }
+          }
+          if (code1 === 1) {
+            this._eatBits(12);
+            gotEOL = true;
+          } else if (code1 === ccittEOF) {
+            this.eof = true;
+          }
+        }
+        if (!this.eof && this.encoding > 0 && !this.rowsDone) {
+          this.nextLine2D = !this._lookBits(1);
+          this._eatBits(1);
+        }
+        if (this.eoblock && gotEOL && this.byteAlign) {
+          code1 = this._lookBits(12);
+          if (code1 === 1) {
+            this._eatBits(12);
+            if (this.encoding > 0) {
+              this._lookBits(1);
+              this._eatBits(1);
+            }
+            if (this.encoding >= 0) {
+              for (i = 0; i < 4; ++i) {
+                code1 = this._lookBits(12);
+                if (code1 !== 1) {
+                  (0, _util.info)('bad rtc code: ' + code1);
+                }
+                this._eatBits(12);
+                if (this.encoding > 0) {
+                  this._lookBits(1);
+                  this._eatBits(1);
+                }
+              }
+            }
+            this.eof = true;
+          }
+        } else if (this.err && this.eoline) {
+          while (true) {
+            code1 = this._lookBits(13);
+            if (code1 === ccittEOF) {
+              this.eof = true;
+              return -1;
+            }
+            if (code1 >> 1 === 1) {
+              break;
+            }
+            this._eatBits(1);
+          }
+          this._eatBits(12);
+          if (this.encoding > 0) {
+            this._eatBits(1);
+            this.nextLine2D = !(code1 & 1);
+          }
+        }
+        if (codingLine[0] > 0) {
+          this.outputBits = codingLine[this.codingPos = 0];
+        } else {
+          this.outputBits = codingLine[this.codingPos = 1];
+        }
+        this.row++;
+      }
+      let c;
+      if (this.outputBits >= 8) {
+        c = this.codingPos & 1 ? 0 : 0xFF;
+        this.outputBits -= 8;
+        if (this.outputBits === 0 && codingLine[this.codingPos] < columns) {
+          this.codingPos++;
+          this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
+        }
+      } else {
+        bits = 8;
+        c = 0;
+        do {
+          if (this.outputBits > bits) {
+            c <<= bits;
+            if (!(this.codingPos & 1)) {
+              c |= 0xFF >> 8 - bits;
+            }
+            this.outputBits -= bits;
+            bits = 0;
+          } else {
+            c <<= this.outputBits;
+            if (!(this.codingPos & 1)) {
+              c |= 0xFF >> 8 - this.outputBits;
+            }
+            bits -= this.outputBits;
+            this.outputBits = 0;
+            if (codingLine[this.codingPos] < columns) {
+              this.codingPos++;
+              this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
+            } else if (bits > 0) {
+              c <<= bits;
+              bits = 0;
+            }
+          }
+        } while (bits);
+      }
+      if (this.black) {
+        c ^= 0xFF;
+      }
+      return c;
+    },
+    _addPixels(a1, blackPixels) {
+      let codingLine = this.codingLine;
+      let codingPos = this.codingPos;
+      if (a1 > codingLine[codingPos]) {
+        if (a1 > this.columns) {
+          (0, _util.info)('row is wrong length');
+          this.err = true;
+          a1 = this.columns;
+        }
+        if (codingPos & 1 ^ blackPixels) {
+          ++codingPos;
+        }
+        codingLine[codingPos] = a1;
+      }
+      this.codingPos = codingPos;
+    },
+    _addPixelsNeg(a1, blackPixels) {
+      let codingLine = this.codingLine;
+      let codingPos = this.codingPos;
+      if (a1 > codingLine[codingPos]) {
+        if (a1 > this.columns) {
+          (0, _util.info)('row is wrong length');
+          this.err = true;
+          a1 = this.columns;
+        }
+        if (codingPos & 1 ^ blackPixels) {
+          ++codingPos;
+        }
+        codingLine[codingPos] = a1;
+      } else if (a1 < codingLine[codingPos]) {
+        if (a1 < 0) {
+          (0, _util.info)('invalid code');
+          this.err = true;
+          a1 = 0;
+        }
+        while (codingPos > 0 && a1 < codingLine[codingPos - 1]) {
+          --codingPos;
+        }
+        codingLine[codingPos] = a1;
+      }
+      this.codingPos = codingPos;
+    },
+    _findTableCode(start, end, table, limit) {
+      let limitValue = limit || 0;
+      for (let i = start; i <= end; ++i) {
+        let code = this._lookBits(i);
+        if (code === ccittEOF) {
+          return [true, 1, false];
+        }
+        if (i < end) {
+          code <<= end - i;
+        }
+        if (!limitValue || code >= limitValue) {
+          let p = table[code - limitValue];
+          if (p[0] === i) {
+            this._eatBits(i);
+            return [true, p[1], true];
+          }
+        }
+      }
+      return [false, 0, false];
+    },
+    _getTwoDimCode() {
+      let code = 0;
+      let p;
+      if (this.eoblock) {
+        code = this._lookBits(7);
+        p = twoDimTable[code];
+        if (p && p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(1, 7, twoDimTable);
+        if (result[0] && result[2]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('Bad two dim code');
+      return ccittEOF;
+    },
+    _getWhiteCode() {
+      let code = 0;
+      let p;
+      if (this.eoblock) {
+        code = this._lookBits(12);
+        if (code === ccittEOF) {
+          return 1;
+        }
+        if (code >> 5 === 0) {
+          p = whiteTable1[code];
+        } else {
+          p = whiteTable2[code >> 3];
+        }
+        if (p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(1, 9, whiteTable2);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(11, 12, whiteTable1);
+        if (result[0]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('bad white code');
+      this._eatBits(1);
+      return 1;
+    },
+    _getBlackCode() {
+      let code, p;
+      if (this.eoblock) {
+        code = this._lookBits(13);
+        if (code === ccittEOF) {
+          return 1;
+        }
+        if (code >> 7 === 0) {
+          p = blackTable1[code];
+        } else if (code >> 9 === 0 && code >> 7 !== 0) {
+          p = blackTable2[(code >> 1) - 64];
+        } else {
+          p = blackTable3[code >> 7];
+        }
+        if (p[0] > 0) {
+          this._eatBits(p[0]);
+          return p[1];
+        }
+      } else {
+        let result = this._findTableCode(2, 6, blackTable3);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(7, 12, blackTable2, 64);
+        if (result[0]) {
+          return result[1];
+        }
+        result = this._findTableCode(10, 13, blackTable1);
+        if (result[0]) {
+          return result[1];
+        }
+      }
+      (0, _util.info)('bad black code');
+      this._eatBits(1);
+      return 1;
+    },
+    _lookBits(n) {
+      let c;
+      while (this.inputBits < n) {
+        if ((c = this.source.next()) === -1) {
+          if (this.inputBits === 0) {
+            return ccittEOF;
+          }
+          return this.inputBuf << n - this.inputBits & 0xFFFF >> 16 - n;
+        }
+        this.inputBuf = this.inputBuf << 8 | c;
+        this.inputBits += 8;
+      }
+      return this.inputBuf >> this.inputBits - n & 0xFFFF >> 16 - n;
+    },
+    _eatBits(n) {
+      if ((this.inputBits -= n) < 0) {
+        this.inputBits = 0;
+      }
+    }
+  };
+  return CCITTFaxDecoder;
+}();
+exports.CCITTFaxDecoder = CCITTFaxDecoder;
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 var ArithmeticDecoder = function ArithmeticDecoderClosure() {
   var QeTable = [{
     qe: 0x5601,
@@ -12060,7 +12595,7 @@ var ArithmeticDecoder = function ArithmeticDecoderClosure() {
 exports.ArithmeticDecoder = ArithmeticDecoder;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -12073,7 +12608,7 @@ exports.JpxImage = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _arithmetic_decoder = __w_pdfjs_require__(11);
+var _arithmetic_decoder = __w_pdfjs_require__(12);
 
 let JpxError = function JpxErrorClosure() {
   function JpxError(msg) {
@@ -13988,7 +14523,7 @@ var JpxImage = function JpxImageClosure() {
 exports.JpxImage = JpxImage;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -15582,7 +16117,7 @@ exports.calculateSHA384 = calculateSHA384;
 exports.calculateSHA512 = calculateSHA512;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -17002,7 +17537,7 @@ exports.CFFPrivateDict = CFFPrivateDict;
 exports.CFFCompiler = CFFCompiler;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -17745,7 +18280,7 @@ exports.getSupplementalGlyphMapForArialBlack = getSupplementalGlyphMapForArialBl
 exports.getSupplementalGlyphMapForCalibri = getSupplementalGlyphMapForCalibri;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 var getLookupTableFactory = __w_pdfjs_require__(0).getLookupTableFactory;
@@ -19722,7 +20257,7 @@ exports.getNormalizedUnicodes = getNormalizedUnicodes;
 exports.getUnicodeForGlyph = getUnicodeForGlyph;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -20778,19 +21313,19 @@ exports.PostScriptEvaluator = PostScriptEvaluator;
 exports.PostScriptCompiler = PostScriptCompiler;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
 
 
-var pdfjsVersion = '2.0.288';
-var pdfjsBuild = 'f0216484';
-var pdfjsCoreWorker = __w_pdfjs_require__(19);
+var pdfjsVersion = '2.0.303';
+var pdfjsBuild = '55e3f97a';
+var pdfjsCoreWorker = __w_pdfjs_require__(20);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -20803,7 +21338,7 @@ exports.WorkerMessageHandler = exports.WorkerTask = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _pdf_manager = __w_pdfjs_require__(23);
+var _pdf_manager = __w_pdfjs_require__(24);
 
 var _is_node = __w_pdfjs_require__(44);
 
@@ -20986,7 +21521,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.288';
+    let workerVersion = '2.0.303';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -21370,7 +21905,7 @@ exports.WorkerTask = WorkerTask;
 exports.WorkerMessageHandler = WorkerMessageHandler;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -21379,7 +21914,7 @@ exports.WorkerMessageHandler = WorkerMessageHandler;
 ;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -21399,11 +21934,11 @@ if (typeof ReadableStream !== 'undefined') {
 if (isReadableStreamSupported) {
   exports.ReadableStream = ReadableStream;
 } else {
-  exports.ReadableStream = __w_pdfjs_require__(22).ReadableStream;
+  exports.ReadableStream = __w_pdfjs_require__(23).ReadableStream;
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -24419,7 +24954,7 @@ if (isReadableStreamSupported) {
 }]));
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -24434,7 +24969,7 @@ var _util = __w_pdfjs_require__(0);
 
 var _chunked_stream = __w_pdfjs_require__(9);
 
-var _document = __w_pdfjs_require__(24);
+var _document = __w_pdfjs_require__(25);
 
 var _stream = __w_pdfjs_require__(2);
 
@@ -24603,7 +25138,7 @@ exports.LocalPdfManager = LocalPdfManager;
 exports.NetworkPdfManager = NetworkPdfManager;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -24624,7 +25159,7 @@ var _stream = __w_pdfjs_require__(2);
 
 var _annotation = __w_pdfjs_require__(31);
 
-var _crypto = __w_pdfjs_require__(13);
+var _crypto = __w_pdfjs_require__(14);
 
 var _parser = __w_pdfjs_require__(5);
 
@@ -24632,7 +25167,7 @@ var _operator_list = __w_pdfjs_require__(7);
 
 var _evaluator = __w_pdfjs_require__(32);
 
-var _function = __w_pdfjs_require__(17);
+var _function = __w_pdfjs_require__(18);
 
 var Page = function PageClosure() {
   var DEFAULT_USER_UNIT = 1.0;
@@ -25126,7 +25661,7 @@ exports.Page = Page;
 exports.PDFDocument = PDFDocument;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -25139,7 +25674,7 @@ exports.CCITTFaxStream = undefined;
 
 var _primitives = __w_pdfjs_require__(1);
 
-var _ccitt = __w_pdfjs_require__(26);
+var _ccitt = __w_pdfjs_require__(11);
 
 var _stream = __w_pdfjs_require__(2);
 
@@ -25181,541 +25716,6 @@ var CCITTFaxStream = function CCITTFaxStreamClosure() {
   return CCITTFaxStream;
 }();
 exports.CCITTFaxStream = CCITTFaxStream;
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __w_pdfjs_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.CCITTFaxDecoder = undefined;
-
-var _util = __w_pdfjs_require__(0);
-
-let CCITTFaxDecoder = function CCITTFaxDecoder() {
-  const ccittEOL = -2;
-  const ccittEOF = -1;
-  const twoDimPass = 0;
-  const twoDimHoriz = 1;
-  const twoDimVert0 = 2;
-  const twoDimVertR1 = 3;
-  const twoDimVertL1 = 4;
-  const twoDimVertR2 = 5;
-  const twoDimVertL2 = 6;
-  const twoDimVertR3 = 7;
-  const twoDimVertL3 = 8;
-  const twoDimTable = [[-1, -1], [-1, -1], [7, twoDimVertL3], [7, twoDimVertR3], [6, twoDimVertL2], [6, twoDimVertL2], [6, twoDimVertR2], [6, twoDimVertR2], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [4, twoDimPass], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimHoriz], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertL1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [3, twoDimVertR1], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0], [1, twoDimVert0]];
-  const whiteTable1 = [[-1, -1], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [12, 1984], [12, 2048], [12, 2112], [12, 2176], [12, 2240], [12, 2304], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [12, 2368], [12, 2432], [12, 2496], [12, 2560]];
-  const whiteTable2 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [8, 29], [8, 29], [8, 30], [8, 30], [8, 45], [8, 45], [8, 46], [8, 46], [7, 22], [7, 22], [7, 22], [7, 22], [7, 23], [7, 23], [7, 23], [7, 23], [8, 47], [8, 47], [8, 48], [8, 48], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [6, 13], [7, 20], [7, 20], [7, 20], [7, 20], [8, 33], [8, 33], [8, 34], [8, 34], [8, 35], [8, 35], [8, 36], [8, 36], [8, 37], [8, 37], [8, 38], [8, 38], [7, 19], [7, 19], [7, 19], [7, 19], [8, 31], [8, 31], [8, 32], [8, 32], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 1], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [6, 12], [8, 53], [8, 53], [8, 54], [8, 54], [7, 26], [7, 26], [7, 26], [7, 26], [8, 39], [8, 39], [8, 40], [8, 40], [8, 41], [8, 41], [8, 42], [8, 42], [8, 43], [8, 43], [8, 44], [8, 44], [7, 21], [7, 21], [7, 21], [7, 21], [7, 28], [7, 28], [7, 28], [7, 28], [8, 61], [8, 61], [8, 62], [8, 62], [8, 63], [8, 63], [8, 0], [8, 0], [8, 320], [8, 320], [8, 384], [8, 384], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 10], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [5, 11], [7, 27], [7, 27], [7, 27], [7, 27], [8, 59], [8, 59], [8, 60], [8, 60], [9, 1472], [9, 1536], [9, 1600], [9, 1728], [7, 18], [7, 18], [7, 18], [7, 18], [7, 24], [7, 24], [7, 24], [7, 24], [8, 49], [8, 49], [8, 50], [8, 50], [8, 51], [8, 51], [8, 52], [8, 52], [7, 25], [7, 25], [7, 25], [7, 25], [8, 55], [8, 55], [8, 56], [8, 56], [8, 57], [8, 57], [8, 58], [8, 58], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 192], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [6, 1664], [8, 448], [8, 448], [8, 512], [8, 512], [9, 704], [9, 768], [8, 640], [8, 640], [8, 576], [8, 576], [9, 832], [9, 896], [9, 960], [9, 1024], [9, 1088], [9, 1152], [9, 1216], [9, 1280], [9, 1344], [9, 1408], [7, 256], [7, 256], [7, 256], [7, 256], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 2], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [4, 3], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 128], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 8], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [5, 9], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 16], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [6, 17], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 4], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [4, 5], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 14], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [6, 15], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [5, 64], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 6], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7], [4, 7]];
-  const blackTable1 = [[-1, -1], [-1, -1], [12, ccittEOL], [12, ccittEOL], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1], [11, 1792], [11, 1792], [11, 1792], [11, 1792], [12, 1984], [12, 1984], [12, 2048], [12, 2048], [12, 2112], [12, 2112], [12, 2176], [12, 2176], [12, 2240], [12, 2240], [12, 2304], [12, 2304], [11, 1856], [11, 1856], [11, 1856], [11, 1856], [11, 1920], [11, 1920], [11, 1920], [11, 1920], [12, 2368], [12, 2368], [12, 2432], [12, 2432], [12, 2496], [12, 2496], [12, 2560], [12, 2560], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [10, 18], [12, 52], [12, 52], [13, 640], [13, 704], [13, 768], [13, 832], [12, 55], [12, 55], [12, 56], [12, 56], [13, 1280], [13, 1344], [13, 1408], [13, 1472], [12, 59], [12, 59], [12, 60], [12, 60], [13, 1536], [13, 1600], [11, 24], [11, 24], [11, 24], [11, 24], [11, 25], [11, 25], [11, 25], [11, 25], [13, 1664], [13, 1728], [12, 320], [12, 320], [12, 384], [12, 384], [12, 448], [12, 448], [13, 512], [13, 576], [12, 53], [12, 53], [12, 54], [12, 54], [13, 896], [13, 960], [13, 1024], [13, 1088], [13, 1152], [13, 1216], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64], [10, 64]];
-  const blackTable2 = [[8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [8, 13], [11, 23], [11, 23], [12, 50], [12, 51], [12, 44], [12, 45], [12, 46], [12, 47], [12, 57], [12, 58], [12, 61], [12, 256], [10, 16], [10, 16], [10, 16], [10, 16], [10, 17], [10, 17], [10, 17], [10, 17], [12, 48], [12, 49], [12, 62], [12, 63], [12, 30], [12, 31], [12, 32], [12, 33], [12, 40], [12, 41], [11, 22], [11, 22], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [8, 14], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 10], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [7, 11], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [9, 15], [12, 128], [12, 192], [12, 26], [12, 27], [12, 28], [12, 29], [11, 19], [11, 19], [11, 20], [11, 20], [12, 34], [12, 35], [12, 36], [12, 37], [12, 38], [12, 39], [11, 21], [11, 21], [12, 42], [12, 43], [10, 0], [10, 0], [10, 0], [10, 0], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12], [7, 12]];
-  const blackTable3 = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [6, 9], [6, 8], [5, 7], [5, 7], [4, 6], [4, 6], [4, 6], [4, 6], [4, 5], [4, 5], [4, 5], [4, 5], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 1], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [3, 4], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2], [2, 2]];
-  function CCITTFaxDecoder(source, options = {}) {
-    if (!source || typeof source.next !== 'function') {
-      throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
-    }
-    this.source = source;
-    this.eof = false;
-    this.encoding = options['K'] || 0;
-    this.eoline = options['EndOfLine'] || false;
-    this.byteAlign = options['EncodedByteAlign'] || false;
-    this.columns = options['Columns'] || 1728;
-    this.rows = options['Rows'] || 0;
-    let eoblock = options['EndOfBlock'];
-    if (eoblock === null || eoblock === undefined) {
-      eoblock = true;
-    }
-    this.eoblock = eoblock;
-    this.black = options['BlackIs1'] || false;
-    this.codingLine = new Uint32Array(this.columns + 1);
-    this.refLine = new Uint32Array(this.columns + 2);
-    this.codingLine[0] = this.columns;
-    this.codingPos = 0;
-    this.row = 0;
-    this.nextLine2D = this.encoding < 0;
-    this.inputBits = 0;
-    this.inputBuf = 0;
-    this.outputBits = 0;
-    this.rowsDone = false;
-    let code1;
-    while ((code1 = this._lookBits(12)) === 0) {
-      this._eatBits(1);
-    }
-    if (code1 === 1) {
-      this._eatBits(12);
-    }
-    if (this.encoding > 0) {
-      this.nextLine2D = !this._lookBits(1);
-      this._eatBits(1);
-    }
-  }
-  CCITTFaxDecoder.prototype = {
-    readNextChar() {
-      if (this.eof) {
-        return -1;
-      }
-      let refLine = this.refLine;
-      let codingLine = this.codingLine;
-      let columns = this.columns;
-      let refPos, blackPixels, bits, i;
-      if (this.outputBits === 0) {
-        if (this.rowsDone) {
-          this.eof = true;
-        }
-        if (this.eof) {
-          return -1;
-        }
-        this.err = false;
-        let code1, code2, code3;
-        if (this.nextLine2D) {
-          for (i = 0; codingLine[i] < columns; ++i) {
-            refLine[i] = codingLine[i];
-          }
-          refLine[i++] = columns;
-          refLine[i] = columns;
-          codingLine[0] = 0;
-          this.codingPos = 0;
-          refPos = 0;
-          blackPixels = 0;
-          while (codingLine[this.codingPos] < columns) {
-            code1 = this._getTwoDimCode();
-            switch (code1) {
-              case twoDimPass:
-                this._addPixels(refLine[refPos + 1], blackPixels);
-                if (refLine[refPos + 1] < columns) {
-                  refPos += 2;
-                }
-                break;
-              case twoDimHoriz:
-                code1 = code2 = 0;
-                if (blackPixels) {
-                  do {
-                    code1 += code3 = this._getBlackCode();
-                  } while (code3 >= 64);
-                  do {
-                    code2 += code3 = this._getWhiteCode();
-                  } while (code3 >= 64);
-                } else {
-                  do {
-                    code1 += code3 = this._getWhiteCode();
-                  } while (code3 >= 64);
-                  do {
-                    code2 += code3 = this._getBlackCode();
-                  } while (code3 >= 64);
-                }
-                this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
-                if (codingLine[this.codingPos] < columns) {
-                  this._addPixels(codingLine[this.codingPos] + code2, blackPixels ^ 1);
-                }
-                while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                  refPos += 2;
-                }
-                break;
-              case twoDimVertR3:
-                this._addPixels(refLine[refPos] + 3, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  ++refPos;
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVertR2:
-                this._addPixels(refLine[refPos] + 2, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  ++refPos;
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVertR1:
-                this._addPixels(refLine[refPos] + 1, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  ++refPos;
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVert0:
-                this._addPixels(refLine[refPos], blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  ++refPos;
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVertL3:
-                this._addPixelsNeg(refLine[refPos] - 3, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  if (refPos > 0) {
-                    --refPos;
-                  } else {
-                    ++refPos;
-                  }
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVertL2:
-                this._addPixelsNeg(refLine[refPos] - 2, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  if (refPos > 0) {
-                    --refPos;
-                  } else {
-                    ++refPos;
-                  }
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case twoDimVertL1:
-                this._addPixelsNeg(refLine[refPos] - 1, blackPixels);
-                blackPixels ^= 1;
-                if (codingLine[this.codingPos] < columns) {
-                  if (refPos > 0) {
-                    --refPos;
-                  } else {
-                    ++refPos;
-                  }
-                  while (refLine[refPos] <= codingLine[this.codingPos] && refLine[refPos] < columns) {
-                    refPos += 2;
-                  }
-                }
-                break;
-              case ccittEOF:
-                this._addPixels(columns, 0);
-                this.eof = true;
-                break;
-              default:
-                (0, _util.info)('bad 2d code');
-                this._addPixels(columns, 0);
-                this.err = true;
-            }
-          }
-        } else {
-          codingLine[0] = 0;
-          this.codingPos = 0;
-          blackPixels = 0;
-          while (codingLine[this.codingPos] < columns) {
-            code1 = 0;
-            if (blackPixels) {
-              do {
-                code1 += code3 = this._getBlackCode();
-              } while (code3 >= 64);
-            } else {
-              do {
-                code1 += code3 = this._getWhiteCode();
-              } while (code3 >= 64);
-            }
-            this._addPixels(codingLine[this.codingPos] + code1, blackPixels);
-            blackPixels ^= 1;
-          }
-        }
-        let gotEOL = false;
-        if (this.byteAlign) {
-          this.inputBits &= ~7;
-        }
-        if (!this.eoblock && this.row === this.rows - 1) {
-          this.rowsDone = true;
-        } else {
-          code1 = this._lookBits(12);
-          if (this.eoline) {
-            while (code1 !== ccittEOF && code1 !== 1) {
-              this._eatBits(1);
-              code1 = this._lookBits(12);
-            }
-          } else {
-            while (code1 === 0) {
-              this._eatBits(1);
-              code1 = this._lookBits(12);
-            }
-          }
-          if (code1 === 1) {
-            this._eatBits(12);
-            gotEOL = true;
-          } else if (code1 === ccittEOF) {
-            this.eof = true;
-          }
-        }
-        if (!this.eof && this.encoding > 0 && !this.rowsDone) {
-          this.nextLine2D = !this._lookBits(1);
-          this._eatBits(1);
-        }
-        if (this.eoblock && gotEOL && this.byteAlign) {
-          code1 = this._lookBits(12);
-          if (code1 === 1) {
-            this._eatBits(12);
-            if (this.encoding > 0) {
-              this._lookBits(1);
-              this._eatBits(1);
-            }
-            if (this.encoding >= 0) {
-              for (i = 0; i < 4; ++i) {
-                code1 = this._lookBits(12);
-                if (code1 !== 1) {
-                  (0, _util.info)('bad rtc code: ' + code1);
-                }
-                this._eatBits(12);
-                if (this.encoding > 0) {
-                  this._lookBits(1);
-                  this._eatBits(1);
-                }
-              }
-            }
-            this.eof = true;
-          }
-        } else if (this.err && this.eoline) {
-          while (true) {
-            code1 = this._lookBits(13);
-            if (code1 === ccittEOF) {
-              this.eof = true;
-              return -1;
-            }
-            if (code1 >> 1 === 1) {
-              break;
-            }
-            this._eatBits(1);
-          }
-          this._eatBits(12);
-          if (this.encoding > 0) {
-            this._eatBits(1);
-            this.nextLine2D = !(code1 & 1);
-          }
-        }
-        if (codingLine[0] > 0) {
-          this.outputBits = codingLine[this.codingPos = 0];
-        } else {
-          this.outputBits = codingLine[this.codingPos = 1];
-        }
-        this.row++;
-      }
-      let c;
-      if (this.outputBits >= 8) {
-        c = this.codingPos & 1 ? 0 : 0xFF;
-        this.outputBits -= 8;
-        if (this.outputBits === 0 && codingLine[this.codingPos] < columns) {
-          this.codingPos++;
-          this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
-        }
-      } else {
-        bits = 8;
-        c = 0;
-        do {
-          if (this.outputBits > bits) {
-            c <<= bits;
-            if (!(this.codingPos & 1)) {
-              c |= 0xFF >> 8 - bits;
-            }
-            this.outputBits -= bits;
-            bits = 0;
-          } else {
-            c <<= this.outputBits;
-            if (!(this.codingPos & 1)) {
-              c |= 0xFF >> 8 - this.outputBits;
-            }
-            bits -= this.outputBits;
-            this.outputBits = 0;
-            if (codingLine[this.codingPos] < columns) {
-              this.codingPos++;
-              this.outputBits = codingLine[this.codingPos] - codingLine[this.codingPos - 1];
-            } else if (bits > 0) {
-              c <<= bits;
-              bits = 0;
-            }
-          }
-        } while (bits);
-      }
-      if (this.black) {
-        c ^= 0xFF;
-      }
-      return c;
-    },
-    _addPixels(a1, blackPixels) {
-      let codingLine = this.codingLine;
-      let codingPos = this.codingPos;
-      if (a1 > codingLine[codingPos]) {
-        if (a1 > this.columns) {
-          (0, _util.info)('row is wrong length');
-          this.err = true;
-          a1 = this.columns;
-        }
-        if (codingPos & 1 ^ blackPixels) {
-          ++codingPos;
-        }
-        codingLine[codingPos] = a1;
-      }
-      this.codingPos = codingPos;
-    },
-    _addPixelsNeg(a1, blackPixels) {
-      let codingLine = this.codingLine;
-      let codingPos = this.codingPos;
-      if (a1 > codingLine[codingPos]) {
-        if (a1 > this.columns) {
-          (0, _util.info)('row is wrong length');
-          this.err = true;
-          a1 = this.columns;
-        }
-        if (codingPos & 1 ^ blackPixels) {
-          ++codingPos;
-        }
-        codingLine[codingPos] = a1;
-      } else if (a1 < codingLine[codingPos]) {
-        if (a1 < 0) {
-          (0, _util.info)('invalid code');
-          this.err = true;
-          a1 = 0;
-        }
-        while (codingPos > 0 && a1 < codingLine[codingPos - 1]) {
-          --codingPos;
-        }
-        codingLine[codingPos] = a1;
-      }
-      this.codingPos = codingPos;
-    },
-    _findTableCode(start, end, table, limit) {
-      let limitValue = limit || 0;
-      for (let i = start; i <= end; ++i) {
-        let code = this._lookBits(i);
-        if (code === ccittEOF) {
-          return [true, 1, false];
-        }
-        if (i < end) {
-          code <<= end - i;
-        }
-        if (!limitValue || code >= limitValue) {
-          let p = table[code - limitValue];
-          if (p[0] === i) {
-            this._eatBits(i);
-            return [true, p[1], true];
-          }
-        }
-      }
-      return [false, 0, false];
-    },
-    _getTwoDimCode() {
-      let code = 0;
-      let p;
-      if (this.eoblock) {
-        code = this._lookBits(7);
-        p = twoDimTable[code];
-        if (p && p[0] > 0) {
-          this._eatBits(p[0]);
-          return p[1];
-        }
-      } else {
-        let result = this._findTableCode(1, 7, twoDimTable);
-        if (result[0] && result[2]) {
-          return result[1];
-        }
-      }
-      (0, _util.info)('Bad two dim code');
-      return ccittEOF;
-    },
-    _getWhiteCode() {
-      let code = 0;
-      let p;
-      if (this.eoblock) {
-        code = this._lookBits(12);
-        if (code === ccittEOF) {
-          return 1;
-        }
-        if (code >> 5 === 0) {
-          p = whiteTable1[code];
-        } else {
-          p = whiteTable2[code >> 3];
-        }
-        if (p[0] > 0) {
-          this._eatBits(p[0]);
-          return p[1];
-        }
-      } else {
-        let result = this._findTableCode(1, 9, whiteTable2);
-        if (result[0]) {
-          return result[1];
-        }
-        result = this._findTableCode(11, 12, whiteTable1);
-        if (result[0]) {
-          return result[1];
-        }
-      }
-      (0, _util.info)('bad white code');
-      this._eatBits(1);
-      return 1;
-    },
-    _getBlackCode() {
-      let code, p;
-      if (this.eoblock) {
-        code = this._lookBits(13);
-        if (code === ccittEOF) {
-          return 1;
-        }
-        if (code >> 7 === 0) {
-          p = blackTable1[code];
-        } else if (code >> 9 === 0 && code >> 7 !== 0) {
-          p = blackTable2[(code >> 1) - 64];
-        } else {
-          p = blackTable3[code >> 7];
-        }
-        if (p[0] > 0) {
-          this._eatBits(p[0]);
-          return p[1];
-        }
-      } else {
-        let result = this._findTableCode(2, 6, blackTable3);
-        if (result[0]) {
-          return result[1];
-        }
-        result = this._findTableCode(7, 12, blackTable2, 64);
-        if (result[0]) {
-          return result[1];
-        }
-        result = this._findTableCode(10, 13, blackTable1);
-        if (result[0]) {
-          return result[1];
-        }
-      }
-      (0, _util.info)('bad black code');
-      this._eatBits(1);
-      return 1;
-    },
-    _lookBits(n) {
-      let c;
-      while (this.inputBits < n) {
-        if ((c = this.source.next()) === -1) {
-          if (this.inputBits === 0) {
-            return ccittEOF;
-          }
-          return this.inputBuf << n - this.inputBits & 0xFFFF >> 16 - n;
-        }
-        this.inputBuf = this.inputBuf << 8 | c;
-        this.inputBits += 8;
-      }
-      return this.inputBuf >> this.inputBits - n & 0xFFFF >> 16 - n;
-    },
-    _eatBits(n) {
-      if ((this.inputBits -= n) < 0) {
-        this.inputBits = 0;
-      }
-    }
-  };
-  return CCITTFaxDecoder;
-}();
-exports.CCITTFaxDecoder = CCITTFaxDecoder;
 
 /***/ }),
 /* 27 */
@@ -25802,7 +25802,9 @@ exports.Jbig2Image = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _arithmetic_decoder = __w_pdfjs_require__(11);
+var _arithmetic_decoder = __w_pdfjs_require__(12);
+
+var _ccitt = __w_pdfjs_require__(11);
 
 let Jbig2Error = function Jbig2ErrorClosure() {
   function Jbig2Error(msg) {
@@ -26092,7 +26094,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
   function decodeBitmap(mmr, width, height, templateIndex, prediction, skip, at, decodingContext) {
     if (mmr) {
-      throw new Jbig2Error('MMR encoding is not supported');
+      let input = new Reader(decodingContext.data, decodingContext.start, decodingContext.end);
+      return decodeMMRBitmap(input, width, height, false);
     }
     if (templateIndex === 0 && !skip && !prediction && at.length === 4 && at[0].x === 3 && at[0].y === -1 && at[1].x === -3 && at[1].y === -1 && at[2].x === 2 && at[2].y === -2 && at[3].x === -2 && at[3].y === -2) {
       return decodeBitmapTemplate0(width, height, decodingContext);
@@ -26265,30 +26268,39 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     return bitmap;
   }
-  function decodeSymbolDictionary(huffman, refinement, symbols, numberOfNewSymbols, numberOfExportedSymbols, huffmanTables, templateIndex, at, refinementTemplateIndex, refinementAt, decodingContext) {
-    if (huffman) {
-      throw new Jbig2Error('huffman is not supported');
+  function decodeSymbolDictionary(huffman, refinement, symbols, numberOfNewSymbols, numberOfExportedSymbols, huffmanTables, templateIndex, at, refinementTemplateIndex, refinementAt, decodingContext, huffmanInput) {
+    if (huffman && refinement) {
+      throw new Jbig2Error('symbol refinement with Huffman is not supported');
     }
     var newSymbols = [];
     var currentHeight = 0;
     var symbolCodeLength = (0, _util.log2)(symbols.length + numberOfNewSymbols);
     var decoder = decodingContext.decoder;
     var contextCache = decodingContext.contextCache;
+    let tableB1, symbolWidths;
+    if (huffman) {
+      tableB1 = getStandardTable(1);
+      symbolWidths = [];
+      symbolCodeLength = Math.max(symbolCodeLength, 1);
+    }
     while (newSymbols.length < numberOfNewSymbols) {
-      var deltaHeight = decodeInteger(contextCache, 'IADH', decoder);
+      var deltaHeight = huffman ? huffmanTables.tableDeltaHeight.decode(huffmanInput) : decodeInteger(contextCache, 'IADH', decoder);
       currentHeight += deltaHeight;
-      var currentWidth = 0;
+      let currentWidth = 0,
+          totalWidth = 0;
+      let firstSymbol = huffman ? symbolWidths.length : 0;
       while (true) {
-        var deltaWidth = decodeInteger(contextCache, 'IADW', decoder);
+        var deltaWidth = huffman ? huffmanTables.tableDeltaWidth.decode(huffmanInput) : decodeInteger(contextCache, 'IADW', decoder);
         if (deltaWidth === null) {
           break;
         }
         currentWidth += deltaWidth;
+        totalWidth += currentWidth;
         var bitmap;
         if (refinement) {
           var numberOfInstances = decodeInteger(contextCache, 'IAAI', decoder);
           if (numberOfInstances > 1) {
-            bitmap = decodeTextRegion(huffman, refinement, currentWidth, currentHeight, 0, numberOfInstances, 1, symbols.concat(newSymbols), symbolCodeLength, 0, 0, 1, 0, huffmanTables, refinementTemplateIndex, refinementAt, decodingContext);
+            bitmap = decodeTextRegion(huffman, refinement, currentWidth, currentHeight, 0, numberOfInstances, 1, symbols.concat(newSymbols), symbolCodeLength, 0, 0, 1, 0, huffmanTables, refinementTemplateIndex, refinementAt, decodingContext, 0, huffmanInput);
           } else {
             var symbolId = decodeIAID(contextCache, decoder, symbolCodeLength);
             var rdx = decodeInteger(contextCache, 'IARDX', decoder);
@@ -26296,10 +26308,49 @@ var Jbig2Image = function Jbig2ImageClosure() {
             var symbol = symbolId < symbols.length ? symbols[symbolId] : newSymbols[symbolId - symbols.length];
             bitmap = decodeRefinement(currentWidth, currentHeight, refinementTemplateIndex, symbol, rdx, rdy, false, refinementAt, decodingContext);
           }
+          newSymbols.push(bitmap);
+        } else if (huffman) {
+          symbolWidths.push(currentWidth);
         } else {
           bitmap = decodeBitmap(false, currentWidth, currentHeight, templateIndex, false, null, at, decodingContext);
+          newSymbols.push(bitmap);
         }
-        newSymbols.push(bitmap);
+      }
+      if (huffman && !refinement) {
+        let bitmapSize = huffmanTables.tableBitmapSize.decode(huffmanInput);
+        huffmanInput.byteAlign();
+        let collectiveBitmap;
+        if (bitmapSize === 0) {
+          collectiveBitmap = readUncompressedBitmap(huffmanInput, totalWidth, currentHeight);
+        } else {
+          let originalEnd = huffmanInput.end;
+          let bitmapEnd = huffmanInput.position + bitmapSize;
+          huffmanInput.end = bitmapEnd;
+          collectiveBitmap = decodeMMRBitmap(huffmanInput, totalWidth, currentHeight, false);
+          huffmanInput.end = originalEnd;
+          huffmanInput.position = bitmapEnd;
+        }
+        let numberOfSymbolsDecoded = symbolWidths.length;
+        if (firstSymbol === numberOfSymbolsDecoded - 1) {
+          newSymbols.push(collectiveBitmap);
+        } else {
+          let i,
+              y,
+              xMin = 0,
+              xMax,
+              bitmapWidth,
+              symbolBitmap;
+          for (i = firstSymbol; i < numberOfSymbolsDecoded; i++) {
+            bitmapWidth = symbolWidths[i];
+            xMax = xMin + bitmapWidth;
+            symbolBitmap = [];
+            for (y = 0; y < currentHeight; y++) {
+              symbolBitmap.push(collectiveBitmap[y].subarray(xMin, xMax));
+            }
+            newSymbols.push(symbolBitmap);
+            xMin = xMax;
+          }
+        }
       }
     }
     var exportedSymbols = [];
@@ -26307,7 +26358,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
         currentFlag = false;
     var totalSymbolsLength = symbols.length + numberOfNewSymbols;
     while (flags.length < totalSymbolsLength) {
-      var runLength = decodeInteger(contextCache, 'IAEX', decoder);
+      var runLength = huffman ? tableB1.decode(huffmanInput) : decodeInteger(contextCache, 'IAEX', decoder);
       while (runLength--) {
         flags.push(currentFlag);
       }
@@ -26325,9 +26376,9 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     return exportedSymbols;
   }
-  function decodeTextRegion(huffman, refinement, width, height, defaultPixelValue, numberOfSymbolInstances, stripSize, inputSymbols, symbolCodeLength, transposed, dsOffset, referenceCorner, combinationOperator, huffmanTables, refinementTemplateIndex, refinementAt, decodingContext) {
-    if (huffman) {
-      throw new Jbig2Error('huffman is not supported');
+  function decodeTextRegion(huffman, refinement, width, height, defaultPixelValue, numberOfSymbolInstances, stripSize, inputSymbols, symbolCodeLength, transposed, dsOffset, referenceCorner, combinationOperator, huffmanTables, refinementTemplateIndex, refinementAt, decodingContext, logStripSize, huffmanInput) {
+    if (huffman && refinement) {
+      throw new Jbig2Error('refinement with Huffman is not supported');
     }
     var bitmap = [];
     var i, row;
@@ -26342,20 +26393,23 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     var decoder = decodingContext.decoder;
     var contextCache = decodingContext.contextCache;
-    var stripT = -decodeInteger(contextCache, 'IADT', decoder);
+    var stripT = huffman ? -huffmanTables.tableDeltaT.decode(huffmanInput) : -decodeInteger(contextCache, 'IADT', decoder);
     var firstS = 0;
     i = 0;
     while (i < numberOfSymbolInstances) {
-      var deltaT = decodeInteger(contextCache, 'IADT', decoder);
+      var deltaT = huffman ? huffmanTables.tableDeltaT.decode(huffmanInput) : decodeInteger(contextCache, 'IADT', decoder);
       stripT += deltaT;
-      var deltaFirstS = decodeInteger(contextCache, 'IAFS', decoder);
+      var deltaFirstS = huffman ? huffmanTables.tableFirstS.decode(huffmanInput) : decodeInteger(contextCache, 'IAFS', decoder);
       firstS += deltaFirstS;
       var currentS = firstS;
       do {
-        var currentT = stripSize === 1 ? 0 : decodeInteger(contextCache, 'IAIT', decoder);
+        let currentT = 0;
+        if (stripSize > 1) {
+          currentT = huffman ? huffmanInput.readBits(logStripSize) : decodeInteger(contextCache, 'IAIT', decoder);
+        }
         var t = stripSize * stripT + currentT;
-        var symbolId = decodeIAID(contextCache, decoder, symbolCodeLength);
-        var applyRefinement = refinement && decodeInteger(contextCache, 'IARI', decoder);
+        var symbolId = huffman ? huffmanTables.symbolIDTable.decode(huffmanInput) : decodeIAID(contextCache, decoder, symbolCodeLength);
+        var applyRefinement = refinement && (huffman ? huffmanInput.readBit() : decodeInteger(contextCache, 'IARI', decoder));
         var symbolBitmap = inputSymbols[symbolId];
         var symbolWidth = symbolBitmap[0].length;
         var symbolHeight = symbolBitmap.length;
@@ -26420,7 +26474,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
           currentS += symbolWidth - 1;
         }
         i++;
-        var deltaS = decodeInteger(contextCache, 'IADS', decoder);
+        var deltaS = huffman ? huffmanTables.tableDeltaS.decode(huffmanInput) : decodeInteger(contextCache, 'IADS', decoder);
         if (deltaS === null) {
           break;
         }
@@ -26431,23 +26485,25 @@ var Jbig2Image = function Jbig2ImageClosure() {
   }
   function decodePatternDictionary(mmr, patternWidth, patternHeight, maxPatternIndex, template, decodingContext) {
     let at = [];
-    at.push({
-      x: -patternWidth,
-      y: 0
-    });
-    if (template === 0) {
+    if (!mmr) {
       at.push({
-        x: -3,
-        y: -1
+        x: -patternWidth,
+        y: 0
       });
-      at.push({
-        x: 2,
-        y: -2
-      });
-      at.push({
-        x: -2,
-        y: -2
-      });
+      if (template === 0) {
+        at.push({
+          x: -3,
+          y: -1
+        });
+        at.push({
+          x: 2,
+          y: -2
+        });
+        at.push({
+          x: -2,
+          y: -2
+        });
+      }
     }
     let collectiveWidth = (maxPatternIndex + 1) * patternWidth;
     let collectiveBitmap = decodeBitmap(mmr, collectiveWidth, patternHeight, template, false, null, at, decodingContext);
@@ -26494,27 +26550,39 @@ var Jbig2Image = function Jbig2ImageClosure() {
         patternHeight = pattern0.length;
     let bitsPerValue = (0, _util.log2)(numberOfPatterns);
     let at = [];
-    at.push({
-      x: template <= 1 ? 3 : 2,
-      y: -1
-    });
-    if (template === 0) {
+    if (!mmr) {
       at.push({
-        x: -3,
+        x: template <= 1 ? 3 : 2,
         y: -1
       });
-      at.push({
-        x: 2,
-        y: -2
-      });
-      at.push({
-        x: -2,
-        y: -2
-      });
+      if (template === 0) {
+        at.push({
+          x: -3,
+          y: -1
+        });
+        at.push({
+          x: 2,
+          y: -2
+        });
+        at.push({
+          x: -2,
+          y: -2
+        });
+      }
     }
-    let grayScaleBitPlanes = [];
+    let grayScaleBitPlanes = [],
+        mmrInput,
+        bitmap;
+    if (mmr) {
+      mmrInput = new Reader(decodingContext.data, decodingContext.start, decodingContext.end);
+    }
     for (i = bitsPerValue - 1; i >= 0; i--) {
-      grayScaleBitPlanes[i] = decodeBitmap(mmr, gridWidth, gridHeight, template, false, skip, at, decodingContext);
+      if (mmr) {
+        bitmap = decodeMMRBitmap(mmrInput, gridWidth, gridHeight, true);
+      } else {
+        bitmap = decodeBitmap(false, gridWidth, gridHeight, template, false, skip, at, decodingContext);
+      }
+      grayScaleBitPlanes[i] = bitmap;
     }
     let mg, ng, bit, patternIndex, patternBitmap, x, y, patternRow, regionRow;
     for (mg = 0; mg < gridHeight; mg++) {
@@ -26735,7 +26803,8 @@ var Jbig2Image = function Jbig2ImageClosure() {
         position += 2;
         textRegion.huffman = !!(textRegionSegmentFlags & 1);
         textRegion.refinement = !!(textRegionSegmentFlags & 2);
-        textRegion.stripSize = 1 << (textRegionSegmentFlags >> 2 & 3);
+        textRegion.logStripSize = textRegionSegmentFlags >> 2 & 3;
+        textRegion.stripSize = 1 << textRegion.logStripSize;
         textRegion.referenceCorner = textRegionSegmentFlags >> 4 & 3;
         textRegion.transposed = !!(textRegionSegmentFlags & 64);
         textRegion.combinationOperator = textRegionSegmentFlags >> 7 & 3;
@@ -26752,7 +26821,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
           textRegion.huffmanRefinementDH = textRegionHuffmanFlags >> 8 & 3;
           textRegion.huffmanRefinementDX = textRegionHuffmanFlags >> 10 & 3;
           textRegion.huffmanRefinementDY = textRegionHuffmanFlags >> 12 & 3;
-          textRegion.huffmanRefinementSizeSelector = !!(textRegionHuffmanFlags & 14);
+          textRegion.huffmanRefinementSizeSelector = !!(textRegionHuffmanFlags & 0x4000);
         }
         if (textRegion.refinement && !textRegion.refinementTemplate) {
           at = [];
@@ -26767,9 +26836,6 @@ var Jbig2Image = function Jbig2ImageClosure() {
         }
         textRegion.numberOfSymbolInstances = (0, _util.readUint32)(data, position);
         position += 4;
-        if (textRegion.huffman) {
-          throw new Jbig2Error('huffman is not supported');
-        }
         args = [textRegion, header.referredTo, data, position, end];
         break;
       case 16:
@@ -26856,6 +26922,9 @@ var Jbig2Image = function Jbig2ImageClosure() {
       case 50:
         break;
       case 51:
+        break;
+      case 53:
+        args = [header.number, data, position, end];
         break;
       case 62:
         break;
@@ -26953,9 +27022,10 @@ var Jbig2Image = function Jbig2ImageClosure() {
       this.onImmediateGenericRegion.apply(this, arguments);
     },
     onSymbolDictionary: function SimpleSegmentVisitor_onSymbolDictionary(dictionary, currentSegment, referredSegments, data, start, end) {
-      var huffmanTables;
+      let huffmanTables, huffmanInput;
       if (dictionary.huffman) {
-        throw new Jbig2Error('huffman is not supported');
+        huffmanTables = getSymbolDictionaryHuffmanTables(dictionary, referredSegments, this.customTables);
+        huffmanInput = new Reader(data, start, end);
       }
       var symbols = this.symbols;
       if (!symbols) {
@@ -26963,22 +27033,32 @@ var Jbig2Image = function Jbig2ImageClosure() {
       }
       var inputSymbols = [];
       for (var i = 0, ii = referredSegments.length; i < ii; i++) {
-        inputSymbols = inputSymbols.concat(symbols[referredSegments[i]]);
+        let referredSymbols = symbols[referredSegments[i]];
+        if (referredSymbols) {
+          inputSymbols = inputSymbols.concat(referredSymbols);
+        }
       }
       var decodingContext = new DecodingContext(data, start, end);
-      symbols[currentSegment] = decodeSymbolDictionary(dictionary.huffman, dictionary.refinement, inputSymbols, dictionary.numberOfNewSymbols, dictionary.numberOfExportedSymbols, huffmanTables, dictionary.template, dictionary.at, dictionary.refinementTemplate, dictionary.refinementAt, decodingContext);
+      symbols[currentSegment] = decodeSymbolDictionary(dictionary.huffman, dictionary.refinement, inputSymbols, dictionary.numberOfNewSymbols, dictionary.numberOfExportedSymbols, huffmanTables, dictionary.template, dictionary.at, dictionary.refinementTemplate, dictionary.refinementAt, decodingContext, huffmanInput);
     },
     onImmediateTextRegion: function SimpleSegmentVisitor_onImmediateTextRegion(region, referredSegments, data, start, end) {
       var regionInfo = region.info;
-      var huffmanTables;
+      let huffmanTables, huffmanInput;
       var symbols = this.symbols;
       var inputSymbols = [];
       for (var i = 0, ii = referredSegments.length; i < ii; i++) {
-        inputSymbols = inputSymbols.concat(symbols[referredSegments[i]]);
+        let referredSymbols = symbols[referredSegments[i]];
+        if (referredSymbols) {
+          inputSymbols = inputSymbols.concat(referredSymbols);
+        }
       }
       var symbolCodeLength = (0, _util.log2)(inputSymbols.length);
+      if (region.huffman) {
+        huffmanInput = new Reader(data, start, end);
+        huffmanTables = getTextRegionHuffmanTables(region, referredSegments, this.customTables, inputSymbols.length, huffmanInput);
+      }
       var decodingContext = new DecodingContext(data, start, end);
-      var bitmap = decodeTextRegion(region.huffman, region.refinement, regionInfo.width, regionInfo.height, region.defaultPixelValue, region.numberOfSymbolInstances, region.stripSize, inputSymbols, symbolCodeLength, region.transposed, region.dsOffset, region.referenceCorner, region.combinationOperator, huffmanTables, region.refinementTemplate, region.refinementAt, decodingContext);
+      var bitmap = decodeTextRegion(region.huffman, region.refinement, regionInfo.width, regionInfo.height, region.defaultPixelValue, region.numberOfSymbolInstances, region.stripSize, inputSymbols, symbolCodeLength, region.transposed, region.dsOffset, region.referenceCorner, region.combinationOperator, huffmanTables, region.refinementTemplate, region.refinementAt, decodingContext, region.logStripSize, huffmanInput);
       this.drawBitmap(regionInfo, bitmap);
     },
     onImmediateLosslessTextRegion: function SimpleSegmentVisitor_onImmediateLosslessTextRegion() {
@@ -27001,8 +27081,472 @@ var Jbig2Image = function Jbig2ImageClosure() {
     },
     onImmediateLosslessHalftoneRegion() {
       this.onImmediateHalftoneRegion.apply(this, arguments);
+    },
+    onTables(currentSegment, data, start, end) {
+      let customTables = this.customTables;
+      if (!customTables) {
+        this.customTables = customTables = {};
+      }
+      customTables[currentSegment] = decodeTablesSegment(data, start, end);
     }
   };
+  function HuffmanLine(lineData) {
+    if (lineData.length === 2) {
+      this.isOOB = true;
+      this.rangeLow = 0;
+      this.prefixLength = lineData[0];
+      this.rangeLength = 0;
+      this.prefixCode = lineData[1];
+      this.isLowerRange = false;
+    } else {
+      this.isOOB = false;
+      this.rangeLow = lineData[0];
+      this.prefixLength = lineData[1];
+      this.rangeLength = lineData[2];
+      this.prefixCode = lineData[3];
+      this.isLowerRange = lineData[4] === 'lower';
+    }
+  }
+  function HuffmanTreeNode(line) {
+    this.children = [];
+    if (line) {
+      this.isLeaf = true;
+      this.rangeLength = line.rangeLength;
+      this.rangeLow = line.rangeLow;
+      this.isLowerRange = line.isLowerRange;
+      this.isOOB = line.isOOB;
+    } else {
+      this.isLeaf = false;
+    }
+  }
+  HuffmanTreeNode.prototype = {
+    buildTree(line, shift) {
+      let bit = line.prefixCode >> shift & 1;
+      if (shift <= 0) {
+        this.children[bit] = new HuffmanTreeNode(line);
+      } else {
+        let node = this.children[bit];
+        if (!node) {
+          this.children[bit] = node = new HuffmanTreeNode(null);
+        }
+        node.buildTree(line, shift - 1);
+      }
+    },
+    decodeNode(reader) {
+      if (this.isLeaf) {
+        if (this.isOOB) {
+          return null;
+        }
+        let htOffset = reader.readBits(this.rangeLength);
+        return this.rangeLow + (this.isLowerRange ? -htOffset : htOffset);
+      }
+      let node = this.children[reader.readBit()];
+      if (!node) {
+        throw new Jbig2Error('invalid Huffman data');
+      }
+      return node.decodeNode(reader);
+    }
+  };
+  function HuffmanTable(lines, prefixCodesDone) {
+    if (!prefixCodesDone) {
+      this.assignPrefixCodes(lines);
+    }
+    this.rootNode = new HuffmanTreeNode(null);
+    let i,
+        ii = lines.length,
+        line;
+    for (i = 0; i < ii; i++) {
+      line = lines[i];
+      if (line.prefixLength > 0) {
+        this.rootNode.buildTree(line, line.prefixLength - 1);
+      }
+    }
+  }
+  HuffmanTable.prototype = {
+    decode(reader) {
+      return this.rootNode.decodeNode(reader);
+    },
+    assignPrefixCodes(lines) {
+      let linesLength = lines.length,
+          prefixLengthMax = 0,
+          i;
+      for (i = 0; i < linesLength; i++) {
+        prefixLengthMax = Math.max(prefixLengthMax, lines[i].prefixLength);
+      }
+      let histogram = new Uint32Array(prefixLengthMax + 1);
+      for (i = 0; i < linesLength; i++) {
+        histogram[lines[i].prefixLength]++;
+      }
+      let currentLength = 1,
+          firstCode = 0,
+          currentCode,
+          currentTemp,
+          line;
+      histogram[0] = 0;
+      while (currentLength <= prefixLengthMax) {
+        firstCode = firstCode + histogram[currentLength - 1] << 1;
+        currentCode = firstCode;
+        currentTemp = 0;
+        while (currentTemp < linesLength) {
+          line = lines[currentTemp];
+          if (line.prefixLength === currentLength) {
+            line.prefixCode = currentCode;
+            currentCode++;
+          }
+          currentTemp++;
+        }
+        currentLength++;
+      }
+    }
+  };
+  function decodeTablesSegment(data, start, end) {
+    let flags = data[start];
+    let lowestValue = (0, _util.readUint32)(data, start + 1) & 0xFFFFFFFF;
+    let highestValue = (0, _util.readUint32)(data, start + 5) & 0xFFFFFFFF;
+    let reader = new Reader(data, start + 9, end);
+    let prefixSizeBits = (flags >> 1 & 7) + 1;
+    let rangeSizeBits = (flags >> 4 & 7) + 1;
+    let lines = [];
+    let prefixLength,
+        rangeLength,
+        currentRangeLow = lowestValue;
+    do {
+      prefixLength = reader.readBits(prefixSizeBits);
+      rangeLength = reader.readBits(rangeSizeBits);
+      lines.push(new HuffmanLine([currentRangeLow, prefixLength, rangeLength, 0]));
+      currentRangeLow += 1 << rangeLength;
+    } while (currentRangeLow < highestValue);
+    prefixLength = reader.readBits(prefixSizeBits);
+    lines.push(new HuffmanLine([lowestValue - 1, prefixLength, 32, 0, 'lower']));
+    prefixLength = reader.readBits(prefixSizeBits);
+    lines.push(new HuffmanLine([highestValue, prefixLength, 32, 0]));
+    if (flags & 1) {
+      prefixLength = reader.readBits(prefixSizeBits);
+      lines.push(new HuffmanLine([prefixLength, 0]));
+    }
+    return new HuffmanTable(lines, false);
+  }
+  let standardTablesCache = {};
+  function getStandardTable(number) {
+    let table = standardTablesCache[number];
+    if (table) {
+      return table;
+    }
+    let lines;
+    switch (number) {
+      case 1:
+        lines = [[0, 1, 4, 0x0], [16, 2, 8, 0x2], [272, 3, 16, 0x6], [65808, 3, 32, 0x7]];
+        break;
+      case 2:
+        lines = [[0, 1, 0, 0x0], [1, 2, 0, 0x2], [2, 3, 0, 0x6], [3, 4, 3, 0xE], [11, 5, 6, 0x1E], [75, 6, 32, 0x3E], [6, 0x3F]];
+        break;
+      case 3:
+        lines = [[-256, 8, 8, 0xFE], [0, 1, 0, 0x0], [1, 2, 0, 0x2], [2, 3, 0, 0x6], [3, 4, 3, 0xE], [11, 5, 6, 0x1E], [-257, 8, 32, 0xFF, 'lower'], [75, 7, 32, 0x7E], [6, 0x3E]];
+        break;
+      case 4:
+        lines = [[1, 1, 0, 0x0], [2, 2, 0, 0x2], [3, 3, 0, 0x6], [4, 4, 3, 0xE], [12, 5, 6, 0x1E], [76, 5, 32, 0x1F]];
+        break;
+      case 5:
+        lines = [[-255, 7, 8, 0x7E], [1, 1, 0, 0x0], [2, 2, 0, 0x2], [3, 3, 0, 0x6], [4, 4, 3, 0xE], [12, 5, 6, 0x1E], [-256, 7, 32, 0x7F, 'lower'], [76, 6, 32, 0x3E]];
+        break;
+      case 6:
+        lines = [[-2048, 5, 10, 0x1C], [-1024, 4, 9, 0x8], [-512, 4, 8, 0x9], [-256, 4, 7, 0xA], [-128, 5, 6, 0x1D], [-64, 5, 5, 0x1E], [-32, 4, 5, 0xB], [0, 2, 7, 0x0], [128, 3, 7, 0x2], [256, 3, 8, 0x3], [512, 4, 9, 0xC], [1024, 4, 10, 0xD], [-2049, 6, 32, 0x3E, 'lower'], [2048, 6, 32, 0x3F]];
+        break;
+      case 7:
+        lines = [[-1024, 4, 9, 0x8], [-512, 3, 8, 0x0], [-256, 4, 7, 0x9], [-128, 5, 6, 0x1A], [-64, 5, 5, 0x1B], [-32, 4, 5, 0xA], [0, 4, 5, 0xB], [32, 5, 5, 0x1C], [64, 5, 6, 0x1D], [128, 4, 7, 0xC], [256, 3, 8, 0x1], [512, 3, 9, 0x2], [1024, 3, 10, 0x3], [-1025, 5, 32, 0x1E, 'lower'], [2048, 5, 32, 0x1F]];
+        break;
+      case 8:
+        lines = [[-15, 8, 3, 0xFC], [-7, 9, 1, 0x1FC], [-5, 8, 1, 0xFD], [-3, 9, 0, 0x1FD], [-2, 7, 0, 0x7C], [-1, 4, 0, 0xA], [0, 2, 1, 0x0], [2, 5, 0, 0x1A], [3, 6, 0, 0x3A], [4, 3, 4, 0x4], [20, 6, 1, 0x3B], [22, 4, 4, 0xB], [38, 4, 5, 0xC], [70, 5, 6, 0x1B], [134, 5, 7, 0x1C], [262, 6, 7, 0x3C], [390, 7, 8, 0x7D], [646, 6, 10, 0x3D], [-16, 9, 32, 0x1FE, 'lower'], [1670, 9, 32, 0x1FF], [2, 0x1]];
+        break;
+      case 9:
+        lines = [[-31, 8, 4, 0xFC], [-15, 9, 2, 0x1FC], [-11, 8, 2, 0xFD], [-7, 9, 1, 0x1FD], [-5, 7, 1, 0x7C], [-3, 4, 1, 0xA], [-1, 3, 1, 0x2], [1, 3, 1, 0x3], [3, 5, 1, 0x1A], [5, 6, 1, 0x3A], [7, 3, 5, 0x4], [39, 6, 2, 0x3B], [43, 4, 5, 0xB], [75, 4, 6, 0xC], [139, 5, 7, 0x1B], [267, 5, 8, 0x1C], [523, 6, 8, 0x3C], [779, 7, 9, 0x7D], [1291, 6, 11, 0x3D], [-32, 9, 32, 0x1FE, 'lower'], [3339, 9, 32, 0x1FF], [2, 0x0]];
+        break;
+      case 10:
+        lines = [[-21, 7, 4, 0x7A], [-5, 8, 0, 0xFC], [-4, 7, 0, 0x7B], [-3, 5, 0, 0x18], [-2, 2, 2, 0x0], [2, 5, 0, 0x19], [3, 6, 0, 0x36], [4, 7, 0, 0x7C], [5, 8, 0, 0xFD], [6, 2, 6, 0x1], [70, 5, 5, 0x1A], [102, 6, 5, 0x37], [134, 6, 6, 0x38], [198, 6, 7, 0x39], [326, 6, 8, 0x3A], [582, 6, 9, 0x3B], [1094, 6, 10, 0x3C], [2118, 7, 11, 0x7D], [-22, 8, 32, 0xFE, 'lower'], [4166, 8, 32, 0xFF], [2, 0x2]];
+        break;
+      case 11:
+        lines = [[1, 1, 0, 0x0], [2, 2, 1, 0x2], [4, 4, 0, 0xC], [5, 4, 1, 0xD], [7, 5, 1, 0x1C], [9, 5, 2, 0x1D], [13, 6, 2, 0x3C], [17, 7, 2, 0x7A], [21, 7, 3, 0x7B], [29, 7, 4, 0x7C], [45, 7, 5, 0x7D], [77, 7, 6, 0x7E], [141, 7, 32, 0x7F]];
+        break;
+      case 12:
+        lines = [[1, 1, 0, 0x0], [2, 2, 0, 0x2], [3, 3, 1, 0x6], [5, 5, 0, 0x1C], [6, 5, 1, 0x1D], [8, 6, 1, 0x3C], [10, 7, 0, 0x7A], [11, 7, 1, 0x7B], [13, 7, 2, 0x7C], [17, 7, 3, 0x7D], [25, 7, 4, 0x7E], [41, 8, 5, 0xFE], [73, 8, 32, 0xFF]];
+        break;
+      case 13:
+        lines = [[1, 1, 0, 0x0], [2, 3, 0, 0x4], [3, 4, 0, 0xC], [4, 5, 0, 0x1C], [5, 4, 1, 0xD], [7, 3, 3, 0x5], [15, 6, 1, 0x3A], [17, 6, 2, 0x3B], [21, 6, 3, 0x3C], [29, 6, 4, 0x3D], [45, 6, 5, 0x3E], [77, 7, 6, 0x7E], [141, 7, 32, 0x7F]];
+        break;
+      case 14:
+        lines = [[-2, 3, 0, 0x4], [-1, 3, 0, 0x5], [0, 1, 0, 0x0], [1, 3, 0, 0x6], [2, 3, 0, 0x7]];
+        break;
+      case 15:
+        lines = [[-24, 7, 4, 0x7C], [-8, 6, 2, 0x3C], [-4, 5, 1, 0x1C], [-2, 4, 0, 0xC], [-1, 3, 0, 0x4], [0, 1, 0, 0x0], [1, 3, 0, 0x5], [2, 4, 0, 0xD], [3, 5, 1, 0x1D], [5, 6, 2, 0x3D], [9, 7, 4, 0x7D], [-25, 7, 32, 0x7E, 'lower'], [25, 7, 32, 0x7F]];
+        break;
+      default:
+        throw new Jbig2Error(`standard table B.${number} does not exist`);
+    }
+    let length = lines.length,
+        i;
+    for (i = 0; i < length; i++) {
+      lines[i] = new HuffmanLine(lines[i]);
+    }
+    table = new HuffmanTable(lines, true);
+    standardTablesCache[number] = table;
+    return table;
+  }
+  function Reader(data, start, end) {
+    this.data = data;
+    this.start = start;
+    this.end = end;
+    this.position = start;
+    this.shift = -1;
+    this.currentByte = 0;
+  }
+  Reader.prototype = {
+    readBit() {
+      if (this.shift < 0) {
+        if (this.position >= this.end) {
+          throw new Jbig2Error('end of data while reading bit');
+        }
+        this.currentByte = this.data[this.position++];
+        this.shift = 7;
+      }
+      let bit = this.currentByte >> this.shift & 1;
+      this.shift--;
+      return bit;
+    },
+    readBits(numBits) {
+      let result = 0,
+          i;
+      for (i = numBits - 1; i >= 0; i--) {
+        result |= this.readBit() << i;
+      }
+      return result;
+    },
+    byteAlign() {
+      this.shift = -1;
+    },
+    next() {
+      if (this.position >= this.end) {
+        return -1;
+      }
+      return this.data[this.position++];
+    }
+  };
+  function getCustomHuffmanTable(index, referredTo, customTables) {
+    let currentIndex = 0,
+        i,
+        ii = referredTo.length,
+        table;
+    for (i = 0; i < ii; i++) {
+      table = customTables[referredTo[i]];
+      if (table) {
+        if (index === currentIndex) {
+          return table;
+        }
+        currentIndex++;
+      }
+    }
+    throw new Jbig2Error('can\'t find custom Huffman table');
+  }
+  function getTextRegionHuffmanTables(textRegion, referredTo, customTables, numberOfSymbols, reader) {
+    let codes = [],
+        i,
+        codeLength;
+    for (i = 0; i <= 34; i++) {
+      codeLength = reader.readBits(4);
+      codes.push(new HuffmanLine([i, codeLength, 0, 0]));
+    }
+    let runCodesTable = new HuffmanTable(codes, false);
+    codes.length = 0;
+    for (i = 0; i < numberOfSymbols;) {
+      codeLength = runCodesTable.decode(reader);
+      if (codeLength >= 32) {
+        let repeatedLength, numberOfRepeats, j;
+        switch (codeLength) {
+          case 32:
+            if (i === 0) {
+              throw new Jbig2Error('no previous value in symbol ID table');
+            }
+            numberOfRepeats = reader.readBits(2) + 3;
+            repeatedLength = codes[i - 1].prefixLength;
+            break;
+          case 33:
+            numberOfRepeats = reader.readBits(3) + 3;
+            repeatedLength = 0;
+            break;
+          case 34:
+            numberOfRepeats = reader.readBits(7) + 11;
+            repeatedLength = 0;
+            break;
+          default:
+            throw new Jbig2Error('invalid code length in symbol ID table');
+        }
+        for (j = 0; j < numberOfRepeats; j++) {
+          codes.push(new HuffmanLine([i, repeatedLength, 0, 0]));
+          i++;
+        }
+      } else {
+        codes.push(new HuffmanLine([i, codeLength, 0, 0]));
+        i++;
+      }
+    }
+    reader.byteAlign();
+    let symbolIDTable = new HuffmanTable(codes, false);
+    let customIndex = 0,
+        tableFirstS,
+        tableDeltaS,
+        tableDeltaT;
+    switch (textRegion.huffmanFS) {
+      case 0:
+      case 1:
+        tableFirstS = getStandardTable(textRegion.huffmanFS + 6);
+        break;
+      case 3:
+        tableFirstS = getCustomHuffmanTable(customIndex, referredTo, customTables);
+        customIndex++;
+        break;
+      default:
+        throw new Jbig2Error('invalid Huffman FS selector');
+    }
+    switch (textRegion.huffmanDS) {
+      case 0:
+      case 1:
+      case 2:
+        tableDeltaS = getStandardTable(textRegion.huffmanDS + 8);
+        break;
+      case 3:
+        tableDeltaS = getCustomHuffmanTable(customIndex, referredTo, customTables);
+        customIndex++;
+        break;
+      default:
+        throw new Jbig2Error('invalid Huffman DS selector');
+    }
+    switch (textRegion.huffmanDT) {
+      case 0:
+      case 1:
+      case 2:
+        tableDeltaT = getStandardTable(textRegion.huffmanDT + 11);
+        break;
+      case 3:
+        tableDeltaT = getCustomHuffmanTable(customIndex, referredTo, customTables);
+        customIndex++;
+        break;
+      default:
+        throw new Jbig2Error('invalid Huffman DT selector');
+    }
+    if (textRegion.refinement) {
+      throw new Jbig2Error('refinement with Huffman is not supported');
+    }
+    return {
+      symbolIDTable,
+      tableFirstS,
+      tableDeltaS,
+      tableDeltaT
+    };
+  }
+  function getSymbolDictionaryHuffmanTables(dictionary, referredTo, customTables) {
+    let customIndex = 0,
+        tableDeltaHeight,
+        tableDeltaWidth;
+    switch (dictionary.huffmanDHSelector) {
+      case 0:
+      case 1:
+        tableDeltaHeight = getStandardTable(dictionary.huffmanDHSelector + 4);
+        break;
+      case 3:
+        tableDeltaHeight = getCustomHuffmanTable(customIndex, referredTo, customTables);
+        customIndex++;
+        break;
+      default:
+        throw new Jbig2Error('invalid Huffman DH selector');
+    }
+    switch (dictionary.huffmanDWSelector) {
+      case 0:
+      case 1:
+        tableDeltaWidth = getStandardTable(dictionary.huffmanDWSelector + 2);
+        break;
+      case 3:
+        tableDeltaWidth = getCustomHuffmanTable(customIndex, referredTo, customTables);
+        customIndex++;
+        break;
+      default:
+        throw new Jbig2Error('invalid Huffman DW selector');
+    }
+    let tableBitmapSize, tableAggregateInstances;
+    if (dictionary.bitmapSizeSelector) {
+      tableBitmapSize = getCustomHuffmanTable(customIndex, referredTo, customTables);
+      customIndex++;
+    } else {
+      tableBitmapSize = getStandardTable(1);
+    }
+    if (dictionary.aggregationInstancesSelector) {
+      tableAggregateInstances = getCustomHuffmanTable(customIndex, referredTo, customTables);
+    } else {
+      tableAggregateInstances = getStandardTable(1);
+    }
+    return {
+      tableDeltaHeight,
+      tableDeltaWidth,
+      tableBitmapSize,
+      tableAggregateInstances
+    };
+  }
+  function readUncompressedBitmap(reader, width, height) {
+    let bitmap = [],
+        x,
+        y,
+        row;
+    for (y = 0; y < height; y++) {
+      row = new Uint8Array(width);
+      bitmap.push(row);
+      for (x = 0; x < width; x++) {
+        row[x] = reader.readBit();
+      }
+      reader.byteAlign();
+    }
+    return bitmap;
+  }
+  function decodeMMRBitmap(input, width, height, endOfBlock) {
+    let params = {
+      K: -1,
+      Columns: width,
+      Rows: height,
+      BlackIs1: true,
+      EndOfBlock: endOfBlock
+    };
+    let decoder = new _ccitt.CCITTFaxDecoder(input, params);
+    let bitmap = [],
+        x,
+        y,
+        row,
+        currentByte,
+        shift,
+        eof = false;
+    for (y = 0; y < height; y++) {
+      row = new Uint8Array(width);
+      bitmap.push(row);
+      shift = -1;
+      for (x = 0; x < width; x++) {
+        if (shift < 0) {
+          currentByte = decoder.readNextChar();
+          if (currentByte === -1) {
+            currentByte = 0;
+            eof = true;
+          }
+          shift = 7;
+        }
+        row[x] = currentByte >> shift & 1;
+        shift--;
+      }
+    }
+    if (endOfBlock && !eof) {
+      const lookForEOFLimit = 5;
+      for (let i = 0; i < lookForEOFLimit; i++) {
+        if (decoder.readNextChar() === -1) {
+          break;
+        }
+      }
+    }
+    return bitmap;
+  }
   function Jbig2Image() {}
   Jbig2Image.prototype = {
     parseChunks: function Jbig2Image_parseChunks(chunks) {
@@ -27944,7 +28488,7 @@ exports.JpxStream = undefined;
 
 var _stream = __w_pdfjs_require__(2);
 
-var _jpx = __w_pdfjs_require__(12);
+var _jpx = __w_pdfjs_require__(13);
 
 var _util = __w_pdfjs_require__(0);
 
@@ -28699,9 +29243,9 @@ var _fonts = __w_pdfjs_require__(34);
 
 var _encodings = __w_pdfjs_require__(4);
 
-var _unicode = __w_pdfjs_require__(16);
+var _unicode = __w_pdfjs_require__(17);
 
-var _standard_fonts = __w_pdfjs_require__(15);
+var _standard_fonts = __w_pdfjs_require__(16);
 
 var _pattern = __w_pdfjs_require__(38);
 
@@ -28715,7 +29259,7 @@ var _glyphlist = __w_pdfjs_require__(8);
 
 var _metrics = __w_pdfjs_require__(40);
 
-var _function = __w_pdfjs_require__(17);
+var _function = __w_pdfjs_require__(18);
 
 var _jpeg_stream = __w_pdfjs_require__(6);
 
@@ -32074,15 +32618,15 @@ exports.getFontType = exports.ProblematicCharRanges = exports.IdentityToUnicodeM
 
 var _util = __w_pdfjs_require__(0);
 
-var _cff_parser = __w_pdfjs_require__(14);
+var _cff_parser = __w_pdfjs_require__(15);
 
 var _glyphlist = __w_pdfjs_require__(8);
 
 var _encodings = __w_pdfjs_require__(4);
 
-var _standard_fonts = __w_pdfjs_require__(15);
+var _standard_fonts = __w_pdfjs_require__(16);
 
-var _unicode = __w_pdfjs_require__(16);
+var _unicode = __w_pdfjs_require__(17);
 
 var _font_renderer = __w_pdfjs_require__(36);
 
@@ -34638,7 +35182,7 @@ exports.FontRendererFactory = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _cff_parser = __w_pdfjs_require__(14);
+var _cff_parser = __w_pdfjs_require__(15);
 
 var _glyphlist = __w_pdfjs_require__(8);
 
@@ -40260,7 +40804,7 @@ var _stream = __w_pdfjs_require__(2);
 
 var _jpeg_stream = __w_pdfjs_require__(6);
 
-var _jpx = __w_pdfjs_require__(12);
+var _jpx = __w_pdfjs_require__(13);
 
 var PDFImage = function PDFImageClosure() {
   function handleImageData(image, nativeDecoder) {
