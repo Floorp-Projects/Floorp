@@ -182,12 +182,12 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
     debugCheckNewObject(group, shape, allocKind, heap);
 
-    JSObject* obj = js::Allocate<JSObject>(cx, allocKind, /* numDynamicSlots = */ 0, heap, clasp);
+    JSObject* obj = js::Allocate<JSObject>(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
     if (!obj)
         return cx->alreadyReportedOOM();
 
     ProxyObject* pobj = static_cast<ProxyObject*>(obj);
-    pobj->group_.init(group);
+    pobj->initGroup(group);
     pobj->initShape(shape);
 
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
