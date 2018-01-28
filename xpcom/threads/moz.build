@@ -31,6 +31,7 @@ EXPORTS += [
     'nsProcess.h',
     'nsProxyRelease.h',
     'nsThread.h',
+    'nsThreadManager.h',
     'nsThreadUtils.h',
 ]
 

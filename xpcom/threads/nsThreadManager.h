@@ -22,6 +22,8 @@ public:
 
   static nsThreadManager& get();
 
+  static void InitializeShutdownObserver();
+
   nsresult Init();
 
   // Shutdown all threads.  This function should only be called on the main
@@ -74,6 +76,10 @@ private:
     , mHighestNumberOfThreads(1)
   {
   }
+
+  nsresult
+  SpinEventLoopUntilInternal(nsINestedEventLoopCondition* aCondition,
+                             bool aCheckingShutdown);
 
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned            mCurThreadIndex;  // thread-local-storage index
