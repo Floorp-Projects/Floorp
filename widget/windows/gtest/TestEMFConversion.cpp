@@ -41,10 +41,10 @@ GetFilePathViaSpecialDirectory(const char* aSpecialDirName,
                                                       aFileName);
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  nsAutoCString path;
-  nsresult rv  = file->GetNativePath(path);
+  nsAutoString path;
+  nsresult rv  = file->GetPath(path);
   if (NS_SUCCEEDED(rv)) {
-    aPath = NS_ConvertUTF8toUTF16(path);
+    aPath = path;
   }
   return rv;
 }

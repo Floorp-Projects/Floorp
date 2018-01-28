@@ -33,6 +33,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsICertOverrideService.h"
 #include "nsIFile.h"
+#include "nsILocalFileWin.h"
 #include "nsIObserverService.h"
 #include "nsIPrompt.h"
 #include "nsIProperties.h"
@@ -1210,7 +1211,18 @@ GetNSS3Directory(nsCString& result)
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get parent directory?"));
     return rv;
   }
+#ifdef XP_WIN
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> nss3DirectoryWin = do_QueryInterface(nss3Directory);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
+    return rv;
+  }
+  return nss3DirectoryWin->GetNativeCanonicalPath(result);
+#else
   return nss3Directory->GetNativePath(result);
+#endif
 }
 
 // Returns by reference the path to the desired directory, based on the current
@@ -1232,7 +1244,18 @@ GetDirectoryPath(const char* directoryKey, nsCString& result)
             ("could not get '%s' from directory service", directoryKey));
     return rv;
   }
+#ifdef XP_WIN
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> directoryWin = do_QueryInterface(directory);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
+    return rv;
+  }
+  return directoryWin->GetNativeCanonicalPath(result);
+#else
   return directory->GetNativePath(result);
+#endif
 }
 
 

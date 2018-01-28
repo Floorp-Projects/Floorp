@@ -304,9 +304,7 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile)
     rv = localHandler->GetExecutable(getter_AddRefs(executable));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoCString path;
-    aFile->GetNativePath(path);
-    return LaunchWithIProcess(executable, path);
+    return LaunchWithIProcess(executable, aFile->NativePath());
   }
 
   return NS_ERROR_INVALID_ARG;
@@ -422,10 +420,7 @@ nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile)
   if (!mDefaultApplication)
     return NS_ERROR_FILE_NOT_FOUND;
 
-  nsAutoCString nativePath;
-  aFile->GetNativePath(nativePath);
-  
-  return LaunchWithIProcess(mDefaultApplication, nativePath);
+  return LaunchWithIProcess(mDefaultApplication, aFile->NativePath());
 }
 
 NS_IMETHODIMP

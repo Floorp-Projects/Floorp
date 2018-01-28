@@ -507,7 +507,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
     if (NS_FAILED(rv))
         return rv;
     nsAutoCString chromePath;
-    rv = chromeDir->GetNativePath(chromePath);
+    rv = chromeDir->GetPersistentDescriptor(chromePath);
     if (NS_FAILED(rv))
         return rv;
 
