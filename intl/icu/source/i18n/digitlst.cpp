@@ -851,7 +851,12 @@ DigitList::set(double source)
             uprv_strcpy(rep,"inf");
         }
     } else {
+#if U_USE_STRTOD_L && U_PLATFORM_USES_ONLY_WIN32_API
+        umtx_initOnce(gCLocaleInitOnce, &initCLocale);
+        _sprintf_l(rep, "%+1.*e", gCLocale, MAX_DBL_DIGITS - 1, source);
+#else
         sprintf(rep, "%+1.*e", MAX_DBL_DIGITS - 1, source);
+#endif
     }
     U_ASSERT(uprv_strlen(rep) < sizeof(rep));
 

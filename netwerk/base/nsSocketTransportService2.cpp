@@ -755,6 +755,7 @@ NS_IMETHODIMP
 nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
                                                     nsISocketTransport **result)
 {
+#ifdef XP_UNIX
     nsresult rv;
 
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -772,6 +773,9 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
 
     trans.forget(result);
     return NS_OK;
+#else
+    return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
+#endif
 }
 
 NS_IMETHODIMP
