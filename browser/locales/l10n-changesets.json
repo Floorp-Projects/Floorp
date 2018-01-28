@@ -57,7 +57,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "98b140b80b9c"
+        "revision": "f7357fc90548"
     }, 
     "as": {
         "platforms": [
@@ -147,7 +147,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "53c75d669386"
+        "revision": "e73b507e9b77"
     }, 
     "bn-IN": {
         "platforms": [
@@ -222,7 +222,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "1f0865edfa83"
+        "revision": "d58bdf731afe"
     }, 
     "cs": {
         "platforms": [
@@ -312,7 +312,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "f440796e884a"
+        "revision": "347f08c6b2de"
     }, 
     "en-GB": {
         "platforms": [
@@ -387,7 +387,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "4ec850e0c5c7"
+        "revision": "0e2bee625eb4"
     }, 
     "es-ES": {
         "platforms": [
@@ -672,7 +672,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d26927fbc590"
+        "revision": "83d5e6aed1aa"
     }, 
     "hy-AM": {
         "platforms": [
@@ -702,7 +702,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "7d4836414a44"
+        "revision": "73af9228d1c8"
     }, 
     "id": {
         "platforms": [
@@ -717,7 +717,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "03db03f33028"
+        "revision": "8e7a701b5bf5"
     }, 
     "is": {
         "platforms": [
@@ -747,7 +747,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "af1852a8bf36"
+        "revision": "2be25087236f"
     }, 
     "ja": {
         "platforms": [
@@ -887,7 +887,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "684a050a23e6"
+        "revision": "86362c6fc999"
     }, 
     "lv": {
         "platforms": [
