@@ -123,6 +123,7 @@
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/PointerEventHandler.h"
 #include "nsHostObjectProtocolHandler.h"
+#include "nsThreadManager.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -321,6 +322,8 @@ nsLayoutStatics::Initialize()
     // initialized.
     mozilla::dom::DOMPrefs::Initialize();
   }
+
+  nsThreadManager::InitializeShutdownObserver();
 
   return NS_OK;
 }
