@@ -752,7 +752,7 @@ class InlineOpaqueTypedObject : public InlineTypedObject
 };
 
 // Class for the global SIMD object.
-class SimdObject : public JSObject
+class SimdObject : public NativeObject
 {
   public:
     static const Class class_;
