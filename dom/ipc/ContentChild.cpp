@@ -2962,6 +2962,19 @@ ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 mozilla::ipc::IPCResult
 ContentChild::RecvShutdown()
 {
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  if (os) {
+    os->NotifyObservers(static_cast<nsIContentChild*>(this),
+                          "content-child-will-shutdown", nullptr);
+  }
+
+  ShutdownInternal();
+  return IPC_OK();
+}
+
+void
+ContentChild::ShutdownInternal()
+{
   // If we receive the shutdown message from within a nested event loop, we want
   // to wait for that event loop to finish. Otherwise we could prematurely
   // terminate an "unload" or "pagehide" event handler (which might be doing a
@@ -2981,9 +2994,10 @@ ContentChild::RecvShutdown()
     // then.
     MessageLoop::current()->PostDelayedTask(
       NewRunnableMethod(
-        "dom::ContentChild::RecvShutdown", this, &ContentChild::RecvShutdown),
+        "dom::ContentChild::RecvShutdown", this,
+        &ContentChild::ShutdownInternal),
       100);
-    return IPC_OK();
+    return;
   }
 
   mShuttingDown = true;
@@ -3030,8 +3044,6 @@ ContentChild::RecvShutdown()
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
                                           : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
-
-  return IPC_OK();
 }
 
 PBrowserOrId
