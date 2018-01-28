@@ -639,12 +639,8 @@ JSRuntime::getDefaultLocale()
     if (defaultLocale)
         return defaultLocale;
 
-    const char* locale;
-#ifdef HAVE_SETLOCALE
-    locale = setlocale(LC_ALL, nullptr);
-#else
-    locale = getenv("LANG");
-#endif
+    const char* locale = setlocale(LC_ALL, nullptr);
+
     // convert to a well-formed BCP 47 language tag
     if (!locale || !strcmp(locale, "C"))
         locale = "und";

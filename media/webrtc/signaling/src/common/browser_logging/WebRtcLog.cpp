@@ -19,6 +19,7 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsNativeCharsetUtils.h"
 
 using mozilla::LogLevel;
 
@@ -188,7 +189,14 @@ void ConfigWebRtcLog(mozilla::LogLevel level, uint32_t trace_mask,
     nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
     if (NS_SUCCEEDED(rv)) {
       tempDir->AppendNative(default_log_name);
+#ifdef XP_WIN
+      // WebRTC wants a path encoded in the native charset, not UTF-8.
+      nsAutoString logFile;
+      tempDir->GetPath(logFile);
+      NS_CopyUnicodeToNative(logFile, aLogFile);
+#else
       tempDir->GetNativePath(aLogFile);
+#endif
     }
   }
 #endif
@@ -268,7 +276,14 @@ nsCString ConfigAecLog() {
   nsCOMPtr<nsIFile> tempDir;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
   if (NS_SUCCEEDED(rv)) {
+#ifdef XP_WIN
+    // WebRTC wants a path encoded in the native charset, not UTF-8.
+    nsAutoString temp;
+    tempDir->GetPath(temp);
+    NS_CopyUnicodeToNative(temp, aecLogDir);
+#else
     tempDir->GetNativePath(aecLogDir);
+#endif
   }
 #endif
   webrtc::Trace::set_aec_debug_filename(aecLogDir.get());

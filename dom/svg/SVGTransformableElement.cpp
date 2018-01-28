@@ -72,9 +72,11 @@ SVGTransformableElement::GetAttributeChangeHint(const nsAtom* aAttribute,
       MOZ_ASSERT(aModType == nsIDOMMutationEvent::MODIFICATION,
                  "Unknown modification type.");
       if (!mTransforms ||
-          !mTransforms->HasTransform() ||
-          !mTransforms->HadTransformBeforeLastBaseValChange()) {
-        // New or old value is empty; this is effectively addition or removal.
+          !mTransforms->HasTransform()) {
+        // New value is empty, treat as removal.
+        isAdditionOrRemoval = true;
+      } else if (mTransforms->RequiresFrameReconstruction()) {
+        // Old value was empty, treat as addition.
         isAdditionOrRemoval = true;
       }
     }

@@ -7,8 +7,10 @@ SOURCES += [
 ]
 
 # Don't let LTO reorder StaticXULComponentsStart.o.
-if '-flto' in CONFIG['OS_CXXFLAGS']:
-    SOURCES['StaticXULComponentsEnd.cpp'].flags += ['-fno-lto']
+for f in CONFIG['OS_CXXFLAGS']:
+    if f.startswith('-flto'):
+        SOURCES['StaticXULComponentsEnd.cpp'].flags += ['-fno-lto']
+        break
 
 Library('StaticXULComponentsEnd')
 
