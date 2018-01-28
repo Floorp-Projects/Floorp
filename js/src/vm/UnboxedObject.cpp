@@ -629,10 +629,8 @@ UnboxedObject::createInternal(JSContext* cx, js::gc::AllocKind kind, js::gc::Ini
     UnboxedObject* uobj = static_cast<UnboxedObject*>(obj);
     uobj->group_.init(group);
 
-    if (clasp->shouldDelayMetadataBuilder())
-        cx->compartment()->setObjectPendingMetadata(cx, uobj);
-    else
-        uobj = SetNewObjectMetadata(cx, uobj);
+    MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+    cx->compartment()->setObjectPendingMetadata(cx, uobj);
 
     js::gc::TraceCreateObject(uobj);
 
