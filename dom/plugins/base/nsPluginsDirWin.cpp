@@ -237,33 +237,25 @@ static bool CanLoadPlugin(char16ptr_t aBinaryPath)
 // The file name must be in the form "np*.dll"
 bool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-  nsAutoCString path;
-  if (NS_FAILED(file->GetNativePath(path)))
+  nsAutoString path;
+  if (NS_FAILED(file->GetPath(path)))
     return false;
 
-  const char *cPath = path.get();
-
   // this is most likely a path, so skip to the filename
-  const char* filename = PL_strrchr(cPath, '\\');
-  if (filename)
-    ++filename;
-  else
-    filename = cPath;
+  auto filename = Substring(path, path.RFindChar('\\') + 1);
+  // The file name must have at least one character between "np" and ".dll".
+  if (filename.Length() < 7) {
+    return false;
+  }
 
-  char* extension = PL_strrchr(filename, '.');
-  if (extension)
-    ++extension;
-
-  uint32_t fullLength = strlen(filename);
-  uint32_t extLength = extension ? strlen(extension) : 0;
-  if (fullLength >= 7 && extLength == 3) {
-    if (!PL_strncasecmp(filename, "np", 2) && !PL_strncasecmp(extension, "dll", 3)) {
-      // don't load OJI-based Java plugins
-      if (!PL_strncasecmp(filename, "npoji", 5) ||
-          !PL_strncasecmp(filename, "npjava", 6))
-        return false;
-      return true;
-    }
+  ToLowerCase(filename);
+  if (StringBeginsWith(filename, NS_LITERAL_STRING("np")) &&
+      StringEndsWith(filename, NS_LITERAL_STRING(".dll"))) {
+    // don't load OJI-based Java plugins
+    if (StringBeginsWith(filename, NS_LITERAL_STRING("npoji")) ||
+        StringBeginsWith(filename, NS_LITERAL_STRING("npjava")))
+      return false;
+    return true;
   }
 
   return false;

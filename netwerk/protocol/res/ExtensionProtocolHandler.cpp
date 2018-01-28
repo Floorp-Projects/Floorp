@@ -609,13 +609,9 @@ LogExternalResourceError(nsIFile* aExtensionDir, nsIFile* aRequestedFile)
   MOZ_ASSERT(aExtensionDir);
   MOZ_ASSERT(aRequestedFile);
 
-  nsAutoCString extensionDirPath, requestedFilePath;
-  Unused << aExtensionDir->GetNativePath(extensionDirPath);
-  Unused << aRequestedFile->GetNativePath(requestedFilePath);
-
   LOG("Rejecting external unpacked extension resource [%s] from "
-      "extension directory [%s]", requestedFilePath.get(),
-      extensionDirPath.get());
+      "extension directory [%s]", aRequestedFile->HumanReadablePath().get(),
+      aExtensionDir->HumanReadablePath().get());
 }
 
 Result<nsCOMPtr<nsIInputStream>, nsresult>

@@ -11,6 +11,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/FileUtils.h"
 
 /* Scale DC by keeping aspect ratio */
 static
@@ -47,34 +48,14 @@ PDFViaEMFPrintHelper::OpenDocument(nsIFile* aFile)
     return NS_ERROR_FAILURE;
   }
 
-
-  nsAutoCString nativePath;
-  nsresult rv = aFile->GetNativePath(nativePath);
+  AutoFDClose prFileDesc;
+  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &prFileDesc.rwget());
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return OpenDocument(nativePath.get());
-}
-
-nsresult
-PDFViaEMFPrintHelper::OpenDocument(const char* aFileName)
-{
-  MOZ_ASSERT(aFileName);
-
-  if (mPDFDoc) {
-    MOZ_ASSERT_UNREACHABLE("We can only open one PDF at a time,"
-                           "Use CloseDocument() to close the opened file"
-                           "before calling OpenDocument()");
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ENSURE_TRUE(CreatePDFiumEngineIfNeed(), NS_ERROR_FAILURE);
-
-  mPDFDoc = mPDFiumEngine->LoadDocument(aFileName, nullptr);
-  NS_ENSURE_TRUE(mPDFDoc, NS_ERROR_FAILURE);
-
-  return NS_OK;
+  return OpenDocument(FileDescriptor(FileDescriptor::PlatformHandleType(
+                                     PR_FileDesc2NativeHandle(prFileDesc))));
 }
 
 nsresult

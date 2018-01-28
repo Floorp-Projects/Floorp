@@ -489,6 +489,27 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     return "string";
   }
 
+  function tokenNestedComment(depth) {
+    return function (stream, state) {
+      var ch
+      while (ch = stream.next()) {
+        if (ch == "*" && stream.eat("/")) {
+          if (depth == 1) {
+            state.tokenize = null
+            break
+          } else {
+            state.tokenize = tokenNestedComment(depth - 1)
+            return state.tokenize(stream, state)
+          }
+        } else if (ch == "/" && stream.eat("*")) {
+          state.tokenize = tokenNestedComment(depth + 1)
+          return state.tokenize(stream, state)
+        }
+      }
+      return "comment"
+    }
+  }
+
   def("text/x-scala", {
     name: "clike",
     keywords: words(
@@ -544,6 +565,12 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
         } else {
           return false
         }
+      },
+
+      "/": function(stream, state) {
+        if (!stream.eat("*")) return false
+        state.tokenize = tokenNestedComment(1)
+        return state.tokenize(stream, state)
       }
     },
     modeProps: {closeBrackets: {triples: '"'}}
@@ -578,7 +605,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       "file import where by get set abstract enum open inner override private public internal " +
       "protected catch finally out final vararg reified dynamic companion constructor init " +
       "sealed field property receiver param sparam lateinit data inline noinline tailrec " +
-      "external annotation crossinline const operator infix suspend"
+      "external annotation crossinline const operator infix suspend actual expect"
     ),
     types: words(
       /* package java.lang */
