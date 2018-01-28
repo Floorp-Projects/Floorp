@@ -1971,6 +1971,12 @@ AccumulateCategorical(HistogramID id, const nsCString& label)
 }
 
 void
+AccumulateCategorical(HistogramID id, const nsTArray<nsCString>& labels)
+{
+  TelemetryHistogram::AccumulateCategorical(id, labels);
+}
+
+void
 AccumulateTimeDelta(HistogramID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
