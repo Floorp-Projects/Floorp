@@ -65,7 +65,7 @@ define(function (require, exports, module) {
             title: JSONView.Locale.$STR("jsonViewer.tab.JSON")},
             JsonPanel({
               data: this.state.json,
-              expandedNodes: this.props.expandedNodes,
+              expandedNodes: this.state.expandedNodes,
               actions: this.props.actions,
               searchFilter: this.state.searchFilter
             })
