@@ -45,6 +45,7 @@ void Accumulate(const char* name, uint32_t sample);
 void Accumulate(const char* name, const nsCString& key, uint32_t sample);
 
 void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsCString& aLabel);
+void AccumulateCategorical(mozilla::Telemetry::HistogramID aId, const nsTArray<nsCString>& aLabels);
 
 void AccumulateChild(mozilla::Telemetry::ProcessID aProcessType,
                      const nsTArray<mozilla::Telemetry::HistogramAccumulation>& aAccumulations);
