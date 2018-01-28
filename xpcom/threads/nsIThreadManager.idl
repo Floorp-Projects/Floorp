@@ -121,6 +121,15 @@ interface nsIThreadManager : nsISupports
   void spinEventLoopUntil(in nsINestedEventLoopCondition condition);
 
   /**
+   * Similar to the previous method, but the spinning of the event loop
+   * terminates when the shutting down starts.
+   *
+   * C++ code should not use this function, instead preferring
+   * mozilla::SpinEventLoopUntil.
+   */
+  void spinEventLoopUntilOrShutdown(in nsINestedEventLoopCondition condition);
+
+  /**
    * Spin the current thread's event loop until there are no more pending
    * events.  This could be done with spinEventLoopUntil, but that would
    * require access to the current thread from JavaScript, which we are
