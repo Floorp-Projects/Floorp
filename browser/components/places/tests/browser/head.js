@@ -457,3 +457,14 @@ function promisePopupHidden(popup) {
     popup.addEventListener("popuphidden", onPopupHidden);
   });
 }
+
+// Identify a bookmark node in the Bookmarks Toolbar by its guid.
+function getToolbarNodeForItemGuid(itemGuid) {
+  let children = document.getElementById("PlacesToolbarItems").childNodes;
+  for (let child of children) {
+    if (itemGuid === child._placesNode.bookmarkGuid) {
+      return child;
+    }
+  }
+  return null;
+}

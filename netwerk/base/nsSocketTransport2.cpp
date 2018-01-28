@@ -929,10 +929,10 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
     return NS_OK;
 }
 
+#if defined(XP_UNIX)
 nsresult
 nsSocketTransport::InitWithFilename(const char *filename)
 {
-#if defined(XP_UNIX)
     size_t filenameLength = strlen(filename);
 
     if (filenameLength > sizeof(mNetAddr.local.path) - 1)
@@ -948,10 +948,8 @@ nsSocketTransport::InitWithFilename(const char *filename)
     mNetAddrIsSet = true;
 
     return NS_OK;
-#else
-    return NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED;
-#endif
 }
+#endif
 
 nsresult
 nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)

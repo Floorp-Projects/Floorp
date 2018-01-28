@@ -8961,9 +8961,7 @@ main(int argc, char** argv, char** envp)
 
     int result;
 
-#ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
-#endif
 
     // Special-case stdout and stderr. We bump their refcounts to prevent them
     // from getting closed and then having some printf fail somewhere.

@@ -3240,10 +3240,8 @@ nsStandardURL::GetFile(nsIFile **result)
         return rv;
 
     if (LOG_ENABLED()) {
-        nsAutoCString path;
-        mFile->GetNativePath(path);
         LOG(("nsStandardURL::GetFile [this=%p spec=%s resulting_path=%s]\n",
-            this, mSpec.get(), path.get()));
+            this, mSpec.get(), mFile->HumanReadablePath().get()));
     }
 
     // clone the file, so the caller can modify it.
