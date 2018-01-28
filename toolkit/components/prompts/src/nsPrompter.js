@@ -507,7 +507,7 @@ function openRemotePrompt(domWin, args, tabPrompt) {
 
     messageManager.sendAsyncMessage("Prompt:Open", args, {});
 
-    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+    Services.tm.spinEventLoopUntil(() => closed);
 }
 
 function ModalPrompter(domWin) {
