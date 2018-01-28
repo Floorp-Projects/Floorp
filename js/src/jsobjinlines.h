@@ -403,12 +403,6 @@ JSObject::setInitialSlotsMaybeNonNative(js::HeapSlot* slots)
     static_cast<js::NativeObject*>(this)->slots_ = slots;
 }
 
-inline void
-JSObject::setInitialElementsMaybeNonNative(js::HeapSlot* elements)
-{
-    static_cast<js::NativeObject*>(this)->elements_ = elements;
-}
-
 inline js::GlobalObject&
 JSObject::global() const
 {

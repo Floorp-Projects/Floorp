@@ -2409,10 +2409,8 @@ TypedObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap h
         return cx->alreadyReportedOOM();
 
     TypedObject* tobj = static_cast<TypedObject*>(obj);
-    tobj->group_.init(group);
+    tobj->initGroup(group);
     tobj->initShape(shape);
-
-    tobj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
 
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     cx->compartment()->setObjectPendingMetadata(cx, tobj);
