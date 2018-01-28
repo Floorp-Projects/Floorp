@@ -109,6 +109,7 @@ dictionary PublicKeyCredentialRequestOptions {
 typedef record<DOMString, any>       AuthenticationExtensions;
 
 dictionary CollectedClientData {
+    required DOMString           type;
     required DOMString           challenge;
     required DOMString           origin;
     required DOMString           hashAlgorithm;
