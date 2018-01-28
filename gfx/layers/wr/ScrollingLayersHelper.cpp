@@ -91,7 +91,13 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   mItemClipStack.back().Unapply(mBuilder);
   mItemClipStack.pop_back();
 
+  // Zoom display items report their bounds etc using the parent document's
+  // APD because zoom items act as a conversion layer between the two different
+  // APDs.
   int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  if (aItem->GetType() == DisplayItemType::TYPE_ZOOM) {
+    auPerDevPixel = static_cast<nsDisplayZoom*>(aItem)->GetParentAppUnitsPerDevPixel();
+  }
 
   // There are two ASR chains here that we need to be fully defined. One is the
   // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the
