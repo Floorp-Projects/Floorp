@@ -518,6 +518,25 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <method name="_whereToOpen">
+        <parameter name="event"/>
+        <body><![CDATA[
+          let isMouseEvent = event instanceof MouseEvent;
+          let where = undefined;
+          if (isMouseEvent) {
+            where = whereToOpenLink(event, false, false);
+          } else {
+            // If the current tab is empty, ignore Alt+Enter (reuse this tab)
+            let altEnter = !isMouseEvent &&
+                           event &&
+                           event.altKey &&
+                           !isTabEmpty(gBrowser.selectedTab);
+            where = altEnter ? "tab" : "current";
+          }
+          return where;
+        ]]></body>
+      </method>
+
       <!--
         This is ultimately called by the autocomplete controller as the result
         of handleEnter when the Return key is pressed in the textbox.  Since
@@ -566,19 +585,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return;
           }
 
-          let where = openUILinkWhere;
-          if (!where) {
-            if (isMouseEvent) {
-              where = whereToOpenLink(event, false, false);
-            } else {
-              // If the current tab is empty, ignore Alt+Enter (reuse this tab)
-              let altEnter = !isMouseEvent &&
-                             event &&
-                             event.altKey &&
-                             !isTabEmpty(gBrowser.selectedTab);
-              where = altEnter ? "tab" : "current";
-            }
-          }
+          let where = openUILinkWhere || this._whereToOpen(event);
 
           let url = this.value;
           if (!url) {
