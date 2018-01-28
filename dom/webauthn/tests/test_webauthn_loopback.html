@@ -65,6 +65,7 @@ function() {
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
+    is(clientData.type, "webauthn.create", "Type is correct");
 
     return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
     .then(function(aAttestationObj) {
@@ -119,6 +120,7 @@ function() {
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
+    is(clientData.type, "webauthn.get", "Type is correct");
 
     return webAuthnDecodeAuthDataArray(aAssertion.response.authenticatorData)
     .then(function(aAttestation) {

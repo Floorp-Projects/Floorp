@@ -305,7 +305,10 @@ this.ExtensionSettingsStore = {
         {id, installDate: addon.installDate.valueOf(), value, enabled: true});
     } else {
       // Item already exists or this extension, so update it.
-      keyInfo.precedenceList[foundIndex].value = value;
+      let item = keyInfo.precedenceList[foundIndex];
+      item.value = value;
+      // Ensure the item is enabled.
+      item.enabled = true;
     }
 
     // Sort the list.

@@ -58,8 +58,8 @@ add_task(function* () {
                         .textContent;
     info("Current summary count: " + valueCount);
     let expectedCount = PluralForm.get(requestsSummary.count,
-      L10N.getFormatStrWithNumbers("networkMenu.summary.requestsCount",
-        requestsSummary.count));
+      L10N.getStr("networkMenu.summary.requestsCount2"))
+        .replace("#1", requestsSummary.count);
 
     if (!totalRequestsCount || !requestsSummary.count) {
       is(valueCount, L10N.getStr("networkMenu.summary.requestsCountEmpty"),

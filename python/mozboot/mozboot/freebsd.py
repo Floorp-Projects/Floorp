@@ -32,7 +32,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gconf2',
             'gtk2',
             'gtk3',
-            'llvm40',
+            'mesa-dri',  # depends on llvm*
             'pulseaudio',
             'v4l_compat',
             'yasm',

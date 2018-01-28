@@ -268,14 +268,6 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
   };
 }
 
-// Helper that allows checking array equality.
-function do_check_array_eq(a1, a2) {
-  Assert.equal(a1.length, a2.length);
-  for (let i = 0; i < a1.length; ++i) {
-    Assert.equal(a1[i], a2[i]);
-  }
-}
-
 // Helper function to get the sync telemetry and add the typically used test
 // engine names to its list of allowed engines.
 function get_sync_test_telemetry() {

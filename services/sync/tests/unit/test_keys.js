@@ -261,10 +261,10 @@ add_task(async function test_ensureLoggedIn() {
   Assert.ok(d7.same);
   Assert.ok(d8.same);
 
-  do_check_array_eq(d1.changed, []);
-  do_check_array_eq(d2.changed, ["bar"]);
-  do_check_array_eq(d3.changed, ["bar"]);
-  do_check_array_eq(d4.changed, ["bar", "foo"]);
-  do_check_array_eq(d5.changed, ["baz", "foo"]);
-  do_check_array_eq(d6.changed, ["bar", "foo"]);
+  Assert.deepEqual(d1.changed, []);
+  Assert.deepEqual(d2.changed, ["bar"]);
+  Assert.deepEqual(d3.changed, ["bar"]);
+  Assert.deepEqual(d4.changed, ["bar", "foo"]);
+  Assert.deepEqual(d5.changed, ["baz", "foo"]);
+  Assert.deepEqual(d6.changed, ["bar", "foo"]);
 });
