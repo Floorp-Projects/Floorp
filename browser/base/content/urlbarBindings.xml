@@ -73,6 +73,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         Services.prefs.addObserver("browser.search.suggest.enabled", this);
         this.browserSearchSuggestEnabled = Services.prefs.getBoolPref("browser.search.suggest.enabled");
 
+        this.openInTab = this._prefs.getBoolPref("openintab");
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
@@ -529,6 +530,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           } else {
             let altEnter = event && event.altKey;
             where = altEnter ? "tab" : "current";
+          }
+          if (this.openInTab) {
+            if (where == "current") {
+              where = "tab";
+            } else if (where == "tab") {
+              where = "current";
+            }
+            reuseEmpty = true;
           }
           if (where == "tab" && reuseEmpty && isTabEmpty(gBrowser.selectedTab)) {
             where = "current";
@@ -1125,6 +1134,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "speculativeConnect.enabled":
                 this.speculativeConnectEnabled = this._prefs.getBoolPref(aData);
+                break;
+              case "openintab":
+                this.openInTab = this._prefs.getBoolPref(aData);
                 break;
               case "browser.search.suggest.enabled":
                 this.browserSearchSuggestEnabled = Services.prefs.getBoolPref(aData);
