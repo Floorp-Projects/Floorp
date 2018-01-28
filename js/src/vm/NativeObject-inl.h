@@ -542,14 +542,13 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
         return cx->alreadyReportedOOM();
 
     NativeObject* nobj = static_cast<NativeObject*>(obj);
-    nobj->group_.init(group);
+    nobj->initGroup(group);
     nobj->initShape(shape);
-
-    // Note: slots are created and assigned internally by Allocate<JSObject>.
-    nobj->setInitialElementsMaybeNonNative(js::emptyObjectElements);
+    // NOTE: Slots are created and assigned internally by Allocate<JSObject>.
+    nobj->setEmptyElements();
 
     if (clasp->hasPrivate())
-        nobj->privateRef(shape->numFixedSlots()) = nullptr;
+        nobj->initPrivate(nullptr);
 
     if (size_t span = shape->slotSpan())
         nobj->initializeSlotRange(0, span);

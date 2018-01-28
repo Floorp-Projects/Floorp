@@ -1322,6 +1322,10 @@ class NativeObject : public ShapedObject
     bool canHaveNonEmptyElements();
 #endif
 
+    void setEmptyElements() {
+        elements_ = emptyObjectElements;
+    }
+
     void setFixedElements(uint32_t numShifted = 0) {
         MOZ_ASSERT(canHaveNonEmptyElements());
         elements_ = fixedElements() + numShifted;

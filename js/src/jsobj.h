@@ -128,6 +128,10 @@ class JSObject : public js::gc::Cell
         return group_;
     }
 
+    void initGroup(js::ObjectGroup* group) {
+        group_.init(group);
+    }
+
     /*
      * Whether this is the only object which has its specified group. This
      * object will have its group constructed lazily as needed by analysis.
@@ -155,7 +159,6 @@ class JSObject : public js::gc::Cell
     // objects. For non-native objects, these must not be dynamically allocated
     // pointers which leak when the non-native object finishes initialization.
     inline void setInitialSlotsMaybeNonNative(js::HeapSlot* slots);
-    inline void setInitialElementsMaybeNonNative(js::HeapSlot* elements);
 
     enum GenerateShape {
         GENERATE_NONE,
