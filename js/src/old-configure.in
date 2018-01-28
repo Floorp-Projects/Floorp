@@ -1875,7 +1875,7 @@ dnl ========================================================
 
 MOZ_CHECK_ALLOCATOR
 
-AC_CHECK_FUNCS(setlocale localeconv)
+AC_CHECK_FUNCS(localeconv)
 
 AC_SUBST(ac_configure_args)
 

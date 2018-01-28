@@ -278,8 +278,7 @@ CacheFileContextEvictor::PersistEvictionInfoToDisk(
     return rv;
   }
 
-  nsAutoCString path;
-  file->GetNativePath(path);
+  nsCString path = file->HumanReadablePath();
 
   PRFileDesc *fd;
   rv = file->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0600,
@@ -315,8 +314,7 @@ CacheFileContextEvictor::RemoveEvictInfoFromDisk(
     return rv;
   }
 
-  nsAutoCString path;
-  file->GetNativePath(path);
+  nsCString path = file->HumanReadablePath();
 
   rv = file->Remove(false);
   if (NS_WARN_IF(NS_FAILED(rv))) {

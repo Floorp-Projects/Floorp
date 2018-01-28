@@ -506,7 +506,8 @@ var gEditItemOverlay = {
         (this._paneInfo.isURI || this._paneInfo.bulkTagging)) {
       this._updateTags().then(
         anyChanges => {
-          if (anyChanges)
+          // Check _paneInfo here as we might be closing the dialog.
+          if (anyChanges && this._paneInfo)
             this._mayUpdateFirstEditField("tagsField");
         }, Components.utils.reportError);
     }

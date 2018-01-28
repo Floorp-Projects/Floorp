@@ -7606,6 +7606,7 @@ function defineOptions(CodeMirror) {
     clearCaches(cm)
     regChange(cm)
   }, true)
+
   option("lineSeparator", null, function (cm, val) {
     cm.doc.lineSep = val
     if (!val) { return }
@@ -9646,7 +9647,7 @@ CodeMirror.fromTextArea = fromTextArea
 
 addLegacyProps(CodeMirror)
 
-CodeMirror.version = "5.32.0"
+CodeMirror.version = "5.33.0"
 
 return CodeMirror;
 
