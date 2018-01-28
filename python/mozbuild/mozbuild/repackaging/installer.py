@@ -10,9 +10,14 @@ import mozpack.path as mozpath
 from mozbuild.action.exe_7z_archive import archive_exe
 from mozbuild.util import ensureParentDir
 
-def repackage_installer(topsrcdir, tag, setupexe, package, output):
+
+def repackage_installer(topsrcdir, tag, setupexe, package, output, package_name, sfx_stub):
     if package and not zipfile.is_zipfile(package):
         raise Exception("Package file %s is not a valid .zip file." % package)
+    if package is not None and package_name is None:
+        raise Exception("Package name must be provided, if a package is provided.")
+    if package is None and package_name is not None:
+        raise Exception("Package name must not be provided, if a package is not provided.")
 
     # We need the full path for the tag and output, since we chdir later.
     tag = mozpath.realpath(tag)
@@ -35,9 +40,8 @@ def repackage_installer(topsrcdir, tag, setupexe, package, output):
         # unpacked (the tmpdir)
         os.chdir(tmpdir)
 
-        sfx_package = mozpath.join(topsrcdir, 'other-licenses/7zstub/firefox/7zSD.sfx')
+        sfx_package = mozpath.join(topsrcdir, sfx_stub)
 
-        package_name = 'firefox' if package else None
         archive_exe(package_name, tag, sfx_package, output)
 
     finally:
