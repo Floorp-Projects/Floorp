@@ -690,7 +690,6 @@
 #endif
 @RESPATH@/res/fonts/*
 @RESPATH@/res/dtd/*
-@RESPATH@/res/html/*
 @RESPATH@/res/language.properties
 #ifdef XP_MACOSX
 @RESPATH@/res/MainMenu.nib/
