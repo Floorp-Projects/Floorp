@@ -14,10 +14,11 @@
 
 #include "threading/ConditionVariable.h"
 #include "vm/MutexIDs.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 
-class AtomicsObject : public JSObject
+class AtomicsObject : public NativeObject
 {
   public:
     static const Class class_;
