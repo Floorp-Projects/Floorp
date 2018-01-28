@@ -81,7 +81,7 @@ add_task(async function test_basics() {
 
   engines = await manager.getEnabled();
 
-  do_check_array_eq(engines, [petrol, dummy, diesel]);
+  Assert.deepEqual(engines, [petrol, dummy, diesel]);
 
   _("Changing the priorities should change the order in getEnabled()");
 
@@ -89,7 +89,7 @@ add_task(async function test_basics() {
 
   engines = await manager.getEnabled();
 
-  do_check_array_eq(engines, [petrol, diesel, dummy]);
+  Assert.deepEqual(engines, [petrol, diesel, dummy]);
 
   _("Unregister an engine by name");
   manager.unregister("dummy");

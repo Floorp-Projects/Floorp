@@ -50,7 +50,7 @@ NS_IMPL_ISUPPORTS(WebAuthnManager, nsIDOMEventListener);
 
 static nsresult
 AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
-                   /* out */ nsACString& aJsonOut)
+                   const nsAString& aType, /* out */ nsACString& aJsonOut)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -61,6 +61,7 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
   }
 
   CollectedClientData clientDataObject;
+  clientDataObject.mType.Assign(aType);
   clientDataObject.mChallenge.Assign(challengeBase64);
   clientDataObject.mOrigin.Assign(aOrigin);
   clientDataObject.mHashAlgorithm.AssignLiteral(u"SHA-256");
@@ -343,7 +344,8 @@ WebAuthnManager::MakeCredential(const MakePublicKeyCredentialOptions& aOptions,
   }
 
   nsAutoCString clientDataJSON;
-  srv = AssembleClientData(origin, challenge, clientDataJSON);
+  srv = AssembleClientData(origin, challenge,
+                           NS_LITERAL_STRING("webauthn.create"), clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
@@ -518,7 +520,8 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
   }
 
   nsAutoCString clientDataJSON;
-  srv = AssembleClientData(origin, challenge, clientDataJSON);
+  srv = AssembleClientData(origin, challenge, NS_LITERAL_STRING("webauthn.get"),
+                           clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
