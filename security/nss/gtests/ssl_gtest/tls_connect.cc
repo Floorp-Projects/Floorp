@@ -197,7 +197,6 @@ void TlsConnectTestBase::SetUp() {
   SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
   SSLInt_ClearSelfEncryptKey();
   SSLInt_SetTicketLifetime(30);
-  SSLInt_SetMaxEarlyDataSize(1024);
   SSL_SetupAntiReplay(1 * PR_USEC_PER_SEC, 1, 3);
   ClearStats();
   Init();
