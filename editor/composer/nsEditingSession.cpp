@@ -7,12 +7,12 @@
 #include <string.h>                     // for nullptr, strcmp
 
 #include "imgIContainer.h"              // for imgIContainer, etc
+#include "mozilla/ComposerCommandsUpdater.h" // for ComposerCommandsUpdater
 #include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/HTMLEditor.h"         // for HTMLEditor
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
-#include "nsComposerCommandsUpdater.h"  // for nsComposerCommandsUpdater
 #include "nsContentUtils.h"
 #include "nsDebug.h"                    // for NS_ENSURE_SUCCESS, etc
 #include "nsEditingSession.h"
@@ -378,16 +378,16 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
   }
 
   // make the UI state maintainer
-  mStateMaintainer = new nsComposerCommandsUpdater();
+  mComposerCommandsUpdater = new ComposerCommandsUpdater();
 
   // now init the state maintainer
   // This allows notification of error state
   //  even if we don't create an editor
-  rv = mStateMaintainer->Init(window);
+  rv = mComposerCommandsUpdater->Init(window);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mEditorStatus != eEditorCreationInProgress) {
-    mStateMaintainer->NotifyDocumentCreated();
+    mComposerCommandsUpdater->NotifyDocumentCreated();
     return NS_ERROR_FAILURE;
   }
 
@@ -455,7 +455,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
 
   // Set up as a doc state listener
   // Important! We must have this to broadcast the "obs_documentCreated" message
-  rv = htmlEditor->AddDocumentStateListener(mStateMaintainer);
+  rv = htmlEditor->AddDocumentStateListener(mComposerCommandsUpdater);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = htmlEditor->Init(domDoc, nullptr /* root content */,
@@ -467,14 +467,13 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
     return NS_ERROR_FAILURE;
   }
 
-  rv = selection->AddSelectionListener(mStateMaintainer);
-  NS_ENSURE_SUCCESS(rv, rv);
+  htmlEditor->SetComposerCommandsUpdater(mComposerCommandsUpdater);
 
   // and as a transaction listener
   nsCOMPtr<nsITransactionManager> txnMgr;
   htmlEditor->GetTransactionManager(getter_AddRefs(txnMgr));
   if (txnMgr) {
-    txnMgr->AddListener(mStateMaintainer);
+    txnMgr->AddListener(mComposerCommandsUpdater);
   }
 
   // Set context on all controllers to be the editor
@@ -493,22 +492,19 @@ void
 nsEditingSession::RemoveListenersAndControllers(nsPIDOMWindowOuter* aWindow,
                                                 HTMLEditor* aHTMLEditor)
 {
-  if (!mStateMaintainer || !aHTMLEditor) {
+  if (!mComposerCommandsUpdater || !aHTMLEditor) {
     return;
   }
 
   // Remove all the listeners
-  RefPtr<Selection> selection = aHTMLEditor->GetSelection();
-  if (selection) {
-    selection->RemoveSelectionListener(mStateMaintainer);
-  }
+  aHTMLEditor->SetComposerCommandsUpdater(nullptr);
 
-  aHTMLEditor->RemoveDocumentStateListener(mStateMaintainer);
+  aHTMLEditor->RemoveDocumentStateListener(mComposerCommandsUpdater);
 
   nsCOMPtr<nsITransactionManager> txnMgr;
   aHTMLEditor->GetTransactionManager(getter_AddRefs(txnMgr));
   if (txnMgr) {
-    txnMgr->RemoveListener(mStateMaintainer);
+    txnMgr->RemoveListener(mComposerCommandsUpdater);
   }
 
   // Remove editor controllers from the window now that we're not
@@ -557,7 +553,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy *aWindow)
     htmlDoc->TearingDownEditor();
   }
 
-  if (mStateMaintainer && htmlEditor) {
+  if (mComposerCommandsUpdater && htmlEditor) {
     // Null out the editor on the controllers first to prevent their weak
     // references from pointing to a destroyed editor.
     SetEditorOnControllers(aWindow, nullptr);
@@ -1283,7 +1279,8 @@ nsEditingSession::DetachFromWindow(mozIDOMWindowProxy* aWindow)
 {
   NS_ENSURE_TRUE(mDoneSetup, NS_OK);
 
-  NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
+  NS_ASSERTION(mComposerCommandsUpdater,
+               "mComposerCommandsUpdater should exist.");
 
   // Kill any existing reload timer
   if (mLoadBlankDocTimer) {
@@ -1313,7 +1310,8 @@ nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow)
   NS_ENSURE_TRUE(mDoneSetup, NS_OK);
   NS_ENSURE_TRUE(aWindow, NS_ERROR_FAILURE);
 
-  NS_ASSERTION(mStateMaintainer, "mStateMaintainer should exist.");
+  NS_ASSERTION(mComposerCommandsUpdater,
+               "mComposerCommandsUpdater should exist.");
 
   // Imitate nsEditorDocShell::MakeEditable() to reattach the
   // old editor ot the window.
@@ -1350,8 +1348,8 @@ nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow)
                                     &mDocStateControllerId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mStateMaintainer) {
-    mStateMaintainer->Init(window);
+  if (mComposerCommandsUpdater) {
+    mComposerCommandsUpdater->Init(window);
   }
 
   // Get editor

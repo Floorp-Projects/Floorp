@@ -141,7 +141,7 @@ public:
 
 protected:
   nsPresContext* mPresContext;
-  nsCOMPtr<nsIPresShell> mPresShell;
+  nsCOMPtr<nsIDocument> mDocument;
   // mSelection is typically normal selection but if OnQuerySelectedText()
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
   // by WidgetQueryContentEvent::mInput::mSelectionType.
@@ -337,10 +337,6 @@ protected:
   // If the aCollapsedRawRange isn't in text node but next to a text node,
   // this method modifies it in the text node.  Otherwise, not modified.
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
-  // Find the first frame for the range and get the start offset in it.
-  nsresult GetStartFrameAndOffset(const RawRange& aRawRange,
-                                  nsIFrame*& aFrame,
-                                  int32_t& aOffsetInFrame);
   // Convert the frame relative offset to be relative to the root frame of the
   // root presContext (but still measured in appUnits of aFrame's presContext).
   nsresult ConvertToRootRelativeOffset(nsIFrame* aFrame,

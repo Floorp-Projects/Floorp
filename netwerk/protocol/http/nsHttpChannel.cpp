@@ -1295,28 +1295,6 @@ ProcessXCTO(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadI
         return NS_ERROR_CORRUPTED_CONTENT;
     }
 
-    if (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGE) {
-        if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
-            Accumulate(Telemetry::XCTO_NOSNIFF_BLOCK_IMAGE, 0);
-            return NS_OK;
-        }
-        Accumulate(Telemetry::XCTO_NOSNIFF_BLOCK_IMAGE, 1);
-        // Instead of consulting Preferences::GetBool() all the time we
-        // can cache the result to speed things up.
-        static bool sXCTONosniffBlockImages = false;
-        static bool sIsInited = false;
-        if (!sIsInited) {
-            sIsInited = true;
-            Preferences::AddBoolVarCache(&sXCTONosniffBlockImages,
-            "security.xcto_nosniff_block_images");
-        }
-        if (!sXCTONosniffBlockImages) {
-            return NS_OK;
-        }
-        ReportTypeBlocking(aURI, aLoadInfo, "MimeTypeMismatch");
-        return NS_ERROR_CORRUPTED_CONTENT;
-    }
-
     if (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_SCRIPT) {
         if (nsContentUtils::IsScriptType(contentType)) {
             return NS_OK;

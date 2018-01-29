@@ -7,8 +7,8 @@
 #define HTMLEditorObjectResizerUtils_h
 
 #include "mozilla/HTMLEditor.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
-#include "nsISelectionListener.h"
 #include "nsISupportsImpl.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsLiteralString.h"
@@ -25,24 +25,6 @@ namespace mozilla {
 #define kBottomLeft    NS_LITERAL_STRING("sw")
 #define kBottom        NS_LITERAL_STRING("s")
 #define kBottomRight   NS_LITERAL_STRING("se")
-
-/******************************************************************************
- * mozilla::ResizerSelectionListener
- ******************************************************************************/
-
-class ResizerSelectionListener final : public nsISelectionListener
-{
-public:
-  explicit ResizerSelectionListener(HTMLEditor& aHTMLEditor);
-  void Reset();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISELECTIONLISTENER
-
-protected:
-  virtual ~ResizerSelectionListener() {}
-  CachedWeakPtr<HTMLEditor, nsIHTMLEditor> mHTMLEditorWeak;
-};
 
 /******************************************************************************
  * mozilla::ResizerMouseMotionListener
