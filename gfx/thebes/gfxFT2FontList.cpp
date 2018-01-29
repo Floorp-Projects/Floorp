@@ -961,7 +961,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
     struct stat s;
     int statRetval = stat(aFileName.get(), &s);
     if (!cachedFaceList.IsEmpty() && 0 == statRetval &&
-        s.st_mtime == timestamp && s.st_size == filesize)
+        uint32_t(s.st_mtime) == timestamp && s.st_size == filesize)
     {
         LOG(("using cached font info for %s", aFileName.get()));
         AppendFacesFromCachedFaceList(aFileName, cachedFaceList, aStdFile);
