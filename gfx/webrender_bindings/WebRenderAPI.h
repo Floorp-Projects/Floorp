@@ -50,16 +50,42 @@ struct Line {
   wr::LineStyle style;
 };
 
-/// Updates to retained resources such as images and fonts, applied within the
-/// same transaction.
-class ResourceUpdateQueue {
+
+class TransactionBuilder {
 public:
-  ResourceUpdateQueue();
-  ~ResourceUpdateQueue();
-  ResourceUpdateQueue(ResourceUpdateQueue&&);
-  ResourceUpdateQueue(const ResourceUpdateQueue&) = delete;
-  ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
-  ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
+  TransactionBuilder();
+
+  ~TransactionBuilder();
+
+  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
+
+  void SetRootPipeline(PipelineId aPipelineId);
+
+  void RemovePipeline(PipelineId aPipelineId);
+
+  void SetDisplayList(gfx::Color aBgColor,
+                      Epoch aEpoch,
+                      mozilla::LayerSize aViewportSize,
+                      wr::WrPipelineId pipeline_id,
+                      const wr::LayoutSize& content_size,
+                      wr::BuiltDisplayListDescriptor dl_descriptor,
+                      wr::Vec<uint8_t>& dl_data);
+
+  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
+
+  void GenerateFrame();
+
+  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
+
+  void SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
+                           const LayoutDeviceIntRect& aDocRect);
+
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const wr::LayoutPoint& aScrollPosition);
+
+  bool IsEmpty() const;
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
@@ -113,57 +139,11 @@ public:
 
   void Clear();
 
-  // Try to avoid using this when possible.
-  wr::ResourceUpdates* Raw() { return mUpdates; }
-
-protected:
-  explicit ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
-  : mUpdates(aUpdates) {}
-
-  wr::ResourceUpdates* mUpdates;
-};
-
-class TransactionBuilder {
-public:
-  TransactionBuilder();
-
-  ~TransactionBuilder();
-
-  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
-
-  void SetRootPipeline(PipelineId aPipelineId);
-
-  void RemovePipeline(PipelineId aPipelineId);
-
-  void SetDisplayList(gfx::Color aBgColor,
-                      Epoch aEpoch,
-                      mozilla::LayerSize aViewportSize,
-                      wr::WrPipelineId pipeline_id,
-                      const wr::LayoutSize& content_size,
-                      wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec<uint8_t>& dl_data);
-
-  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
-
-  void GenerateFrame();
-
-  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  void SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
-                           const LayoutDeviceIntRect& aDocRect);
-
-  void UpdateResources(ResourceUpdateQueue& aUpdates);
-
-  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                            const layers::FrameMetrics::ViewID& aScrollId,
-                            const wr::LayoutPoint& aScrollPosition);
-
-  bool IsEmpty() const;
-
   Transaction* Raw() { return mTxn; }
+  wr::ResourceUpdates* RawUpdates() { return mResourceUpdates; }
 protected:
   Transaction* mTxn;
+  wr::ResourceUpdates* mResourceUpdates;
 };
 
 class WebRenderAPI

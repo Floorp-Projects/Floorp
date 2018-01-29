@@ -148,15 +148,15 @@ MacIOSurfaceTextureHostOGL::NumSubTextures() const
 }
 
 void
-MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+MacIOSurfaceTextureHostOGL::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                                 ResourceUpdateOp aOp,
                                                 const Range<wr::ImageKey>& aImageKeys,
                                                 const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mSurface);
 
-  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
-                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
+                                              : &wr::TransactionBuilder::UpdateExternalImage;
   auto bufferType = wr::WrExternalImageBufferType::TextureRectHandle;
 
   switch (GetFormat()) {
