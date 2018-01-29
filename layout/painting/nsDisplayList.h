@@ -3247,6 +3247,8 @@ public:
   void ConfigureLayer(ImageLayer* aLayer,
                       const ContainerLayerParameters& aParameters);
 
+  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) = 0;
+
   virtual already_AddRefed<imgIContainer> GetImage() = 0;
 
   virtual nsRect GetDestRect() const = 0;
@@ -3845,6 +3847,11 @@ public:
                                        nsDisplayListBuilder* aBuilder) override;
   virtual already_AddRefed<imgIContainer> GetImage() override;
   virtual nsRect GetDestRect() const override;
+
+  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
+  {
+    nsDisplayBackgroundGeometry::UpdateDrawResult(this, aResult);
+  }
 
   static nsRegion GetInsideClipRegion(const nsDisplayItem* aItem,
                                       StyleGeometryBox aClip,
