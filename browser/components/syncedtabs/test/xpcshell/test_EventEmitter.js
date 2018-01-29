@@ -1,6 +1,6 @@
 "use strict";
 
-let { EventEmitter } = Cu.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
+let { EventEmitter } = ChromeUtils.import("resource:///modules/syncedtabs/EventEmitter.jsm", {});
 
 add_task(async function testSingleListener() {
   let eventEmitter = new EventEmitter();

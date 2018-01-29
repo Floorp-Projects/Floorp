@@ -4,16 +4,16 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 do_get_profile();
 
-Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Sqlite.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Promise.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // To spin the event loop in test.
-Cu.import("resource://services-common/async.js");
+ChromeUtils.import("resource://services-common/async.js");
 
 function sleep(ms) {
   return new Promise(resolve => {
@@ -82,7 +82,7 @@ async function getDummyTempDatabase(name, extraOptions = {}) {
 }
 
 add_task(async function test_setup() {
-  Cu.import("resource://testing-common/services/common/logging.js");
+  ChromeUtils.import("resource://testing-common/services/common/logging.js");
   initTestLogging("Trace");
 });
 

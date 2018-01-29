@@ -5,8 +5,8 @@
 
 const ToolkitModules = {};
 
-XPCOMUtils.defineLazyModuleGetter(ToolkitModules, "EventEmitter",
-                                  "resource://gre/modules/EventEmitter.jsm");
+ChromeUtils.defineModuleGetter(ToolkitModules, "EventEmitter",
+                               "resource://gre/modules/EventEmitter.jsm");
 
 var {
   ignoreEvent,

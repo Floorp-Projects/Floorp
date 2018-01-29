@@ -1,7 +1,7 @@
 
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 add_task(async function test_isAddressField_isCreditCardField() {
   const TEST_CASES = {

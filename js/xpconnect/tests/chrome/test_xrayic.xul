@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1355109
   // Import our test JSM. We first strip the filename off
   // the chrome url, then append the jsm filename.
   var base = /.*\//.exec(window.location.href)[0];
-  Cu.import(base + "file_expandosharing.jsm");
+  ChromeUtils.import(base + "file_expandosharing.jsm");
 
   // Wait for all child frames to load.
   var gLoadCount = 0;

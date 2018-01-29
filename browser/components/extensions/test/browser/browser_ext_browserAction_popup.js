@@ -3,7 +3,7 @@
 "use strict";
 
 function getBrowserAction(extension) {
-  const {GlobalManager, Management: {global: {browserActionFor}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {GlobalManager, Management: {global: {browserActionFor}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
   let ext = GlobalManager.extensionMap.get(extension.id);
   return browserActionFor(ext);

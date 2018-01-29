@@ -5,8 +5,8 @@
 
 var { utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 const PREF_APP_UPDATE_CHANNEL = "app.update.channel";
 const TEST_CHANNEL            = "TestChannel";

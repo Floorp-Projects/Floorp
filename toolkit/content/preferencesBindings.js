@@ -9,13 +9,13 @@
 const Preferences = window.Preferences = (function() {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-  Cu.import("resource://gre/modules/EventEmitter.jsm");
-  Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+  ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
   const lazy = {};
-  XPCOMUtils.defineLazyModuleGetter(lazy, "DeferredTask",
-                                    "resource://gre/modules/DeferredTask.jsm");
+  ChromeUtils.defineModuleGetter(lazy, "DeferredTask",
+                                 "resource://gre/modules/DeferredTask.jsm");
 
   function getElementsByAttribute(name, value) {
     // If we needed to defend against arbitrary values, we would escape

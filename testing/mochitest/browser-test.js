@@ -4,12 +4,12 @@ var gTimeoutSeconds = 45;
 var gConfig;
 var gSaveInstrumentationData = null;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Task.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
+ChromeUtils.defineModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
 const SIMPLETEST_OVERRIDES =
@@ -113,7 +113,7 @@ function testInit() {
     globalMM.loadFrameScript("chrome://mochikit/content/shutdown-leaks-collector.js", true);
   } else {
     // In non-e10s, only run the ShutdownLeaksCollector in the parent process.
-    Components.utils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
+    ChromeUtils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
   }
 
   let gmm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
@@ -399,13 +399,13 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this.MemoryStats = simpleTestScope.MemoryStats;
   this.Task = Task;
-  this.ContentTask = Components.utils.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
-  this.BrowserTestUtils = Components.utils.import("resource://testing-common/BrowserTestUtils.jsm", null).BrowserTestUtils;
-  this.TestUtils = Components.utils.import("resource://testing-common/TestUtils.jsm", null).TestUtils;
+  this.ContentTask = ChromeUtils.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
+  this.BrowserTestUtils = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm", null).BrowserTestUtils;
+  this.TestUtils = ChromeUtils.import("resource://testing-common/TestUtils.jsm", null).TestUtils;
   this.Task.Debugging.maintainStack = true;
-  this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
-  this.PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
-  this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+  this.Promise = ChromeUtils.import("resource://gre/modules/Promise.jsm", null).Promise;
+  this.PromiseTestUtils = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", null).PromiseTestUtils;
+  this.Assert = ChromeUtils.import("resource://testing-common/Assert.jsm", null).Assert;
 
   this.PromiseTestUtils.init();
 
@@ -416,7 +416,7 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this._coverageCollector = null;
 
-  const XPCOMUtilsMod = Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+  const XPCOMUtilsMod = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
   // Avoid failing tests when XPCOMUtils.defineLazyScriptGetter is used.
   XPCOMUtilsMod.Services = Object.create(Services, {
@@ -480,8 +480,8 @@ Tester.prototype = {
 
     if (gConfig.jscovDirPrefix) {
       let coveragePath = gConfig.jscovDirPrefix;
-      let {CoverageCollector} = Cu.import("resource://testing-common/CoverageUtils.jsm",
-                                          {});
+      let {CoverageCollector} = ChromeUtils.import("resource://testing-common/CoverageUtils.jsm",
+                                                   {});
       this._coverageCollector = new CoverageCollector(coveragePath);
     }
 
@@ -883,7 +883,7 @@ Tester.prototype = {
 
           // Destroy BackgroundPageThumbs resources.
           let {BackgroundPageThumbs} =
-            Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", {});
+            ChromeUtils.import("resource://gre/modules/BackgroundPageThumbs.jsm", {});
           BackgroundPageThumbs._destroy();
 
           // Destroy preloaded browsers.
@@ -914,7 +914,7 @@ Tester.prototype = {
 
 
         let {AsyncShutdown} =
-          Cu.import("resource://gre/modules/AsyncShutdown.jsm", {});
+          ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", {});
 
         let barrier = new AsyncShutdown.Barrier(
           "ShutdownLeaks: Wait for cleanup to be finished before checking for leaks");

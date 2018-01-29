@@ -3,7 +3,7 @@
 
 'use strict';
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 

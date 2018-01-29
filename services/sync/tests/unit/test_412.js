@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/service.js");
-Cu.import("resource://testing-common/services/sync/rotaryengine.js");
+ChromeUtils.import("resource://services-sync/service.js");
+ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
 
 add_task(async function test_412_not_treated_as_failure() {
   await Service.engineManager.register(RotaryEngine);

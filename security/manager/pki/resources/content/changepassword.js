@@ -4,7 +4,7 @@
 "use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";

@@ -2,7 +2,7 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function() {
   let scriptUrl = Services.io.newFileURI(do_get_file("file_simple_script.js")).spec;

@@ -5,7 +5,7 @@
 
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 Preferences.addAll([
   { id: "intl.accept_languages", type: "wstring" },

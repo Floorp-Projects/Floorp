@@ -2,9 +2,9 @@
 const BASE = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content/", "https://example.com/");
 
-Cu.import("resource:///modules/ExtensionsUI.jsm");
+ChromeUtils.import("resource:///modules/ExtensionsUI.jsm");
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return Management;
 });
 

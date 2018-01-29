@@ -18,10 +18,10 @@ this.EXPORTED_SYMBOLS = ["UIState"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Weave",
-                                  "resource://services-sync/main.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Weave",
+                               "resource://services-sync/main.js");
 
 const TOPICS = [
   "weave:service:login:change",
@@ -236,8 +236,8 @@ const UIStateInternal = {
   }
 };
 
-XPCOMUtils.defineLazyModuleGetter(UIStateInternal, "fxAccounts",
-                                  "resource://gre/modules/FxAccounts.jsm");
+ChromeUtils.defineModuleGetter(UIStateInternal, "fxAccounts",
+                               "resource://gre/modules/FxAccounts.jsm");
 
 for (let topic of TOPICS) {
   Services.obs.addObserver(UIStateInternal, topic);

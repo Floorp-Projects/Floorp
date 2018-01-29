@@ -7,7 +7,7 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const test = [
 // 0: 0x8e followed by hi byte, not valid JIS X 0201

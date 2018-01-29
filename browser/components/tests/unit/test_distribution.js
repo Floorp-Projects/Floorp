@@ -5,7 +5,7 @@
  * Tests that preferences are properly set by distribution.ini
  */
 
-Cu.import("resource://gre/modules/LoadContextInfo.jsm");
+ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
 
 // Import common head.
 var commonFile = do_get_file("../../../../toolkit/components/places/tests/head_common.js", false);

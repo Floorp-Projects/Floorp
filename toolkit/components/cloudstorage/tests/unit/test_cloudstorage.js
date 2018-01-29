@@ -6,14 +6,14 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CloudStorage",
-                                  "resource://gre/modules/CloudStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "CloudStorage",
+                               "resource://gre/modules/CloudStorage.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
 
 const CLOUD_SERVICES_PREF = "cloud.services.";
 const DROPBOX_DOWNLOAD_FOLDER = "Dropbox";
@@ -205,7 +205,7 @@ async function checkSavedPromptResponse(aKey, metadata, remember, selected = fal
 
 
 add_task(async function test_checkInit() {
-  let {CloudStorageInternal} = Cu.import("resource://gre/modules/CloudStorage.jsm", {});
+  let {CloudStorageInternal} = ChromeUtils.import("resource://gre/modules/CloudStorage.jsm", {});
   let isInitialized = await CloudStorageInternal.promiseInit;
   Assert.ok(isInitialized, "Providers Metadata successfully initialized");
 });

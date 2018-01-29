@@ -20,16 +20,16 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.importGlobalProperties(["TextEncoder"]);
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/subprocess/subprocess_common.jsm");
 
 if (AppConstants.platform == "win") {
-  XPCOMUtils.defineLazyModuleGetter(this, "SubprocessImpl",
-                                    "resource://gre/modules/subprocess/subprocess_win.jsm");
+  ChromeUtils.defineModuleGetter(this, "SubprocessImpl",
+                                 "resource://gre/modules/subprocess/subprocess_win.jsm");
 } else {
-  XPCOMUtils.defineLazyModuleGetter(this, "SubprocessImpl",
-                                    "resource://gre/modules/subprocess/subprocess_unix.jsm");
+  ChromeUtils.defineModuleGetter(this, "SubprocessImpl",
+                                 "resource://gre/modules/subprocess/subprocess_unix.jsm");
 }
 
 function encodeEnvVar(name, value) {

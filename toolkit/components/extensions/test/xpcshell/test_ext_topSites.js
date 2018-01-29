@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://gre/modules/NewTabUtils.jsm");
+ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm");
 
 
 function TestProvider(getLinksFn) {

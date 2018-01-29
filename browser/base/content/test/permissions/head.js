@@ -1,4 +1,4 @@
-Cu.import("resource:///modules/SitePermissions.jsm", this);
+ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
 function is_hidden(element) {
   var style = element.ownerGlobal.getComputedStyle(element);

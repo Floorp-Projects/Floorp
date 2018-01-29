@@ -1,7 +1,7 @@
 // Test the sidebar counters in BrowserUITelemetry.
 "use strict";
 
-const { BrowserUITelemetry: BUIT } = Cu.import("resource:///modules/BrowserUITelemetry.jsm", {});
+const { BrowserUITelemetry: BUIT } = ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm", {});
 
 add_task(async function testSidebarOpenClose() {
   // Reset BrowserUITelemetry's world.
