@@ -244,22 +244,17 @@ ContentEventHandler::RawRange::SelectNodeContents(
 
 ContentEventHandler::ContentEventHandler(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
-  , mPresShell(aPresContext->GetPresShell())
+  , mDocument(aPresContext->Document())
 {
 }
 
 nsresult
 ContentEventHandler::InitBasic()
 {
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
-
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   // If text frame which has overflowing selection underline is dirty,
   // we need to flush the pending reflow here.
-  mPresShell->FlushPendingNotifications(FlushType::Layout);
-
-  // Flushing notifications can cause mPresShell to be destroyed (bug 577963).
-  NS_ENSURE_TRUE(!mPresShell->IsDestroying(), NS_ERROR_FAILURE);
-
+  mDocument->FlushPendingNotifications(FlushType::Layout);
   return NS_OK;
 }
 
@@ -283,7 +278,7 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
       return NS_ERROR_FAILURE;
     }
     if (!mRootContent) {
-      mRootContent = mPresShell->GetDocument()->GetRootElement();
+      mRootContent = mDocument->GetRootElement();
       if (NS_WARN_IF(!mRootContent)) {
         return NS_ERROR_NOT_AVAILABLE;
       }
@@ -309,14 +304,14 @@ ContentEventHandler::InitRootContent(Selection* aNormalSelection)
   }
 
   // See bug 537041 comment 5, the range could have removed node.
-  if (NS_WARN_IF(startNode->GetComposedDoc() != mPresShell->GetDocument())) {
+  if (NS_WARN_IF(startNode->GetComposedDoc() != mDocument)) {
     return NS_ERROR_FAILURE;
   }
 
   NS_ASSERTION(startNode->GetComposedDoc() == endNode->GetComposedDoc(),
                "firstNormalSelectionRange crosses the document boundary");
 
-  mRootContent = startNode->GetSelectionRootContent(mPresShell);
+  mRootContent = startNode->GetSelectionRootContent(mDocument->GetShell());
   if (NS_WARN_IF(!mRootContent)) {
     return NS_ERROR_FAILURE;
   }
@@ -338,8 +333,10 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
   nsresult rv = InitBasic();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISelectionController> selectionController =
-    mPresShell->GetSelectionControllerForFocusedContent();
+  nsCOMPtr<nsISelectionController> selectionController;
+  if (nsIPresShell* shell = mDocument->GetShell()) {
+    selectionController = shell->GetSelectionControllerForFocusedContent();
+  }
   if (NS_WARN_IF(!selectionController)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -488,11 +485,7 @@ ContentEventHandler::Init(WidgetSelectionEvent* aEvent)
 nsIContent*
 ContentEventHandler::GetFocusedContent()
 {
-  nsIDocument* doc = mPresShell->GetDocument();
-  if (!doc) {
-    return nullptr;
-  }
-  nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
+  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
   return nsFocusManager::GetFocusedDescendant(
                            window,
@@ -1074,7 +1067,8 @@ ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   NS_ASSERTION(*aXPOffset <= aContent->TextLength(),
                "offset is out of range.");
 
-  RefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
+  MOZ_DIAGNOSTIC_ASSERT(mDocument->GetShell());
+  RefPtr<nsFrameSelection> fs = mDocument->GetShell()->FrameSelection();
   int32_t offsetInFrame;
   CaretAssociationHint hint =
     aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
@@ -2671,11 +2665,8 @@ ContentEventHandler::OnQuerySelectionAsTransferable(
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = mPresShell->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
   rv = nsCopySupport::GetTransferableForSelection(
-         mSelection, doc, getter_AddRefs(aEvent->mReply.mTransferable));
+         mSelection, mDocument, getter_AddRefs(aEvent->mReply.mTransferable));
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mSucceeded = true;
@@ -2693,7 +2684,9 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   aEvent->mReply.mOffset = aEvent->mReply.mTentativeCaretOffset =
     WidgetQueryContentEvent::NOT_FOUND;
 
-  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+  nsIPresShell* shell = mDocument->GetShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsIFrame* rootFrame = shell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
   nsIWidget* rootWidget = rootFrame->GetNearestWidget();
   NS_ENSURE_TRUE(rootWidget, NS_ERROR_FAILURE);
@@ -2806,9 +2799,9 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
 
   NS_ENSURE_TRUE(aEvent->mWidget, NS_ERROR_FAILURE);
 
-  nsIDocument* doc = mPresShell->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsIFrame* docFrame = mPresShell->GetRootFrame();
+  nsIPresShell* shell = mDocument->GetShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsIFrame* docFrame = shell->GetRootFrame();
   NS_ENSURE_TRUE(docFrame, NS_ERROR_FAILURE);
 
   LayoutDeviceIntPoint eventLoc =
@@ -2819,7 +2812,7 @@ ContentEventHandler::OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent)
     mPresContext->DevPixelsToIntCSSPixels(eventLoc.y) - docFrameRect.y);
 
   Element* contentUnderMouse =
-    doc->ElementFromPointHelper(eventLocCSS.x, eventLocCSS.y, false, false);
+    mDocument->ElementFromPointHelper(eventLocCSS.x, eventLocCSS.y, false, false);
   if (contentUnderMouse) {
     nsIWidget* targetWidget = nullptr;
     nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
@@ -3072,27 +3065,6 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aRawRange)
     aRawRange.CollapseTo(RawRangeBoundary(childNode, offsetInChildNode));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-  return NS_OK;
-}
-
-nsresult
-ContentEventHandler::GetStartFrameAndOffset(const RawRange& aRawRange,
-                                            nsIFrame*& aFrame,
-                                            int32_t& aOffsetInFrame)
-{
-  aFrame = nullptr;
-  aOffsetInFrame = -1;
-
-  nsINode* node = aRawRange.GetStartContainer();
-  if (NS_WARN_IF(!node) || NS_WARN_IF(!node->IsContent())) {
-    return NS_ERROR_FAILURE;
-  }
-  RefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
-  aFrame = fs->GetFrameForNodeOffset(node->AsContent(), aRawRange.StartOffset(),
-                                     fs->GetHint(), &aOffsetInFrame);
-  if (NS_WARN_IF(!aFrame)) {
-    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }

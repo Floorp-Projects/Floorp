@@ -68,36 +68,6 @@ DocumentResizeEventListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 }
 
 /******************************************************************************
- * mozilla::ResizerSelectionListener
- ******************************************************************************/
-
-NS_IMPL_ISUPPORTS(ResizerSelectionListener, nsISelectionListener)
-
-ResizerSelectionListener::ResizerSelectionListener(HTMLEditor& aHTMLEditor)
-  : mHTMLEditorWeak(&aHTMLEditor)
-{
-}
-
-NS_IMETHODIMP
-ResizerSelectionListener::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
-                                                 nsISelection* aSelection,
-                                                 int16_t aReason)
-{
-  if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
-                  nsISelectionListener::KEYPRESS_REASON |
-                  nsISelectionListener::SELECTALL_REASON)) && aSelection) {
-    // the selection changed and we need to check if we have to
-    // hide and/or redisplay resizing handles
-    RefPtr<HTMLEditor> htmlEditor = mHTMLEditorWeak.get();
-    if (htmlEditor) {
-      htmlEditor->CheckSelectionStateForAnonymousButtons(aSelection);
-    }
-  }
-
-  return NS_OK;
-}
-
-/******************************************************************************
  * mozilla::ResizerMouseMotionListener
  ******************************************************************************/
 

@@ -384,7 +384,8 @@ InlineSpellChecker.prototype = {
 };
 
 var SpellCheckHelper = {
-  // Set when over a non-read-only <textarea> or editable <input>.
+  // Set when over a non-read-only <textarea> or editable <input>
+  // (that allows text entry of some kind, so not e.g. <input type=checkbox>)
   EDITABLE: 0x1,
 
   // Set when over an <input> element of any type.
@@ -408,6 +409,10 @@ var SpellCheckHelper = {
 
   // Set when over an <input type="password"> field.
   PASSWORD: 0x80,
+
+  // Set when spellcheckable. Replaces `EDITABLE`/`CONTENTEDITABLE` combination
+  // specifically for spellcheck.
+  SPELLCHECKABLE: 0x100,
 
   isTargetAKeywordField(aNode, window) {
     if (!(aNode instanceof window.HTMLInputElement))
@@ -443,9 +448,11 @@ var SpellCheckHelper = {
     var flags = 0;
     if (element instanceof window.HTMLInputElement) {
       flags |= this.INPUT;
-
       if (element.mozIsTextField(false) || element.type == "number") {
         flags |= this.TEXTINPUT;
+        if (!element.readOnly) {
+          flags |= this.EDITABLE;
+        }
 
         if (element.type == "number") {
           flags |= this.NUMERIC;
@@ -454,7 +461,7 @@ var SpellCheckHelper = {
         // Allow spellchecking UI on all text and search inputs.
         if (!element.readOnly &&
             (element.type == "text" || element.type == "search")) {
-          flags |= this.EDITABLE;
+          flags |= this.SPELLCHECKABLE;
         }
         if (this.isTargetAKeywordField(element, window))
           flags |= this.KEYWORD;
@@ -465,14 +472,14 @@ var SpellCheckHelper = {
     } else if (element instanceof window.HTMLTextAreaElement) {
       flags |= this.TEXTINPUT | this.TEXTAREA;
       if (!element.readOnly) {
-        flags |= this.EDITABLE;
+        flags |= this.SPELLCHECKABLE | this.EDITABLE;
       }
     }
 
-    if (!(flags & this.EDITABLE)) {
+    if (!(flags & this.SPELLCHECKABLE)) {
       var win = element.ownerGlobal;
       if (win) {
-        var isEditable = false;
+        var isSpellcheckable = false;
         try {
           var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIWebNavigation)
@@ -480,14 +487,14 @@ var SpellCheckHelper = {
                                   .getInterface(Ci.nsIEditingSession);
           if (editingSession.windowIsEditable(win) &&
               this.getComputedStyle(element, "-moz-user-modify") == "read-write") {
-            isEditable = true;
+            isSpellcheckable = true;
           }
         } catch (ex) {
           // If someone built with composer disabled, we can't get an editing session.
         }
 
-        if (isEditable)
-          flags |= this.CONTENTEDITABLE;
+        if (isSpellcheckable)
+          flags |= this.CONTENTEDITABLE | this.SPELLCHECKABLE;
       }
     }
 

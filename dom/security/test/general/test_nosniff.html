@@ -16,10 +16,6 @@
 <script id="scriptCorrectType"></script>
 <script id="scriptWrongType"></script>
 
-<!-- add the two img tests -->
-<img id="imgCorrectType" />
-<img id="imgWrongType" />
-
 <script class="testbody" type="text/javascript">
 /* Description of the test:
  * We load 2 css files, 2 script files and 2 image files, where
@@ -28,7 +24,7 @@
  */
 
 SimpleTest.waitForExplicitFinish();
-const NUM_TESTS = 6;
+const NUM_TESTS = 4;
 
 var testCounter = 0;
 function checkFinish() {
@@ -37,8 +33,6 @@ function checkFinish() {
 		SimpleTest.finish();
 	}
 }
-
-SpecialPowers.pushPrefEnv({set: [["security.xcto_nosniff_block_images", true]]}, function() {
 
   // 1) Test CSS with correct mime type
   var cssCorrectType = document.getElementById("cssCorrectType");
@@ -88,30 +82,6 @@ SpecialPowers.pushPrefEnv({set: [["security.xcto_nosniff_block_images", true]]},
   }
   scriptWrongType.src = "file_nosniff_testserver.sjs?scriptWrongType";
 
-  // 5) Test IMG with correct mime type
-  var imgCorrectType = document.getElementById("imgCorrectType");
-  imgCorrectType.onload = function() {
-    ok(true, "img nosniff correct type should load");
-    checkFinish();
-  }
-  imgCorrectType.onerror = function() {
-    ok(false, "img nosniff correct type should load");
-    checkFinish();
-  }
-  imgCorrectType.src = "file_nosniff_testserver.sjs?imgCorrectType";
-
-  // 6) Test IMG with wrong mime type
-  var imgWrongType = document.getElementById("imgWrongType");
-  imgWrongType.onload = function() {
-    ok(false, "img nosniff wrong type should not load");
-    checkFinish();
-  }
-  imgWrongType.onerror = function() {
-    ok(true, "img nosniff wrong type should not load");
-    checkFinish();
-  }
-  imgWrongType.src = "file_nosniff_testserver.sjs?imgWrongType";
-});
 
 </script>
 </body>

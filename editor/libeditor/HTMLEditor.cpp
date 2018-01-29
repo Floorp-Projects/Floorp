@@ -5,6 +5,7 @@
 
 #include "mozilla/HTMLEditor.h"
 
+#include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -140,24 +141,7 @@ HTMLEditor::~HTMLEditor()
     mRules->AsHTMLEditRules()->EndListeningToEditActions();
   }
 
-  //the autopointers will clear themselves up.
-  //but we need to also remove the listeners or we have a leak
-  RefPtr<Selection> selection = GetSelection();
-  // if we don't get the selection, just skip this
-  if (selection) {
-    nsCOMPtr<nsISelectionListener>listener;
-    listener = do_QueryInterface(mTypeInState);
-    if (listener) {
-      selection->RemoveSelectionListener(listener);
-    }
-    listener = do_QueryInterface(mSelectionListenerP);
-    if (listener) {
-      selection->RemoveSelectionListener(listener);
-    }
-  }
-
   mTypeInState = nullptr;
-  mSelectionListenerP = nullptr;
 
   if (mLinkHandler && IsInitialized()) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -190,6 +174,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mComposerCommandsUpdater)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets)
 
   tmp->HideAnonymousEditingUIs();
@@ -199,6 +184,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mComposerCommandsUpdater)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTopLeftHandle)
@@ -214,7 +200,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, TextEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizingInfo)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizedObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMouseMotionListenerP)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionListenerP)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResizeEventListenerP)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAbsolutelyPositionedObject)
@@ -299,25 +284,9 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     // init the type-in state
     mTypeInState = new TypeInState();
 
-    // init the selection listener for image resizing
-    mSelectionListenerP = new ResizerSelectionListener(*this);
-
     if (!IsInteractionAllowed()) {
       // ignore any errors from this in case the file is missing
       AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
-    }
-
-    RefPtr<Selection> selection = GetSelection();
-    if (selection) {
-      nsCOMPtr<nsISelectionListener>listener;
-      listener = do_QueryInterface(mTypeInState);
-      if (listener) {
-        selection->AddSelectionListener(listener);
-      }
-      listener = do_QueryInterface(mSelectionListenerP);
-      if (listener) {
-        selection->AddSelectionListener(listener);
-      }
     }
   }
   NS_ENSURE_SUCCESS(rulesRv, rulesRv);
@@ -346,6 +315,48 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
   HideAnonymousEditingUIs();
 
   return TextEditor::PreDestroy(aDestroyingFrames);
+}
+
+NS_IMETHODIMP
+HTMLEditor::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                   nsISelection* aSelection,
+                                   int16_t aReason)
+{
+  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<Selection> selection = aSelection->AsSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mTypeInState) {
+    RefPtr<TypeInState> typeInState = mTypeInState;
+    typeInState->OnSelectionChange(*selection);
+
+    // We used a class which derived from nsISelectionListener to call
+    // HTMLEditor::CheckSelectionStateForAnonymousButtons().  The lifetime of
+    // the class was exactly same as mTypeInState.  So, call it only when
+    // mTypeInState is not nullptr.
+    if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
+                    nsISelectionListener::KEYPRESS_REASON |
+                    nsISelectionListener::SELECTALL_REASON)) && aSelection) {
+      // the selection changed and we need to check if we have to
+      // hide and/or redisplay resizing handles
+      // FYI: This is an XPCOM method.  So, the caller, Selection, guarantees
+      //      the lifetime of this instance.  So, don't need to grab this with
+      //      local variable.
+      CheckSelectionStateForAnonymousButtons(selection);
+    }
+  }
+
+  if (mComposerCommandsUpdater) {
+    RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
+    updater->OnSelectionChange();
+  }
+
+  return EditorBase::NotifySelectionChanged(aDOMDocument, aSelection, aReason);
 }
 
 void
