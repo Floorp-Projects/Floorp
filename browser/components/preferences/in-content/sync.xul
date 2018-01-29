@@ -205,10 +205,12 @@
                 hidden="true"/>
       </hbox>
     </groupbox>
-    <label id="mobilePromo-singledevice"
-           class="text-link fxaMobilePromo">&mobilepromo.singledevice;</label>
-    <label id="mobilePromo-multidevice"
-           class="text-link fxaMobilePromo">&mobilepromo.multidevice;</label>
+    <vbox align="start">
+      <label id="mobilePromo-singledevice"
+             class="text-link fxaMobilePromo">&mobilepromo.singledevice;</label>
+      <label id="mobilePromo-multidevice"
+             class="text-link fxaMobilePromo">&mobilepromo.multidevice;</label>
+    </vbox>
     <vbox id="tosPP-small" align="start">
       <label id="tosPP-small-ToS" class="text-link">
         &prefs.tosLink.label;

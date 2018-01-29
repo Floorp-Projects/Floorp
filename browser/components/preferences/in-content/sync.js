@@ -329,10 +329,11 @@ var gSyncPane = {
     fxAccounts.promiseAccountsManageURI(this._getEntryPoint()).then(accountsManageURI => {
       document.getElementById("verifiedManage").setAttribute("href", accountsManageURI);
     });
+    let isUnverified = state.status == UIState.STATUS_NOT_VERIFIED;
     // The mobile promo links - which one is shown depends on the number of devices.
     let isMultiDevice = Weave.Service.clientsEngine.stats.numClients > 1;
-    document.getElementById("mobilePromo-singledevice").hidden = isMultiDevice;
-    document.getElementById("mobilePromo-multidevice").hidden = !isMultiDevice;
+    document.getElementById("mobilePromo-singledevice").hidden = isUnverified || isMultiDevice;
+    document.getElementById("mobilePromo-multidevice").hidden = isUnverified || !isMultiDevice;
   },
 
   _getEntryPoint() {
