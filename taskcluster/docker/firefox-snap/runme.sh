@@ -47,7 +47,7 @@ for locale in $locales; do
 done
 
 # Generate snapcraft manifest
-sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > ${WORKSPACE}/snapcraft.yaml
+sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
 cd "${WORKSPACE}"
 snapcraft
 
