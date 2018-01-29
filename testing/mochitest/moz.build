@@ -169,18 +169,3 @@ with Files("**"):
 
 with Files("*remote*"):
     BUG_COMPONENT = ("Firefox for Android", "Testing")
-
-with Files("chrome/**"):
-    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
-
-with Files("chrome-harness.js"):
-    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
-
-with Files("BrowserTestUtils/**"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")
-
-with Files("browser*"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")
-
-with Files("tests/browser/**"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")

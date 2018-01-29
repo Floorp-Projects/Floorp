@@ -55,3 +55,6 @@ with Files('docs/**'):
 
 with Files('**'):
     BUG_COMPONENT = ('Testing', 'Mozbase')
+
+with Files('rust/**'):
+    BUG_COMPONENT = ('Testing', 'Mozbase Rust')
