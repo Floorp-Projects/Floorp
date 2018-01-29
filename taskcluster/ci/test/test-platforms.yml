@@ -62,6 +62,7 @@ linux64-nightly/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - awsy
+        - linux-talos-profiling
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
