@@ -152,6 +152,10 @@ let buttonActions = {
     window.parent.location.reload(true);
   },
 
+  rerender() {
+    requestStore.setState({});
+  },
+
   setAddresses1() {
     requestStore.setState({savedAddresses: ADDRESSES_1});
   },
