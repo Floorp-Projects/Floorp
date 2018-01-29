@@ -3260,15 +3260,15 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* funcNode, uint
     if (!tokenStream.advance(fun->lazyScript()->end()))
         return false;
 
-#if JS_HAS_EXPR_CLOSURES
-    // Only expression closure can be Statement kind.
-    // If we remove expression closure, we can remove isExprBody flag from
-    // LazyScript and JSScript.
-    if (kind == Statement && funbox->isExprBody()) {
-        if (!matchOrInsertSemicolon())
-            return false;
+    if (allowExpressionClosures()) {
+        // Only expression closure can be Statement kind.
+        // If we remove expression closure, we can remove isExprBody flag from
+        // LazyScript and JSScript.
+        if (kind == Statement && funbox->isExprBody()) {
+            if (!matchOrInsertSemicolon())
+                return false;
+        }
     }
-#endif
 
     // Append possible Annex B function box only upon successfully parsing.
     if (tryAnnexB && !pc->innermostScope()->addPossibleAnnexBFunctionBox(pc, funbox))
@@ -3778,14 +3778,14 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
                 return false;
             }
 
-#if JS_HAS_EXPR_CLOSURES
-            this->addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
-            if (!warnOnceAboutExprClosure())
+            if (allowExpressionClosures()) {
+                this->addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
+                if (!warnOnceAboutExprClosure())
+                    return false;
+            } else {
+                error(JSMSG_CURLY_BEFORE_BODY);
                 return false;
-#else
-            error(JSMSG_CURLY_BEFORE_BODY);
-            return false;
-#endif
+            }
         }
 
         anyChars.ungetToken();
@@ -3847,9 +3847,8 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
                                                               JSMSG_CURLY_OPENED, openedPos));
         funbox->setEnd(anyChars);
     } else {
-#if !JS_HAS_EXPR_CLOSURES
-        MOZ_ASSERT(kind == Arrow);
-#endif
+        MOZ_ASSERT_IF(!allowExpressionClosures(), kind == Arrow);
+
         if (anyChars.hadError())
             return false;
         funbox->setEnd(anyChars);

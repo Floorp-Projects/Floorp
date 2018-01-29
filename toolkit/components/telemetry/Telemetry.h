@@ -121,6 +121,30 @@ void AccumulateCategorical(E enumValue) {
 };
 
 /**
+ * Adds an array of samples to categorical histograms defined in TelemetryHistogramEnums.h
+ * This is the typesafe - and preferred - way to use the categorical histograms
+ * by passing values from the corresponding Telemetry::LABELS_* enums.
+ *
+ * @param enumValues - Array of labels from Telemetry::LABELS_* enums.
+ */
+template<class E>
+void
+AccumulateCategorical(const nsTArray<E>& enumValues)
+{
+  static_assert(IsCategoricalLabelEnum<E>::value,
+                "Only categorical label enum types are supported.");
+  nsTArray<uint32_t> intSamples(enumValues.Length());
+
+  for (E aValue: enumValues){
+    intSamples.AppendElement(static_cast<uint32_t>(aValue));
+  }
+
+  HistogramID categoricalId = static_cast<HistogramID>(CategoricalLabelId<E>::value);
+
+  Accumulate(categoricalId, intSamples);
+}
+
+/**
  * Adds sample to a keyed categorical histogram defined in TelemetryHistogramEnums.h
  * This is the typesafe - and preferred - way to use the keyed categorical histograms
  * by passing values from the corresponding Telemetry::LABELS_* enum.
@@ -147,6 +171,14 @@ void AccumulateCategoricalKeyed(const nsCString& key, E enumValue) {
  * @param label - A string label value that is defined in Histograms.json for this histogram.
  */
 void AccumulateCategorical(HistogramID id, const nsCString& label);
+
+/**
+ * Adds an array of samples to a categorical histogram defined in Histograms.json
+ *
+ * @param id - The histogram id
+ * @param labels - The array of labels to accumulate
+ */
+void AccumulateCategorical(HistogramID id, const nsTArray<nsCString>& labels);
 
 /**
  * Adds time delta in milliseconds to a histogram defined in TelemetryHistogramEnums.h
