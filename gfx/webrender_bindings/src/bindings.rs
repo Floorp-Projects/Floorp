@@ -100,8 +100,7 @@ pub struct DocumentHandle {
 }
 
 impl DocumentHandle {
-    pub fn new(api: RenderApi, size: DeviceUintSize) -> DocumentHandle {
-        let layer = 0; //TODO
+    pub fn new(api: RenderApi, size: DeviceUintSize, layer: i8) -> DocumentHandle {
         let doc = api.add_document(size, layer);
         DocumentHandle {
             api: api,
@@ -782,16 +781,41 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         *out_max_texture_size = renderer.get_max_texture_size();
     }
     let window_size = DeviceUintSize::new(window_width, window_height);
+    let layer = 0;
     *out_handle = Box::into_raw(Box::new(
-            DocumentHandle::new(sender.create_api(), window_size)));
+            DocumentHandle::new(sender.create_api(), window_size, layer)));
     *out_renderer = Box::into_raw(Box::new(renderer));
 
     return true;
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle,
-                                      out_handle: &mut *mut DocumentHandle) {
+pub extern "C" fn wr_api_create_document(
+    root_dh: &mut DocumentHandle,
+    out_handle: &mut *mut DocumentHandle,
+    doc_size: DeviceUintSize,
+    layer: i8,
+) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
+        root_dh.api.clone_sender().create_api(),
+        doc_size,
+        layer
+    )));
+}
+
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_delete_document(dh: &mut DocumentHandle) {
+    dh.api.delete_document(dh.document_id);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_clone(
+    dh: &mut DocumentHandle,
+    out_handle: &mut *mut DocumentHandle
+) {
     assert!(unsafe { is_in_compositor_thread() });
 
     let handle = DocumentHandle {
@@ -804,11 +828,13 @@ pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle,
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
-    let handle = Box::from_raw(dh);
-    if handle.document_id.0 == handle.api.get_namespace_id() {
-        handle.api.delete_document(handle.document_id);
-        handle.api.shut_down();
-    }
+    let _ = Box::from_raw(dh);
+}
+
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
+    dh.api.shut_down();
 }
 
 #[no_mangle]
@@ -894,13 +920,12 @@ pub extern "C" fn wr_transaction_update_resources(
 #[no_mangle]
 pub extern "C" fn wr_transaction_set_window_parameters(
     txn: &mut Transaction,
-    window_width: i32,
-    window_height: i32,
+    window_size: &DeviceUintSize,
+    doc_rect: &DeviceUintRect,
 ) {
-    let size = DeviceUintSize::new(window_width as u32, window_height as u32);
     txn.set_window_parameters(
-        size,
-        DeviceUintRect::new(DeviceUintPoint::new(0, 0), size),
+        *window_size,
+        *doc_rect,
         1.0,
     );
 }
