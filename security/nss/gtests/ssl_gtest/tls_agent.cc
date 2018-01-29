@@ -66,6 +66,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role,
       expected_sent_alert_(kTlsAlertCloseNotify),
       expected_sent_alert_level_(kTlsAlertWarning),
       handshake_callback_called_(false),
+      resumption_callback_called_(false),
       error_code_(0),
       send_ctr_(0),
       recv_ctr_(0),
@@ -182,6 +183,10 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
 
     ScopedCERTCertList anchors(CERT_NewCertList());
     rv = SSL_SetTrustAnchors(ssl_fd(), anchors.get());
+    if (rv != SECSuccess) return false;
+
+    rv = SSL_SetMaxEarlyDataSize(ssl_fd(), 1024);
+    EXPECT_EQ(SECSuccess, rv);
     if (rv != SECSuccess) return false;
   } else {
     rv = SSL_SetURL(ssl_fd(), "server");
@@ -420,6 +425,7 @@ SECStatus ResumptionTokenCallback(PRFileDesc* fd,
 
   std::vector<uint8_t> new_token(resumptionToken, resumptionToken + len);
   reinterpret_cast<TlsAgent*>(ctx)->SetResumptionToken(new_token);
+  reinterpret_cast<TlsAgent*>(ctx)->SetResumptionCallbackCalled();
   return SECSuccess;
 }
 

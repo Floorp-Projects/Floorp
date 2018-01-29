@@ -212,7 +212,7 @@ test_nss()
     RET=$?
 
     print_log "######## details of detected failures (if any) ########"
-    grep -B50 FAILED ${OUTPUTFILE}
+    grep -B50 -w FAILED ${OUTPUTFILE}
     [ $? -eq 1 ] || RET=1
 
     print_result "NSS - tests - ${BITS} bits - ${OPT}" ${RET} 0
@@ -268,8 +268,13 @@ check_abi()
         fi
         abidiff --hd1 $PREVDIST/public/ --hd2 $NEWDIST/public \
             $PREVDIST/*/lib/$SO $NEWDIST/*/lib/$SO \
-            > ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt
+            > ${HGDIR}/nss/automation/abi-check/new-report-temp$SO.txt
         RET=$?
+        cat ${HGDIR}/nss/automation/abi-check/new-report-temp$SO.txt \
+            | grep -v "^Functions changes summary:" \
+            | grep -v "^Variables changes summary:" \
+            > ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt
+        rm -f ${HGDIR}/nss/automation/abi-check/new-report-temp$SO.txt
         ABIDIFF_ERROR=$((($RET & 0x01) != 0))
         ABIDIFF_USAGE_ERROR=$((($RET & 0x02) != 0))
         ABIDIFF_ABI_CHANGE=$((($RET & 0x04) != 0))

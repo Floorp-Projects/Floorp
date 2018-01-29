@@ -332,10 +332,6 @@ void SSLInt_SetTicketLifetime(uint32_t lifetime) {
   ssl_ticket_lifetime = lifetime;
 }
 
-void SSLInt_SetMaxEarlyDataSize(uint32_t size) {
-  ssl_max_early_data_size = size;
-}
-
 SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size) {
   sslSocket *ss;
 
