@@ -31,7 +31,7 @@ If you wish to exclude a subdirectory of an included one, you can add it to the 
 directive.
 
 The default configuration file lives in ``topsrcdir/.flake8``. The default configuration can be
-overriden for a given subdirectory by creating a new ``.flake8`` file in the subdirectory. Be warned
+overridden for a given subdirectory by creating a new ``.flake8`` file in the subdirectory. Be warned
 that ``.flake8`` files cannot inherit from one another, so all configuration you wish to keep must
 be re-defined.
 
