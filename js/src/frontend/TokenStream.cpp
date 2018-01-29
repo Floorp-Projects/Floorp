@@ -11,6 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -33,6 +34,7 @@
 #include "vm/Unicode.h"
 
 using mozilla::ArrayLength;
+using mozilla::MakeScopeExit;
 using mozilla::Maybe;
 using mozilla::PodArrayZero;
 using mozilla::PodAssign;
@@ -1302,8 +1304,13 @@ template<typename CharT, class AnyCharsAccess>
 bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* identStart)
 {
-    const CharT* tmp = userbuf.addressOfNextRawChar();
+    const CharT* const originalAddress = userbuf.addressOfNextRawChar();
     userbuf.setAddressOfNextRawChar(identStart);
+
+    auto restoreNextRawCharAddress =
+        MakeScopeExit([this, originalAddress]() {
+            this->userbuf.setAddressOfNextRawChar(originalAddress);
+        });
 
     tokenbuf.clear();
     for (;;) {
@@ -1314,10 +1321,8 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
             if (!unicode::IsIdentifierPart(codePoint))
                 break;
 
-            if (!appendMultiUnitCodepointToTokenbuf(codePoint)) {
-                userbuf.setAddressOfNextRawChar(tmp);
+            if (!appendMultiUnitCodepointToTokenbuf(codePoint))
                 return false;
-            }
 
             continue;
         }
@@ -1330,23 +1335,19 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
             if (MOZ_UNLIKELY(unicode::IsSupplementary(qc))) {
                 char16_t lead, trail;
                 unicode::UTF16Encode(qc, &lead, &trail);
-                if (!tokenbuf.append(lead) || !tokenbuf.append(trail)) {
-                    userbuf.setAddressOfNextRawChar(tmp);
+                if (!tokenbuf.append(lead) || !tokenbuf.append(trail))
                     return false;
-                }
+
                 continue;
             }
 
             c = qc;
         }
 
-        if (!tokenbuf.append(c)) {
-            userbuf.setAddressOfNextRawChar(tmp);
+        if (!tokenbuf.append(c))
             return false;
-        }
     }
 
-    userbuf.setAddressOfNextRawChar(tmp);
     return true;
 }
 
