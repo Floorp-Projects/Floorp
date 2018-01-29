@@ -36,6 +36,7 @@
 #include <secport.h>
 #include <secitem.h>
 #include <blapi.h>
+#include <assert.h>
 #include <private/pprio.h>
 
 /* Android API < 21 doesn't define RTLD_NOLOAD */
@@ -252,7 +253,12 @@ PORT_ZAllocAligned_stub(size_t bytes, size_t alignment, void **mem)
     }
 
     memset(*mem, 0, len);
-    return (void *)(((uintptr_t)*mem + x) & ~(uintptr_t)x);
+
+    /* We're pretty sure this is non-zero, but let's assure scan-build too. */
+    void *ret = (void *)(((uintptr_t)*mem + x) & ~(uintptr_t)x);
+    assert(ret);
+
+    return ret;
 }
 
 extern void *

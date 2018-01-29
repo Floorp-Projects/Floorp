@@ -53,34 +53,35 @@ static const sslSocketOps ssl_secure_ops = { /* SSL. */
 ** default settings for socket enables
 */
 static sslOptions ssl_defaults = {
-    { siBuffer, NULL, 0 }, /* nextProtoNego */
-    PR_TRUE,               /* useSecurity        */
-    PR_FALSE,              /* useSocks           */
-    PR_FALSE,              /* requestCertificate */
-    2,                     /* requireCertificate */
-    PR_FALSE,              /* handshakeAsClient  */
-    PR_FALSE,              /* handshakeAsServer  */
-    PR_FALSE,              /* noCache            */
-    PR_FALSE,              /* fdx                */
-    PR_TRUE,               /* detectRollBack     */
-    PR_FALSE,              /* noLocks            */
-    PR_FALSE,              /* enableSessionTickets */
-    PR_FALSE,              /* enableDeflate      */
-    2,                     /* enableRenegotiation (default: requires extension) */
-    PR_FALSE,              /* requireSafeNegotiation */
-    PR_FALSE,              /* enableFalseStart   */
-    PR_TRUE,               /* cbcRandomIV        */
-    PR_FALSE,              /* enableOCSPStapling */
-    PR_FALSE,              /* enableNPN          */
-    PR_TRUE,               /* enableALPN         */
-    PR_TRUE,               /* reuseServerECDHEKey */
-    PR_FALSE,              /* enableFallbackSCSV */
-    PR_TRUE,               /* enableServerDhe */
-    PR_FALSE,              /* enableExtendedMS    */
-    PR_FALSE,              /* enableSignedCertTimestamps */
-    PR_FALSE,              /* requireDHENamedGroups */
-    PR_FALSE,              /* enable0RttData */
-    PR_FALSE               /* enableTls13CompatMode */
+    .nextProtoNego = { siBuffer, NULL, 0 },
+    .maxEarlyDataSize = 1 << 16,
+    .useSecurity = PR_TRUE,
+    .useSocks = PR_FALSE,
+    .requestCertificate = PR_FALSE,
+    .requireCertificate = SSL_REQUIRE_FIRST_HANDSHAKE,
+    .handshakeAsClient = PR_FALSE,
+    .handshakeAsServer = PR_FALSE,
+    .noCache = PR_FALSE,
+    .fdx = PR_FALSE,
+    .detectRollBack = PR_TRUE,
+    .noLocks = PR_FALSE,
+    .enableSessionTickets = PR_FALSE,
+    .enableDeflate = PR_FALSE,
+    .enableRenegotiation = SSL_RENEGOTIATE_REQUIRES_XTN,
+    .requireSafeNegotiation = PR_FALSE,
+    .enableFalseStart = PR_FALSE,
+    .cbcRandomIV = PR_TRUE,
+    .enableOCSPStapling = PR_FALSE,
+    .enableNPN = PR_FALSE,
+    .enableALPN = PR_TRUE,
+    .reuseServerECDHEKey = PR_TRUE,
+    .enableFallbackSCSV = PR_FALSE,
+    .enableServerDhe = PR_TRUE,
+    .enableExtendedMS = PR_FALSE,
+    .enableSignedCertTimestamps = PR_FALSE,
+    .requireDHENamedGroups = PR_FALSE,
+    .enable0RttData = PR_FALSE,
+    .enableTls13CompatMode = PR_FALSE
 };
 
 /*
@@ -1249,6 +1250,18 @@ SSL_OptionSetDefault(PRInt32 which, PRIntn val)
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             return SECFailure;
     }
+    return SECSuccess;
+}
+
+SECStatus
+SSLExp_SetMaxEarlyDataSize(PRFileDesc *fd, PRUint32 size)
+{
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure; /* Error code already set. */
+    }
+
+    ss->opt.maxEarlyDataSize = size;
     return SECSuccess;
 }
 
@@ -3932,6 +3945,7 @@ struct {
     EXP(InstallExtensionHooks),
     EXP(KeyUpdate),
     EXP(SendSessionTicket),
+    EXP(SetMaxEarlyDataSize),
     EXP(SetupAntiReplay),
     EXP(SetResumptionTokenCallback),
     EXP(SetResumptionToken),

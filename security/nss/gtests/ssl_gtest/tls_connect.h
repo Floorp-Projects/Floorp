@@ -225,6 +225,8 @@ class TlsConnectGenericResumption
       client_->SetResumptionTokenCallback();
     }
   }
+
+  bool use_external_cache() const { return external_cache_; }
 };
 
 class TlsConnectTls13ResumptionToken
