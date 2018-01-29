@@ -84,6 +84,8 @@ protected:
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();
   mozilla::layers::WebRenderBridgeChild* GetWebRenderBridge();
 
+  // Until callers are annotated.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD SendMouseEventCommon(const nsAString& aType,
                                   float aX,
                                   float aY,

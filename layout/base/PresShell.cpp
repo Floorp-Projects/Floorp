@@ -6994,22 +6994,21 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
 
     // Only capture mouse events and pointer events.
-    nsIContent* pointerCapturingContent =
+    nsCOMPtr<nsIContent> pointerCapturingContent =
       PointerEventHandler::GetPointerCapturingContent(aEvent);
 
     if (pointerCapturingContent) {
-      nsIFrame* pointerCapturingFrame =
-        pointerCapturingContent->GetPrimaryFrame();
+      frame = pointerCapturingContent->GetPrimaryFrame();
 
-      if (!pointerCapturingFrame) {
+      if (!frame) {
         // Dispatch events to the capturing content even it's frame is
         // destroyed.
         PointerEventHandler::DispatchPointerFromMouseOrTouch(
-          this, nullptr, pointerCapturingContent, aEvent, false, aEventStatus,
-          nullptr);
+          this, nullptr, pointerCapturingContent, aEvent, false,
+          aEventStatus, nullptr);
 
-        PresShell* shell = GetShellForEventTarget(nullptr,
-                                                  pointerCapturingContent);
+        RefPtr<PresShell> shell =
+          GetShellForEventTarget(nullptr, pointerCapturingContent);
 
         if (!shell) {
           // The capturing element could be changed when dispatch pointer
@@ -7019,8 +7018,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         return shell->HandleEventWithTarget(aEvent, nullptr,
                                             pointerCapturingContent,
                                             aEventStatus, true);
-      } else {
-        frame = pointerCapturingFrame;
       }
     }
 
@@ -7095,7 +7092,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       return NS_OK;
     }
 
-    PresShell* shell = static_cast<PresShell*>(frame->PresShell());
+    RefPtr<PresShell> shell = static_cast<PresShell*>(frame->PresShell());
     // Check if we have an active EventStateManager which isn't the
     // EventStateManager of the current PresContext.
     // If that is the case, and mouse is over some ancestor document,
@@ -7198,7 +7195,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
                 touchEvent)) {
           frame = newFrame;
           frame->GetContentForEvent(aEvent, getter_AddRefs(targetElement));
-          shell = static_cast<PresShell*>(frame->PresContext()->PresShell());
+          shell = static_cast<PresShell*>(frame->PresShell());
         }
       } else if (PresShell* newShell = GetShellForTouchEvent(aEvent)) {
         // Touch events (except touchstart) are dispatching to the captured
@@ -7207,8 +7204,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    // Prevent deletion until we're done with event handling (bug 336582)
-    nsCOMPtr<nsIPresShell> kungFuDeathGrip(shell);
     nsresult rv;
 
     // Handle the event in the correct shell.
