@@ -15,6 +15,29 @@ job-defaults:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
+codespell:
+    description: Checks for misspellings in text files
+    platform: lint/opt
+    treeherder:
+        symbol: spell
+    run:
+        mach: lint -l codespell -f treeherder
+    when:
+        files-changed:
+            - '**/*.js'
+            - '**/*.jsm'
+            - '**/*.jxs'
+            - '**/*.xml'
+            - '**/*.html'
+            - '**/*.xhtml'
+            - '**/*.cpp'
+            - '**/*.c'
+            - '**/*.h'
+            - '**/*.configure'
+            - '**/*.py'
+            - '**/*.properties'
+            - '**/*.rst'
+
 eslint:
     description: JS lint check
     platform: lint/opt
