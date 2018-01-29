@@ -102,29 +102,23 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
     *aDocument = nullptr;
   }
 
-  if (NS_WARN_IF(!aEventTarget)) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aEventTarget);
-  if (!doc) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(aEventTarget);
-    if (node) {
-      doc = node->OwnerDoc();
-    } else {
-      nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aEventTarget);
-      if (!window) {
-        return false;
-      }
-      doc = window->GetExtantDoc();
-    }
-    if (!doc) {
+  nsIDocument* doc = nullptr;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aEventTarget);
+  if (node) {
+    doc = node->OwnerDoc();
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aEventTarget);
+    if (!window) {
       return false;
     }
+    doc = window->GetExtantDoc();
   }
+
+  // nsContentUtils::IsChromeDoc is null-safe.
   bool isChrome = nsContentUtils::IsChromeDoc(doc);
-  if (aDocument) {
-    doc.swap(*aDocument);
+  if (aDocument && doc) {
+    nsCOMPtr<nsIDocument> retVal = doc;
+    retVal.swap(*aDocument);
   }
   return isChrome;
 }

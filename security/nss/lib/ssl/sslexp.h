@@ -444,6 +444,14 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
         (PRFileDesc * _fd, const PRUint8 *_token, const unsigned int _len), \
         (fd, token, len))
 
+/* TLS 1.3 allows a server to set a limit on the number of bytes of early data
+ * that can be received. This allows that limit to be set. This function has no
+ * effect on a client. */
+#define SSL_SetMaxEarlyDataSize(fd, size)                    \
+    SSL_EXPERIMENTAL_API("SSL_SetMaxEarlyDataSize",          \
+                         (PRFileDesc * _fd, PRUint32 _size), \
+                         (fd, size))
+
 /* Deprecated experimental APIs */
 
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
