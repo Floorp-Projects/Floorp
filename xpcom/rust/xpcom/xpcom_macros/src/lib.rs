@@ -202,7 +202,7 @@ enum RefcntKind {
 impl ToTokens for RefcntKind {
     fn to_tokens(&self, tokens: &mut Tokens) {
         match *self {
-            RefcntKind::NonAtomic => quote!(xpcom::RefCnt).to_tokens(tokens),
+            RefcntKind::NonAtomic => quote!(xpcom::Refcnt).to_tokens(tokens),
             RefcntKind::Atomic => quote!(xpcom::AtomicRefcnt).to_tokens(tokens),
         }
     }
