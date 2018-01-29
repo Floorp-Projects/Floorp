@@ -1265,11 +1265,7 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
     aValue &= ~legacy;
     aResult.AppendLiteral("legacy ");
   }
-  // Don't serialize the 'unsafe' keyword; it's the default.
   auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_UNSAFE);
-  if (MOZ_UNLIKELY(overflowPos == NS_STYLE_ALIGN_SAFE)) {
-    aResult.AppendLiteral("safe ");
-  }
   aValue &= ~overflowPos;
   MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
              "unknown bits in align/justify value");
@@ -1287,6 +1283,12 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
   }
   const auto& kwtable(nsCSSProps::kAlignAllKeywords);
   AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(aValue, kwtable), aResult);
+  // Don't serialize the 'unsafe' keyword; it's the default.
+  if (MOZ_UNLIKELY(overflowPos == NS_STYLE_ALIGN_SAFE)) {
+    aResult.Append(' ');
+    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(overflowPos, kwtable),
+                       aResult);
+  }
 }
 
 /**
