@@ -845,6 +845,10 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override // GeckoSession.ContentListener
+    public void onFocusRequest(final GeckoSession session) {
+    }
+
+    @Override // GeckoSession.ContentListener
     public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
         if (fullScreen) {
             SnackbarBuilder.builder(this)
