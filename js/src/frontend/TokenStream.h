@@ -948,7 +948,7 @@ class TokenStreamCharsBase
         const CharT* ptr;
     };
 
-    MOZ_MUST_USE bool appendMultiUnitCodepointToTokenbuf(uint32_t codepoint);
+    MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
     class MOZ_STACK_CLASS Position
     {
@@ -1158,7 +1158,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using typename CharsSharedBase::TokenBuf;
 
   private:
-    using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
+    using CharsSharedBase::appendCodePointToTokenbuf;
     using CharsSharedBase::atomizeChars;
     using CharsSharedBase::copyTokenbufTo;
     using GeneralCharsBase::getCharIgnoreEOL;
