@@ -50,7 +50,6 @@ PK11SymKey *SSLInt_CipherSpecToKey(const ssl3CipherSpec *spec);
 SSLCipherAlgorithm SSLInt_CipherSpecToAlgorithm(const ssl3CipherSpec *spec);
 const PRUint8 *SSLInt_CipherSpecToIv(const ssl3CipherSpec *spec);
 void SSLInt_SetTicketLifetime(uint32_t lifetime);
-void SSLInt_SetMaxEarlyDataSize(uint32_t size);
 SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size);
 void SSLInt_RolloverAntiReplay(void);
 

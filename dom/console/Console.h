@@ -392,6 +392,12 @@ private:
                            const Sequence<JS::Value>& aData);
 
   void
+  MaybeExecuteDumpFunctionForTime(JSContext* aCx, MethodName aMethodName,
+                                  const nsAString& aMethodString,
+                                  uint64_t aMonotonicTimer,
+                                  const JS::Value& aData);
+
+  void
   MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack);
 
   void
