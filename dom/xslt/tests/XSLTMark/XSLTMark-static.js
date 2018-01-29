@@ -12,7 +12,7 @@ const nsIFilePicker   = Components.interfaces.nsIFilePicker;
 const STDURLMUT_CTRID = "@mozilla.org/network/standard-url-mutator;1";
 const nsIURIMutator   = Components.interfaces.nsIURIMutator;
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var gStop = false;
 

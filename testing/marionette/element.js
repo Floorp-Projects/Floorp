@@ -7,16 +7,16 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/atom.js");
+ChromeUtils.import("chrome://marionette/content/assert.js");
+ChromeUtils.import("chrome://marionette/content/atom.js");
 const {
   InvalidArgumentError,
   InvalidSelectorError,
   NoSuchElementError,
   StaleElementReferenceError,
-} = Cu.import("chrome://marionette/content/error.js", {});
-const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
-const {PollPromise} = Cu.import("chrome://marionette/content/sync.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+const {PollPromise} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = [
   "ChromeWebElement",

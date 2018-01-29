@@ -13,9 +13,9 @@ this.EXPORTED_SYMBOLS = [
 
 var {utils: Cu} = Components;
 
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/record.js");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://services-sync/record.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 this.FakeFilesystemService = function FakeFilesystemService(contents) {
   this.fakeContents = contents;

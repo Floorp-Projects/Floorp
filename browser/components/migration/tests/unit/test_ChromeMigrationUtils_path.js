@@ -2,9 +2,9 @@
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource:///modules/ChromeMigrationUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource:///modules/ChromeMigrationUtils.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function getRootPath() {
   let dirKey;

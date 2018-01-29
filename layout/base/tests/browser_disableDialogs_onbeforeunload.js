@@ -38,7 +38,7 @@ async function openPage(enableDialogs) {
     // Load the content script in the frame.
     let methodName = enableDialogs ? "enableDialogs" : "disableDialogs";
     await ContentTask.spawn(browser, methodName, async function(name) {
-      Components.utils.import("resource://gre/modules/Services.jsm");
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
       Services.obs.addObserver(doc => {
         if (content && doc == content.document) {
           content.QueryInterface(Ci.nsIInterfaceRequestor).

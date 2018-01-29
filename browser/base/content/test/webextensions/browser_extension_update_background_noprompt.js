@@ -1,4 +1,4 @@
-const {AddonManagerPrivate} = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const {AddonManagerPrivate} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
 const ID_PERMS = "update_perms@tests.mozilla.org";
 const ID_LEGACY = "legacy_update@tests.mozilla.org";

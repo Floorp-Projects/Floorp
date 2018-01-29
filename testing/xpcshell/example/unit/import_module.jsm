@@ -12,7 +12,7 @@ const MODULE_IMPORTED = true;
 const MODULE_URI = __URI__;
 
 // Will import SUBMODULE_IMPORTED into scope.
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.importRelative(this, "import_sub_module.jsm");
 
 // Prepare two scopes that we can import the submodule into.

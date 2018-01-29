@@ -12,8 +12,8 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://formautofill/FormAutofillContent.jsm");
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillContent.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 /**
  * Handles content's interactions for the frame.

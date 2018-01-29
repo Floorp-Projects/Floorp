@@ -6,11 +6,11 @@ this.EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
+ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
 const kCSSVarsMap = new Map([
@@ -39,7 +39,7 @@ this.LightweightThemeConsumer =
   Services.obs.addObserver(this, "lightweight-theme-styling-update");
 
   var temp = {};
-  Cu.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+  ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
   this._update(temp.LightweightThemeManager.currentThemeForDisplay);
   this._win.addEventListener("resize", this);
 };

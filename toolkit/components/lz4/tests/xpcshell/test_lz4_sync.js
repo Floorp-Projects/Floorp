@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/lz4.js");
-Cu.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/lz4.js");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function compare_arrays(a, b) {
   return Array.prototype.join.call(a) == Array.prototype.join.call(b);

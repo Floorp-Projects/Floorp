@@ -10,10 +10,10 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
+ChromeUtils.defineModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
 
 const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]

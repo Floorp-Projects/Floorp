@@ -5,9 +5,9 @@
 
 const {
   EncryptionRemoteTransformer,
-} = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
-Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-sync/util.js");
+} = ChromeUtils.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
+ChromeUtils.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 /**
  * Like Assert.throws, but for generators.

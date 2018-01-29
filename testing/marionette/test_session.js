@@ -6,11 +6,11 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Cu.import("chrome://marionette/content/error.js");
-Cu.import("chrome://marionette/content/session.js");
+ChromeUtils.import("chrome://marionette/content/error.js");
+ChromeUtils.import("chrome://marionette/content/session.js");
 
 add_test(function test_Timeouts_ctor() {
   let ts = new session.Timeouts();

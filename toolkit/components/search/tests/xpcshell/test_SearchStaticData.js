@@ -7,7 +7,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/SearchStaticData.jsm", this);
+ChromeUtils.import("resource://gre/modules/SearchStaticData.jsm", this);
 
 function run_test() {
   Assert.ok(SearchStaticData.getAlternateDomains("www.google.com")

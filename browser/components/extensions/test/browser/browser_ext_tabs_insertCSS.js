@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  let {MessageChannel} = Cu.import("resource://gre/modules/MessageChannel.jsm", {});
+  let {MessageChannel} = ChromeUtils.import("resource://gre/modules/MessageChannel.jsm", {});
 
   let messageManagersSize = MessageChannel.messageManagers.size;
   let responseManagersSize = MessageChannel.responseManagers.size;

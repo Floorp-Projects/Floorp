@@ -4,7 +4,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 var { utils: Cu, interfaces: Ci } = Components;
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 var Prompter = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),

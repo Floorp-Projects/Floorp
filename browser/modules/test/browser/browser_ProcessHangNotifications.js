@@ -1,9 +1,9 @@
 /* globals ProcessHangMonitor */
 
 const { WebExtensionPolicy } =
-  Cu.getGlobalForObject(Cu.import("resource://gre/modules/Services.jsm", {}));
+  Cu.getGlobalForObject(ChromeUtils.import("resource://gre/modules/Services.jsm", {}));
 
-Cu.import("resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm");
 
 function getNotificationBox(aWindow) {
   return aWindow.document.getElementById("high-priority-global-notificationbox");

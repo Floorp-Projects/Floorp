@@ -3,8 +3,8 @@
 
 const INT_MAX = 0x7FFFFFFF;
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 // Return an array of numbers from lower up to, excluding, upper
 function numberRange(lower, upper) {

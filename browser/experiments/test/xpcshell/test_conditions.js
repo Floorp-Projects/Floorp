@@ -4,8 +4,8 @@
 "use strict";
 
 
-Cu.import("resource:///modules/experiments/Experiments.jsm");
-Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 
 const SEC_IN_ONE_DAY = 24 * 60 * 60;
 

@@ -13,7 +13,7 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
 // doesn't support lightweight themes.
 Services.prefs.setBoolPref("lightweightThemes.update.enabled", true);
 
-Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
                "%ITEM_STATUS%/%APP_ID%/%APP_VERSION%/%CURRENT_APP_VERSION%/" +

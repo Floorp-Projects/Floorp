@@ -5,7 +5,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 /* global sinon */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 
@@ -18,10 +18,10 @@ const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/pref
 const TEST_SERVICE_WORKER_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/service_worker_test.html";
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
 
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
-const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
-const { OfflineAppCacheHelper } = Cu.import("resource:///modules/offlineAppCache.jsm", {});
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", {});
+const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
+const { OfflineAppCacheHelper } = ChromeUtils.import("resource:///modules/offlineAppCache.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
 

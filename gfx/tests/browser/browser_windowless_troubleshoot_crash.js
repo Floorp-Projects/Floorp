@@ -1,4 +1,4 @@
-let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 add_task(async function test_windowlessBrowserTroubleshootCrash() {
   let webNav = Services.appShell.createWindowlessBrowser(false);
@@ -36,7 +36,7 @@ add_task(async function test_windowlessBrowserTroubleshootCrash() {
   }
   ok(true, "not crashed");
 
-  var Troubleshoot = Cu.import("resource://gre/modules/Troubleshoot.jsm", {}).Troubleshoot;
+  var Troubleshoot = ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm", {}).Troubleshoot;
   var data = await new Promise((resolve, reject) => {
     Troubleshoot.snapshot((data) => {
       resolve(data);
