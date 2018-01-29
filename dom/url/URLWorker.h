@@ -122,6 +122,16 @@ public:
 private:
   ~URLWorker();
 
+  enum Strategy {
+    eAlwaysUseProxy,
+    eUseProxyIfNeeded,
+  };
+
+  void
+  SetHrefInternal(const nsAString& aHref,
+                  Strategy aStrategy,
+                  ErrorResult& aRv);
+
   workers::WorkerPrivate* mWorkerPrivate;
   RefPtr<URLProxy> mURLProxy;
   RefPtr<net::nsStandardURL> mStdURL;
