@@ -25,7 +25,7 @@ struct AnyRegister {
     Code code_;
 
   public:
-    AnyRegister() = default;
+    AnyRegister() : code_(Invalid) {}
 
     explicit AnyRegister(Register gpr) {
         code_ = gpr.code();
@@ -40,6 +40,7 @@ struct AnyRegister {
         return r;
     }
     bool isFloat() const {
+        MOZ_ASSERT(isValid());
         return code_ >= Registers::Total;
     }
     Register gpr() const {
@@ -51,15 +52,18 @@ struct AnyRegister {
         return FloatRegister::FromCode(code_ - Registers::Total);
     }
     bool operator ==(AnyRegister other) const {
+        // We don't need the operands to be valid to test for equality.
         return code_ == other.code_;
     }
     bool operator !=(AnyRegister other) const {
+        // We don't need the operands to be valid to test for equality.
         return code_ != other.code_;
     }
     const char* name() const {
         return isFloat() ? fpu().name() : gpr().name();
     }
     Code code() const {
+        MOZ_ASSERT(isValid());
         return code_;
     }
     bool volatile_() const {
@@ -99,7 +103,9 @@ struct AnyRegister {
             return true;
         return false;
     }
-
+    bool isValid() const {
+        return code_ != Invalid;
+    }
 };
 
 // Registers to hold a boxed value. Uses one register on 64 bit
@@ -169,7 +175,7 @@ class TypedOrValueRegister
     MIRType type_;
 
     union U {
-        AnyRegister typed;
+        AnyRegister::Code typed;
         ValueOperand value;
     } data;
 
@@ -180,7 +186,7 @@ class TypedOrValueRegister
     TypedOrValueRegister(MIRType type, AnyRegister reg)
       : type_(type)
     {
-        data.typed = reg;
+        data.typed = reg.code();
     }
 
     MOZ_IMPLICIT TypedOrValueRegister(ValueOperand value)
@@ -203,7 +209,7 @@ class TypedOrValueRegister
 
     AnyRegister typedReg() const {
         MOZ_ASSERT(hasTyped());
-        return data.typed;
+        return AnyRegister::FromCode(data.typed);
     }
 
     ValueOperand valueReg() const {
