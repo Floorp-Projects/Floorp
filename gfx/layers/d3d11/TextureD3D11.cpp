@@ -1090,7 +1090,7 @@ DXGITextureHostD3D11::NumSubTextures() const
 }
 
 void
-DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+DXGITextureHostD3D11::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                           ResourceUpdateOp aOp,
                                           const Range<wr::ImageKey>& aImageKeys,
                                           const wr::ExternalImageId& aExtID)
@@ -1101,8 +1101,8 @@ DXGITextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
   }
 
   MOZ_ASSERT(mHandle);
-  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
-                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
+                                              : &wr::TransactionBuilder::UpdateExternalImage;
   switch (mFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -1341,7 +1341,7 @@ DXGIYCbCrTextureHostD3D11::NumSubTextures() const
 }
 
 void
-DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                                ResourceUpdateOp aOp,
                                                const Range<wr::ImageKey>& aImageKeys,
                                                const wr::ExternalImageId& aExtID)
@@ -1356,8 +1356,8 @@ DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::ResourceUpdateQueue& aResourc
   MOZ_ASSERT(mSize.width % 2 == 0);
   MOZ_ASSERT(mSize.height % 2 == 0);
 
-  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
-                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
+                                              : &wr::TransactionBuilder::UpdateExternalImage;
   auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
 
   // y

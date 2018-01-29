@@ -1,4 +1,4 @@
-if (getBuildConfiguration().release_or_beta)
+enableExpressionClosures();
 eval(`
 function f1(foo, bar) foo + bar;
 assertEq(f1.toString(), "function f1(foo, bar) foo + bar");

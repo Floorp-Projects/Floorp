@@ -354,6 +354,9 @@ public:
     virtual void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes)
     {
     }
+    virtual void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances)
+    {
+    }
 
     nsString         mName;
     nsString         mFamilyName;

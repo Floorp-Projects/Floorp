@@ -70,6 +70,8 @@ talos:
     - talos-tp6
     - talos-tp6-stylo-threads
     - talos-speedometer
+    - talos-h1
+    - talos-h2
 
 awsy:
     - awsy

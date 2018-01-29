@@ -679,6 +679,13 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
+    public void onFocusRequest(GeckoSession session) {
+        Intent intent = new Intent(getIntent());
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
+    }
+
+    @Override
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         ActivityUtils.setFullScreen(this, fullScreen);
         if (fullScreen) {

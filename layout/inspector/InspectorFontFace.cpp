@@ -14,6 +14,7 @@
 #include "brotli/decode.h"
 #include "zlib.h"
 #include "mozilla/dom/FontFaceSet.h"
+#include "mozilla/Unused.h"
 
 namespace mozilla {
 namespace dom {
@@ -189,8 +190,19 @@ InspectorFontFace::GetMetadata(nsAString& aMetadata)
   }
 }
 
+// Append an OpenType tag to a string as a 4-ASCII-character code.
+static void
+AppendTagAsASCII(nsAString& aString, uint32_t aTag)
+{
+  aString.AppendPrintf("%c%c%c%c", (aTag >> 24) & 0xff,
+                                   (aTag >> 16) & 0xff,
+                                   (aTag >> 8) & 0xff,
+                                   aTag & 0xff);
+}
+
 void
-InspectorFontFace::GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult)
+InspectorFontFace::GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult,
+                                    ErrorResult& aRV)
 {
   if (!mFontEntry->HasVariations()) {
     return;
@@ -198,19 +210,52 @@ InspectorFontFace::GetVariationAxes(nsTArray<InspectorVariationAxis>& aResult)
   AutoTArray<gfxFontVariationAxis,4> axes;
   mFontEntry->GetVariationAxes(axes);
   MOZ_ASSERT(!axes.IsEmpty());
+  if (!aResult.SetCapacity(axes.Length(), mozilla::fallible)) {
+    aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
   for (auto a : axes) {
-    // Turn the uint32_t OpenType tag into a 4-ASCII-character string
-    nsAutoStringN<4> tag;
-    tag.AppendPrintf("%c%c%c%c", (a.mTag >> 24) & 0xff,
-                                 (a.mTag >> 16) & 0xff,
-                                 (a.mTag >> 8) & 0xff,
-                                 a.mTag & 0xff);
     InspectorVariationAxis& axis = *aResult.AppendElement();
-    axis.mTag = tag;
+    AppendTagAsASCII(axis.mTag, a.mTag);
     axis.mName = a.mName;
     axis.mMinValue = a.mMinValue;
     axis.mMaxValue = a.mMaxValue;
     axis.mDefaultValue = a.mDefaultValue;
+  }
+}
+
+void
+InspectorFontFace::GetVariationInstances(
+  nsTArray<InspectorVariationInstance>& aResult,
+  ErrorResult& aRV)
+{
+  if (!mFontEntry->HasVariations()) {
+    return;
+  }
+  AutoTArray<gfxFontVariationInstance,16> instances;
+  mFontEntry->GetVariationInstances(instances);
+  if (!aResult.SetCapacity(instances.Length(), mozilla::fallible)) {
+    aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  for (auto i : instances) {
+    InspectorVariationInstance& inst = *aResult.AppendElement();
+    inst.mName = i.mName;
+    // inst.mValues is a webidl sequence<>, which is a fallible array,
+    // so we are required to use fallible SetCapacity and AppendElement calls,
+    // and check the result. In practice we don't expect failure here; the
+    // list of values cannot get huge because of limits in the font format.
+    if (!inst.mValues.SetCapacity(i.mValues.Length(), mozilla::fallible)) {
+      aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    for (auto v : i.mValues) {
+      InspectorVariationValue value;
+      AppendTagAsASCII(value.mAxis, v.mAxis);
+      value.mValue = v.mValue;
+      // This won't fail, because of SetCapacity above.
+      Unused << inst.mValues.AppendElement(value, mozilla::fallible);
+    }
   }
 }
 

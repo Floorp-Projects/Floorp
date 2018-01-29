@@ -50,16 +50,42 @@ struct Line {
   wr::LineStyle style;
 };
 
-/// Updates to retained resources such as images and fonts, applied within the
-/// same transaction.
-class ResourceUpdateQueue {
+
+class TransactionBuilder {
 public:
-  ResourceUpdateQueue();
-  ~ResourceUpdateQueue();
-  ResourceUpdateQueue(ResourceUpdateQueue&&);
-  ResourceUpdateQueue(const ResourceUpdateQueue&) = delete;
-  ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
-  ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
+  TransactionBuilder();
+
+  ~TransactionBuilder();
+
+  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
+
+  void SetRootPipeline(PipelineId aPipelineId);
+
+  void RemovePipeline(PipelineId aPipelineId);
+
+  void SetDisplayList(gfx::Color aBgColor,
+                      Epoch aEpoch,
+                      mozilla::LayerSize aViewportSize,
+                      wr::WrPipelineId pipeline_id,
+                      const wr::LayoutSize& content_size,
+                      wr::BuiltDisplayListDescriptor dl_descriptor,
+                      wr::Vec<uint8_t>& dl_data);
+
+  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
+
+  void GenerateFrame();
+
+  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
+
+  void SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
+                           const LayoutDeviceIntRect& aDocRect);
+
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const wr::LayoutPoint& aScrollPosition);
+
+  bool IsEmpty() const;
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
@@ -113,56 +139,11 @@ public:
 
   void Clear();
 
-  // Try to avoid using this when possible.
-  wr::ResourceUpdates* Raw() { return mUpdates; }
-
-protected:
-  explicit ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
-  : mUpdates(aUpdates) {}
-
-  wr::ResourceUpdates* mUpdates;
-};
-
-class TransactionBuilder {
-public:
-  TransactionBuilder();
-
-  ~TransactionBuilder();
-
-  void UpdateEpoch(PipelineId aPipelineId, Epoch aEpoch);
-
-  void SetRootPipeline(PipelineId aPipelineId);
-
-  void RemovePipeline(PipelineId aPipelineId);
-
-  void SetDisplayList(gfx::Color aBgColor,
-                      Epoch aEpoch,
-                      mozilla::LayerSize aViewportSize,
-                      wr::WrPipelineId pipeline_id,
-                      const wr::LayoutSize& content_size,
-                      wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec<uint8_t>& dl_data);
-
-  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId aPipeline);
-
-  void GenerateFrame();
-
-  void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                               const nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  void SetWindowParameters(LayoutDeviceIntSize size);
-
-  void UpdateResources(ResourceUpdateQueue& aUpdates);
-
-  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                            const layers::FrameMetrics::ViewID& aScrollId,
-                            const wr::LayoutPoint& aScrollPosition);
-
-  bool IsEmpty() const;
-
   Transaction* Raw() { return mTxn; }
+  wr::ResourceUpdates* RawUpdates() { return mResourceUpdates; }
 protected:
   Transaction* mTxn;
+  wr::ResourceUpdates* mResourceUpdates;
 };
 
 class WebRenderAPI
@@ -174,6 +155,8 @@ public:
   static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParentBase* aBridge,
                                                RefPtr<widget::CompositorWidget>&& aWidget,
                                                LayoutDeviceIntSize aSize);
+
+  already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex);
 
   // Redirect the WR's log to gfxCriticalError/Note.
   static void InitExternalLogHandler();
@@ -224,7 +207,17 @@ protected:
   uint32_t mMaxTextureSize;
   bool mUseANGLE;
   layers::SyncHandle mSyncHandle;
+
+  // We maintain alive the root api to know when to shut the render backend down,
+  // and the root api for the document to know when to delete the document.
+  // mRootApi is null for the api object that owns the channel (and is responsible
+  // for shutting it down), and mRootDocumentApi is null for the api object owning
+  // (and responsible for destroying) a given document.
+  // All api objects in the same window use the same channel, and some api objects
+  // write to the same document (but there is only one owner for each channel and
+  // for each document).
   RefPtr<wr::WebRenderAPI> mRootApi;
+  RefPtr<wr::WebRenderAPI> mRootDocumentApi;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;

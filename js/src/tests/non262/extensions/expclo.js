@@ -1,4 +1,4 @@
-// |reftest| skip-if(!release_or_beta)
+// |reftest| skip-if(!xulRuntime.shell)
 /* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
@@ -8,6 +8,9 @@
 
 var summary = "Flat expression closure source coordinate fencepost test";
 
+enableExpressionClosures();
+
+eval(`
 function f(a) {
     if (a) {
         let b = 42;
@@ -20,5 +23,6 @@ function f(a) {
 
 var expect = 44;
 var actual = f(1)();
+`);
 
 reportCompare(expect, actual, summary);

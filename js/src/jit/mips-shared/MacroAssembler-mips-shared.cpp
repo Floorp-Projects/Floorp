@@ -328,9 +328,16 @@ template <typename L>
 void
 MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, L overflow)
 {
-    as_addu(rd, rs, rt);
-    as_sltu(SecondScratchReg, rd, rs);
-    ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    if (rd != rs) {
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, rs);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    } else {
+        ma_move(SecondScratchReg, rs);
+        as_addu(rd, rs, rt);
+        as_sltu(SecondScratchReg, rd, SecondScratchReg);
+        ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    }
 }
 
 template void
@@ -709,7 +716,7 @@ MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& acces
     int16_t lowOffset, hiOffset;
     Register base;
 
-    asMasm().computeEffectiveAddress(dest, SecondScratchReg);
+    asMasm().computeScaledAddress(dest, SecondScratchReg);
 
     if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + size / 8 - 1)) {
         base = SecondScratchReg;
