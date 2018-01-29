@@ -1362,8 +1362,7 @@ PresShell::Destroy()
   }
 
   if (mPresContext) {
-    mPresContext->AnimationManager()->ClearEventQueue();
-    mPresContext->TransitionManager()->ClearEventQueue();
+    rd->CancelPendingAnimationEvents(mPresContext->AnimationEventDispatcher());
   }
 
   // Revoke any pending events.  We need to do this and cancel pending reflows

@@ -141,6 +141,8 @@ public:
            (aEnabledState & EnabledState::eInUASheets);
   }
 
+  static nsString PseudoTypeAsString(Type aPseudoType);
+
 private:
   // Does the given pseudo-element have all of the flags given?
 

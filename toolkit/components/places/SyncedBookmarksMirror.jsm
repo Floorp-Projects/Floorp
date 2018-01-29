@@ -334,14 +334,20 @@ class SyncedBookmarksMirror {
     // mirror, and we're holding the Sync lock at this point.
     MirrorLog.debug("Building remote tree from mirror");
     let remoteTree = await this.fetchRemoteTree(remoteTimeSeconds);
-    MirrorLog.trace("Built remote tree from mirror", remoteTree);
+    if (MirrorLog.level <= Log.Level.Trace) {
+      MirrorLog.trace("Built remote tree from mirror\n" +
+                      remoteTree.toASCIITreeString());
+    }
 
     let observersToNotify = new BookmarkObserverRecorder(this.db);
 
     let changeRecords = await this.db.executeTransaction(async () => {
       MirrorLog.debug("Building local tree from Places");
       let localTree = await this.fetchLocalTree(localTimeSeconds);
-      MirrorLog.trace("Built local tree from Places", localTree);
+      if (MirrorLog.level <= Log.Level.Trace) {
+        MirrorLog.trace("Built local tree from Places\n" +
+                        localTree.toASCIITreeString());
+      }
 
       MirrorLog.debug("Fetching content info for new mirror items");
       let newRemoteContents = await this.fetchNewRemoteContents();
@@ -358,8 +364,11 @@ class SyncedBookmarksMirror {
       }
 
       if (MirrorLog.level <= Log.Level.Trace) {
-        let newTreeRoot = mergedRoot.toBookmarkNode();
-        MirrorLog.trace("Built new merged tree", newTreeRoot);
+        MirrorLog.trace([
+          "Built new merged tree",
+          mergedRoot.toASCIITreeString(),
+          ...merger.deletionsToStrings(),
+        ].join("\n"));
       }
 
       // The merged tree should know about all items mentioned in the local
@@ -2562,6 +2571,46 @@ class BookmarkMergeState {
   value() {
     return this.type;
   }
+
+  /**
+   * Returns a representation of the value ("V") and structure ("S") state
+   * for logging. "L" is "local", "R" is "remote", and "+" is "new". We use
+   * compact notation here to reduce noise in trace logs, which log the
+   * merge state of every node in the tree.
+   *
+   * @return {String}
+   */
+  toString() {
+    return `(${this.valueToString()}; ${this.structureToString()})`;
+  }
+
+  valueToString() {
+    switch (this.value()) {
+      case BookmarkMergeState.TYPE.LOCAL:
+        return "V: L";
+      case BookmarkMergeState.TYPE.REMOTE:
+        return "V: R";
+    }
+    return "V: ?";
+  }
+
+  structureToString() {
+    switch (this.structure()) {
+      case BookmarkMergeState.TYPE.LOCAL:
+        return "S: L";
+      case BookmarkMergeState.TYPE.REMOTE:
+        return "S: R";
+      case BookmarkMergeState.TYPE.NEW:
+        // We intentionally don't log the new structure node here, since
+        // the merger already does that.
+        return "S: +";
+    }
+    return "S: ?";
+  }
+
+  toJSON() {
+    return this.toString();
+  }
 }
 
 BookmarkMergeState.TYPE = {
@@ -2684,6 +2733,61 @@ class BookmarkNode {
       }
     }
   }
+
+  /**
+   * Generates a human-readable, ASCII art representation of the node and its
+   * descendants. This is useful for visualizing the tree structure in trace
+   * logs.
+   *
+   * @return {String}
+   */
+  toASCIITreeString(prefix = "") {
+    if (!this.isFolder()) {
+      return prefix + "- " + this.toString();
+    }
+    return prefix + "+ " + this.toString() + "\n" + this.children.map(childNode =>
+      childNode.toASCIITreeString(`${prefix}| `)
+    ).join("\n");
+  }
+
+  /**
+   * Returns a representation of the node for logging. This should be compact,
+   * because the merger logs every local and remote node when trace logging is
+   * enabled.
+   *
+   * @return {String}
+   *         A string in the form of "bookmarkAAAA (B; 1.234s; !)", where
+   *         "B" is the kind, "1.234s" is the age, and "!" indicates that the
+   *         node needs to be merged.
+   */
+  toString() {
+    let info = `${this.kindToString()}; ${this.age.toFixed(3)}s`;
+    if (this.needsMerge) {
+      info += "; !";
+    }
+    return `${this.guid} (${info})`;
+  }
+
+  kindToString() {
+    switch (this.kind) {
+      case SyncedBookmarksMirror.KIND.BOOKMARK:
+        return "B";
+      case SyncedBookmarksMirror.KIND.QUERY:
+        return "Q";
+      case SyncedBookmarksMirror.KIND.FOLDER:
+        return "F";
+      case SyncedBookmarksMirror.KIND.LIVEMARK:
+        return "L";
+      case SyncedBookmarksMirror.KIND.SEPARATOR:
+        return "S";
+    }
+    return "?";
+  }
+
+  // Used by `Log.jsm`.
+  toJSON() {
+    return this.toString();
+  }
 }
 
 /**
@@ -2768,9 +2872,16 @@ class BookmarkTree {
     }
   }
 
-  toJSON() {
-    let deleted = Array.from(this.deletedGuids);
-    return { root: this.root, deleted };
+  /**
+   * Generates an ASCII art representation of the complete tree. Deleted GUIDs
+   * are prefixed with "~".
+   *
+   * @return {String}
+   */
+  toASCIITreeString() {
+    return this.root.toASCIITreeString() + "\n" + Array.from(this.deletedGuids,
+      guid => `~${guid}`
+    ).join(", ");
   }
 }
 
@@ -2875,6 +2986,38 @@ class MergedBookmarkNode {
     MirrorLog.error("Merged node ${guid} has unknown value state ${valueState}",
                     { guid: this.guid, valueState });
     throw new TypeError("Can't take unknown value state");
+  }
+
+  /**
+   * Generates an ASCII art representation of the merged node and its
+   * descendants. This is similar to the format generated by
+   * `BookmarkNode#toASCIITreeString`, but logs value and structure states for
+   * merged children.
+   *
+   * @return {String}
+   */
+  toASCIITreeString(prefix = "") {
+    if (!this.mergedChildren.length) {
+      return prefix + "- " + this.toString();
+    }
+    return prefix + "+ " + this.toString() + "\n" + this.mergedChildren.map(
+      mergedChildNode => mergedChildNode.toASCIITreeString(`${prefix}| `)
+    ).join("\n");
+  }
+
+  /**
+   * Returns a representation of the merged node for logging.
+   *
+   * @return {String}
+   *         A string in the form of "bookmarkAAAA (V: R, S: R)", where
+   *         "V" is the value state and "R" is the structure state.
+   */
+  toString() {
+    return `${this.guid} ${this.mergeState.toString()}`;
+  }
+
+  toJSON() {
+    return this.toString();
   }
 }
 
@@ -3667,6 +3810,25 @@ class BookmarkMerger {
       break;
     }
     return newLocalNode;
+  }
+
+  /**
+   * Returns an array of local ("L: ~bookmarkAAAA, ~bookmarkBBBB") and remote
+   * ("R: ~bookmarkCCCC, ~bookmarkDDDD") deletions for logging.
+   *
+   * @return {String[]}
+   */
+  deletionsToStrings() {
+    let infos = [];
+    if (this.deleteLocally.size) {
+      infos.push("L: " + Array.from(this.deleteLocally,
+        guid => `~${guid}`).join(", "));
+    }
+    if (this.deleteRemotely.size) {
+      infos.push("R: " + Array.from(this.deleteRemotely,
+        guid => `~${guid}`).join(", "));
+    }
+    return infos;
   }
 }
 
