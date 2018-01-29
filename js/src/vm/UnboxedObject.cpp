@@ -299,18 +299,17 @@ UnboxedPlainObject::getValue(const UnboxedLayout::Property& property,
 void
 UnboxedPlainObject::trace(JSTracer* trc, JSObject* obj)
 {
-    if (obj->as<UnboxedPlainObject>().expando_) {
-        TraceManuallyBarrieredEdge(trc,
-            reinterpret_cast<NativeObject**>(&obj->as<UnboxedPlainObject>().expando_),
-            "unboxed_expando");
-    }
+    UnboxedPlainObject* uobj = &obj->as<UnboxedPlainObject>();
 
-    const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration();
+    if (uobj->maybeExpando())
+        TraceManuallyBarrieredEdge(trc, uobj->addressOfExpando(), "unboxed_expando");
+
+    const UnboxedLayout& layout = uobj->layoutDontCheckGeneration();
     const int32_t* list = layout.traceList();
     if (!list)
         return;
 
-    uint8_t* data = obj->as<UnboxedPlainObject>().data();
+    uint8_t* data = uobj->data();
     while (*list != -1) {
         GCPtrString* heap = reinterpret_cast<GCPtrString*>(data + *list);
         TraceEdge(trc, heap, "unboxed_string");
@@ -330,8 +329,8 @@ UnboxedPlainObject::trace(JSTracer* trc, JSObject* obj)
 /* static */ UnboxedExpandoObject*
 UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj)
 {
-    if (obj->expando_)
-        return obj->expando_;
+    if (obj->maybeExpando())
+        return obj->maybeExpando();
 
     UnboxedExpandoObject* expando =
         NewObjectWithGivenProto<UnboxedExpandoObject>(cx, nullptr, gc::AllocKind::OBJECT4);
@@ -356,7 +355,7 @@ UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj
     if (IsInsideNursery(expando) && !IsInsideNursery(obj))
         cx->zone()->group()->storeBuffer().putWholeCell(obj);
 
-    obj->expando_ = expando;
+    obj->setExpandoUnsafe(expando);
     return expando;
 }
 

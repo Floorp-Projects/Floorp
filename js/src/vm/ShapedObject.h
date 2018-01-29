@@ -24,23 +24,30 @@ class ShapedObject : public JSObject
     // Property layout description and other state.
     GCPtrShape shape_;
 
+    MOZ_ALWAYS_INLINE const GCPtrShape& shapeRef() const {
+        return shape_;
+    }
+    MOZ_ALWAYS_INLINE GCPtrShape& shapeRef() {
+        return shape_;
+    }
+
+    // Used for GC tracing and Shape::listp
+    MOZ_ALWAYS_INLINE GCPtrShape* shapePtr() {
+        return &shape_;
+    }
+
   public:
     // Set the shape of an object. This pointer is valid for native objects and
     // some non-native objects. After creating an object, the objects for which
     // the shape pointer is invalid need to overwrite this pointer before a GC
     // can occur.
-    void initShape(Shape* shape) {
-        this->shape_.init(shape);
-    }
+    void initShape(Shape* shape) { shapeRef().init(shape); }
 
-    void setShape(Shape* shape) {
-        this->shape_ = shape;
-    }
-
-    Shape* shape() const { return this->shape_; }
+    void setShape(Shape* shape) { shapeRef() = shape; }
+    Shape* shape() const { return shapeRef(); }
 
     void traceShape(JSTracer* trc) {
-        TraceEdge(trc, &shape_, "shape");
+        TraceEdge(trc, shapePtr(), "shape");
     }
 
     static size_t offsetOfShape() { return offsetof(ShapedObject, shape_); }

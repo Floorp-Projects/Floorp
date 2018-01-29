@@ -1533,10 +1533,10 @@ NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
 
     // Make sure the shape's numFixedSlots() is correct.
     size_t nfixed = gc::GetGCKindSlots(obj->asTenured().getAllocKind(), obj->getClass());
-    if (nfixed != obj->shape_->numFixedSlots()) {
+    if (nfixed != obj->shape()->numFixedSlots()) {
         if (!NativeObject::generateOwnShape(cx, obj))
             return false;
-        obj->shape_->setNumFixedSlots(nfixed);
+        obj->shape()->setNumFixedSlots(nfixed);
     }
 
     if (obj->hasPrivate())
@@ -1566,7 +1566,7 @@ JSObject::fixDictionaryShapeAfterSwap()
     // Dictionary shapes can point back to their containing objects, so after
     // swapping the guts of those objects fix the pointers up.
     if (isNative() && as<NativeObject>().inDictionaryMode())
-        as<NativeObject>().shape_->listp = &as<NativeObject>().shape_;
+        as<NativeObject>().shape()->listp = as<NativeObject>().shapePtr();
 }
 
 static MOZ_MUST_USE bool
