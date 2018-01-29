@@ -484,21 +484,6 @@ add_task(async function test_multipleKeywordsSamePostData() {
   await check_no_orphans();
 });
 
-add_task(async function test_oldPostDataAPI() {
-  let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
-                                                      parentGuid: PlacesUtils.bookmarks.unfiledGuid });
-  await PlacesUtils.keywords.insert({ keyword: "keyword", url: "http://example.com/" });
-  let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
-  await PlacesUtils.setPostDataForBookmark(itemId, "postData");
-  await check_keyword(true, "http://example.com/", "keyword", "postData");
-  Assert.equal(PlacesUtils.getPostDataForBookmark(itemId), "postData");
-
-  await PlacesUtils.keywords.remove("keyword");
-  await PlacesUtils.bookmarks.remove(bookmark);
-
-  await check_no_orphans();
-});
-
 add_task(async function test_oldKeywordsAPI() {
   let bookmark = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
                                                     parentGuid: PlacesUtils.bookmarks.unfiledGuid });
