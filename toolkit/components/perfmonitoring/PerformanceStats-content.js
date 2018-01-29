@@ -13,10 +13,10 @@
 "use strict";
 
 var { utils: Cu, classes: Cc, interfaces: Ci } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "PerformanceStats",
+ChromeUtils.defineModuleGetter(this, "PerformanceStats",
   "resource://gre/modules/PerformanceStats.jsm");
 
 /**

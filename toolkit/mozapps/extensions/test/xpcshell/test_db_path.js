@@ -1,7 +1,7 @@
 
-Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm", {});
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
 let global = this;
 

@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import('resource://gre/modules/Services.jsm');
-var Downloads = Cu.import("resource://gre/modules/Downloads.jsm", {}).Downloads;
-Cu.import('resource://gre/modules/NetUtil.jsm');
+ChromeUtils.import('resource://gre/modules/Services.jsm');
+var Downloads = ChromeUtils.import("resource://gre/modules/Downloads.jsm", {}).Downloads;
+ChromeUtils.import('resource://gre/modules/NetUtil.jsm');
 
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
                                                     "http://mochi.test:8888/")

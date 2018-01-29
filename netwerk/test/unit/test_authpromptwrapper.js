@@ -5,7 +5,7 @@
 // - HTTPS
 // - Proxies
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const nsIAuthInformation = Components.interfaces.nsIAuthInformation;
 const nsIAuthPromptAdapterFactory = Components.interfaces.nsIAuthPromptAdapterFactory;
 

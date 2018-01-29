@@ -9,14 +9,14 @@ this.EXPORTED_SYMBOLS = ["MulticastDNS"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Messaging.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const DEBUG = false;
 
 var log = function(s) {};
 if (DEBUG) {
-  log = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
+  log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {})
           .AndroidLog.d.bind(null, "MulticastDNS");
 }
 

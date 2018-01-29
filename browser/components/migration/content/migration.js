@@ -11,8 +11,8 @@ var Cu = Components.utils;
 const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/MigrationUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
 var MigrationWizard = { /* exported MigrationWizard */
   _source: "",                  // Source Profile Migrator ContractID suffix

@@ -3,7 +3,7 @@
 
 // Tests incremental vacuum of the favicons database.
 
-Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 add_task(async function() {
   let icon = {

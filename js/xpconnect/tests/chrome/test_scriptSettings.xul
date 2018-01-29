@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
     const Cu = Components.utils;
-    Cu.import("resource://gre/modules/Promise.jsm");
+    ChromeUtils.import("resource://gre/modules/Promise.jsm");
     iwin = window[0];
 
     // Smoketest.

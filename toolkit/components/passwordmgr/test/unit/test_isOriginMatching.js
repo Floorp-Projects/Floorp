@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
 
 add_task(function test_isOriginMatching() {
   let testcases = [

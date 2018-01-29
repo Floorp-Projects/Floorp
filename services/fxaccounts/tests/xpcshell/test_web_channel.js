@@ -3,10 +3,10 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+ChromeUtils.import("resource://services-crypto/utils.js");
 const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
-    Cu.import("resource://gre/modules/FxAccountsWebChannel.jsm", {});
+    ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm", {});
 
 const URL_STRING = "https://example.com";
 

@@ -23,7 +23,7 @@ var Cr = Components.results;
 
 SimpleTest.waitForExplicitFinish();
 
-Components.utils.import("resource://gre/modules/CertUtils.jsm");
+ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
 
 function testStart() {
   ok(true, "Entering testStart");

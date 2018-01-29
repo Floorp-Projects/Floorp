@@ -1,6 +1,6 @@
 "use strict";
 
-var Services = Components.utils.import("resource://gre/modules/Services.jsm", {}).Services;
+var Services = ChromeUtils.import("resource://gre/modules/Services.jsm", {}).Services;
 
 // Process Message Manager topics.
 const MSG_REQUEST = "session-restore-test?duration";

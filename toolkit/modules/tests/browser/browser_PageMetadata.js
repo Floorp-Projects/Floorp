@@ -3,7 +3,7 @@
  * document.
  */
 
-var {PageMetadata} = Cu.import("resource://gre/modules/PageMetadata.jsm", {});
+var {PageMetadata} = ChromeUtils.import("resource://gre/modules/PageMetadata.jsm", {});
 
 var rootURL = "http://example.com/browser/toolkit/modules/tests/browser/";
 

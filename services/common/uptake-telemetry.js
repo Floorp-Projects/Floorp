@@ -8,7 +8,7 @@
 this.EXPORTED_SYMBOLS = ["UptakeTelemetry"];
 
 const { utils: Cu } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 
 // Telemetry report results.

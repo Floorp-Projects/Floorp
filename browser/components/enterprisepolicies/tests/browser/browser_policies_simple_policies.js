@@ -15,7 +15,7 @@ add_task(async function test_simple_policies() {
     Services.policies;
   });
 
-  let { Policies } = Cu.import("resource:///modules/policies/Policies.jsm", {});
+  let { Policies } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
 
   let policy0Ran = false, policy1Ran = false, policy2Ran = false, policy3Ran = false;
 

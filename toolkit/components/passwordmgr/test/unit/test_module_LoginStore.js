@@ -11,8 +11,8 @@
 
 // Globals
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoginStore",
-                                  "resource://gre/modules/LoginStore.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginStore",
+                               "resource://gre/modules/LoginStore.jsm");
 
 const TEST_STORE_FILE_NAME = "test-logins.json";
 

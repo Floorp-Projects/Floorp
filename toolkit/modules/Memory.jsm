@@ -8,8 +8,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 // How long we should wait for the Promise to resolve.
 const TIMEOUT_INTERVAL = 2000;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 this.Memory = {
   /**

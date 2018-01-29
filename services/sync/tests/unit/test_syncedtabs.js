@@ -3,9 +3,9 @@
 */
 "use strict";
 
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/SyncedTabs.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://services-sync/SyncedTabs.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 const faviconService = Cc["@mozilla.org/browser/favicon-service;1"]
                        .getService(Ci.nsIFaviconService);

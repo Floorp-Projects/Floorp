@@ -4,9 +4,9 @@
 // NOTE: The sync test_errorhandler_* tests have quite good coverage for
 // other aspects of this.
 
-Cu.import("resource://services-common/logmanager.js");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://services-common/logmanager.js");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 // Returns an array of [consoleAppender, dumpAppender, [fileAppenders]] for
 // the specified log.  Note that fileAppenders will usually have length=1

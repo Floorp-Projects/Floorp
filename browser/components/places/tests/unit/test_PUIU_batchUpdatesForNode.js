@@ -1,12 +1,12 @@
 // ================================================
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
 /* globals sinon */
 // ================================================
 
-Cu.import("resource:///modules/PlacesUIUtils.jsm");
+ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
 
 add_task(async function test_no_result_node() {
   let functionSpy = sinon.stub().returns(Promise.resolve());

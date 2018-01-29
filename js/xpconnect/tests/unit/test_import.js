@@ -4,14 +4,14 @@
  
 function run_test() {   
   var scope = {};
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope);
   Assert.equal(typeof(scope.XPCOMUtils), "object");
   Assert.equal(typeof(scope.XPCOMUtils.generateNSGetFactory), "function");
   
   // access module's global object directly without importing any
   // symbols
-  var module = Components.utils.import("resource://gre/modules/XPCOMUtils.jsm",
-                                       null);
+  var module = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm",
+                                  null);
   Assert.equal(typeof(XPCOMUtils), "undefined");
   Assert.equal(typeof(module), "object");
   Assert.equal(typeof(module.XPCOMUtils), "object");
@@ -20,13 +20,13 @@ function run_test() {
 
   // import symbols to our global object
   Assert.equal(typeof(Components.utils.import), "function");
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
   Assert.equal(typeof(XPCOMUtils), "object");
   Assert.equal(typeof(XPCOMUtils.generateNSGetFactory), "function");
   
   // try on a new object
   var scope2 = {};
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
+  ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", scope2);
   Assert.equal(typeof(scope2.XPCOMUtils), "object");
   Assert.equal(typeof(scope2.XPCOMUtils.generateNSGetFactory), "function");
   
@@ -39,13 +39,13 @@ function run_test() {
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
   var scope3 = {};
-  Assert.throws(() => Components.utils.import(filePath, scope3),
+  Assert.throws(() => ChromeUtils.import(filePath, scope3),
                 /NS_ERROR_UNEXPECTED/);
 
   // make sure we throw when the second arg is bogus
   var didThrow = false;
   try {
-      Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", "wrong");
+      ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", "wrong");
   } catch (ex) {
       print("exception (expected): " + ex);
       didThrow = true;
