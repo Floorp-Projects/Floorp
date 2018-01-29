@@ -106,7 +106,7 @@
 #endif
 
 // A wrapper for the tgkill syscall: send a signal to a specific thread.
-static int tgkill(pid_t tgid, pid_t tid, int sig) {
+static int _tgkill(pid_t tgid, pid_t tid, int sig) {
   return syscall(__NR_tgkill, tgid, tid, sig);
   return 0;
 }
@@ -387,7 +387,7 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
     // In order to retrigger it, we have to queue a new signal by calling
     // kill() ourselves.  The special case (si_pid == 0 && sig == SIGABRT) is
     // due to the kernel sending a SIGABRT from a user request via SysRQ.
-    if (tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
+    if (_tgkill(getpid(), syscall(__NR_gettid), sig) < 0) {
       // If we failed to kill ourselves (e.g. because a sandbox disallows us
       // to do so), we instead resort to terminating our process. This will
       // result in an incorrect exit code.
