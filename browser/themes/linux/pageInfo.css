@@ -21,6 +21,10 @@
   color: HighlightText;
 }
 
+#viewGroup > radio > .radio-label-box {
+  padding: 0 6px;
+}
+
 #topBar {
   border-bottom: 1px solid ThreeDShadow;
   padding-inline-start: 10px;
