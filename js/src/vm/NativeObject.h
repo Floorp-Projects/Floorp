@@ -680,6 +680,12 @@ class NativeObject : public ShapedObject
     }
 
   public:
+
+    /* Object allocation may directly initialize slots so this is public. */
+    void initSlots(HeapSlot* slots) {
+        slots_ = slots;
+    }
+
     static MOZ_MUST_USE bool generateOwnShape(JSContext* cx, HandleNativeObject obj,
                                               Shape* newShape = nullptr)
     {

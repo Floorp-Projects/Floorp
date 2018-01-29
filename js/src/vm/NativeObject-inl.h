@@ -544,7 +544,9 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
     NativeObject* nobj = static_cast<NativeObject*>(obj);
     nobj->initGroup(group);
     nobj->initShape(shape);
-    // NOTE: Slots are created and assigned internally by Allocate<JSObject>.
+    // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
+    if (!nDynamicSlots)
+        nobj->initSlots(nullptr);
     nobj->setEmptyElements();
 
     if (clasp->hasPrivate())

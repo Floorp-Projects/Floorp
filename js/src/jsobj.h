@@ -154,12 +154,6 @@ class JSObject : public js::gc::Cell
     inline js::Shape* maybeShape() const;
     inline js::Shape* ensureShape(JSContext* cx);
 
-    // Set the initial slots and elements of an object. These pointers are only
-    // valid for native objects, but during initialization are set for all
-    // objects. For non-native objects, these must not be dynamically allocated
-    // pointers which leak when the non-native object finishes initialization.
-    inline void setInitialSlotsMaybeNonNative(js::HeapSlot* slots);
-
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
