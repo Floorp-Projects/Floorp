@@ -914,6 +914,9 @@ pub extern "C" fn wr_transaction_update_resources(
     txn: &mut Transaction,
     resource_updates: &mut ResourceUpdates
 ) {
+    if resource_updates.updates.is_empty() {
+        return;
+    }
     txn.update_resources(mem::replace(resource_updates, ResourceUpdates::new()));
 }
 
