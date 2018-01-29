@@ -25,6 +25,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     debug("register");
 
     addEventListener("DOMTitleChanged", this, false);
+    addEventListener("DOMWindowFocus", this, false);
     addEventListener("MozDOMFullscreen:Entered", this, false);
     addEventListener("MozDOMFullscreen:Exit", this, false);
     addEventListener("MozDOMFullscreen:Exited", this, false);
@@ -43,6 +44,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     debug("unregister");
 
     removeEventListener("DOMTitleChanged", this);
+    removeEventListener("DOMWindowFocus", this);
     removeEventListener("MozDOMFullscreen:Entered", this);
     removeEventListener("MozDOMFullscreen:Exit", this);
     removeEventListener("MozDOMFullscreen:Exited", this);
@@ -171,6 +173,11 @@ class GeckoViewContent extends GeckoViewContentModule {
         this.eventDispatcher.sendRequest({
           type: "GeckoView:DOMTitleChanged",
           title: content.document.title
+        });
+        break;
+      case "DOMWindowFocus":
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:DOMWindowFocus"
         });
         break;
     }
