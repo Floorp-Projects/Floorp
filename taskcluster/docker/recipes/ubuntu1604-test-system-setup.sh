@@ -91,16 +91,13 @@ apt-get install -y -f "${apt_packages[@]}"
 
 dpkg-reconfigure locales
 
-# shellcheck source=taskcluster/docker/recipes/common.sh
 . /setup/common.sh
-# shellcheck source=taskcluster/docker/recipes/install-mercurial.sh
 . /setup/install-mercurial.sh
 
 pip install --upgrade pip
 
 pip install virtualenv
 
-# shellcheck source=taskcluster/docker/recipes/install-node.sh
 . /setup/install-node.sh
 
 # Install custom-built Debian packages.  These come from a set of repositories
