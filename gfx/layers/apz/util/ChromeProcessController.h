@@ -49,6 +49,7 @@ public:
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
   virtual bool IsRepaintThread() override;
   virtual void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
+  MOZ_CAN_RUN_SCRIPT
   virtual void HandleTap(TapType aType,
                          const mozilla::LayoutDevicePoint& aPoint,
                          Modifiers aModifiers,

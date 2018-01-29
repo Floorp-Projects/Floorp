@@ -548,18 +548,14 @@ AccessibleCaretManager::TapCaret(const nsPoint& aPoint)
 nsresult
 AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
 {
-  auto UpdateCaretsWithHapticFeedback = [this] {
-    UpdateCarets();
-    ProvideHapticFeedback();
-  };
-
   // If the long-tap is landing on a pre-existing selection, don't replace
   // it with a new one. Instead just return and let the context menu pop up
   // on the pre-existing selection.
   if (GetCaretMode() == CaretMode::Selection &&
       GetSelection()->ContainsPoint(aPoint)) {
     AC_LOG("%s: UpdateCarets() for current selection", __FUNCTION__);
-    UpdateCaretsWithHapticFeedback();
+    UpdateCarets();
+    ProvideHapticFeedback();
     return NS_OK;
   }
 
@@ -607,7 +603,8 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
     }
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
-    UpdateCaretsWithHapticFeedback();
+    UpdateCarets();
+    ProvideHapticFeedback();
     DispatchCaretStateChangedEvent(CaretChangedReason::Longpressonemptycontent);
     return NS_OK;
   }
@@ -641,7 +638,8 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
 
   // Then try select a word under point.
   nsresult rv = SelectWord(ptFrame, ptInFrame);
-  UpdateCaretsWithHapticFeedback();
+  UpdateCarets();
+  ProvideHapticFeedback();
 
   return rv;
 }

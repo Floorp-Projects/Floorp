@@ -60,28 +60,46 @@ class WidgetTouchEvent;
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret
 //
-class AccessibleCaretEventHub : public nsIReflowObserver,
-                                public nsIScrollObserver,
-                                public nsISelectionListener,
-                                public nsSupportsWeakReference
+class AccessibleCaretEventHub
+  : public nsIReflowObserver
+  , public nsIScrollObserver
+  , public nsISelectionListener
+  , public nsSupportsWeakReference
 {
 public:
   explicit AccessibleCaretEventHub(nsIPresShell* aPresShell);
   void Init();
   void Terminate();
 
+  MOZ_CAN_RUN_SCRIPT
   nsEventStatus HandleEvent(WidgetEvent* aEvent);
 
   // Call this function to notify the blur event happened.
+  MOZ_CAN_RUN_SCRIPT
   void NotifyBlur(bool aIsLeavingDocument);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIREFLOWOBSERVER
-  NS_DECL_NSISELECTIONLISTENER
+
+  // nsIReflowObserver
+  MOZ_CAN_RUN_SCRIPT
+  NS_IMETHOD Reflow(DOMHighResTimeStamp start,
+                    DOMHighResTimeStamp end) final;
+  MOZ_CAN_RUN_SCRIPT
+  NS_IMETHOD ReflowInterruptible(DOMHighResTimeStamp start,
+                                 DOMHighResTimeStamp end) final;
+
+  // nsISelectionListener
+  MOZ_CAN_RUN_SCRIPT
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* doc,
+                                    nsISelection* sel,
+                                    int16_t reason) final;
 
   // Override nsIScrollObserver methods.
+  MOZ_CAN_RUN_SCRIPT
   virtual void ScrollPositionChanged() override;
+  MOZ_CAN_RUN_SCRIPT
   virtual void AsyncPanZoomStarted() override;
+  MOZ_CAN_RUN_SCRIPT
   virtual void AsyncPanZoomStopped() override;
 
   // Base state
@@ -112,8 +130,11 @@ protected:
 
   void SetState(State* aState);
 
+  MOZ_CAN_RUN_SCRIPT
   nsEventStatus HandleMouseEvent(WidgetMouseEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsEventStatus HandleTouchEvent(WidgetTouchEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT
   nsEventStatus HandleKeyboardEvent(WidgetKeyboardEvent* aEvent);
 
   virtual nsPoint GetTouchEventPosition(WidgetTouchEvent* aEvent,
@@ -124,10 +145,14 @@ protected:
 
   void LaunchLongTapInjector();
   void CancelLongTapInjector();
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void FireLongTap(nsITimer* aTimer, void* aAccessibleCaretEventHub);
 
   void LaunchScrollEndInjector();
   void CancelScrollEndInjector();
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void FireScrollEnd(nsITimer* aTimer, void* aAccessibleCaretEventHub);
 
   // Member variables
