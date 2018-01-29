@@ -9,28 +9,53 @@ extern crate xpcom;
 
 extern crate nserror;
 
-extern crate nsstring;
-
 use std::ptr;
-use xpcom::{XpCom, getter_addrefs, interfaces};
+use std::ffi::{CStr, CString};
+use xpcom::interfaces;
 use nserror::{NsresultExt, nsresult, NS_OK};
-use nsstring::{nsCStr, nsCString};
 
 #[no_mangle]
-pub unsafe extern fn Rust_CallIURIFromRust() -> *const interfaces::nsIIOService {
-    let iosvc = xpcom::services::get_IOService().unwrap();
+pub unsafe extern fn Rust_ObserveFromRust() -> *const interfaces::nsIObserverService {
+    let obssvc = xpcom::services::get_ObserverService().unwrap();
 
-    let uri = getter_addrefs(|p| iosvc.NewURI(&nsCStr::from("https://google.com"), ptr::null(), ptr::null(), p)).unwrap();
+    // Define an observer
+    #[derive(xpcom)]
+    #[xpimplements(nsIObserver)]
+    #[refcnt = "nonatomic"]
+    struct InitObserver {
+        run: *mut bool
+    }
+    impl Observer {
+        unsafe fn Observe(
+            &self,
+            _subject: *const interfaces::nsISupports,
+            topic: *const i8,
+            _data: *const i16
+        ) -> nsresult {
+            *self.run = true;
+            assert!(CStr::from_ptr(topic).to_str() == Ok("test-rust-observe"));
+            NS_OK
+        }
+    }
 
-    let mut host = nsCString::new();
-    let rv = uri.GetHost(&mut host);
+    let topic = CString::new("test-rust-observe").unwrap();
+
+    let mut run = false;
+    let observer = Observer::allocate(InitObserver{ run: &mut run });
+    let rv = obssvc.AddObserver(observer.coerce::<interfaces::nsIObserver>(), topic.as_ptr(), false);
     assert!(rv.succeeded());
 
-    assert_eq!(&*host, "google.com");
+    let rv = obssvc.NotifyObservers(ptr::null(), topic.as_ptr(), ptr::null());
+    assert!(rv.succeeded());
+    assert!(run, "The observer should have been run!");
 
-    assert!(iosvc.query_interface::<interfaces::nsISupports>().is_some());
-    assert!(iosvc.query_interface::<interfaces::nsIURI>().is_none());
-    &*iosvc
+    let rv = obssvc.RemoveObserver(observer.coerce::<interfaces::nsIObserver>(), topic.as_ptr());
+    assert!(rv.succeeded());
+
+    assert!(observer.coerce::<interfaces::nsISupports>() as *const _==
+            &*observer.query_interface::<interfaces::nsISupports>().unwrap() as *const _);
+
+    &*obssvc
 }
 
 #[no_mangle]

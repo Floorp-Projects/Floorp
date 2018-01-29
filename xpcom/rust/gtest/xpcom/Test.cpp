@@ -6,14 +6,14 @@
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
 #include "mozilla/Services.h"
-#include "nsIIOService.h"
+#include "nsIObserverService.h"
 
-extern "C" nsIIOService* Rust_CallIURIFromRust();
+extern "C" nsIObserverService* Rust_ObserveFromRust();
 
-TEST(RustXpcom, CallIURIFromRust)
+TEST(RustXpcom, ObserverFromRust)
 {
-  nsCOMPtr<nsIIOService> rust = Rust_CallIURIFromRust();
-  nsCOMPtr<nsIIOService> cpp = mozilla::services::GetIOService();
+  nsCOMPtr<nsIObserverService> rust = Rust_ObserveFromRust();
+  nsCOMPtr<nsIObserverService> cpp = mozilla::services::GetObserverService();
   EXPECT_EQ(rust, cpp);
 }
 
