@@ -49,7 +49,7 @@ index 5b79b83..01463be 100644
  [dependencies]
  audioipc = { path = "../audioipc" }
 -cubeb-core = { git = "https://github.com/djg/cubeb-rs", version="^0.1" }
--cubeb = { git = "https://github.com/djg/cubeb-rs", version="^0.3.1" }
+-cubeb = { git = "https://github.com/djg/cubeb-rs", version="^0.3.2" }
 +cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
 +cubeb = { path = "../../cubeb-rs/cubeb-api" }
  bytes = "0.4"
