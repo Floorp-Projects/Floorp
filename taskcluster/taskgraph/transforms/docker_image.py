@@ -63,9 +63,10 @@ def validate(config, tasks):
         yield task
 
 
-def order_image_tasks(tasks):
+def order_image_tasks(config, tasks):
     """Iterate image tasks in an order where parent images come first."""
     pending = deque(tasks)
+    task_names = {task['name'] for task in pending}
     emitted = set()
     while True:
         try:
@@ -74,6 +75,9 @@ def order_image_tasks(tasks):
             break
         parent = task.get('parent')
         if parent and parent not in emitted:
+            if parent not in task_names:
+                raise Exception('Missing parant image for {}-{}: {}'.format(
+                    config.kind, task['name'], parent))
             pending.append(task)
             continue
         emitted.add(task['name'])
@@ -97,7 +101,7 @@ def fill_template(config, tasks):
 
     context_hashes = {}
 
-    for task in order_image_tasks(tasks):
+    for task in order_image_tasks(config, tasks):
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
         args = task.pop('args', {})
