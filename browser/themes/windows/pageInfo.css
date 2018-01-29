@@ -12,9 +12,9 @@
 #viewGroup > radio {
   list-style-image: url("chrome://browser/skin/pageInfo.png");
   -moz-appearance: none;
-  padding: 5px 3px 1px 3px;
-  margin: 0 1px;
   min-width: 4.5em;
+  margin: 0;
+  padding: 3px;
 }
 
 #viewGroup > radio:hover {
@@ -25,6 +25,11 @@
 #viewGroup > radio[selected="true"] {
   background-color: #C1D2EE;
   color: black;
+}
+
+#viewGroup > radio > .radio-label-box {
+  margin: 0;
+  padding: 0 6px;
 }
 
 #topBar {
