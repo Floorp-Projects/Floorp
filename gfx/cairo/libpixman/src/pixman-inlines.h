@@ -26,7 +26,6 @@
 #ifndef PIXMAN_FAST_PATH_H__
 #define PIXMAN_FAST_PATH_H__
 
-#include <malloc.h>
 #include "pixman-private.h"
 
 #define PIXMAN_REPEAT_COVER -1
