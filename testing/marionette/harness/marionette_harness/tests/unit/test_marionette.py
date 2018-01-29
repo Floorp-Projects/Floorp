@@ -48,7 +48,7 @@ class TestMarionette(MarionetteTestCase):
             self.assertRaises(socket.timeout, marionette.raise_for_port, timeout=1.0)
 
             self.marionette._send_message("acceptConnections", {"value": True})
-            marionette.raise_for_port(timeout=1.0)
+            marionette.raise_for_port(timeout=10.0)
 
         finally:
             self.marionette._send_message("acceptConnections", {"value": True})
