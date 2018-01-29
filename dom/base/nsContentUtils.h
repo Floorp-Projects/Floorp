@@ -781,7 +781,7 @@ public:
    *
    * @param aContent The content node.
    * @return the presContext, or nullptr if the content is not in a document
-   *         (if GetCurrentDoc returns nullptr)
+   *         (if GetComposedDoc returns nullptr)
    */
   static nsPresContext* GetContextForContent(const nsIContent* aContent);
 
