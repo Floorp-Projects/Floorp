@@ -231,10 +231,11 @@ public:
 
   virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                      uint32_t aFlags) override;
-  virtual nsresult HandleEvent(nsIFrame* aFrame,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               bool aDontRetargetEvents,
-                               nsEventStatus* aEventStatus) override;
+  MOZ_CAN_RUN_SCRIPT virtual nsresult HandleEvent(
+    nsIFrame* aFrame,
+    mozilla::WidgetGUIEvent* aEvent,
+    bool aDontRetargetEvents,
+    nsEventStatus* aEventStatus) override;
   virtual nsresult HandleDOMEventWithTarget(
                                  nsIContent* aTargetContent,
                                  mozilla::WidgetEvent* aEvent,
@@ -675,8 +676,9 @@ protected:
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
   nsIContent* GetCurrentEventContent();
   nsIFrame* GetCurrentEventFrame();
-  nsresult RetargetEventToParent(mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RetargetEventToParent(mozilla::WidgetGUIEvent* aEvent,
+                        nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
   /**
