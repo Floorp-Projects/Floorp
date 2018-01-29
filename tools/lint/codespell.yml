@@ -1,7 +1,9 @@
 ---
 codespell:
     description: Check code for common misspellings
-    include: ['.']
+    include:
+        - tools/lint
+        - python/mozlint
     exclude:
         - third_party
     # List of extensions coming from:
