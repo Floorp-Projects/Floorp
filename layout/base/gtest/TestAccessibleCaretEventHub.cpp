@@ -196,6 +196,9 @@ public:
     return Move(event);
   }
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestAsyncPanZoomScroll();
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void HandleEventAndCheckState(UniquePtr<WidgetEvent> aEvent,
                                 MockAccessibleCaretEventHub::State* aExpectedState,
                                 nsEventStatus aExpectedEventStatus)
@@ -210,40 +213,48 @@ public:
     EXPECT_EQ(mHub->GetState(), aExpectedState);
   }
 
-  template <typename PressEventCreator, typename ReleaseEventCreator>
-  void TestPressReleaseOnNoCaret(PressEventCreator aPressEventCreator,
-                                 ReleaseEventCreator aReleaseEventCreator);
-
-  template <typename PressEventCreator, typename ReleaseEventCreator>
-  void TestPressReleaseOnCaret(PressEventCreator aPressEventCreator,
-                               ReleaseEventCreator aReleaseEventCreator);
-
-  template <typename PressEventCreator, typename MoveEventCreator,
-            typename ReleaseEventCreator>
-  void TestPressMoveReleaseOnNoCaret(PressEventCreator aPressEventCreator,
-                                     MoveEventCreator aMoveEventCreator,
-                                     ReleaseEventCreator aReleaseEventCreator);
-
-  template <typename PressEventCreator, typename MoveEventCreator,
-            typename ReleaseEventCreator>
-  void TestPressMoveReleaseOnCaret(PressEventCreator aPressEventCreator,
-                                   MoveEventCreator aMoveEventCreator,
-                                   ReleaseEventCreator aReleaseEventCreator);
-
-  template <typename PressEventCreator, typename ReleaseEventCreator>
-  void TestLongTapWithSelectWordSuccessful(
+  template<typename PressEventCreator, typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestPressReleaseOnNoCaret(
     PressEventCreator aPressEventCreator,
     ReleaseEventCreator aReleaseEventCreator);
 
-  template <typename PressEventCreator, typename ReleaseEventCreator>
-  void TestLongTapWithSelectWordFailed(
+  template<typename PressEventCreator, typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestPressReleaseOnCaret(
     PressEventCreator aPressEventCreator,
     ReleaseEventCreator aReleaseEventCreator);
 
-  template <typename PressEventCreator, typename MoveEventCreator,
-            typename ReleaseEventCreator>
-  void TestEventDrivenAsyncPanZoomScroll(
-    PressEventCreator aPressEventCreator, MoveEventCreator aMoveEventCreator,
+  template<typename PressEventCreator,
+           typename MoveEventCreator,
+           typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestPressMoveReleaseOnNoCaret(
+    PressEventCreator aPressEventCreator,
+    MoveEventCreator aMoveEventCreator,
+    ReleaseEventCreator aReleaseEventCreator);
+
+  template<typename PressEventCreator,
+           typename MoveEventCreator,
+           typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestPressMoveReleaseOnCaret(
+    PressEventCreator aPressEventCreator,
+    MoveEventCreator aMoveEventCreator,
+    ReleaseEventCreator aReleaseEventCreator);
+
+  template<typename PressEventCreator, typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestLongTapWithSelectWordSuccessful(
+    PressEventCreator aPressEventCreator,
+    ReleaseEventCreator aReleaseEventCreator);
+
+  template<typename PressEventCreator, typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestLongTapWithSelectWordFailed(
+    PressEventCreator aPressEventCreator,
+    ReleaseEventCreator aReleaseEventCreator);
+
+  template<typename PressEventCreator,
+           typename MoveEventCreator,
+           typename ReleaseEventCreator>
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TestEventDrivenAsyncPanZoomScroll(
+    PressEventCreator aPressEventCreator,
+    MoveEventCreator aMoveEventCreator,
     ReleaseEventCreator aReleaseEventCreator);
 
   // Member variables
@@ -252,11 +263,13 @@ public:
 }; // class AccessibleCaretEventHubTester
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnNoCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressReleaseOnNoCaret(CreateMousePressEvent, CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnNoCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
@@ -284,11 +297,13 @@ AccessibleCaretEventHubTester::TestPressReleaseOnNoCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressReleaseOnCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressReleaseOnCaret(CreateMousePressEvent, CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressReleaseOnCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressReleaseOnCaret(CreateTouchStartEvent, CreateTouchEndEvent);
 }
@@ -326,12 +341,14 @@ AccessibleCaretEventHubTester::TestPressReleaseOnCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnNoCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressMoveReleaseOnNoCaret(CreateMousePressEvent, CreateMouseMoveEvent,
                                 CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnNoCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressMoveReleaseOnNoCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
                                 CreateTouchEndEvent);
@@ -380,12 +397,14 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnNoCaret(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMousePressMoveReleaseOnCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressMoveReleaseOnCaret(CreateMousePressEvent, CreateMouseMoveEvent,
                               CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchPressMoveReleaseOnCaret)
+MOZ_CAN_RUN_SCRIPT
 {
   TestPressMoveReleaseOnCaret(CreateTouchStartEvent, CreateTouchMoveEvent,
                               CreateTouchEndEvent);
@@ -447,6 +466,7 @@ AccessibleCaretEventHubTester::TestPressMoveReleaseOnCaret(
 
 TEST_F(AccessibleCaretEventHubTester,
        TestTouchStartMoveEndOnCaretWithTouchCancelIgnored)
+MOZ_CAN_RUN_SCRIPT
 {
   nscoord x0 = 0, y0 = 0;
   nscoord x1 = 100, y1 = 100;
@@ -505,12 +525,14 @@ TEST_F(AccessibleCaretEventHubTester,
                            nsEventStatus_eIgnore);}
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordSuccessful)
+MOZ_CAN_RUN_SCRIPT
 {
   TestLongTapWithSelectWordSuccessful(CreateMousePressEvent,
                                       CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordSuccessful)
+MOZ_CAN_RUN_SCRIPT
 {
   TestLongTapWithSelectWordSuccessful(CreateTouchStartEvent,
                                       CreateTouchEndEvent);
@@ -589,12 +611,14 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordSuccessful(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseLongTapWithSelectWordFailed)
+MOZ_CAN_RUN_SCRIPT
 {
   TestLongTapWithSelectWordFailed(CreateMousePressEvent,
                                   CreateMouseReleaseEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchLongTapWithSelectWordFailed)
+MOZ_CAN_RUN_SCRIPT
 {
   TestLongTapWithSelectWordFailed(CreateTouchStartEvent,
                                   CreateTouchEndEvent);
@@ -630,12 +654,14 @@ AccessibleCaretEventHubTester::TestLongTapWithSelectWordFailed(
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestTouchEventDrivenAsyncPanZoomScroll)
+MOZ_CAN_RUN_SCRIPT
 {
   TestEventDrivenAsyncPanZoomScroll(CreateTouchStartEvent, CreateTouchMoveEvent,
                                     CreateTouchEndEvent);
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestMouseEventDrivenAsyncPanZoomScroll)
+MOZ_CAN_RUN_SCRIPT
 {
   TestEventDrivenAsyncPanZoomScroll(CreateMousePressEvent, CreateMouseMoveEvent,
                                     CreateMouseReleaseEvent);
@@ -738,7 +764,13 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
-TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
+TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll) MOZ_CAN_RUN_SCRIPT
+{
+  TestAsyncPanZoomScroll();
+}
+
+void
+AccessibleCaretEventHubTester::TestAsyncPanZoomScroll()
 {
   MockFunction<void(::std::string aCheckPointName)> check;
   {
@@ -782,6 +814,7 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScroll)
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollStartedThenBlur)
+MOZ_CAN_RUN_SCRIPT
 {
   {
     InSequence dummy;
@@ -802,6 +835,7 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollStartedThenBlur)
 }
 
 TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
+MOZ_CAN_RUN_SCRIPT
 {
   {
     InSequence dummy;

@@ -60,29 +60,39 @@ class WidgetTouchEvent;
 // Please see the wiki page for more information.
 // https://wiki.mozilla.org/AccessibleCaret
 //
-class AccessibleCaretEventHub : public nsIReflowObserver,
-                                public nsIScrollObserver,
-                                public nsISelectionListener,
-                                public nsSupportsWeakReference
+class AccessibleCaretEventHub
+  : public nsIReflowObserver
+  , public nsIScrollObserver
+  , public nsISelectionListener
+  , public nsSupportsWeakReference
 {
 public:
   explicit AccessibleCaretEventHub(nsIPresShell* aPresShell);
   void Init();
   void Terminate();
 
-  nsEventStatus HandleEvent(WidgetEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT nsEventStatus HandleEvent(WidgetEvent* aEvent);
 
   // Call this function to notify the blur event happened.
-  void NotifyBlur(bool aIsLeavingDocument);
+  MOZ_CAN_RUN_SCRIPT void NotifyBlur(bool aIsLeavingDocument);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIREFLOWOBSERVER
-  NS_DECL_NSISELECTIONLISTENER
+
+  // nsIReflowObserver
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD Reflow(DOMHighResTimeStamp start,
+                                       DOMHighResTimeStamp end) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
+  ReflowInterruptible(DOMHighResTimeStamp start, DOMHighResTimeStamp end) final;
+
+  // nsISelectionListener
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* doc,
+                                                       nsISelection* sel,
+                                                       int16_t reason) final;
 
   // Override nsIScrollObserver methods.
-  virtual void ScrollPositionChanged() override;
-  virtual void AsyncPanZoomStarted() override;
-  virtual void AsyncPanZoomStopped() override;
+  MOZ_CAN_RUN_SCRIPT virtual void ScrollPositionChanged() override;
+  MOZ_CAN_RUN_SCRIPT virtual void AsyncPanZoomStarted() override;
+  MOZ_CAN_RUN_SCRIPT virtual void AsyncPanZoomStopped() override;
 
   // Base state
   class State;
@@ -113,9 +123,10 @@ protected:
 
   void SetState(State* aState);
 
-  nsEventStatus HandleMouseEvent(WidgetMouseEvent* aEvent);
-  nsEventStatus HandleTouchEvent(WidgetTouchEvent* aEvent);
-  nsEventStatus HandleKeyboardEvent(WidgetKeyboardEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT nsEventStatus HandleMouseEvent(WidgetMouseEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT nsEventStatus HandleTouchEvent(WidgetTouchEvent* aEvent);
+  MOZ_CAN_RUN_SCRIPT nsEventStatus
+  HandleKeyboardEvent(WidgetKeyboardEvent* aEvent);
 
   virtual nsPoint GetTouchEventPosition(WidgetTouchEvent* aEvent,
                                         int32_t aIdentifier) const;
@@ -125,11 +136,25 @@ protected:
 
   void LaunchLongTapInjector();
   void CancelLongTapInjector();
-  static void FireLongTap(nsITimer* aTimer, void* aAccessibleCaretEventHub);
 
   void LaunchScrollEndInjector();
   void CancelScrollEndInjector();
-  static void FireScrollEnd(nsITimer* aTimer, void* aAccessibleCaretEventHub);
+
+  // This is a MOZ_CAN_RUN_SCRIPT_BOUNDARY because it fires from a timer.
+  //
+  // The `aAccessibleCaretEventHub` parameter is guaranteed to remain alive
+  // because we take a strong ref to it from inside the function.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void FireLongTap(
+    nsITimer* aTimer,
+    void* aAccessibleCaretEventHub);
+
+  // This is a MOZ_CAN_RUN_SCRIPT_BOUNDARY because it fires from a timer.
+  //
+  // The `aAccessibleCaretEventHub` parameter is guaranteed to remain alive
+  // because we take a strong ref to it from inside the function.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void FireScrollEnd(
+    nsITimer* aTimer,
+    void* aAccessibleCaretEventHub);
 
   // Member variables
   State* mState = NoActionState();
