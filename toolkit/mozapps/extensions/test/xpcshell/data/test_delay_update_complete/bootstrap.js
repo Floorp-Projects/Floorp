@@ -1,6 +1,6 @@
 /* exported startup, shutdown, install, uninstall, ADDON_ID, INSTALL_COMPLETE_PREF */
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 const ADDON_ID = "test_delay_update_complete@tests.mozilla.org";
 const INSTALL_COMPLETE_PREF = "bootstraptest.install_complete_done";

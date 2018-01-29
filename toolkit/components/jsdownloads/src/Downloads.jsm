@@ -14,18 +14,18 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Integration.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/DownloadCore.jsm");
+ChromeUtils.import("resource://gre/modules/Integration.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadCore.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadCombinedList",
-                                  "resource://gre/modules/DownloadList.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadList",
-                                  "resource://gre/modules/DownloadList.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadSummary",
-                                  "resource://gre/modules/DownloadList.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
-                                  "resource://gre/modules/DownloadUIHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadCombinedList",
+                               "resource://gre/modules/DownloadList.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadList",
+                               "resource://gre/modules/DownloadList.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadSummary",
+                               "resource://gre/modules/DownloadList.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadUIHelper",
+                               "resource://gre/modules/DownloadUIHelper.jsm");
 
 /* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",

@@ -1,7 +1,7 @@
 // Test the plaintext-or-binary sniffer
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // List of Content-Type headers to test.  For each header we have an array.
 // The first element in the array is the Content-Type header string.  The

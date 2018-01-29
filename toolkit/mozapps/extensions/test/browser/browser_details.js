@@ -4,7 +4,7 @@
 
 // Tests various aspects of the details view
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_EM_HOTFIX_ID = "extensions.hotfix.id";

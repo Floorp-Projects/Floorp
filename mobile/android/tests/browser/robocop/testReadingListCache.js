@@ -7,9 +7,9 @@
 
 var { utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/ReaderMode.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+ChromeUtils.import("resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Task.jsm");
 
 var Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 

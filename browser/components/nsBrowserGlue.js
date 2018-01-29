@@ -9,9 +9,9 @@ const Cu = Components.utils;
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
@@ -92,7 +92,7 @@ let initializedModules = {};
   ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
 ].forEach(([name, resource, init]) => {
   XPCOMUtils.defineLazyGetter(this, name, () => {
-    Cu.import(resource, initializedModules);
+    ChromeUtils.import(resource, initializedModules);
     initializedModules[name][init]();
     return initializedModules[name];
   });
@@ -241,7 +241,7 @@ function BrowserGlue() {
                                      "nsIIdleService");
 
   XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
-                                Cu.import("resource:///modules/distribution.js");
+                                ChromeUtils.import("resource:///modules/distribution.js");
                                 return new DistributionCustomizer();
                               });
 
@@ -252,7 +252,7 @@ function BrowserGlue() {
       return sanitizerScope.Sanitizer;
     });
 
-  XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
+  ChromeUtils.defineModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
   XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-service;1", "nsIAlertsService");
 
   this._init();
@@ -299,7 +299,7 @@ BrowserGlue.prototype = {
     }
     delay = delay <= MAX_DELAY ? delay : MAX_DELAY;
 
-    Cu.import("resource://services-sync/main.js");
+    ChromeUtils.import("resource://services-sync/main.js");
     Weave.Service.scheduler.delayedAutoConnect(delay);
   },
 
@@ -767,7 +767,7 @@ BrowserGlue.prototype = {
   },
 
   async _calculateProfileAgeInDays() {
-    let ProfileAge = Cu.import("resource://gre/modules/ProfileAge.jsm", {}).ProfileAge;
+    let ProfileAge = ChromeUtils.import("resource://gre/modules/ProfileAge.jsm", {}).ProfileAge;
     let profileAge = new ProfileAge(null, null);
 
     let creationDate = await profileAge.created;
@@ -827,7 +827,7 @@ BrowserGlue.prototype = {
     if (!win)
       return;
 
-    Cu.import("resource://gre/modules/ResetProfile.jsm");
+    ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
     if (!ResetProfile.resetSupported())
       return;
 
@@ -909,7 +909,7 @@ BrowserGlue.prototype = {
     let channel = new WebChannel("remote-troubleshooting", "remote-troubleshooting");
     channel.listen((id, data, target) => {
       if (data.command == "request") {
-        let {Troubleshoot} = Cu.import("resource://gre/modules/Troubleshoot.jsm", {});
+        let {Troubleshoot} = ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm", {});
         Troubleshoot.snapshot(snapshotData => {
           // for privacy we remove crash IDs and all preferences (but bug 1091944
           // exists to expose prefs once we are confident of privacy implications)
@@ -934,7 +934,7 @@ BrowserGlue.prototype = {
       // Check if we were just re-installed and offer Firefox Reset
       let updateChannel;
       try {
-        updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
+        updateChannel = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
       } catch (ex) {}
       if (updateChannel) {
         let uninstalledValue =
@@ -1130,7 +1130,7 @@ BrowserGlue.prototype = {
         if (WINTASKBAR_CONTRACTID in Cc &&
             Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
           let temp = {};
-          Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
+          ChromeUtils.import("resource:///modules/WindowsJumpLists.jsm", temp);
           temp.WinTaskbarJumpList.startup();
         }
       });
@@ -1147,7 +1147,7 @@ BrowserGlue.prototype = {
     });
 
     Services.tm.idleDispatchToMainThread(() => {
-      let {setTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
+      let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
       setTimeout(function() {
         Services.tm.idleDispatchToMainThread(Services.startup.trackStartupCrashEnd);
       }, STARTUP_CRASHES_END_DELAY_MS);
@@ -1200,7 +1200,7 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       let obj = {};
-      Cu.import("resource://gre/modules/GMPInstallManager.jsm", obj);
+      ChromeUtils.import("resource://gre/modules/GMPInstallManager.jsm", obj);
       this._gmpInstallManager = new obj.GMPInstallManager();
       // We don't really care about the results, if someone is interested they
       // can check the log.
@@ -2022,7 +2022,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 41) {
-      const Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+      const Preferences = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
       Preferences.resetBranch("loop.");
     }
 

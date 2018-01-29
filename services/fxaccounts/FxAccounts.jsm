@@ -9,33 +9,33 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.importGlobalProperties(["URL"]);
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/rest.js");
-Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
-Cu.import("resource://gre/modules/FxAccountsCommon.js");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/rest.js");
+ChromeUtils.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccountsStorage.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
+ChromeUtils.defineModuleGetter(this, "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsConfig",
+ChromeUtils.defineModuleGetter(this, "FxAccountsConfig",
   "resource://gre/modules/FxAccountsConfig.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
+ChromeUtils.defineModuleGetter(this, "jwcrypto",
   "resource://services-crypto/jwcrypto.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsOAuthGrantClient",
+ChromeUtils.defineModuleGetter(this, "FxAccountsOAuthGrantClient",
   "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfile",
+ChromeUtils.defineModuleGetter(this, "FxAccountsProfile",
   "resource://gre/modules/FxAccountsProfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://services-sync/util.js");
 
 // All properties exposed by the public FxAccounts API.
@@ -91,7 +91,7 @@ const OBSERVER_PRELOADS = [
   // Sync
   () => {
     let scope = {};
-    Cu.import("resource://services-sync/main.js", scope);
+    ChromeUtils.import("resource://services-sync/main.js", scope);
     return scope.Weave.Service.promiseInitialized;
   },
 

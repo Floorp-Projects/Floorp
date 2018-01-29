@@ -5,7 +5,7 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+ChromeUtils.defineModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
 /* globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
 

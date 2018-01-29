@@ -1,8 +1,8 @@
 // Test the SyncedTabs counters in BrowserUITelemetry.
 "use strict";
 
-const { BrowserUITelemetry: BUIT } = Cu.import("resource:///modules/BrowserUITelemetry.jsm", {});
-const {SyncedTabs} = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
+const { BrowserUITelemetry: BUIT } = ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm", {});
+const {SyncedTabs} = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
 
 function mockSyncedTabs() {
   // Mock SyncedTabs.jsm

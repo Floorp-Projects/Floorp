@@ -42,7 +42,7 @@ add_task(async function() {
   let iframeURL = rootDirURL + IFRAME_BASENAME;
   let contentScriptURL = rootDirURL + CONTENT_SCRIPT_BASENAME;
 
-  let { Panel } = Cu.import(jsmURL, {});
+  let { Panel } = ChromeUtils.import(jsmURL, {});
   let panel = new Panel(gURLBar.popup, iframeURL);
   registerCleanupFunction(() => {
     panel.destroy();

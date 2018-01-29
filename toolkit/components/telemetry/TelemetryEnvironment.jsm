@@ -11,30 +11,30 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const myScope = this;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
-Cu.import("resource://gre/modules/ObjectUtils.jsm");
-Cu.import("resource://gre/modules/TelemetryController.jsm", this);
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
-const { AddonManager, AddonManagerPrivate } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const { AddonManager, AddonManagerPrivate } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "AttributionCode",
-                                  "resource:///modules/AttributionCode.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
-                                  "resource://gre/modules/ctypes.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
-                                  "resource://gre/modules/ProfileAge.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
-                                  "resource://gre/modules/WindowsRegistry.jsm");
+ChromeUtils.defineModuleGetter(this, "AttributionCode",
+                               "resource:///modules/AttributionCode.jsm");
+ChromeUtils.defineModuleGetter(this, "ctypes",
+                               "resource://gre/modules/ctypes.jsm");
+ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
+                               "resource://gre/modules/LightweightThemeManager.jsm");
+ChromeUtils.defineModuleGetter(this, "ProfileAge",
+                               "resource://gre/modules/ProfileAge.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateUtils",
+                               "resource://gre/modules/UpdateUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
+                               "resource://gre/modules/WindowsRegistry.jsm");
 
 // The maximum length of a string (e.g. description) in the addons section.
 const MAX_ADDON_STRING_LENGTH = 100;
@@ -814,7 +814,7 @@ EnvironmentAddonBuilder.prototype = {
     let experimentInfo = {};
     try {
       let scope = {};
-      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
+      ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", scope);
       let experiments = scope.Experiments.instance();
       let activeExperiment = experiments.getActiveExperimentID();
       if (activeExperiment) {
@@ -1329,7 +1329,7 @@ EnvironmentCache.prototype = {
     let shellService;
     try {
       let scope = {};
-      Cu.import("resource:///modules/ShellService.jsm", scope);
+      ChromeUtils.import("resource:///modules/ShellService.jsm", scope);
       shellService = scope.ShellService;
     } catch (ex) {
       this._log.error("_isDefaultBrowser - Could not obtain shell service JSM");

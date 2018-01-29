@@ -8,11 +8,11 @@ const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const SUGGESTION_ENGINE_NAME = "browser_UsageTelemetry usageTelemetrySearchSuggestions.xml";
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
-XPCOMUtils.defineLazyModuleGetter(this, "URLBAR_SELECTED_RESULT_TYPES",
-                                  "resource:///modules/BrowserUsageTelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "URLBAR_SELECTED_RESULT_TYPES",
+                               "resource:///modules/BrowserUsageTelemetry.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
-                                  "resource:///modules/BrowserUsageTelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
+                               "resource:///modules/BrowserUsageTelemetry.jsm");
 
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let i = 0; i < resultIndexes.counts.length; i++) {

@@ -1,6 +1,6 @@
-Cu.import('resource://gre/modules/LoadContextInfo.jsm');
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var first = true;
 function contentHandler(metadata, response)

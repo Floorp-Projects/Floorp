@@ -20,8 +20,8 @@
 //    plus 4. Also, the request ids of the rest requests should be less than non-focused
 //    window id + 2.
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;

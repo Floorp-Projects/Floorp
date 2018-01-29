@@ -4,8 +4,8 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PREF_BRANCH = "extensions.webcompat.";
 const PREF_DEFAULTS = {perform_ua_overrides: true};
@@ -13,8 +13,8 @@ const PREF_DEFAULTS = {perform_ua_overrides: true};
 const UA_OVERRIDES_INIT_TOPIC = "useragentoverrides-initialized";
 const UA_ENABLE_PREF_NAME = "extensions.webcompat.perform_ua_overrides";
 
-XPCOMUtils.defineLazyModuleGetter(this, "UAOverrider", "chrome://webcompat/content/lib/ua_overrider.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UAOverrides", "chrome://webcompat/content/data/ua_overrides.jsm");
+ChromeUtils.defineModuleGetter(this, "UAOverrider", "chrome://webcompat/content/lib/ua_overrider.jsm");
+ChromeUtils.defineModuleGetter(this, "UAOverrides", "chrome://webcompat/content/data/ua_overrides.jsm");
 
 let overrider;
 
