@@ -367,7 +367,7 @@ private:
 public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
-  bool MayBeAsynchronouslyScrolled() const {
+  bool IsMaybeAsynchronouslyScrolled() const {
     // If this is true, then we'll build an ASR, and that's what we want
     // to know I think.
     return mWillBuildScrollableLayer;
@@ -927,8 +927,8 @@ public:
   virtual bool IsMaybeScrollingActive() const override {
     return mHelper.IsMaybeScrollingActive();
   }
-  virtual bool MayBeAsynchronouslyScrolled() override {
-    return mHelper.MayBeAsynchronouslyScrolled();
+  virtual bool IsMaybeAsynchronouslyScrolled() override {
+    return mHelper.IsMaybeAsynchronouslyScrolled();
   }
   virtual bool IsProcessingAsyncScroll() override {
     return mHelper.IsProcessingAsyncScroll();
@@ -1372,8 +1372,8 @@ public:
   virtual bool IsMaybeScrollingActive() const override {
     return mHelper.IsMaybeScrollingActive();
   }
-  virtual bool MayBeAsynchronouslyScrolled() override {
-    return mHelper.MayBeAsynchronouslyScrolled();
+  virtual bool IsMaybeAsynchronouslyScrolled() override {
+    return mHelper.IsMaybeAsynchronouslyScrolled();
   }
   virtual bool IsProcessingAsyncScroll() override {
     return mHelper.IsProcessingAsyncScroll();
