@@ -30,7 +30,7 @@ overrider.set({
   AppConstants: {MOZILLA_OFFICIAL: true},
   Components: {
     classes: {},
-    interfaces: {},
+    interfaces: {nsIHttpChannel: {REFERRER_POLICY_UNSAFE_URL: 5}},
     utils: {
       import() {},
       importGlobalProperties() {},

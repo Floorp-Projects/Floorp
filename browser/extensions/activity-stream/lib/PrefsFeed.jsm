@@ -71,9 +71,11 @@ this.PrefsFeed = class PrefsFeed {
     this._setPrerenderPref();
     this._initOnboardingPref();
   }
+
   removeListeners() {
     this._prefs.ignoreBranch(this);
   }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:

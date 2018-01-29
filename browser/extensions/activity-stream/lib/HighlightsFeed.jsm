@@ -144,7 +144,7 @@ this.HighlightsFeed = class HighlightsFeed {
    * Fetch an image for a given highlight and update the card with it. If no
    * image is available then fallback to fetching a screenshot.
    */
-  async fetchImage(page) {
+  fetchImage(page) {
     // Request a screenshot if we don't already have one pending
     const {preview_image_url: imageUrl, url} = page;
     Screenshots.maybeCacheScreenshot(page, imageUrl || url, "image", image => {
