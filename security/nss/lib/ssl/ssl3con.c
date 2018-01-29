@@ -4272,6 +4272,7 @@ ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                          sizeof(stackBuf), &stateLen);
         if (stateBuf == NULL) {
             ssl_MapLowLevelError(SSL_ERROR_DIGEST_FAILURE);
+            rv = SECFailure;
             goto tls12_loser;
         }
         rv |= PK11_DigestFinal(h, hashes->u.raw, &hashes->len,
@@ -4283,7 +4284,6 @@ ssl3_ComputeHandshakeHashes(sslSocket *ss,
         }
 
         hashes->hashAlg = ssl3_GetSuitePrfHash(ss);
-        rv = SECSuccess;
 
     tls12_loser:
         if (stateBuf) {
@@ -4315,6 +4315,7 @@ ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                             sizeof md5StackBuf, &md5StateLen);
         if (md5StateBuf == NULL) {
             ssl_MapLowLevelError(SSL_ERROR_MD5_DIGEST_FAILURE);
+            rv = SECFailure;
             goto loser;
         }
         md5 = ss->ssl3.hs.md5;
@@ -4323,6 +4324,7 @@ ssl3_ComputeHandshakeHashes(sslSocket *ss,
                                             sizeof shaStackBuf, &shaStateLen);
         if (shaStateBuf == NULL) {
             ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+            rv = SECFailure;
             goto loser;
         }
         sha = ss->ssl3.hs.sha;
@@ -4418,7 +4420,6 @@ ssl3_ComputeHandshakeHashes(sslSocket *ss,
         PRINT_BUF(60, (NULL, "SHA outer: result", hashes->u.s.sha, SHA1_LENGTH));
 
         hashes->len = MD5_LENGTH + SHA1_LENGTH;
-        rv = SECSuccess;
 
     loser:
         if (md5StateBuf) {
