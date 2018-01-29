@@ -17,6 +17,7 @@
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
 #include "js/UniquePtr.h"
+#include "vm/ArrayObject.h"
 #include "vm/NativeObject.h"
 
 namespace js {
@@ -199,6 +200,9 @@ class NewObjectCache
         MOZ_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
         MOZ_ASSERT(entry_ == makeIndex(clasp, key, kind));
         Entry* entry = &entries[entry_];
+
+        MOZ_ASSERT(!obj->hasDynamicSlots());
+        MOZ_ASSERT(obj->hasEmptyElements() || obj->is<ArrayObject>());
 
         entry->clasp = clasp;
         entry->key = key;

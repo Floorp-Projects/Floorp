@@ -12,9 +12,18 @@
 namespace mozilla {
 namespace dom {
 
-ServiceWorkerDescriptor::ServiceWorkerDescriptor()
+ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,
+                                                 nsIPrincipal* aPrincipal,
+                                                 const nsACString& aScope,
+                                                 ServiceWorkerState aState)
   : mData(MakeUnique<IPCServiceWorkerDescriptor>())
 {
+  MOZ_ALWAYS_SUCCEEDS(
+    PrincipalToPrincipalInfo(aPrincipal, &mData->principalInfo()));
+
+  mData->id() = aId;
+  mData->scope() = aScope;
+  mData->state() = aState;
 }
 
 ServiceWorkerDescriptor::ServiceWorkerDescriptor(uint64_t aId,

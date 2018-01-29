@@ -926,10 +926,7 @@ def set_worker_type(config, tests):
                 test['worker-type'] = win_worker_type_platform[test['virtualization']]
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and test['build-platform'] != 'linux64-ccov/opt':
-                if try_options.get('taskcluster_worker'):
-                    test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
-                else:
-                    test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
+                test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
             else:
                 test['worker-type'] = LINUX_WORKER_TYPES[test['instance-size']]
         else:

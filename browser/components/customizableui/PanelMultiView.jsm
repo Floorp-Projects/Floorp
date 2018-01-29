@@ -201,7 +201,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       this.node.getElementsByTagName("panelview"),
       node => PanelView.forNode(node)));
     this.openViews = [];
-    this._mainViewHeight = 0;
     this.__transitioning = false;
     this.showingSubView = false;
 
@@ -357,43 +356,34 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
       viewNode.panelMultiView = this.node;
 
-      let reverse = !!aPreviousView;
-      if (!reverse) {
-        nextPanelView.headerText = viewNode.getAttribute("title") ||
-                                   (aAnchor && aAnchor.getAttribute("label"));
-      }
-
       let previousViewNode = aPreviousView || this._currentSubView;
       // If the panelview to show is the same as the previous one, the 'ViewShowing'
       // event has already been dispatched. Don't do it twice.
       let showingSameView = viewNode == previousViewNode;
-      let playTransition = (!!previousViewNode && !showingSameView && this._panel.state == "open");
-      let isMainView = viewNode.id == this._mainViewId;
 
-      let previousRect = previousViewNode.__lastKnownBoundingRect =
-          this._dwu.getBoundsWithoutFlushing(previousViewNode);
-      // Cache the measures that have the same caching lifetime as the width
-      // or height of the main view, i.e. whilst the panel is shown and/ or
-      // visible.
-      if (!this._mainViewWidth) {
-        this._mainViewWidth = previousRect.width;
-      }
-      if (!this._mainViewHeight) {
-        this._mainViewHeight = previousRect.height;
-        this._viewContainer.style.minHeight = this._mainViewHeight + "px";
-      }
+      let prevPanelView = PanelView.forNode(previousViewNode);
+      prevPanelView.captureKnownSize();
 
       this._viewShowing = viewNode;
-      // Because the 'mainview' attribute may be out-of-sync, due to view node
-      // reparenting in combination with ephemeral PanelMultiView instances,
-      // this is the best place to correct it (just before showing).
-      nextPanelView.mainview = isMainView;
+
+      let reverse = !!aPreviousView;
+      if (!reverse) {
+        // We are opening a new view, either because we are navigating forward
+        // or because we are showing the main view. Some properties of the view
+        // may vary between panels, so we make sure to update them every time.
+        // Firstly, make sure that the header matches how the view was opened.
+        nextPanelView.headerText = viewNode.getAttribute("title") ||
+                                   (aAnchor && aAnchor.getAttribute("label"));
+        // The main view of a panel can be a subview in another one.
+        let isMainView = viewNode.id == this._mainViewId;
+        nextPanelView.mainview = isMainView;
+        // The constrained width of subviews may also vary between panels.
+        nextPanelView.minMaxWidth = isMainView ? 0 : prevPanelView.knownWidth;
+      }
 
       if (aAnchor) {
         viewNode.classList.add("PanelUI-subView");
       }
-      if (!isMainView && this._mainViewWidth)
-        viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
       if (!showingSameView || !viewNode.hasAttribute("current")) {
         // Emit the ViewShowing event so that the widget definition has a chance
@@ -425,8 +415,8 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       // Now we have to transition the panel. If we've got an older transition
       // still running, make sure to clean it up.
       await this._cleanupTransitionPhase();
-      if (playTransition) {
-        await this._transitionViews(previousViewNode, viewNode, reverse, previousRect, aAnchor);
+      if (!showingSameView && this._panel.state == "open") {
+        await this._transitionViews(previousViewNode, viewNode, reverse, aAnchor);
         nextPanelView.focusSelectedElement();
       } else {
         this.hideAllViewsExcept(nextPanelView);
@@ -448,12 +438,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
    *                                     after the transition has finished.
    * @param {Boolean}   reverse          Whether we're navigation back to a
    *                                     previous view or forward to a next view.
-   * @param {Object}    previousRect     Rect object, with the same structure as
-   *                                     a DOMRect, of the `previousViewNode`.
    * @param {Element}   anchor           the anchor for which we're opening
    *                                     a new panelview, if any
    */
-  async _transitionViews(previousViewNode, viewNode, reverse, previousRect, anchor) {
+  async _transitionViews(previousViewNode, viewNode, reverse, anchor) {
     // There's absolutely no need to show off our epic animation skillz when
     // the panel's not even open.
     if (this._panel.state != "open") {
@@ -463,6 +451,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     const {window, document} = this;
 
     let nextPanelView = PanelView.forNode(viewNode);
+    let prevPanelView = PanelView.forNode(previousViewNode);
 
     if (this._autoResizeWorkaroundTimer)
       window.clearTimeout(this._autoResizeWorkaroundTimer);
@@ -481,23 +470,27 @@ this.PanelMultiView = class extends this.AssociatedToNode {
     previousViewNode.setAttribute("in-transition", true);
     // Set the viewContainer dimensions to make sure only the current view is
     // visible.
-    this._viewContainer.style.height = Math.max(previousRect.height, this._mainViewHeight) + "px";
-    this._viewContainer.style.width = previousRect.width + "px";
+    let olderView = reverse ? nextPanelView : prevPanelView;
+    this._viewContainer.style.minHeight = olderView.knownHeight + "px";
+    this._viewContainer.style.height = prevPanelView.knownHeight + "px";
+    this._viewContainer.style.width = prevPanelView.knownWidth + "px";
     // Lock the dimensions of the window that hosts the popup panel.
     let rect = this._panel.popupBoxObject.getOuterScreenRect();
     this._panel.setAttribute("width", rect.width);
     this._panel.setAttribute("height", rect.height);
 
     let viewRect;
-    if (reverse && viewNode.__lastKnownBoundingRect) {
+    if (reverse) {
       // Use the cached size when going back to a previous view, but not when
       // reopening a subview, because its contents may have changed.
-      viewRect = viewNode.__lastKnownBoundingRect;
+      viewRect = { width: nextPanelView.knownWidth,
+                   height: nextPanelView.knownHeight };
       viewNode.setAttribute("in-transition", true);
     } else if (viewNode.customRectGetter) {
       // Can't use Object.assign directly with a DOM Rect object because its properties
       // aren't enumerable.
-      let {height, width} = previousRect;
+      let width = prevPanelView.knownWidth;
+      let height = prevPanelView.knownHeight;
       viewRect = Object.assign({height, width}, viewNode.customRectGetter());
       let header = viewNode.firstChild;
       if (header && header.classList.contains("panel-header")) {
@@ -506,8 +499,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
       viewNode.setAttribute("in-transition", true);
     } else {
       let oldSibling = viewNode.nextSibling || null;
-      this._offscreenViewStack.style.minHeight =
-        this._viewContainer.style.height;
+      this._offscreenViewStack.style.minHeight = olderView.knownHeight + "px";
       this._offscreenViewStack.appendChild(viewNode);
       viewNode.setAttribute("in-transition", true);
 
@@ -533,7 +525,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     // The 'magic' part: build up the amount of pixels to move right or left.
     let moveToLeft = (this._dir == "rtl" && !reverse) || (this._dir == "ltr" && reverse);
-    let deltaX = previousRect.width;
+    let deltaX = prevPanelView.knownWidth;
     let deepestNode = reverse ? previousViewNode : viewNode;
 
     // With a transition when navigating backwards - user hits the 'back'
@@ -554,7 +546,7 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
     // Now set the viewContainer dimensions to that of the new view, which
     // kicks of the height animation.
-    this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
+    this._viewContainer.style.height = viewRect.height + "px";
     this._viewContainer.style.width = viewRect.width + "px";
     this._panel.removeAttribute("width");
     this._panel.removeAttribute("height");
@@ -757,13 +749,6 @@ this.PanelMultiView = class extends this.AssociatedToNode {
         this._transitioning = false;
         this.node.removeAttribute("panelopen");
         this.showMainView();
-        for (let panelView of this._viewStack.children) {
-          if (panelView.nodeName != "children") {
-            panelView.__lastKnownBoundingRect = null;
-            panelView.style.removeProperty("min-width");
-            panelView.style.removeProperty("max-width");
-          }
-        }
         this.window.removeEventListener("keydown", this);
         this._panel.removeEventListener("mousemove", this);
         this.openViews.forEach(panelView => panelView.clearNavigation());
@@ -771,12 +756,10 @@ this.PanelMultiView = class extends this.AssociatedToNode {
 
         // Clear the main view size caches. The dimensions could be different
         // when the popup is opened again, e.g. through touch mode sizing.
-        this._mainViewHeight = 0;
-        this._mainViewWidth = 0;
         this._viewContainer.style.removeProperty("min-height");
         this._viewStack.style.removeProperty("max-height");
-        this._viewContainer.style.removeProperty("min-width");
-        this._viewContainer.style.removeProperty("max-width");
+        this._viewContainer.style.removeProperty("width");
+        this._viewContainer.style.removeProperty("height");
 
         this.dispatchCustomEvent("PanelMultiViewHidden");
         break;
@@ -813,6 +796,20 @@ this.PanelView = class extends this.AssociatedToNode {
     } else if (this.node.hasAttribute("current")) {
       this.dispatchCustomEvent("ViewHiding");
       this.node.removeAttribute("current");
+    }
+  }
+
+  /**
+   * Constrains the width of this view using the "min-width" and "max-width"
+   * styles. Setting this to zero removes the constraints.
+   */
+  set minMaxWidth(value) {
+    let style = this.node.style;
+    if (value) {
+      style.minWidth = style.maxWidth = value + "px";
+    } else {
+      style.removeProperty("min-width");
+      style.removeProperty("max-width");
     }
   }
 
@@ -865,6 +862,19 @@ this.PanelView = class extends this.AssociatedToNode {
   dispatchCustomEvent(...args) {
     CustomizableUI.ensureSubviewListeners(this.node);
     return super.dispatchCustomEvent(...args);
+  }
+
+  /**
+   * Populates the "knownWidth" and "knownHeight" properties with the current
+   * dimensions of the view. These may be zero if the view is invisible.
+   *
+   * These values are relevant during transitions and are retained for backwards
+   * navigation if the view is still open but is invisible.
+   */
+  captureKnownSize() {
+    let rect = this._dwu.getBoundsWithoutFlushing(this.node);
+    this.knownWidth = rect.width;
+    this.knownHeight = rect.height;
   }
 
   /**

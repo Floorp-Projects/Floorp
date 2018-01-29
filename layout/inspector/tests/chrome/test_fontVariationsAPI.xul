@@ -12,6 +12,103 @@
 
 SimpleTest.waitForExplicitFinish();
 
+// Which platform are we on?
+const kIsLinux = navigator.platform.indexOf("Linux") == 0;
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+const kIsWin = navigator.platform.indexOf("Win") == 0;
+
+// If it's an older macOS version (pre-Sierra), we don't expect the
+// @font-face examples to work, so just skip them.
+const kIsOldMac = navigator.oscpu.substr(navigator.oscpu.lastIndexOf(".") + 1) < 12;
+
+// We allow for some "fuzz" on axis values, given the conversions between
+// fixed-point and floating-point representations.
+const kEpsilon = 0.001;
+
+
+const LibreFranklinAxes = [
+  { tag: "wght", name: "Weight", minValue: 40, maxValue: 200, defaultValue: 40 },
+];
+
+const GinghamAxes = [
+  { tag: "wght", name: "Weight", minValue: 300, maxValue: 700, defaultValue: 300 },
+  { tag: "wdth", name: "Width",  minValue: 1,   maxValue: 150, defaultValue: 1   },
+];
+
+const SkiaAxes = [
+  { tag: "wght", name: "Weight", minValue: 0.48, maxValue: 3.2, defaultValue: 1.0 },
+  { tag: "wdth", name: "Width",  minValue: 0.62, maxValue: 1.3, defaultValue: 1.0 },
+];
+
+function checkAxes(axes, reference) {
+  is(axes.length, reference.length, "number of variation axes");
+  for (var i = 0; i < Math.min(axes.length, reference.length); ++i) {
+    var v = axes[i];
+    var ref = reference[i];
+    is(v.tag, ref.tag, "axis tag");
+    is(v.name, ref.name, "axis name");
+    isfuzzy(v.minValue, ref.minValue, kEpsilon, "minimum value");
+    isfuzzy(v.maxValue, ref.maxValue, kEpsilon, "maximum value");
+    is(v.defaultValue, ref.defaultValue, "default value");
+  }
+}
+
+// Expected variation instances for each of our test fonts, sorted by name
+const LibreFranklinInstances = [
+  { name: "Black",      values: [ { axis: "wght", value: 200 } ] },
+  { name: "Bold",       values: [ { axis: "wght", value: 154 } ] },
+  { name: "ExtraBold",  values: [ { axis: "wght", value: 178 } ] },
+  { name: "ExtraLight", values: [ { axis: "wght", value: 50  } ] },
+  { name: "Light",      values: [ { axis: "wght", value: 66  } ] },
+  { name: "Medium",     values: [ { axis: "wght", value: 106 } ] },
+  { name: "Regular",    values: [ { axis: "wght", value: 84  } ] },
+  { name: "SemiBold",   values: [ { axis: "wght", value: 130 } ] },
+  { name: "Thin",       values: [ { axis: "wght", value: 40  } ] },
+];
+
+const GinghamInstances = [
+  { name: "Bold",              values: [ { axis: "wght", value: 700 }, { axis: "wdth", value: 100 } ] },
+  { name: "Condensed Bold",    values: [ { axis: "wght", value: 700 }, { axis: "wdth", value: 1   } ] },
+  { name: "Condensed Light",   values: [ { axis: "wght", value: 300 }, { axis: "wdth", value: 1   } ] },
+  { name: "Condensed Regular", values: [ { axis: "wght", value: 400 }, { axis: "wdth", value: 1   } ] },
+  { name: "Light",             values: [ { axis: "wght", value: 300 }, { axis: "wdth", value: 100 } ] },
+  { name: "Regular",           values: [ { axis: "wght", value: 400 }, { axis: "wdth", value: 100 } ] },
+  { name: "Wide Bold",         values: [ { axis: "wght", value: 700 }, { axis: "wdth", value: 150 } ] },
+  { name: "Wide Light",        values: [ { axis: "wght", value: 300 }, { axis: "wdth", value: 150 } ] },
+  { name: "Wide Regular",      values: [ { axis: "wght", value: 400 }, { axis: "wdth", value: 150 } ] },
+];
+
+const SkiaInstances = [
+  { name: "Black",           values: [ { axis: "wght", value: 3.2  }, { axis: "wdth", value: 1    } ] },
+  { name: "Black Condensed", values: [ { axis: "wght", value: 3    }, { axis: "wdth", value: 0.7  } ] },
+  { name: "Black Extended",  values: [ { axis: "wght", value: 3.2  }, { axis: "wdth", value: 1.3  } ] },
+  { name: "Bold",            values: [ { axis: "wght", value: 1.95 }, { axis: "wdth", value: 1    } ] },
+  { name: "Condensed",       values: [ { axis: "wght", value: 1    }, { axis: "wdth", value: 0.62 } ] },
+  { name: "Extended",        values: [ { axis: "wght", value: 1    }, { axis: "wdth", value: 1.3  } ] },
+  { name: "Light",           values: [ { axis: "wght", value: 0.48 }, { axis: "wdth", value: 1    } ] },
+  { name: "Light Condensed", values: [ { axis: "wght", value: 0.48 }, { axis: "wdth", value: 0.7  } ] },
+  { name: "Light Extended",  values: [ { axis: "wght", value: 0.48 }, { axis: "wdth", value: 1.3  } ] },
+  { name: "Regular",         values: [ { axis: "wght", value: 1    }, { axis: "wdth", value: 1    } ] },
+];
+
+function checkInstances(instances, reference) {
+  is(instances.length, reference.length, "number of variation instances");
+  instances.sort(function (a, b) {
+    return a.name.localeCompare(b.name, "en-US");
+  });
+  for (var i = 0; i < Math.min(instances.length, reference.length); ++i) {
+    var ref = reference[i];
+    var inst = instances[i];
+    is(inst.name, ref.name, "instance name");
+    is(inst.values.length, ref.values.length, "number of values");
+    for (var j = 0; j < Math.min(inst.values.length, ref.values.length); ++j) {
+      var v = inst.values[j];
+      is(v.axis, ref.values[j].axis, "axis");
+      isfuzzy(v.value, ref.values[j].value, kEpsilon, "value");
+    }
+  }
+}
+
 function RunTest() {
   // Ensure we're running with font-variations enabled
   SpecialPowers.pushPrefEnv(
@@ -19,33 +116,17 @@ function RunTest() {
              ['gfx.downloadable_fonts.keep_variation_tables', true],
              ['gfx.downloadable_fonts.otl_validation', false]]},
     function() {
-      // Which platform are we on?
-      const kIsLinux = navigator.platform.indexOf("Linux") == 0;
-      const kIsMac = navigator.platform.indexOf("Mac") == 0;
-      const kIsWin = navigator.platform.indexOf("Win") == 0;
-
-      // Until bug 1433098 is fixed, Windows fails to return axis names
-      const nameTest = kIsWin ? todo : is;
-
-      // If it's an older macOS version (pre-Sierra), we don't expect the
-      // @font-face examples to work, so just skip them.
-      const kIsOldMac = navigator.oscpu.substr(navigator.oscpu.lastIndexOf(".") + 1) < 12;
-
       var rng = document.createRange();
       var elem, fonts, f;
 
-      // We allow for some "fuzz" on non-integer axis values, given the
-      // conversions between fixed-point and floating-point representations.
-      const kEpsilon = 0.001;
-
-      // First test element uses Arial, which has no variations
+      // First test element uses Arial (or a substitute), which has no variations
       elem = document.getElementById("test1");
       rng.selectNode(elem);
       fonts = InspectorUtils.getUsedFontFaces(rng);
-      is(fonts.length, 1, "number of fonts: " + fonts.length);
+      is(fonts.length, 1, "number of fonts");
       f = fonts[0];
-      var axes = f.getVariationAxes();
-      is(axes.length, 0, "no variations");
+      is(f.getVariationAxes().length, 0, "no variations");
+      is(f.getVariationInstances().length, 0, "no instances");
 
       if (!(kIsMac && kIsOldMac)) {
         // Libre Franklin font should have a single axis: Weight.
@@ -53,25 +134,11 @@ function RunTest() {
         elem.style.display = "block";
         rng.selectNode(elem);
         fonts = InspectorUtils.getUsedFontFaces(rng);
-        is(fonts.length, 1, "number of fonts: " + fonts.length);
+        is(fonts.length, 1, "number of fonts");
         f = fonts[0];
-        is(f.name, "Libre Franklin", "font name: " + f.name);
-        axes = f.getVariationAxes();
-        is(axes.length, 1, "number of variation axes: " + axes.length);
-        for (var i = 0; i < axes.length; ++i) {
-          var v = axes[i];
-          switch (v.tag) {
-          case "wght":
-            nameTest(v.name, "Weight", "name of wght axis: " + v.name);
-            is(v.minValue, 40, "minimum weight: " + v.minValue);
-            is(v.maxValue, 200, "maximum weight: " + v.maxValue);
-            is(v.defaultValue, 40, "default weight: " + v.defaultValue);
-            break;
-          default:
-            ok(false, "unexpected axis: " + v.tag);
-            break;
-          }
-        }
+        is(f.name, "Libre Franklin", "font name");
+        checkAxes(f.getVariationAxes(), LibreFranklinAxes);
+        checkInstances(f.getVariationInstances(), LibreFranklinInstances);
 
         // Gingham font should have two axes: Weight and Width.
         elem = document.getElementById("test3");
@@ -80,29 +147,9 @@ function RunTest() {
         fonts = InspectorUtils.getUsedFontFaces(rng);
         is(fonts.length, 1, "number of fonts");
         f = fonts[0];
-        is(f.name, "Gingham Regular", "font name: " + f.name);
-        axes = f.getVariationAxes();
-        is(axes.length, 2, "number of variation axes");
-        for (var i = 0; i < axes.length; ++i) {
-          var v = axes[i];
-          switch (v.tag) {
-          case "wght":
-            nameTest(v.name, "Weight", "name of wght axis: " + v.name);
-            is(v.minValue, 300, "minimum weight: " + v.minValue);
-            is(v.maxValue, 700, "maximum weight: " + v.maxValue);
-            is(v.defaultValue, 300, "default weight: " + v.defaultValue);
-            break;
-          case "wdth":
-            nameTest(v.name, "Width", "name of wdth axis: " + v.name);
-            is(v.minValue, 1, "minimum width: " + v.minValue);
-            is(v.maxValue, 150, "maximum width: " + v.maxValue);
-            is(v.defaultValue, 1, "default width: " + v.defaultValue);
-            break;
-          default:
-            ok(false, "unexpected axis: " + v.tag);
-            break;
-          }
-        }
+        is(f.name, "Gingham Regular", "font name");
+        checkAxes(f.getVariationAxes(), GinghamAxes);
+        checkInstances(f.getVariationInstances(), GinghamInstances);
       }
 
       if (kIsMac) {
@@ -111,31 +158,11 @@ function RunTest() {
         elem = document.getElementById("test4");
         rng.selectNode(elem);
         fonts = InspectorUtils.getUsedFontFaces(rng);
-        is(fonts.length, 1, "number of fonts: " + fonts.length);
+        is(fonts.length, 1, "number of fonts");
         f = fonts[0];
-        is(f.name, "Skia", "font name: " + f.name);
-        axes = f.getVariationAxes();
-        is(axes.length, 2, "number of variation axes: " + axes.length);
-        for (var i = 0; i < axes.length; ++i) {
-          var v = axes[i];
-          switch (v.tag) {
-          case "wght":
-            is(v.name, "Weight", "name of wght axis: " + v.name);
-            isfuzzy(v.minValue, 0.48, kEpsilon, "minimum weight: " + v.minValue);
-            isfuzzy(v.maxValue, 3.20, kEpsilon, "maximum weight: " + v.maxValue);
-            is(v.defaultValue, 1.0, "default weight: " + v.defaultValue);
-            break;
-          case "wdth":
-            is(v.name, "Width", "name of wdth axis: " + v.name);
-            isfuzzy(v.minValue, 0.62, kEpsilon, "minimum width: " + v.minValue);
-            isfuzzy(v.maxValue, 1.30, kEpsilon, "maximum width: " + v.maxValue);
-            is(v.defaultValue, 1.0, "default width: " + v.defaultValue);
-            break;
-          default:
-            ok(false, "unexpected axis: " + v.tag);
-            break;
-          }
-        }
+        is(f.name, "Skia", "font name");
+        checkAxes(f.getVariationAxes(), SkiaAxes);
+        checkInstances(f.getVariationInstances(), SkiaInstances);
       }
 
       SimpleTest.finish();
