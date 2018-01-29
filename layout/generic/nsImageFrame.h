@@ -439,6 +439,11 @@ public:
    */
   virtual nsRect GetDestRect() const override;
 
+  virtual void UpdateDrawResult(mozilla::image::ImgDrawResult aResult) override
+  {
+    nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, aResult);
+  }
+
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
