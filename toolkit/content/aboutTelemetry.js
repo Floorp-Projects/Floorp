@@ -2253,10 +2253,10 @@ var KeyedHistogramSection = {
     }
 
     let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
-      if (option == "parent") {
+      let value = option.getAttribute("value");
+      if (value == "parent") {
         return Object.keys(aPayload.keyedHistograms).length > 0;
       }
-      let value = option.getAttribute("value");
       let keyedHistos = aPayload.processes[value].keyedHistograms;
       return keyedHistos && Object.keys(keyedHistos).length > 0;
     });
