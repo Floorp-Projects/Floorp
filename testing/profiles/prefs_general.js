@@ -394,3 +394,6 @@ user_pref("extensions.screenshots.disabled", true);
 // relatively long time which may cause unnecessary intermittents and slow down
 // tests. This, like many things, will stop working correctly in 2038.
 user_pref("places.database.lastMaintenance", 2147483647);
+
+// Disable Bookmark backups by default.
+user_pref("browser.bookmarks.max_backups", 0);
