@@ -155,7 +155,7 @@ def lint(paths, config, **lintargs):
 
     files = find_shell_scripts(config, paths)
 
-    base_command = [binary, '-x', '-f', 'json']
+    base_command = [binary, '-f', 'json']
     if config.get('excludecodes'):
         base_command.extend(['-e', ','.join(config.get('excludecodes'))])
 
