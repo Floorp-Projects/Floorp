@@ -6,6 +6,8 @@
 #ifndef _mozilla_dom_ServiceWorkerDescriptor_h
 #define _mozilla_dom_ServiceWorkerDescriptor_h
 
+class nsIPrincipal;
+
 namespace mozilla {
 
 namespace ipc {
@@ -29,7 +31,10 @@ class ServiceWorkerDescriptor final
   UniquePtr<IPCServiceWorkerDescriptor> mData;
 
 public:
-  ServiceWorkerDescriptor();
+  ServiceWorkerDescriptor(uint64_t aId,
+                          nsIPrincipal* aPrincipal,
+                          const nsACString& aScope,
+                          ServiceWorkerState aState);
 
   ServiceWorkerDescriptor(uint64_t aId,
                           const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
