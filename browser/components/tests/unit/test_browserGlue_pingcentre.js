@@ -1,4 +1,4 @@
-Cu.import("resource:///modules/PingCentre.jsm");
+ChromeUtils.import("resource:///modules/PingCentre.jsm");
 
 const TOPIC_SHIELD_INIT_COMPLETE = "shield-init-complete";
 const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";

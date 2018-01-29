@@ -10,7 +10,7 @@ add_task(async function() {
   });
 
   const kPrefCustomizationState = "browser.uiCustomization.state";
-  let bsPass = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+  let bsPass = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
   ok(bsPass.gSeenWidgets.has(BUTTONID), "Widget should be seen after createWidget is called.");
   CustomizableUI.reset();
   ok(bsPass.gSeenWidgets.has(BUTTONID), "Widget should still be seen after reset.");

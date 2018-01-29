@@ -14,12 +14,12 @@ this.EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components; /* global Components */
 
-Cu.import("resource://gre/modules/Accounts.jsm"); /* global Accounts */
-Cu.import("resource://gre/modules/Services.jsm"); /* global Services */
-Cu.import("resource://gre/modules/WebChannel.jsm"); /* global WebChannel */
-Cu.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
+ChromeUtils.import("resource://gre/modules/Accounts.jsm"); /* global Accounts */
+ChromeUtils.import("resource://gre/modules/Services.jsm"); /* global Services */
+ChromeUtils.import("resource://gre/modules/WebChannel.jsm"); /* global WebChannel */
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm"); /* global XPCOMUtils */
 
-const log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccounts");
+const log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccounts");
 
 const WEBCHANNEL_ID = "account_updates";
 
@@ -36,9 +36,9 @@ const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 XPCOMUtils.defineLazyGetter(this, "strings",
                             () => Services.strings.createBundle("chrome://browser/locale/aboutAccounts.properties")); /* global strings */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Prompt", "resource://gre/modules/Prompt.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+ChromeUtils.defineModuleGetter(this, "Prompt", "resource://gre/modules/Prompt.jsm");
+ChromeUtils.defineModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
 
 this.FxAccountsWebChannelHelpers = function() {
 };

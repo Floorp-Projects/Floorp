@@ -1,13 +1,13 @@
 "use strict";
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabSearchProvider",
+ChromeUtils.defineModuleGetter(this, "NewTabSearchProvider",
     "resource:///modules/NewTabSearchProvider.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
-                                  "resource:///modules/ContentSearch.jsm");
+ChromeUtils.defineModuleGetter(this, "ContentSearch",
+                               "resource:///modules/ContentSearch.jsm");
 
 // ensure a profile exists
 do_get_profile();

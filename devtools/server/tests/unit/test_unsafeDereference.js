@@ -11,7 +11,7 @@
 // cross-compartment wrappers with interesting properties, and this is the
 // xpcshell test directory most closely related to the JS Debugger API.
 
-Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
 // Add a method to Debugger.Object for fetching value properties

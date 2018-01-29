@@ -7,7 +7,7 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 if (AppConstants.platform == "win" && AppConstants.DEBUG) {
   // Shutdown timing is flaky in this test, and remote extensions
@@ -16,7 +16,7 @@ if (AppConstants.platform == "win" && AppConstants.DEBUG) {
   Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 }
 
-Components.utils.import("resource://testing-common/PromiseTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 PromiseTestUtils.expectUncaughtRejection(/Message manager disconnected/);
 

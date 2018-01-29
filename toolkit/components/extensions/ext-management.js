@@ -8,14 +8,14 @@
 XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
 });
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "promptService",
                                    "@mozilla.org/embedcomp/prompt-service;1",
                                    "nsIPromptService");
 
 XPCOMUtils.defineLazyGetter(this, "GlobalManager", () => {
-  const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return GlobalManager;
 });
 

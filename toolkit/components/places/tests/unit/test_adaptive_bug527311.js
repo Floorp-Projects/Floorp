@@ -8,7 +8,7 @@ const TEST_URL = "http://adapt.mozilla.org/";
 const SEARCH_STRING = "adapt";
 const SUGGEST_TYPES = ["history", "bookmark", "openpage"];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC =
   "places-autocomplete-feedback-updated";

@@ -8,9 +8,9 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/ctypes.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://ppapi.js/opengles2-utils.jsm");
+ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://ppapi.js/opengles2-utils.jsm");
 Cu.importGlobalProperties(['URL']);
 
 const PP_OK = 0;

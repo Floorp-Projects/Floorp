@@ -1,8 +1,8 @@
 //Used by JSHint:
 /*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
-const { ManifestIcons } = Cu.import("resource://gre/modules/ManifestIcons.jsm", {});
-const { ManifestObtainer } = Cu.import("resource://gre/modules/ManifestObtainer.jsm", {});
+const { ManifestIcons } = ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm", {});
+const { ManifestObtainer } = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
 
 const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");

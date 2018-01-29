@@ -4,7 +4,7 @@
 
 /* import-globals-from allDownloadsViewOverlay.js */
 
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var ContentAreaDownloadsView = {
   init() {

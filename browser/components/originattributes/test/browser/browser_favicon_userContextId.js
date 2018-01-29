@@ -4,7 +4,7 @@
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+ChromeUtils.defineModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
 let EventUtils = {};
@@ -27,7 +27,7 @@ const USER_CONTEXT_ID_PERSONAL = 1;
 const USER_CONTEXT_ID_WORK     = 2;
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-let makeURI = Cu.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
+let makeURI = ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm", {}).BrowserUtils.makeURI;
 
 function clearAllImageCaches() {
   var tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"]

@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { VariablesView } = Components.utils.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
+const { VariablesView } = ChromeUtils.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
 
 const PENDING = {
   "type": "object",

@@ -75,10 +75,10 @@ XPCOMUtils.defineConstant(this, "BUTTON_POSITION_CANCEL", BUTTON_POSITION_CANCEL
 XPCOMUtils.defineConstant(this, "BUTTON_POSITION_DONT_SAVE", BUTTON_POSITION_DONT_SAVE);
 XPCOMUtils.defineConstant(this, "BUTTON_POSITION_REVERT", BUTTON_POSITION_REVERT);
 
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
+ChromeUtils.defineModuleGetter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
+ChromeUtils.defineModuleGetter(this, "VariablesViewController",
   "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
@@ -91,10 +91,10 @@ loader.lazyRequireGetter(this, "HUDService", "devtools/client/webconsole/hudserv
 XPCOMUtils.defineLazyGetter(this, "REMOTE_TIMEOUT", () =>
   Services.prefs.getIntPref("devtools.debugger.remote-timeout"));
 
-XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+ChromeUtils.defineModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Reflect",
+ChromeUtils.defineModuleGetter(this, "Reflect",
   "resource://gre/modules/reflect.jsm");
 
 var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;

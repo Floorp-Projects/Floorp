@@ -5,7 +5,7 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 this.EXPORTED_SYMBOLS = ["Utils"];
 

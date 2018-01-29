@@ -30,11 +30,11 @@
  *
  */
 
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 // const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const kNS_OFFLINECACHEUPDATESERVICE_CONTRACTID =
   "@mozilla.org/offlinecacheupdate-service;1";

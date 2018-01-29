@@ -4,9 +4,9 @@
 
 var { interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 // loglevel should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Debug" will be used by

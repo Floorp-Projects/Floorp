@@ -2,7 +2,7 @@
 
 const { Constructor: CC } = Components;
 
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -12,7 +12,7 @@ var id = "xpcshell@tests.mozilla.org";
 var appName = "XPCShell";
 var version = "1";
 var platformVersion = "1.9.2";
-Cu.import("resource://testing-common/AppInfo.jsm", this);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 
 updateAppInfo({
   name: appName,
@@ -27,7 +27,7 @@ let server;
 // Some simple tests to demonstrate that the core preload sync operations work
 // correctly and that simple kinto operations are working as expected.
 add_task(async function test_something() {
-  const { PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
+  const { PinningPreloadClient } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/pinning/collections/pins/records";

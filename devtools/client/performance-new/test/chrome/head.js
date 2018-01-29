@@ -6,7 +6,7 @@
 /* exported addPerfTest, MockPerfFront */
 /* globals URL_ROOT */
 
-const { BrowserLoader } = Components.utils.import("resource://devtools/client/shared/browser-loader.js", {});
+const { BrowserLoader } = ChromeUtils.import("resource://devtools/client/shared/browser-loader.js", {});
 var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/performance-new/",
   window

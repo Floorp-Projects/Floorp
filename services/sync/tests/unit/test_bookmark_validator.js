@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://services-sync/bookmark_validator.js");
-Components.utils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/bookmark_validator.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 function run_test() {
   do_get_profile();

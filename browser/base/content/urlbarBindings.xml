@@ -2414,7 +2414,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <property name="DownloadUtils" readonly="true">
         <getter><![CDATA[
           let module = {};
-          Components.utils.import("resource://gre/modules/DownloadUtils.jsm", module);
+          ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", module);
           Object.defineProperty(this, "DownloadUtils", {
             configurable: true,
             enumerable: true,

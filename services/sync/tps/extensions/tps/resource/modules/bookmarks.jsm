@@ -12,12 +12,12 @@ var EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "Separator", "Livemark",
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/PlacesBackups.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-common/async.js");
-Cu.import("resource://tps/logger.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesBackups.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.import("resource://tps/logger.jsm");
 
 async function DumpBookmarks() {
   let [bookmarks, ] = await PlacesBackups.getBookmarksTree();

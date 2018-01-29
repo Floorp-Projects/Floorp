@@ -3,7 +3,7 @@
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 
-Cu.import("resource://gre/modules/EventEmitter.jsm");
+ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 
 add_task(async function test_extractFiles() {
   testEmitter(new EventEmitter());

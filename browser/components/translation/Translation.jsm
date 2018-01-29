@@ -14,7 +14,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const TRANSLATION_PREF_SHOWUI = "browser.translation.ui.show";
 const TRANSLATION_PREF_DETECT_LANG = "browser.translation.detectLanguage";
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.Translation = {
   STATE_OFFER: 0,
@@ -76,7 +76,7 @@ this.Translation = {
 
   openProviderAttribution() {
     let attribution = this.supportedEngines[this.translationEngine];
-    Cu.import("resource:///modules/RecentWindow.jsm");
+    ChromeUtils.import("resource:///modules/RecentWindow.jsm");
     RecentWindow.getMostRecentBrowserWindow().openUILinkIn(attribution, "tab");
   },
 

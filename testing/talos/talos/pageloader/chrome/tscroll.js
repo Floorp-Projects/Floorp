@@ -6,7 +6,7 @@ if (typeof(TalosContentProfiler) == "undefined") {
   try {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   } catch (e) {}
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
   Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
 }
 

@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 addEventListener("DOMContentLoaded", function loaded() {
   removeEventListener("DOMContentLoaded", loaded);
   var b = document.getElementById("browser");

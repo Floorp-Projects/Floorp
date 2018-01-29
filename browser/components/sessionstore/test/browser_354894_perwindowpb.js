@@ -30,7 +30,7 @@
 //
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.whitelistRejectionsGlobally(/getMostRecentBrowserWindow/);
 
 // Some urls that might be opened in tabs and/or popups

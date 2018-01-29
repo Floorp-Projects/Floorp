@@ -1,7 +1,7 @@
 "use strict";
 
 const {PlacesTestUtils} =
-  Cu.import("resource://testing-common/PlacesTestUtils.jsm", {});
+  ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm", {});
 
 let notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 let oldShowFavicons;

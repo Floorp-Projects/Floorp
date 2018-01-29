@@ -1,5 +1,5 @@
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 function run_test() {
   do_get_profile();

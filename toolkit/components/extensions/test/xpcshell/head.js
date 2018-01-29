@@ -4,11 +4,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 /* exported createHttpServer, promiseConsoleOutput, cleanupDir, clearCache, testEnv */
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Timer.jsm");
-Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentTask: "resource://testing-common/ContentTask.jsm",

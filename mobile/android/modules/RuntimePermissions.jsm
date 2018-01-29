@@ -8,10 +8,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 this.EXPORTED_SYMBOLS = ["RuntimePermissions"];
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
-                                  "resource://gre/modules/Messaging.jsm");
+ChromeUtils.defineModuleGetter(this, "EventDispatcher",
+                               "resource://gre/modules/Messaging.jsm");
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
 const ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";

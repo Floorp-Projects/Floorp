@@ -15,7 +15,7 @@ var ADDONS = [
   "test_bug470377_5",
 ];
 
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 var server;
 
 function run_test() {
