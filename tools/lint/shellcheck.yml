@@ -2,11 +2,11 @@
 shellcheck:
     description: Shell script linter
     include:
-        - taskcluster/docker/
+        - taskcluster/docker/funsize-update-generator/scripts/
     exclude: []
     # 1090: https://github.com/koalaman/shellcheck/wiki/SC1090
     # 'Can't follow a non-constant source'
     extensions: ['sh']
-    excludecodes: ['1090', '1091']
+    excludecodes: ['1090']
     type: external
     payload: shell:lint
