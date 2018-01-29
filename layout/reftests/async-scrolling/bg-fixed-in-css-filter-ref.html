@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fixed background inside blur filter</title>
+    <style>
+        .scrollable {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+        }
+        .bg {
+            width: 100px;
+            height: 100px;
+            background-image: url("repeatable-diagonal-gradient.png");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .blur {
+            filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+<div class="scrollable">
+    <div class="bg blur"></div>
+</div>
+</body>
+</html>
