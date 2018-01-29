@@ -6,6 +6,7 @@
 
 #include "DisplayListChecker.h"
 
+#include "gfxPrefs.h"
 #include "nsDisplayList.h"
 
 namespace mozilla {
@@ -93,6 +94,7 @@ private:
                        unsigned& aIndex);
 
   std::vector<DisplayItemBlueprint> mItems;
+  const bool mVerifyOrder = gfxPrefs::LayoutVerifyRetainDisplayListOrder();
 };
 
 // Object representing one display item, with just enough information to
@@ -264,11 +266,46 @@ DisplayListBlueprint::CompareList(
   const DisplayItemBlueprintStack& aStackOther) const
 {
   bool same = true;
+  unsigned previousFoundIndex = 0;
+  const DisplayItemBlueprint* previousFoundItemBefore = nullptr;
+  const DisplayItemBlueprint* previousFoundItemAfter = nullptr;
   for (const DisplayItemBlueprint& itemBefore : mItems) {
     bool found = false;
+    unsigned foundIndex = 0;
     for (const DisplayItemBlueprint& itemAfter : aOther.mItems) {
       if (itemBefore.CompareItem(itemAfter, aDiff)) {
         found = true;
+
+        if (mVerifyOrder) {
+          if (foundIndex < previousFoundIndex) {
+            same = false;
+            aDiff << "\n";
+            if (aStack.Output(aDiff)) {
+              aDiff << " > ";
+            }
+            aDiff << itemBefore.mDescription;
+            aDiff << "\n * Corresponding item in unexpected order: ";
+            if (aStackOther.Output(aDiff)) {
+              aDiff << " > ";
+            }
+            aDiff << itemAfter.mDescription;
+            aDiff << "\n * Was expected after: ";
+            if (aStackOther.Output(aDiff)) {
+              aDiff << " > ";
+            }
+            MOZ_ASSERT(previousFoundItemAfter);
+            aDiff << previousFoundItemAfter->mDescription;
+            aDiff << "\n   which corresponds to: ";
+            if (aStack.Output(aDiff)) {
+              aDiff << " > ";
+            }
+            MOZ_ASSERT(previousFoundItemBefore);
+            aDiff << previousFoundItemBefore->mDescription;
+          }
+          previousFoundIndex = foundIndex;
+          previousFoundItemBefore = &itemBefore;
+          previousFoundItemAfter = &itemAfter;
+        }
 
         const DisplayItemBlueprintStack stack = { &aStack, &itemBefore };
         const DisplayItemBlueprintStack stackOther = { &aStackOther,
@@ -283,6 +320,7 @@ DisplayListBlueprint::CompareList(
         }
         break;
       }
+      ++foundIndex;
     }
     if (!found) {
       same = false;
