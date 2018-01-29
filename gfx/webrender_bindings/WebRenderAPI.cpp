@@ -135,11 +135,13 @@ private:
 TransactionBuilder::TransactionBuilder()
 {
   mTxn = wr_transaction_new();
+  mResourceUpdates = wr_resource_updates_new();
 }
 
 TransactionBuilder::~TransactionBuilder()
 {
   wr_transaction_delete(mTxn);
+  wr_resource_updates_delete(mResourceUpdates);
 }
 
 void
@@ -223,12 +225,6 @@ TransactionBuilder::SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
   wrDocRect.size.width = aDocumentRect.width;
   wrDocRect.size.height = aDocumentRect.height;
   wr_transaction_set_window_parameters(mTxn, &wrWindowSize, &wrDocRect);
-}
-
-void
-TransactionBuilder::UpdateResources(ResourceUpdateQueue& aUpdates)
-{
-  wr_transaction_update_resources(mTxn, aUpdates.Raw());
 }
 
 void
@@ -363,6 +359,7 @@ WebRenderAPI::~WebRenderAPI()
 void
 WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 {
+  wr_transaction_update_resources(aTxn.Raw(), aTxn.RawUpdates());
   wr_api_send_transaction(mDocHandle, aTxn.Raw());
 }
 
@@ -546,66 +543,40 @@ WebRenderAPI::Capture()
 }
 
 
-ResourceUpdateQueue::ResourceUpdateQueue()
+void
+TransactionBuilder::Clear()
 {
-  mUpdates = wr_resource_updates_new();
-}
-
-ResourceUpdateQueue::ResourceUpdateQueue(ResourceUpdateQueue&& aFrom)
-{
-  mUpdates = aFrom.mUpdates;
-  aFrom.mUpdates = nullptr;
-}
-
-ResourceUpdateQueue&
-ResourceUpdateQueue::operator=(ResourceUpdateQueue&& aFrom)
-{
-  mUpdates = aFrom.mUpdates;
-  aFrom.mUpdates = nullptr;
-  return *this;
-}
-
-ResourceUpdateQueue::~ResourceUpdateQueue()
-{
-  if (mUpdates) {
-    wr_resource_updates_delete(mUpdates);
-  }
+  wr_resource_updates_clear(mResourceUpdates);
 }
 
 void
-ResourceUpdateQueue::Clear()
+TransactionBuilder::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                             wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_clear(mUpdates);
-}
-
-void
-ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                              wr::Vec<uint8_t>& aBytes)
-{
-  wr_resource_updates_add_image(mUpdates,
+  wr_resource_updates_add_image(mResourceUpdates,
                                 key,
                                 &aDescriptor,
                                 &aBytes.inner);
 }
 
 void
-ResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                                  wr::Vec<uint8_t>& aBytes)
+TransactionBuilder::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                                 wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_add_blob_image(mUpdates,
+  wr_resource_updates_add_blob_image(mResourceUpdates,
                                      key,
                                      &aDescriptor,
                                      &aBytes.inner);
 }
 
 void
-ResourceUpdateQueue::AddExternalImage(ImageKey key,
-                                      const ImageDescriptor& aDescriptor,
-                                      ExternalImageId aExtID,
-                                      wr::WrExternalImageBufferType aBufferType,
-                                      uint8_t aChannelIndex)
+TransactionBuilder::AddExternalImage(ImageKey key,
+                                     const ImageDescriptor& aDescriptor,
+                                     ExternalImageId aExtID,
+                                     wr::WrExternalImageBufferType aBufferType,
+                                     uint8_t aChannelIndex)
 {
-  wr_resource_updates_add_external_image(mUpdates,
+  wr_resource_updates_add_external_image(mResourceUpdates,
                                          key,
                                          &aDescriptor,
                                          aExtID,
@@ -614,9 +585,9 @@ ResourceUpdateQueue::AddExternalImage(ImageKey key,
 }
 
 void
-ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
-                                            const ImageDescriptor& aDescriptor,
-                                            ExternalImageId aHandle)
+TransactionBuilder::AddExternalImageBuffer(ImageKey aKey,
+                                           const ImageDescriptor& aDescriptor,
+                                           ExternalImageId aHandle)
 {
   auto channelIndex = 0;
   AddExternalImage(aKey, aDescriptor, aHandle,
@@ -625,23 +596,23 @@ ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
 }
 
 void
-ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
-                                       const ImageDescriptor& aDescriptor,
-                                       wr::Vec<uint8_t>& aBytes)
+TransactionBuilder::UpdateImageBuffer(ImageKey aKey,
+                                      const ImageDescriptor& aDescriptor,
+                                      wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_update_image(mUpdates,
+  wr_resource_updates_update_image(mResourceUpdates,
                                    aKey,
                                    &aDescriptor,
                                    &aBytes.inner);
 }
 
 void
-ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
-                                     const ImageDescriptor& aDescriptor,
-                                     wr::Vec<uint8_t>& aBytes,
-                                     const wr::DeviceUintRect& aDirtyRect)
+TransactionBuilder::UpdateBlobImage(ImageKey aKey,
+                                    const ImageDescriptor& aDescriptor,
+                                    wr::Vec<uint8_t>& aBytes,
+                                    const wr::DeviceUintRect& aDirtyRect)
 {
-  wr_resource_updates_update_blob_image(mUpdates,
+  wr_resource_updates_update_blob_image(mResourceUpdates,
                                         aKey,
                                         &aDescriptor,
                                         &aBytes.inner,
@@ -649,13 +620,13 @@ ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
 }
 
 void
-ResourceUpdateQueue::UpdateExternalImage(ImageKey aKey,
-                                         const ImageDescriptor& aDescriptor,
-                                         ExternalImageId aExtID,
-                                         wr::WrExternalImageBufferType aBufferType,
-                                         uint8_t aChannelIndex)
+TransactionBuilder::UpdateExternalImage(ImageKey aKey,
+                                        const ImageDescriptor& aDescriptor,
+                                        ExternalImageId aExtID,
+                                        wr::WrExternalImageBufferType aBufferType,
+                                        uint8_t aChannelIndex)
 {
-  wr_resource_updates_update_external_image(mUpdates,
+  wr_resource_updates_update_external_image(mResourceUpdates,
                                             aKey,
                                             &aDescriptor,
                                             aExtID,
@@ -664,46 +635,46 @@ ResourceUpdateQueue::UpdateExternalImage(ImageKey aKey,
 }
 
 void
-ResourceUpdateQueue::DeleteImage(ImageKey aKey)
+TransactionBuilder::DeleteImage(ImageKey aKey)
 {
-  wr_resource_updates_delete_image(mUpdates, aKey);
+  wr_resource_updates_delete_image(mResourceUpdates, aKey);
 }
 
 void
-ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
+TransactionBuilder::AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_raw_font(mUpdates, aKey, &aBytes.inner, aIndex);
+  wr_resource_updates_add_raw_font(mResourceUpdates, aKey, &aBytes.inner, aIndex);
 }
 
 void
-ResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
+TransactionBuilder::AddFontDescriptor(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_font_descriptor(mUpdates, aKey, &aBytes.inner, aIndex);
+  wr_resource_updates_add_font_descriptor(mResourceUpdates, aKey, &aBytes.inner, aIndex);
 }
 
 void
-ResourceUpdateQueue::DeleteFont(wr::FontKey aKey)
+TransactionBuilder::DeleteFont(wr::FontKey aKey)
 {
-  wr_resource_updates_delete_font(mUpdates, aKey);
+  wr_resource_updates_delete_font(mResourceUpdates, aKey);
 }
 
 void
-ResourceUpdateQueue::AddFontInstance(wr::FontInstanceKey aKey,
-                                     wr::FontKey aFontKey,
-                                     float aGlyphSize,
-                                     const wr::FontInstanceOptions* aOptions,
-                                     const wr::FontInstancePlatformOptions* aPlatformOptions,
-                                     wr::Vec<uint8_t>& aVariations)
+TransactionBuilder::AddFontInstance(wr::FontInstanceKey aKey,
+                                    wr::FontKey aFontKey,
+                                    float aGlyphSize,
+                                    const wr::FontInstanceOptions* aOptions,
+                                    const wr::FontInstancePlatformOptions* aPlatformOptions,
+                                    wr::Vec<uint8_t>& aVariations)
 {
-  wr_resource_updates_add_font_instance(mUpdates, aKey, aFontKey, aGlyphSize,
+  wr_resource_updates_add_font_instance(mResourceUpdates, aKey, aFontKey, aGlyphSize,
                                         aOptions, aPlatformOptions,
                                         &aVariations.inner);
 }
 
 void
-ResourceUpdateQueue::DeleteFontInstance(wr::FontInstanceKey aKey)
+TransactionBuilder::DeleteFontInstance(wr::FontInstanceKey aKey)
 {
-  wr_resource_updates_delete_font_instance(mUpdates, aKey);
+  wr_resource_updates_delete_font_instance(mResourceUpdates, aKey);
 }
 
 class FrameStartTime : public RendererEvent

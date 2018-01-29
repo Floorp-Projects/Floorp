@@ -199,9 +199,9 @@ private:
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                        const nsTArray<RefCountedShmem>& aSmallShmems,
                        const nsTArray<ipc::Shmem>& aLargeShmems,
-                       wr::ResourceUpdateQueue& aUpdates);
+                       wr::TransactionBuilder& aUpdates);
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
-                        wr::ResourceUpdateQueue& aResources);
+                        wr::TransactionBuilder& aResources);
 
   uint64_t GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands);
