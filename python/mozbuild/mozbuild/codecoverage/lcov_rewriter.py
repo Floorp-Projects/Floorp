@@ -626,11 +626,13 @@ class LcovFileRewriter(object):
                 return None
 
             source_file, pp_info = res
-            assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
+            # We can't assert that the file exists here, because we don't have the source checkout available
+            # on test machines. We can bring back this assertion when bug 1432287 is fixed.
+            # assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
 
             found_valid[0] = True
 
-            return source_file, pp_info
+            return res
 
         in_paths = [os.path.abspath(in_path) for in_path in in_paths]
 
