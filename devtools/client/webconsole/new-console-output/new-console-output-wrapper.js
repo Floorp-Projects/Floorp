@@ -258,6 +258,9 @@ NewConsoleOutputWrapper.prototype = {
   },
 
   dispatchMessagesClear: function () {
+    this.queuedMessageAdds = [];
+    this.queuedMessageUpdates = [];
+    this.queuedRequestUpdates = [];
     store.dispatch(actions.messagesClear());
   },
 

@@ -36,7 +36,6 @@ class nsITimer;
 { 0xbc26ff01, 0xf2bd, 0x11d4, { 0xa7, 0x3c, 0xe5, 0xa4, 0xb5, 0xa8, 0xbd, 0xfc } }
 
 
-class nsComposerCommandsUpdater;
 class nsIChannel;
 class nsIControllers;
 class nsIDocShell;
@@ -44,6 +43,7 @@ class nsIEditor;
 class nsIWebProgress;
 
 namespace mozilla {
+class ComposerCommandsUpdater;
 class HTMLEditor;
 } // namespace mozilla
 
@@ -130,7 +130,7 @@ protected:
 
   // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
   // MORE THAN ONE EDITOR PER EDITING SESSION
-  RefPtr<nsComposerCommandsUpdater> mStateMaintainer;
+  RefPtr<mozilla::ComposerCommandsUpdater> mComposerCommandsUpdater;
 
   // Save the editor type so we can create the editor after loading uri
   nsCString       mEditorType;

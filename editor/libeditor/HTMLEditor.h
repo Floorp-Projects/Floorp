@@ -7,6 +7,7 @@
 #define mozilla_HTMLEditor_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/StyleSheet.h"
@@ -29,7 +30,6 @@
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsISelectionListener.h"
 #include "nsITableEditor.h"
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
@@ -38,16 +38,19 @@
 class nsDocumentFragment;
 class nsITransferable;
 class nsIClipboard;
+class nsIDOMDocument;
 class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;
 class nsRange;
+class nsISelection;
 
 namespace mozilla {
 class AutoSelectionSetterAfterTableEdit;
 class HTMLEditorEventListener;
 class HTMLEditRules;
+class ResizerSelectionListener;
 class TypeInState;
 class WSRunObject;
 enum class EditAction : int32_t;
@@ -105,6 +108,11 @@ public:
 
   // nsIEditor overrides
   NS_IMETHOD GetPreferredIMEState(widget::IMEState* aState) override;
+
+  // nsISelectionListener overrides
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                    nsISelection* aSelection,
+                                    int16_t aReason) override;
 
   // TextEditor overrides
   NS_IMETHOD BeginningOfDocument() override;
@@ -254,6 +262,20 @@ public:
                                           nsAString& outValue);
   nsresult RemoveInlineProperty(nsAtom* aProperty,
                                 nsAtom* aAttribute);
+
+  /**
+   * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
+   * This will crash in debug build if the editor already has an instance
+   * but called with another instance.
+   */
+  void SetComposerCommandsUpdater(
+         ComposerCommandsUpdater* aComposerCommandsUpdater)
+  {
+    MOZ_ASSERT(!aComposerCommandsUpdater || !mComposerCommandsUpdater ||
+               aComposerCommandsUpdater == mComposerCommandsUpdater);
+    mComposerCommandsUpdater = aComposerCommandsUpdater;
+  }
+
 protected:
   virtual ~HTMLEditor();
 
@@ -973,6 +995,7 @@ protected:
 
 protected:
   RefPtr<TypeInState> mTypeInState;
+  RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
   bool mCRInParagraphCreatesParagraph;
 
@@ -1056,7 +1079,6 @@ protected:
   nsCOMPtr<Element> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
-  nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
   int32_t mOriginalX;
