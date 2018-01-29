@@ -4494,7 +4494,7 @@ nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
   if (imageWidth > 0 && imageHeight > 0) {
     // We're actually using the ImageContainer. Let our frame know that it
     // should consider itself to have painted successfully.
-    nsDisplayBackgroundGeometry::UpdateDrawResult(this, ImgDrawResult::SUCCESS);
+    UpdateDrawResult(ImgDrawResult::SUCCESS);
   }
 
   // XXX(seth): Right now we ignore aParameters.Scale() and
