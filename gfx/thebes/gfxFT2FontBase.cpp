@@ -624,12 +624,15 @@ gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
 {
     aCoords->TruncateLength(0);
     if (aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-        typedef FT_UInt (*GetVarFunc)(FT_Face, FT_MM_Var**);
+        typedef FT_Error (*GetVarFunc)(FT_Face, FT_MM_Var**);
         static GetVarFunc getVar;
+        typedef FT_Error (*DoneVarFunc)(FT_Library, FT_MM_Var*);
+        static DoneVarFunc doneVar;
         static bool firstTime = true;
         if (firstTime) {
             firstTime = false;
             getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
+            doneVar = (DoneVarFunc)dlsym(RTLD_DEFAULT, "FT_Done_MM_Var");
         }
         FT_MM_Var* ftVar;
         if (getVar && FT_Err_Ok == (*getVar)(aFace, &ftVar)) {
@@ -645,7 +648,11 @@ gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
                     }
                 }
             }
-            free(ftVar);
+            if (doneVar) {
+                (*doneVar)(aFace->glyph->library, ftVar);
+            } else {
+                free(ftVar);
+            }
         }
     }
 }
