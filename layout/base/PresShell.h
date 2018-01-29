@@ -226,10 +226,10 @@ public:
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              uint32_t aFlags) override;
-  nsresult HandleEvent(nsIFrame* aFrame,
-                       WidgetGUIEvent* aEvent,
-                       bool aDontRetargetEvents,
-                       nsEventStatus* aEventStatus) override;
+  MOZ_CAN_RUN_SCRIPT nsresult HandleEvent(nsIFrame* aFrame,
+                                          WidgetGUIEvent* aEvent,
+                                          bool aDontRetargetEvents,
+                                          nsEventStatus* aEventStatus) override;
   nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                     WidgetEvent* aEvent,
                                     nsEventStatus* aStatus) override;
@@ -666,8 +666,8 @@ private:
   already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
   nsIContent* GetCurrentEventContent();
   nsIFrame* GetCurrentEventFrame();
-  nsresult RetargetEventToParent(WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  RetargetEventToParent(WidgetGUIEvent* aEvent, nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
   /**
