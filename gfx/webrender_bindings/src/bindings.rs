@@ -481,7 +481,7 @@ impl RenderNotifier for CppNotifier {
         unsafe {
             if scrolled {
                 wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
-            } else {
+            } else if composite_needed {
                 wr_notifier_new_frame_ready(self.window_id);
             }
         }
