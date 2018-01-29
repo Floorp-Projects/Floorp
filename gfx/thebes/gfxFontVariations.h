@@ -11,12 +11,29 @@
 
 typedef mozilla::gfx::FontVariation gfxFontVariation;
 
+// Structure that describes a single axis of variation in an
+// OpenType Variation or Multiple-Master font.
 struct gfxFontVariationAxis {
     uint32_t mTag;
-    nsString mName;
+    nsString mName; // may be empty
     float    mMinValue;
     float    mMaxValue;
     float    mDefaultValue;
+};
+
+// A single <axis, value> pair that may be applied to a variation font.
+struct gfxFontVariationValue {
+    uint32_t mAxis;
+    float    mValue;
+};
+
+// Structure that describes a named instance of a variation font:
+// a name like "Light Condensed" or "Black Ultra Extended" etc.,
+// and a list of the corresponding <variation-axis, value> pairs
+// to be used.
+struct gfxFontVariationInstance {
+    nsString mName;
+    nsTArray<gfxFontVariationValue> mValues;
 };
 
 #endif
