@@ -42,7 +42,7 @@ class Shmem;
 
 namespace wr {
 class DisplayListBuilder;
-class ResourceUpdateQueue;
+class TransactionBuilder;
 }
 
 namespace layers {
@@ -637,7 +637,7 @@ public:
   };
 
   // Add all necessary TextureHost informations to the resource update queue.
-  virtual void PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
                                    ResourceUpdateOp aOp,
                                    const Range<wr::ImageKey>& aImageKeys,
                                    const wr::ExternalImageId& aExtID)
@@ -754,7 +754,7 @@ public:
 
   virtual uint32_t NumSubTextures() const override;
 
-  virtual void PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
                                    ResourceUpdateOp aOp,
                                    const Range<wr::ImageKey>& aImageKeys,
                                    const wr::ExternalImageId& aExtID) override;

@@ -1,4 +1,4 @@
-if (getBuildConfiguration().release_or_beta)
+enableExpressionClosures();
 eval(`
 m = {
     i() {},

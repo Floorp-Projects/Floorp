@@ -64,6 +64,7 @@ class IonBindNameIC;
 class IonGetIteratorIC;
 class IonHasOwnIC;
 class IonInIC;
+class IonInstanceOfIC;
 
 class IonIC
 {
@@ -166,6 +167,10 @@ class IonIC
     IonInIC* asInIC() {
         MOZ_ASSERT(kind_ == CacheKind::In);
         return (IonInIC*)this;
+    }
+    IonInstanceOfIC* asInstanceOfIC() {
+        MOZ_ASSERT(kind_ == CacheKind::InstanceOf);
+        return (IonInstanceOfIC*)this;
     }
 
     void updateBaseAddress(JitCode* code, MacroAssembler& masm);
@@ -439,6 +444,35 @@ class IonInIC : public IonIC
 
     static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonInIC* ic,
                                     HandleValue key, HandleObject obj, bool* res);
+};
+
+class IonInstanceOfIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+
+    TypedOrValueRegister lhs_;
+    Register rhs_;
+    Register output_;
+
+    public:
+
+    IonInstanceOfIC(LiveRegisterSet liveRegs, TypedOrValueRegister lhs, Register rhs,
+                    Register output)
+      : IonIC(CacheKind::InstanceOf),
+        liveRegs_(liveRegs),
+        lhs_(lhs),
+        rhs_(rhs),
+        output_(output)
+    { }
+
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+    TypedOrValueRegister lhs() const { return lhs_; }
+    Register rhs() const { return rhs_; }
+    Register output() const { return output_; }
+
+    // This signature mimics that of TryAttachInstanceOfStub in baseline
+    static MOZ_MUST_USE bool update(JSContext* cx, HandleScript outerScript, IonInstanceOfIC* ic,
+                                    HandleValue lhs, HandleObject rhs, bool* attached);
 };
 
 } // namespace jit

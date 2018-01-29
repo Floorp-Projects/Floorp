@@ -577,13 +577,13 @@ BufferTextureHost::NumSubTextures() const
 }
 
 void
-BufferTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+BufferTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                        ResourceUpdateOp aOp,
                                        const Range<wr::ImageKey>& aImageKeys,
                                        const wr::ExternalImageId& aExtID)
 {
-  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::ResourceUpdateQueue::AddExternalImage
-                                              : &wr::ResourceUpdateQueue::UpdateExternalImage;
+  auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
+                                              : &wr::TransactionBuilder::UpdateExternalImage;
   auto bufferType = wr::WrExternalImageBufferType::ExternalBuffer;
 
   if (GetFormat() != gfx::SurfaceFormat::YUV) {

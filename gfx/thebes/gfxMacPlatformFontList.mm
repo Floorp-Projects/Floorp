@@ -342,6 +342,12 @@ MacOSFontEntry::GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes)
     }
 }
 
+void
+MacOSFontEntry::GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances)
+{
+    gfxFontUtils::GetVariationInstances(this, aInstances);
+}
+
 bool
 MacOSFontEntry::IsCFF()
 {
