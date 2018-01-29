@@ -16,13 +16,13 @@
 const {
   utils: Cu,
 } = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ManifestObtainer",
+ChromeUtils.defineModuleGetter(this, "ManifestObtainer",
 				  "resource://gre/modules/ManifestObtainer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ManifestFinder",
+ChromeUtils.defineModuleGetter(this, "ManifestFinder",
 				  "resource://gre/modules/ManifestFinder.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ManifestIcons",
+ChromeUtils.defineModuleGetter(this, "ManifestIcons",
 				  "resource://gre/modules/ManifestIcons.jsm");
 
 const MessageHandler = {

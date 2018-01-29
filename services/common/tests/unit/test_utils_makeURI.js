@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Make sure uri strings are converted to nsIURIs");
-Cu.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/utils.js");
 
 function run_test() {
   _test_makeURI();

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1092477
   <script type="application/javascript"><![CDATA[
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 var exn;
 var url = "resource://non-existent/script.js";
 try {

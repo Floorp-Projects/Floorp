@@ -15,8 +15,8 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
 const chromeScript = SpecialPowers.loadChromeScript(_ => {
-  Components.utils.import("resource://gre/modules/Services.jsm");
-  Components.utils.import("resource://gre/modules/Timer.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
   const alertService = Components.classes["@mozilla.org/alerts-service;1"]
                                  .getService(Components.interfaces.nsIAlertsService);

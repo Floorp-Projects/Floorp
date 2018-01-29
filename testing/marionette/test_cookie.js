@@ -4,7 +4,7 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/cookie.js");
+ChromeUtils.import("chrome://marionette/content/cookie.js");
 
 cookie.manager = {
   cookies: [],

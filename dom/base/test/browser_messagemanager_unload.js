@@ -1,6 +1,6 @@
 function frameScript()
 {
-  Components.utils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   function eventHandler(e) {
     if (!docShell) {

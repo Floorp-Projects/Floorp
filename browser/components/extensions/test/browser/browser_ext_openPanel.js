@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function test_openPopup_requires_user_interaction() {
-  const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
   async function backgroundScript() {
     browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tabInfo) => {

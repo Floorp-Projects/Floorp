@@ -9,7 +9,7 @@ const ScalarId = "browser.session.restore.worker_restart_count";
 
 // Prepare the session file.
 var profd = do_get_profile();
-Cu.import("resource:///modules/sessionstore/SessionFile.jsm", this);
+ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", this);
 
 /**
  * In order to use browser.session.restore.worker_restart_count scalar, it has
@@ -26,7 +26,7 @@ add_task(async function test_ensure_scalar_is_empty() {
  * becomes higher than the threshold.
  */
 add_task(async function test_worker_restart() {
-  let backstagePass = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {});
+  let backstagePass = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {});
   backstagePass.SessionFileInternal._workerHealth.failures = backstagePass.kMaxWriteFailures + 1;
   backstagePass.SessionFileInternal._checkWorkerHealth();
 

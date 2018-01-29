@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1428076
 
 /** Test for Bug 1428076 **/
 "use strict";
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function startProfiler() {
   const settings = {

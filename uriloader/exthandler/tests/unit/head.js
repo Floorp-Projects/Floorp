@@ -10,15 +10,15 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
-Cu.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://testing-common/HandlerServiceTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gHandlerServiceJSON",
                                    "@mozilla.org/uriloader/handler-service;1",

@@ -2,7 +2,7 @@
 // Run test script in content process instead of chrome (xpcshell's default)
 //
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   // Allow all cookies.

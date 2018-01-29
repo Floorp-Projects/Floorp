@@ -9,8 +9,8 @@ this.EXPORTED_SYMBOLS = ["RokuApp"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 function log(msg) {
   // Services.console.logStringMessage(msg);

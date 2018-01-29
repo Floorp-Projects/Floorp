@@ -1,11 +1,11 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
-Cu.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/RecipeRunner.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
 
 function withStubInits(testFunction) {
   return decorate(

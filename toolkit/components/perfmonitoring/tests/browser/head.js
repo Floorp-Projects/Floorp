@@ -5,10 +5,10 @@
 
 var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
-Cu.import("resource://gre/modules/AddonManager.jsm", this);
-Cu.import("resource://gre/modules/PerformanceWatcher.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
+ChromeUtils.import("resource://gre/modules/PerformanceWatcher.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 /**
  * Base class for simulating slow addons/webpages.

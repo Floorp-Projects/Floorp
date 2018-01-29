@@ -8,9 +8,9 @@ this.EXPORTED_SYMBOLS = ["WindowSize"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
 this.WindowSize = {
 
