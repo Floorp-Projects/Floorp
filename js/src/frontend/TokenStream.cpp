@@ -1293,12 +1293,22 @@ IsTokenSane(Token* tp)
 
 template<>
 MOZ_MUST_USE bool
-TokenStreamCharsBase<char16_t>::appendMultiUnitCodepointToTokenbuf(uint32_t codepoint)
+TokenStreamCharsBase<char16_t>::appendCodePointToTokenbuf(uint32_t codepoint)
 {
-    char16_t lead, trail;
-    unicode::UTF16Encode(codepoint, &lead, &trail);
+    char16_t units[2];
+    unsigned numUnits;
+    unicode::UTF16Encode(codepoint, units, &numUnits);
 
-    return tokenbuf.append(lead) && tokenbuf.append(trail);
+    MOZ_ASSERT(numUnits == 1 || numUnits == 2,
+               "UTF-16 code points are only encoded in one or two units");
+
+    if (!tokenbuf.append(units[0]))
+        return false;
+
+    if (numUnits == 1)
+        return true;
+
+    return tokenbuf.append(units[1]);
 }
 
 template<class AnyCharsAccess>
@@ -1341,31 +1351,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::putIdentInTokenbuf(const CharT* iden
         if (codePoint) {
             if (!unicode::IsIdentifierPart(codePoint))
                 break;
-
-            if (!appendMultiUnitCodepointToTokenbuf(codePoint))
-                return false;
-
-            continue;
-        }
-
-        if (!unicode::IsIdentifierPart(char16_t(c))) {
+        } else if (!unicode::IsIdentifierPart(char16_t(c))) {
             uint32_t qc;
             if (c != '\\' || !matchUnicodeEscapeIdent(&qc))
                 break;
-
-            if (MOZ_UNLIKELY(unicode::IsSupplementary(qc))) {
-                char16_t lead, trail;
-                unicode::UTF16Encode(qc, &lead, &trail);
-                if (!tokenbuf.append(lead) || !tokenbuf.append(trail))
-                    return false;
-
-                continue;
-            }
-
-            c = qc;
         }
 
-        if (!tokenbuf.append(c))
+        if (!appendCodePointToTokenbuf(codePoint))
             return false;
     }
 
