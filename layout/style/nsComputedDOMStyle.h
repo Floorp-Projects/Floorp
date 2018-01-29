@@ -129,9 +129,6 @@ public:
                                     eWithoutAnimation);
   }
 
-  static nsIPresShell*
-  GetPresShellForContent(const nsIContent* aContent);
-
   // Helper for nsDOMWindowUtils::GetVisitedDependentComputedStyle
   void SetExposeVisitedStyle(bool aExpose) {
     NS_ASSERTION(aExpose != mExposeVisitedStyle, "should always be changing");

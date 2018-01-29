@@ -26,7 +26,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TypeTraits.h" // For Forward<>
-#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
@@ -263,7 +262,7 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
 
   // Ignore animations on orphaned elements and elements in documents without
   // a pres shell (e.g. XMLHttpRequest responseXML documents).
-  if (!nsComputedDOMStyle::GetPresShellForContent(aElement)) {
+  if (!nsContentUtils::GetPresShellForContent(aElement)) {
     return;
   }
 
@@ -491,7 +490,7 @@ EffectCompositor::GetServoAnimationRule(
   MOZ_ASSERT(mPresContext && mPresContext->IsDynamic(),
              "Should not be in print preview");
   // Gecko_GetAnimationRule should have already checked this
-  MOZ_ASSERT(nsComputedDOMStyle::GetPresShellForContent(aElement),
+  MOZ_ASSERT(nsContentUtils::GetPresShellForContent(aElement),
              "Should not be trying to run animations on elements in documents"
              " without a pres shell (e.g. XMLHttpRequest documents)");
 
@@ -980,7 +979,7 @@ EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
-  MOZ_ASSERT(!aRoot || nsComputedDOMStyle::GetPresShellForContent(aRoot),
+  MOZ_ASSERT(!aRoot || nsContentUtils::GetPresShellForContent(aRoot),
              "Traversal root, if provided, should be bound to a display "
              "document");
 
@@ -1027,7 +1026,7 @@ EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
     // We will drop them from mElementsToRestyle at the end of the next full
     // document restyle (at the end of this function) but for consistency with
     // how we treat such elements in RequestRestyle, we just ignore them here.
-    if (!nsComputedDOMStyle::GetPresShellForContent(target.mElement)) {
+    if (!nsContentUtils::GetPresShellForContent(target.mElement)) {
       return returnTarget;
     }
 
@@ -1133,7 +1132,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
   // If |aElement|'s document does not have a pres shell, e.g. it is document
   // without a browsing context such as we might get from an XMLHttpRequest, we
   // should not run animations on it.
-  if (!nsComputedDOMStyle::GetPresShellForContent(aElement)) {
+  if (!nsContentUtils::GetPresShellForContent(aElement)) {
     return false;
   }
 
