@@ -465,6 +465,7 @@ class TupOnly(CommonBackend, PartialBackend):
                 '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '$(DIST)/idl',
                 '$(DIST)/include',
+                '$(DIST)/xpcrs',
                 '$(MOZ_OBJ_ROOT)/%s/components' % dest,
                 module,
             ]
@@ -472,6 +473,8 @@ class TupOnly(CommonBackend, PartialBackend):
 
             outputs = ['$(MOZ_OBJ_ROOT)/%s/components/%s.xpt' % (dest, module)]
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in sorted(idls)])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in sorted(idls)])
             backend_file.rule(
                 inputs=[
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',
