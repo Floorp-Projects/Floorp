@@ -245,7 +245,7 @@ module.exports = {
     // Disallow eval and setInteral/setTimeout with strings
     "no-implied-eval": "error",
 
-    // No invalid regular expresions
+    // No invalid regular expressions
     "no-invalid-regexp": "error",
 
     // No odd whitespace characters
