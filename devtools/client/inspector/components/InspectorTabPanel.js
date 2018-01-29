@@ -25,8 +25,10 @@ class InspectorTabPanel extends Component {
       id: PropTypes.string.isRequired,
       // Optional prefix for panel IDs.
       idPrefix: PropTypes.string,
-      // Optional mount callback
+      // Optional mount callback.
       onMount: PropTypes.func,
+      // Optional unmount callback.
+      onUnmount: PropTypes.func,
     };
   }
 
@@ -51,6 +53,10 @@ class InspectorTabPanel extends Component {
   componentWillUnmount() {
     let doc = this.refs.content.ownerDocument;
     let panels = doc.getElementById("tabpanels");
+
+    if (this.props.onUnmount) {
+      this.props.onUnmount(this.refs.content, this.props);
+    }
 
     // Move panel's content node back into list of tab panels.
     panels.appendChild(this.refs.content.firstChild);

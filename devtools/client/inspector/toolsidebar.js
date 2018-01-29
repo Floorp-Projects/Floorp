@@ -137,6 +137,7 @@ ToolSidebar.prototype = {
       title: title,
       url: url,
       onMount: this.onSidePanelMounted.bind(this),
+      onUnmount: this.onSidePanelUnmounted.bind(this),
     });
 
     this.addTab(id, title, panel, selected, index);
@@ -161,6 +162,20 @@ ToolSidebar.prototype = {
 
     iframe.addEventListener("load", onIFrameLoaded, true);
     iframe.setAttribute("src", props.url);
+  },
+
+  onSidePanelUnmounted: function (content, props) {
+    let iframe = content.querySelector("iframe");
+    if (!iframe || !iframe.hasAttribute("src")) {
+      return;
+    }
+
+    let win = iframe.contentWindow;
+    if ("destroy" in win) {
+      win.destroy(this._toolPanel, iframe);
+    }
+
+    iframe.removeAttribute("src");
   },
 
   /**
