@@ -527,7 +527,12 @@ ifndef NSS_DISABLE_CHACHAPOLY
             EXTRA_SRCS += chacha20_vec.c
         endif
     else
-        EXTRA_SRCS += poly1305.c
+        ifeq ($(CPU_ARCH),aarch64)
+            EXTRA_SRCS += Hacl_Poly1305_64.c
+        else
+            EXTRA_SRCS += poly1305.c
+        endif
+
         EXTRA_SRCS += chacha20.c
         VERIFIED_SRCS += Hacl_Chacha20.c
     endif # x86_64

@@ -423,7 +423,10 @@ ReadVariableFromBuffer(sslReader *reader, sslReadBuffer *readerBuffer,
     if (readerBuffer->len) {
         SECItem tempItem = { siBuffer, (unsigned char *)readerBuffer->buf,
                              readerBuffer->len };
-        SECITEM_CopyItem(NULL, dest, &tempItem);
+        SECStatus rv = SECITEM_CopyItem(NULL, dest, &tempItem);
+        if (rv != SECSuccess) {
+            return rv;
+        }
     }
     return SECSuccess;
 }
@@ -521,6 +524,7 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
         return SECFailure;
     }
     if (readerBuffer.len) {
+        PORT_Assert(readerBuffer.buf);
         sid->peerID = PORT_Strdup((const char *)readerBuffer.buf);
     }
 
@@ -532,6 +536,7 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
         if (sid->urlSvrName) {
             PORT_Free((void *)sid->urlSvrName);
         }
+        PORT_Assert(readerBuffer.buf);
         sid->urlSvrName = PORT_Strdup((const char *)readerBuffer.buf);
     }
 
@@ -605,6 +610,7 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
         return SECFailure;
     }
     if (readerBuffer.len) {
+        PORT_Assert(readerBuffer.buf);
         PORT_Memcpy(sid->u.ssl3.sessionID, readerBuffer.buf, readerBuffer.len);
     }
 
@@ -626,6 +632,7 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+    PORT_Assert(readerBuffer.buf);
     PORT_Memcpy(sid->u.ssl3.keys.wrapped_master_secret, readerBuffer.buf,
                 readerBuffer.len);
 
@@ -660,27 +667,10 @@ ssl_DecodeResumptionToken(sslSessionID *sid, const PRUint8 *encodedToken,
     }
     sid->u.ssl3.masterWrapSeries = (PRUint16)tmpInt;
 
-    if (sslRead_ReadNumber(&reader, 8, &tmpInt) != SECSuccess) {
-        return SECFailure;
-    }
-    sid->u.ssl3.clAuthModuleID = (unsigned long)tmpInt;
-    if (sslRead_ReadNumber(&reader, 8, &tmpInt) != SECSuccess) {
-        return SECFailure;
-    }
-    sid->u.ssl3.clAuthSlotID = (unsigned long)tmpInt;
-    if (sslRead_ReadNumber(&reader, 2, &tmpInt) != SECSuccess) {
-        return SECFailure;
-    }
-    sid->u.ssl3.clAuthSeries = (PRUint16)tmpInt;
-
     if (sslRead_ReadNumber(&reader, 1, &tmpInt) != SECSuccess) {
         return SECFailure;
     }
     sid->u.ssl3.masterValid = (char)tmpInt;
-    if (sslRead_ReadNumber(&reader, 1, &tmpInt) != SECSuccess) {
-        return SECFailure;
-    }
-    sid->u.ssl3.clAuthValid = (char)tmpInt;
 
     if (ReadVariableFromBuffer(&reader, &readerBuffer, 1,
                                &sid->u.ssl3.srvName) != SECSuccess) {
@@ -758,8 +748,8 @@ ssl_EncodeResumptionToken(sslSessionID *sid, sslBuffer *encodedTokenBuf)
 {
     PORT_Assert(encodedTokenBuf);
     PORT_Assert(sid);
-    if (!sid->u.ssl3.locked.sessionTicket.ticket.len || !encodedTokenBuf ||
-        !sid || !sid->u.ssl3.keys.resumable || !sid->urlSvrName) {
+    if (!sid || !sid->u.ssl3.locked.sessionTicket.ticket.len ||
+        !encodedTokenBuf || !sid->u.ssl3.keys.resumable || !sid->urlSvrName) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
@@ -1022,28 +1012,7 @@ ssl_EncodeResumptionToken(sslSessionID *sid, sslBuffer *encodedTokenBuf)
         return SECFailure;
     }
 
-    rv = sslBuffer_AppendNumber(encodedTokenBuf, sid->u.ssl3.clAuthModuleID, 8);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    rv = sslBuffer_AppendNumber(encodedTokenBuf, sid->u.ssl3.clAuthSlotID, 8);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    rv = sslBuffer_AppendNumber(encodedTokenBuf, sid->u.ssl3.clAuthSeries, 2);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-
     rv = sslBuffer_AppendNumber(encodedTokenBuf, sid->u.ssl3.masterValid, 1);
-    if (rv != SECSuccess) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
-    }
-    rv = sslBuffer_AppendNumber(encodedTokenBuf, sid->u.ssl3.clAuthValid, 1);
     if (rv != SECSuccess) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
@@ -1099,6 +1068,11 @@ ssl_CacheExternalToken(sslSocket *ss)
 
     /* This is only available for stateless resumption. */
     if (sid->u.ssl3.locked.sessionTicket.ticket.data == NULL) {
+        return;
+    }
+
+    /* Don't export token if the session used client authentication. */
+    if (sid->u.ssl3.clAuthValid) {
         return;
     }
 
@@ -1160,10 +1134,12 @@ ssl_UncacheSessionID(sslSocket *ss)
     sslSecurityInfo *sec = &ss->sec;
     PORT_Assert(sec);
 
-    if (sec->isServer) {
-        ssl_ServerUncacheSessionID(sec->ci.sid);
-    } else if (!ss->resumptionTokenCallback) {
-        LockAndUncacheSID(sec->ci.sid);
+    if (sec->ci.sid) {
+        if (sec->isServer) {
+            ssl_ServerUncacheSessionID(sec->ci.sid);
+        } else if (!ss->resumptionTokenCallback) {
+            LockAndUncacheSID(sec->ci.sid);
+        }
     }
 }
 

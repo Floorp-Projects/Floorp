@@ -1014,4 +1014,25 @@ TEST_P(TlsConnectTls13ResumptionToken, ConnectResumeGetInfoZeroRtt) {
   SendReceive();
 }
 
+// Resumption on sessions with client authentication only works with internal
+// caching.
+TEST_P(TlsConnectGenericResumption, ConnectResumeClientAuth) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+  Connect();
+  SendReceive();
+  EXPECT_FALSE(client_->resumption_callback_called());
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  if (use_external_cache()) {
+    ExpectResumption(RESUME_NONE);
+  } else {
+    ExpectResumption(RESUME_TICKET);
+  }
+  Connect();
+  SendReceive();
+}
+
 }  // namespace nss_test
