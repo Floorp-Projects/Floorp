@@ -680,6 +680,12 @@ class NativeObject : public ShapedObject
     }
 
   public:
+
+    /* Object allocation may directly initialize slots so this is public. */
+    void initSlots(HeapSlot* slots) {
+        slots_ = slots;
+    }
+
     static MOZ_MUST_USE bool generateOwnShape(JSContext* cx, HandleNativeObject obj,
                                               Shape* newShape = nullptr)
     {
@@ -1321,6 +1327,10 @@ class NativeObject : public ShapedObject
 #ifdef DEBUG
     bool canHaveNonEmptyElements();
 #endif
+
+    void setEmptyElements() {
+        elements_ = emptyObjectElements;
+    }
 
     void setFixedElements(uint32_t numShifted = 0) {
         MOZ_ASSERT(canHaveNonEmptyElements());

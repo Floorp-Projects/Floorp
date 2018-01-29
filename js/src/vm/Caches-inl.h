@@ -60,7 +60,8 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
     if (cx->runtime()->gc.upcomingZealousGC())
         return nullptr;
 
-    NativeObject* obj = static_cast<NativeObject*>(Allocate<JSObject, NoGC>(cx, entry->kind, 0,
+    NativeObject* obj = static_cast<NativeObject*>(Allocate<JSObject, NoGC>(cx, entry->kind,
+                                                                            /* nDynamicSlots = */ 0,
                                                                             heap, group->clasp()));
     if (!obj)
         return nullptr;

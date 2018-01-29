@@ -259,9 +259,6 @@ class JitTest:
                     elif name == 'test-also-wasm-tiering':
                         if options.wasm_enabled:
                             test.test_also.append(['--test-wasm-await-tier2'])
-                    elif name == 'test-also-wasm-check-bce':
-                        if options.wasm_enabled:
-                            test.test_also.append(['--wasm-check-bce'])
                     elif name.startswith('test-also='):
                         test.test_also.append([name[len('test-also='):]])
                     elif name.startswith('test-join='):

@@ -1454,7 +1454,6 @@ class ICInstanceOf_Fallback : public ICFallbackStub
     static const uint16_t UNOPTIMIZABLE_ACCESS_BIT = 0x1;
 
   public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 4;
 
     void noteUnoptimizableAccess() {
         extra_ |= UNOPTIMIZABLE_ACCESS_BIT;
@@ -1474,59 +1473,6 @@ class ICInstanceOf_Fallback : public ICFallbackStub
 
         ICStub* getStub(ICStubSpace* space) override {
             return newStub<ICInstanceOf_Fallback>(space, getStubCode());
-        }
-    };
-};
-
-class ICInstanceOf_Function : public ICStub
-{
-    friend class ICStubSpace;
-
-    GCPtrShape shape_;
-    GCPtrObject prototypeObj_;
-    uint32_t slot_;
-
-    ICInstanceOf_Function(JitCode* stubCode, Shape* shape, JSObject* prototypeObj, uint32_t slot);
-
-  public:
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    GCPtrObject& prototypeObject() {
-        return prototypeObj_;
-    }
-    uint32_t slot() const {
-        return slot_;
-    }
-    static size_t offsetOfShape() {
-        return offsetof(ICInstanceOf_Function, shape_);
-    }
-    static size_t offsetOfPrototypeObject() {
-        return offsetof(ICInstanceOf_Function, prototypeObj_);
-    }
-    static size_t offsetOfSlot() {
-        return offsetof(ICInstanceOf_Function, slot_);
-    }
-
-    class Compiler : public ICStubCompiler {
-        RootedShape shape_;
-        RootedObject prototypeObj_;
-        uint32_t slot_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
-
-      public:
-        Compiler(JSContext* cx, Shape* shape, JSObject* prototypeObj, uint32_t slot)
-          : ICStubCompiler(cx, ICStub::InstanceOf_Function, Engine::Baseline),
-            shape_(cx, shape),
-            prototypeObj_(cx, prototypeObj),
-            slot_(slot)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) override {
-            return newStub<ICInstanceOf_Function>(space, getStubCode(), shape_, prototypeObj_,
-                                                  slot_);
         }
     };
 };

@@ -875,6 +875,8 @@ MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind all
     if (!nDynamicSlots)
         return freeListAllocate(result, temp, allocKind, fail);
 
+    // Only NativeObject can have nDynamicSlots > 0 and reach here.
+
     callMallocStub(nDynamicSlots * sizeof(GCPtrValue), temp, fail);
 
     Label failAlloc;
@@ -1205,8 +1207,8 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
 
     storePtr(ImmGCPtr(templateObj->group()), Address(obj, JSObject::offsetOfGroup()));
 
-    if (Shape* shape = templateObj->maybeShape())
-        storePtr(ImmGCPtr(shape), Address(obj, ShapedObject::offsetOfShape()));
+    if (templateObj->is<ShapedObject>())
+        storePtr(ImmGCPtr(templateObj->maybeShape()), Address(obj, ShapedObject::offsetOfShape()));
 
     MOZ_ASSERT_IF(convertDoubleElements, templateObj->is<ArrayObject>());
 
@@ -1284,7 +1286,8 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
             offset += sizeof(uintptr_t);
         }
     } else if (templateObj->is<UnboxedPlainObject>()) {
-        storePtr(ImmWord(0), Address(obj, UnboxedPlainObject::offsetOfExpando()));
+        MOZ_ASSERT(!templateObj->as<UnboxedPlainObject>().maybeExpando());
+        storePtr(ImmPtr(nullptr), Address(obj, UnboxedPlainObject::offsetOfExpando()));
         if (initContents)
             initUnboxedObjectContents(obj, &templateObj->as<UnboxedPlainObject>());
     } else {

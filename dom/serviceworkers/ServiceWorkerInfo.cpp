@@ -221,6 +221,7 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsAString& aCacheName,
                                      nsLoadFlags aImportsLoadFlags)
   : mPrincipal(aPrincipal)
+  , mDescriptor(GetNextID(), aPrincipal, aScope, ServiceWorkerState::Parsed)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
   , mImportsLoadFlags(aImportsLoadFlags)
@@ -243,12 +244,6 @@ ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
   // Otherwise, we might not be able to update a service worker correctly, if
   // there is a service worker generating the script.
   MOZ_DIAGNOSTIC_ASSERT(mImportsLoadFlags & nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
-
-  PrincipalInfo principalInfo;
-  MOZ_ALWAYS_SUCCEEDS(PrincipalToPrincipalInfo(aPrincipal, &principalInfo));
-
-  mDescriptor = ServiceWorkerDescriptor(GetNextID(), principalInfo, aScope,
-                                        ServiceWorkerState::Parsed);
 }
 
 ServiceWorkerInfo::~ServiceWorkerInfo()

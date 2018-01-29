@@ -120,7 +120,7 @@ GPUVideoTextureHost::NumSubTextures() const
 }
 
 void
-GPUVideoTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+GPUVideoTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                          ResourceUpdateOp aOp,
                                          const Range<wr::ImageKey>& aImageKeys,
                                          const wr::ExternalImageId& aExtID)

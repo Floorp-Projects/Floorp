@@ -38,7 +38,7 @@ js::Allocate(JSContext* cx, AllocKind kind, size_t nDynamicSlots, InitialHeap he
     static_assert(sizeof(JSObject_Slots0) >= MinCellSize,
                   "All allocations must be at least the allocator-imposed minimum size.");
 
-    MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNative() || clasp->isProxy());
+    MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNative());
 
     // Off-thread alloc cannot trigger GC or make runtime assertions.
     if (cx->helperThread()) {
@@ -119,10 +119,12 @@ GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind, size_t thingSize,
 
     JSObject* obj = tryNewTenuredThing<JSObject, allowGC>(cx, kind, thingSize);
 
-    if (obj)
-        obj->setInitialSlotsMaybeNonNative(slots);
-    else
+    if (obj) {
+        if (nDynamicSlots)
+            static_cast<NativeObject*>(obj)->initSlots(slots);
+    } else {
         js_free(slots);
+    }
 
     return obj;
 }
