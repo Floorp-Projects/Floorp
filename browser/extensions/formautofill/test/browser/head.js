@@ -329,17 +329,19 @@ async function removeAllRecords() {
   }
 }
 
-function testDialog(url, testFn, arg) {
-  return new Promise(resolve => {
-    let win = window.openDialog(url, null, null, arg);
-    win.addEventListener("FormReady", () => {
-      win.addEventListener("unload", () => {
-        ok(true, "Dialog is closed");
-        resolve();
-      }, {once: true});
-      testFn(win);
-    }, {once: true});
-  });
+async function waitForFocusAndFormReady(win) {
+  return Promise.all([
+    new Promise(resolve => waitForFocus(resolve, win)),
+    BrowserTestUtils.waitForEvent(win, "FormReady"),
+  ]);
+}
+
+async function testDialog(url, testFn, arg) {
+  let win = window.openDialog(url, null, null, arg);
+  await waitForFocusAndFormReady(win);
+  let unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");
+  testFn(win);
+  return unloadPromise;
 }
 
 registerCleanupFunction(removeAllRecords);

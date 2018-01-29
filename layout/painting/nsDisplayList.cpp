@@ -2453,6 +2453,18 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       }
     }
 
+    // Windowed plugins are not supported with WebRender enabled.
+    // But PluginGeometry needs to be updated to show plugin.
+    // Windowed plugins are going to be removed by Bug 1296400.
+    nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+    if (rootPresContext && XRE_IsContentProcess()) {
+      if (aBuilder->WillComputePluginGeometry()) {
+        rootPresContext->ComputePluginGeometryUpdates(aBuilder->RootReferenceFrame(), aBuilder, this);
+      }
+      // This must be called even if PluginGeometryUpdates were not computed.
+      rootPresContext->CollectPluginGeometryUpdates(layerManager);
+    }
+
     WebRenderLayerManager* wrManager = static_cast<WebRenderLayerManager*>(layerManager.get());
 
     MaybeSetupTransactionIdAllocator(layerManager, presContext);

@@ -12,6 +12,7 @@ apt-get install -y --no-install-recommends apt-utils
 apt_packages=()
 apt_packages+=('build-essential')
 apt_packages+=('ca-certificates')
+apt_packages+=('clang-5.0')
 apt_packages+=('curl')
 apt_packages+=('npm')
 apt_packages+=('git')
@@ -47,16 +48,17 @@ echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main" >
 apt-get -y update
 apt-get install -y --no-install-recommends ${apt_packages[@]}
 
-# Download clang.
-curl -LO https://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-curl -LO https://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz.sig
-# Verify the signature.
-gpg --keyserver pool.sks-keyservers.net --recv-keys B6C8F98282B944E3B0D5C2530FC3042E345AD05D
-gpg --verify *.tar.xz.sig
-# Install into /usr/local/.
-tar xJvf *.tar.xz -C /usr/local --strip-components=1
-# Cleanup.
-rm *.tar.xz*
+# Latest version of abigail-tools
+apt-get install -y libxml2-dev autoconf libelf-dev libdw-dev libtool
+git clone git://sourceware.org/git/libabigail.git
+cd ./libabigail
+autoreconf -fi
+./configure --prefix=/usr --disable-static --disable-apidoc --disable-manual
+make
+make install
+cd ..
+apt-get remove -y libxml2-dev autoconf libtool
+rm -rf libabigail
 
 # Install latest Rust (stable).
 su worker -c "curl https://sh.rustup.rs -sSf | sh -s -- -y"

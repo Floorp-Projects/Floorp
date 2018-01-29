@@ -179,6 +179,10 @@ class TlsAgent : public PollTarget {
         sizeof(SSLResumptionTokenInfo));
     ASSERT_EQ(SECSuccess, rv);
   }
+  void SetResumptionCallbackCalled() { resumption_callback_called_ = true; }
+  bool resumption_callback_called() const {
+    return resumption_callback_called_;
+  }
 
   const std::string& name() const { return name_; }
 
@@ -396,6 +400,7 @@ class TlsAgent : public PollTarget {
   uint8_t expected_sent_alert_;
   uint8_t expected_sent_alert_level_;
   bool handshake_callback_called_;
+  bool resumption_callback_called_;
   SSLChannelInfo info_;
   SSLCipherSuiteInfo csinfo_;
   SSLVersionRange vrange_;

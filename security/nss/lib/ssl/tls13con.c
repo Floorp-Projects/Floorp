@@ -4417,8 +4417,6 @@ tls13_SendClientSecondRound(sslSocket *ss)
  *   } NewSessionTicket;
  */
 
-PRUint32 ssl_max_early_data_size = (2 << 16); /* Arbitrary limit. */
-
 static SECStatus
 tls13_SendNewSessionTicket(sslSocket *ss, const PRUint8 *appToken,
                            unsigned int appTokenLen)
@@ -4520,7 +4518,7 @@ tls13_SendNewSessionTicket(sslSocket *ss, const PRUint8 *appToken,
         if (rv != SECSuccess)
             goto loser;
 
-        rv = ssl3_AppendHandshakeNumber(ss, ssl_max_early_data_size, 4);
+        rv = ssl3_AppendHandshakeNumber(ss, ss->opt.maxEarlyDataSize, 4);
         if (rv != SECSuccess)
             goto loser;
     }

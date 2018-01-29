@@ -821,7 +821,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss, const NewSessionTicket *ticket,
     if (rv != SECSuccess)
         goto loser;
 
-    rv = sslBuffer_AppendNumber(&plaintext, ssl_max_early_data_size, 4);
+    rv = sslBuffer_AppendNumber(&plaintext, ss->opt.maxEarlyDataSize, 4);
     if (rv != SECSuccess)
         goto loser;
 
