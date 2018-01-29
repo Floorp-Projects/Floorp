@@ -3169,9 +3169,9 @@ css::ImageValue::Initialize(nsIDocument* aDocument)
                                               mExtraData->GetPrincipal(),
                                               mExtraData->GetReferrer(),
                                               this,
-                                              CORSMode::CORS_NONE);
+                                              mCORSMode);
 
-     mLoadedImage = true;
+    mLoadedImage = true;
   }
 
   aDocument->StyleImageLoader()->MaybeRegisterCSSImage(this);

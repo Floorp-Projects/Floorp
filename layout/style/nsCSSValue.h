@@ -10,6 +10,7 @@
 #define nsCSSValue_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/SheetType.h"
@@ -204,10 +205,16 @@ protected:
   // confused by the non-standard-layout packing of the variable up into
   // URLValueData.
   bool mLoadedImage = false;
+  CORSMode mCORSMode = CORSMode::CORS_NONE;
 
   virtual ~URLValueData();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+public:
+  void SetCORSMode(CORSMode aCORSMode) {
+    mCORSMode = aCORSMode;
+  }
 
 private:
   URLValueData(const URLValueData& aOther) = delete;
