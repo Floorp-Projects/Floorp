@@ -45,6 +45,14 @@ this.Policies = {
     }
   },
 
+  "BlockAboutSupport": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("about:support", true);
+      }
+    }
+  },
+
   "DisableAppUpdate": {
     onBeforeAddons(manager, param) {
       if (param) {
