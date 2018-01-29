@@ -1,8 +1,8 @@
 const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
-Cu.import("resource://gre/modules/LoginHelper.jsm", this);
-Cu.import("resource://testing-common/LoginTestUtils.jsm", this);
-Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/LoginHelper.jsm", this);
+ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 add_task(async function common_initialize() {
   await SpecialPowers.pushPrefEnv({"set": [["signon.rememberSignons", true]]});

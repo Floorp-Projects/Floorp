@@ -219,7 +219,7 @@ function removeSubframeFrom(browser, frameDepth = 0) {
  */
 function controlFrameAt(browser, frameDepth, command) {
   return ContentTask.spawn(browser, { frameDepth, command }, async function(args) {
-    Cu.import("resource://testing-common/TestUtils.jsm", this);
+    ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
 
     let { command: contentCommand, frameDepth: contentFrameDepth } = args;
 

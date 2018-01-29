@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
-                                  "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloads",
+                               "resource://gre/modules/Downloads.jsm");
 
 const OLD_NAMES = {[Downloads.PUBLIC]: "old-public", [Downloads.PRIVATE]: "old-private"};
 const RECENT_NAMES = {[Downloads.PUBLIC]: "recent-public", [Downloads.PRIVATE]: "recent-private"};

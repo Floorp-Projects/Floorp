@@ -7,11 +7,11 @@
  * entries.
  */
 
-const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
 
 const profd = do_get_profile();
-const {SessionFile} = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {});
+const {SessionFile} = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {});
 const {Paths} = SessionFile;
 
 const {File} = OS;
@@ -20,7 +20,7 @@ const MAX_ENTRIES = 9;
 const URL = "http://example.com/#";
 
 // We need a XULAppInfo to initialize SessionFile
-Cu.import("resource://testing-common/AppInfo.jsm", this);
+ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",

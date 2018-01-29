@@ -2,7 +2,7 @@
 
 requestLongerTimeout(2);
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const gHttpTestRoot = "http://example.com/browser/dom/base/test/";
 
@@ -77,7 +77,7 @@ add_task(async function() {
   Telemetry.canRecordExtended = gOldParentCanRecord;
 
   await ContentTask.spawn(gBrowser.selectedBrowser, { oldCanRecord: gOldContentCanRecord }, async function(arg) {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     await new Promise(resolve => {
       let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
       telemetry.canRecordExtended = arg.oldCanRecord;
@@ -95,7 +95,7 @@ function waitForDestroyedDocuments() {
 
 function waitForPageLoad(browser) {
   return ContentTask.spawn(browser, null, async function() {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("load", listener, true);
@@ -148,7 +148,7 @@ var check_use_counter_iframe = async function(file, use_counter_middlefix, check
 
   // Inject our desired file into the iframe of the newly-loaded page.
   await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, function(opts) {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
     let wu = content.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -212,7 +212,7 @@ var check_use_counter_img = async function(file, use_counter_middlefix) {
 
   // Inject our desired file into the img of the newly-loaded page.
   await ContentTask.spawn(gBrowser.selectedBrowser, { file: file }, async function(opts) {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
     let img = content.document.getElementById('display');
@@ -275,7 +275,7 @@ var check_use_counter_direct = async function(file, use_counter_middlefix, xfail
 
   gBrowser.selectedBrowser.loadURI(gHttpTestRoot + file);
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     await new Promise(resolve => {
       let listener = () => {
         removeEventListener("load", listener, true);

@@ -1,4 +1,4 @@
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 const base64url =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";

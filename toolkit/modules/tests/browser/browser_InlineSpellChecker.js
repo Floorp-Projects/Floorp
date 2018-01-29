@@ -3,7 +3,7 @@ var SpellCheckHelper;
 
 function test() {
   let tempScope = {};
-  Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", tempScope);
+  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", tempScope);
   InlineSpellChecker = tempScope.InlineSpellChecker;
   SpellCheckHelper = tempScope.SpellCheckHelper;
 

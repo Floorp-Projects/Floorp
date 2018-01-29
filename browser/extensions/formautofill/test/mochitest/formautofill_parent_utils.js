@@ -6,10 +6,10 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
-let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
+let {profileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
 
 const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME} = FormAutofillUtils;
 

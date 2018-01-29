@@ -1,5 +1,5 @@
 /* global gBrowser */
-Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
+ChromeUtils.import("resource://gre/modules/CrashSubmit.jsm", this);
 
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
 

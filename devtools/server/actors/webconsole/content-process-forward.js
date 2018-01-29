@@ -13,8 +13,8 @@ const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
-XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
-                                  "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "E10SUtils",
+                               "resource://gre/modules/E10SUtils.jsm");
 
 /*
  * The message manager has an upper limit on message sizes that it can

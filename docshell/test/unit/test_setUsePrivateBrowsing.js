@@ -2,8 +2,8 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 add_task(async function() {
   let webNav = Services.appShell.createWindowlessBrowser(false);

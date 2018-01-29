@@ -5,7 +5,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
@@ -39,7 +39,7 @@ var GeckoViewUtils = {
     XPCOMUtils.defineLazyGetter(scope, name, _ => {
       let ret = undefined;
       if (module) {
-        ret = Cu.import(module, {})[name];
+        ret = ChromeUtils.import(module, {})[name];
       } else if (service) {
         ret = Cc[service].getService(Ci.nsISupports).wrappedJSObject;
       } else if (typeof handler === "function") {

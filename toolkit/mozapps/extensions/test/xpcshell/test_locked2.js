@@ -5,7 +5,7 @@
 // Checks that we handle a locked database when there are extension changes
 // in progress
 
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 // Will be left alone
 var addon1 = {

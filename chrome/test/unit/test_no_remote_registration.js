@@ -10,7 +10,7 @@ var manifests = [
 ];
 registerManifests(manifests);
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function ProtocolHandler(aScheme, aFlags) {
   this.scheme = aScheme;
@@ -68,7 +68,7 @@ var testProtocols = [
   },
 ];
 function run_test() {
-  Components.utils.import("resource://testing-common/AppInfo.jsm", this);
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
   let XULAppInfo = newAppInfo({
     name: "XPCShell",
     ID: "{39885e5f-f6b4-4e2a-87e5-6259ecf79011}",

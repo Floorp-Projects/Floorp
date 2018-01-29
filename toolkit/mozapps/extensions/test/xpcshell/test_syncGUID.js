@@ -2,12 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // restartManager() mucks with XPIProvider.jsm importing, so we hack around.
 this.__defineGetter__("XPIProvider", function() {
   let scope = {};
-  return Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", scope)
+  return ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", scope)
                    .XPIProvider;
 });
 

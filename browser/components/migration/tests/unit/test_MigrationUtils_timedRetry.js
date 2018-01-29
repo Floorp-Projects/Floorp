@@ -1,7 +1,7 @@
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
 
 let tmpFile = FileUtils.getDir("TmpD", [], true);
 let dbConn;

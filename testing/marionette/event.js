@@ -10,7 +10,7 @@ this.event = {};
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
-Cu.import("chrome://marionette/content/element.js");
+ChromeUtils.import("chrome://marionette/content/element.js");
 
 const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 

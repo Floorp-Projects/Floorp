@@ -5,7 +5,7 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/ServiceRequest.jsm");
+ChromeUtils.import("resource://gre/modules/ServiceRequest.jsm");
 
 add_task(async function test_tls_conservative() {
   const request = new ServiceRequest();

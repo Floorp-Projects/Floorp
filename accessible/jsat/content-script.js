@@ -7,20 +7,20 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Logger",
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Logger",
   "resource://gre/modules/accessibility/Utils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Presentation",
+ChromeUtils.defineModuleGetter(this, "Presentation",
   "resource://gre/modules/accessibility/Presentation.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/accessibility/Utils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "EventManager",
+ChromeUtils.defineModuleGetter(this, "EventManager",
   "resource://gre/modules/accessibility/EventManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContentControl",
+ChromeUtils.defineModuleGetter(this, "ContentControl",
   "resource://gre/modules/accessibility/ContentControl.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Roles",
+ChromeUtils.defineModuleGetter(this, "Roles",
   "resource://gre/modules/accessibility/Constants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "States",
+ChromeUtils.defineModuleGetter(this, "States",
   "resource://gre/modules/accessibility/Constants.jsm");
 
 Logger.info("content-script.js", content.document.location);

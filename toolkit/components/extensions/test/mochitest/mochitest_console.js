@@ -1,7 +1,7 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 const {addMessageListener, sendAsyncMessage} = this;
 
 // Much of the console monitoring code is copied from TestUtils but simplified

@@ -18,9 +18,9 @@ function debug(s) {
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/DOMRequestHelper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 XPCOMUtils.defineLazyGetter(this, "SE", function() {
   let obj = {};
-  Cu.import("resource://gre/modules/se_consts.js", obj);
+  ChromeUtils.import("resource://gre/modules/se_consts.js", obj);
   return obj;
 });
 

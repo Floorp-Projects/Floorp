@@ -1,6 +1,6 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const contract = "@mozilla.org/network/protocol/about;1?what=newtab";
 const am = Cc[contract].getService(Ci.nsIAboutModule);

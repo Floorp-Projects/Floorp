@@ -13,13 +13,13 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
   let profileStorage;
   try {
-    profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+    profileStorage = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
     profileStorage.initialize();
   } catch (ex) {
     profileStorage = null;

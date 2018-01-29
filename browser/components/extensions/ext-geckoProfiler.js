@@ -5,11 +5,11 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ../../../toolkit/components/extensions/ext-toolkit.js */
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["TextEncoder", "TextDecoder"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
 
 const PREF_ASYNC_STACK = "javascript.options.asyncstack";
 const PREF_SYMBOLS_URL = "extensions.geckoProfiler.symbols.url";

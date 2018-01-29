@@ -12,14 +12,14 @@
 // Globals
 
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
-                                  "resource://gre/modules/LoginHelper.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginImport",
-                                  "resource://gre/modules/LoginImport.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginStore",
-                                  "resource://gre/modules/LoginStore.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
-                                  "resource://gre/modules/Sqlite.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginHelper",
+                               "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginImport",
+                               "resource://gre/modules/LoginImport.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginStore",
+                               "resource://gre/modules/LoginStore.jsm");
+ChromeUtils.defineModuleGetter(this, "Sqlite",
+                               "resource://gre/modules/Sqlite.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gLoginManagerCrypto",
                                    "@mozilla.org/login-manager/crypto/SDR;1",

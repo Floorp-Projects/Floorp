@@ -6,12 +6,12 @@ this.EXPORTED_SYMBOLS = [
 
 var {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-sync/main.js");
-Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://services-common/tokenserverclient.js");
-Cu.import("resource://testing-common/services/common/logging.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://services-sync/browserid_identity.js");
+ChromeUtils.import("resource://services-common/tokenserverclient.js");
+ChromeUtils.import("resource://testing-common/services/common/logging.js");
+ChromeUtils.import("resource://testing-common/services/sync/utils.js");
 
 // Create a new browserid_identity object and initialize it with a
 // mocked TokenServerClient which always receives the specified response.
