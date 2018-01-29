@@ -37,7 +37,7 @@ mochitest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 48
-            android.*: 20
+            android.*: 24
             linux.*/debug: 16
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
