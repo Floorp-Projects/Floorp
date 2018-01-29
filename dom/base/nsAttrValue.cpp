@@ -16,6 +16,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsAtom.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/CORSMode.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
@@ -1692,7 +1693,9 @@ nsAttrValue::LoadImage(nsIDocument* aDocument)
                "How did we end up with an empty string for eURL");
 
   mozilla::css::ImageValue* image =
-      mozilla::css::ImageValue::CreateFromURLValue(url, aDocument);
+      mozilla::css::ImageValue::CreateFromURLValue(url,
+                                                   aDocument,
+                                                   mozilla::CORSMode::CORS_NONE);
 
   NS_ADDREF(image);
   cont->mValue.mImage = image;
