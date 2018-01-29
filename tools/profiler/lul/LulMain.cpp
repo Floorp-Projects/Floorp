@@ -1509,7 +1509,7 @@ bool GetAndCheckStackTrace(LUL* aLUL, const char* dstring)
   startRegs.xbp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#elif defined(GP_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
   volatile uintptr_t block[6];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(
