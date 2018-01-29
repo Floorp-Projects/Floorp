@@ -141,7 +141,7 @@ public:
 
 protected:
   nsPresContext* mPresContext;
-  nsCOMPtr<nsIPresShell> mPresShell;
+  nsCOMPtr<nsIDocument> mDocument;
   // mSelection is typically normal selection but if OnQuerySelectedText()
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
   // by WidgetQueryContentEvent::mInput::mSelectionType.
