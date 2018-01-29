@@ -169,7 +169,7 @@
                 // a "pagehide" event.
 
                 let tmp = {};
-                Components.utils.import("resource://gre/modules/CommonDialog.jsm", tmp);
+                ChromeUtils.import("resource://gre/modules/CommonDialog.jsm", tmp);
                 this.Dialog = new tmp.CommonDialog(args, this.ui);
                 this.Dialog.onLoad(null);
 

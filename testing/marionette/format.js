@@ -6,7 +6,7 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
 

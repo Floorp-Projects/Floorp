@@ -6,17 +6,17 @@
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
-                                  "resource:///modules/experiments/Experiments.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryUtils",
-                                  "resource://gre/modules/TelemetryUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Experiments",
+                               "resource:///modules/experiments/Experiments.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "CommonUtils",
+                               "resource://services-common/utils.js");
+ChromeUtils.defineModuleGetter(this, "TelemetryUtils",
+                               "resource://gre/modules/TelemetryUtils.jsm");
 
 
 const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";

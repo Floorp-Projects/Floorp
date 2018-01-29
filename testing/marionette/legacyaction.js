@@ -4,15 +4,15 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const {
   element,
   WebElement,
-} = Cu.import("chrome://marionette/content/element.js", {});
-Cu.import("chrome://marionette/content/evaluate.js");
-Cu.import("chrome://marionette/content/event.js");
+} = ChromeUtils.import("chrome://marionette/content/element.js", {});
+ChromeUtils.import("chrome://marionette/content/evaluate.js");
+ChromeUtils.import("chrome://marionette/content/event.js");
 
 const CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
 const DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms

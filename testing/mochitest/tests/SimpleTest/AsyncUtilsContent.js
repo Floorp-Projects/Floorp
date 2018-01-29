@@ -3,7 +3,7 @@
  * Generally it just delegates to EventUtils.js.
  */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having

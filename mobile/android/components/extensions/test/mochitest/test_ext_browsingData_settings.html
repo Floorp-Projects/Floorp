@@ -15,7 +15,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var {SharedPreferences} = Cu.import("resource://gre/modules/SharedPreferences.jsm", {});
+var {SharedPreferences} = ChromeUtils.import("resource://gre/modules/SharedPreferences.jsm", {});
 
 const PREF_DOMAIN = "android.not_a_preference.privacy.clear";
 const PREF_KEY_PREFIX = "private.data.";

@@ -6,7 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // dialog is just an array we'll use to store various properties from the dialog document...
 var dialog;

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 const HISTOGRAM_NAME = "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM";
 

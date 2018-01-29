@@ -6,13 +6,13 @@
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
-Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/capture.js");
+ChromeUtils.import("chrome://marionette/content/assert.js");
+ChromeUtils.import("chrome://marionette/content/capture.js");
 const {InvalidArgumentError} =
-    Cu.import("chrome://marionette/content/error.js", {});
+    ChromeUtils.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["reftest"];
 

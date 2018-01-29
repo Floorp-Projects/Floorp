@@ -1,5 +1,5 @@
 
-Components.utils.import("resource://gre/modules/addons/AddonSettings.jsm");
+ChromeUtils.import("resource://gre/modules/addons/AddonSettings.jsm");
 
 let profileDir;
 add_task(async function setup() {

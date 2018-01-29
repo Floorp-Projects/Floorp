@@ -17,16 +17,16 @@ var EXPORTED_SYMBOLS = ["PresentationDevicePrompt"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // An string bundle for localization.
 XPCOMUtils.defineLazyGetter(this, "Strings", function() {
   return Services.strings.createBundle("chrome://presentation/locale/presentation.properties");
 });
 // To generate a device selection prompt.
-XPCOMUtils.defineLazyModuleGetter(this, "PermissionUI",
-                                        "resource:///modules/PermissionUI.jsm");
+ChromeUtils.defineModuleGetter(this, "PermissionUI",
+                                     "resource:///modules/PermissionUI.jsm");
 /*
  * Utils
  */

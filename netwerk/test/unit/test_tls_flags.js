@@ -11,8 +11,8 @@
 // level of intolerance rollback and to test out an experimental 1.3
 // hello, though they are not tested here.
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
 
 // Get a profile directory and ensure PSM initializes NSS.
 do_get_profile();

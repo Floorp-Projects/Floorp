@@ -4,7 +4,7 @@
 "use strict";
 
 var tmp = {};
-Cu.import("resource:///modules/translation/Translation.jsm", tmp);
+ChromeUtils.import("resource:///modules/translation/Translation.jsm", tmp);
 var {Translation, TranslationTelemetry} = tmp;
 const Telemetry = Services.telemetry;
 

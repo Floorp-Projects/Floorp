@@ -6,9 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["HeadlessShell"];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const Ci = Components.interfaces;
 

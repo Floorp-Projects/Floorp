@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 const idService = Cc["@mozilla.org/identity/crypto-service;1"]
                     .getService(Ci.nsIIdentityCryptoService);

@@ -1,6 +1,6 @@
 'use strict';
 
-const {PushRecord} = Cu.import('resource://gre/modules/PushRecord.jsm', {});
+const {PushRecord} = ChromeUtils.import('resource://gre/modules/PushRecord.jsm', {});
 
 function run_test() {
   run_next_test();

@@ -1,5 +1,5 @@
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/status.js");
+ChromeUtils.import("resource://services-sync/constants.js");
+ChromeUtils.import("resource://services-sync/status.js");
 
 function run_test() {
 

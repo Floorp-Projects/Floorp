@@ -74,7 +74,7 @@
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
         utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 
 /* import-globals-from testConstants.js */
 Services.scriptloader.loadSubScript("chrome://mochitests/content/chrome/toolkit/mozapps/update/tests/chrome/testConstants.js", this);

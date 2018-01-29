@@ -5,9 +5,9 @@
 
 /* globals TestUtils */
 
-let {ExtensionTestCommon} = Components.utils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
+let {ExtensionTestCommon} = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
-Components.utils.import("resource://testing-common/ContentTask.jsm", {});
+ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
 
 var gAddon;
 var gOtherAddon;

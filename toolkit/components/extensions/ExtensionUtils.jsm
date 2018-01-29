@@ -9,11 +9,11 @@ this.EXPORTED_SYMBOLS = ["ExtensionUtils"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
-                                  "resource://gre/modules/Console.jsm");
+ChromeUtils.defineModuleGetter(this, "ConsoleAPI",
+                               "resource://gre/modules/Console.jsm");
 
 function getConsole() {
   return new ConsoleAPI({

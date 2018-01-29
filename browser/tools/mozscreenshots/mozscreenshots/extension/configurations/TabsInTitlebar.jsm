@@ -10,7 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const PREF_TABS_IN_TITLEBAR = "browser.tabs.drawInTitlebar";
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 this.TabsInTitlebar = {
 

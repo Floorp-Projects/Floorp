@@ -1,8 +1,8 @@
 "use strict";
 
-Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/Addons.jsm", this);
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Addons.jsm", this);
 
 // Initialize test utils
 AddonTestUtils.initMochitest(this);

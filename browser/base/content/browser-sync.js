@@ -5,11 +5,11 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-Cu.import("resource://services-sync/UIState.jsm");
+ChromeUtils.import("resource://services-sync/UIState.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "EnsureFxAccountsWebChannel",
+ChromeUtils.defineModuleGetter(this, "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Weave",
+ChromeUtils.defineModuleGetter(this, "Weave",
   "resource://services-sync/main.js");
 
 const MIN_STATUS_ANIMATION_DURATION = 1600;

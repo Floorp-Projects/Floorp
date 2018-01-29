@@ -1,8 +1,8 @@
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/TelemetryArchive.jsm");
-Cu.import("resource://testing-common/Assert.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/TelemetryController.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm");
+ChromeUtils.import("resource://testing-common/Assert.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "TelemetryArchiveTesting",

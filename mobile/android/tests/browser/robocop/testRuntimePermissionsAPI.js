@@ -5,9 +5,9 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+ChromeUtils.defineModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
 
 add_task(function* test_snackbar_api() {
   RuntimePermissions.waitForPermissions([

@@ -2,13 +2,13 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "OfflineAppCacheHelper",
-                                  "resource:///modules/offlineAppCache.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.defineModuleGetter(this, "OfflineAppCacheHelper",
+                               "resource:///modules/offlineAppCache.jsm");
+ChromeUtils.defineModuleGetter(this, "ContextualIdentityService",
+                               "resource://gre/modules/ContextualIdentityService.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "@mozilla.org/serviceworkers/manager;1",
                                    "nsIServiceWorkerManager");

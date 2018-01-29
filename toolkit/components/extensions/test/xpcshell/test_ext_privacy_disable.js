@@ -3,16 +3,16 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
   return Management;
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-                                  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
-                                  "resource://gre/modules/ExtensionPreferencesManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+                               "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionPreferencesManager",
+                               "resource://gre/modules/ExtensionPreferencesManager.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences",
+                               "resource://gre/modules/Preferences.jsm");
 
 const {
   createAppInfo,

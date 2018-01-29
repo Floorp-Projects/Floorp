@@ -5,7 +5,7 @@
 
 // Test splitBy from node-attribute-parser.js
 
-const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {splitBy} = require("devtools/client/shared/node-attribute-parser");
 
 const TEST_DATA = [{

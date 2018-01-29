@@ -34,14 +34,14 @@ const TOOLBAR_VISIBLE_PREF = "devtools.toolbar.visible";
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-                                  "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
-                                  "resource:///modules/CustomizableWidgets.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
+ChromeUtils.defineModuleGetter(this, "CustomizableUI",
+                               "resource:///modules/CustomizableUI.jsm");
+ChromeUtils.defineModuleGetter(this, "CustomizableWidgets",
+                               "resource:///modules/CustomizableWidgets.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "StartupBundle", function () {
   const url = "chrome://devtools-shim/locale/startup.properties";

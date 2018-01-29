@@ -9,8 +9,8 @@ var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * A service for adding, removing and notifying observers of notifications.

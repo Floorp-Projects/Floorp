@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let tgt = Components.utils.Sandbox(Services.scriptSecurityManager.getSystemPrincipal());
 Services.scriptloader.loadSubScript("resource://test/environment_script.js", tgt);

@@ -12,8 +12,8 @@ const {
   results: Cr,
 } = Components;
 
-Cu.import("resource://gre/modules/EventEmitter.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const IOUtil = Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
 const ScriptableInputStream = CC("@mozilla.org/scriptableinputstream;1",

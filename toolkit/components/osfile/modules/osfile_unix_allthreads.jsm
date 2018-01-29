@@ -25,10 +25,10 @@ var SharedAll;
 if (typeof Components != "undefined") {
   let Cu = Components.utils;
   // Module is opened as a jsm module
-  Cu.import("resource://gre/modules/ctypes.jsm", this);
+  ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
 
   SharedAll = {};
-  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
   this.exports = {};
 } else if (typeof module != "undefined" && typeof require != "undefined") {
   // Module is loaded with require()

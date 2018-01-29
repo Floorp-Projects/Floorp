@@ -10,8 +10,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "ProxyScriptContext",
-                                  "resource://gre/modules/ProxyScriptContext.jsm");
+ChromeUtils.defineModuleGetter(this, "ProxyScriptContext",
+                               "resource://gre/modules/ProxyScriptContext.jsm");
 
 // WeakMap[Extension -> ProxyScriptContext]
 let proxyScriptContextMap = new WeakMap();

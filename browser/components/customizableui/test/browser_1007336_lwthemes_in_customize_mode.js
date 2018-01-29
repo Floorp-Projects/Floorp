@@ -7,7 +7,7 @@
 const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
 const LIGHT_THEME_ID = "firefox-compact-light@mozilla.org";
 const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
-const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
 add_task(async function() {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");

@@ -6,13 +6,13 @@
 
 let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const WEBCOMPATREPORTER_JSM = "chrome://webcompat-reporter/content/WebCompatReporter.jsm";
 const DELAYED_STARTUP_FINISHED = "browser-delayed-startup-finished";
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebCompatReporter",
+ChromeUtils.defineModuleGetter(this, "WebCompatReporter",
   WEBCOMPATREPORTER_JSM);
 
 const PREF_WC_REPORTER_ENABLED = "extensions.webcompat-reporter.enabled";

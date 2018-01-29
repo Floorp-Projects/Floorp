@@ -14,7 +14,7 @@ runChecksAfterCommonInit(() => startTest());
 
 runInParent(function setup() {
   const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-  const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+  const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
            createInstance(Ci.nsILoginInfo);
   login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].

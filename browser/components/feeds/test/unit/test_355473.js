@@ -1,5 +1,5 @@
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
   var feedFeedURI = Services.io.newURI("feed://example.com/feed.xml");

@@ -1,7 +1,7 @@
 "use strict";
 
-let { SyncedTabs } = Cu.import("resource://services-sync/SyncedTabs.jsm", {});
-let { SyncedTabsListStore } = Cu.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
+let { SyncedTabs } = ChromeUtils.import("resource://services-sync/SyncedTabs.jsm", {});
+let { SyncedTabsListStore } = ChromeUtils.import("resource:///modules/syncedtabs/SyncedTabsListStore.js", {});
 
 const FIXTURE = [
   {

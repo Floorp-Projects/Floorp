@@ -5,8 +5,8 @@
 
 // Tests for the FxA push service.
 
-Cu.import("resource://gre/modules/FxAccountsCommon.js");
-Cu.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
 
 let importScope = {};
 Services.scriptloader.loadSubScript("resource://gre/components/FxAccountsPush.js", importScope);
@@ -188,7 +188,7 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
   const fxAccountsMock = new FxAccounts({
     newAccountState() {
       return {
@@ -238,7 +238,7 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+  let { FxAccounts } = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
   const fxAccountsMock = new FxAccounts({
     newAccountState() {
       return {

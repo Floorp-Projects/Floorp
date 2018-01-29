@@ -5,11 +5,11 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
-Cu.import("resource://shield-recipe-client/lib/PreferenceFilters.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/Sampling.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceFilters.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "mozjexl", "resource://shield-recipe-client-vendor/mozjexl.js");
+ChromeUtils.defineModuleGetter(this, "mozjexl", "resource://shield-recipe-client-vendor/mozjexl.js");
 
 this.EXPORTED_SYMBOLS = ["FilterExpressions"];
 

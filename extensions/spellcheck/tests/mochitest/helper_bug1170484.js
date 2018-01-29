@@ -1,7 +1,7 @@
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Chrome scripts are run with synchronous messages, so make sure we're completely
 // decoupled from the content process before doing this work.

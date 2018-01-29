@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/TelemetryController.jsm", this);
-Cu.import("resource://gre/modules/AppConstants.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 
 // We need both in order to capture stacks.
 const ENABLE_TESTS = AppConstants.MOZ_GECKO_PROFILER;

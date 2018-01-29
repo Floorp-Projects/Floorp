@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { PostQueue } = Cu.import("resource://services-sync/record.js", {});
+let { PostQueue } = ChromeUtils.import("resource://services-sync/record.js", {});
 
 function makeRecord(nbytes) {
   return {

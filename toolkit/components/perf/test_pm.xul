@@ -17,7 +17,7 @@ function test()
 {
   SimpleTest.waitForExplicitFinish();
 
-  Components.utils.import("resource://gre/modules/PerfMeasurement.jsm");
+  ChromeUtils.import("resource://gre/modules/PerfMeasurement.jsm");
   let pm = new PerfMeasurement(PerfMeasurement.ALL);
   if (pm.eventsMeasured == 0) {
     todo(false, "stub, skipping test");

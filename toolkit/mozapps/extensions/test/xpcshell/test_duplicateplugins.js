@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://testing-common/MockRegistrar.jsm");
+ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 var Ci = Components.interfaces;
 
