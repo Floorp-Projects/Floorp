@@ -841,10 +841,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         let row = fragment.rows.tracks[rowNumber - 1];
         let column = fragment.cols.tracks[columnNumber - 1];
 
-        // Check if the font size is exceeds the bounds of the containing grid cell.
+        // If the font size exceeds the bounds of the containing grid cell, size it its
+        // row or column dimension, whichever is smallest.
         if (fontSize > (column.breadth * displayPixelRatio) ||
             fontSize > (row.breadth * displayPixelRatio)) {
-          fontSize = (column.breadth + row.breadth) / 2;
+          fontSize = Math.min([column.breadth, row.breadth]);
           this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
         }
 

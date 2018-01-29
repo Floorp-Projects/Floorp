@@ -19,6 +19,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
 #include "nsCSSPropertyIDSet.h"
+#include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
@@ -249,7 +250,7 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     currentPhase = TransitionPhase::Pending;
   }
 
-  AutoTArray<TransitionEventInfo, 3> events;
+  AutoTArray<AnimationEventInfo, 3> events;
 
   auto appendTransitionEvent = [&](EventMessage aMessage,
                                    const StickyTimeDuration& aElapsedTime,
@@ -258,12 +259,12 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
     if (aMessage == eTransitionCancel) {
       elapsedTime = nsRFPService::ReduceTimePrecisionAsSecs(elapsedTime);
     }
-    events.AppendElement(TransitionEventInfo(mOwningElement.Target(),
-                                             aMessage,
-                                             TransitionProperty(),
-                                             elapsedTime,
-                                             aTimeStamp,
-                                             this));
+    events.AppendElement(AnimationEventInfo(TransitionProperty(),
+                                            mOwningElement.Target(),
+                                            aMessage,
+                                            elapsedTime,
+                                            aTimeStamp,
+                                            this));
   };
 
   // Handle cancel events first
@@ -336,7 +337,7 @@ CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime)
   mPreviousTransitionPhase = currentPhase;
 
   if (!events.IsEmpty()) {
-    presContext->TransitionManager()->QueueEvents(Move(events));
+    presContext->AnimationEventDispatcher()->QueueEvents(Move(events));
   }
 }
 
@@ -421,11 +422,6 @@ CSSTransition::SetEffectFromStyle(dom::AnimationEffectReadOnly* aEffect)
 }
 
 ////////////////////////// nsTransitionManager ////////////////////////////
-
-NS_IMPL_CYCLE_COLLECTION(nsTransitionManager, mEventDispatcher)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTransitionManager, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,

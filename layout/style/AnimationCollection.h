@@ -88,8 +88,6 @@ public:
                                    CSSPseudoElementType aPseudoType,
                                    bool* aCreatedCollection);
 
-  static nsString PseudoTypeAsString(CSSPseudoElementType aPseudoType);
-
   dom::Element *mElement;
 
   // the atom we use in mElement's prop table (must be a static atom,
