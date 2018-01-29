@@ -293,8 +293,11 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t nDynamicSlots, co
         }
     }
 
-    /* Always initialize the slots field to match the JIT behavior. */
-    obj->setInitialSlotsMaybeNonNative(slots);
+    /* Store slots pointer directly in new object. If no dynamic slots were
+     * requested, caller must initialize slots_ field itself as needed. We
+     * don't know if the caller was a native object or not. */
+    if (nDynamicSlots)
+        static_cast<NativeObject*>(obj)->initSlots(slots);
 
     TraceNurseryAlloc(obj, size);
     return obj;

@@ -119,10 +119,12 @@ GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind, size_t thingSize,
 
     JSObject* obj = tryNewTenuredThing<JSObject, allowGC>(cx, kind, thingSize);
 
-    if (obj)
-        obj->setInitialSlotsMaybeNonNative(slots);
-    else
+    if (obj) {
+        if (nDynamicSlots)
+            static_cast<NativeObject*>(obj)->initSlots(slots);
+    } else {
         js_free(slots);
+    }
 
     return obj;
 }

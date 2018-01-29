@@ -57,7 +57,9 @@ ArrayObject::createArrayInternal(JSContext* cx, gc::AllocKind kind, gc::InitialH
     ArrayObject* aobj = static_cast<ArrayObject*>(obj);
     aobj->initGroup(group);
     aobj->initShape(shape);
-    // NOTE: Slots are created and assigned internally by Allocate<JSObject>.
+    // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
+    if (!nDynamicSlots)
+        aobj->initSlots(nullptr);
 
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     cx->compartment()->setObjectPendingMetadata(cx, aobj);
