@@ -1797,11 +1797,6 @@ async function initializeMirrorDatabase(db) {
 
   await db.execute(`CREATE INDEX mirror.urlHashes ON urls(hash)`);
 
-  await db.execute(`CREATE INDEX mirror.locations ON structure(
-    parentGuid,
-    position
-  )`);
-
   await createMirrorRoots(db);
 }
 
