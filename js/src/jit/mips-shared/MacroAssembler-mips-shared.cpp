@@ -1869,9 +1869,11 @@ MacroAssembler::comment(const char* msg)
 // WebAssembly
 
 CodeOffset
-MacroAssembler::illegalInstruction()
+MacroAssembler::wasmTrapInstruction()
 {
-    MOZ_CRASH("NYI");
+    CodeOffset offset(currentOffset());
+    as_teq(zero, zero, WASM_TRAP);
+    return offset;
 }
 
 void
