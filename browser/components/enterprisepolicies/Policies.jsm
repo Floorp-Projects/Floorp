@@ -76,6 +76,14 @@ this.Policies = {
     }
   },
 
+  "block_set_desktop_background": {
+    onBeforeUIStartup(manager, param) {
+      if (param == true) {
+        manager.disallowFeature("set_desktop_background", true);
+      }
+    }
+  },
+
   "dont_check_default_browser": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("browser.shell.checkDefaultBrowser", false);
