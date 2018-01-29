@@ -211,9 +211,18 @@ TransactionBuilder::IsEmpty() const
 }
 
 void
-TransactionBuilder::SetWindowParameters(LayoutDeviceIntSize size)
+TransactionBuilder::SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
+                                        const LayoutDeviceIntRect& aDocumentRect)
 {
-  wr_transaction_set_window_parameters(mTxn, size.width, size.height);
+  wr::DeviceUintSize wrWindowSize;
+  wrWindowSize.width = aWindowSize.width;
+  wrWindowSize.height = aWindowSize.height;
+  wr::DeviceUintRect wrDocRect;
+  wrDocRect.origin.x = aDocumentRect.x;
+  wrDocRect.origin.y = aDocumentRect.y;
+  wrDocRect.size.width = aDocumentRect.width;
+  wrDocRect.size.height = aDocumentRect.height;
+  wr_transaction_set_window_parameters(mTxn, &wrWindowSize, &wrDocRect);
 }
 
 void
@@ -287,7 +296,26 @@ WebRenderAPI::Clone()
 
   RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(docHandle, mId, mMaxTextureSize, mUseANGLE, mSyncHandle);
   renderApi->mRootApi = this; // Hold root api
+  renderApi->mRootDocumentApi = this;
   return renderApi.forget();
+}
+
+already_AddRefed<WebRenderAPI>
+WebRenderAPI::CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex)
+{
+  wr::DeviceUintSize wrSize;
+  wrSize.width = aSize.width;
+  wrSize.height = aSize.height;
+  wr::DocumentHandle* newDoc;
+
+  wr_api_create_document(mDocHandle, &newDoc, wrSize, aLayerIndex);
+
+  RefPtr<WebRenderAPI> api(new WebRenderAPI(newDoc, mId,
+                                            mMaxTextureSize,
+                                            mUseANGLE,
+                                            mSyncHandle));
+  api->mRootApi = this;
+  return api.forget();
 }
 
 wr::WrIdNamespace
@@ -299,14 +327,19 @@ extern void ClearBlobImageResources(WrIdNamespace aNamespace);
 
 WebRenderAPI::~WebRenderAPI()
 {
-  if (!mRootApi) {
+  if (!mRootDocumentApi) {
+    wr_api_delete_document(mDocHandle);
+  }
 
+  if (!mRootApi) {
     RenderThread::Get()->SetDestroyed(GetId());
 
     layers::SynchronousTask task("Destroy WebRenderAPI");
     auto event = MakeUnique<RemoveRenderer>(&task);
     RunOnRenderThread(Move(event));
     task.Wait();
+
+    wr_api_shut_down(mDocHandle);
   }
 
   // wr_api_get_namespace cannot be marked destructor-safe because it has a

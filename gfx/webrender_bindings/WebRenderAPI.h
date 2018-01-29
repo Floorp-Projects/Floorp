@@ -150,7 +150,8 @@ public:
   void UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
                                const nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  void SetWindowParameters(LayoutDeviceIntSize size);
+  void SetWindowParameters(const LayoutDeviceIntSize& aWindowSize,
+                           const LayoutDeviceIntRect& aDocRect);
 
   void UpdateResources(ResourceUpdateQueue& aUpdates);
 
@@ -174,6 +175,8 @@ public:
   static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParentBase* aBridge,
                                                RefPtr<widget::CompositorWidget>&& aWidget,
                                                LayoutDeviceIntSize aSize);
+
+  already_AddRefed<WebRenderAPI> CreateDocument(LayoutDeviceIntSize aSize, int8_t aLayerIndex);
 
   // Redirect the WR's log to gfxCriticalError/Note.
   static void InitExternalLogHandler();
@@ -224,7 +227,17 @@ protected:
   uint32_t mMaxTextureSize;
   bool mUseANGLE;
   layers::SyncHandle mSyncHandle;
+
+  // We maintain alive the root api to know when to shut the render backend down,
+  // and the root api for the document to know when to delete the document.
+  // mRootApi is null for the api object that owns the channel (and is responsible
+  // for shutting it down), and mRootDocumentApi is null for the api object owning
+  // (and responsible for destroying) a given document.
+  // All api objects in the same window use the same channel, and some api objects
+  // write to the same document (but there is only one owner for each channel and
+  // for each document).
   RefPtr<wr::WebRenderAPI> mRootApi;
+  RefPtr<wr::WebRenderAPI> mRootDocumentApi;
 
   friend class DisplayListBuilder;
   friend class layers::WebRenderBridgeParent;

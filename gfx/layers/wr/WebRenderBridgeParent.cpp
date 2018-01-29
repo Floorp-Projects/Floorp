@@ -610,8 +610,9 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
   // In that case do not send the commands to webrender.
   if (mIdNamespace == aIdNamespace) {
     if (mWidget) {
-      LayoutDeviceIntSize size = mWidget->GetClientSize();
-      txn.SetWindowParameters(size);
+      LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
+      LayoutDeviceIntRect docRect(LayoutDeviceIntPoint(), widgetSize);
+      txn.SetWindowParameters(widgetSize, docRect);
     }
     gfx::Color clearColor(0.f, 0.f, 0.f, 0.f);
     txn.SetDisplayList(clearColor, wr::NewEpoch(wrEpoch), LayerSize(aSize.width, aSize.height),
