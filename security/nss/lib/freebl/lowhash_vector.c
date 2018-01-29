@@ -102,13 +102,13 @@ freebl_LoadDSO(void)
 
 static PRCallOnceType loadFreeBLOnce;
 
-static PRStatus
+static void
 freebl_RunLoaderOnce(void)
 {
     /* Don't have NSPR, so can use the real PR_CallOnce, implement a stripped
      * down version. */
     if (loadFreeBLOnce.initialized) {
-        return loadFreeBLOnce.status;
+        return;
     }
     if (__sync_lock_test_and_set(&loadFreeBLOnce.inProgress, 1) == 0) {
         loadFreeBLOnce.status = freebl_LoadDSO();
@@ -122,17 +122,21 @@ freebl_RunLoaderOnce(void)
             sleep(1); /* don't have condition variables, just give up the CPU */
         }
     }
+}
 
-    return loadFreeBLOnce.status;
+static const NSSLOWVector *
+freebl_InitVector(void)
+{
+    if (!vector) {
+        freebl_RunLoaderOnce();
+    }
+    return vector;
 }
 
 const FREEBLVector *
 FREEBL_GetVector(void)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce()) {
-        return NULL;
-    }
-    if (vector) {
+    if (freebl_InitVector()) {
         return (vector->p_FREEBL_GetVector)();
     }
     return NULL;
@@ -141,25 +145,26 @@ FREEBL_GetVector(void)
 NSSLOWInitContext *
 NSSLOW_Init(void)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return NULL;
-    return (vector->p_NSSLOW_Init)();
+    if (freebl_InitVector()) {
+        return (vector->p_NSSLOW_Init)();
+    }
+    return NULL;
 }
 
 void
 NSSLOW_Shutdown(NSSLOWInitContext *context)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOW_Shutdown)(context);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOW_Shutdown)(context);
+    }
 }
 
 void
 NSSLOW_Reset(NSSLOWInitContext *context)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOW_Reset)(context);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOW_Reset)(context);
+    }
 }
 
 NSSLOWHASHContext *
@@ -167,17 +172,18 @@ NSSLOWHASH_NewContext(
     NSSLOWInitContext *initContext,
     HASH_HashType hashType)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return NULL;
-    return (vector->p_NSSLOWHASH_NewContext)(initContext, hashType);
+    if (freebl_InitVector()) {
+        return (vector->p_NSSLOWHASH_NewContext)(initContext, hashType);
+    }
+    return NULL;
 }
 
 void
 NSSLOWHASH_Begin(NSSLOWHASHContext *context)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOWHASH_Begin)(context);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOWHASH_Begin)(context);
+    }
 }
 
 void
@@ -185,9 +191,9 @@ NSSLOWHASH_Update(NSSLOWHASHContext *context,
                   const unsigned char *buf,
                   unsigned int len)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOWHASH_Update)(context, buf, len);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOWHASH_Update)(context, buf, len);
+    }
 }
 
 void
@@ -195,23 +201,24 @@ NSSLOWHASH_End(NSSLOWHASHContext *context,
                unsigned char *buf,
                unsigned int *ret, unsigned int len)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOWHASH_End)(context, buf, ret, len);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOWHASH_End)(context, buf, ret, len);
+    }
 }
 
 void
 NSSLOWHASH_Destroy(NSSLOWHASHContext *context)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return;
-    (vector->p_NSSLOWHASH_Destroy)(context);
+    if (freebl_InitVector()) {
+        (vector->p_NSSLOWHASH_Destroy)(context);
+    }
 }
 
 unsigned int
 NSSLOWHASH_Length(NSSLOWHASHContext *context)
 {
-    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
-        return -1;
-    return (vector->p_NSSLOWHASH_Length)(context);
+    if (freebl_InitVector()) {
+        return (vector->p_NSSLOWHASH_Length)(context);
+    }
+    return -1;
 }
