@@ -26,6 +26,8 @@
 
 typedef struct hb_blob_t hb_blob_t;
 
+struct gfxFontVariationInstance;
+
 class gfxSparseBitSet {
 private:
     enum { BLOCK_SIZE = 32 };   // ==> 256 codepoints per block
@@ -999,6 +1001,15 @@ public:
                                     const mozilla::gfx::Color& aDefaultColor,
                                     nsTArray<uint16_t> &aGlyphs,
                                     nsTArray<mozilla::gfx::Color> &aColors);
+
+    // Helper used to implement gfxFontEntry::GetVariationInstances for
+    // platforms where the native font APIs don't provide the info we want
+    // in a convenient form.
+    // (Not used on platforms -- currently, freetype -- where the font APIs
+    // expose variation instance details directly.)
+    static void
+    GetVariationInstances(gfxFontEntry* aFontEntry,
+                          nsTArray<gfxFontVariationInstance>& aInstances);
 
 protected:
     friend struct MacCharsetMappingComparator;

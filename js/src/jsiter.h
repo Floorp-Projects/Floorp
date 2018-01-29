@@ -132,7 +132,7 @@ class PropertyIteratorObject : public NativeObject
     static void finalize(FreeOp* fop, JSObject* obj);
 };
 
-class ArrayIteratorObject : public JSObject
+class ArrayIteratorObject : public NativeObject
 {
   public:
     static const Class class_;
@@ -141,7 +141,7 @@ class ArrayIteratorObject : public JSObject
 ArrayIteratorObject*
 NewArrayIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
 
-class StringIteratorObject : public JSObject
+class StringIteratorObject : public NativeObject
 {
   public:
     static const Class class_;

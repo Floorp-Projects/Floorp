@@ -352,6 +352,13 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override // GeckoSession.ContentListener
+    public void onFocusRequest(GeckoSession session) {
+        Intent intent = new Intent(getIntent());
+        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
+    }
+
+    @Override // GeckoSession.ContentListener
     public void onContextMenu(GeckoSession session, int screenX, int screenY,
                               String uri, String elementSrc) {
         final String content = uri != null ? uri : elementSrc != null ? elementSrc : "";

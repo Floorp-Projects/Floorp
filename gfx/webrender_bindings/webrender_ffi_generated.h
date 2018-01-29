@@ -325,6 +325,8 @@ struct TypedSize2D {
   }
 };
 
+using DeviceUintSize = TypedSize2D<uint32_t, DevicePixel>;
+
 using LayerSize = TypedSize2D<float, LayerPixel>;
 
 using LayoutSize = LayerSize;
@@ -987,7 +989,18 @@ void wr_api_clone(DocumentHandle *aDh,
 WR_FUNC;
 
 WR_INLINE
+void wr_api_create_document(DocumentHandle *aRootDh,
+                            DocumentHandle **aOutHandle,
+                            DeviceUintSize aDocSize,
+                            int8_t aLayer)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_delete(DocumentHandle *aDh)
+WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE
+void wr_api_delete_document(DocumentHandle *aDh)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
@@ -1018,6 +1031,10 @@ WR_INLINE
 void wr_api_send_transaction(DocumentHandle *aDh,
                              Transaction *aTransaction)
 WR_FUNC;
+
+WR_INLINE
+void wr_api_shut_down(DocumentHandle *aDh)
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 void wr_clear_item_tag(WrState *aState)
@@ -1587,8 +1604,8 @@ WR_FUNC;
 
 WR_INLINE
 void wr_transaction_set_window_parameters(Transaction *aTxn,
-                                          int32_t aWindowWidth,
-                                          int32_t aWindowHeight)
+                                          const DeviceUintSize *aWindowSize,
+                                          const DeviceUintRect *aDocRect)
 WR_FUNC;
 
 WR_INLINE

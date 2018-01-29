@@ -143,7 +143,7 @@ WebRenderTextureHost::NumSubTextures() const
 }
 
 void
-WebRenderTextureHost::PushResourceUpdates(wr::ResourceUpdateQueue& aResources,
+WebRenderTextureHost::PushResourceUpdates(wr::TransactionBuilder& aResources,
                                           ResourceUpdateOp aOp,
                                           const Range<wr::ImageKey>& aImageKeys,
                                           const wr::ExternalImageId& aExtID)

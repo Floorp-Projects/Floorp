@@ -7,6 +7,8 @@
 #include "mozilla/BinarySearch.h"
 
 #include "gfxFontUtils.h"
+#include "gfxFontEntry.h"
+#include "gfxFontVariations.h"
 
 #include "nsServiceManagerUtils.h"
 
@@ -1801,6 +1803,145 @@ gfxFontUtils::GetColorGlyphLayers(hb_blob_t* aCOLR,
         layer++;
     }
     return true;
+}
+
+void
+gfxFontUtils::GetVariationInstances(gfxFontEntry* aFontEntry,
+                                    nsTArray<gfxFontVariationInstance>& aInstances)
+{
+    MOZ_ASSERT(aInstances.IsEmpty());
+
+    if (!aFontEntry->HasVariations()) {
+        return;
+    }
+
+    // Some platforms don't offer a simple API to return the list of instances,
+    // so we have to interpret the 'fvar' table ourselves.
+
+    // https://www.microsoft.com/typography/otspec/fvar.htm#fvarHeader
+    struct FvarHeader {
+        AutoSwap_PRUint16 majorVersion;
+        AutoSwap_PRUint16 minorVersion;
+        AutoSwap_PRUint16 axesArrayOffset;
+        AutoSwap_PRUint16 reserved;
+        AutoSwap_PRUint16 axisCount;
+        AutoSwap_PRUint16 axisSize;
+        AutoSwap_PRUint16 instanceCount;
+        AutoSwap_PRUint16 instanceSize;
+    };
+
+    // https://www.microsoft.com/typography/otspec/fvar.htm#variationAxisRecord
+    struct AxisRecord {
+        AutoSwap_PRUint32 axisTag;
+        AutoSwap_PRInt32  minValue;
+        AutoSwap_PRInt32  defaultValue;
+        AutoSwap_PRInt32  maxValue;
+        AutoSwap_PRUint16 flags;
+        AutoSwap_PRUint16 axisNameID;
+    };
+
+    // https://www.microsoft.com/typography/otspec/fvar.htm#instanceRecord
+    struct InstanceRecord {
+        AutoSwap_PRUint16 subfamilyNameID;
+        AutoSwap_PRUint16 flags;
+        AutoSwap_PRInt32  coordinates[1]; // variable-size array [axisCount]
+        // The variable-length 'coordinates' array may be followed by an
+        // optional extra field 'postScriptNameID'. We can't directly
+        // represent this in the struct, because its offset varies depending
+        // on the number of axes present.
+        // (Not currently used by our code here anyhow.)
+    //  AutoSwap_PRUint16 postScriptNameID;
+    };
+
+    // Helper to ensure we free a font table when we return.
+    class AutoHBBlob {
+    public:
+        explicit AutoHBBlob(hb_blob_t* aBlob) : mBlob(aBlob)
+        { }
+
+        ~AutoHBBlob() {
+            if (mBlob) {
+                hb_blob_destroy(mBlob);
+            }
+        }
+
+        operator hb_blob_t* () { return mBlob; }
+
+    private:
+        hb_blob_t* const mBlob;
+    };
+
+    // Load the two font tables we need as harfbuzz blobs; if either is absent,
+    // just bail out.
+    AutoHBBlob fvarTable(aFontEntry->GetFontTable(TRUETYPE_TAG('f','v','a','r')));
+    AutoHBBlob nameTable(aFontEntry->GetFontTable(TRUETYPE_TAG('n','a','m','e')));
+    if (!fvarTable || !nameTable) {
+        return;
+    }
+    unsigned int len;
+    const char* data = hb_blob_get_data(fvarTable, &len);
+    if (len < sizeof(FvarHeader)) {
+        return;
+    }
+    // Read the fields of the table header; bail out if it looks broken.
+    auto fvar = reinterpret_cast<const FvarHeader*>(data);
+    if (uint16_t(fvar->majorVersion) != 1 ||
+        uint16_t(fvar->minorVersion) != 0 ||
+        uint16_t(fvar->reserved) != 2) {
+        return;
+    }
+    uint16_t axisCount = fvar->axisCount;
+    uint16_t axisSize = fvar->axisSize;
+    uint16_t instanceCount = fvar->instanceCount;
+    uint16_t instanceSize = fvar->instanceSize;
+    if (axisCount == 0 || // no axes?
+        // https://www.microsoft.com/typography/otspec/fvar.htm#axisSize
+        axisSize != 20 || // required value for current table version
+        instanceCount == 0 || // no instances?
+        // https://www.microsoft.com/typography/otspec/fvar.htm#instanceSize
+        (instanceSize != axisCount * sizeof(int32_t) + 4 &&
+         instanceSize != axisCount * sizeof(int32_t) + 6)) {
+        return;
+    }
+    // Check that axis array will not exceed table size
+    uint16_t axesOffset = fvar->axesArrayOffset;
+    if (axesOffset + uint32_t(axisCount) * axisSize > len) {
+        return;
+    }
+    // Get pointer to the array of axis records
+    auto axes = reinterpret_cast<const AxisRecord*>(data + axesOffset);
+    // Get address of instance array, and check it doesn't overflow table size.
+    // https://www.microsoft.com/typography/otspec/fvar.htm#axisAndInstanceArrays
+    auto instData = data + axesOffset + axisCount * axisSize;
+    if (instData + uint32_t(instanceCount) * instanceSize > data + len) {
+        return;
+    }
+    aInstances.SetCapacity(instanceCount);
+    for (unsigned i = 0; i < instanceCount; ++i, instData += instanceSize) {
+        // Typed pointer to the current instance record, to read its fields.
+        auto inst = reinterpret_cast<const InstanceRecord*>(instData);
+        // Pointer to the coordinates array within the instance record.
+        // This array has axisCount elements, and is included in instanceSize
+        // (which depends on axisCount, and was validated above) so we know
+        // access to coords[j] below will not be outside the table bounds.
+        auto coords = &inst->coordinates[0];
+        gfxFontVariationInstance instance;
+        uint16_t nameID = inst->subfamilyNameID;
+        nsresult rv =
+            ReadCanonicalName(nameTable, nameID, instance.mName);
+        if (NS_FAILED(rv)) {
+            // If no name was available for the instance, ignore it.
+            continue;
+        }
+        instance.mValues.SetCapacity(axisCount);
+        for (unsigned j = 0; j < axisCount; ++j) {
+            gfxFontVariationValue value;
+            value.mAxis = axes[j].axisTag;
+            value.mValue = int32_t(coords[j]) / 65536.0;
+            instance.mValues.AppendElement(value);
+        }
+        aInstances.AppendElement(instance);
+    }
 }
 
 #ifdef XP_WIN

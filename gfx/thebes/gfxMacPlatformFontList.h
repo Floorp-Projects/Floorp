@@ -63,6 +63,7 @@ public:
 
     bool HasVariations() override;
     void GetVariationAxes(nsTArray<gfxFontVariationAxis>& aVariationAxes) override;
+    void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances) override;
 
     bool IsCFF();
 

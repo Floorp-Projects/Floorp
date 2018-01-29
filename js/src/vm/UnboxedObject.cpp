@@ -627,12 +627,10 @@ UnboxedObject::createInternal(JSContext* cx, js::gc::AllocKind kind, js::gc::Ini
         return cx->alreadyReportedOOM();
 
     UnboxedObject* uobj = static_cast<UnboxedObject*>(obj);
-    uobj->group_.init(group);
+    uobj->initGroup(group);
 
-    if (clasp->shouldDelayMetadataBuilder())
-        cx->compartment()->setObjectPendingMetadata(cx, uobj);
-    else
-        uobj = SetNewObjectMetadata(cx, uobj);
+    MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
+    cx->compartment()->setObjectPendingMetadata(cx, uobj);
 
     js::gc::TraceCreateObject(uobj);
 
@@ -651,18 +649,17 @@ UnboxedPlainObject::create(JSContext* cx, HandleObjectGroup group, NewObjectKind
 
     MOZ_ASSERT(newKind != SingletonObject);
 
-    UnboxedObject* res_;
-    JS_TRY_VAR_OR_RETURN_NULL(cx, res_, createInternal(cx, allocKind, heap, group));
-    UnboxedPlainObject* res = &res_->as<UnboxedPlainObject>();
+    JSObject* obj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, createInternal(cx, allocKind, heap, group));
 
-    // Overwrite the dummy shape which was written to the object's expando field.
-    res->initExpando();
+    UnboxedPlainObject* uobj = static_cast<UnboxedPlainObject*>(obj);
+    uobj->initExpando();
 
     // Initialize reference fields of the object. All fields in the object will
     // be overwritten shortly, but references need to be safe for the GC.
-    const int32_t* list = res->layout().traceList();
+    const int32_t* list = uobj->layout().traceList();
     if (list) {
-        uint8_t* data = res->data();
+        uint8_t* data = uobj->data();
         while (*list != -1) {
             GCPtrString* heap = reinterpret_cast<GCPtrString*>(data + *list);
             heap->init(cx->names().empty);
@@ -678,7 +675,7 @@ UnboxedPlainObject::create(JSContext* cx, HandleObjectGroup group, NewObjectKind
         MOZ_ASSERT(*(list + 1) == -1);
     }
 
-    return res;
+    return uobj;
 }
 
 /* static */ JSObject*

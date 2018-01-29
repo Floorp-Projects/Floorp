@@ -163,6 +163,11 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
+        public void onFocusRequest(GeckoSession session) {
+            Log.i(LOGTAG, "Content requesting focus");
+        }
+
+        @Override
         public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
             getWindow().setFlags(fullScreen ? WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                  WindowManager.LayoutParams.FLAG_FULLSCREEN);
