@@ -76,11 +76,11 @@ with Files("config/tooltool-manifests/**"):
     BUG_COMPONENT = ("Release Engineering", "Mozharness")
 
 with Files("*cppunittest*"):
-    BUG_COMPONENT = ("Testing", "General")
+    BUG_COMPONENT = ("Testing", "CPPUnitTest")
     SCHEDULES.exclusive = ['cppunittest']
 
 with Files("gtest/**"):
-    BUG_COMPONENT = ("Testing", "General")
+    BUG_COMPONENT = ("Testing", "GTest")
     SCHEDULES.exclusive = ['gtest']
 
 with Files("specialpowers/**"):
