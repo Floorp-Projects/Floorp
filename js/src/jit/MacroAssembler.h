@@ -1438,7 +1438,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ========================================================================
     // wasm support
 
-    CodeOffset illegalInstruction() PER_SHARED_ARCH;
+    CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
+
     void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
 
     // Emit a bounds check against the wasm heap limit, jumping to 'label' if 'cond' holds.

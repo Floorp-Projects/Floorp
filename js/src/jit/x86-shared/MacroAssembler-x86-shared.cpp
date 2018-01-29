@@ -672,7 +672,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 // WebAssembly
 
 CodeOffset
-MacroAssembler::illegalInstruction()
+MacroAssembler::wasmTrapInstruction()
 {
     return ud2();
 }

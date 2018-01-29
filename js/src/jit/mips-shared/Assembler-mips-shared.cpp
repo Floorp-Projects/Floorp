@@ -1779,6 +1779,54 @@ AssemblerMIPSShared::as_movn(FloatFormat fmt, FloatRegister fd, FloatRegister fs
     }
 }
 
+BufferOffset
+AssemblerMIPSShared::as_tge(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("tge %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_tge).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_tgeu(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("tgeu %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_tgeu).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_tlt(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("tlt %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_tlt).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_tltu(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("tltu %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_tltu).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_teq(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("teq %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_teq).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_tne(Register rs, Register rt, uint32_t code)
+{
+    MOZ_ASSERT(code <= MAX_BREAK_CODE);
+    spew("tne %3s,%3s,%d", rs.name(), rt.name(), code);
+    return writeInst(InstReg(op_special, rs, rt, zero, code, ff_tne).encode());
+}
+
 void
 AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 {
