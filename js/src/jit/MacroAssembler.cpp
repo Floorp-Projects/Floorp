@@ -875,6 +875,8 @@ MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind all
     if (!nDynamicSlots)
         return freeListAllocate(result, temp, allocKind, fail);
 
+    // Only NativeObject can have nDynamicSlots > 0 and reach here.
+
     callMallocStub(nDynamicSlots * sizeof(GCPtrValue), temp, fail);
 
     Label failAlloc;

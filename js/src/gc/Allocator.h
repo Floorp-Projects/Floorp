@@ -21,7 +21,8 @@ struct Class;
 //
 // Note that JSObject allocation must use the longer signature below that
 // includes slot, heap, and finalizer information in support of various
-// object-specific optimizations.
+// object-specific optimizations. If dynamic slots are requested they will be
+// allocated and the pointer stored directly in |NativeObject::slots_|.
 template <typename T, AllowGC allowGC = CanGC>
 T*
 Allocate(JSContext* cx);
