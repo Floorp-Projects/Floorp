@@ -2948,7 +2948,7 @@ MacroAssembler::maybeBranchTestType(MIRType type, MDefinition* maybeDef, Registe
 void
 MacroAssembler::wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset)
 {
-    append(trap, wasm::TrapSite(illegalInstruction().offset(), bytecodeOffset));
+    append(trap, wasm::TrapSite(wasmTrapInstruction().offset(), bytecodeOffset));
 }
 
 void

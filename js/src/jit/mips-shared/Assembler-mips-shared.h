@@ -211,6 +211,7 @@ static const uint32_t RegMask = Registers::Total - 1;
 
 static const uint32_t BREAK_STACK_UNALIGNED = 1;
 static const uint32_t MAX_BREAK_CODE = 1024 - 1;
+static const uint32_t WASM_TRAP = 6; // BRK_OVERFLOW
 
 class Instruction;
 class InstReg;
@@ -1228,6 +1229,14 @@ class AssemblerMIPSShared : public AssemblerShared
                          FPConditionBit fcc = FCC0);
     BufferOffset as_movz(FloatFormat fmt, FloatRegister fd, FloatRegister fs, Register rt);
     BufferOffset as_movn(FloatFormat fmt, FloatRegister fd, FloatRegister fs, Register rt);
+
+    // Conditional trap operations
+    BufferOffset as_tge(Register rs, Register rt, uint32_t code = 0);
+    BufferOffset as_tgeu(Register rs, Register rt, uint32_t code = 0);
+    BufferOffset as_tlt(Register rs, Register rt, uint32_t code = 0);
+    BufferOffset as_tltu(Register rs, Register rt, uint32_t code = 0);
+    BufferOffset as_teq(Register rs, Register rt, uint32_t code = 0);
+    BufferOffset as_tne(Register rs, Register rt, uint32_t code = 0);
 
     // label operations
     void bind(Label* label, BufferOffset boff = BufferOffset());

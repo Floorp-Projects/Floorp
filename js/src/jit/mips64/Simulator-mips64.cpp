@@ -237,7 +237,7 @@ class SimInstruction
     bool isForbiddenInBranchDelay() const;
     // Say if the instruction 'links'. e.g. jal, bal.
     bool isLinkingInstruction() const;
-    // Say if the instruction is a break or a trap.
+    // Say if the instruction is a debugger break/trap.
     bool isTrap() const;
 
   private:
@@ -323,13 +323,14 @@ SimInstruction::isTrap() const
     } else {
         switch (functionFieldRaw()) {
           case ff_break:
+            return instructionBits() != kCallRedirInstr;
           case ff_tge:
           case ff_tgeu:
           case ff_tlt:
           case ff_tltu:
           case ff_teq:
           case ff_tne:
-            return true;
+            return bits(15, 6) != kWasmTrapCode;
           default:
             return false;
         };
@@ -869,8 +870,7 @@ MipsDebugger::debug()
                               cmd, arg1, arg2);
             if ((strcmp(cmd, "si") == 0) || (strcmp(cmd, "stepi") == 0)) {
                 SimInstruction* instr = reinterpret_cast<SimInstruction*>(sim_->get_pc());
-                if (!(instr->isTrap()) ||
-                        instr->instructionBits() == kCallRedirInstr) {
+                if (!instr->isTrap()) {
                     sim_->instructionDecode(
                         reinterpret_cast<SimInstruction*>(sim_->get_pc()));
                 } else {
@@ -1624,6 +1624,34 @@ Simulator::handleWasmInterrupt()
     MOZ_CRASH("NIY");
 }
 
+bool
+Simulator::handleWasmTrapFault()
+{
+    if (!wasm::CodeExists)
+        return false;
+
+    JSContext* cx = TlsContext.get();
+    if (!cx->activation() || !cx->activation()->isJit())
+        return false;
+    JitActivation* act = cx->activation()->asJit();
+
+    void* pc = reinterpret_cast<void*>(get_pc());
+    uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
+
+    const wasm::CodeSegment* segment = wasm::LookupCodeSegment(pc);
+    if (!segment)
+        return false;
+
+    wasm::Trap trap;
+    wasm::BytecodeOffset bytecode;
+    if (!segment->code().lookupTrap(pc, &trap, &bytecode))
+        return false;
+
+    act->startWasmTrap(trap, bytecode.offset, pc, fp);
+    set_pc(int64_t(segment->trapCode()));
+    return true;
+}
+
 // The MIPS cannot do unaligned reads and writes.  On some MIPS platforms an
 // interrupt is caused.  On others it does a funky rotation thing.  For now we
 // simply disallow unaligned reads, but at some point we may want to move to
@@ -2132,6 +2160,16 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             handleStop(code, instr);
         }
     } else {
+        switch (func) {
+            case ff_tge:
+            case ff_tgeu:
+            case ff_tlt:
+            case ff_tltu:
+            case ff_teq:
+            case ff_tne:
+            if (instr->bits(15, 6) == kWasmTrapCode && handleWasmTrapFault())
+                return;
+        };
         // All remaining break_ codes, and all traps are handled here.
         MipsDebugger dbg(this);
         dbg.debug();

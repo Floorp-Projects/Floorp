@@ -1339,6 +1339,12 @@ MachExceptionHandler::install(JSContext* cx)
 
 #else  // If not Windows or Mac, assume Unix
 
+#ifdef __mips__
+    static const uint32_t kWasmTrapSignal = SIGFPE;
+#else
+    static const uint32_t kWasmTrapSignal = SIGILL;
+#endif
+
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
 static bool
@@ -1349,7 +1355,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     AutoSignalHandler ash;
 
-    MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == SIGILL);
+    MOZ_RELEASE_ASSERT(signum == SIGSEGV || signum == SIGBUS || signum == kWasmTrapSignal);
 
     CONTEXT* context = (CONTEXT*)ctx;
     uint8_t** ppc = ContextToPC(context);
@@ -1366,7 +1372,12 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     JitActivation* activation = TlsContext.get()->activation()->asJit();
     MOZ_ASSERT(activation->compartment() == instance->compartment());
 
-    if (signum == SIGILL) {
+    if (signum == kWasmTrapSignal) {
+        // Wasm traps for MIPS raise only integer overflow fp exception.
+#ifdef __mips__
+        if (info->si_code != FPE_INTOVF)
+            return false;
+#endif
         Trap trap;
         BytecodeOffset bytecode;
         if (!segment->code().lookupTrap(pc, &trap, &bytecode))
@@ -1416,7 +1427,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
 
 static struct sigaction sPrevSEGVHandler;
 static struct sigaction sPrevSIGBUSHandler;
-static struct sigaction sPrevSIGILLHandler;
+static struct sigaction sPrevWasmTrapHandler;
 
 static void
 WasmFaultHandler(int signum, siginfo_t* info, void* context)
@@ -1428,7 +1439,7 @@ WasmFaultHandler(int signum, siginfo_t* info, void* context)
     switch (signum) {
       case SIGSEGV: previousSignal = &sPrevSEGVHandler; break;
       case SIGBUS: previousSignal = &sPrevSIGBUSHandler; break;
-      case SIGILL: previousSignal = &sPrevSIGILLHandler; break;
+      case kWasmTrapSignal: previousSignal = &sPrevWasmTrapHandler; break;
     }
     MOZ_ASSERT(previousSignal);
 
@@ -1672,14 +1683,14 @@ ProcessHasSignalHandlers()
         MOZ_CRASH("unable to install sigbus handler");
 #  endif
 
-    // Install a SIGILL handler to handle the ud2 instructions that are emitted
-    // to implement wasm traps.
-    struct sigaction illegalHandler;
-    illegalHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-    illegalHandler.sa_sigaction = WasmFaultHandler;
-    sigemptyset(&illegalHandler.sa_mask);
-    if (sigaction(SIGILL, &illegalHandler, &sPrevSIGILLHandler))
-        MOZ_CRASH("unable to install segv handler");
+    // Install a handler to handle the instructions that are emitted to implement
+    // wasm traps.
+    struct sigaction wasmTrapHandler;
+    wasmTrapHandler.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
+    wasmTrapHandler.sa_sigaction = WasmFaultHandler;
+    sigemptyset(&wasmTrapHandler.sa_mask);
+    if (sigaction(kWasmTrapSignal, &wasmTrapHandler, &sPrevWasmTrapHandler))
+        MOZ_CRASH("unable to install wasm trap handler");
 # endif
 
     sHaveSignalHandlers = true;
