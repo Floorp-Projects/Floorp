@@ -44,7 +44,7 @@ SpecialPowers.pushPrefEnv({'set':[
     var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
     mm.loadFrameScript('data:,new ' + function ContentScriptScope() {
       let Cu = Components.utils;
-      Cu.import("resource://gre/modules/ctypes.jsm");
+      ChromeUtils.import("resource://gre/modules/ctypes.jsm");
       let crash = function() {
         let zero = new ctypes.intptr_t(8);
         let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));

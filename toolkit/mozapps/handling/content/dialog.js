@@ -33,8 +33,8 @@ var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 
 var dialog = {

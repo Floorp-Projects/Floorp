@@ -8,22 +8,22 @@ this.EXPORTED_SYMBOLS = ["BrowserUITelemetry"];
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+ChromeUtils.defineModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
+ChromeUtils.defineModuleGetter(this, "UITelemetry",
   "resource://gre/modules/UITelemetry.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+ChromeUtils.defineModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITour",
+ChromeUtils.defineModuleGetter(this, "UITour",
   "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyGetter(this, "Timer", function() {
   let timer = {};
-  Cu.import("resource://gre/modules/Timer.jsm", timer);
+  ChromeUtils.import("resource://gre/modules/Timer.jsm", timer);
   return timer;
 });
 

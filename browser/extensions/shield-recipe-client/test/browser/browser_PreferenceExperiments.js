@@ -1,10 +1,10 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Preferences.jsm", this);
-Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
 
 // Save ourselves some typing
 const {withMockExperiments} = PreferenceExperiments;

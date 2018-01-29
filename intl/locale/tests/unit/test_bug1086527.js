@@ -6,7 +6,7 @@
  * This unit test makes sure that PluralForm.get can be called from strict mode
  */
 
-Components.utils.import("resource://gre/modules/PluralForm.jsm");
+ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
 
 delete PluralForm.numForms;
 delete PluralForm.get;

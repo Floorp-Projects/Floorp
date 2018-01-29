@@ -9,8 +9,8 @@ const Cc = Components.classes;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
                                    "@mozilla.org/xul/xulstore;1",
                                    "nsIXULStore");
@@ -21,7 +21,7 @@ const BROWSER_DOCUMENT_URL        = "chrome://browser/content/browser.xul";
 const PREF_BOOKMARKS_ALREADY_DISPLAYED = "browser.policies.bookmarkBarWasDisplayed";
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm", {});
+  let { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
   return new ConsoleAPI({
     prefix: "Policies.jsm",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed

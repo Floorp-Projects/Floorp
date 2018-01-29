@@ -6,14 +6,14 @@
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gAppInfo = null;
 
 function createAppInfo(ID, name, version, platformVersion="1.0") {
   let tmp = {};
-  Cu.import("resource://testing-common/AppInfo.jsm", tmp);
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
   tmp.updateAppInfo({
     ID, name, version, platformVersion,
     crashReporter: true

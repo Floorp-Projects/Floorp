@@ -6,7 +6,7 @@ const {
   interfaces: Ci
 } = Components;
 
-Cu.import("resource://gre/modules/PromiseMessage.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
 
 this.ManifestIcons = {
 

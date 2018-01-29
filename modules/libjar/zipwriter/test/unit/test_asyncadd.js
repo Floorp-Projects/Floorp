@@ -4,7 +4,7 @@
  */
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Values taken from using zipinfo to list the test.zip contents
 var TESTS = [

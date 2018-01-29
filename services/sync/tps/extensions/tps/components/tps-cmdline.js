@@ -19,9 +19,9 @@ const nsIComponentRegistrar          = Components.interfaces.nsIComponentRegistr
 const nsISupportsString              = Components.interfaces.nsISupportsString;
 const nsIWindowWatcher               = Components.interfaces.nsIWindowWatcher;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 function TPSCmdLineHandler() {}
 
@@ -65,8 +65,8 @@ TPSCmdLineHandler.prototype = {
       /* Ignore the platform's online/offline status while running tests. */
       Services.io.manageOfflineStatus = false;
       Services.io.offline = false;
-      Components.utils.import("resource://tps/tps.jsm");
-      Components.utils.import("resource://tps/quit.js", TPS);
+      ChromeUtils.import("resource://tps/tps.jsm");
+      ChromeUtils.import("resource://tps/quit.js", TPS);
       TPS.RunTestPhase(uri, phase, logfile, options).catch(err => TPS.DumpError("TestPhase failed", err));
     };
     Services.obs.addObserver(onStartupFinished, "browser-delayed-startup-finished");

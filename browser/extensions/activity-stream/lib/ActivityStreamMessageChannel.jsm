@@ -5,10 +5,10 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource:///modules/AboutNewTab.jsm");
-Cu.import("resource://gre/modules/RemotePageManager.jsm");
+ChromeUtils.import("resource:///modules/AboutNewTab.jsm");
+ChromeUtils.import("resource://gre/modules/RemotePageManager.jsm");
 
-const {actionCreators: ac, actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {actionCreators: ac, actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
 const ABOUT_HOME_URL = "about:home";

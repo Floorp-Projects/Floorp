@@ -10,12 +10,12 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "ContentLinkHandler" ];
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
+ChromeUtils.defineModuleGetter(this, "Feeds",
   "resource:///modules/Feeds.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+ChromeUtils.defineModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
 const SIZES_TELEMETRY_ENUM = {

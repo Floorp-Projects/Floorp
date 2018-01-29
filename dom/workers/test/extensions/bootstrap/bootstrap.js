@@ -6,8 +6,8 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function testForExpectedSymbols(stage, data) {
   const expectedSymbols = [ "Worker", "ChromeWorker" ];

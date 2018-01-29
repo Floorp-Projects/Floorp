@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
+ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 add_task(async function test_unconfigured_no_badge() {
   const oldUIState = UIState.get;

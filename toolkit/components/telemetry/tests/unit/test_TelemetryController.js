@@ -8,16 +8,16 @@
  * checked in the second request.
  */
 
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/ClientID.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/TelemetryController.jsm", this);
-Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
-Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
-Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://gre/modules/ClientID.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 
 const PING_FORMAT_VERSION = 4;
 const DELETION_PING_TYPE = "deletion";

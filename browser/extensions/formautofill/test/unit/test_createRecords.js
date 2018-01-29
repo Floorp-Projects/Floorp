@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillHandler.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
 
 const TESTCASES = [
   {

@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Log.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/LogManager.jsm", this);
+ChromeUtils.import("resource://gre/modules/Log.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm", this);
 
 add_task(async function() {
   // Ensure that configuring the logger affects all generated loggers.

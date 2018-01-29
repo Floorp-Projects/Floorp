@@ -1,6 +1,6 @@
 "use strict";
 
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A trivial test ensuring that we can call osfile from xpcshell.

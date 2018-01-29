@@ -13,7 +13,7 @@ const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
 const GOOD_FINGERPRINT = "39:E7:2B:7A:5B:CF:37:78:F9:5D:4A:E0:53:2D:2F:3D:68:53:C5:60";
 const BAD_FINGERPRINT  = "40:E7:2B:7A:5B:CF:37:78:F9:5D:4A:E0:53:2D:2F:3D:68:53:C5:60";
 
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;

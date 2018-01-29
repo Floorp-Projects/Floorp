@@ -4,11 +4,11 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SearchSuggestionController",
-                                  "resource://gre/modules/SearchSuggestionController.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "SearchSuggestionController",
+                               "resource://gre/modules/SearchSuggestionController.jsm");
 
 /**
  * SuggestAutoComplete is a base class that implements nsIAutoCompleteSearch

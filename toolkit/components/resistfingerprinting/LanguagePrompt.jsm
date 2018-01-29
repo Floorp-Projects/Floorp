@@ -8,8 +8,8 @@ this.EXPORTED_SYMBOLS = ["LanguagePrompt"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const kPrefResistFingerprinting = "privacy.resistFingerprinting";
 const kPrefSpoofEnglish = "privacy.spoof_english";

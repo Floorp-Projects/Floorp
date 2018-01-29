@@ -6,14 +6,14 @@
 
 const {utils: Cu, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/TelemetryController.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm");
-Cu.import("resource://shield-recipe-client/lib/EventEmitter.jsm");
-Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryController.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/CleanupManager.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/EventEmitter.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 Cu.importGlobalProperties(["URL"]); /* globals URL */
 

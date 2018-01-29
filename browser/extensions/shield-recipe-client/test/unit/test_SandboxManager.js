@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm");
 
 // wrapAsync should wrap privileged Promises with Promises that are usable by
 // the sandbox.

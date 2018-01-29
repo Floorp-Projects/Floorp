@@ -4,8 +4,8 @@
 
 var {Constructor: CC} = Components;
 
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
+ChromeUtils.defineModuleGetter(this, "CommonUtils",
+                               "resource://services-common/utils.js");
 XPCOMUtils.defineLazyPreferenceGetter(this, "redirectDomain",
                                       "extensions.webextensions.identity.redirectDomain");
 

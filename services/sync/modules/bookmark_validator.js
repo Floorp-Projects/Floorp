@@ -6,18 +6,18 @@
 
 const { interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-common/utils.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Async",
-                                  "resource://services-common/async.js");
+ChromeUtils.defineModuleGetter(this, "Async",
+                               "resource://services-common/async.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
-                                  "resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesSyncUtils",
+                               "resource://gre/modules/PlacesSyncUtils.jsm");
 
 Cu.importGlobalProperties(["URLSearchParams"]);
 

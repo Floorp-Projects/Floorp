@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {utils: Cu, interfaces: Ci, classes: Cc, results: Cr} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "EnableDelayHelper",
-                                  "resource://gre/modules/SharedPromptUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "EnableDelayHelper",
+                               "resource://gre/modules/SharedPromptUtils.jsm");
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Helper Functions
@@ -98,12 +98,12 @@ const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const nsITimer = Components.interfaces.nsITimer;
 
 var downloadModule = {};
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
-Components.utils.import("resource://gre/modules/DownloadPaths.jsm");
-Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-Components.utils.import("resource://gre/modules/Downloads.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
+ChromeUtils.import("resource://gre/modules/DownloadPaths.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 /* ctor
  */

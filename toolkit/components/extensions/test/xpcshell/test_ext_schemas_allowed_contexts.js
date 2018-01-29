@@ -1,6 +1,6 @@
 "use strict";
 
-Components.utils.import("resource://gre/modules/Schemas.jsm");
+ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 const global = this;
 

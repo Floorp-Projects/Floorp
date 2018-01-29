@@ -30,26 +30,26 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/AsyncShutdown.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
+ChromeUtils.defineModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
+ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RunState",
+ChromeUtils.defineModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
+ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionWorker",
+ChromeUtils.defineModuleGetter(this, "SessionWorker",
   "resource:///modules/sessionstore/SessionWorker.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+ChromeUtils.defineModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";

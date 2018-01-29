@@ -5,10 +5,10 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/main.js");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-sync/main.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BookmarkRepairRequestor",
+ChromeUtils.defineModuleGetter(this, "BookmarkRepairRequestor",
   "resource://services-sync/bookmark_repair.js");
 
 this.EXPORTED_SYMBOLS = ["getRepairRequestor", "getAllRepairRequestors",
@@ -32,7 +32,7 @@ function _getRepairConstructor(which, collection) {
   }
   let [modname, symbolname] = which[collection];
   let ns = {};
-  Cu.import("resource://services-sync/" + modname, ns);
+  ChromeUtils.import("resource://services-sync/" + modname, ns);
   return ns[symbolname];
 }
 

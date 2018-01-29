@@ -6,9 +6,9 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const baseURL = "http://mochi.test:8888/browser/" +
   "toolkit/components/addoncompat/tests/browser/";

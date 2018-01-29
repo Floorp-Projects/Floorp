@@ -627,7 +627,7 @@ var gDidInitialSetUp = false;
 function setUp(aNoEngine) {
   return (async function() {
     if (!gDidInitialSetUp) {
-      Cu.import("resource:///modules/ContentSearch.jsm");
+      ChromeUtils.import("resource:///modules/ContentSearch.jsm");
       let originalOnMessageSearch = ContentSearch._onMessageSearch;
       let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
       ContentSearch._onMessageSearch = () => {};

@@ -5,12 +5,12 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["sendMessageToJava", "Messaging", "EventDispatcher"];
 
-XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+ChromeUtils.defineModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
                                    "@mozilla.org/uuid-generator;1",

@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
+ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 add_task(async function() {
   registerFakePath("ULibDir", do_get_file("Library/"));

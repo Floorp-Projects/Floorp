@@ -10,7 +10,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 this.Panel = function(panelElt, iframeURL) {
   this.p = panelElt;

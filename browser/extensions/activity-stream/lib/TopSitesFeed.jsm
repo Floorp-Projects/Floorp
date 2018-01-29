@@ -4,23 +4,23 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
-const {TippyTopProvider} = Cu.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
-const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
-const {Dedupe} = Cu.import("resource://activity-stream/common/Dedupe.jsm", {});
-const {shortURL} = Cu.import("resource://activity-stream/lib/ShortURL.jsm", {});
+const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+const {TippyTopProvider} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
+const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = ChromeUtils.import("resource://activity-stream/common/Reducers.jsm", {});
+const {Dedupe} = ChromeUtils.import("resource://activity-stream/common/Dedupe.jsm", {});
+const {shortURL} = ChromeUtils.import("resource://activity-stream/lib/ShortURL.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "filterAdult",
+ChromeUtils.defineModuleGetter(this, "filterAdult",
   "resource://activity-stream/lib/FilterAdult.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LinksCache",
+ChromeUtils.defineModuleGetter(this, "LinksCache",
   "resource://activity-stream/lib/LinksCache.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
+ChromeUtils.defineModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+ChromeUtils.defineModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 
 const DEFAULT_SITES_PREF = "default.sites";

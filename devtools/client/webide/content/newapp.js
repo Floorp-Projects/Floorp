@@ -16,8 +16,8 @@ const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const {getJSON} = require("devtools/client/shared/getjson");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 
 const TEMPLATES_URL = "devtools.webide.templatesURL";
 

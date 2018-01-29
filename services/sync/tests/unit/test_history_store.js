@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-sync/engines/history.js");
-Cu.import("resource://services-sync/service.js");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-sync/engines/history.js");
+ChromeUtils.import("resource://services-sync/service.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 const TIMESTAMP1 = (Date.now() - 103406528) * 1000;
 const TIMESTAMP2 = (Date.now() - 6592903) * 1000;

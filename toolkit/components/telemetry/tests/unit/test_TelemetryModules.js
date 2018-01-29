@@ -3,11 +3,11 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/TelemetryModules.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/ctypes.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/TelemetryModules.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const MAX_NAME_LENGTH = 64;
 

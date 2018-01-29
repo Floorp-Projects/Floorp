@@ -2,10 +2,10 @@
 
 const {
   LegacyExtensionContext,
-} = Cu.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
 function promiseAddonStartup(extension) {
-  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
   return new Promise((resolve) => {
     let listener = (evt, extensionInstance) => {
