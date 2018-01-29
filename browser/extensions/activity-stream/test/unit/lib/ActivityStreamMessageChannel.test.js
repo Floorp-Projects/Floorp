@@ -333,11 +333,11 @@ describe("ActivityStreamMessageChannel", () => {
       beforeEach(() => mm.onActionFromContent({type: "FOO"}, "foo"));
       it("should dispatch a SendToMain action", () => {
         assert.calledOnce(dispatch);
-        const action = dispatch.firstCall.args[0];
+        const [action] = dispatch.firstCall.args;
         assert.equal(action.type, "FOO", "action.type");
       });
       it("should have the right fromTarget", () => {
-        const action = dispatch.firstCall.args[0];
+        const [action] = dispatch.firstCall.args;
         assert.equal(action.meta.fromTarget, "foo", "meta.fromTarget");
       });
     });
