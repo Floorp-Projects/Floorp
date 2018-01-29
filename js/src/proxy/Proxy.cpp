@@ -686,7 +686,7 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
 {
     ProxyObject* proxy = &obj->as<ProxyObject>();
 
-    TraceEdge(trc, &proxy->shape_, "ProxyObject_shape");
+    TraceEdge(trc, proxy->shapePtr(), "ProxyObject_shape");
 
 #ifdef DEBUG
     if (TlsContext.get()->isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {

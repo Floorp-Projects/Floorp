@@ -413,7 +413,7 @@ enum class ShouldUpdateTypes {
 /*
  * NativeObject specifies the internal implementation of a native object.
  *
- * Native objects use ShapedObject::shape_ to record property information.  Two
+ * Native objects use ShapedObject::shape to record property information. Two
  * native objects with the same shape are guaranteed to have the same number of
  * fixed slots.
  *
@@ -476,8 +476,8 @@ class NativeObject : public ShapedObject
 
   public:
     Shape* lastProperty() const {
-        MOZ_ASSERT(shape_);
-        return shape_;
+        MOZ_ASSERT(shape());
+        return shape();
     }
 
     uint32_t propertyCount() const {
@@ -741,7 +741,7 @@ class NativeObject : public ShapedObject
      */
     bool hasAllFlags(js::BaseShape::Flag flags) const {
         MOZ_ASSERT(flags);
-        return shape_->hasAllObjectFlags(flags);
+        return shape()->hasAllObjectFlags(flags);
     }
     bool nonProxyIsExtensible() const {
         return !hasAllFlags(js::BaseShape::NOT_EXTENSIBLE);
