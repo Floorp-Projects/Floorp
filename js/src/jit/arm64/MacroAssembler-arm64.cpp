@@ -853,7 +853,7 @@ MacroAssembler::comment(const char* msg)
 // wasm support
 
 CodeOffset
-MacroAssembler::illegalInstruction()
+MacroAssembler::wasmTrapInstruction()
 {
     MOZ_CRASH("NYI");
 }
