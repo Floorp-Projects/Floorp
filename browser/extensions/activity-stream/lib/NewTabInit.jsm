@@ -15,6 +15,7 @@ this.NewTabInit = class NewTabInit {
   constructor() {
     this._repliedEarlyTabs = new Map();
   }
+
   reply(target) {
     // Skip this reply if we already replied to an early tab
     if (this._repliedEarlyTabs.get(target)) {
@@ -30,6 +31,7 @@ this.NewTabInit = class NewTabInit {
       this._repliedEarlyTabs.set(target, true);
     }
   }
+
   onAction(action) {
     switch (action.type) {
       case at.NEW_TAB_STATE_REQUEST:
