@@ -140,7 +140,6 @@ public:
   nsresult OnSelectionEvent(WidgetSelectionEvent* aEvent);
 
 protected:
-  nsPresContext* mPresContext;
   nsCOMPtr<nsIDocument> mDocument;
   // mSelection is typically normal selection but if OnQuerySelectedText()
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
