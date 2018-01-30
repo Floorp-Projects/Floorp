@@ -417,7 +417,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
     aValue);
 }
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
                                      const nsAString& aValue,
                                      nsIPrincipal* aSubjectPrincipal)
