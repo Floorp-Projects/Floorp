@@ -205,8 +205,17 @@ GPUProcessManager::EnsureGPUReady()
     }
   }
 
-  if (mGPUChild && mGPUChild->EnsureGPUReady()) {
-    return true;
+  if (mGPUChild) {
+    if (mGPUChild->EnsureGPUReady()) {
+      return true;
+    }
+
+    // If the initialization above fails, we likely have a GPU process teardown
+    // waiting in our message queue (or will soon). We need to ensure we don't
+    // restart it later because if we fail here, our callers assume they should
+    // fall back to a combined UI/GPU process. This also ensures our internal
+    // state is consistent (e.g. process token is reset).
+    DisableGPUProcess("Failed to initialize GPU process");
   }
 
   return false;
