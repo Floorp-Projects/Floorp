@@ -2301,19 +2301,6 @@ ToCanonicalSupports(nsINode* aPointer)
   { \
     *aResult = nsINode::HasChildNodes(); \
     return NS_OK; \
-  } \
-  NS_IMETHOD CloneNode(bool aDeep, uint8_t aArgc, nsIDOMNode** aResult) __VA_ARGS__ override \
-  { \
-    if (aArgc == 0) { \
-      aDeep = true; \
-    } \
-    mozilla::ErrorResult rv; \
-    nsCOMPtr<nsINode> clone = nsINode::CloneNode(aDeep, rv); \
-    if (rv.Failed()) { \
-      return rv.StealNSResult(); \
-    } \
-    *aResult = clone.forget().take()->AsDOMNode(); \
-    return NS_OK; \
   }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE \
