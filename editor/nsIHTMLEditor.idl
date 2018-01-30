@@ -361,8 +361,11 @@ interface nsIHTMLEditor : nsISupports
                                             in nsIDOMNode aNode);
 
   /**
-   * Return an element only if it is the only node selected,
-   *    such as an image, horizontal rule, etc.
+   * Return an Element only if it is the only node selected,
+   *    such as an image, horizontal rule, etc.  The return type is
+   *    nsISupports for implementation convenience; the returned object,
+   *    if not null, is always a DOM Element.
+   *
    * The exception is a link, which is more like a text attribute:
    *    The Anchor tag is returned if the selection is within the textnode(s)
    *    that are children of the "A" node.
@@ -378,7 +381,7 @@ interface nsIHTMLEditor : nsISupports
    *      (an "A" tag with the "name" attribute set)
    * @return the element as described above
    */
-  nsIDOMElement getSelectedElement(in AString aTagName);
+  nsISupports getSelectedElement(in AString aTagName);
 
   /**
    * Replace all children of <HEAD> with string of HTML source

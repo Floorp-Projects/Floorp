@@ -2334,7 +2334,7 @@ HTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName,
 
 NS_IMETHODIMP
 HTMLEditor::GetSelectedElement(const nsAString& aTagName,
-                               nsIDOMElement** aReturn)
+                               nsISupports** aReturn)
 {
   NS_ENSURE_TRUE(aReturn , NS_ERROR_NULL_POINTER);
 
@@ -2500,6 +2500,15 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     NS_ADDREF(*aReturn);
   }
   return NS_OK;
+}
+
+already_AddRefed<Element>
+HTMLEditor::GetSelectedElement(const nsAString& aTagName)
+{
+  nsCOMPtr<nsISupports> domElement;
+  GetSelectedElement(aTagName, getter_AddRefs(domElement));
+  nsCOMPtr<Element> element = do_QueryInterface(domElement);
+  return element.forget();
 }
 
 already_AddRefed<Element>
@@ -4458,13 +4467,8 @@ HTMLEditor::GetSelectionContainer()
       int32_t endOffset = range->EndOffset();
 
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        nsCOMPtr<nsIDOMElement> focusElement;
-        nsresult rv = GetSelectedElement(EmptyString(),
-                                         getter_AddRefs(focusElement));
-        NS_ENSURE_SUCCESS(rv, nullptr);
-        if (focusElement) {
-          focusNode = do_QueryInterface(focusElement);
-        }
+        MOZ_ASSERT(!focusNode, "How did it get set already?");
+        focusNode = GetSelectedElement(EmptyString());
       }
       if (!focusNode) {
         focusNode = range->GetCommonAncestor();
