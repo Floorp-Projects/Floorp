@@ -237,7 +237,7 @@ public:
   {
     return mIsAbsolutelyPositioningEnabled;
   }
-  nsresult GetAbsolutelyPositionedSelectionContainer(nsINode** aContainer);
+  already_AddRefed<Element> GetAbsolutelyPositionedSelectionContainer();
   Element* GetPositionedElement() const
   {
     return mAbsolutelyPositionedObject;
@@ -1110,6 +1110,12 @@ protected:
 
   nsresult SetAllResizersPosition();
 
+  /**
+   * Shows active resizers around an element's frame
+   * @param aResizedElement [IN] a DOM Element
+   */
+  nsresult ShowResizers(Element& aResizedElement);
+
   ManualNACPtr CreateResizer(int16_t aLocation, nsIContent& aParentContent);
   void SetAnonymousElementPosition(int32_t aX, int32_t aY,
                                    Element* aResizer);
@@ -1153,6 +1159,15 @@ protected:
 
   int32_t mGridSize;
 
+  /**
+   * shows a grabber attached to an arbitrary element. The grabber is an image
+   * positioned on the left hand side of the top border of the element. Draggin
+   * and dropping it allows to change the element's absolute position in the
+   * document. See chrome://editor/content/images/grabber.gif
+   * @param aElement [IN] the element
+   */
+  nsresult ShowGrabberOnElement(Element& aElement);
+
   ManualNACPtr CreateGrabber(nsIContent& aParentContent);
   nsresult StartMoving(nsIDOMElement* aHandle);
   nsresult SetFinalPosition(int32_t aX, int32_t aY);
@@ -1160,8 +1175,8 @@ protected:
   void SnapToGrid(int32_t& newX, int32_t& newY);
   nsresult GrabberClicked();
   nsresult EndMoving();
-  nsresult CheckPositionedElementBGandFG(nsIDOMElement* aElement,
-                                         nsAString& aReturn);
+  nsresult GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
+                                                        nsAString& aReturn);
 
   // inline table editing
   RefPtr<Element> mInlineEditedCell;

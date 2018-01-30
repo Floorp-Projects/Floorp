@@ -9,8 +9,8 @@
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
+#include "WorkerCommon.h"
 #include "WorkerPrivate.h"
-#include "Workers.h"
 
 #define FETCH_STREAM_FLAG 0
 

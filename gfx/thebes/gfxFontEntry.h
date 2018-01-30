@@ -99,6 +99,14 @@ private:
     gfxCharacterMap& operator=(const gfxCharacterMap&);
 };
 
+// Info on an individual font feature, for reporting available features
+// to DevTools via the GetFeatureInfo method.
+struct gfxFontFeatureInfo {
+    uint32_t mTag;
+    uint32_t mScript;
+    uint32_t mLangSys;
+};
+
 class gfxFontEntry {
 public:
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -357,6 +365,9 @@ public:
     virtual void GetVariationInstances(nsTArray<gfxFontVariationInstance>& aInstances)
     {
     }
+
+    // Get the font's list of features (if any) for DevTools support.
+    void GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo);
 
     nsString         mName;
     nsString         mFamilyName;

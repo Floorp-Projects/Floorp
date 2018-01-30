@@ -559,6 +559,8 @@
   </vbox>
 </groupbox>
 
+<!-- Firefox Data Collection and Use -->
+#ifdef MOZ_DATA_REPORTING
 <hbox id="dataCollectionCategory"
       class="subcategory"
       hidden="true"
@@ -566,8 +568,6 @@
   <label class="header-name" flex="1">&dataCollection.label;</label>
 </hbox>
 
-<!-- Firefox Data Collection and Use -->
-#ifdef MOZ_DATA_REPORTING
 <groupbox id="dataCollectionGroup" data-category="panePrivacy" hidden="true">
   <caption class="search-header" hidden="true"><label>&dataCollection.label;</label></caption>
 

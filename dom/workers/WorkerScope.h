@@ -7,12 +7,16 @@
 #ifndef mozilla_dom_workerscope_h__
 #define mozilla_dom_workerscope_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsWeakReference.h"
 #include "mozilla/dom/ImageBitmapSource.h"
+
+#ifdef XP_WIN
+#undef PostMessage
+#endif
 
 namespace mozilla {
 namespace dom {

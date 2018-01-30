@@ -7,10 +7,14 @@
 #ifndef mozilla_dom_workers_sharedworker_h__
 #define mozilla_dom_workers_sharedworker_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/DOMEventTargetHelper.h"
+
+#ifdef XP_WIN
+#undef PostMessage
+#endif
 
 class nsIDOMEvent;
 class nsPIDOMWindowInner;
