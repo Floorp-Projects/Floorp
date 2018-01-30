@@ -1430,8 +1430,6 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-
   CommitComposition();
   AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
@@ -1471,7 +1469,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       // Named Anchor is a special case,
       // We collapse to insert element BEFORE the selection
       // For all other tags, we insert AFTER the selection
-      if (HTMLEditUtils::IsNamedAnchor(node)) {
+      if (HTMLEditUtils::IsNamedAnchor(element)) {
         selection->CollapseToStart();
       } else {
         selection->CollapseToEnd();
@@ -1501,7 +1499,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
       // check for inserting a whole table at the end of a block. If so insert
       // a br after it.
-      if (HTMLEditUtils::IsTable(node) &&
+      if (HTMLEditUtils::IsTable(element) &&
           IsLastEditableChild(element)) {
         DebugOnly<bool> advanced = insertedPoint.AdvanceOffset();
         NS_WARNING_ASSERTION(advanced,
