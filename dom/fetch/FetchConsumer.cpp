@@ -10,10 +10,10 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIInputStreamPump.h"
 #include "nsProxyRelease.h"
+#include "WorkerCommon.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "Workers.h"
 
 namespace mozilla {
 namespace dom {

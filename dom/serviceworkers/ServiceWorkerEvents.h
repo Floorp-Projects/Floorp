@@ -15,7 +15,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 
 #include "nsProxyRelease.h"
 #include "nsContentUtils.h"

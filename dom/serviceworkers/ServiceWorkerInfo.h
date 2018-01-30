@@ -9,7 +9,7 @@
 
 #include "MainThreadUtils.h"
 #include "mozilla/dom/ServiceWorkerBinding.h" // For ServiceWorkerState
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 #include "nsIServiceWorkerManager.h"
 
 namespace mozilla {
