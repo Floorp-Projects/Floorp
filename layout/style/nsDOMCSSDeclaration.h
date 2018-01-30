@@ -63,9 +63,10 @@ public:
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
-  NS_IMETHOD GetCssText(nsAString & aCssText) override;
-  NS_IMETHOD SetCssText(const nsAString & aCssText,
-                        nsIPrincipal* aSubjectPrincipal) override;
+  void GetCssText(nsAString & aCssText) override;
+  void SetCssText(const nsAString & aCssText,
+                  nsIPrincipal* aSubjectPrincipal,
+                  mozilla::ErrorResult& aRv) override;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
                               nsAString & _retval) override;
   virtual already_AddRefed<mozilla::dom::CSSValue>
