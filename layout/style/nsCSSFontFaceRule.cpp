@@ -205,13 +205,12 @@ nsCSSFontFaceStyleDecl::RemoveProperty(const nsAString & propertyName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::GetPropertyPriority(const nsAString & propertyName,
                                             nsAString & aResult)
 {
   // font descriptors do not have priorities at present
   aResult.Truncate();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
