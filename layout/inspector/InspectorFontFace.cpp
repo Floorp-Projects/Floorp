@@ -259,5 +259,26 @@ InspectorFontFace::GetVariationInstances(
   }
 }
 
+void
+InspectorFontFace::GetFeatures(nsTArray<InspectorFontFeature>& aResult,
+                               ErrorResult& aRV)
+{
+  AutoTArray<gfxFontFeatureInfo,64> features;
+  mFontEntry->GetFeatureInfo(features);
+  if (features.IsEmpty()) {
+    return;
+  }
+  if (!aResult.SetCapacity(features.Length(), mozilla::fallible)) {
+    aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  for (auto& f : features) {
+    InspectorFontFeature& feat = *aResult.AppendElement();
+    AppendTagAsASCII(feat.mTag, f.mTag);
+    AppendTagAsASCII(feat.mScript, f.mScript);
+    AppendTagAsASCII(feat.mLanguageSystem, f.mLangSys);
+  }
+}
+
 } // namespace dom
 } // namespace mozilla
