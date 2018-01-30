@@ -213,16 +213,9 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
     let searchData = this.searchData = this.searchData || { };
     let selectorOnly = !!options.selectorOnly;
 
-    // Backwards compat.  Use selector only search if the new
-    // search functionality isn't implemented, or if the caller (tests)
-    // want it.
-    if (selectorOnly || !this.traits.textSearch) {
+    if (selectorOnly) {
       searchType = "selector";
-      if (this.traits.multiFrameQuerySelectorAll) {
-        nodeList = yield this.multiFrameQuerySelectorAll(query);
-      } else {
-        nodeList = yield this.querySelectorAll(this.rootNode, query);
-      }
+      nodeList = yield this.multiFrameQuerySelectorAll(query);
     } else {
       searchType = "search";
       let result = yield this._search(query, options);

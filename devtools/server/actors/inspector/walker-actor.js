@@ -189,18 +189,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
-      traits: {
-        // FF42+ Inspector starts managing the Walker, while the inspector also
-        // starts cleaning itself up automatically on client disconnection.
-        // So that there is no need to manually release the walker anymore.
-        autoReleased: true,
-        // XXX: It seems silly that we need to tell the front which capabilities
-        // its actor has in this way when the target can use actorHasMethod. If
-        // this was ported to the protocol (Bug 1157048) we could call that
-        // inside of custom front methods and not need to do traits for this.
-        multiFrameQuerySelectorAll: true,
-        textSearch: true,
-      }
+      traits: {}
     };
   },
 
