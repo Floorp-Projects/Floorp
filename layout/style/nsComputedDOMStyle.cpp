@@ -439,11 +439,9 @@ nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
   aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetLength(uint32_t* aLength)
+uint32_t
+nsComputedDOMStyle::Length()
 {
-  NS_PRECONDITION(aLength, "Null aLength!  Prepare to die!");
-
   uint32_t length = GetComputedStyleMap()->Length();
 
   // Make sure we have up to date style so that we can include custom
@@ -455,11 +453,9 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
       : StyleVariables()->mVariables.Count();
   }
 
-  *aLength = length;
-
   ClearCurrentStyleSources();
 
-  return NS_OK;
+  return length;
 }
 
 css::Rule*

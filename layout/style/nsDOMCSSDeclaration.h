@@ -43,8 +43,6 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
 
-  using nsICSSDeclaration::GetLength;
-
   /**
    * Method analogous to CSSStyleDeclaration::GetPropertyValue,
    * which obeys all the same restrictions.
@@ -81,7 +79,7 @@ public:
                          const nsAString& value,
                          const nsAString& priority,
                          nsIPrincipal* aSubjectPrincipal) override;
-  NS_IMETHOD GetLength(uint32_t *aLength) override;
+  uint32_t Length() override;
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
