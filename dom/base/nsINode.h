@@ -2314,18 +2314,6 @@ ToCanonicalSupports(nsINode* aPointer)
     } \
     *aResult = clone.forget().take()->AsDOMNode(); \
     return NS_OK; \
-  } \
-  NS_IMETHOD GetTextContent(nsAString& aTextContent) __VA_ARGS__ override \
-  { \
-    mozilla::ErrorResult rv; \
-    nsINode::GetTextContent(aTextContent, rv); \
-    return rv.StealNSResult(); \
-  } \
-  NS_IMETHOD SetTextContent(const nsAString& aTextContent) __VA_ARGS__ override \
-  { \
-    mozilla::ErrorResult rv; \
-    nsINode::SetTextContent(aTextContent, rv); \
-    return rv.StealNSResult(); \
   }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE \
