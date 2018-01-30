@@ -37,6 +37,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
@@ -236,7 +237,6 @@ function BrowserGlue() {
                                 return new DistributionCustomizer();
                               });
 
-  ChromeUtils.defineModuleGetter(this, "fxAccounts", "resource://gre/modules/FxAccounts.jsm");
   XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-service;1", "nsIAlertsService");
 
   this._init();
@@ -404,10 +404,6 @@ BrowserGlue.prototype = {
         } else if (data == "smart-bookmarks-init") {
           this.ensurePlacesDefaultQueriesInitialized().then(() => {
             Services.obs.notifyObservers(null, "test-smart-bookmarks-done");
-          });
-        } else if (data == "mock-fxaccounts") {
-          Object.defineProperty(this, "fxAccounts", {
-            value: subject.wrappedJSObject
           });
         } else if (data == "mock-alerts-service") {
           Object.defineProperty(this, "AlertsService", {
@@ -2647,7 +2643,7 @@ BrowserGlue.prototype = {
     let clickCallback = async (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
-      let url = await this.fxAccounts.promiseAccountsManageDevicesURI("device-connected-notification");
+      let url = await FxAccounts.config.promiseManageDevicesURI("device-connected-notification");
       let win = RecentWindow.getMostRecentBrowserWindow({private: false});
       if (!win) {
         this._openURLInNewWindow(url);

@@ -21,7 +21,7 @@ describe("SnippetsFeed", () => {
           this.reset = Promise.resolve(WEEK_IN_MS);
         }
       },
-      fxAccounts: {promiseAccountsSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}
+      FxAccounts: {config: {promiseSignUpURI: sandbox.stub().returns(Promise.resolve(signUpUrl))}}
     });
   });
   afterEach(() => {
