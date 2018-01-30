@@ -14,6 +14,9 @@ const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/conte
 
 var readerButton = document.getElementById("reader-mode-button");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
+
 add_task(async function test_reader_button() {
   registerCleanupFunction(function() {
     // Reset test prefs.
@@ -37,6 +40,15 @@ add_task(async function test_reader_button() {
 
   // Point tab to a test page that is reader-able.
   let url = TEST_PATH + "readerModeArticle.html";
+  // Set up favicon for testing.
+  let favicon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
+                "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+  info("Adding visit so we can add favicon");
+  await PlacesTestUtils.addVisits(new URL(url));
+  info("Adding favicon");
+  await PlacesTestUtils.addFavicons(new Map([[url, favicon]]));
+  info("Opening tab and waiting for reader mode button to show up");
+
   await promiseTabLoadEvent(tab, url);
   await promiseWaitForCondition(() => !readerButton.hidden);
 
@@ -50,6 +62,10 @@ add_task(async function test_reader_button() {
   let readerUrl = gBrowser.selectedBrowser.currentURI.spec;
   ok(readerUrl.startsWith("about:reader"), "about:reader loaded after clicking reader mode button");
   is_element_visible(readerButton, "Reader mode button is present on about:reader");
+  let iconEl = document.getAnonymousElementByAttribute(tab, "anonid", "tab-icon-image");
+  await promiseWaitForCondition(() => iconEl.getBoundingClientRect().width != 0);
+  is_element_visible(iconEl, "Favicon should be visible");
+  is(iconEl.src, favicon, "Correct favicon should be loaded");
 
   is(gURLBar.value, readerUrl, "gURLBar value is about:reader URL");
   is(gURLBar.textValue, url.substring("http://".length), "gURLBar is displaying original article URL");

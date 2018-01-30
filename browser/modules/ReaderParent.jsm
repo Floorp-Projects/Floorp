@@ -28,7 +28,7 @@ var ReaderParent = {
           faviconUrl.then(function onResolution(favicon) {
             message.target.messageManager.sendAsyncMessage("Reader:FaviconReturn", {
               url: message.data.url,
-              faviconUrl: favicon.path.replace(/^favicon:/, "")
+              faviconUrl: favicon.pathQueryRef.replace(/^favicon:/, "")
             });
           },
           function onRejection(reason) {
