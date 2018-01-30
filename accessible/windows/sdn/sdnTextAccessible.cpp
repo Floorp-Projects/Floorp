@@ -42,8 +42,7 @@ sdnTextAccessible::get_domText(BSTR __RPC_FAR* aText)
 
   nsAutoString nodeValue;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mAccessible->GetContent()));
-  DOMNode->GetNodeValue(nodeValue);
+  mAccessible->GetContent()->GetNodeValue(nodeValue);
   if (nodeValue.IsEmpty())
     return S_FALSE;
 

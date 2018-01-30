@@ -2316,11 +2316,16 @@ nsRange::CutContents(DocumentFragment** aFragment)
               rv = charData->SubstringData(startOffset, endOffset - startOffset,
                                            cutValue);
               NS_ENSURE_SUCCESS(rv, rv);
-              nsCOMPtr<nsIDOMNode> clone;
-              rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
-              NS_ENSURE_SUCCESS(rv, rv);
-              clone->SetNodeValue(cutValue);
-              nodeToResult = do_QueryInterface(clone);
+              ErrorResult err;
+              nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
+              clone->SetNodeValue(cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
+              nodeToResult = clone;
             }
 
             nsMutationGuard guard;
@@ -2344,11 +2349,16 @@ nsRange::CutContents(DocumentFragment** aFragment)
               nsAutoString cutValue;
               rv = charData->SubstringData(startOffset, dataLength, cutValue);
               NS_ENSURE_SUCCESS(rv, rv);
-              nsCOMPtr<nsIDOMNode> clone;
-              rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
-              NS_ENSURE_SUCCESS(rv, rv);
-              clone->SetNodeValue(cutValue);
-              nodeToResult = do_QueryInterface(clone);
+              ErrorResult err;
+              nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
+              clone->SetNodeValue(cutValue, err);
+              if (NS_WARN_IF(err.Failed())) {
+                return err.StealNSResult();
+              }
+              nodeToResult = clone;
             }
 
             nsMutationGuard guard;
@@ -2368,11 +2378,16 @@ nsRange::CutContents(DocumentFragment** aFragment)
           nsAutoString cutValue;
           rv = charData->SubstringData(0, endOffset, cutValue);
           NS_ENSURE_SUCCESS(rv, rv);
-          nsCOMPtr<nsIDOMNode> clone;
-          rv = charData->CloneNode(false, 1, getter_AddRefs(clone));
-          NS_ENSURE_SUCCESS(rv, rv);
-          clone->SetNodeValue(cutValue);
-          nodeToResult = do_QueryInterface(clone);
+          ErrorResult err;
+          nsCOMPtr<nsINode> clone = node->CloneNode(false, err);
+          if (NS_WARN_IF(err.Failed())) {
+            return err.StealNSResult();
+          }
+          clone->SetNodeValue(cutValue, err);
+          if (NS_WARN_IF(err.Failed())) {
+            return err.StealNSResult();
+          }
+          nodeToResult = clone;
         }
 
         nsMutationGuard guard;
