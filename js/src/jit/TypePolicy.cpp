@@ -99,7 +99,7 @@ ArithPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 }
 
 bool
-AllDoublePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
+AllDoublePolicy::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
     for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         MDefinition* in = ins->getOperand(i);
@@ -266,6 +266,37 @@ ComparePolicy::adjustInputs(TempAllocator& alloc, MInstruction* def)
     }
 
     return true;
+}
+
+bool
+SameValuePolicy::adjustInputs(TempAllocator& alloc, MInstruction* def)
+{
+    MOZ_ASSERT(def->isSameValue());
+    MSameValue* sameValue = def->toSameValue();
+    MIRType lhsType = sameValue->lhs()->type();
+    MIRType rhsType = sameValue->rhs()->type();
+
+    // If both operands are numbers, convert them to doubles.
+    if (IsNumberType(lhsType) && IsNumberType(rhsType))
+        return AllDoublePolicy::staticAdjustInputs(alloc, def);
+
+    // SameValue(Anything, Double) is specialized, so convert the rhs if it's
+    // not already a double.
+    if (lhsType == MIRType::Value && IsNumberType(rhsType)) {
+        if (rhsType != MIRType::Double) {
+            MInstruction* replace = MToDouble::New(alloc, sameValue->rhs());
+            def->block()->insertBefore(def, replace);
+            def->replaceOperand(1, replace);
+
+            if (!replace->typePolicy()->adjustInputs(alloc, replace))
+                return false;
+        }
+
+        return true;
+    }
+
+    // Otherwise box both operands.
+    return BoxInputsPolicy::staticAdjustInputs(alloc, def);
 }
 
 bool
@@ -1204,6 +1235,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(FilterTypeSetPolicy)                      \
     _(InstanceOfPolicy)                         \
     _(PowPolicy)                                \
+    _(SameValuePolicy)                          \
     _(SimdAllPolicy)                            \
     _(SimdSelectPolicy)                         \
     _(SimdShufflePolicy)                        \
