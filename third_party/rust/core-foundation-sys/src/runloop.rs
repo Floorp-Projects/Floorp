@@ -17,17 +17,17 @@ use string::CFStringRef;
 #[repr(C)]
 pub struct __CFRunLoop(c_void);
 
-pub type CFRunLoopRef = *const __CFRunLoop;
+pub type CFRunLoopRef = *mut __CFRunLoop;
 
 #[repr(C)]
 pub struct __CFRunLoopSource(c_void);
 
-pub type CFRunLoopSourceRef = *const __CFRunLoopSource;
+pub type CFRunLoopSourceRef = *mut __CFRunLoopSource;
 
 #[repr(C)]
 pub struct __CFRunLoopObserver(c_void);
 
-pub type CFRunLoopObserverRef = *const __CFRunLoopObserver;
+pub type CFRunLoopObserverRef = *mut __CFRunLoopObserver;
 
 // Reasons for CFRunLoopRunInMode() to Return
 pub const kCFRunLoopRunFinished: i32      = 1;
@@ -99,7 +99,7 @@ pub type CFRunLoopTimerCallBack = extern "C" fn (timer: CFRunLoopTimerRef, info:
 #[repr(C)]
 pub struct __CFRunLoopTimer;
 
-pub type CFRunLoopTimerRef = *const __CFRunLoopTimer;
+pub type CFRunLoopTimerRef = *mut __CFRunLoopTimer;
 
 extern {
     /*

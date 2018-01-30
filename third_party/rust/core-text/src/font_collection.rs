@@ -40,7 +40,9 @@ impl Drop for CTFontCollection {
     }
 }
 
-impl TCFType<CTFontCollectionRef> for CTFontCollection {
+impl TCFType for CTFontCollection {
+    type Ref = CTFontCollectionRef;
+
     #[inline]
     fn as_concrete_TypeRef(&self) -> CTFontCollectionRef {
         self.obj
@@ -75,7 +77,7 @@ impl TCFType<CTFontCollectionRef> for CTFontCollection {
 }
 
 impl CTFontCollection {
-    pub fn get_descriptors(&self) -> CFArray {
+    pub fn get_descriptors(&self) -> CFArray<CTFontDescriptor> {
         // surprise! this function follows the Get rule, despite being named *Create*.
         // So we have to addRef it to avoid CTFontCollection from double freeing it later.
         unsafe {
@@ -84,10 +86,10 @@ impl CTFontCollection {
     }
 }
 
-pub fn new_from_descriptors(descs: &CFArray) -> CTFontCollection {
+pub fn new_from_descriptors(descs: &CFArray<CTFontDescriptor>) -> CTFontCollection {
     unsafe {
         let key: CFString = TCFType::wrap_under_get_rule(kCTFontCollectionRemoveDuplicatesOption);
-        let value = CFNumber::from_i64(1);
+        let value = CFNumber::from(1i64);
         let options = CFDictionary::from_CFType_pairs(&[ (key.as_CFType(), value.as_CFType()) ]);
         let font_collection_ref =
             CTFontCollectionCreateWithFontDescriptors(descs.as_concrete_TypeRef(),
@@ -99,7 +101,7 @@ pub fn new_from_descriptors(descs: &CFArray) -> CTFontCollection {
 pub fn create_for_all_families() -> CTFontCollection {
     unsafe {
         let key: CFString = TCFType::wrap_under_get_rule(kCTFontCollectionRemoveDuplicatesOption);
-        let value = CFNumber::from_i64(1);
+        let value = CFNumber::from(1i64);
         let options = CFDictionary::from_CFType_pairs(&[ (key.as_CFType(), value.as_CFType()) ]);
         let font_collection_ref =
             CTFontCollectionCreateFromAvailableFonts(options.as_concrete_TypeRef());
@@ -126,14 +128,14 @@ pub fn create_for_family(family: &str) -> Option<CTFontCollection> {
         if matched_descs == ptr::null() {
             return None;
         }
-        let matched_descs: CFArray = TCFType::wrap_under_create_rule(matched_descs);
+        let matched_descs: CFArray<CTFontDescriptor> = TCFType::wrap_under_create_rule(matched_descs);
         // I suppose one doesn't even need the CTFontCollection object at this point.
         // But we stick descriptors into and out of it just to provide a nice wrapper API.
         Some(new_from_descriptors(&matched_descs))
     }
 }
 
-pub fn get_family_names() -> CFArray {
+pub fn get_family_names() -> CFArray<CFString> {
     unsafe {
         TCFType::wrap_under_create_rule(CTFontManagerCopyAvailableFontFamilyNames())
     }

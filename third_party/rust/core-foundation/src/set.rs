@@ -10,30 +10,23 @@
 //! An immutable bag of elements.
 
 pub use core_foundation_sys::set::*;
-use core_foundation_sys::base::CFRelease;
 use core_foundation_sys::base::{CFTypeRef, kCFAllocatorDefault};
 
 use base::{CFIndexConvertible, TCFType};
 
 use std::mem;
 
-/// An immutable bag of elements.
-pub struct CFSet(CFSetRef);
 
-impl Drop for CFSet {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// An immutable bag of elements.
+    CFSet, CFSetRef
 }
-
 impl_TCFType!(CFSet, CFSetRef, CFSetGetTypeID);
 impl_CFTypeDescription!(CFSet);
 
 impl CFSet {
     /// Creates a new set from a list of `CFType` instances.
-    pub fn from_slice<R, T>(elems: &[T]) -> CFSet where T: TCFType<R> {
+    pub fn from_slice<T>(elems: &[T]) -> CFSet where T: TCFType {
         unsafe {
             let elems: Vec<CFTypeRef> = elems.iter().map(|elem| elem.as_CFTypeRef()).collect();
             let set_ref = CFSetCreate(kCFAllocatorDefault,
