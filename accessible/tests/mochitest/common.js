@@ -47,7 +47,6 @@ const nsIObserverService = Components.interfaces.nsIObserverService;
 const nsIDOMDocument = Components.interfaces.nsIDOMDocument;
 const nsIDOMEvent = Components.interfaces.nsIDOMEvent;
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
-const nsIDOMHTMLElement = Components.interfaces.nsIDOMHTMLElement;
 const nsIDOMWindow = Components.interfaces.nsIDOMWindow;
 const nsIDOMXULElement = Components.interfaces.nsIDOMXULElement;
 

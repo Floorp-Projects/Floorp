@@ -12,7 +12,6 @@
 #include "nsAttrName.h"
 #include "nsCoreUtils.h"
 #include "nsIAccessibleTypes.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsICSSDeclaration.h"
 #include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
