@@ -5,7 +5,7 @@
 "use strict";
 
 let {FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {});
-ChromeUtils.import("resource://formautofill/ProfileStorage.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
 
 add_task(async function test_activeStatus_init() {
   let formAutofillParent = new FormAutofillParent();

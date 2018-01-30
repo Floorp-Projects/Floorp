@@ -60,7 +60,7 @@ function FormAutofillParent() {
   // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
   // Once storage is loaded we need to update saved field names and inform content processes.
   XPCOMUtils.defineLazyGetter(this, "profileStorage", () => {
-    let {profileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
+    let {profileStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
     log.debug("Loading profileStorage");
 
     profileStorage.initialize().then(() => {
@@ -96,7 +96,7 @@ FormAutofillParent.prototype = {
   },
 
   /**
-   * Initializes ProfileStorage and registers the message handler.
+   * Initializes FormAutofillStorage and registers the message handler.
    */
   async init() {
     if (this._initialized) {
