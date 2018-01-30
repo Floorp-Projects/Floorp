@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DebugCommand, DeviceIntPoint};
+use api::{ApiMsg, BuiltDisplayList, DebugCommand, DeviceIntPoint};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
@@ -11,9 +11,9 @@ use api::{IdNamespace, PipelineId, RenderNotifier, WorldPoint};
 use api::channel::{MsgReceiver, MsgSender, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "capture")]
+use api::CaptureBits;
+#[cfg(feature = "replay")]
 use api::CapturedDocument;
-#[cfg(feature = "capture")]
-use capture::{CaptureConfig, ExternalCaptureImage};
 #[cfg(feature = "debugger")]
 use debug_server;
 use frame::FrameContext;
@@ -21,27 +21,27 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
-use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
-#[cfg(feature = "capture")]
-use resource_cache::{PlainCacheOwn, PlainResources};
+#[cfg(feature = "replay")]
+use resource_cache::PlainCacheOwn;
+#[cfg(any(feature = "capture", feature = "replay"))]
+use resource_cache::PlainResources;
 use scene::Scene;
 #[cfg(feature = "serialize")]
 use serde::{Serialize, Deserialize};
 #[cfg(feature = "debugger")]
 use serde_json;
-#[cfg(feature = "capture")]
+#[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
-use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::u32;
-use texture_cache::TextureCache;
 use time::precise_time_ns;
 
 
-#[cfg_attr(feature = "capture", derive(Clone, Serialize, Deserialize))]
+#[cfg_attr(feature = "capture", derive(Clone, Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct DocumentView {
     window_size: DeviceUintSize,
     inner_rect: DeviceUintRect,
@@ -159,6 +159,7 @@ struct DocumentOps {
     scroll: bool,
     build: bool,
     render: bool,
+    composite: bool,
     queries: Vec<HitTestQuery>,
 }
 
@@ -168,6 +169,7 @@ impl DocumentOps {
             scroll: false,
             build: false,
             render: false,
+            composite: false,
             queries: vec![],
         }
     }
@@ -183,6 +185,7 @@ impl DocumentOps {
         self.scroll = self.scroll || other.scroll;
         self.build = self.build || other.build;
         self.render = self.render || other.render;
+        self.composite = self.composite || other.composite;
         self.queries.extend(other.queries.drain(..));
     }
 }
@@ -190,8 +193,9 @@ impl DocumentOps {
 /// The unique id for WR resource identification.
 static NEXT_NAMESPACE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
-#[cfg(feature = "capture")]
-#[derive(Serialize, Deserialize)]
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderBackend {
     default_device_pixel_ratio: f32,
     enable_render_on_scroll: bool,
@@ -230,18 +234,14 @@ impl RenderBackend {
         payload_tx: PayloadSender,
         result_tx: Sender<ResultMsg>,
         default_device_pixel_ratio: f32,
-        texture_cache: TextureCache,
-        workers: Arc<ThreadPool>,
+        resource_cache: ResourceCache,
         notifier: Box<RenderNotifier>,
         frame_config: FrameBuilderConfig,
         recorder: Option<Box<ApiRecordingReceiver>>,
-        blob_image_renderer: Option<Box<BlobImageRenderer>>,
         enable_render_on_scroll: bool,
     ) -> RenderBackend {
         // The namespace_id should start from 1.
         NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
-
-        let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
 
         RenderBackend {
             api_rx,
@@ -255,7 +255,6 @@ impl RenderBackend {
             documents: FastHashMap::default(),
             notifier,
             recorder,
-
             enable_render_on_scroll,
         }
     }
@@ -408,10 +407,16 @@ impl RenderBackend {
                 DocumentOps {
                     scroll: true,
                     render: should_render,
+                    composite: should_render,
                     ..DocumentOps::nop()
                 }
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
+                // note that we render without compositing here; we only
+                // need to render so we have an updated clip-scroll tree
+                // for handling the hit-test queries. Doing a composite
+                // here (without having being explicitly requested) causes
+                // Gecko assertion failures.
                 DocumentOps {
                     render: doc.render_on_hittest,
                     queries: vec![(pipeline_id, point, flags, tx)],
@@ -427,6 +432,7 @@ impl RenderBackend {
                 DocumentOps {
                     scroll: true,
                     render: should_render,
+                    composite: should_render,
                     ..DocumentOps::nop()
                 }
             }
@@ -435,9 +441,12 @@ impl RenderBackend {
 
                 doc.frame_ctx.tick_scrolling_bounce_animations();
 
+                let should_render = doc.render_on_scroll == Some(true);
+
                 DocumentOps {
                     scroll: true,
-                    render: doc.render_on_scroll == Some(true),
+                    render: should_render,
+                    composite: should_render,
                     ..DocumentOps::nop()
                 }
             }
@@ -469,6 +478,7 @@ impl RenderBackend {
 
                 if doc.scene.root_pipeline_id.is_some() {
                     op.render = true;
+                    op.composite = true;
                 }
 
                 op
@@ -575,11 +585,10 @@ impl RenderBackend {
                         }
                         #[cfg(feature = "capture")]
                         DebugCommand::SaveCapture(root, bits) => {
-                            let config = CaptureConfig::new(root, bits);
-                            let deferred = self.save_capture(&config, &mut profile_counters);
-                            ResultMsg::DebugOutput(DebugOutput::SaveCapture(config, deferred))
+                            let output = self.save_capture(root, bits, &mut profile_counters);
+                            ResultMsg::DebugOutput(output)
                         },
-                        #[cfg(feature = "capture")]
+                        #[cfg(feature = "replay")]
                         DebugCommand::LoadCapture(root, tx) => {
                             NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
                             frame_counter += 1;
@@ -656,6 +665,8 @@ impl RenderBackend {
             );
         }
 
+        debug_assert!(op.render || !op.composite);
+
         let doc = self.documents.get_mut(&document_id).unwrap();
 
         if op.build {
@@ -703,7 +714,7 @@ impl RenderBackend {
         }
 
         if op.render || op.scroll {
-            self.notifier.new_document_ready(document_id, op.scroll, op.render);
+            self.notifier.new_document_ready(document_id, op.scroll, op.composite);
         }
 
         for (pipeline_id, point, flags, tx) in op.queries {
@@ -841,18 +852,20 @@ impl ToDebugString for SpecificDisplayItem {
     }
 }
 
-#[cfg(feature = "capture")]
 impl RenderBackend {
+    #[cfg(feature = "capture")]
     // Note: the mutable `self` is only needed here for resolving blob images
     fn save_capture(
         &mut self,
-        config: &CaptureConfig,
+        root: PathBuf,
+        bits: CaptureBits,
         profile_counters: &mut BackendProfileCounters,
-    ) -> Vec<ExternalCaptureImage> {
-        use api::CaptureBits;
+    ) -> DebugOutput {
+        use capture::CaptureConfig;
 
-        info!("capture: saving {:?}", config.root);
-        let (resources, deferred) = self.resource_cache.save_capture(&config.root);
+        info!("capture: saving {:?}", root);
+        let (resources, deferred) = self.resource_cache.save_capture(&root);
+        let config = CaptureConfig::new(root, bits);
 
         for (&id, doc) in &mut self.documents {
             info!("\tdocument {:?}", id);
@@ -889,14 +902,16 @@ impl RenderBackend {
         config.serialize(&backend, "backend");
 
         if config.bits.contains(CaptureBits::FRAME) {
-            // After we rendered the frames, there are pending updates.
-            // Instead of serializing them, we are going to make sure
+            // After we rendered the frames, there are pending updates to both
+            // GPU cache and resources. Instead of serializing them, we are going to make sure
             // they are applied on the `Renderer` side.
-            let msg = ResultMsg::UpdateResources {
+            let msg_update_gpu_cache = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
+            self.result_tx.send(msg_update_gpu_cache).unwrap();
+            let msg_update_resources = ResultMsg::UpdateResources {
                 updates: self.resource_cache.pending_updates(),
                 cancel_rendering: false,
             };
-            self.result_tx.send(msg).unwrap();
+            self.result_tx.send(msg_update_resources).unwrap();
             // Save the texture/glyph/image caches.
             info!("\tresource cache");
             let caches = self.resource_cache.save_caches(&config.root);
@@ -905,14 +920,16 @@ impl RenderBackend {
             config.serialize(&self.gpu_cache, "gpu_cache");
         }
 
-        deferred
+        DebugOutput::SaveCapture(config, deferred)
     }
 
+    #[cfg(feature = "replay")]
     fn load_capture(
         &mut self,
         root: &PathBuf,
         profile_counters: &mut BackendProfileCounters,
     ) {
+        use capture::CaptureConfig;
         use tiling::Frame;
 
         info!("capture: loading {:?}", root);

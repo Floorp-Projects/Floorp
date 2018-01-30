@@ -18,7 +18,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 #[cfg(feature = "capture")]
-use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
+use capture::{CaptureConfig, ExternalCaptureImage};
+#[cfg(feature = "replay")]
+use capture::PlainExternalImage;
 use tiling;
 
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FxHasher>>;
@@ -34,11 +36,13 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 // map from cache texture ID to native texture.
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheTextureId(pub usize);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderPassIndex(pub usize);
 
 // Represents the source for a texture.
@@ -48,7 +52,8 @@ pub struct RenderPassIndex(pub usize);
 // native texture ID.
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum SourceTexture {
     Invalid,
     TextureCache(CacheTextureId),
@@ -65,7 +70,8 @@ pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
 pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetInfo {
     pub has_depth: bool,
 }
@@ -154,7 +160,7 @@ pub enum DebugOutput {
     FetchClipScrollTree(String),
     #[cfg(feature = "capture")]
     SaveCapture(CaptureConfig, Vec<ExternalCaptureImage>),
-    #[cfg(feature = "capture")]
+    #[cfg(feature = "replay")]
     LoadCapture(PathBuf, Vec<PlainExternalImage>),
 }
 
@@ -173,4 +179,17 @@ pub enum ResultMsg {
         TextureUpdateList,
         BackendProfileCounters,
     ),
+}
+
+#[derive(Clone, Debug)]
+pub struct ResourceCacheError {
+    description: String,
+}
+
+impl ResourceCacheError {
+    pub fn new(description: String) -> ResourceCacheError {
+        ResourceCacheError {
+            description,
+        }
+    }
 }

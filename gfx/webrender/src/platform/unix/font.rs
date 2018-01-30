@@ -18,7 +18,7 @@ use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHIN
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
-use internal_types::FastHashMap;
+use internal_types::{FastHashMap, ResourceCacheError};
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
 use std::ffi::CString;
@@ -138,7 +138,7 @@ fn flip_bitmap_y(bitmap: &mut [u8], width: usize, height: usize) {
 }
 
 impl FontContext {
-    pub fn new() -> FontContext {
+    pub fn new() -> Result<FontContext, ResourceCacheError> {
         let mut lib: FT_Library = ptr::null_mut();
 
         // Using an LCD filter may add one full pixel to each side if support is built in.
@@ -148,19 +148,21 @@ impl FontContext {
         // subpixel AA is used.
         let lcd_extra_pixels = 1;
 
-        unsafe {
-            let result = FT_Init_FreeType(&mut lib);
-            assert!(
-                result.succeeded(),
-                "Unable to initialize FreeType library {:?}",
-                result
-            );
-        }
+        let result = unsafe {
+            FT_Init_FreeType(&mut lib)
+        };
 
-        FontContext {
-            lib,
-            faces: FastHashMap::default(),
-            lcd_extra_pixels,
+        if result.succeeded() {
+            Ok(FontContext {
+                lib,
+                faces: FastHashMap::default(),
+                lcd_extra_pixels,
+            })
+        } else {
+            // TODO(gw): Provide detailed error values.
+            Err(ResourceCacheError::new(
+                format!("Failed to initialize FreeType - {}", result.0)
+            ))
         }
     }
 

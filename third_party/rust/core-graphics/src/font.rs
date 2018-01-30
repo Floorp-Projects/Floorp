@@ -7,7 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use std::ptr;
 use core_foundation::base::{CFRelease, CFRetain, CFTypeID, TCFType};
+use core_foundation::array::{CFArray, CFArrayRef};
+use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::string::{CFString, CFStringRef};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use data_provider::CGDataProvider;
@@ -104,6 +107,21 @@ impl CGFont {
             CGFontGetUnitsPerEm(self.as_ptr())
         }
     }
+
+    pub fn copy_table_tags(&self) -> CFArray<u32> {
+        unsafe {
+            TCFType::wrap_under_create_rule(CGFontCopyTableTags(self.as_ptr()))
+        }
+    }
+
+    pub fn copy_table_for_tag(&self, tag: u32) -> Option<CFData> {
+        let data_ref = unsafe { CGFontCopyTableForTag(self.as_ptr(), tag) };
+        if data_ref != ptr::null() {
+            Some(unsafe { TCFType::wrap_under_create_rule(data_ref) })
+        } else {
+            None
+        }
+    }
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -132,4 +150,7 @@ extern {
                               advances: *mut c_int)
                               -> bool;
     fn CGFontGetUnitsPerEm(font: ::sys::CGFontRef) -> c_int;
+
+    fn CGFontCopyTableTags(font: ::sys::CGFontRef) -> CFArrayRef;
+    fn CGFontCopyTableForTag(font: ::sys::CGFontRef, tag: u32) -> CFDataRef;
 }

@@ -38,7 +38,7 @@ pub type CFMessagePortInvalidationCallBack = Option<
 
 #[repr(C)]
 pub struct __CFMessagePort(c_void);
-pub type CFMessagePortRef = *const __CFMessagePort;
+pub type CFMessagePortRef = *mut __CFMessagePort;
 
 extern {
     /*

@@ -14,7 +14,7 @@ log = "0.3"
 
 [dependencies.webrender]
 path = "../webrender"
-version = "0.56.1"
+version = "0.57.0"
 default-features = false
 features = ["capture"]
 
@@ -22,7 +22,7 @@ features = ["capture"]
 dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.4.6"
-core-graphics = "0.12.3"
+core-foundation = "0.5"
+core-graphics = "0.13"
 foreign-types = "0.3.0"
 

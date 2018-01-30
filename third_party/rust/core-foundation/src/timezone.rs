@@ -10,7 +10,7 @@
 //! Core Foundation time zone objects.
 
 pub use core_foundation_sys::timezone::*;
-use core_foundation_sys::base::{CFRelease, kCFAllocatorDefault};
+use core_foundation_sys::base::kCFAllocatorDefault;
 
 use base::TCFType;
 use date::{CFDate, CFTimeInterval};
@@ -18,17 +18,11 @@ use date::{CFDate, CFTimeInterval};
 #[cfg(feature = "with-chrono")]
 use chrono::{FixedOffset, NaiveDateTime};
 
-/// A time zone.
-pub struct CFTimeZone(CFTimeZoneRef);
 
-impl Drop for CFTimeZone {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// A time zone.
+    CFTimeZone, CFTimeZoneRef
 }
-
 impl_TCFType!(CFTimeZone, CFTimeZoneRef, CFTimeZoneGetTypeID);
 impl_CFTypeDescription!(CFTimeZone);
 

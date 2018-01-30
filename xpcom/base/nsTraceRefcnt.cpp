@@ -34,6 +34,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/UniquePtr.h"
 
 #include <string>
 #include <vector>
@@ -83,6 +84,7 @@ static PLHashTable* gObjectsToLog;
 static PLHashTable* gSerialNumbers;
 static intptr_t gNextSerialNumber;
 static bool gDumpedStatistics = false;
+static bool gLogJSStacks = false;
 
 // By default, debug builds only do bloat logging. Bloat logging
 // only tries to record when an object is created or destroyed, so we
@@ -133,6 +135,27 @@ struct SerialNumberRecord
   // XPCOM equivalents do leak-checking, and if you try to leak-check while
   // leak-checking, you're gonna have a bad time.
   std::vector<void*> allocationStack;
+  mozilla::UniquePtr<char[]> jsStack;
+
+  void SaveJSStack() {
+    // If this thread isn't running JS, there's nothing to do.
+    if (!CycleCollectedJSContext::Get()) {
+      return;
+    }
+
+    JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+    if (!cx) {
+      return;
+    }
+
+    JS::UniqueChars chars = xpc_PrintJSStack(cx,
+                                             /*showArgs=*/ false,
+                                             /*showLocals=*/ false,
+                                             /*showThisProps=*/ false);
+    size_t len = strlen(chars.get());
+    jsStack = MakeUnique<char[]>(len + 1);
+    memcpy(jsStack.get(), chars.get(), len + 1);
+  }
 };
 
 struct nsTraceRefcntStats
@@ -472,6 +495,15 @@ DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
       fprintf(outputFile, "%s\n", buf);
     }
   }
+
+  if (gLogJSStacks) {
+    if (record->jsStack) {
+      fprintf(outputFile, "JS allocation stack:\n%s\n", record->jsStack.get());
+    } else {
+      fprintf(outputFile, "There is no JS context on the stack.\n");
+    }
+  }
+
   return HT_ENUMERATE_NEXT;
 }
 
@@ -587,6 +619,9 @@ GetSerialNumber(void* aPtr, bool aCreate)
   WalkTheStackSavingLocations(record->allocationStack);
   PL_HashTableRawAdd(gSerialNumbers, hep, HashNumber(aPtr),
                      aPtr, static_cast<void*>(record));
+  if (gLogJSStacks) {
+    record->SaveJSStack();
+  }
   return gNextSerialNumber;
 }
 
@@ -829,6 +864,10 @@ InitTraceLog()
     }
   }
 
+  if (getenv("XPCOM_MEM_LOG_JS_STACK")) {
+    fprintf(stdout, "### XPCOM_MEM_LOG_JS_STACK defined\n");
+    gLogJSStacks = true;
+  }
 
   if (gBloatLog) {
     gLogging = OnlyBloatLogging;

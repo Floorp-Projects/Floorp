@@ -742,7 +742,6 @@ html|span.ac-emphasize-text-url {
    */
   @media (-moz-gtk-csd-minimize-button) {
     #titlebar-min {
-      list-style-image: url("moz-icon://stock/window-minimize-symbolic");
       -moz-appearance: -moz-window-button-minimize;
     }
   }
@@ -754,11 +753,9 @@ html|span.ac-emphasize-text-url {
 
   @media (-moz-gtk-csd-maximize-button) {
     #titlebar-max {
-      list-style-image: url("moz-icon://stock/window-maximize-symbolic");
       -moz-appearance: -moz-window-button-maximize;
     }
     :root[sizemode="maximized"] #titlebar-max {
-      list-style-image: url("moz-icon://stock/window-restore-symbolic");
       -moz-appearance: -moz-window-button-restore;
     }
   }
@@ -770,7 +767,6 @@ html|span.ac-emphasize-text-url {
 
   @media (-moz-gtk-csd-close-button) {
     #titlebar-close {
-      list-style-image: url("moz-icon://stock/window-close-symbolic");
       -moz-appearance: -moz-window-button-close;
     }
   }

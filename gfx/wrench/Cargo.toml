@@ -1,6 +1,6 @@
 [package]
 name = "wrench"
-version = "0.2.6"
+version = "0.3.0"
 authors = ["Vladimir Vukicevic <vladimir@pobox.com>"]
 build = "build.rs"
 license = "MPL-2.0"
@@ -12,7 +12,7 @@ byteorder = "1.0"
 env_logger = { version = "0.4", optional = true }
 euclid = "0.16"
 gleam = "0.4"
-servo-glutin = "0.13"
+servo-glutin = "0.14"
 app_units = "0.6"
 image = "0.17"
 clap = { version = "2", features = ["yaml"] }
@@ -25,13 +25,13 @@ time = "0.1"
 crossbeam = "0.2"
 osmesa-sys = { version = "0.1.2", optional = true }
 osmesa-src = { git = "https://github.com/servo/osmesa-src", optional = true }
-webrender = {path = "../webrender", features=["capture","debugger","png","profiler"]}
-webrender_api = {path = "../webrender_api", features=["debug-serialization"]}
+webrender = {path = "../webrender", features=["capture","replay","debugger","png","profiler"]}
+webrender_api = {path = "../webrender_api", features=["serialize","deserialize"]}
 serde = {version = "1.0", features = ["derive"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-graphics = "0.12.4"
-core-foundation = "0.4"
+core-graphics = "0.13"
+core-foundation = "0.5"
 
 [features]
 headless = [ "osmesa-sys", "osmesa-src" ]
@@ -41,4 +41,4 @@ logging = [ "env_logger" ]
 dwrote = "0.4.1"
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
-font-loader = "0.5"
+font-loader = "0.6"

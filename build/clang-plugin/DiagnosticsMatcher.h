@@ -14,7 +14,7 @@ public:
   ASTConsumerPtr makeASTConsumer() { return AstMatcher.newASTConsumer(); }
 
 private:
-#define CHECK(cls, name) cls cls##_;
+#define CHECK(cls, name) cls cls##_ { name };
 #include "Checks.inc"
 #undef CHECK
   MatchFinder AstMatcher;

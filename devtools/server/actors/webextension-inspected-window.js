@@ -11,7 +11,7 @@ const {Ci, Cu, Cr} = require("chrome");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 
-loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspector").NodeActor, true);
+loader.lazyGetter(this, "NodeActor", () => require("devtools/server/actors/inspector/node-actor").NodeActor, true);
 
 const {
   XPCOMUtils,
