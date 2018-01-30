@@ -376,8 +376,7 @@ interface nsIHTMLEditor : nsISupports
    *      (an "A" tag with the "href" attribute set)
    *    Use "anchor" or "namedanchor" to get a named anchor node
    *      (an "A" tag with the "name" attribute set)
-   * @return          NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-   *                  (passes NS_SUCCEEDED macro)
+   * @return the element as described above
    */
   nsIDOMElement getSelectedElement(in AString aTagName);
 
