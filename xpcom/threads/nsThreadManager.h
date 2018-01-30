@@ -39,12 +39,8 @@ public:
   void UnregisterCurrentThread(nsThread& aThread);
 
   // Returns the current thread.  Returns null if OOM or if ThreadManager isn't
-  // initialized.  Creates the nsThread if one does not exist yet.
+  // initialized.
   nsThread* GetCurrentThread();
-
-  // Returns true iff the currently running thread has an nsThread associated
-  // with it (ie; whether this is a thread that we can dispatch runnables to).
-  bool IsNSThread() const;
 
   // CreateCurrentThread sets up an nsThread for the current thread. It uses the
   // event queue and main thread flags passed in. It should only be called once

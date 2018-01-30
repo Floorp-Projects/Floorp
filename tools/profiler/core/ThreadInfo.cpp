@@ -22,12 +22,10 @@
 ThreadInfo::ThreadInfo(const char* aName,
                        int aThreadId,
                        bool aIsMainThread,
-                       nsIEventTarget* aThread,
                        void* aStackTop)
   : mName(strdup(aName))
   , mRegisterTime(TimeStamp::Now())
   , mIsMainThread(aIsMainThread)
-  , mThread(aThread)
   , mRacyInfo(mozilla::MakeNotNull<RacyThreadInfo*>(aThreadId))
   , mPlatformData(AllocPlatformData(aThreadId))
   , mStackTop(aStackTop)
@@ -62,7 +60,9 @@ ThreadInfo::StartProfiling()
 {
   mIsBeingProfiled = true;
   mRacyInfo->ReinitializeOnResume();
-  mResponsiveness.emplace(mThread, mIsMainThread);
+  if (mIsMainThread) {
+    mResponsiveness.emplace();
+  }
 }
 
 void
