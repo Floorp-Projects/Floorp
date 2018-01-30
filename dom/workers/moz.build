@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
     'WorkerCommon.h',
+    'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
     'WorkerLoadInfo.h',
 ]
@@ -47,6 +48,7 @@ UNIFIED_SOURCES += [
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
     'SharedWorker.cpp',
+    'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',

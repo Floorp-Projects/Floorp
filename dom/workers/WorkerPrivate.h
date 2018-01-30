@@ -14,7 +14,6 @@
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsILoadGroup.h"
-#include "nsIWorkerDebugger.h"
 #include "nsPIDOMWindow.h"
 
 #include "mozilla/Assertions.h"
@@ -82,9 +81,6 @@ class PrincipalInfo;
 } // namespace mozilla
 
 struct PRThread;
-
-class ReportDebuggerErrorRunnable;
-class PostDebuggerMessageRunnable;
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -955,46 +951,6 @@ public:
   }
 };
 
-class WorkerDebugger : public nsIWorkerDebugger {
-  friend class ::ReportDebuggerErrorRunnable;
-  friend class ::PostDebuggerMessageRunnable;
-
-  WorkerPrivate* mWorkerPrivate;
-  bool mIsInitialized;
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
-
-public:
-  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWORKERDEBUGGER
-
-  void
-  AssertIsOnParentThread();
-
-  void
-  Close();
-
-  void
-  PostMessageToDebugger(const nsAString& aMessage);
-
-  void
-  ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
-                        const nsAString& aMessage);
-
-private:
-  virtual
-  ~WorkerDebugger();
-
-  void
-  PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
-
-  void
-  ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
-                                    uint32_t aLineno,
-                                    const nsAString& aMessage);
-};
-
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 {
   friend class WorkerHolder;
@@ -1699,6 +1655,10 @@ public:
     return mTarget;
   }
 };
+
+// TODO: this will be removed in the next patch
+void
+LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
 
 END_WORKERS_NAMESPACE
 

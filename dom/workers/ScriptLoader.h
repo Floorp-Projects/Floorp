@@ -25,6 +25,8 @@ class ErrorResult;
 
 BEGIN_WORKERS_NAMESPACE
 
+struct WorkerLoadInfo;
+
 enum WorkerScriptType {
   WorkerScript,
   DebuggerScript
