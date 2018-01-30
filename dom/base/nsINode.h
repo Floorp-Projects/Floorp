@@ -2092,7 +2092,6 @@ protected:
   nsINode* ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
                                  nsINode* aRefChild,
                                  mozilla::ErrorResult& aError);
-  nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
 
   /**
    * Returns the Element that should be used for resolving namespaces
@@ -2297,10 +2296,6 @@ ToCanonicalSupports(nsINode* aPointer)
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) __VA_ARGS__ override \
   { \
     return nsINode::GetOwnerDocument(aOwnerDocument); \
-  } \
-  NS_IMETHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aResult) __VA_ARGS__ override \
-  { \
-    return nsINode::RemoveChild(aOldChild, aResult); \
   } \
   NS_IMETHOD HasChildNodes(bool* aResult) __VA_ARGS__ override \
   { \

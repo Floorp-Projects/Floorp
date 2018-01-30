@@ -11,6 +11,7 @@
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -87,8 +88,8 @@ static bool FindIntegerAfterString(const char* aLeadingString,
                                    nsCString& aCStr, int32_t& foundNumber);
 static nsresult RemoveFragComments(nsCString& theStr);
 static void RemoveBodyAndHead(nsINode& aNode);
-static nsresult FindTargetNode(nsIDOMNode* aStart,
-                               nsCOMPtr<nsIDOMNode>& aResult);
+static nsresult FindTargetNode(nsINode* aStart,
+                               nsCOMPtr<nsINode>& aResult);
 
 nsresult
 HTMLEditor::LoadHTML(const nsAString& aInputString)
@@ -1999,14 +2000,11 @@ void RemoveBodyAndHead(nsINode& aNode)
  * the magical comment node containing kInsertCookie or, failing that, the
  * firstChild of the firstChild (until we reach a leaf).
  */
-nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
+nsresult FindTargetNode(nsINode *aStart, nsCOMPtr<nsINode> &aResult)
 {
   NS_ENSURE_TRUE(aStart, NS_OK);
 
-  nsCOMPtr<nsIDOMNode> child, tmp;
-
-  nsresult rv = aStart->GetFirstChild(getter_AddRefs(child));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> child = aStart->GetFirstChild();
 
   if (!child) {
     // If the current result is nullptr, then aStart is a leaf, and is the
@@ -2019,10 +2017,9 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
 
   do {
     // Is this child the magical cookie?
-    nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(child);
-    if (comment) {
+    if (child->IsNodeOfType(nsINode::eCOMMENT)) {
       nsAutoString data;
-      rv = comment->GetData(data);
+      nsresult rv = static_cast<Comment*>(child.get())->GetData(data);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (data.EqualsLiteral(kInsertCookie)) {
@@ -2030,24 +2027,20 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
         // search.
         aResult = aStart;
 
-        // Note: it doesn't matter if this fails.
-        aStart->RemoveChild(child, getter_AddRefs(tmp));
+        child->Remove();
 
         return NS_SUCCESS_EDITOR_FOUND_TARGET;
       }
     }
 
-    rv = FindTargetNode(child, aResult);
+    nsresult rv = FindTargetNode(child, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (rv == NS_SUCCESS_EDITOR_FOUND_TARGET) {
       return NS_SUCCESS_EDITOR_FOUND_TARGET;
     }
 
-    rv = child->GetNextSibling(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    child = tmp;
+    child = child->GetNextSibling();
   } while (child);
 
   return NS_OK;
@@ -2071,7 +2064,7 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
 
   // if we have context info, create a fragment for that
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> contextLeaf;
+  nsCOMPtr<nsINode> contextLeaf;
   RefPtr<DocumentFragment> contextAsNode;
   if (!aContextStr.IsEmpty()) {
     rv = ParseFragment(aContextStr, nullptr, doc, getter_AddRefs(contextAsNode),
@@ -2125,7 +2118,7 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
   // If there was no context, then treat all of the data we did get as the
   // pasted data.
   if (contextLeaf) {
-    *outEndNode = *outStartNode = contextLeaf;
+    *outEndNode = *outStartNode = contextLeaf->AsDOMNode();
   } else {
     *outEndNode = *outStartNode = fragment;
   }
