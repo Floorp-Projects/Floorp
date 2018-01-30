@@ -1111,19 +1111,12 @@ Blocklist.prototype = {
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
-    const pluginProperties = {
-      description: plugin.description,
-      filename: plugin.filename,
-      name: plugin.name,
-    };
-    const pluginVersion = plugin.version;
-
     for (var blockEntry of pluginEntries) {
       var matchFailed = false;
       for (var name in blockEntry.matches) {
-        let pluginProperty = pluginProperties[name];
-        if (typeof(pluginProperty) !== "string" ||
-            !blockEntry.matches[name].test(pluginProperty)) {
+        if (!(name in plugin) ||
+            typeof(plugin[name]) != "string" ||
+            !blockEntry.matches[name].test(plugin[name])) {
           matchFailed = true;
           break;
         }
@@ -1133,7 +1126,7 @@ Blocklist.prototype = {
         continue;
 
       for (let blockEntryVersion of blockEntry.versions) {
-        if (blockEntryVersion.includesItem(pluginVersion, appVersion,
+        if (blockEntryVersion.includesItem(plugin.version, appVersion,
                                            toolkitVersion)) {
           return {entry: blockEntry, version: blockEntryVersion};
         }
