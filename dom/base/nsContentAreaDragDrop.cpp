@@ -853,28 +853,22 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
       // in this case, drag the image, rather than a serialization of the HTML
       // XXX generalize this to other draggable element types?
       if (selectionStart == selectionEnd) {
-        bool hasChildren;
-        selectionStart->HasChildNodes(&hasChildren);
-        if (hasChildren) {
+        nsCOMPtr<nsIContent> selStartContent = do_QueryInterface(selectionStart);
+        if (selStartContent && selStartContent->HasChildNodes()) {
           // see if just one node is selected
           int32_t anchorOffset, focusOffset;
           inSelection->GetAnchorOffset(&anchorOffset);
           inSelection->GetFocusOffset(&focusOffset);
           if (abs(anchorOffset - focusOffset) == 1) {
-            nsCOMPtr<nsIContent> selStartContent =
-              do_QueryInterface(selectionStart);
-
-            if (selStartContent) {
-              int32_t childOffset =
-                (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
-              nsIContent *childContent =
-                selStartContent->GetChildAt_Deprecated(childOffset);
-              // if we find an image, we'll fall into the node-dragging code,
-              // rather the the selection-dragging code
-              if (nsContentUtils::IsDraggableImage(childContent)) {
-                NS_ADDREF(*outImageOrLinkNode = childContent);
-                return NS_OK;
-              }
+            int32_t childOffset =
+              (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
+            nsIContent *childContent =
+              selStartContent->GetChildAt_Deprecated(childOffset);
+            // if we find an image, we'll fall into the node-dragging code,
+            // rather the the selection-dragging code
+            if (nsContentUtils::IsDraggableImage(childContent)) {
+              NS_ADDREF(*outImageOrLinkNode = childContent);
+              return NS_OK;
             }
           }
         }
