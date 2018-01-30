@@ -201,18 +201,16 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
-                                         nsAString& aReturn)
+                                         nsAString& aPriority)
 {
   DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
-  aReturn.Truncate();
+  aPriority.Truncate();
   if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
-    aReturn.AssignLiteral("important");
+    aPriority.AssignLiteral("important");
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

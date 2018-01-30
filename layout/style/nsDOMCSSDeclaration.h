@@ -75,8 +75,8 @@ public:
   using nsICSSDeclaration::GetPropertyCSSValue;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
                             nsAString & _retval) override;
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
-                                 nsAString & _retval) override;
+  void GetPropertyPriority(const nsAString & propertyName,
+                           nsAString & aPriority) override;
   NS_IMETHOD SetProperty(const nsAString& propertyName,
                          const nsAString& value,
                          const nsAString& priority,
