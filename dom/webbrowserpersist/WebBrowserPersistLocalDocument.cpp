@@ -1135,7 +1135,8 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
                       IgnoredErrorResult ignored;
                       outElt->RemoveAttribute(valueAttr, ignored);
                     } else {
-                      outElt->SetAttribute(valueAttr, valueStr);
+                      IgnoredErrorResult ignored;
+                      outElt->SetAttribute(valueAttr, valueStr, ignored);
                     }
                     break;
                 case NS_FORM_INPUT_CHECKBOX:
