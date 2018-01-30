@@ -13,24 +13,18 @@ pub use core_foundation_sys::string::*;
 
 use base::{CFIndexConvertible, TCFType};
 
-use core_foundation_sys::base::{Boolean, CFIndex, CFRange, CFRelease};
+use core_foundation_sys::base::{Boolean, CFIndex, CFRange};
 use core_foundation_sys::base::{kCFAllocatorDefault, kCFAllocatorNull};
 use std::fmt;
 use std::str::{self, FromStr};
 use std::ptr;
 use std::ffi::CStr;
 
-/// An immutable string in one of a variety of encodings.
-pub struct CFString(CFStringRef);
 
-impl Drop for CFString {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// An immutable string in one of a variety of encodings.
+    CFString, CFStringRef
 }
-
 impl_TCFType!(CFString, CFStringRef, CFStringGetTypeID);
 
 impl FromStr for CFString {

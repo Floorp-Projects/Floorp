@@ -19,7 +19,7 @@ window.onload = function () {
 
   const {utils: Cu} = Components;
   const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-  require("devtools/server/actors/inspector");
+  require("devtools/server/actors/inspector/inspector-actor");
   const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
   const {PausedDebuggerOverlay} = require("devtools/server/actors/highlighters/paused-debugger");
 

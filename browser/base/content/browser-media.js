@@ -344,9 +344,13 @@ let gDecoderDoctorHandler = {
             params.append("label", "type-media");
             params.append("problem_type", "video_bug");
             params.append("src", "media-decode-error");
-            params.append("details",
-                          "Technical Information:\n" + decodeIssue +
-                          (resourceURL ? ("\nResource: " + resourceURL) : ""));
+
+            let details = {"Technical Information:": decodeIssue};
+            if (resourceURL) {
+              details["Resource:"] = resourceURL;
+            }
+
+            params.append("details", JSON.stringify(details));
             openUILinkIn(endpoint + "?" + params.toString(), "tab");
           }
         });

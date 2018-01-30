@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-const inspector = require("devtools/server/actors/inspector");
+const {DocumentWalker} = require("devtools/server/actors/inspector/document-walker");
 
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
@@ -54,7 +54,7 @@ addAsyncTest(function* testRearrange() {
   let nextNode = children.nodes[13];
   yield gWalker.insertBefore(nodeA, longlist, nextNode);
   let sibling =
-    new inspector._documentWalker(gInspectee.querySelector("#a"), window).nextSibling();
+    new DocumentWalker(gInspectee.querySelector("#a"), window).nextSibling();
   is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
   children = yield gWalker.children(longlist);
   is(nodeA, children.nodes[13], "a should be where we expect it.");

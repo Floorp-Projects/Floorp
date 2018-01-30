@@ -69,28 +69,26 @@ impl NotifierData {
 
 struct Notifier(Arc<Mutex<NotifierData>>);
 
-impl RenderNotifier for Notifier {
-    fn clone(&self) -> Box<RenderNotifier> {
-        Box::new(Notifier(self.0.clone()))
-    }
-
-    fn wake_up(&self) {
+impl Notifier {
+    fn update(&self, check_document: bool) {
         let mut data = self.0.lock();
         let data = data.as_mut().unwrap();
-        match data.timing_receiver.steal() {
-            chase_lev::Steal::Data(last_timing) => {
-                data.frames_notified += 1;
-                if data.verbose && data.frames_notified == 600 {
-                    let elapsed = time::SteadyTime::now() - last_timing;
-                    println!(
-                        "frame latency (consider queue depth here): {:3.6} ms",
-                        elapsed.num_microseconds().unwrap() as f64 / 1000.
-                    );
-                    data.frames_notified = 0;
+        if check_document {
+            match data.timing_receiver.steal() {
+                chase_lev::Steal::Data(last_timing) => {
+                    data.frames_notified += 1;
+                    if data.verbose && data.frames_notified == 600 {
+                        let elapsed = time::SteadyTime::now() - last_timing;
+                        println!(
+                            "frame latency (consider queue depth here): {:3.6} ms",
+                            elapsed.num_microseconds().unwrap() as f64 / 1000.
+                        );
+                        data.frames_notified = 0;
+                    }
                 }
-            }
-            _ => {
-                println!("Notified of frame, but no frame was ready?");
+                _ => {
+                    println!("Notified of frame, but no frame was ready?");
+                }
             }
         }
         if let Some(ref window_proxy) = data.window_proxy {
@@ -98,17 +96,19 @@ impl RenderNotifier for Notifier {
             window_proxy.wakeup_event_loop();
         }
     }
+}
+
+impl RenderNotifier for Notifier {
+    fn clone(&self) -> Box<RenderNotifier> {
+        Box::new(Notifier(self.0.clone()))
+    }
+
+    fn wake_up(&self) {
+        self.update(false);
+    }
 
     fn new_document_ready(&self, _: DocumentId, scrolled: bool, _composite_needed: bool) {
-        if scrolled {
-            let data = self.0.lock();
-            if let Some(ref window_proxy) = data.unwrap().window_proxy {
-                #[cfg(not(target_os = "android"))]
-                window_proxy.wakeup_event_loop();
-            }
-        } else {
-            self.wake_up();
-        }
+        self.update(!scrolled);
     }
 }
 

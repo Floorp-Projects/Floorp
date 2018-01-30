@@ -10,24 +10,18 @@
 //! Core Foundation byte buffers.
 
 pub use core_foundation_sys::data::*;
-use core_foundation_sys::base::{CFIndex, CFRelease};
+use core_foundation_sys::base::CFIndex;
 use core_foundation_sys::base::{kCFAllocatorDefault};
 use std::ops::Deref;
 use std::slice;
 
 use base::{CFIndexConvertible, TCFType};
 
-/// A byte buffer.
-pub struct CFData(CFDataRef);
 
-impl Drop for CFData {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// A byte buffer.
+    CFData, CFDataRef
 }
-
 impl_TCFType!(CFData, CFDataRef, CFDataGetTypeID);
 impl_CFTypeDescription!(CFData);
 

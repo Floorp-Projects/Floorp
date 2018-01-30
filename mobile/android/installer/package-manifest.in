@@ -81,7 +81,6 @@
 
 [xpcom]
 @BINPATH@/package-name.txt
-@BINPATH@/classes.dex
 
 [browser]
 ; [Base Browser Files]

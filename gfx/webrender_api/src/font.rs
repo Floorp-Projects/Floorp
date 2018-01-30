@@ -8,7 +8,7 @@ use core_foundation::string::CFString;
 #[cfg(target_os = "macos")]
 use core_graphics::font::CGFont;
 #[cfg(target_os = "windows")]
-use dwrote::FontDescriptor;
+pub use dwrote::FontDescriptor as NativeFontHandle;
 #[cfg(target_os = "macos")]
 use serde::de::{self, Deserialize, Deserializer};
 #[cfg(target_os = "macos")]
@@ -17,6 +17,13 @@ use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct NativeFontHandle {
+    pub pathname: String,
+    pub index: u32,
+}
 
 #[cfg(target_os = "macos")]
 #[derive(Clone)]
@@ -28,8 +35,10 @@ impl Serialize for NativeFontHandle {
     where
         S: Serializer,
     {
-        let postscript_name = self.0.postscript_name().to_string();
-        postscript_name.serialize(serializer)
+        self.0
+            .postscript_name()
+            .to_string()
+            .serialize(serializer)
     }
 }
 
@@ -39,26 +48,16 @@ impl<'de> Deserialize<'de> for NativeFontHandle {
     where
         D: Deserializer<'de>,
     {
-        let postscript_name: String = try!(Deserialize::deserialize(deserializer));
+        let postscript_name: String = Deserialize::deserialize(deserializer)?;
 
         match CGFont::from_name(&CFString::new(&*postscript_name)) {
             Ok(font) => Ok(NativeFontHandle(font)),
-            _ => Err(de::Error::custom(
+            Err(_) => Err(de::Error::custom(
                 "Couldn't find a font with that PostScript name!",
             )),
         }
     }
 }
-
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-#[derive(Clone, Serialize, Deserialize)]
-pub struct NativeFontHandle {
-    pub pathname: String,
-    pub index: u32,
-}
-
-#[cfg(target_os = "windows")]
-pub type NativeFontHandle = FontDescriptor;
 
 #[repr(C)]
 #[derive(Copy, Clone, Deserialize, Serialize, Debug)]
@@ -203,7 +202,7 @@ pub struct GlyphOptions {
 }
 
 impl Default for GlyphOptions {
-    fn default() -> GlyphOptions {
+    fn default() -> Self {
         GlyphOptions {
             render_mode: FontRenderMode::Subpixel,
             flags: FontInstanceFlags::empty(),

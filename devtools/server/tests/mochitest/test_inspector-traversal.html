@@ -284,11 +284,11 @@ addTest(function testFrameTraversal() {
 
 addTest(function testLongValue() {
   const testSummaryLength = 10;
-  const inspector = require("devtools/server/actors/inspector");
+  const WalkerActor = require("devtools/server/actors/inspector/walker-actor");
 
-  inspector.setValueSummaryLength(testSummaryLength);
+  WalkerActor.setValueSummaryLength(testSummaryLength);
   SimpleTest.registerCleanupFunction(function () {
-    inspector.setValueSummaryLength(inspector.DEFAULT_VALUE_SUMMARY_LENGTH);
+    WalkerActor.setValueSummaryLength(WalkerActor.DEFAULT_VALUE_SUMMARY_LENGTH);
   });
 
   let longstringText = gInspectee.getElementById("longstring").firstChild.nodeValue;

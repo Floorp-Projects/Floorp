@@ -38,7 +38,8 @@ const FRAMES_BEFORE_EVICTION: usize = 10;
 const NEW_ROWS_PER_RESIZE: u32 = 512;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Epoch(u32);
 
 impl Epoch {
@@ -48,7 +49,8 @@ impl Epoch {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheLocation {
     block_index: BlockIndex,
     epoch: Epoch,
@@ -56,7 +58,8 @@ struct CacheLocation {
 
 /// A single texel in RGBAF32 texture - 16 bytes.
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuBlockData {
     data: [f32; 4],
 }
@@ -111,7 +114,8 @@ pub trait ToGpuBlocks {
 
 // A handle to a GPU resource.
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCacheHandle {
     location: Option<CacheLocation>,
 }
@@ -126,7 +130,8 @@ impl GpuCacheHandle {
 // as part of the primitive instances, to allow the vertex
 // shader to fetch the specific data.
 #[derive(Copy, Debug, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCacheAddress {
     pub u: u16,
     pub v: u16,
@@ -161,7 +166,8 @@ impl Add<usize> for GpuCacheAddress {
 
 // An entry in a free-list of blocks in the GPU cache.
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Block {
     // The location in the cache of this block.
     address: GpuCacheAddress,
@@ -187,11 +193,13 @@ impl Block {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct BlockIndex(usize);
 
 // A row in the cache texture.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Row {
     // The fixed size of blocks that this row supports.
     // Each row becomes a slab allocator for a fixed block size.
@@ -212,7 +220,8 @@ impl Row {
 // this frame. The list of updates is created by the render backend
 // during frame construction. It's passed to the render thread
 // where GL commands can be applied.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum GpuCacheUpdate {
     Copy {
         block_index: usize,
@@ -222,7 +231,8 @@ pub enum GpuCacheUpdate {
 }
 
 #[must_use]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCacheUpdateList {
     /// The frame current update list was generated from.
     pub frame_id: FrameId,
@@ -238,7 +248,8 @@ pub struct GpuCacheUpdateList {
 
 // Holds the free lists of fixed size blocks. Mostly
 // just serves to work around the borrow checker.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct FreeBlockLists {
     free_list_1: Option<BlockIndex>,
     free_list_2: Option<BlockIndex>,
@@ -289,7 +300,8 @@ impl FreeBlockLists {
 }
 
 // CPU-side representation of the GPU resource cache texture.
-#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Texture {
     // Current texture height
     height: u32,
@@ -504,7 +516,8 @@ impl<'a> Drop for GpuDataRequest<'a> {
 
 
 /// The main LRU cache interface.
-#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuCache {
     /// Current frame ID.
     frame_id: FrameId,

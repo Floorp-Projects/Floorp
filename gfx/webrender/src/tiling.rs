@@ -35,19 +35,21 @@ pub struct ScrollbarPrimitive {
 }
 
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetIndex(pub usize);
 
 pub struct RenderTargetContext<'a> {
     pub device_pixel_scale: DevicePixelScale,
     pub prim_store: &'a PrimitiveStore,
     pub resource_cache: &'a ResourceCache,
-    pub node_data: &'a [ClipScrollNodeData],
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub use_dual_source_blending: bool,
+    pub node_data: &'a [ClipScrollNodeData],
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureAllocator {
     // TODO(gw): Replace this with a simpler allocator for
     // render target allocation - this use case doesn't need
@@ -121,19 +123,21 @@ pub trait RenderTarget {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderTargetKind {
     Color, // RGBA32
     Alpha, // R8
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTargetList<T> {
     screen_size: DeviceIntSize,
     pub format: ImageFormat,
     pub max_size: DeviceUintSize,
     pub targets: Vec<T>,
-    #[cfg_attr(feature = "capture", serde(skip))]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub texture: Option<Texture>,
 }
 
@@ -231,34 +235,39 @@ impl<T: RenderTarget> RenderTargetList<T> {
 /// Storing the task ID allows the renderer to find
 /// the target rect within the render target that this
 /// pipeline exists at.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameOutput {
     pub task_id: RenderTaskId,
     pub pipeline_id: PipelineId,
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingInfo {
     pub src_task_id: RenderTaskId,
     pub dest_task_id: RenderTaskId,
 }
 
 // Defines where the source data for a blit job can be found.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BlitJobSource {
     Texture(SourceTexture, i32, DeviceIntRect),
     RenderTask(RenderTaskId),
 }
 
 // Information required to do a blit from a source to a target.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BlitJob {
     pub source: BlitJobSource,
     pub target_rect: DeviceIntRect,
 }
 
 /// A render target represents a number of rendering operations on a surface.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ColorRenderTarget {
     pub alpha_batcher: AlphaBatcher,
     // List of blur operations to apply for this render target.
@@ -441,7 +450,8 @@ impl RenderTarget for ColorRenderTarget {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
     pub brush_mask_corners: Vec<PrimitiveInstance>,
@@ -614,7 +624,8 @@ impl RenderTarget for AlphaRenderTarget {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheRenderTarget {
     pub horizontal_blurs: Vec<BlurInstance>,
     pub blits: Vec<BlitJob>,
@@ -677,7 +688,8 @@ impl TextureCacheRenderTarget {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum RenderPassKind {
     MainFramebuffer(ColorRenderTarget),
     OffScreen {
@@ -692,7 +704,8 @@ pub enum RenderPassKind {
 ///
 /// A render pass can have several render targets if there wasn't enough space in one
 /// target to do all of the rendering for that pass.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderPass {
     pub kind: RenderPassKind,
     tasks: Vec<RenderTaskId>,
@@ -859,7 +872,8 @@ impl CompositeOps {
 
 /// A rendering-oriented representation of frame::Frame built by the render backend
 /// and presented to the renderer.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct Frame {
     //TODO: share the fields with DocumentView struct
     pub window_size: DeviceUintSize,
@@ -868,7 +882,7 @@ pub struct Frame {
     pub layer: DocumentLayer,
     pub device_pixel_ratio: f32,
     pub passes: Vec<RenderPass>,
-    #[cfg_attr(feature = "capture", serde(default = "FrameProfileCounters::new", skip))]
+    #[cfg_attr(any(feature = "capture", feature = "replay"), serde(default = "FrameProfileCounters::new", skip))]
     pub profile_counters: FrameProfileCounters,
 
     pub node_data: Vec<ClipScrollNodeData>,
