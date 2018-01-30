@@ -15,6 +15,7 @@
 #include "mozilla/dom/workers/bindings/WorkerHolderToken.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "nsContentUtils.h"
 #include "prthread.h"
 
 namespace mozilla {

@@ -11,6 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 
+#include "WorkerDebugger.h"
 #include "WorkerPrivate.h"
 
 USING_WORKERS_NAMESPACE

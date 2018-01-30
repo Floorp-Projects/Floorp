@@ -9,7 +9,6 @@ with Files("**"):
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
-    'FileReaderSync.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
     'WorkerPrivate.h',
@@ -19,8 +18,10 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
+    'WorkerCommon.h',
+    'WorkerDebugger.h',
     'WorkerDebuggerManager.h',
-    'Workers.h',
+    'WorkerLoadInfo.h',
 ]
 
 # Stuff needed for the bindings, not really public though.
@@ -39,15 +40,18 @@ XPIDL_SOURCES += [
 
 UNIFIED_SOURCES += [
     'ChromeWorkerScope.cpp',
-    'FileReaderSync.cpp',
+    'MessageEventRunnable.cpp',
     'Principal.cpp',
     'RegisterBindings.cpp',
     'RuntimeService.cpp',
     'ScriptLoader.cpp',
     'SharedWorker.cpp',
+    'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
+    'WorkerError.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',
+    'WorkerLoadInfo.cpp',
     'WorkerLocation.cpp',
     'WorkerNavigator.cpp',
     'WorkerPrivate.cpp',

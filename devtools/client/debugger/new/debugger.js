@@ -10138,7 +10138,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.root", true);
   pref("devtools.debugger.features.column-breakpoints", false);
   pref("devtools.debugger.features.chrome-scopes", false);
-  pref("devtools.debugger.features.map-scopes", true);
+  pref("devtools.debugger.features.map-scopes", false);
   pref("devtools.debugger.features.breakpoints-dropdown", true);
   pref("devtools.debugger.features.remove-command-bar-options", true);
   pref("devtools.debugger.features.code-coverage", false);
@@ -17097,7 +17097,7 @@ Object.keys(_sourceDocuments).forEach(function (key) {
   });
 });
 
-var _getTokenLocation = __webpack_require__(1783);
+var _getTokenLocation = __webpack_require__(2244);
 
 Object.keys(_getTokenLocation).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -17199,7 +17199,8 @@ function traverseResults(e, ctx, query, dir, modifiers) {
 
 function toEditorLine(sourceId, lineOrOffset) {
   if ((0, _wasm.isWasm)(sourceId)) {
-    return (0, _wasm.wasmOffsetToLine)(sourceId, lineOrOffset);
+    // TODO ensure offset is always "mappable" to edit line.
+    return (0, _wasm.wasmOffsetToLine)(sourceId, lineOrOffset) || 0;
   }
 
   return lineOrOffset ? lineOrOffset - 1 : 1;
@@ -17241,9 +17242,7 @@ function toSourceLocation(sourceId, location) {
   };
 }
 
-function markText(editor, className, location) {
-  const { start, end } = location;
-
+function markText(editor, className, { start, end }) {
   return editor.codeMirror.markText({ ch: start.column, line: start.line }, { ch: end.column, line: end.line }, { className });
 }
 
@@ -19074,7 +19073,7 @@ class SearchInput extends _react.Component {
 
     return _temp = super(...args), this.shouldShowErrorEmoji = () => {
       const { count, query, showErrorEmoji } = this.props;
-      return count === 0 && query.trim() !== "" && showErrorEmoji;
+      return showErrorEmoji && count === 0 && query.trim() !== "";
     }, _temp;
   }
 
@@ -23572,7 +23571,10 @@ function update(state = InitialState(), action) {
       return state.update("query", value => actionCopy.query);
 
     case "CLEAR_QUERY":
-      return state.remove("query");
+      return state.merge({
+        query: "",
+        status: statusType.initial
+      });
 
     case "ADD_SEARCH_RESULT":
       const results = state.get("results");
@@ -23586,10 +23588,12 @@ function update(state = InitialState(), action) {
         results: state.get("results").clear()
       });
 
+    case "CLEAR_SEARCH":
     case "CLOSE_PROJECT_SEARCH":
       return state.merge({
         query: "",
-        results: state.get("results").clear()
+        results: state.get("results").clear(),
+        status: statusType.initial
       });
   }
   return state;
@@ -24066,6 +24070,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.addSearchQuery = addSearchQuery;
 exports.clearSearchQuery = clearSearchQuery;
 exports.clearSearchResults = clearSearchResults;
+exports.clearSearch = clearSearch;
 exports.updateSearchStatus = updateSearchStatus;
 exports.closeProjectSearch = closeProjectSearch;
 exports.searchSources = searchSources;
@@ -24082,9 +24087,7 @@ var _sources = __webpack_require__(1797);
 var _projectTextSearch = __webpack_require__(1424);
 
 function addSearchQuery(query) {
-  return ({ dispatch, getState }) => {
-    dispatch({ type: "ADD_QUERY", query });
-  };
+  return { type: "ADD_QUERY", query };
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -24095,15 +24098,15 @@ function addSearchQuery(query) {
  */
 
 function clearSearchQuery() {
-  return ({ dispatch, getState }) => {
-    dispatch({ type: "CLEAR_QUERY" });
-  };
+  return { type: "CLEAR_QUERY" };
 }
 
 function clearSearchResults() {
-  return ({ dispatch, getState }) => {
-    dispatch({ type: "CLEAR_SEARCH_RESULTS" });
-  };
+  return { type: "CLEAR_SEARCH_RESULTS" };
+}
+
+function clearSearch() {
+  return { type: "CLEAR_SEARCH" };
 }
 
 function updateSearchStatus(status) {
@@ -24119,12 +24122,13 @@ function searchSources(query) {
     await dispatch(clearSearchResults());
     await dispatch(addSearchQuery(query));
     dispatch(updateSearchStatus(_projectTextSearch.statusType.fetching));
-    await dispatch((0, _sources.loadAllSources)());
     const sources = (0, _selectors.getSources)(getState());
-    const validSources = sources.valueSeq().filter(source => (0, _source.isLoaded)(source) && !(0, _selectors.hasPrettySource)(getState(), source.get("id")) && !(0, _source.isThirdParty)(source));
+    const validSources = sources.valueSeq().filter(source => !(0, _selectors.hasPrettySource)(getState(), source.get("id")) && !(0, _source.isThirdParty)(source));
     for (const source of validSources) {
+      await dispatch((0, _sources.loadSourceText)(source));
       await dispatch(searchSource(source.get("id"), query));
     }
+    dispatch(updateSearchStatus(_projectTextSearch.statusType.done));
   };
 }
 
@@ -24136,6 +24140,9 @@ function searchSource(sourceId, query) {
     }
 
     const matches = await (0, _search.findSourceMatches)(sourceRecord.toJS(), query);
+    if (!matches.length) {
+      return;
+    }
     dispatch({
       type: "ADD_SEARCH_RESULT",
       result: {
@@ -24144,9 +24151,6 @@ function searchSource(sourceId, query) {
         matches
       }
     });
-    if (matches.length) {
-      dispatch(updateSearchStatus(_projectTextSearch.statusType.done));
-    }
   };
 }
 
@@ -24161,7 +24165,6 @@ function searchSource(sourceId, query) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.loadAllSources = loadAllSources;
 exports.loadSourceText = loadSourceText;
 
 var _devtoolsSourceMap = __webpack_require__(1360);
@@ -24180,15 +24183,19 @@ var _defer = __webpack_require__(1800);
 
 var _defer2 = _interopRequireDefault(_defer);
 
-var _projectTextSearch = __webpack_require__(1433);
+var _devtoolsModules = __webpack_require__(1376);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-const requests = new Map(); /* This Source Code Form is subject to the terms of the Mozilla Public
-                             * License, v. 2.0. If a copy of the MPL was not distributed with this
-                             * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const requests = new Map();
+
+const loadSourceHistogram = _devtoolsModules.Services.telemetry.getHistogramById("DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS");
 
 async function loadSource(source, { sourceMaps, client }) {
   const id = source.get("id");
@@ -24206,35 +24213,12 @@ async function loadSource(source, { sourceMaps, client }) {
 }
 
 /**
-  Load the text for all the available sources
- * @memberof actions/sources
- * @static
- */
-function loadAllSources() {
-  return async ({ dispatch, getState }) => {
-    const sources = (0, _selectors.getSources)(getState());
-    const query = (0, _selectors.getTextSearchQuery)(getState());
-    for (const [, source] of sources) {
-      if ((0, _source.isThirdParty)(source)) {
-        continue;
-      }
-
-      await dispatch(loadSourceText(source));
-      // If there is a current search query we search
-      // each of the source texts as they get loaded
-      if (query) {
-        await dispatch((0, _projectTextSearch.searchSource)(source.get("id"), query));
-      }
-    }
-  };
-}
-
-/**
  * @memberof actions/sources
  * @static
  */
 function loadSourceText(source) {
   return async ({ dispatch, getState, client, sourceMaps }) => {
+    const telemetryStart = performance.now();
     const deferred = (0, _defer2.default)();
 
     // Fetch the source text only once.
@@ -24275,6 +24259,10 @@ function loadSourceText(source) {
     // signal that the action is finished
     deferred.resolve();
     requests.delete(id);
+
+    const telemetryEnd = performance.now();
+    const duration = telemetryEnd - telemetryStart;
+    loadSourceHistogram.add(duration);
   };
 }
 
@@ -30749,7 +30737,7 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
   // send update only to redux
   if (pendingBreakpoint.disabled || existingClient && isSameLocation) {
     const id = pendingBreakpoint.disabled ? "" : existingClient.id;
-    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation);
+    return createSyncData(id, pendingBreakpoint, scopedLocation, scopedGeneratedLocation, previousLocation);
   }
 
   // clear server breakpoints if they exist and we have moved
@@ -30784,7 +30772,12 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getMatchIndex = exports.removeOverlay = exports.findPrev = exports.findNext = exports.find = exports.buildQuery = undefined;
+exports.buildQuery = undefined;
+exports.getMatchIndex = getMatchIndex;
+exports.removeOverlay = removeOverlay;
+exports.find = find;
+exports.findNext = findNext;
+exports.findPrev = findPrev;
 
 var _buildQuery = __webpack_require__(1402);
 
@@ -31053,11 +31046,6 @@ function findPrev(ctx, query, keepSelection, modifiers) {
 }
 
 exports.buildQuery = _buildQuery2.default;
-exports.find = find;
-exports.findNext = findNext;
-exports.findPrev = findPrev;
-exports.removeOverlay = removeOverlay;
-exports.getMatchIndex = getMatchIndex;
 
 /***/ }),
 /* 1527 */
@@ -34260,7 +34248,7 @@ const mapStateToProps = state => {
     hitCount: (0, _selectors.getHitCountForSource)(state, sourceId),
     coverageOn: (0, _selectors.getCoverageEnabled)(state),
     conditionalPanelLine: (0, _selectors.getConditionalPanelLine)(state),
-    symbols: (0, _selectors.getSymbols)(state, selectedSource)
+    symbols: (0, _selectors.getSymbols)(state, selectedSource && selectedSource.toJS())
   };
 };
 
@@ -42217,7 +42205,7 @@ function formatShortcutResults() {
 }
 
 function formatSources(sources) {
-  return sources.valueSeq().filter(source => !(0, _source.isPretty)(source) && !(0, _source.isThirdParty)(source)).map(source => {
+  return sources.valueSeq().filter(source => !(0, _source.isPretty)(source)).map(source => {
     const sourcePath = (0, _source.getSourcePath)(source.get("url"));
     return {
       value: sourcePath,
@@ -42832,6 +42820,8 @@ var _reactRedux = __webpack_require__(1189);
 
 var _fuzzaldrinPlus = __webpack_require__(161);
 
+var _fuzzaldrinPlus2 = _interopRequireDefault(_fuzzaldrinPlus);
+
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -42856,6 +42846,13 @@ var _ResultList2 = _interopRequireDefault(_ResultList);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function filter(values, query) {
+  return _fuzzaldrinPlus2.default.filter(values, query, {
+    key: "value",
+    maxResults: 1000
+  });
+}
+
 class QuickOpenModal extends _react.Component {
   constructor(props) {
     super(props);
@@ -42872,10 +42869,10 @@ class QuickOpenModal extends _react.Component {
 
       if (this.isGotoSourceQuery()) {
         const [baseQuery] = query.split(":");
-        const results = (0, _fuzzaldrinPlus.filter)(this.props.sources, baseQuery, { key: "value" });
+        const results = filter(this.props.sources, baseQuery);
         this.setState({ results });
       } else {
-        const results = (0, _fuzzaldrinPlus.filter)(this.props.sources, query, { key: "value" });
+        const results = filter(this.props.sources, query);
         this.setState({ results });
       }
     };
@@ -42891,9 +42888,7 @@ class QuickOpenModal extends _react.Component {
         return this.setState({ results });
       }
 
-      results = (0, _fuzzaldrinPlus.filter)(results, query.slice(1), {
-        key: "value"
-      });
+      results = filter(results, query.slice(1));
 
       this.setState({ results });
     };
@@ -42902,13 +42897,24 @@ class QuickOpenModal extends _react.Component {
       this.setState({ results: (0, _quickOpen.formatShortcutResults)() });
     };
 
+    this.showTopSources = () => {
+      const results = this.props.sources.slice(0, 100);
+      this.setState({ results });
+    };
+
     this.updateResults = query => {
+      if (query == "") {
+        return this.showTopSources();
+      }
+
       if (this.isSymbolSearch()) {
         return this.searchSymbols(query);
       }
+
       if (this.isShortcutQuery()) {
         return this.showShortcuts(query);
       }
+
       return this.searchSources(query);
     };
 
@@ -43085,6 +43091,7 @@ class QuickOpenModal extends _react.Component {
 
     const showSummary = searchType === "sources" || searchType === "functions" || searchType === "variables" || searchType === "shortcuts";
 
+    const newResults = results && results.slice(0, 100);
     return _react2.default.createElement(
       _Modal2.default,
       { "in": enabled, handleClose: this.closeModal },
@@ -43097,9 +43104,9 @@ class QuickOpenModal extends _react.Component {
         onKeyDown: this.onKeyDown,
         handleClose: this.closeModal
       })),
-      results && _react2.default.createElement(_ResultList2.default, _extends({
+      newResults && _react2.default.createElement(_ResultList2.default, _extends({
         key: "results",
-        items: results,
+        items: newResults,
         selected: selectedIndex,
         selectItem: this.selectResultItem,
         ref: "resultList"
@@ -46454,34 +46461,7 @@ function createLocation({
 }
 
 /***/ }),
-/* 1783 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.getTokenLocation = getTokenLocation;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function getTokenLocation(codeMirror, tokenEl) {
-  const { left, top, width, height } = tokenEl.getBoundingClientRect();
-  const { line, ch } = codeMirror.coordsChar({
-    left: left + width / 2,
-    top: top + height / 2
-  });
-
-  return {
-    line: line + 1,
-    column: ch
-  };
-}
-
-/***/ }),
+/* 1783 */,
 /* 1784 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -46771,6 +46751,10 @@ function setPreview(token, tokenPos, cursorPos) {
         }
 
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
+        if (!selectedFrame) {
+          return;
+        }
+
         const { result } = await client.evaluateInFrame(selectedFrame.id, expression);
 
         if (result === undefined) {
@@ -49505,6 +49489,11 @@ function getFilePath(item, index) {
   return item.type === "RESULT" ? `${item.sourceId}-${index || "$"}` : `${item.sourceId}-${item.line}-${item.column}-${index || "$"}`;
 }
 
+function sanitizeQuery(query) {
+  // no '\' at end of query
+  return query.replace(/\\$/, "");
+}
+
 class ProjectSearch extends _react.Component {
   constructor(props) {
     super(props);
@@ -49549,7 +49538,10 @@ class ProjectSearch extends _react.Component {
         return;
       }
       this.focusedItem = null;
-      this.props.searchSources(this.state.inputValue);
+      const query = sanitizeQuery(this.state.inputValue);
+      if (query) {
+        this.props.searchSources(query);
+      }
     };
 
     this.onEnterPress = () => {
@@ -49565,7 +49557,11 @@ class ProjectSearch extends _react.Component {
 
     this.inputOnChange = e => {
       const inputValue = e.target.value;
+      const { clearSearch } = this.props;
       this.setState({ inputValue });
+      if (inputValue === "") {
+        clearSearch();
+      }
     };
 
     this.renderFile = (file, focused, expanded, setExpanded) => {
@@ -49675,6 +49671,7 @@ class ProjectSearch extends _react.Component {
       count: this.getResultCount(),
       placeholder: L10N.getStr("projectTextSearch.placeholder"),
       size: "big",
+      showErrorEmoji: this.props.status === _projectTextSearch.statusType.done,
       summaryMsg: this.renderSummary(),
       onChange: this.inputOnChange,
       onFocus: () => this.setState({ inputFocused: true }),
@@ -50967,6 +50964,259 @@ exports.default = (0, _reactRedux.connect)(state => {
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
+
+/***/ }),
+/* 2019 */,
+/* 2020 */,
+/* 2021 */,
+/* 2022 */,
+/* 2023 */,
+/* 2024 */,
+/* 2025 */,
+/* 2026 */,
+/* 2027 */,
+/* 2028 */,
+/* 2029 */,
+/* 2030 */,
+/* 2031 */,
+/* 2032 */,
+/* 2033 */,
+/* 2034 */,
+/* 2035 */,
+/* 2036 */,
+/* 2037 */,
+/* 2038 */,
+/* 2039 */,
+/* 2040 */,
+/* 2041 */,
+/* 2042 */,
+/* 2043 */,
+/* 2044 */,
+/* 2045 */,
+/* 2046 */,
+/* 2047 */,
+/* 2048 */,
+/* 2049 */,
+/* 2050 */,
+/* 2051 */,
+/* 2052 */,
+/* 2053 */,
+/* 2054 */,
+/* 2055 */,
+/* 2056 */,
+/* 2057 */,
+/* 2058 */,
+/* 2059 */,
+/* 2060 */,
+/* 2061 */,
+/* 2062 */,
+/* 2063 */,
+/* 2064 */,
+/* 2065 */,
+/* 2066 */,
+/* 2067 */,
+/* 2068 */,
+/* 2069 */,
+/* 2070 */,
+/* 2071 */,
+/* 2072 */,
+/* 2073 */,
+/* 2074 */,
+/* 2075 */,
+/* 2076 */,
+/* 2077 */,
+/* 2078 */,
+/* 2079 */,
+/* 2080 */,
+/* 2081 */,
+/* 2082 */,
+/* 2083 */,
+/* 2084 */,
+/* 2085 */,
+/* 2086 */,
+/* 2087 */,
+/* 2088 */,
+/* 2089 */,
+/* 2090 */,
+/* 2091 */,
+/* 2092 */,
+/* 2093 */,
+/* 2094 */,
+/* 2095 */,
+/* 2096 */,
+/* 2097 */,
+/* 2098 */,
+/* 2099 */,
+/* 2100 */,
+/* 2101 */,
+/* 2102 */,
+/* 2103 */,
+/* 2104 */,
+/* 2105 */,
+/* 2106 */,
+/* 2107 */,
+/* 2108 */,
+/* 2109 */,
+/* 2110 */,
+/* 2111 */,
+/* 2112 */,
+/* 2113 */,
+/* 2114 */,
+/* 2115 */,
+/* 2116 */,
+/* 2117 */,
+/* 2118 */,
+/* 2119 */,
+/* 2120 */,
+/* 2121 */,
+/* 2122 */,
+/* 2123 */,
+/* 2124 */,
+/* 2125 */,
+/* 2126 */,
+/* 2127 */,
+/* 2128 */,
+/* 2129 */,
+/* 2130 */,
+/* 2131 */,
+/* 2132 */,
+/* 2133 */,
+/* 2134 */,
+/* 2135 */,
+/* 2136 */,
+/* 2137 */,
+/* 2138 */,
+/* 2139 */,
+/* 2140 */,
+/* 2141 */,
+/* 2142 */,
+/* 2143 */,
+/* 2144 */,
+/* 2145 */,
+/* 2146 */,
+/* 2147 */,
+/* 2148 */,
+/* 2149 */,
+/* 2150 */,
+/* 2151 */,
+/* 2152 */,
+/* 2153 */,
+/* 2154 */,
+/* 2155 */,
+/* 2156 */,
+/* 2157 */,
+/* 2158 */,
+/* 2159 */,
+/* 2160 */,
+/* 2161 */,
+/* 2162 */,
+/* 2163 */,
+/* 2164 */,
+/* 2165 */,
+/* 2166 */,
+/* 2167 */,
+/* 2168 */,
+/* 2169 */,
+/* 2170 */,
+/* 2171 */,
+/* 2172 */,
+/* 2173 */,
+/* 2174 */,
+/* 2175 */,
+/* 2176 */,
+/* 2177 */,
+/* 2178 */,
+/* 2179 */,
+/* 2180 */,
+/* 2181 */,
+/* 2182 */,
+/* 2183 */,
+/* 2184 */,
+/* 2185 */,
+/* 2186 */,
+/* 2187 */,
+/* 2188 */,
+/* 2189 */,
+/* 2190 */,
+/* 2191 */,
+/* 2192 */,
+/* 2193 */,
+/* 2194 */,
+/* 2195 */,
+/* 2196 */,
+/* 2197 */,
+/* 2198 */,
+/* 2199 */,
+/* 2200 */,
+/* 2201 */,
+/* 2202 */,
+/* 2203 */,
+/* 2204 */,
+/* 2205 */,
+/* 2206 */,
+/* 2207 */,
+/* 2208 */,
+/* 2209 */,
+/* 2210 */,
+/* 2211 */,
+/* 2212 */,
+/* 2213 */,
+/* 2214 */,
+/* 2215 */,
+/* 2216 */,
+/* 2217 */,
+/* 2218 */,
+/* 2219 */,
+/* 2220 */,
+/* 2221 */,
+/* 2222 */,
+/* 2223 */,
+/* 2224 */,
+/* 2225 */,
+/* 2226 */,
+/* 2227 */,
+/* 2228 */,
+/* 2229 */,
+/* 2230 */,
+/* 2231 */,
+/* 2232 */,
+/* 2233 */,
+/* 2234 */,
+/* 2235 */,
+/* 2236 */,
+/* 2237 */,
+/* 2238 */,
+/* 2239 */,
+/* 2240 */,
+/* 2241 */,
+/* 2242 */,
+/* 2243 */,
+/* 2244 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getTokenLocation = getTokenLocation;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function getTokenLocation(codeMirror, tokenEl) {
+  const { left, top, width, height } = tokenEl.getBoundingClientRect();
+  const { line, ch } = codeMirror.coordsChar({
+    left: left + width / 2,
+    top: top + height / 2
+  });
+
+  return {
+    line: line + 1,
+    column: ch
+  };
+}
 
 /***/ })
 /******/ ]);
