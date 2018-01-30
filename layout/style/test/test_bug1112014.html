@@ -89,7 +89,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   for (let tc in InspectorUtils) {
     if (/TYPE_/.test(tc)) {
       if (!(tc in testValues)) {
-	reps.push(tc);
+        reps.push(tc);
       }
     }
   }
@@ -101,8 +101,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
     for (let iter in testValues) {
       let testValue = testValues[iter];
       if (propertyName in overrideValues &&
-	  iter in overrideValues[propertyName]) {
-	testValue = overrideValues[propertyName][iter];
+          iter in overrideValues[propertyName]) {
+        testValue = overrideValues[propertyName][iter];
       }
 
       let supported =
