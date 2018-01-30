@@ -72,6 +72,7 @@ class PerformanceStorage;
 class PromiseNativeHandler;
 class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
+class WorkerErrorReport;
 class WorkerGlobalScope;
 struct WorkerOptions;
 } // namespace dom
@@ -141,45 +142,6 @@ public:
   {
     mMutex->AssertCurrentThreadOwns();
   }
-};
-
-class WorkerErrorBase {
-public:
-  nsString mMessage;
-  nsString mFilename;
-  uint32_t mLineNumber;
-  uint32_t mColumnNumber;
-  uint32_t mErrorNumber;
-
-  WorkerErrorBase()
-  : mLineNumber(0),
-    mColumnNumber(0),
-    mErrorNumber(0)
-  { }
-
-  void AssignErrorBase(JSErrorBase* aReport);
-};
-
-class WorkerErrorNote : public WorkerErrorBase {
-public:
-  void AssignErrorNote(JSErrorNotes::Note* aNote);
-};
-
-class WorkerErrorReport : public WorkerErrorBase {
-public:
-  nsString mLine;
-  uint32_t mFlags;
-  JSExnType mExnType;
-  bool mMutedError;
-  nsTArray<WorkerErrorNote> mNotes;
-
-  WorkerErrorReport()
-  : mFlags(0),
-    mExnType(JSEXN_ERR),
-    mMutedError(false)
-  { }
-
-  void AssignErrorReport(JSErrorReport* aReport);
 };
 
 template <class Derived>
@@ -1655,10 +1617,6 @@ public:
     return mTarget;
   }
 };
-
-// TODO: this will be removed in the next patch
-void
-LogErrorToConsole(const WorkerErrorReport& aReport, uint64_t aInnerWindowId);
 
 END_WORKERS_NAMESPACE
 
