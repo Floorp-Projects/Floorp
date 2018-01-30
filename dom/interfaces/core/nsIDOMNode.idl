@@ -32,7 +32,6 @@ interface nsIDOMNode : nsISupports
   const unsigned short      DOCUMENT_FRAGMENT_NODE = 11;
   const unsigned short      NOTATION_NODE      = 12;
 
-  readonly attribute DOMString        nodeName;
            attribute DOMString        nodeValue;
                                           // raises(DOMException) on setting
                                           // raises(DOMException) on retrieval

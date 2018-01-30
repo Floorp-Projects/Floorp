@@ -97,9 +97,7 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   *aNodeType = static_cast<unsigned short>(nodeType);
 
   if (*aNodeType !=  NODETYPE_TEXT) {
-    nsAutoString nodeName;
-    DOMNode->GetNodeName(nodeName);
-    *aNodeName = ::SysAllocString(nodeName.get());
+    *aNodeName = ::SysAllocString(mNode->NodeName().get());
   }
 
   nsAutoString nodeValue;

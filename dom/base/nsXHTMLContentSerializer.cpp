@@ -808,28 +808,16 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
 bool
 nsXHTMLContentSerializer::IsFirstChildOfOL(nsIContent* aElement)
 {
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-  nsAutoString parentName;
-
-  nsCOMPtr<nsIDOMNode> parentNode;
-  node->GetParentNode(getter_AddRefs(parentNode));
-  if (parentNode)
-    parentNode->GetNodeName(parentName);
-  else
-    return false;
-
-  if (parentName.LowerCaseEqualsLiteral("ol")) {
-
+  nsIContent* parent = aElement->GetParent();
+  if (parent && parent->NodeName().LowerCaseEqualsLiteral("ol")) {
     if (!mOLStateStack.IsEmpty()) {
       olState state = mOLStateStack[mOLStateStack.Length()-1];
       if (state.isFirstListItem)
         return true;
     }
-
-    return false;
   }
-  else
-    return false;
+
+  return false;
 }
 
 bool
