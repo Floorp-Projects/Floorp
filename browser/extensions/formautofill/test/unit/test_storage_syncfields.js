@@ -1,5 +1,5 @@
 /**
- * Tests ProfileStorage objects support for sync related fields.
+ * Tests FormAutofillStorage objects support for sync related fields.
  */
 
 "use strict";

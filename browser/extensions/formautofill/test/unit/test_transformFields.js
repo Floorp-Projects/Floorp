@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {ProfileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
+const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 
 const TEST_STORE_FILE_NAME = "test-profile.json";
 
@@ -841,7 +841,7 @@ let do_check_record_matches = (expectedRecord, record) => {
 add_task(async function test_computeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   ADDRESS_COMPUTE_TESTCASES.forEach(testcase => {
@@ -858,7 +858,7 @@ add_task(async function test_computeAddressFields() {
 add_task(async function test_normalizeAddressFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   ADDRESS_NORMALIZE_TESTCASES.forEach(testcase => {
@@ -875,7 +875,7 @@ add_task(async function test_normalizeAddressFields() {
 add_task(async function test_computeCreditCardFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   CREDIT_CARD_COMPUTE_TESTCASES.forEach(testcase => {
@@ -892,7 +892,7 @@ add_task(async function test_computeCreditCardFields() {
 add_task(async function test_normalizeCreditCardFields() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
 
-  let profileStorage = new ProfileStorage(path);
+  let profileStorage = new FormAutofillStorage(path);
   await profileStorage.initialize();
 
   CREDIT_CARD_NORMALIZE_TESTCASES.forEach(testcase => {

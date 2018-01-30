@@ -114,7 +114,7 @@ this.MasterPassword = {
    * Decrypts cipherText synchronously. "ensureLoggedIn()" needs to be called
    * outside in case another dialog is showing.
    *
-   * NOTE: This method will be removed soon once the ProfileStorage APIs are
+   * NOTE: This method will be removed soon once the FormAutofillStorage APIs are
    *       refactored to be async functions (bug 1399367). Please use async
    *       version instead.
    *
@@ -147,7 +147,7 @@ this.MasterPassword = {
    * Encrypts plainText synchronously. "ensureLoggedIn()" needs to be called
    * outside in case another dialog is showing.
    *
-   * NOTE: This method will be removed soon once the ProfileStorage APIs are
+   * NOTE: This method will be removed soon once the FormAutofillStorage APIs are
    *       refactored to be async functions (bug 1399367). Please use async
    *       version instead.
    *
