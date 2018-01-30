@@ -66,6 +66,8 @@ public:
   NS_DECL_NSICSSDECLARATION
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
+  nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
+                            nsAString& aValue) override;
   virtual already_AddRefed<CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
     override;
