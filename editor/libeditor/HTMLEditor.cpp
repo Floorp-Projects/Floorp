@@ -2345,7 +2345,6 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  bool bNodeFound = false;
   bool isCollapsed = selection->Collapsed();
 
   nsAutoString domTagName;
@@ -2356,7 +2355,6 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   bool isLinkTag = IsLinkTag(TagName);
   bool isNamedAnchorTag = IsNamedAnchorTag(TagName);
 
-  nsCOMPtr<nsIDOMElement> selectedElement;
   RefPtr<nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
 
@@ -2378,119 +2376,119 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       if (anyTag || (TagName == domTagName) ||
           (isLinkTag && HTMLEditUtils::IsLink(selectedNode)) ||
           (isNamedAnchorTag && HTMLEditUtils::IsNamedAnchor(selectedNode))) {
-        bNodeFound = true;
-        selectedElement = do_QueryInterface(selectedNode);
+        selectedNode.forget(aReturn);
+        return NS_OK;
       }
     }
   }
 
-  if (!bNodeFound) {
-    if (isLinkTag) {
-      // Link tag is a special case - we return the anchor node
-      //  found for any selection that is totally within a link,
-      //  included a collapsed selection (just a caret in a link)
-      const RangeBoundary& anchor = selection->AnchorRef();
-      const RangeBoundary& focus = selection->FocusRef();
-      // Link node must be the same for both ends of selection
-      if (anchor.IsSet()) {
-        nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-        nsresult rv =
-          GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                      anchor.Container()->AsDOMNode(),
-                                      getter_AddRefs(parentLinkOfAnchor));
-        // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
-        if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
-          if (isCollapsed) {
-            // We have just a caret in the link
+  bool bNodeFound = false;
+  nsCOMPtr<nsIDOMElement> selectedElement;
+  if (isLinkTag) {
+    // Link tag is a special case - we return the anchor node
+    //  found for any selection that is totally within a link,
+    //  included a collapsed selection (just a caret in a link)
+    const RangeBoundary& anchor = selection->AnchorRef();
+    const RangeBoundary& focus = selection->FocusRef();
+    // Link node must be the same for both ends of selection
+    if (anchor.IsSet()) {
+      nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
+      nsresult rv =
+        GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                    anchor.Container()->AsDOMNode(),
+                                    getter_AddRefs(parentLinkOfAnchor));
+      // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
+      if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
+        if (isCollapsed) {
+          // We have just a caret in the link
+          bNodeFound = true;
+        } else if (focus.IsSet()) {
+          // Link node must be the same for both ends of selection.
+          nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
+          rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                           focus.Container()->AsDOMNode(),
+                                           getter_AddRefs(parentLinkOfFocus));
+          if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
             bNodeFound = true;
-          } else if (focus.IsSet()) {
-            // Link node must be the same for both ends of selection.
-            nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
-            rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                             focus.Container()->AsDOMNode(),
-                                             getter_AddRefs(parentLinkOfFocus));
-            if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
-              bNodeFound = true;
-            }
           }
+        }
 
-          // We found a link node parent
-          if (bNodeFound) {
-            // GetElementOrParentByTagName addref'd this, so we don't need to do it here
-            parentLinkOfAnchor.forget(aReturn);
-            return NS_OK;
-          }
-        } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
-          // Check if link node is the only thing selected
-          if (HTMLEditUtils::IsLink(anchor.GetChildAtOffset()) &&
-              anchor.Container() == focus.Container() &&
-              focus.GetChildAtOffset() ==
-                anchor.GetChildAtOffset()->GetNextSibling()) {
-            selectedElement = do_QueryInterface(anchor.GetChildAtOffset());
-            bNodeFound = true;
-          }
+        // We found a link node parent
+        if (bNodeFound) {
+          // GetElementOrParentByTagName addref'd this, so we don't need to do it here
+          parentLinkOfAnchor.forget(aReturn);
+          return NS_OK;
+        }
+      } else if (anchor.GetChildAtOffset() && focus.GetChildAtOffset()) {
+        // Check if link node is the only thing selected
+        if (HTMLEditUtils::IsLink(anchor.GetChildAtOffset()) &&
+            anchor.Container() == focus.Container() &&
+            focus.GetChildAtOffset() ==
+              anchor.GetChildAtOffset()->GetNextSibling()) {
+          selectedElement = do_QueryInterface(anchor.GetChildAtOffset());
+          bNodeFound = true;
         }
       }
     }
+  }
 
-    if (!isCollapsed) {
-      RefPtr<nsRange> currange = selection->GetRangeAt(0);
-      if (currange) {
-        nsresult rv;
-        nsCOMPtr<nsIContentIterator> iter =
-          do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
-                            &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
+  if (!isCollapsed) {
+    RefPtr<nsRange> currange = selection->GetRangeAt(0);
+    if (currange) {
+      nsresult rv;
+      nsCOMPtr<nsIContentIterator> iter =
+        do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
+                          &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        iter->Init(currange);
-        // loop through the content iterator for each content node
-        while (!iter->IsDone()) {
-          // Query interface to cast nsIContent to nsIDOMNode
-          //  then get tagType to compare to  aTagName
-          // Clone node of each desired type and append it to the aDomFrag
-          nsINode* currentNode = iter->GetCurrentNode();
-          selectedElement = do_QueryInterface(currentNode);
-          if (selectedElement) {
-            // If we already found a node, then we have another element,
-            //  thus there's not just one element selected
-            if (bNodeFound) {
-              bNodeFound = false;
-              break;
-            }
-
-            domTagName = currentNode->NodeName();
-            ToLowerCase(domTagName);
-
-            if (anyTag) {
-              // Get name of first selected element
-              selectedElement->GetTagName(TagName);
-              ToLowerCase(TagName);
-              anyTag = false;
-            }
-
-            // The "A" tag is a pain,
-            //  used for both link(href is set) and "Named Anchor"
-            nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
-            if ((isLinkTag &&
-                 HTMLEditUtils::IsLink(selectedNode)) ||
-                (isNamedAnchorTag &&
-                 HTMLEditUtils::IsNamedAnchor(selectedNode))) {
-              bNodeFound = true;
-            } else if (TagName == domTagName) { // All other tag names are handled here
-              bNodeFound = true;
-            }
-            if (!bNodeFound) {
-              // Check if node we have is really part of the selection???
-              break;
-            }
+      iter->Init(currange);
+      // loop through the content iterator for each content node
+      while (!iter->IsDone()) {
+        // Query interface to cast nsIContent to nsIDOMNode
+        //  then get tagType to compare to  aTagName
+        // Clone node of each desired type and append it to the aDomFrag
+        nsINode* currentNode = iter->GetCurrentNode();
+        selectedElement = do_QueryInterface(currentNode);
+        if (selectedElement) {
+          // If we already found a node, then we have another element,
+          //  thus there's not just one element selected
+          if (bNodeFound) {
+            bNodeFound = false;
+            break;
           }
-          iter->Next();
+
+          domTagName = currentNode->NodeName();
+          ToLowerCase(domTagName);
+
+          if (anyTag) {
+            // Get name of first selected element
+            selectedElement->GetTagName(TagName);
+            ToLowerCase(TagName);
+            anyTag = false;
+          }
+
+          // The "A" tag is a pain,
+          //  used for both link(href is set) and "Named Anchor"
+          nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
+          if ((isLinkTag &&
+               HTMLEditUtils::IsLink(selectedNode)) ||
+              (isNamedAnchorTag &&
+               HTMLEditUtils::IsNamedAnchor(selectedNode))) {
+            bNodeFound = true;
+          } else if (TagName == domTagName) { // All other tag names are handled here
+            bNodeFound = true;
+          }
+          if (!bNodeFound) {
+            // Check if node we have is really part of the selection???
+            break;
+          }
         }
-      } else {
-        // Should never get here?
-        isCollapsed = true;
-        NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
+        iter->Next();
       }
+    } else {
+      // Should never get here?
+      isCollapsed = true;
+      NS_WARNING("isCollapsed was FALSE, but no elements found in selection\n");
     }
   }
 
