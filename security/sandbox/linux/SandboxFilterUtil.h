@@ -23,7 +23,8 @@ namespace mozilla {
 // respectively; on most other architectures they're individual system
 // calls. It translates the syscalls into socketcall/ipc selector
 // values, because those are defined (even if not used) for all
-// architectures.
+// architectures.  (As of kernel 4.2.0, x86 also has regular system
+// calls, but userland will typically still use socketcall.)
 //
 // This EvaluateSyscall() routine always returns InvalidSyscall() for
 // everything else.  It's assumed that subclasses will be implementing
@@ -35,26 +36,19 @@ public:
   using ResultExpr = sandbox::bpf_dsl::ResultExpr;
 
   virtual ResultExpr EvaluateSyscall(int aSysno) const override;
-  virtual Maybe<ResultExpr> EvaluateSocketCall(int aCall) const {
+
+  // aHasArgs is true if this is a normal syscall, where the arguments
+  // can be inspected by seccomp-bpf, rather than a case of socketcall().
+  virtual Maybe<ResultExpr> EvaluateSocketCall(int aCall, bool aHasArgs) const {
     return Nothing();
   }
+
 #ifndef ANDROID
   // Android doesn't use SysV IPC (and doesn't define the selector
   // constants in its headers), so this isn't implemented there.
   virtual Maybe<ResultExpr> EvaluateIpcCall(int aCall) const {
     return Nothing();
   }
-#endif
-
-#ifdef __NR_socketcall
-  // socketcall(2) takes the actual call's arguments via a pointer, so
-  // seccomp-bpf can't inspect them; ipc(2) takes them at different indices.
-  static const bool kSocketCallHasArgs = false;
-  static const bool kIpcCallNormalArgs = false;
-#else
-  // Otherwise, the bpf_dsl Arg<> class can be used normally.
-  static const bool kSocketCallHasArgs = true;
-  static const bool kIpcCallNormalArgs = true;
 #endif
 };
 
