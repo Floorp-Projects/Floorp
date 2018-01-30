@@ -27,3 +27,18 @@ only-for-build-platforms:
     - win32-devedition-nightly/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
+
+job-template:
+    mozharness:
+        config:
+            by-build-platform:
+                linux-.*:
+                    - repackage/linux32_signed.py
+                linux64-.*:
+                    - repackage/linux64_signed.py
+                macosx64-.*:
+                    - repackage/osx_signed.py
+                win32-.*:
+                    - repackage/win32_signed.py
+                win64-.*:
+                    - repackage/win64_signed.py
