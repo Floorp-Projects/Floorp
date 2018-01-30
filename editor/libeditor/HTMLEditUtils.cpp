@@ -336,13 +336,6 @@ HTMLEditUtils::IsImage(nsIDOMNode* aNode)
 }
 
 bool
-HTMLEditUtils::IsLink(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return node && IsLink(node);
-}
-
-bool
 HTMLEditUtils::IsLink(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
