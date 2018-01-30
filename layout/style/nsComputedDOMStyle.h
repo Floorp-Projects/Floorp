@@ -93,11 +93,6 @@ public:
     return mContent;
   }
 
-  virtual mozilla::dom::DocGroup* GetDocGroup() const override
-  {
-    return mContent ? mContent->GetDocGroup() : nullptr;
-  }
-
   static already_AddRefed<nsStyleContext>
   GetStyleContext(mozilla::dom::Element* aElement, nsAtom* aPseudo,
                   nsIPresShell* aPresShell,
