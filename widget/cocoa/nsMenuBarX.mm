@@ -597,8 +597,9 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
     return nil;
   }
 
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-  if (!domdoc) {
+  RefPtr<mozilla::dom::Element> menuItem =
+    doc->GetElementById(nodeID);
+  if (!menuItem) {
     return nil;
   }
 
@@ -606,36 +607,27 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
   nsAutoString label;
   nsAutoString modifiers;
   nsAutoString key;
-  nsCOMPtr<nsIDOMElement> menuItem;
-  domdoc->GetElementById(nodeID, getter_AddRefs(menuItem));
-  if (menuItem) {
-    menuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
-    menuItem->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
-    menuItem->GetAttribute(NS_LITERAL_STRING("key"), key);
-  }
-  else {
-    return nil;
-  }
+  menuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
+  menuItem->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
+  menuItem->GetAttribute(NS_LITERAL_STRING("key"), key);
 
   // Get more information about the key equivalent. Start by
   // finding the key node we need.
   NSString* keyEquiv = nil;
   unsigned int macKeyModifiers = 0;
   if (!key.IsEmpty()) {
-    nsCOMPtr<nsIDOMElement> keyElement;
-    domdoc->GetElementById(key, getter_AddRefs(keyElement));
+    RefPtr<Element> keyElement = doc->GetElementById(key);
     if (keyElement) {
-      nsCOMPtr<Element> keyContent (do_QueryInterface(keyElement));
       // first grab the key equivalent character
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
-      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
+      keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) {
         keyEquiv = [[NSString stringWithCharacters:reinterpret_cast<const unichar*>(keyChar.get())
                                             length:keyChar.Length()] lowercaseString];
       }
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
-      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
+      keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
       uint8_t geckoModifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
       macKeyModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
