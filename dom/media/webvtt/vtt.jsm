@@ -28,8 +28,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
  */
 
 var Cu = Components.utils;
-ChromeUtils.import('resource://gre/modules/Services.jsm');
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+Cu.import('resource://gre/modules/Services.jsm');
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 (function(global) {

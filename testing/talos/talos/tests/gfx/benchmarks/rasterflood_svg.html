@@ -140,7 +140,7 @@ addEventListener("load", function() {
   } catch (e) {}
 
   try {
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Components.utils.import("resource://gre/modules/Services.jsm");
     Services.scriptloader.loadSubScript("chrome://talos-powers-content/content/TalosContentProfiler.js");
 
     TalosContentProfiler.resume("rasterflood_svg.html loaded", true).then(() => {

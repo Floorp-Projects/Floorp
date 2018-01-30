@@ -10,8 +10,8 @@ const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
-ChromeUtils.defineModuleGetter(this, "MINIMUM_TAB_COUNT_INTERVAL_MS",
-                               "resource:///modules/BrowserUsageTelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MINIMUM_TAB_COUNT_INTERVAL_MS",
+                                  "resource:///modules/BrowserUsageTelemetry.jsm");
 
 // Reset internal URI counter in case URIs were opened by other tests.
 Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);

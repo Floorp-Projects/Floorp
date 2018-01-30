@@ -70,7 +70,7 @@ function test() {
 
   SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]}).then(() => {
     var cl = new consoleListener();
-    ChromeUtils.import(JSM);
+    Components.utils.import(JSM);
     ConsoleTest.go(dumpFunction);
   });
 }

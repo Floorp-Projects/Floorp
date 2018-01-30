@@ -2,10 +2,10 @@
 
 /* global windowTracker, EventManager, EventEmitter */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
-                               "resource://gre/modules/LightweightThemeManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gThemesEnabled", () => {
   return Services.prefs.getBoolPref("extensions.webextensions.themes.enabled");

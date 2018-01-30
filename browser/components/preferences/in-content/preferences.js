@@ -20,18 +20,18 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "formAutofillParent",
-                               "resource://formautofill/FormAutofillParent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "formAutofillParent",
+                                  "resource://formautofill/FormAutofillParent.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "trackingprotectionUiEnabled",
                                       "privacy.trackingprotection.ui.enabled");

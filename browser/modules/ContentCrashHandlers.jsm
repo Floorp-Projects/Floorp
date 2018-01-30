@@ -13,24 +13,24 @@ this.EXPORTED_SYMBOLS = [ "TabCrashHandler",
                           "PluginCrashReporter",
                           "UnsubmittedCrashHandler" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CrashSubmit",
+XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "RemotePages",
+XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
   "resource://gre/modules/RemotePageManager.jsm");
-ChromeUtils.defineModuleGetter(this, "SessionStore",
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm",
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {

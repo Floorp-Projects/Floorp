@@ -4,8 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PageActions",
-                               "resource://gre/modules/PageActions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource://gre/modules/PageActions.jsm");
 
 // Define service devices. We should consider moving these to their respective
 // JSM files, but we left them here to allow for better lazy JSM loading.
@@ -13,7 +13,7 @@ var rokuDevice = {
   id: "roku:ecp",
   target: "roku:ecp",
   factory: function(aService) {
-    ChromeUtils.import("resource://gre/modules/RokuApp.jsm");
+    Cu.import("resource://gre/modules/RokuApp.jsm");
     return new RokuApp(aService);
   },
   types: ["video/mp4"],
@@ -24,7 +24,7 @@ var mediaPlayerDevice = {
   id: "media:router",
   target: "media:router",
   factory: function(aService) {
-    ChromeUtils.import("resource://gre/modules/MediaPlayerApp.jsm");
+    Cu.import("resource://gre/modules/MediaPlayerApp.jsm");
     return new MediaPlayerApp(aService);
   },
   types: ["video/mp4", "video/webm", "application/x-mpegurl"],

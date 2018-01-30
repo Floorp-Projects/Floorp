@@ -6,12 +6,12 @@ this.EXPORTED_SYMBOLS = ["Resource"];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/util.js");
-const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/util.js");
+const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 Cu.importGlobalProperties(["fetch"]);
 /* global AbortController */
 

@@ -5,14 +5,14 @@ this.EXPORTED_SYMBOLS = ["NewTabSearchProvider"];
 const {utils: Cu, interfaces: Ci} = Components;
 const CURRENT_ENGINE = "browser-search-engine-modified";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ContentSearch",
-                               "resource:///modules/ContentSearch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
+                                  "resource:///modules/ContentSearch.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
-  const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
+  const {EventEmitter} = Cu.import("resource://gre/modules/EventEmitter.jsm", {});
   return EventEmitter;
 });
 

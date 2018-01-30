@@ -5,10 +5,10 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://services-sync/UIState.jsm");
+Cu.import("resource://services-sync/UIState.jsm");
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
-                               "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+                                  "resource://gre/modules/FxAccounts.jsm");
 
 var gTestTab;
 var gContentAPI;

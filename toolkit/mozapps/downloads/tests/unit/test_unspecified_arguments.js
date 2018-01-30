@@ -8,7 +8,7 @@
  */
 
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
 function run_test() {
   Assert.equal(DownloadUtils.getDownloadStatus(1000, null, null, null) + "",

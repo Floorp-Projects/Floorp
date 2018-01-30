@@ -20,7 +20,7 @@
   function runTest() {
     let script = SpecialPowers.loadChromeScript(function() {
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+      const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
       // Force download to be w/o user assistance for our testing mime type
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
@@ -43,7 +43,7 @@
       prefBranch.setIntPref("folderList", 2);
 
       const { Downloads } =
-        ChromeUtils.import("resource://gre/modules/Downloads.jsm", {});
+        Cu.import("resource://gre/modules/Downloads.jsm", {});
       Downloads.getList(Downloads.PUBLIC).then(list => {
         list.addView({
           onDownloadAdded(aDownload) {
@@ -67,7 +67,7 @@
   testCleanUp = function cleanup() {
     SpecialPowers.loadChromeScript(function() {
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+      const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
         mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");

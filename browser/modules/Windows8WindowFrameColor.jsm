@@ -7,9 +7,9 @@ const {interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = ["Windows8WindowFrameColor"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-var Registry = ChromeUtils.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRegistry;
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+var Registry = Cu.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRegistry;
 
 var Windows8WindowFrameColor = {
   _windowFrameColor: null,

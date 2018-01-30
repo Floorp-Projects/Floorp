@@ -4,13 +4,13 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 let rt;
 function getRuntime(type) {
   if (!rt) {
     let process = Cc["@mozilla.org/plugin/ppapi.js-process;1"].getService(Ci.nsIPPAPIJSProcess);
-    ChromeUtils.import("resource://ppapi.js/ppapi-runtime.jsm");
+    Cu.import("resource://ppapi.js/ppapi-runtime.jsm");
     rt = new PPAPIRuntime(process);
     process.launch(rt.callback);
   }

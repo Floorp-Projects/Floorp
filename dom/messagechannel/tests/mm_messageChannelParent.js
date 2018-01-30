@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 let port;
 let mm;
 

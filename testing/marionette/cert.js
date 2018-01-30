@@ -4,10 +4,10 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["cert"];
 

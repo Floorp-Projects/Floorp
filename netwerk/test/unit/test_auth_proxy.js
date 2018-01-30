@@ -10,9 +10,9 @@
  * <copied from="test_authentication.js"/>
  */
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;

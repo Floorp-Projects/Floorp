@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const nsIBLS = Components.interfaces.nsIBlocklistService;
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 
 var gNotifier = null;
 var gNextTest = null;

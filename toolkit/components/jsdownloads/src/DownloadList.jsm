@@ -16,7 +16,7 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
  * Represents a collection of Download objects that can be viewed and managed by

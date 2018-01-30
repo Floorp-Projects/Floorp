@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function init() {
   // Include the build date and a warning about Telemetry

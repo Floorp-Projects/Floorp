@@ -7,8 +7,8 @@ this.EXPORTED_SYMBOLS = ["Prefetcher"];
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // Rules are defined at the bottom of this file.
 var PrefetcherRules = {};

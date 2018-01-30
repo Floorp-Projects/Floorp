@@ -4,15 +4,15 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Preferences",
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
-ChromeUtils.defineModuleGetter(this, "Log",
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
   "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryController",
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
   "resource://gre/modules/TelemetryController.jsm");
-ChromeUtils.defineModuleGetter(this, "AppConstants",
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUpdateTimerManager",

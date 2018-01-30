@@ -1,6 +1,6 @@
-ChromeUtils.import("resource:///modules/RecentWindow.jsm");
+Components.utils.import("resource:///modules/RecentWindow.jsm");
 
-ChromeUtils.defineModuleGetter(this, "CaptivePortalWatcher",
+XPCOMUtils.defineLazyModuleGetter(this, "CaptivePortalWatcher",
   "resource:///modules/CaptivePortalWatcher.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cps",

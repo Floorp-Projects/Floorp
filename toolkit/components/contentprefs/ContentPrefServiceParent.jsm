@@ -11,10 +11,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "_methodsCallableFromChild",
-                               "resource://gre/modules/ContentPrefUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "_methodsCallableFromChild",
+                                  "resource://gre/modules/ContentPrefUtils.jsm");
 
 let loadContext = Cc["@mozilla.org/loadcontext;1"].
                     createInstance(Ci.nsILoadContext);

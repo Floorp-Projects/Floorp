@@ -2,8 +2,8 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.defineModuleGetter(this, "FormHistory",
-                               "resource://gre/modules/FormHistory.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
+                                  "resource://gre/modules/FormHistory.jsm");
 
 add_task(async function test() {
   // This test relies on the form history being empty to start with delete

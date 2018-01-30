@@ -17,7 +17,7 @@
 const CC = Components.Constructor;
 const Cm = Components.manager;
 
-ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+Cu.import("resource://testing-common/AppInfo.jsm");
 /* global updateAppInfo:false */ // Imported via AppInfo.jsm.
 updateAppInfo();
 

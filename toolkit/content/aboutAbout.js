@@ -5,7 +5,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var gProtocols = [];
 var gContainer;

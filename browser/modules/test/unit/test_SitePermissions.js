@@ -3,8 +3,8 @@
  */
 "use strict";
 
-ChromeUtils.import("resource:///modules/SitePermissions.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource:///modules/SitePermissions.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const STORAGE_MANAGER_ENABLED = Services.prefs.getBoolPref("browser.storageManager.enabled");
 const RESIST_FINGERPRINTING_ENABLED = Services.prefs.getBoolPref("privacy.resistFingerprinting");

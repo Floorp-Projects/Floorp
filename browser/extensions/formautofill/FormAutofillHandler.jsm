@@ -14,15 +14,15 @@ this.EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
+Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FormAutofillHeuristics",
-                               "resource://formautofill/FormAutofillHeuristics.jsm");
-ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
-                               "resource://gre/modules/FormLikeFactory.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHeuristics",
+                                  "resource://formautofill/FormAutofillHeuristics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
+                                  "resource://gre/modules/FormLikeFactory.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);

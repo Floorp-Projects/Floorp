@@ -6,7 +6,7 @@ const ID = "experiment1@tests.mozilla.org";
 var gIsNightly = false;
 
 function getXS() {
-  let XPI = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+  let XPI = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
   return XPI.XPIStates;
 }
 

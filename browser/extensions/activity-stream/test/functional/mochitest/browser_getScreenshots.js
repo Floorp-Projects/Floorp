@@ -4,13 +4,13 @@
 "use strict";
 
 let Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // a blue page
 const TEST_URL = "https://example.com/browser/browser/extensions/activity-stream/test/functional/mochitest/blue_page.html";
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 
-ChromeUtils.defineModuleGetter(this, "Screenshots", "resource://activity-stream/lib/Screenshots.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshots", "resource://activity-stream/lib/Screenshots.jsm");
 
 function get_pixels_for_data_uri(dataURI, width, height) {
   return new Promise(resolve => {

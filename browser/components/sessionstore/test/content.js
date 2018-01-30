@@ -9,7 +9,7 @@
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function executeSoon(callback) {
   Services.tm.dispatchToMainThread(callback);

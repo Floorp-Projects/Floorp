@@ -1,7 +1,7 @@
 var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
                getService(Ci.nsIURIFixup);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
                 "browser.fixup.domainwhitelist.whitelisted"];

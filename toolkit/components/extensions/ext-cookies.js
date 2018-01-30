@@ -3,8 +3,8 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-toolkit.js */
 
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 /* globals DEFAULT_STORE, PRIVATE_STORE */
 

@@ -9,8 +9,8 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var {CrashManager, CrashStore, dateToDays} = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+var {CrashManager, CrashStore, dateToDays} = Cu.import("resource://gre/modules/CrashManager.jsm", {});
+Cu.import("resource://gre/modules/osfile.jsm", this);
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 DUMMY_DATE.setMilliseconds(0);

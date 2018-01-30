@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/utils.js");
 
 add_test(function test_simple() {
   let expected = {

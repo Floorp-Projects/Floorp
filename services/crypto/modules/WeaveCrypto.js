@@ -6,9 +6,9 @@ this.EXPORTED_SYMBOLS = ["WeaveCrypto"];
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/async.js");
 
 Cu.importGlobalProperties(["crypto"]);
 

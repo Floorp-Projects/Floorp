@@ -1,8 +1,8 @@
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
 
 let engine;
 let store;

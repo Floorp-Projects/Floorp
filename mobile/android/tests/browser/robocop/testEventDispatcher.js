@@ -1,5 +1,5 @@
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Messaging.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var java = new JavaBridge(this);
 

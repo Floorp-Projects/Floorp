@@ -8,20 +8,20 @@
  */
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu, Constructor: CC } = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource:///modules/DirectoryLinksProvider.jsm");
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
-ChromeUtils.import("resource://gre/modules/Http.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/DirectoryLinksProvider.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Http.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
-ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
 do_get_profile();

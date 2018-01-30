@@ -9,7 +9,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-var {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm", {});
+var {Sanitizer} = Cu.import("resource:///modules/Sanitizer.jsm", {});
 
 Preferences.addAll([
   { id: "privacy.cpd.history", type: "bool" },

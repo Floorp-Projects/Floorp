@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var addedTopic = "xpcom-category-entry-added";
 var removedTopic = "xpcom-category-entry-removed";

@@ -12,22 +12,22 @@ const Cr = Components.results;
 const kLoginsKey = "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 const kMainKey = "Software\\Microsoft\\Internet Explorer\\Main";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
-ChromeUtils.import("resource:///modules/MSMigrationUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource:///modules/MSMigrationUtils.jsm");
 
 
-ChromeUtils.defineModuleGetter(this, "ctypes",
-                               "resource://gre/modules/ctypes.jsm");
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
-                               "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OSCrypto",
-                               "resource://gre/modules/OSCrypto.jsm");
-ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
-                               "resource://gre/modules/WindowsRegistry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
+                                  "resource://gre/modules/ctypes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
+                                  "resource://gre/modules/OSCrypto.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 

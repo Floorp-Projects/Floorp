@@ -15,7 +15,7 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 SimpleTest.waitForExplicitFinish();
 

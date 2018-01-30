@@ -9,7 +9,7 @@
  * corrupt, nor a JSON backup nor bookmarks.html are available.
  */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 function run_test() {
   // Remove bookmarks.html from profile.

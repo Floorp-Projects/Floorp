@@ -15,14 +15,16 @@
  * content retrieved.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const {utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "domParser", "@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
 
 const {NoSuchElementError} =
-    ChromeUtils.import("chrome://marionette/content/error.js", {});
+    Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["l10n"];
 

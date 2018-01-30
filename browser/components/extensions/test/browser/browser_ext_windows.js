@@ -91,7 +91,7 @@ add_task(async function testWindowTitle() {
   });
 
   await extension.startup();
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
   async function createApiWin(options) {
     let promiseLoaded = BrowserTestUtils.waitForNewWindow(START_URL);

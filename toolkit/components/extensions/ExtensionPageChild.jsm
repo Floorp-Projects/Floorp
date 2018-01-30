@@ -19,15 +19,15 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionChildDevToolsUtils",
-                               "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Schemas",
-                               "resource://gre/modules/Schemas.jsm");
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChildDevToolsUtils",
+                                  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
+                                  "resource://gre/modules/Schemas.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+                                  "resource://gre/modules/WebNavigationFrames.jsm");
 
 XPCOMUtils.defineLazyGetter(
   this, "processScript",
@@ -37,9 +37,9 @@ XPCOMUtils.defineLazyGetter(
 const CATEGORY_EXTENSION_SCRIPTS_ADDON = "webextension-scripts-addon";
 const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionCommon.jsm");
+Cu.import("resource://gre/modules/ExtensionChild.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   defineLazyGetter,

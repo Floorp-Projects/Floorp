@@ -6,12 +6,12 @@ this.EXPORTED_SYMBOLS = ["WebCompatReporter"];
 
 let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PREF_STYLO_ENABLED = "layout.css.servo.enabled";
 
-ChromeUtils.defineModuleGetter(this, "PageActions",
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
   "resource:///modules/PageActions.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "wcStrings", function() {

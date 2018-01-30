@@ -8,12 +8,12 @@ this.EXPORTED_SYMBOLS = ["FinderIterator"];
 
 const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
-ChromeUtils.defineModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NLP", "resource://gre/modules/NLP.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 
 const kDebug = false;
 const kIterationSizeMax = 100;

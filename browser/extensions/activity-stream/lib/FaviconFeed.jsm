@@ -4,17 +4,17 @@
 "use strict";
 
 const {utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.importGlobalProperties(["fetch", "URL"]);
 
-const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm", {});
-const {getDomain} = ChromeUtils.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
+const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {PersistentCache} = Cu.import("resource://activity-stream/lib/PersistentCache.jsm", {});
+const {getDomain} = Cu.import("resource://activity-stream/lib/TippyTopProvider.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 const FIVE_MINUTES = 5 * 60 * 1000;

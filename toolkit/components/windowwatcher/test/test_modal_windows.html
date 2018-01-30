@@ -15,8 +15,8 @@ that is opened reports itself as being modal.
   <script type="application/javascript">
   const {utils: Cu, interfaces: Ci} = Components;
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
   add_task(async function() {
     BrowserTestUtils.domWindowOpened().then((win) => {

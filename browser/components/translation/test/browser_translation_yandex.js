@@ -11,14 +11,14 @@
 //
 // NOTE: Whitelisting a class of rejections should be limited. Normally you
 //       should use "expectUncaughtRejection" to flag individual failures.
-ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm", this);
+Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_ILLEGAL_VALUE/);
 
 const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kShowUIPref = "browser.translation.ui.show";
 
-const {Translation} = ChromeUtils.import("resource:///modules/translation/Translation.jsm", {});
+const {Translation} = Cu.import("resource:///modules/translation/Translation.jsm", {});
 
 add_task(async function setup() {
   Services.prefs.setCharPref(kEnginePref, "yandex");
@@ -47,8 +47,8 @@ add_task(async function test_yandex_translation() {
   let browser = tab.linkedBrowser;
 
   await ContentTask.spawn(browser, null, async function() {
-    ChromeUtils.import("resource:///modules/translation/TranslationDocument.jsm");
-    ChromeUtils.import("resource:///modules/translation/YandexTranslator.jsm");
+    Cu.import("resource:///modules/translation/TranslationDocument.jsm");
+    Cu.import("resource:///modules/translation/YandexTranslator.jsm");
 
     let client = new YandexTranslator(
       new TranslationDocument(content.document), "fr", "en");

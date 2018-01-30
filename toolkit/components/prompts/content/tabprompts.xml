@@ -169,7 +169,7 @@
                 // a "pagehide" event.
 
                 let tmp = {};
-                ChromeUtils.import("resource://gre/modules/CommonDialog.jsm", tmp);
+                Components.utils.import("resource://gre/modules/CommonDialog.jsm", tmp);
                 this.Dialog = new tmp.CommonDialog(args, this.ui);
                 this.Dialog.onLoad(null);
 
@@ -331,7 +331,7 @@
             let defaultButton = this.ui["button" + bnum];
 
             let { AppConstants } =
-                ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+                Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
             if (AppConstants.platform == "macosx") {
               // On OS X, the default button always stays marked as such (until
               // the entire prompt blurs).

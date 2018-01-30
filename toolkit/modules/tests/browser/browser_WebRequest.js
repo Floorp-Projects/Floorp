@@ -2,7 +2,7 @@
 
 var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
-var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});
+var {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
 
 const BASE = "http://example.com/browser/toolkit/modules/tests/browser";
 const URL = BASE + "/file_WebRequest_page1.html";

@@ -13,11 +13,11 @@ const TEST_ARTICLE =
 const TEST_ITALIAN_ARTICLE =
   "http://example.com/browser/toolkit/components/narrate/test/inferno.html";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services",
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "AddonManager",
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 
 const TEST_PREFS = {
@@ -65,7 +65,7 @@ function spawnInNewReaderTab(url, func) {
           // This imports the test utils for all tests, so we'll declare it as
           // a global here which will make it ESLint happy.
           /* global NarrateTestUtils */
-          ChromeUtils.import("chrome://mochitests/content/browser/" +
+          Components.utils.import("chrome://mochitests/content/browser/" +
             "toolkit/components/narrate/test/NarrateTestUtils.jsm");
 
           await NarrateTestUtils.getReaderReadyPromise(content);

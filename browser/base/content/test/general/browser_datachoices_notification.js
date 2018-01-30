@@ -6,9 +6,9 @@
 
 // Pass an empty scope object to the import to prevent "leaked window property"
 // errors in tests.
-var Preferences = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+var Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 var TelemetryReportingPolicy =
-  ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).TelemetryReportingPolicy;
+  Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).TelemetryReportingPolicy;
 
 const PREF_BRANCH = "datareporting.policy.";
 const PREF_BYPASS_NOTIFICATION = PREF_BRANCH + "dataSubmissionPolicyBypassNotification";
@@ -20,14 +20,14 @@ const TEST_POLICY_VERSION = 37;
 
 function fakeShowPolicyTimeout(set, clear) {
   let reportingPolicy =
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).Policy;
+    Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).Policy;
   reportingPolicy.setShowInfobarTimeout = set;
   reportingPolicy.clearShowInfobarTimeout = clear;
 }
 
 function sendSessionRestoredNotification() {
   let reportingPolicyImpl =
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).TelemetryReportingPolicyImpl;
+    Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {}).TelemetryReportingPolicyImpl;
   reportingPolicyImpl.observe(null, "sessionstore-windows-restored", null);
 }
 

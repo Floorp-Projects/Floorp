@@ -9,8 +9,8 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "DownloadError",
-                               "resource://gre/modules/DownloadCore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadError",
+                                  "resource://gre/modules/DownloadCore.jsm");
 
 // Execution of common tests
 

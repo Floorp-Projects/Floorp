@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
 
 const HOST1 = "https://www.example.com/";
 const HOST2 = "https://www.mozilla.org/";

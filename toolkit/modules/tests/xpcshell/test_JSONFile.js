@@ -5,18 +5,18 @@
 "use strict";
 
 // Globals
-ChromeUtils.defineModuleGetter(this, "AsyncShutdown",
-                               "resource://gre/modules/AsyncShutdown.jsm");
-ChromeUtils.defineModuleGetter(this, "DownloadPaths",
-                               "resource://gre/modules/DownloadPaths.jsm");
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
-ChromeUtils.defineModuleGetter(this, "FileTestUtils",
-                               "resource://testing-common/FileTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
+                                  "resource://gre/modules/DownloadPaths.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
+                                  "resource://gre/modules/JSONFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileTestUtils",
+                                  "resource://testing-common/FileTestUtils.jsm");
 
 /**
  * Returns a reference to a temporary file that is guaranteed not to exist and

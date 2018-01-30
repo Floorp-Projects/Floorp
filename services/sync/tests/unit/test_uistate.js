@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-sync/UIState.jsm");
+Cu.import("resource://services-sync/UIState.jsm");
 
 const UIStateInternal = UIState._internal;
 

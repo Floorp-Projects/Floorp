@@ -1,8 +1,8 @@
 const { Constructor: CC } = Components;
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
-const { OneCRLBlocklistClient } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

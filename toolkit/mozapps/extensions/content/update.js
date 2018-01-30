@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 let BRAND_PROPS = "chrome://branding/locale/brand.properties";
 let UPDATE_PROPS = "chrome://mozapps/locale/extensions/update.properties";

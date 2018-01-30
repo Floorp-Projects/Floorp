@@ -15,7 +15,7 @@ function* testSteps()
 
   // Test for IDBKeyRange and indexedDB availability in JS modules.
   /* import-globals-from GlobalObjectsModule.jsm */
-  ChromeUtils.import(getSpec("GlobalObjectsModule.jsm"));
+  Cu.import(getSpec("GlobalObjectsModule.jsm"));
   let test = new GlobalObjectsModule();
   test.ok = ok;
   test.finishTest = continueToNextStep;

@@ -2,8 +2,8 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var gStarted = false;
 

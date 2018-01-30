@@ -22,8 +22,8 @@ const Cu = Components.utils;
 
 const PR_UINT32_MAX = 0xffffffff;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
                                                  "nsIBinaryInputStream", "setInputStream");

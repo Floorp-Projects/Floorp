@@ -1,10 +1,10 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 const {ExtensionAPI, ExtensionAPIs} = ExtensionCommon;
 
-const {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", {});
+const {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionChild.jsm", {});
 
 Components.utils.importGlobalProperties(["Blob", "URL"]);
 
@@ -97,7 +97,7 @@ add_task(async function test_local() {
   let apiString = `this.userinputtest = ${API.toString()};`;
   let apiUrl = URL.createObjectURL(new Blob([apiString]));
   await Schemas.load(schemaUrl);
-  const {apiManager} = ChromeUtils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
+  const {apiManager} = Components.utils.import("resource://gre/modules/ExtensionPageChild.jsm", {});
   apiManager.registerModules({
     userinputtest: {
       url: apiUrl,

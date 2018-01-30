@@ -84,7 +84,7 @@ add_task(async function maintenance_foreign_count_test() {
   Assert.equal((await getForeignCountForURL(conn, T_URI)), 10);
 
   // Run maintenance
-  ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
+  Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
   await PlacesDBUtils.maintenanceOnIdle();
 
   // Check if the foreign_count has been adjusted to the correct value

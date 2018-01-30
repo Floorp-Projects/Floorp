@@ -2,7 +2,7 @@
  * Test to ensure that load/decode notifications are delivered completely and
  * asynchronously when dealing with a file that's a 404.
  */
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);

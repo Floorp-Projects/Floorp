@@ -1,21 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-sync/browserid_identity.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
-ChromeUtils.import("resource://testing-common/services/sync/fxa_utils.js");
-ChromeUtils.import("resource://services-common/hawkclient.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/status.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-common/tokenserverclient.js");
+Cu.import("resource://gre/modules/FxAccounts.jsm");
+Cu.import("resource://services-sync/browserid_identity.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-crypto/utils.js");
+Cu.import("resource://testing-common/services/sync/fxa_utils.js");
+Cu.import("resource://services-common/hawkclient.js");
+Cu.import("resource://gre/modules/FxAccounts.jsm");
+Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-common/tokenserverclient.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;

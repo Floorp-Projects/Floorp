@@ -7,9 +7,9 @@ this.EXPORTED_SYMBOLS = ["PeerConnectionIdp"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "IdpSandbox",
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "IdpSandbox",
   "resource://gre/modules/media/IdpSandbox.jsm");
 
 /**

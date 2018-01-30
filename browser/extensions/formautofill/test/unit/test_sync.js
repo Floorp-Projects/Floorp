@@ -9,12 +9,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://testing-common/services/sync/utils.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 let {sanitizeStorageObject, AutofillRecord, AddressesEngine} =
-  ChromeUtils.import("resource://formautofill/FormAutofillSync.jsm", {});
+  Cu.import("resource://formautofill/FormAutofillSync.jsm", {});
 
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");

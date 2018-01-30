@@ -1,5 +1,5 @@
 /* run some tests on the data: protocol handler */
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // The behaviour wrt spaces is:
 // - Textual content keeps all spaces

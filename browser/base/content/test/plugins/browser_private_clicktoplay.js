@@ -6,7 +6,7 @@ var gTestBrowser = null;
 var gNextTest = null;
 var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gPrivateWindow = null;
 var gPrivateBrowser = null;

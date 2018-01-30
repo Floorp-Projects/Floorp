@@ -6,20 +6,20 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
+Cu.import("chrome://marionette/content/assert.js");
 const {
   element,
   WebElement,
-} = ChromeUtils.import("chrome://marionette/content/element.js", {});
+} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   JavaScriptError,
   ScriptTimeoutError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = Cu.import("chrome://marionette/content/error.js", {});
 
 const log = Log.repository.getLogger("Marionette");
 
