@@ -4543,14 +4543,37 @@ public:
   int32_t ZIndex() const override;
   void SetOverrideZIndex(int32_t aZIndex);
 
+  /**
+   * Returns the hit test area of this item.
+   */
+  const nsRect& Area() const { return mArea; }
+
+  /**
+   * ApplyOpacity() is overriden for opacity flattening.
+   */
+  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
+                    const DisplayItemClipChain* aClip) override {}
+
+  /**
+   * CanApplyOpacity() is overriden for opacity flattening.
+   */
+  bool CanApplyOpacity() const override { return true; }
+
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override
+  {
+    *aSnap = false;
+    return nsRect();
+  }
+
   NS_DISPLAY_DECL_NAME("CompositorHitTestInfo", TYPE_COMPOSITOR_HITTEST_INFO)
 
 private:
   mozilla::gfx::CompositorHitTestInfo mHitTestInfo;
   mozilla::Maybe<mozilla::layers::FrameMetrics::ViewID> mScrollTarget;
-  mozilla::LayoutDeviceRect mArea;
+  nsRect mArea;
   uint32_t mIndex;
   mozilla::Maybe<int32_t> mOverrideZIndex;
+  int32_t mAppUnitsPerDevPixel;
 };
 
 /**

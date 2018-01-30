@@ -488,10 +488,17 @@ public:
   nsRegion CombinedTouchActionRegion();
 
   /**
-   * Add the given hit regions to the hit regions to the hit retions for this
-   * PaintedLayer.
+   * Add the given hit regions to the hit regions for this PaintedLayer.
    */
-  void AccumulateEventRegions(ContainerState* aState, nsDisplayLayerEventRegions* aEventRegions);
+  void AccumulateEventRegions(ContainerState* aState,
+                              nsDisplayLayerEventRegions* aEventRegions);
+
+  /**
+   * Similar to AccumulateEventRegions() but uses different display item to
+   * track hit regions.
+   */
+  void AccumulateHitTestInfo(ContainerState* aState,
+                             nsDisplayCompositorHitTestInfo* aItem);
 
   /**
    * If this represents only a nsDisplayImage, and the image type supports being
@@ -3145,6 +3152,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
+    MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO);
 
     DisplayItemData* oldData =
       mLayerBuilder->GetOldLayerForFrame(item.mItem->Frame(), item.mItem->GetPerFrameKey());
@@ -3602,6 +3610,108 @@ PaintedLayerData::AccumulateEventRegions(ContainerState* aState, nsDisplayLayerE
 }
 
 void
+PaintedLayerData::AccumulateHitTestInfo(ContainerState* aState,
+                                        nsDisplayCompositorHitTestInfo* aItem)
+{
+  FLB_LOG_PAINTED_LAYER_DECISION(this,
+    "Accumulating hit test info %p against pld=%p\n", aItem, this);
+
+  const mozilla::DisplayItemClip& clip = aItem->GetClip();
+  const nsRect area = clip.ApplyNonRoundedIntersection(aItem->Area());
+  const mozilla::gfx::CompositorHitTestInfo hitTestInfo = aItem->HitTestInfo();
+
+  bool hasRoundedCorners = clip.GetRoundedRectCount() > 0;
+
+  // use the NS_FRAME_SIMPLE_EVENT_REGIONS to avoid calling the slightly
+  // expensive HasNonZeroCorner function if we know from a previous run that
+  // the frame has zero corners.
+  nsIFrame* frame = aItem->Frame();
+
+  bool simpleRegions = frame->HasAnyStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
+  if (!simpleRegions) {
+    if (nsLayoutUtils::HasNonZeroCorner(frame->StyleBorder()->mBorderRadius)) {
+      hasRoundedCorners = true;
+    } else {
+      frame->AddStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS);
+    }
+  }
+
+  if (hasRoundedCorners || (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+    mMaybeHitRegion.OrWith(area);
+  } else {
+    mHitRegion.OrWith(area);
+  }
+
+  if (aItem->HitTestInfo() & CompositorHitTestInfo::eDispatchToContent) {
+    mDispatchToContentHitRegion.OrWith(area);
+  }
+
+  auto touchFlags = hitTestInfo & CompositorHitTestInfo::eTouchActionMask;
+  if (touchFlags) {
+    // something was disabled
+    if (touchFlags == CompositorHitTestInfo::eTouchActionMask) {
+      // everything was disabled, so touch-action:none
+      mNoActionRegion.OrWith(area);
+    } else {
+      // The event regions code does not store enough information to actually
+      // represent all the different states. Prior to the introduction of
+      // CompositorHitTestInfo here in bug 1389149, the following two cases
+      // were effectively getting collapsed:
+      //   (1) touch-action: auto
+      //   (2) touch-action: manipulation
+      // In both of these cases, none of {mNoActionRegion, mHorizontalPanRegion,
+      // mVerticalPanRegion} were modified, and so the fact that case (2) should
+      // have prevented double-tap-zooming was getting lost.
+      // With CompositorHitTestInfo we can now represent that case correctly,
+      // but only if we use CompositorHitTestInfo all the way to the compositor
+      // (i.e. in the WebRender-enabled case). In the non-WebRender case where
+      // we still use the event regions, we must collapse these two cases back
+      // together. Or add another region to the event regions to fix this
+      // properly.
+      if (touchFlags != CompositorHitTestInfo::eTouchActionDoubleTapZoomDisabled) {
+        if (!(hitTestInfo & CompositorHitTestInfo::eTouchActionPanXDisabled)) {
+          // pan-x is allowed
+          mHorizontalPanRegion.OrWith(area);
+        }
+        if (!(hitTestInfo & CompositorHitTestInfo::eTouchActionPanYDisabled)) {
+          // pan-y is allowed
+          mVerticalPanRegion.OrWith(area);
+        }
+      } else {
+        // the touch-action: manipulation case described above. To preserve the
+        // existing behaviour, don't touch either mHorizontalPanRegion or
+        // mVerticalPanRegion
+      }
+    }
+  }
+
+  // If there are multiple touch-action areas, there are multiple elements with
+  // touch-action properties. We don't know what the relationship is between
+  // those elements in terms of DOM ancestry, and so we don't know how to
+  // combine the regions properly. Instead, we just add all the areas to the
+  // dispatch-to-content region, so that the APZ knows to check with the
+  // main thread. See bug 1286957.
+  const int alreadyHadRegions = mNoActionRegion.GetNumRects() +
+    mHorizontalPanRegion.GetNumRects() +
+    mVerticalPanRegion.GetNumRects();
+
+  if (alreadyHadRegions > 1) {
+    mDispatchToContentHitRegion.OrWith(CombinedTouchActionRegion());
+  }
+
+  // Avoid quadratic performance as a result of the region growing to include
+  // and arbitrarily large number of rects, which can happen on some pages.
+  mMaybeHitRegion.SimplifyOutward(8);
+
+  // Calculate scaled versions of the bounds of mHitRegion and mMaybeHitRegion
+  // for quick access in FindPaintedLayerFor().
+  mScaledHitRegionBounds =
+    aState->ScaleToOutsidePixels(mHitRegion.GetBounds());
+  mScaledMaybeHitRegionBounds =
+    aState->ScaleToOutsidePixels(mMaybeHitRegion.GetBounds());
+}
+
+void
 ContainerState::NewPaintedLayerData(PaintedLayerData* aData,
                                     AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                     const ActiveScrolledRoot* aASR,
@@ -3975,6 +4085,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   int32_t maxLayers = gfxPrefs::MaxActiveLayers();
   int layerCount = 0;
 
+#ifdef DEBUG
+  bool hadLayerEventRegions = false;
+  bool hadCompositorHitTestInfo = false;
+#endif
+
   FlattenedDisplayItemIterator iter(mBuilder, aList);
   while (nsDisplayItem* i = iter.GetNext()) {
     nsDisplayItem* item = i;
@@ -3985,6 +4100,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     // If the item is a event regions item, but is empty (has no regions in it)
     // then we should just throw it out
     if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
+#ifdef DEBUG
+      hadLayerEventRegions = true;
+#endif
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
 
@@ -3992,6 +4110,22 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         continue;
       }
     }
+
+    if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+#ifdef DEBUG
+      hadCompositorHitTestInfo = true;
+#endif
+      nsDisplayCompositorHitTestInfo* hitTestInfo =
+        static_cast<nsDisplayCompositorHitTestInfo*>(item);
+
+      if (hitTestInfo->Area().IsEmpty()) {
+        continue;
+      }
+    }
+
+    // Only allow either LayerEventRegions or CompositorHitTestInfo items.
+    MOZ_ASSERT(!(hadLayerEventRegions && hadCompositorHitTestInfo));
+
 
     // Peek ahead to the next item and see if it can be merged with the current
     // item. We create a list of consecutive items that can be merged together.
@@ -4026,6 +4160,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     if (mParameters.mForEventsAndPluginsOnly && !item->GetChildren() &&
         (itemType != DisplayItemType::TYPE_LAYER_EVENT_REGIONS &&
+         itemType != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO &&
          itemType != DisplayItemType::TYPE_PLUGIN)) {
       continue;
     }
@@ -4461,8 +4596,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
       if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
-            static_cast<nsDisplayLayerEventRegions*>(item);
+          static_cast<nsDisplayLayerEventRegions*>(item);
         paintedLayerData->AccumulateEventRegions(this, eventRegions);
+      } else if (itemType == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        nsDisplayCompositorHitTestInfo* hitTestInfo =
+          static_cast<nsDisplayCompositorHitTestInfo*>(item);
+        paintedLayerData->AccumulateHitTestInfo(this, hitTestInfo);
       } else {
         // check to see if the new item has rounded rect clips in common with
         // other items in the layer
