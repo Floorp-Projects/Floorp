@@ -5428,50 +5428,6 @@ EditorBase::SwitchTextDirectionTo(uint32_t aDirection)
   }
 }
 
-#if DEBUG_JOE
-void
-EditorBase::DumpNode(nsIDOMNode* aNode,
-                     int32_t indent)
-{
-  for (int32_t i = 0; i < indent; i++) {
-    printf("  ");
-  }
-
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag = do_QueryInterface(aNode);
-
-  if (element || docfrag) {
-    if (element) {
-      nsAutoString tag;
-      element->GetTagName(tag);
-      printf("<%s>\n", NS_LossyConvertUTF16toASCII(tag).get());
-    } else {
-      printf("<document fragment>\n");
-    }
-    nsCOMPtr<nsIDOMNodeList> childList;
-    aNode->GetChildNodes(getter_AddRefs(childList));
-    NS_ENSURE_TRUE(childList, NS_ERROR_NULL_POINTER);
-    uint32_t numChildren;
-    childList->GetLength(&numChildren);
-    nsCOMPtr<nsIDOMNode> child, tmp;
-    aNode->GetFirstChild(getter_AddRefs(child));
-    for (uint32_t i = 0; i < numChildren; i++) {
-      DumpNode(child, indent + 1);
-      child->GetNextSibling(getter_AddRefs(tmp));
-      child = tmp;
-    }
-  } else if (IsTextNode(aNode)) {
-    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aNode);
-    nsAutoString str;
-    textNode->GetData(str);
-    nsAutoCString cstr;
-    LossyCopyUTF16toASCII(str, cstr);
-    cstr.ReplaceChar('\n', ' ');
-    printf("<textnode> %s\n", cstr.get());
-  }
-}
-#endif
-
 bool
 EditorBase::IsModifiableNode(nsIDOMNode* aNode)
 {
