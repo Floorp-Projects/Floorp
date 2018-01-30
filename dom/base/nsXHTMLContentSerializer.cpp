@@ -738,7 +738,6 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   // It may not be the first LI child of OL but it's first in the selected range.
   // Note that we get into this condition only once per a OL.
   bool found = false;
-  nsCOMPtr<nsIDOMNode> currNode = do_QueryInterface(aElement);
   nsAutoString valueStr;
 
   olState state (0, false);
@@ -755,27 +754,21 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   int32_t offset = 0;
 
   // Traverse previous siblings until we find one with "value" attribute.
-  // offset keeps track of how many previous siblings we had tocurrNode traverse.
+  // offset keeps track of how many previous siblings we had to traverse.
+  nsIContent* currNode = aElement;
   while (currNode && !found) {
-    nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currNode);
-    // currElement may be null if it were a text node.
-    if (currElement) {
-      nsAutoString tagName;
-      currElement->GetTagName(tagName);
-      if (tagName.LowerCaseEqualsLiteral("li")) {
-        currElement->GetAttribute(NS_LITERAL_STRING("value"), valueStr);
-        if (valueStr.IsEmpty())
-          offset++;
-        else {
-          found = true;
-          nsresult rv = NS_OK;
-          startVal = valueStr.ToInteger(&rv);
-        }
+    if (currNode->IsHTMLElement(nsGkAtoms::li)) {
+      currNode->AsElement()->GetAttr(kNameSpaceID_None,
+                                     nsGkAtoms::value, valueStr);
+      if (valueStr.IsEmpty()) {
+        offset++;
+      } else {
+        found = true;
+        nsresult rv = NS_OK;
+        startVal = valueStr.ToInteger(&rv);
       }
     }
-    nsCOMPtr<nsIDOMNode> tmp;
-    currNode->GetPreviousSibling(getter_AddRefs(tmp));
-    currNode.swap(tmp);
+    currNode = currNode->GetPreviousSibling();
   }
   // If LI was not having "value", Set the "value" attribute for it.
   // Note that We are at the first LI in the selected range of OL.
