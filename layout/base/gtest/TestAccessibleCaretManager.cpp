@@ -146,7 +146,6 @@ public:
 }; // class AccessibleCaretManagerTester
 
 TEST_F(AccessibleCaretManagerTester, TestUpdatesInSelectionMode)
-MOZ_CAN_RUN_SCRIPT
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Selection));
@@ -168,7 +167,6 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestSingleTapOnNonEmptyInput)
-MOZ_CAN_RUN_SCRIPT
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Cursor));
@@ -239,7 +237,6 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestSingleTapOnEmptyInput)
-MOZ_CAN_RUN_SCRIPT
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Cursor));
@@ -309,7 +306,7 @@ MOZ_CAN_RUN_SCRIPT
   EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
 }
 
-TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput) MOZ_CAN_RUN_SCRIPT
+TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput)
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Cursor));
@@ -352,7 +349,6 @@ TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput) MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
-MOZ_CAN_RUN_SCRIPT
 {
   // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
@@ -431,9 +427,7 @@ MOZ_CAN_RUN_SCRIPT
   check.Call("scrollend2");
 }
 
-TEST_F(AccessibleCaretManagerTester,
-       TestScrollInSelectionModeWithAlwaysTiltPref)
-MOZ_CAN_RUN_SCRIPT
+TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionModeWithAlwaysTiltPref)
 {
   // Simulate Firefox Android preference.
   AutoRestore<bool> saveCaretsAlwaysTilt(
@@ -539,7 +533,6 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenLogicallyVisible)
-MOZ_CAN_RUN_SCRIPT
 {
   // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
@@ -605,7 +598,6 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeWhenHidden)
-MOZ_CAN_RUN_SCRIPT
 {
   // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
@@ -665,7 +657,6 @@ MOZ_CAN_RUN_SCRIPT
 }
 
 TEST_F(AccessibleCaretManagerTester, TestScrollInCursorModeOnEmptyContent)
-MOZ_CAN_RUN_SCRIPT
 {
   // Simulate caret hiding when scrolling.
   AutoRestore<bool> savesCaretsAlwaysShowWhenScrolling(
@@ -742,7 +733,6 @@ MOZ_CAN_RUN_SCRIPT
 
 TEST_F(AccessibleCaretManagerTester,
        TestScrollInCursorModeWithCaretShownWhenLongTappingOnEmptyContentPref)
-MOZ_CAN_RUN_SCRIPT
 {
   // Simulate Firefox Android preference.
   AutoRestore<bool> savesCaretShownWhenLongTappingOnEmptyContent(
