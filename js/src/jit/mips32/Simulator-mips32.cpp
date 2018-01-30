@@ -1576,24 +1576,34 @@ Simulator::setFCSRRoundError(double original, double rounded)
 {
     bool ret = false;
 
+    setFCSRBit(kFCSRInexactCauseBit, false);
+    setFCSRBit(kFCSRUnderflowCauseBit, false);
+    setFCSRBit(kFCSROverflowCauseBit, false);
+    setFCSRBit(kFCSRInvalidOpCauseBit, false);
+
     if (!std::isfinite(original) || !std::isfinite(rounded)) {
         setFCSRBit(kFCSRInvalidOpFlagBit, true);
+        setFCSRBit(kFCSRInvalidOpCauseBit, true);
         ret = true;
     }
 
     if (original != rounded) {
         setFCSRBit(kFCSRInexactFlagBit, true);
+        setFCSRBit(kFCSRInexactCauseBit, true);
     }
 
     if (rounded < DBL_MIN && rounded > -DBL_MIN && rounded != 0) {
         setFCSRBit(kFCSRUnderflowFlagBit, true);
+        setFCSRBit(kFCSRUnderflowCauseBit, true);
         ret = true;
     }
 
     if (rounded > INT_MAX || rounded < INT_MIN) {
         setFCSRBit(kFCSROverflowFlagBit, true);
+        setFCSRBit(kFCSROverflowCauseBit, true);
         // The reference is not really clear but it seems this is required:
         setFCSRBit(kFCSRInvalidOpFlagBit, true);
+        setFCSRBit(kFCSRInvalidOpCauseBit, true);
         ret = true;
     }
 

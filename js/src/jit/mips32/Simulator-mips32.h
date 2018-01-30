@@ -77,6 +77,12 @@ const uint32_t kFCSROverflowFlagBit = 4;
 const uint32_t kFCSRDivideByZeroFlagBit = 5;
 const uint32_t kFCSRInvalidOpFlagBit = 6;
 
+const uint32_t kFCSRInexactCauseBit = 12;
+const uint32_t kFCSRUnderflowCauseBit = 13;
+const uint32_t kFCSROverflowCauseBit = 14;
+const uint32_t kFCSRDivideByZeroCauseBit = 15;
+const uint32_t kFCSRInvalidOpCauseBit = 16;
+
 const uint32_t kFCSRInexactFlagMask = 1 << kFCSRInexactFlagBit;
 const uint32_t kFCSRUnderflowFlagMask = 1 << kFCSRUnderflowFlagBit;
 const uint32_t kFCSROverflowFlagMask = 1 << kFCSROverflowFlagBit;
