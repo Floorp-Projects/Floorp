@@ -48,14 +48,14 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate thread_profiler;
-#[cfg(any(feature = "debugger", feature = "capture"))]
+#[cfg(any(feature = "debugger", feature = "capture", feature = "replay"))]
 #[macro_use]
 extern crate serde;
 
 mod batch;
 mod border;
 mod box_shadow;
-#[cfg(feature = "capture")]
+#[cfg(any(feature = "capture", feature = "replay"))]
 mod capture;
 mod clip;
 mod clip_scroll_node;
@@ -146,7 +146,7 @@ extern crate gleam;
 extern crate num_traits;
 extern crate plane_split;
 extern crate rayon;
-#[cfg(feature = "capture")]
+#[cfg(feature = "ron")]
 extern crate ron;
 #[cfg(feature = "debugger")]
 extern crate serde_json;

@@ -8,7 +8,7 @@ use api::{GlyphKey, SubpixelDirection};
 use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
-use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
+use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::{CFNumber, CFNumberRef};
 use core_foundation::string::{CFString, CFStringRef};
 use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst};
@@ -23,7 +23,7 @@ use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphFormat, RasterizedGlyph};
-use internal_types::FastHashMap;
+use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
@@ -171,17 +171,16 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
         if axes_ref.is_null() {
             return ct_font;
         }
-        let axes: CFArray = TCFType::wrap_under_create_rule(axes_ref);
+        let axes: CFArray<CFDictionary> = TCFType::wrap_under_create_rule(axes_ref);
         let mut vals: Vec<(CFString, CFNumber)> = Vec::with_capacity(variations.len() as usize);
-        for axis_ptr in axes.iter() {
-            let axis: CFDictionary = TCFType::wrap_under_get_rule(axis_ptr as CFDictionaryRef);
-            if !axis.instance_of::<CFDictionaryRef, CFDictionary>() {
+        for axis in axes.iter() {
+            if !axis.instance_of::<CFDictionary>() {
                 return ct_font;
             }
             let tag_val = match axis.find(kCTFontVariationAxisIdentifierKey as *const _) {
                 Some(tag_ptr) => {
                     let tag: CFNumber = TCFType::wrap_under_get_rule(tag_ptr as CFNumberRef);
-                    if !tag.instance_of::<CFNumberRef, CFNumber>() {
+                    if !tag.instance_of::<CFNumber>() {
                         return ct_font;
                     }
                     match tag.to_i64() {
@@ -200,14 +199,14 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
                 Some(name_ptr) => TCFType::wrap_under_get_rule(name_ptr as CFStringRef),
                 None => return ct_font,
             };
-            if !name.instance_of::<CFStringRef, CFString>() {
+            if !name.instance_of::<CFString>() {
                 return ct_font;
             }
 
             let min_val = match axis.find(kCTFontVariationAxisMinimumValueKey as *const _) {
                 Some(min_ptr) => {
                     let min: CFNumber = TCFType::wrap_under_get_rule(min_ptr as CFNumberRef);
-                    if !min.instance_of::<CFNumberRef, CFNumber>() {
+                    if !min.instance_of::<CFNumber>() {
                         return ct_font;
                     }
                     match min.to_f64() {
@@ -220,7 +219,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             let max_val = match axis.find(kCTFontVariationAxisMaximumValueKey as *const _) {
                 Some(max_ptr) => {
                     let max: CFNumber = TCFType::wrap_under_get_rule(max_ptr as CFNumberRef);
-                    if !max.instance_of::<CFNumberRef, CFNumber>() {
+                    if !max.instance_of::<CFNumber>() {
                         return ct_font;
                     }
                     match max.to_f64() {
@@ -233,7 +232,7 @@ fn new_ct_font_with_variations(cg_font: &CGFont, size: f64, variations: &[FontVa
             let def_val = match axis.find(kCTFontVariationAxisDefaultValueKey as *const _) {
                 Some(def_ptr) => {
                     let def: CFNumber = TCFType::wrap_under_get_rule(def_ptr as CFNumberRef);
-                    if !def.instance_of::<CFNumberRef, CFNumber>() {
+                    if !def.instance_of::<CFNumber>() {
                         return ct_font;
                     }
                     match def.to_f64() {
@@ -267,18 +266,18 @@ fn is_bitmap_font(ct_font: &CTFont) -> bool {
 const OBLIQUE_SKEW_FACTOR: f32 = 0.25;
 
 impl FontContext {
-    pub fn new() -> FontContext {
+    pub fn new() -> Result<FontContext, ResourceCacheError> {
         debug!("Test for subpixel AA support: {}", supports_subpixel_aa());
 
         // Force CG to use sRGB color space to gamma correct.
         let contrast = 0.0;
         let gamma = 0.0;
 
-        FontContext {
+        Ok(FontContext {
             cg_fonts: FastHashMap::default(),
             ct_fonts: FastHashMap::default(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
-        }
+        })
     }
 
     pub fn has_font(&self, font_key: &FontKey) -> bool {

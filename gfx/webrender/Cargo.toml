@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.56.1"
+version = "0.57.0"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -11,7 +11,8 @@ default = ["freetype-lib"]
 freetype-lib = ["freetype/servo-freetype-sys"]
 profiler = ["thread_profiler/thread_profiler"]
 debugger = ["ws", "serde_json", "serde", "image", "base64"]
-capture = ["webrender_api/debug-serialization", "ron", "serde"]
+capture = ["webrender_api/serialize", "ron", "serde"]
+replay = ["webrender_api/deserialize", "ron", "serde"]
 
 [dependencies]
 app_units = "0.6"
@@ -42,7 +43,7 @@ ron = { optional = true, version = "0.1.7" }
 angle = {git = "https://github.com/servo/angle", branch = "servo"}
 env_logger = "0.4"
 rand = "0.3"                # for the benchmarks
-servo-glutin = "0.13"     # for the example apps
+servo-glutin = "0.14"     # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.3", default-features = false }
@@ -51,6 +52,6 @@ freetype = { version = "0.3", default-features = false }
 dwrote = "0.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.4.6"
-core-graphics = "0.12.3"
-core-text = { version = "8.0", default-features = false }
+core-foundation = "0.5"
+core-graphics = "0.13"
+core-text = { version = "9.0", default-features = false }

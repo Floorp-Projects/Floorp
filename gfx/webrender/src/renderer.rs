@@ -21,7 +21,7 @@ use api::DebugCommand;
 use api::channel::MsgSender;
 use batch::{BatchKey, BatchKind, BatchTextures, BrushBatchKind};
 use batch::{BrushImageSourceKind, TransformBatchKind};
-#[cfg(feature = "capture")]
+#[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
 use debug_render::DebugRenderer;
@@ -39,7 +39,7 @@ use gleam::gl;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_types::PrimitiveInstance;
-use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
+use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, FastHashMap, RenderedDocument, ResultMsg, TextureUpdateOp};
 use internal_types::{DebugOutput, RenderPassIndex, RenderTargetInfo, TextureUpdateList, TextureUpdateSource};
 use picture::ContentOrigin;
@@ -52,6 +52,7 @@ use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
 use render_task::{RenderTaskKind, RenderTaskTree};
+use resource_cache::ResourceCache;
 #[cfg(feature = "debugger")]
 use serde_json;
 use std;
@@ -487,7 +488,8 @@ pub struct GraphicsApiInfo {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ImageBufferKind {
     Texture2D = 0,
     TextureRect = 1,
@@ -777,7 +779,8 @@ impl SourceTextureResolver {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[allow(dead_code)] // SubpixelVariableTextColor is not used at the moment.
 pub enum BlendMode {
     None,
@@ -1567,16 +1570,6 @@ struct TargetSelector {
     format: ImageFormat,
 }
 
-#[cfg(feature = "capture")]
-struct RendererCapture {
-    read_fbo: FBOId,
-    owned_external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
-}
-
-// Note: we can't just feature-gate the fields because `cbindgen` fails on those.
-// see https://github.com/eqrion/cbindgen/issues/116
-#[cfg(not(feature = "capture"))]
-struct RendererCapture;
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
@@ -1687,14 +1680,17 @@ pub struct Renderer {
     cpu_profiles: VecDeque<CpuProfile>,
     gpu_profiles: VecDeque<GpuProfile>,
 
-    #[cfg_attr(not(feature = "capture"), allow(dead_code))]
-    capture: RendererCapture,
+    #[cfg(feature = "capture")]
+    read_fbo: FBOId,
+    #[cfg(feature = "replay")]
+    owned_external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
 }
 
 #[derive(Debug)]
 pub enum RendererError {
     Shader(ShaderError),
     Thread(std::io::Error),
+    Resource(ResourceCacheError),
     MaxTextureSize,
 }
 
@@ -1707,6 +1703,12 @@ impl From<ShaderError> for RendererError {
 impl From<std::io::Error> for RendererError {
     fn from(err: std::io::Error) -> Self {
         RendererError::Thread(err)
+    }
+}
+
+impl From<ResourceCacheError> for RendererError {
+    fn from(err: ResourceCacheError) -> Self {
+        RendererError::Resource(err)
     }
 }
 
@@ -2219,6 +2221,11 @@ impl Renderer {
         let blob_image_renderer = options.blob_image_renderer.take();
         let thread_listener_for_render_backend = thread_listener.clone();
         let thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
+        let resource_cache = ResourceCache::new(
+            texture_cache,
+            workers,
+            blob_image_renderer,
+        )?;
         try!{
             thread::Builder::new().name(thread_name.clone()).spawn(move || {
                 register_thread_with_profiler(thread_name.clone());
@@ -2231,12 +2238,10 @@ impl Renderer {
                     payload_tx_for_backend,
                     result_tx,
                     device_pixel_ratio,
-                    texture_cache,
-                    workers,
+                    resource_cache,
                     backend_notifier,
                     config,
                     recorder,
-                    blob_image_renderer,
                     enable_render_on_scroll,
                 );
                 backend.run(backend_profile_counters);
@@ -2246,15 +2251,9 @@ impl Renderer {
             })
         };
 
-        #[cfg(feature = "capture")]
-        let capture = RendererCapture {
-            read_fbo: device.create_fbo_for_external_texture(0),
-            owned_external_images: FastHashMap::default(),
-        };
-        #[cfg(not(feature = "capture"))]
-        let capture = RendererCapture;
-
         let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()));
+        #[cfg(feature = "capture")]
+        let read_fbo = device.create_fbo_for_external_texture(0);
 
         let mut renderer = Renderer {
             result_rx,
@@ -2319,7 +2318,10 @@ impl Renderer {
             texture_cache_upload_pbo,
             texture_resolver,
             renderer_errors: Vec::new(),
-            capture,
+            #[cfg(feature = "capture")]
+            read_fbo,
+            #[cfg(feature = "replay")]
+            owned_external_images: FastHashMap::default(),
         };
 
         renderer.set_debug_flags(options.debug_flags);
@@ -2380,10 +2382,6 @@ impl Renderer {
                     texture_update_list,
                     profile_counters,
                 ) => {
-                    //TODO: associate `document_id` with target window
-                    self.pending_texture_updates.push(texture_update_list);
-                    self.backend_profile_counters = profile_counters;
-
                     // Update the list of available epochs for use during reftests.
                     // This is a workaround for https://github.com/servo/servo/issues/13149.
                     for (pipeline_id, epoch) in &doc.pipeline_epoch_map {
@@ -2404,6 +2402,20 @@ impl Renderer {
                         }
                         None => self.active_documents.push((document_id, doc)),
                     }
+
+                    // IMPORTANT: The pending texture cache updates must be applied
+                    //            *after* the previous frame has been rendered above
+                    //            (if neceessary for a texture cache update). For
+                    //            an example of why this is required:
+                    //            1) Previous frame contains a render task that
+                    //               targets Texture X.
+                    //            2) New frame contains a texture cache update which
+                    //               frees Texture X.
+                    //            3) bad stuff happens.
+
+                    //TODO: associate `document_id` with target window
+                    self.pending_texture_updates.push(texture_update_list);
+                    self.backend_profile_counters = profile_counters;
                 }
                 ResultMsg::UpdateGpuCache(list) => {
                     self.pending_gpu_cache_updates.push(list);
@@ -2413,7 +2425,9 @@ impl Renderer {
                     cancel_rendering,
                 } => {
                     self.pending_texture_updates.push(updates);
+                    self.device.begin_frame();
                     self.update_texture_cache();
+                    self.device.end_frame();
                     // If we receive a `PublishDocument` message followed by this one
                     // within the same update we need ot cancel the frame because we
                     // might have deleted the resources in use in the frame due to a
@@ -2434,7 +2448,7 @@ impl Renderer {
                     DebugOutput::SaveCapture(config, deferred) => {
                         self.save_capture(config, deferred);
                     }
-                    #[cfg(feature = "capture")]
+                    #[cfg(feature = "replay")]
                     DebugOutput::LoadCapture(root, plain_externals) => {
                         self.active_documents.clear();
                         self.load_capture(root, plain_externals);
@@ -2840,9 +2854,9 @@ impl Renderer {
                 self.prepare_tile_frame(&mut doc_with_id.1.frame);
             }
 
-            #[cfg(feature = "capture")]
+            #[cfg(feature = "replay")]
             self.texture_resolver.external_images.extend(
-                self.capture.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
+                self.owned_external_images.iter().map(|(key, value)| (*key, value.clone()))
             );
 
             for &mut (_, RenderedDocument { ref mut frame, .. }) in &mut active_documents {
@@ -2925,11 +2939,8 @@ impl Renderer {
             .any(|&(_, ref render_doc)| !render_doc.layers_bouncing_back.is_empty())
     }
 
-    fn prepare_gpu_cache(&mut self, frame: &Frame) {
+    fn update_gpu_cache(&mut self) {
         let _gm = self.gpu_profile.start_marker("gpu cache update");
-
-        let deferred_update_list = self.update_deferred_resolves(&frame.deferred_resolves);
-        self.pending_gpu_cache_updates.extend(deferred_update_list);
 
         // For an artificial stress test of GPU cache resizing,
         // always pass an extra update list with at least one block in it.
@@ -2970,16 +2981,23 @@ impl Renderer {
 
         let updated_rows = self.gpu_cache_texture.flush(&mut self.device);
 
+        let counters = &mut self.backend_profile_counters.resources.gpu_cache;
+        counters.updated_rows.set(updated_rows);
+        counters.updated_blocks.set(updated_blocks);
+    }
+
+    fn prepare_gpu_cache(&mut self, frame: &Frame) {
+        let deferred_update_list = self.update_deferred_resolves(&frame.deferred_resolves);
+        self.pending_gpu_cache_updates.extend(deferred_update_list);
+
+        self.update_gpu_cache();
+
         // Note: the texture might have changed during the `update`,
         // so we need to bind it here.
         self.device.bind_texture(
             TextureSampler::ResourceCache,
             &self.gpu_cache_texture.texture,
         );
-
-        let counters = &mut self.backend_profile_counters.resources.gpu_cache;
-        counters.updated_rows.set(updated_rows);
-        counters.updated_blocks.set(updated_blocks);
     }
 
     fn update_texture_cache(&mut self) {
@@ -4694,9 +4712,9 @@ impl Renderer {
         self.ps_split_composite.deinit(&mut self.device);
         self.ps_composite.deinit(&mut self.device);
         #[cfg(feature = "capture")]
-        self.device.delete_fbo(self.capture.read_fbo);
-        #[cfg(feature = "capture")]
-        for (_, ext) in self.capture.owned_external_images {
+        self.device.delete_fbo(self.read_fbo);
+        #[cfg(feature = "replay")]
+        for (_, ext) in self.owned_external_images {
             self.device.delete_external_texture(ext);
         }
         self.device.end_frame();
@@ -4848,8 +4866,10 @@ impl RendererStats {
 }
 
 
-#[cfg(feature = "capture")]
-#[derive(Deserialize, Serialize)]
+
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainTexture {
     data: String,
     size: (u32, u32, i32),
@@ -4858,26 +4878,29 @@ struct PlainTexture {
     render_target: Option<RenderTargetInfo>,
 }
 
-#[cfg(feature = "capture")]
-#[derive(Deserialize, Serialize)]
+
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderer {
     gpu_cache: PlainTexture,
+    gpu_cache_frame_id: FrameId,
     textures: Vec<PlainTexture>,
     external_images: Vec<ExternalCaptureImage>
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
 enum CapturedExternalImageData {
     NativeTexture(gl::GLuint),
     Buffer(Arc<Vec<u8>>),
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
 struct DummyExternalImageHandler {
     data: FastHashMap<(ExternalImageId, u8), (CapturedExternalImageData, TexelRect)>,
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
 impl ExternalImageHandler for DummyExternalImageHandler {
     fn lock(&mut self, key: ExternalImageId, channel_index: u8) -> ExternalImage {
         let (ref captured_data, ref uv) = self.data[&(key, channel_index)];
@@ -4892,7 +4915,7 @@ impl ExternalImageHandler for DummyExternalImageHandler {
     fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {}
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
 impl OutputImageHandler for () {
     fn lock(&mut self, _: PipelineId) -> Option<(u32, DeviceIntSize)> {
         None
@@ -4902,8 +4925,8 @@ impl OutputImageHandler for () {
     }
 }
 
-#[cfg(feature = "capture")]
 impl Renderer {
+    #[cfg(feature = "capture")]
     fn save_texture(
         texture: &Texture, name: &str, root: &PathBuf, device: &mut Device
     ) -> PlainTexture {
@@ -4960,6 +4983,7 @@ impl Renderer {
         }
     }
 
+    #[cfg(feature = "replay")]
     fn load_texture(texture: &mut Texture, plain: &PlainTexture, root: &PathBuf, device: &mut Device) -> Vec<u8> {
         use std::fs::File;
         use std::io::Read;
@@ -4980,6 +5004,7 @@ impl Renderer {
         texels
     }
 
+    #[cfg(feature = "capture")]
     fn save_capture(
         &mut self,
         config: CaptureConfig,
@@ -4991,7 +5016,7 @@ impl Renderer {
 
         self.device.begin_frame();
         let _gm = self.gpu_profile.start_marker("read GPU data");
-        self.device.bind_read_target_impl(self.capture.read_fbo);
+        self.device.bind_read_target_impl(self.read_fbo);
 
         if !deferred_images.is_empty() {
             info!("saving external images");
@@ -5068,11 +5093,13 @@ impl Renderer {
             }
 
             info!("saving GPU cache");
+            self.update_gpu_cache(); // flush pending updates
             let mut plain_self = PlainRenderer {
                 gpu_cache: Self::save_texture(
                     &self.gpu_cache_texture.texture,
                     "gpu", &config.root, &mut self.device,
                 ),
+                gpu_cache_frame_id: self.gpu_cache_frame_id,
                 textures: Vec::new(),
                 external_images: deferred_images,
             };
@@ -5093,6 +5120,7 @@ impl Renderer {
         info!("done.");
     }
 
+    #[cfg(feature = "replay")]
     fn load_capture(
         &mut self, root: PathBuf, plain_externals: Vec<PlainExternalImage>
     ) {
@@ -5165,6 +5193,7 @@ impl Renderer {
                 }
                 CacheBus::Scatter { .. } => {}
             }
+            self.gpu_cache_frame_id = renderer.gpu_cache_frame_id;
 
             info!("loading external texture-backed images");
             let mut native_map = FastHashMap::<String, gl::GLuint>::default();
@@ -5192,7 +5221,7 @@ impl Renderer {
                         let mut t = self.device.create_texture(target, plain_tex.format);
                         Self::load_texture(&mut t, &plain_tex, &root, &mut self.device);
                         let extex = t.into_external();
-                        self.capture.owned_external_images.insert(key, extex.clone());
+                        self.owned_external_images.insert(key, extex.clone());
                         e.insert(extex.internal_id()).clone()
                     }
                 };

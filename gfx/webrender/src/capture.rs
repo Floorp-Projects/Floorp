@@ -3,40 +3,45 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::fs::File;
-use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use api::{CaptureBits, ExternalImageData, ExternalImageId, ImageDescriptor, TexelRect};
 #[cfg(feature = "png")]
 use device::ReadPixelsFormat;
-use ron::{de, ser};
-use serde::{Deserialize, Serialize};
+use ron;
+use serde;
 
 
 pub struct CaptureConfig {
     pub root: PathBuf,
     pub bits: CaptureBits,
-    pretty: ser::PrettyConfig,
+    #[cfg(feature = "capture")]
+    pretty: ron::ser::PrettyConfig,
 }
 
 impl CaptureConfig {
+    #[cfg(feature = "capture")]
     pub fn new(root: PathBuf, bits: CaptureBits) -> Self {
         CaptureConfig {
             root,
             bits,
-            pretty: ser::PrettyConfig {
+            #[cfg(feature = "capture")]
+            pretty: ron::ser::PrettyConfig {
                 enumerate_arrays: true,
-                .. ser::PrettyConfig::default()
+                .. ron::ser::PrettyConfig::default()
             },
         }
     }
 
+    #[cfg(feature = "capture")]
     pub fn serialize<T, P>(&self, data: &T, name: P)
     where
-        T: Serialize,
+        T: serde::Serialize,
         P: AsRef<Path>,
     {
-        let ron = ser::to_string_pretty(data, self.pretty.clone())
+        use std::io::Write;
+
+        let ron = ron::ser::to_string_pretty(data, self.pretty.clone())
             .unwrap();
         let path = self.root
             .join(name)
@@ -47,11 +52,14 @@ impl CaptureConfig {
             .unwrap();
     }
 
+    #[cfg(feature = "replay")]
     pub fn deserialize<T, P>(root: &PathBuf, name: P) -> Option<T>
     where
-        T: for<'a> Deserialize<'a>,
+        T: for<'a> serde::Deserialize<'a>,
         P: AsRef<Path>,
     {
+        use std::io::Read;
+
         let mut string = String::new();
         let path = root
             .join(name)
@@ -60,7 +68,7 @@ impl CaptureConfig {
             .ok()?
             .read_to_string(&mut string)
             .unwrap();
-        Some(de::from_str(&string)
+        Some(ron::de::from_str(&string)
             .unwrap())
     }
 
