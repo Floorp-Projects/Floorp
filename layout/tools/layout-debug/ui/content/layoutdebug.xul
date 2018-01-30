@@ -10,9 +10,6 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css" ?>
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-
 <!--
 
   NOTE:  Because this window is used for layout regression tests, the

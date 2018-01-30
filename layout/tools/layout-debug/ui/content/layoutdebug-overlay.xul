@@ -7,24 +7,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 
-<!--
-  This file contains the nodes that will be overlayed on top of
-  <chrome://communicator/content/tasksOverlay.xul>.
-  Declare XML entites that this file refers to in layoutdebug-overlay.dtd.
- -->
-
 <!DOCTYPE window SYSTEM "chrome://layoutdebug/locale/layoutdebug-overlay.dtd" >
 
 <overlay id="layoutdebugTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<!-- SeaMonkey -->
-<menupopup id="taskPopup">
-  <menuitem label="&ldbCmd.label;"
-            accesskey="&ldbCmd.accesskey;"
-            oncommand="toOpenWindowByType('mozapp:layoutdebug',
-                                          'chrome://layoutdebug/content/');"/>
-</menupopup>
 
 <!-- Firefox -->
 <menupopup id="menu_ToolsPopup">
