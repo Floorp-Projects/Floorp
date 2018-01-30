@@ -10,7 +10,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsRange.h"
 #include "nsIBoxObject.h"
 #include "nsXULElement.h"
