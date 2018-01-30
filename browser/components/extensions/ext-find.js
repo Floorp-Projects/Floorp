@@ -20,6 +20,13 @@ function runFindOperation(params, message) {
   let mm = browser.messageManager;
   tabId = tabId || tabTracker.getId(tab);
 
+  // We disallow find in about: urls.
+  if (tab.linkedBrowser.contentPrincipal.isSystemPrincipal ||
+      (["about", "chrome", "resource"].includes(tab.linkedBrowser.currentURI.scheme) &&
+      tab.linkedBrowser.currentURI.spec != "about:blank")) {
+    return Promise.reject({message: `Unable to search: ${tabId}`});
+  }
+
   return new Promise((resolve, reject) => {
     mm.addMessageListener(`ext-Finder:${message}Finished`, function messageListener(message) {
       mm.removeMessageListener(`ext-Finder:${message}Finished`, messageListener);
