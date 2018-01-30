@@ -2934,6 +2934,40 @@ CacheIRCompiler::emitCallObjectHasSparseElementResult()
     return true;
 }
 
+/*
+ * Move a constant value into register dest.
+ */
+void CacheIRCompiler::EmitLoadStubFieldConstant(StubFieldOffset val, Register dest) {
+    MOZ_ASSERT(mode_ == Mode::Ion);
+    switch (val.getStubFieldType()) {
+      case StubField::Type::Shape:
+        masm.movePtr(ImmGCPtr(shapeStubField(val.getOffset())),dest);
+        break;
+      case StubField::Type::String:
+        masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
+        break;
+      default:
+            MOZ_CRASH("Unhandled stub field constant type");
+    }
+}
+
+/*
+ * After this is done executing, dest contains the value; either through a constant load
+ * or through the load from the stub data.
+ *
+ * The current policy is that Baseline will use loads from the stub data (to allow IC
+ * sharing), where as Ion doesn't share ICs, and so we can safely use constants in the
+ * IC.
+ */
+void CacheIRCompiler::EmitLoadStubField(StubFieldOffset val, Register dest) {
+    if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
+        EmitLoadStubFieldConstant(val, dest);
+    } else {
+        Address load(ICStubReg, stubDataOffset_ + val.getOffset());
+        masm.loadPtr(load, dest);
+    }
+}
+
 bool
 CacheIRCompiler::emitLoadInstanceOfObjectResult()
 {
