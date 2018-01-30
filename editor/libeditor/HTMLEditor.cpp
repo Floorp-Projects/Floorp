@@ -2494,10 +2494,6 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     }
   }
 
-  if (!bNodeFound) {
-    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
-  }
-
   *aReturn = selectedElement;
   if (selectedElement) {
     // Getters must addref
