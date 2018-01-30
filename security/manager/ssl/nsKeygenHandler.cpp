@@ -34,7 +34,6 @@
 
 #include "nsDependentString.h"
 #include "nsIContent.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIServiceManager.h"
 #include "nsITokenDialogs.h"
@@ -695,34 +694,33 @@ loser:
 
 // static
 void
-nsKeygenFormProcessor::ExtractParams(nsIDOMHTMLElement* aElement,
+nsKeygenFormProcessor::ExtractParams(Element* aElement,
                                      nsAString& challengeValue,
                                      nsAString& keyTypeValue,
                                      nsAString& keyParamsValue)
 {
-    nsCOMPtr<Element> element = do_QueryInterface(aElement);
-    element->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
+    aElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
     if (keyTypeValue.IsEmpty()) {
         // If this field is not present, we default to rsa.
         keyTypeValue.AssignLiteral("rsa");
     }
 
-    element->GetAttribute(NS_LITERAL_STRING("pqg"),
-                          keyParamsValue);
+    aElement->GetAttribute(NS_LITERAL_STRING("pqg"),
+                           keyParamsValue);
     /* XXX We can still support the pqg attribute in the keygen
      * tag for backward compatibility while introducing a more
      * general attribute named keyparams.
      */
     if (keyParamsValue.IsEmpty()) {
-        element->GetAttribute(NS_LITERAL_STRING("keyparams"),
-                              keyParamsValue);
+        aElement->GetAttribute(NS_LITERAL_STRING("keyparams"),
+                               keyParamsValue);
     }
 
-    element->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
+    aElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
 }
 
 nsresult
-nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement* aElement,
+nsKeygenFormProcessor::ProcessValue(Element* aElement,
                                     const nsAString& aName,
                                     nsAString& aValue)
 {
