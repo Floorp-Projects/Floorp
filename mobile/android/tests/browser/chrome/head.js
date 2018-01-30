@@ -41,7 +41,7 @@ function promiseTabEvent(container, eventType) {
 }
 
 function promiseNotification(aTopic) {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   return new Promise((resolve, reject) => {
     function observe(subject, topic, data) {
@@ -55,7 +55,7 @@ function promiseNotification(aTopic) {
 }
 
 function promiseLinkVisit(url) {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   var linkVisitedTopic = "link-visited";
   return new Promise((resolve, reject) => {

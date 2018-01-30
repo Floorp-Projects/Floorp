@@ -5,9 +5,9 @@
 "use strict";
 
 let syncService = {};
-ChromeUtils.import("resource://services-sync/service.js", syncService);
+Components.utils.import("resource://services-sync/service.js", syncService);
 const service = syncService.Service;
-const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {});
+const {UIState} = Components.utils.import("resource://services-sync/UIState.jsm", {});
 
 let getState;
 let originalSync;

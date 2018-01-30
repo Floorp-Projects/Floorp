@@ -2,13 +2,13 @@
 
 /* globals browser */
 
-ChromeUtils.import("resource://gre/modules/LegacyExtensionsUtils.jsm");
+Cu.import("resource://gre/modules/LegacyExtensionsUtils.jsm");
 
 // Import EmbeddedExtensionManager to be able to check that the
 // tacked instances are cleared after the embedded extension shutdown.
 const {
   EmbeddedExtensionManager,
-} = ChromeUtils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
+} = Cu.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
 /**
  * This test case ensures that the LegacyExtensionsUtils.EmbeddedExtension:

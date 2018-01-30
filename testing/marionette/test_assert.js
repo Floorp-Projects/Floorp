@@ -6,8 +6,8 @@
 
 const {utils: Cu} = Components;
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
-ChromeUtils.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/assert.js");
+Cu.import("chrome://marionette/content/error.js");
 
 add_test(function test_acyclic() {
   assert.acyclic({});

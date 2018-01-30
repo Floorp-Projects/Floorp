@@ -5,7 +5,7 @@
 // Tests that signed extensions extracted/unpacked into a directory do not pass
 // signature verification, because that's no longer supported.
 
-const { ZipUtils } = ChromeUtils.import("resource://gre/modules/ZipUtils.jsm", {});
+const { ZipUtils } = Cu.import("resource://gre/modules/ZipUtils.jsm", {});
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]

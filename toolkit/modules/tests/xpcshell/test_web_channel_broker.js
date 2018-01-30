@@ -5,8 +5,8 @@
 
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/WebChannel.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/WebChannel.jsm");
 
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";

@@ -6,7 +6,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/ContentTask.jsm", this);
+Cu.import("resource://testing-common/ContentTask.jsm", this);
 
 const URL = "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" + Math.random();
 

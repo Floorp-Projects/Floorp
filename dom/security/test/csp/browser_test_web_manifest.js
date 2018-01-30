@@ -9,7 +9,7 @@
 "use strict";
 const {
   ManifestObtainer
-} = ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
+} = Cu.import("resource://gre/modules/ManifestObtainer.jsm", {});
 const path = "/tests/dom/security/test/csp/";
 const testFile = `${path}file_web_manifest.html`;
 const remoteFile = `${path}file_web_manifest_remote.html`;

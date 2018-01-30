@@ -3,10 +3,10 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-common/hawkrequest.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
+Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/hawkrequest.js");
+Cu.import("resource://services-crypto/utils.js");
 
 const FAKE_SESSION_TOKEN = "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf";
 

@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm", this);
+Cu.import("resource://gre/modules/LoginManagerParent.jsm", this);
 
 function registerConverter() {
-  ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-  ChromeUtils.import("resource://gre/modules/NetUtil.jsm", this);
+  Cu.import("resource://gre/modules/Services.jsm", this);
+  Cu.import("resource://gre/modules/NetUtil.jsm", this);
 
   /**
    * Converts the "test/content" MIME type, served by the test over HTTP, to an

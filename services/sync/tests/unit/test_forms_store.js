@@ -2,10 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Make sure the form store follows the Store api and correctly accesses the backend form storage");
-ChromeUtils.import("resource://services-sync/engines/forms.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 add_task(async function run_test() {
   let engine = new FormEngine(Service);

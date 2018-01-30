@@ -1,5 +1,5 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
-ChromeUtils.defineModuleGetter(this, "FormHistory",
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
   "resource://gre/modules/FormHistory.jsm");
 
 function expectedURL(aSearchTerms) {

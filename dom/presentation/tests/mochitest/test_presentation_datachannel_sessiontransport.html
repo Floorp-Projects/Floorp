@@ -31,8 +31,8 @@ const clientMessage = "Client Message";
 const serverMessage = "Server Message";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
 var isClientReady = false;
 var isServerReady = false;

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Plugin registry uses different field delimeters on different platforms
 var DELIM = mozinfo.os == "win" ? "|" : ":";

@@ -22,8 +22,8 @@
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Log.jsm");
 
 this.EXPORTED_SYMBOLS = ["GCTelemetry"];
 

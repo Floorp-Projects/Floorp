@@ -15,7 +15,7 @@ registerCleanupFunction(function() {
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.quota.warn");
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
-  let {OfflineAppCacheHelper} = ChromeUtils.import("resource:///modules/offlineAppCache.jsm", {});
+  let {OfflineAppCacheHelper} = Components.utils.import("resource:///modules/offlineAppCache.jsm", {});
   OfflineAppCacheHelper.clear();
 });
 

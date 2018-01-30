@@ -30,7 +30,7 @@ add_task(async function test_sessions_get_recently_closed_private() {
 
   await extension.startup();
 
-  let {Management: {global: {windowTracker}}} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  let {Management: {global: {windowTracker}}} = Cu.import("resource://gre/modules/Extension.jsm", {});
   let privateWinId = windowTracker.getId(privateWin);
 
   extension.sendMessage("check-sessions");

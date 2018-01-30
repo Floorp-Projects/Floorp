@@ -1,6 +1,6 @@
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 do_get_profile();
 const dirSvc = Cc["@mozilla.org/file/directory_service;1"].

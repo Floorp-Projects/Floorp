@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = [
 
 const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function AsyncRunner(callbacks) {
   this._callbacks = callbacks;

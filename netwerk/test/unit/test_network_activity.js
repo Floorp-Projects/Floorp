@@ -1,8 +1,8 @@
 // test for networkactivity
 //
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var httpserver = new HttpServer();
 var results = [];

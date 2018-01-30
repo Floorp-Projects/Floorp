@@ -6,8 +6,8 @@
 // Tests that security info parser gives correct general security state for
 // different cases.
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function () {

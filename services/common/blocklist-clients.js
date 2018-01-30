@@ -12,23 +12,23 @@ this.EXPORTED_SYMBOLS = ["AddonBlocklistClient",
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 Cu.importGlobalProperties(["fetch"]);
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
-                               "resource://gre/modules/FileUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Kinto",
-                               "resource://services-common/kinto-offline-client.js");
-ChromeUtils.defineModuleGetter(this, "KintoHttpClient",
-                               "resource://services-common/kinto-http-client.js");
-ChromeUtils.defineModuleGetter(this, "FirefoxAdapter",
-                               "resource://services-common/kinto-storage-adapter.js");
-ChromeUtils.defineModuleGetter(this, "CanonicalJSON",
-                               "resource://gre/modules/CanonicalJSON.jsm");
-ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
-                               "resource://services-common/uptake-telemetry.js");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Kinto",
+                                  "resource://services-common/kinto-offline-client.js");
+XPCOMUtils.defineLazyModuleGetter(this, "KintoHttpClient",
+                                  "resource://services-common/kinto-http-client.js");
+XPCOMUtils.defineLazyModuleGetter(this, "FirefoxAdapter",
+                                  "resource://services-common/kinto-storage-adapter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "CanonicalJSON",
+                                  "resource://gre/modules/CanonicalJSON.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UptakeTelemetry",
+                                  "resource://services-common/uptake-telemetry.js");
 
 const KEY_APPDIR                             = "XCurProcD";
 const PREF_SETTINGS_SERVER                   = "services.settings.server";

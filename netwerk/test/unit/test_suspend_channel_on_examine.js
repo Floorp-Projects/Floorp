@@ -2,8 +2,8 @@
 
 var CC = Components.Constructor;
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var obs = Cc["@mozilla.org/observer-service;1"]
             .getService(Ci.nsIObserverService);

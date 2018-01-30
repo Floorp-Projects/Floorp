@@ -4,16 +4,16 @@
 "use strict";
 
 const {results: Cr, utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "LogManager",
+XPCOMUtils.defineLazyModuleGetter(this, "LogManager",
   "resource://shield-recipe-client/lib/LogManager.jsm");
-ChromeUtils.defineModuleGetter(this, "ShieldRecipeClient",
+XPCOMUtils.defineLazyModuleGetter(this, "ShieldRecipeClient",
   "resource://shield-recipe-client/lib/ShieldRecipeClient.jsm");
-ChromeUtils.defineModuleGetter(this, "PreferenceExperiments",
+XPCOMUtils.defineLazyModuleGetter(this, "PreferenceExperiments",
   "resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
 
 // Act as both a normal bootstrap.js and a JS module so that we can test

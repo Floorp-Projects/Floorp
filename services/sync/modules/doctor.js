@@ -13,18 +13,18 @@ this.EXPORTED_SYMBOLS = ["Doctor"];
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/observers.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/resource.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/resource.js");
 
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.defineModuleGetter(this, "getRepairRequestor",
+Cu.import("resource://services-sync/util.js");
+XPCOMUtils.defineLazyModuleGetter(this, "getRepairRequestor",
   "resource://services-sync/collection_repair.js");
-ChromeUtils.defineModuleGetter(this, "getAllRepairRequestors",
+XPCOMUtils.defineLazyModuleGetter(this, "getAllRepairRequestors",
   "resource://services-sync/collection_repair.js");
 
 const log = Log.repository.getLogger("Sync.Doctor");

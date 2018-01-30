@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-let log = ChromeUtils.import("resource://gre/modules/Log.jsm", {})
+let log = Cu.import("resource://gre/modules/Log.jsm", {})
             .Log.repository.getLogger("Sync.RemoteTabs");
 
 this.EXPORTED_SYMBOLS = [

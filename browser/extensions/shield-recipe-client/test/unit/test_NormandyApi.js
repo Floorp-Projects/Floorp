@@ -1,11 +1,11 @@
 /* globals sinon */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/CanonicalJSON.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
 
 load("utils.js"); /* globals withMockPreferences */
 

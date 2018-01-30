@@ -6,15 +6,15 @@
 "use strict";
 
 const {interfaces: Ci, utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {actionTypes: at, actionUtils: au} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
-const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
+const {actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "perfService",
+XPCOMUtils.defineLazyModuleGetter(this, "perfService",
   "resource://activity-stream/common/PerfService.jsm");
-ChromeUtils.defineModuleGetter(this, "PingCentre",
+XPCOMUtils.defineLazyModuleGetter(this, "PingCentre",
   "resource:///modules/PingCentre.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",

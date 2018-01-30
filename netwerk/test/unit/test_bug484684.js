@@ -1,5 +1,5 @@
 const URL = "ftp://localhost/bug464884/";
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const tests = [
   // standard ls unix format

@@ -4,9 +4,9 @@ const profileDir = do_get_profile();
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 const TEST_STORE_FILE_PATH = OS.Path.join(profileDir.path, "test-containers.json");
 

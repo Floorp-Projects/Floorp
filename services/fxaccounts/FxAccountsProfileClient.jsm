@@ -11,10 +11,10 @@ this.EXPORTED_SYMBOLS = ["FxAccountsProfileClient", "FxAccountsProfileClientErro
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/FxAccounts.jsm");
+Cu.import("resource://services-common/rest.js");
 
 Cu.importGlobalProperties(["URL"]);
 

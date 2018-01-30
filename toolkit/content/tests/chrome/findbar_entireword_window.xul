@@ -21,7 +21,7 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gFindBar = null;

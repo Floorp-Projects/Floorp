@@ -20,10 +20,10 @@
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
 
 var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)

@@ -1,6 +1,6 @@
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
-ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
+Cu.import("resource://gre/modules/LoginManagerContent.jsm");
 var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                          Ci.nsILoginInfo, "init");
 

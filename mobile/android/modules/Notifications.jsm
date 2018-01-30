@@ -6,7 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 
 this.EXPORTED_SYMBOLS = ["Notifications"];
 

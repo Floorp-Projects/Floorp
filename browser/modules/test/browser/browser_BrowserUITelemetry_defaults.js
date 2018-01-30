@@ -5,8 +5,8 @@
 
 function test() {
   let s = {};
-  ChromeUtils.import("resource:///modules/CustomizableUI.jsm", s);
-  ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm", s);
+  Cu.import("resource:///modules/CustomizableUI.jsm", s);
+  Cu.import("resource:///modules/BrowserUITelemetry.jsm", s);
 
   let { CustomizableUI, BrowserUITelemetry } = s;
 

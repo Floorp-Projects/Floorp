@@ -4,7 +4,7 @@
 
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
-var { MockRegistrar } = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
+var { MockRegistrar } = Components.utils.import("resource://testing-common/MockRegistrar.jsm", {});
 
 function PluginTag(name, description) {
   this.name = name;

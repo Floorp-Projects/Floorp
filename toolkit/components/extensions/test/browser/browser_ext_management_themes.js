@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+const {LightweightThemeManager} = Cu.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({

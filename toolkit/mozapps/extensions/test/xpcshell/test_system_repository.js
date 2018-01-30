@@ -4,7 +4,7 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
 BootstrapMonitor.init();
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer = new HttpServer();
 gServer.start(-1);
 

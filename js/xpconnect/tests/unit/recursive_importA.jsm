@@ -9,4 +9,4 @@ function foo() {
 }
 
 var bar = {}
-ChromeUtils.import("resource://test/recursive_importB.jsm", bar);
+Components.utils.import("resource://test/recursive_importB.jsm", bar);

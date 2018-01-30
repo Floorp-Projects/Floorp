@@ -6,10 +6,10 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 /**
  * FxAccountsPushService manages Push notifications for Firefox Accounts in the browser
@@ -73,7 +73,7 @@ FxAccountsPushService.prototype = {
     if (options.fxAccounts) {
       this.fxAccounts = options.fxAccounts;
     } else {
-      ChromeUtils.defineModuleGetter(this, "fxAccounts",
+      XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
         "resource://gre/modules/FxAccounts.jsm");
     }
 

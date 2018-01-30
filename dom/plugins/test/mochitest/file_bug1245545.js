@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-const { Services } = ChromeUtils.import('resource://gre/modules/Services.jsm');
+const { Services } = Cu.import('resource://gre/modules/Services.jsm');
 
 function getTestPlugin(pluginName) {
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

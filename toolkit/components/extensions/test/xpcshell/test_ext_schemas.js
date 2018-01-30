@@ -1,8 +1,8 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Schemas.jsm");
-ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+Components.utils.import("resource://gre/modules/Schemas.jsm");
+Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 
 let {LocalAPIImplementation, SchemaAPIInterface} = ExtensionCommon;
 

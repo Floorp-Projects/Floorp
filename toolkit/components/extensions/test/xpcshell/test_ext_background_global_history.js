@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
 add_task(async function test_global_history() {
   let extension = ExtensionTestUtils.loadExtension({

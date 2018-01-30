@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
       let Cu = Components.utils;
       let Ci = Components.interfaces;
 
-      ChromeUtils.import("resource://gre/modules/Services.jsm");
+      Cu.import("resource://gre/modules/Services.jsm");
 
       // Chrome scripts are run with synchronous messages, so make sure we're completely
       // decoupled from the content process before doing this work.

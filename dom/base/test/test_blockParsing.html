@@ -8,7 +8,7 @@
 </head>
 <body>
 <script>
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 async function runTest(url, initialHTML, finalHTML) {
   let iframe = document.createElement("iframe");

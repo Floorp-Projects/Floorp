@@ -9,7 +9,7 @@ function run_test() {
   var uri = ios.newFileURI(file);
 
   try {
-    ChromeUtils.import(uri.spec);
+    Components.utils.import(uri.spec);
     do_throw("Failed to report any error at all");
   } catch (e) {
     Assert.notEqual(/^SyntaxError:/.exec(e + ''), null);

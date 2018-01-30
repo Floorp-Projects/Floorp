@@ -8,7 +8,7 @@
 
 if (typeof Components != "undefined") {
   this.EXPORTED_SYMBOLS = ["OS"];
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_async_front.jsm", this);
+  Components.utils.import("resource://gre/modules/osfile/osfile_async_front.jsm", this);
 } else {
   importScripts("resource://gre/modules/workers/require.js");
 

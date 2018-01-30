@@ -2,8 +2,8 @@
 
 const SCALAR_SEARCHBAR = "browser.engagement.navigation.searchbar";
 
-ChromeUtils.defineModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
-                               "resource:///modules/BrowserUsageTelemetry.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "URLBAR_SELECTED_RESULT_METHODS",
+                                  "resource:///modules/BrowserUsageTelemetry.jsm");
 
 function checkHistogramResults(resultIndexes, expected, histogram) {
   for (let i = 0; i < resultIndexes.counts.length; i++) {

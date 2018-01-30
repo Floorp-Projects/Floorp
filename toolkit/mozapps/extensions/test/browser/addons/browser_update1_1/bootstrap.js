@@ -5,7 +5,7 @@
 
 function install(data, reason) {}
 function startup(data, reason) {
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
   Services.ppmm.loadProcessScript(
     "resource://my-addon/frame-script.js", false);
 }

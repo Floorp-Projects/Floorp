@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 const ID = "webextension1@tests.mozilla.org";
 
@@ -12,7 +12,7 @@ profileDir.append("extensions");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();
 
-const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+const { GlobalManager } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
 add_task(async function() {
   equal(GlobalManager.extensionMap.size, 0);

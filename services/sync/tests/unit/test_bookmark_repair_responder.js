@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
+Cu.import("resource:///modules/PlacesUIUtils.jsm");
 
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/bookmark_repair.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/bookmark_repair.js");
 
 // Disable validation so that we don't try to automatically repair the server
 // when we sync.

@@ -1,8 +1,8 @@
-ChromeUtils.defineModuleGetter(this, "SessionStore",
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateCache",
+XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
-ChromeUtils.defineModuleGetter(this, "TabStateFlusher",
+XPCOMUtils.defineLazyModuleGetter(this, "TabStateFlusher",
   "resource:///modules/sessionstore/TabStateFlusher.jsm");
 
 add_task(async function() {

@@ -10,8 +10,8 @@ this.EXPORTED_SYMBOLS = [ "InsecurePasswordUtils" ];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
@@ -19,8 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
 XPCOMUtils.defineLazyServiceGetter(this, "gScriptSecurityManager",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
-ChromeUtils.defineModuleGetter(this, "LoginHelper",
-                               "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("InsecurePasswordUtils");

@@ -33,7 +33,7 @@ async function runCreatedNavigationTargetTest({extension, openNavTarget, expecte
 // once the last extension which have subscribed a webNavigation event is unloaded
 // all the pending created navigation target data is completely cleared).
 function assertNoPendingCreatedNavigationTargetData() {
-  const {Manager} = ChromeUtils.import("resource://gre/modules/WebNavigation.jsm", {});
+  const {Manager} = Cu.import("resource://gre/modules/WebNavigation.jsm", {});
   Assert.equal(Manager.createdNavigationTargetByOuterWindowId.size, 0,
                "There should be no pending createdNavigationTarget messages in WebNavigation");
 }

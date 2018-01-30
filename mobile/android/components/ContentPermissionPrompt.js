@@ -7,14 +7,14 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "RuntimePermissions",
-                               "resource://gre/modules/RuntimePermissions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions",
+                                  "resource://gre/modules/RuntimePermissions.jsm");
 
-ChromeUtils.defineModuleGetter(this, "DoorHanger",
-                               "resource://gre/modules/Prompt.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DoorHanger",
+                                  "resource://gre/modules/Prompt.jsm");
 
 const kEntities = {
   "contacts": "contacts",
