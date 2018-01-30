@@ -38,27 +38,30 @@ x { background: lime; height:7px; }
 document.body.style.display = "none";
 var align = [
    "stretch",
-   "stretch end",
-   "stretch center",
-   "stretch end safe",
-   "stretch end unsafe",
-   "start safe",
-   "end safe",
-   "center safe",
-   "start unsafe",
-   "end unsafe",
-   "center unsafe",
+   // FIXME: When https://github.com/w3c/csswg-drafts/issues/1002 is implemented.
+   // "stretch end",
+   // "stretch center",
+   // "stretch safe end",
+   // "stretch unsafe end",
+   "safe start",
+   "safe end",
+   "safe center",
+   "unsafe start",
+   "unsafe end",
+   "unsafe center",
    "space-between",
-   "space-between end",
-   "space-between start",
-   "space-between end safe",
+   // FIXME: https://github.com/w3c/csswg-drafts/issues/1002
+   // "space-between end",
+   // "space-between start",
+   // "space-between safe end",
    "space-around",
-   "space-around center",
-   "space-around right",
-   "space-around right safe",
-   "space-around left",
+   // FIXME: https://github.com/w3c/csswg-drafts/issues/1002
+   // "space-around center",
+   // "space-around right",
+   // "space-around safe right",
+   // "space-around left",
    "space-evenly",
-   "space-evenly end",
+   // "space-evenly end",
 ];
 var rows = [ "0", "1", "2", "3", "8", "9" ];
 var heights = [ "auto", "0", "1", "5", "6" ];

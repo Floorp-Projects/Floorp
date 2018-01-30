@@ -1896,10 +1896,10 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     if (i == 1) {
       // This is the FlushType::Style case.
 
+      DispatchScrollEvents();
       DispatchAnimationEvents();
       DispatchPendingEvents();
       RunFrameRequestCallbacks(aNowTime);
-      DispatchScrollEvents();
 
       if (mPresContext && mPresContext->GetPresShell()) {
         AutoTArray<nsIPresShell*, 16> observers;

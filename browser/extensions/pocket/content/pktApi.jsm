@@ -599,6 +599,20 @@ var pktApi = (function() {
     }
 
     /**
+     * Helper function to get a user's pocket stories
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function retrieve(data = {}, options = {}) {
+        const requestData = Object.assign({}, data, {access_token: getAccessToken()});
+        return apiRequest({
+            path: "/get",
+            data: requestData,
+            success: options.success,
+            error: options.error
+        });
+    }
+
+    /**
      * Helper function to get current signup AB group the user is in
      */
     function getSignupPanelTabTestVariant() {
@@ -644,5 +658,6 @@ var pktApi = (function() {
         getSuggestedTagsForItem,
         getSuggestedTagsForURL,
         getSignupPanelTabTestVariant,
+        retrieve,
     };
 }());

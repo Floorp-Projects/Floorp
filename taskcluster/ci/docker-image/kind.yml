@@ -21,10 +21,6 @@ jobs:
     symbol: I(ib)
   desktop1604-test:
     symbol: I(dt16t)
-  desktop-build:
-    symbol: I(db)
-  valgrind-build:
-    symbol: I(vb)
   debian7-base:
     symbol: I(deb7-base)
     definition: debian-base
@@ -65,6 +61,9 @@ jobs:
     parent: debian7-amd64-build
     packages:
       - deb7-cmake
+  valgrind-build:
+    symbol: I(vb)
+    parent: debian7-amd64-build
   lint:
     symbol: I(lnt)
   debian9-base:

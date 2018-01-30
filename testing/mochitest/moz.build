@@ -39,8 +39,8 @@ TEST_HARNESS_FILES.testing.mochitest += [
     '/build/sanitizers/lsan_suppressions.txt',
     '/build/sanitizers/ubsan_suppressions.txt',
     '/build/valgrind/cross-architecture.sup',
-    '/build/valgrind/i386-redhat-linux-gnu.sup',
-    '/build/valgrind/x86_64-redhat-linux-gnu.sup',
+    '/build/valgrind/i386-pc-linux-gnu.sup',
+    '/build/valgrind/x86_64-pc-linux-gnu.sup',
     '/netwerk/test/httpserver/httpd.js',
     'bisection.py',
     'browser-harness.xul',
@@ -169,18 +169,3 @@ with Files("**"):
 
 with Files("*remote*"):
     BUG_COMPONENT = ("Firefox for Android", "Testing")
-
-with Files("chrome/**"):
-    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
-
-with Files("chrome-harness.js"):
-    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
-
-with Files("BrowserTestUtils/**"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")
-
-with Files("browser*"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")
-
-with Files("tests/browser/**"):
-    BUG_COMPONENT = ("Testing", "BrowserTest")

@@ -29,15 +29,15 @@ var inner = document.getElementById("inner");
 var state = "initial";
 
 function onFrame() {
-  is(state, "initial", "Must be in initial state");
-  ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
+  is(state, "didOnScroll", "Must have got scroll event already");
   state = "didOnFrame";
+  SimpleTest.finish();
 }
 
 function onScroll() {
-  is(state, "didOnFrame", "Must have got requestAnimationFrame callback already");
+  is(state, "initial", "Must be in initial state");
   ok(d.scrollTop > 0, "Must have scrolled by some amount (got " + d.scrollTop + ")");
-  SimpleTest.finish();
+  state = "didOnScroll";
 }
 
 function doTest() {

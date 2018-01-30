@@ -1002,7 +1002,7 @@ waitForAllPaints(() => {
     // It's possible that the animation begins at this moment.  If this is the
     // case, an additional superfluous restyle request that we will check later
     // can't be observed.
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 1);
+    const superfluousRestyle = startsRightNow(animation) ? 0 : 1;
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -1027,7 +1027,7 @@ waitForAllPaints(() => {
       // Bug 1417354: There will be an additional superfluous restyle request
       // which results when we detach an element from the document between
       // the Animation tick and styling, and then re-attach it.
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 1 + superfluousRestyle,
          'We should observe one restyle in the first frame right after ' +
          're-attaching to the document');
     } else {

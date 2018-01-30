@@ -29,6 +29,14 @@
    fun:FcPatternObjectInsertElt
    ...
 }
+{
+   Bug 1187649
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcPatternObjectInsertElt
+   ...
+}
 # With older versions of fontconfig (e.g. 2.8.0 on taskcluster systems),
 # there's an uninitialized memory usage and leak when loading app fonts.
 {
@@ -47,6 +55,18 @@
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
+   fun:FcDirScanConfig
+   fun:FcDirCacheScan
+   fun:FcConfigAddDirList
+   fun:FcConfigAppFontAddDir
+   ...
+}
+{
+   Bug 1231701
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcDirScanConfig
    fun:FcDirScanConfig
    fun:FcDirCacheScan
    fun:FcConfigAddDirList
@@ -161,6 +181,15 @@
    fun:XOpenDisplay
    fun:gdk_display_open
    ...
+}
+{
+  _g_io_module_get_default
+   Memcheck:Leak
+   ...
+   fun:g_io_module_new
+   fun:g_io_modules_scan_all_in_directory_with_scope
+   fun:_g_io_modules_ensure_loaded
+   fun:_g_io_module_get_default
 }
 
 ###################################

@@ -37,6 +37,19 @@ struct RefCountedBase {
   }
 };
 
+MOZ_CAN_RUN_SCRIPT void testLambda() {
+  auto doIt = []() MOZ_CAN_RUN_SCRIPT {
+    test();
+  };
+
+  auto doItWrong = []() { // expected-note {{parent function declared here}}
+    test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
+  };
+
+  doIt();
+  doItWrong();
+}
+
 void test2_parent() { // expected-note {{parent function declared here}}
   test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}} \
                              // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}

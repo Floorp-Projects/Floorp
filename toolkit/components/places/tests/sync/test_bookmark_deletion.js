@@ -585,3 +585,67 @@ add_task(async function test_move_to_new_then_delete() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_nonexistent_on_one_side() {
+  let buf = await openMirror("nonexistent_on_one_side");
+
+  info("Set up empty mirror");
+  // Previous tests change the menu's date added time; reset it to a predictable
+  // value.
+  let menuDateAdded = new Date();
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    dateAdded: menuDateAdded,
+  });
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  // A doesn't exist in the mirror.
+  info("Create local tombstone for nonexistent remote item A");
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkAAAA",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "A",
+    url: "http://example.com/a",
+    // Pretend a bookmark restore added A, so that we'll write a tombstone when
+    // we remove it.
+    source: PlacesUtils.bookmarks.SOURCES.IMPORT_REPLACE,
+  });
+  await PlacesUtils.bookmarks.remove("bookmarkAAAA");
+
+  // B doesn't exist in Places, and we don't currently persist tombstones (bug
+  // 1343103), so we should ignore it.
+  info("Create remote tombstone for nonexistent local item B");
+  await buf.store([{
+    id: "bookmarkBBBB",
+    deleted: true
+  }]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), ["bookmarkBBBB"],
+    "Should leave B unmerged");
+
+  // We should still upload a record for the menu, since we changed its
+  // children when we added then removed A.
+  deepEqual(changesToUpload, {
+    menu: {
+      tombstone: false,
+      counter: 2,
+      synced: false,
+      cleartext: {
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        hasDupe: false,
+        parentName: "",
+        dateAdded: menuDateAdded.getTime(),
+        title: "Bookmarks Menu",
+        children: [],
+      },
+    },
+  });
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});

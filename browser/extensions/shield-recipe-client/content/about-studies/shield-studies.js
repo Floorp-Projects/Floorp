@@ -109,7 +109,7 @@ class StudyListItem extends React.Component {
   }
 
   handleClickRemove() {
-    sendPageEvent("RemoveStudy", this.props.study.recipeId);
+    sendPageEvent("RemoveStudy", {recipeId: this.props.study.recipeId, reason: "individual-opt-out"});
   }
 
   render() {

@@ -55,7 +55,6 @@ RUN apt-get update && \
       libpango1.0-dev:$ARCH \
       libpulse-dev:$ARCH \
       libx11-xcb-dev:$ARCH \
-      libxss-dev:$ARCH \
       libxt-dev:$ARCH
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
@@ -66,11 +65,11 @@ COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-# %include taskcluster/docker/desktop-build/oauth.txt
-COPY topsrcdir/taskcluster/docker/desktop-build/oauth.txt /builds/worker/
+# %include taskcluster/docker/recipes/oauth.txt
+COPY topsrcdir/taskcluster/docker/recipes/oauth.txt /builds/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
-# %include taskcluster/docker/desktop-build/buildprops.json
-COPY topsrcdir/taskcluster/docker/desktop-build/buildprops.json /builds/worker/
+# %include taskcluster/docker/recipes/buildprops.json
+COPY topsrcdir/taskcluster/docker/recipes/buildprops.json /builds/worker/
