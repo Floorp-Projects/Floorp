@@ -3391,11 +3391,7 @@ GeneralParser<ParseHandler, CharT>::functionDefinition(Node funcNode, uint32_t t
     if (generatorKind == GeneratorKind::Generator ||
         asyncKind == FunctionAsyncKind::AsyncFunction)
     {
-        // If we are off thread, the generator meta-objects have
-        // already been created by js::StartOffThreadParseTask, so cx will not
-        // be necessary.
-        JSContext* cx = context->helperThread() ? nullptr : context;
-        proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, context->global());
+        proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(context, context->global());
         if (!proto)
             return null();
     }

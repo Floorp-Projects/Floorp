@@ -8,12 +8,12 @@
 
 const {utils: Cu, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AboutNewTab",
-                                  "resource:///modules/AboutNewTab.jsm");
+ChromeUtils.defineModuleGetter(this, "AboutNewTab",
+                               "resource:///modules/AboutNewTab.jsm");
 
 const LOCAL_NEWTAB_URL = "chrome://browser/content/newtab/newTab.xhtml";
 const TOPIC_APP_QUIT = "quit-application-granted";

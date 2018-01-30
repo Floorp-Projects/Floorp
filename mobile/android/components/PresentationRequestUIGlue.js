@@ -12,9 +12,9 @@ const TOPIC_PRESENTATION_RECEIVER_LAUNCH = "presentation-receiver:launch";
 const TOPIC_PRESENTATION_RECEIVER_LAUNCH_RESPONSE = "presentation-receiver:launch:response";
 
 // globals XPCOMUtils
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 // globals Services
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function log(str) {
   // dump("-*- PresentationRequestUIGlue.js -*-: " + str + "\n");

@@ -7,13 +7,13 @@ var EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-sync/addonutils.js");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://tps/logger.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.import("resource://services-sync/addonutils.js");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://tps/logger.jsm");
 
 const ADDONSGETURL = "http://127.0.0.1:4567/";
 const STATE_ENABLED = 1;

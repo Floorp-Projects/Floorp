@@ -1,1 +1,1 @@
-Components.utils.import("resource://test/syntax_error.jsm");
+ChromeUtils.import("resource://test/syntax_error.jsm");

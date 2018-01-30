@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
+let { Preferences } = ChromeUtils.import("resource://gre/modules/Preferences.jsm", {});
 
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";

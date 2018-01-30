@@ -405,7 +405,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsComputedDOMStyle)
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
                                      nsAString& aValue)
 {
@@ -417,7 +417,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
     aValue);
 }
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
                                      const nsAString& aValue,
                                      nsIPrincipal* aSubjectPrincipal)
@@ -425,26 +425,23 @@ nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::GetCssText(nsAString& aCssText)
 {
   aCssText.Truncate();
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
-                               nsIPrincipal* aSubjectPrincipal)
+                               nsIPrincipal* aSubjectPrincipal,
+                               ErrorResult& aRv)
 {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetLength(uint32_t* aLength)
+uint32_t
+nsComputedDOMStyle::Length()
 {
-  NS_PRECONDITION(aLength, "Null aLength!  Prepare to die!");
-
   uint32_t length = GetComputedStyleMap()->Length();
 
   // Make sure we have up to date style so that we can include custom
@@ -456,11 +453,9 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
       : StyleVariables()->mVariables.Count();
   }
 
-  *aLength = length;
-
   ClearCurrentStyleSources();
 
-  return NS_OK;
+  return length;
 }
 
 css::Rule*
@@ -1190,13 +1185,11 @@ nsComputedDOMStyle::RemoveProperty(const nsAString& aPropertyName,
 }
 
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::GetPropertyPriority(const nsAString& aPropertyName,
                                         nsAString& aReturn)
 {
   aReturn.Truncate();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

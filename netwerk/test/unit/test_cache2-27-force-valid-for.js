@@ -1,4 +1,4 @@
-Components.utils.import('resource://gre/modules/LoadContextInfo.jsm');
+ChromeUtils.import('resource://gre/modules/LoadContextInfo.jsm');
 
 function run_test()
 {

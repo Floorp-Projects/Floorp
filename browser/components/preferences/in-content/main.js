@@ -6,15 +6,15 @@
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/Downloads.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-Components.utils.import("resource:///modules/ShellService.jsm");
-Components.utils.import("resource:///modules/TransientPrefs.jsm");
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
-Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
-Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CloudStorage",
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource:///modules/ShellService.jsm");
+ChromeUtils.import("resource:///modules/TransientPrefs.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm");
+ChromeUtils.defineModuleGetter(this, "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm");
 
 // Constants & Enumeration Values
@@ -94,11 +94,11 @@ const ICON_URL_APP = AppConstants.platform == "linux" ?
 // was set by us to a custom handler icon and CSS should not try to override it.
 const APP_ICON_ATTR_NAME = "appHandlerIcon";
 
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
+ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
 if (AppConstants.MOZ_DEV_EDITION) {
-  XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  ChromeUtils.defineModuleGetter(this, "fxAccounts",
     "resource://gre/modules/FxAccounts.jsm");
 }
 
@@ -438,7 +438,7 @@ var gMainPane = {
       let row = document.getElementById("translationBox");
       row.removeAttribute("hidden");
       // Showing attribution only for Bing Translator.
-      Components.utils.import("resource:///modules/translation/Translation.jsm");
+      ChromeUtils.import("resource:///modules/translation/Translation.jsm");
       if (Translation.translationEngine == "bing") {
         document.getElementById("bingAttribution").removeAttribute("hidden");
       }
@@ -1066,7 +1066,7 @@ var gMainPane = {
   },
 
   openTranslationProviderAttribution() {
-    Components.utils.import("resource:///modules/translation/Translation.jsm");
+    ChromeUtils.import("resource:///modules/translation/Translation.jsm");
     Translation.openProviderAttribution();
   },
 

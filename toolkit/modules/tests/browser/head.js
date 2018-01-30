@@ -1,6 +1,6 @@
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "setTimeout", "resource://gre/modules/Timer.jsm");
 
 const kFixtureBaseURL = "https://example.com/browser/toolkit/modules/tests/browser/";
 

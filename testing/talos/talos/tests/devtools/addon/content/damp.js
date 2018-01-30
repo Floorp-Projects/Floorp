@@ -1,12 +1,12 @@
 const Ci = Components.interfaces;
-const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
 
 XPCOMUtils.defineLazyGetter(this, "require", function() {
   let { require } =
-    Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+    ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
   return require;
 });
 XPCOMUtils.defineLazyGetter(this, "gDevTools", function() {
@@ -20,9 +20,6 @@ XPCOMUtils.defineLazyGetter(this, "EVENTS", function() {
 XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
   let { TargetFactory } = require("devtools/client/framework/target");
   return TargetFactory;
-});
-XPCOMUtils.defineLazyGetter(this, "ChromeUtils", function() {
-  return require("ChromeUtils");
 });
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");

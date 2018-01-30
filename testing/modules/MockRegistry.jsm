@@ -5,8 +5,8 @@ this.EXPORTED_SYMBOLS = ["MockRegistry"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://testing-common/MockRegistrar.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 class MockRegistry {
   constructor() {

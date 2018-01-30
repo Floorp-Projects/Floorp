@@ -34,7 +34,7 @@ const WEBSENSE_REG_OPEN_ERROR = 1;
 const WEBSENSE_REG_READ_ERROR = 2;
 const WEBSENSE_ALREADY_MODIFIED = 4;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function startup() {
   if (Services.appinfo.OS != "WINNT") {

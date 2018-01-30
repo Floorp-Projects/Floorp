@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function makeURI(str) {
     return Components.classes["@mozilla.org/network/io-service;1"]

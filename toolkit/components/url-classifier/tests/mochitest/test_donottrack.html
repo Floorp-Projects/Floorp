@@ -73,8 +73,8 @@ const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const contentPage =
   "http://mochi.test:8888/tests/toolkit/components/url-classifier/tests/mochitest/dnt.html";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
 function executeTest(test) {
   SpecialPowers.pushPrefEnv({"set": [

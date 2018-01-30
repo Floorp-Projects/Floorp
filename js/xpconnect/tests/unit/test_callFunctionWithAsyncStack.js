@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {

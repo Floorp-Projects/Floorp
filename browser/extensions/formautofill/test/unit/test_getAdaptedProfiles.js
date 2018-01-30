@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://formautofill/FormAutofillHandler.jsm");
+ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm");
 
 const DEFAULT_ADDRESS_RECORD = {
   "guid": "123",

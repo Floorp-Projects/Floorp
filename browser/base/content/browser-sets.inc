@@ -386,12 +386,12 @@
 
 #ifdef NIGHTLY_BUILD
     <key id="key_wrCaptureCmd"
-#ifdef XP_GNOME
-    keycode="VK_3" event="keydown"
+#ifdef XP_MACOSX
+    keycode="3" modifiers="control,shift"
 #else
-    key="3"
+    key="#" modifiers="control"
 #endif
-    command="wrCaptureCmd" modifiers="control,shift"/>
+    command="wrCaptureCmd"/>
 #endif
   </keyset>
 

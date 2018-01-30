@@ -8,7 +8,7 @@
    the PoliciesValidator API.
  */
 
-const { PoliciesValidator } = Cu.import("resource:///modules/policies/PoliciesValidator.jsm", {});
+const { PoliciesValidator } = ChromeUtils.import("resource:///modules/policies/PoliciesValidator.jsm", {});
 
 add_task(async function test_boolean_values() {
   let schema = {

@@ -6,14 +6,14 @@
 
 const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
-XPCOMUtils.defineLazyModuleGetter(this, "Log",
+ChromeUtils.defineModuleGetter(this, "Log",
     "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+ChromeUtils.defineModuleGetter(this, "Preferences",
     "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let log = Log.repository.getLogger("Marionette");
@@ -295,7 +295,7 @@ MarionetteComponent.prototype.init = function() {
     await startupRecorder;
 
     try {
-      Cu.import("chrome://marionette/content/server.js");
+      ChromeUtils.import("chrome://marionette/content/server.js");
       let listener = new server.TCPListener(prefs.port);
       listener.start();
       log.info(`Listening on port ${listener.port}`);

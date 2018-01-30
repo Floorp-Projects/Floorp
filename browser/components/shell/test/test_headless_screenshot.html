@@ -9,9 +9,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  Components.utils.import("resource://gre/modules/Services.jsm");
-  Components.utils.import("resource://gre/modules/Subprocess.jsm");
-  Components.utils.import("resource://gre/modules/osfile.jsm");
+  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  ChromeUtils.import("resource://gre/modules/Subprocess.jsm");
+  ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
   SimpleTest.requestLongerTimeout(2);
 

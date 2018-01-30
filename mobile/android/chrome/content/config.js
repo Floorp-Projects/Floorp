@@ -4,7 +4,7 @@
 "use strict";
 
 var {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const VKB_ENTER_KEY = 13; // User press of VKB enter key
 const INITIAL_PAGE_DELAY = 500; // Initial pause on program start for scroll alignment

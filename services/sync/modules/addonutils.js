@@ -8,13 +8,13 @@ this.EXPORTED_SYMBOLS = ["AddonUtils"];
 
 var {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://services-sync/util.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+ChromeUtils.defineModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
+ChromeUtils.defineModuleGetter(this, "AddonRepository",
   "resource://gre/modules/addons/AddonRepository.jsm");
 
 function AddonUtilsInternal() {

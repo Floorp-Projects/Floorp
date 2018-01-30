@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 var gMimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 var gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);

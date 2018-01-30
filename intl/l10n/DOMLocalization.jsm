@@ -19,7 +19,7 @@
 /* fluent@0.4.1 */
 
 const { Localization } =
-  Components.utils.import("resource://gre/modules/Localization.jsm", {});
+  ChromeUtils.import("resource://gre/modules/Localization.jsm", {});
 
 // Match the opening angle bracket (<) in HTML tags, and HTML entities like
 // &amp;, &#0038;, &#x0026;.

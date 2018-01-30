@@ -67,7 +67,7 @@ add_task(async function test_contentscript_cache() {
     /* globals addMessageListener, assert */
     chromeScript = SpecialPowers.loadChromeScript(() => {
       addMessageListener("check-script-cache", extensionId => {
-        let {ExtensionManager} = Components.utils.import("resource://gre/modules/ExtensionChild.jsm", {});
+        let {ExtensionManager} = ChromeUtils.import("resource://gre/modules/ExtensionChild.jsm", {});
         let ext = ExtensionManager.extensions.get(extensionId);
 
         if (ext && ext.staticScripts) {

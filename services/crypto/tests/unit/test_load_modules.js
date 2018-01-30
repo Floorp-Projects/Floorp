@@ -10,7 +10,7 @@ function run_test() {
   for (let m of modules) {
     let resource = "resource://services-crypto/" + m;
     _("Attempting to import: " + resource);
-    Components.utils.import(resource, {});
+    ChromeUtils.import(resource, {});
   }
 }
 

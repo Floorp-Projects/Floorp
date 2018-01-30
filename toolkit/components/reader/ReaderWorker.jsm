@@ -8,9 +8,7 @@
  * Interface to a dedicated thread handling readability parsing.
  */
 
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
+ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
 
 this.EXPORTED_SYMBOLS = ["ReaderWorker"];
 

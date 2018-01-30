@@ -1,6 +1,6 @@
 /* exported startup, shutdown, install, uninstall, ADDON_ID */
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
 const ADDON_ID = "test_delay_update_ignore@tests.mozilla.org";
 const TEST_IGNORE_PREF = "delaytest.ignore";

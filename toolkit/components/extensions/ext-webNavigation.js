@@ -7,10 +7,10 @@
 // by ext-utils.js).
 /* global tabTracker */
 
-XPCOMUtils.defineLazyModuleGetter(this, "MatchURLFilters",
-                                  "resource://gre/modules/MatchURLFilters.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebNavigation",
-                                  "resource://gre/modules/WebNavigation.jsm");
+ChromeUtils.defineModuleGetter(this, "MatchURLFilters",
+                               "resource://gre/modules/MatchURLFilters.jsm");
+ChromeUtils.defineModuleGetter(this, "WebNavigation",
+                               "resource://gre/modules/WebNavigation.jsm");
 
 const defaultTransitionTypes = {
   topFrame: "link",

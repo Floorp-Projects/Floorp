@@ -2,12 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource://devtools/client/framework/gDevTools.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://devtools/shared/Loader.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContentTaskUtils",
-                                  "resource://testing-common/ContentTaskUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "gDevTools",
+                               "resource://devtools/client/framework/gDevTools.jsm");
+ChromeUtils.defineModuleGetter(this, "devtools",
+                               "resource://devtools/shared/Loader.jsm");
+ChromeUtils.defineModuleGetter(this, "ContentTaskUtils",
+                               "resource://testing-common/ContentTaskUtils.jsm");
 
 function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
   const actualTabTitle = inspector.panelDoc.querySelector(".tabs-menu-item.is-active").innerText;

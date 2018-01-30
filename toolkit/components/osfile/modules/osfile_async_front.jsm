@@ -25,9 +25,9 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 var SharedAll = {};
-Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/Timer.jsm", this);
+ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
 
 // Boilerplate, to simplify the transition to require()
@@ -37,9 +37,9 @@ var isTypedArray = SharedAll.isTypedArray;
 // The constructor for file errors.
 var SysAll = {};
 if (SharedAll.Constants.Win) {
-  Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
+  ChromeUtils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
 } else if (SharedAll.Constants.libc) {
-  Cu.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
+  ChromeUtils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
@@ -47,20 +47,20 @@ var OSError = SysAll.Error;
 var Type = SysAll.Type;
 
 var Path = {};
-Cu.import("resource://gre/modules/osfile/ospath.jsm", Path);
+ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
+ChromeUtils.defineModuleGetter(this, "PromiseUtils",
+                               "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Task",
+                               "resource://gre/modules/Task.jsm");
 
 // The implementation of communications
-Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
-Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
-var Native = Cu.import("resource://gre/modules/osfile/osfile_native.jsm", {});
+ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
+ChromeUtils.import("resource://gre/modules/AsyncShutdown.jsm", this);
+var Native = ChromeUtils.import("resource://gre/modules/osfile/osfile_native.jsm", {});
 
 
 // It's possible for osfile.jsm to get imported before the profile is
@@ -1225,7 +1225,7 @@ File.Info.prototype = SysAll.AbstractInfo.prototype;
 // Deprecated
 Object.defineProperty(File.Info.prototype, "creationDate", {
   get: function creationDate() {
-    let {Deprecated} = Cu.import("resource://gre/modules/Deprecated.jsm", {});
+    let {Deprecated} = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {});
     Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
     return this._deprecatedCreationDate;
   }
