@@ -164,7 +164,7 @@ add_task(async function test_clicking_on_select_shows_all_options() {
 add_task(async function test_changing_option_selected_affects_other_options() {
   ok(option2.selected, "Option 2 should be selected from prior test");
 
-  option1.selected = true;
+  select1.selectedOption = option1;
   ok(!option2.selected, "Option 2 should no longer be selected after making option 1 selected");
   ok(option1.hasAttribute("selected"), "Option 1 should now have selected attribute");
 });
@@ -280,7 +280,7 @@ add_task(async function test_selected_clone_should_equal_selected_option() {
        "attributes should have matching value; name=" + attrName);
   }
 
-  option2.selected = true;
+  select1.selectedOption = option2;
   await asyncElementRendered();
 
   clonedOptions = select1.querySelectorAll(".rich-select-selected-clone");

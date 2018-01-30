@@ -2,14 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global ObservedPropertiesMixin */
+
 /**
  * <rich-select>
  *  <rich-option></rich-option>
  * </rich-select>
+ *
+ * Note: The only supported way to change the selected option is via the
+ *       `selectedOption` setter.
  */
-
-/* global ObservedPropertiesMixin */
-
 class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   static get observedAttributes() {
     return [
@@ -48,8 +50,22 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     return this.popupBox.querySelector(":scope > [selected]");
   }
 
-  namedItem(name) {
-    return this.popupBox.querySelector(`:scope > [name="${CSS.escape(name)}"]`);
+
+  /**
+   * This is the only supported method of changing the selected option. Do not
+   * manipulate the `selected` property or attribute on options directly.
+   * @param {HTMLOptionElement} option
+   */
+  set selectedOption(option) {
+    for (let child of this.popupBox.children) {
+      child.selected = child == option;
+    }
+
+    this.render();
+  }
+
+  getOptionByValue(value) {
+    return this.popupBox.querySelector(`:scope > [value="${CSS.escape(value)}"]`);
   }
 
   handleEvent(event) {
@@ -117,6 +133,9 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     }
 
     for (let aAttr of aAttrs) {
+      if (aAttr == "selected") {
+        continue;
+      }
       if (a.getAttribute(aAttr) != b.getAttribute(aAttr)) {
         return false;
       }
@@ -145,6 +164,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     for (let child of popupBox.children) {
       if (child.selected) {
         selectedChild = child;
+        break;
       }
     }
     if (!selectedChild && popupBox.children.length) {
@@ -161,6 +181,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       if (selectedChild) {
         selectedClone = selectedChild.cloneNode(false);
         selectedClone.removeAttribute("id");
+        selectedClone.removeAttribute("selected");
         selectedClone.classList.add("rich-select-selected-clone");
         selectedClone = this.appendChild(selectedClone);
       }
