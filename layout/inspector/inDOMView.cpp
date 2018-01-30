@@ -734,8 +734,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
         nsCOMPtr<nsIAttribute> attr = do_QueryInterface(checkNode->node);
         domAttr = static_cast<dom::Attr*>(attr.get());
         if (domAttr) {
-          nsAutoString attrName;
-          domAttr->GetNodeName(attrName);
+          const nsString& attrName = attr->NodeName();
           if (attrName.Equals(attrStr)) {
             // we have found the row for the attribute that was removed
             RemoveLink(checkNode);

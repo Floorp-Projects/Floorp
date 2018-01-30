@@ -307,11 +307,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         }
 
         if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-            nsAutoString target;
-            node->GetNodeName(target);
-
-            return NS_Atomize(target);
+            return NS_Atomize(aNode.mNode->NodeName());
         }
 
         return nullptr;
@@ -359,9 +355,9 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
         if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
             // PIs don't have a nodeinfo but do have a name
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-            node->GetNodeName(aLocalName);
-
+            // XXXbz Not actually true, but this function looks like it wants
+            // different things from elements and PIs for "local name"...
+            aLocalName = aNode.mNode->NodeName();
             return;
         }
 
