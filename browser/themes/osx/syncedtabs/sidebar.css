@@ -100,6 +100,10 @@
   }
 }
 
+.sidebar-search-container {
+  padding: 4px;
+}
+
 .search-box {
   -moz-appearance: searchfield;
   padding: 1px;
@@ -111,18 +115,12 @@
   text-shadow: none;
 }
 
-.search-box.compact > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+.search-box > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
   background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
   background-repeat: no-repeat;
   background-size: 11px 11px;
   width: 11px;
   height: 11px;
-}
-
-.search-box.compact {
-    padding: 0px;
-    /* font size is in px because the XUL it was copied from uses px */
-    font-size: 11px;
 }
 
 .textbox-search-clear {

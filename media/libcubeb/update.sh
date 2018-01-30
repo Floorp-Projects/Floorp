@@ -42,6 +42,7 @@ cp $1/test/test_audio.cpp gtest
 cp $1/test/test_devices.cpp gtest
 cp $1/test/test_duplex.cpp gtest
 cp $1/test/test_latency.cpp gtest
+cp $1/test/test_loopback.cpp gtest
 cp $1/test/test_mixer.cpp gtest
 cp $1/test/test_overload_callback.cpp gtest
 cp $1/test/test_record.cpp gtest

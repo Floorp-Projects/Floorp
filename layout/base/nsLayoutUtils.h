@@ -2582,35 +2582,11 @@ public:
 
 #ifdef MOZ_STYLO
   /**
-   * Return whether stylo should be used for a given document URI and
-   * principal.
+   * Return whether stylo should be used for a given document principal.
    */
-  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal);
-
-  /**
-   * Principal-based blocklist for stylo.
-   * Check if aPrincipal is blocked by stylo's blocklist and should fallback to
-   * use Gecko's style backend. Note that using a document's principal rather
-   * than the document URI will let us piggy-back off the existing principal
-   * relationships and symmetries.
-   */
-  static bool IsInStyloBlocklist(nsIPrincipal* aPrincipal);
-
-  /**
-   * Add aBlockedDomain to the existing stylo blocklist, i.e., sStyloBlocklist.
-   * This function is exposed to nsDOMWindowUtils and only for testing purpose.
-   * So, NEVER use this in any other cases.
-   */
-  static void AddToStyloBlocklist(const nsACString& aBlockedDomain);
-
-  /**
-   * Remove aBlockedDomain from the existing stylo blocklist, i.e., sStyloBlocklist.
-   * This function is exposed to nsDOMWindowUtils and only for testing purpose.
-   * So, NEVER use this in any other cases.
-   */
-  static void RemoveFromStyloBlocklist(const nsACString& aBlockedDomain);
+  static bool ShouldUseStylo(nsIPrincipal* aPrincipal);
 #else
-  static bool ShouldUseStylo(nsIURI* aDocumentURI, nsIPrincipal* aPrincipal) {
+  static bool ShouldUseStylo(nsIPrincipal* aPrincipal) {
     return false;
   }
 #endif
@@ -3134,8 +3110,6 @@ private:
   static bool sTextCombineUprightDigitsEnabled;
 #ifdef MOZ_STYLO
   static bool sStyloEnabled;
-  static bool sStyloBlocklistEnabled;
-  static nsTArray<nsCString>* sStyloBlocklist;
 #endif
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;

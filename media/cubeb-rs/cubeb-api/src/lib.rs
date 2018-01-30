@@ -27,12 +27,13 @@ pub use context::Context;
 // Re-export cubeb_core types
 pub use cubeb_core::{ChannelLayout, Device, DeviceFormat, DeviceId, DeviceInfo,
                      DeviceState, DeviceType, Error, ErrorCode, LogLevel, Result,
-                     SampleFormat, State, StreamParams};
+                     SampleFormat, State, StreamParams, StreamPrefs};
 pub use cubeb_core::{DEVICE_FMT_F32BE, DEVICE_FMT_F32LE, DEVICE_FMT_S16BE,
                      DEVICE_FMT_S16LE};
 pub use cubeb_core::{DEVICE_PREF_ALL, DEVICE_PREF_MULTIMEDIA, DEVICE_PREF_NONE,
                      DEVICE_PREF_NOTIFICATION, DEVICE_PREF_VOICE};
 pub use cubeb_core::{DEVICE_TYPE_INPUT, DEVICE_TYPE_OUTPUT, DEVICE_TYPE_UNKNOWN};
+pub use cubeb_core::{STREAM_PREF_LOOPBACK, STREAM_PREF_NONE};
 
 use cubeb_core::binding::Binding;
 use cubeb_core::ffi;

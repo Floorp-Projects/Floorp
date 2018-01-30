@@ -37,7 +37,7 @@ fn pa_channel_to_cubeb_channel(channel: pulse::ChannelPosition) -> cubeb::Channe
 fn channel_map_to_layout(cm: &pulse::ChannelMap) -> cubeb::ChannelLayout {
     use pulse::ChannelPosition;
     let mut cubeb_map: cubeb::ChannelMap = Default::default();
-    cubeb_map.channels = cm.channels as u32;
+    cubeb_map.channels = u32::from(cm.channels);
     for i in 0usize..cm.channels as usize {
         cubeb_map.map[i] = pa_channel_to_cubeb_channel(ChannelPosition::try_from(cm.map[i])
                                                            .unwrap_or(ChannelPosition::Invalid));
@@ -176,6 +176,7 @@ impl Context {
         }
     }
 
+    #[cfg_attr(feature = "cargo-clippy", allow(too_many_arguments))]
     pub fn new_stream(&mut self,
                       stream_name: &CStr,
                       input_device: cubeb::DeviceId,
@@ -205,7 +206,7 @@ impl Context {
 
     pub fn max_channel_count(&self) -> Result<u32> {
         match self.default_sink_info {
-            Some(ref info) => Ok(info.channel_map.channels as u32),
+            Some(ref info) => Ok(u32::from(info.channel_map.channels)),
             None => Err(cubeb::ERROR),
         }
     }
@@ -276,7 +277,7 @@ impl Context {
                 preferred: preferred,
                 format: cubeb::DeviceFmt::all(),
                 default_format: pulse_format_to_cubeb_format(info.sample_spec.format),
-                max_channels: info.channel_map.channels as u32,
+                max_channels: u32::from(info.channel_map.channels),
                 min_rate: 1,
                 max_rate: PA_RATE_MAX,
                 default_rate: info.sample_spec.rate,
@@ -332,7 +333,7 @@ impl Context {
                 preferred: preferred,
                 format: cubeb::DeviceFmt::all(),
                 default_format: pulse_format_to_cubeb_format(info.sample_spec.format),
-                max_channels: info.channel_map.channels as u32,
+                max_channels: u32::from(info.channel_map.channels),
                 min_rate: 1,
                 max_rate: PA_RATE_MAX,
                 default_rate: info.sample_spec.rate,
@@ -341,7 +342,6 @@ impl Context {
             };
 
             list_data.devinfo.push(devinfo);
-
         }
 
         fn default_device_names(_: &pulse::Context, info: &pulse::ServerInfo, user_data: *mut c_void) {
@@ -403,7 +403,7 @@ impl Context {
             let mut devices = Vec::from_raw_parts(coll.device as *mut cubeb::DeviceInfo,
                                                   coll.count,
                                                   coll.count);
-            for dev in devices.iter_mut() {
+            for dev in &mut devices {
                 if !dev.group_id.is_null() {
                     let _ = CString::from_raw(dev.group_id as *mut _);
                 }
@@ -558,18 +558,15 @@ impl Context {
         }
 
         let context_ptr: *mut c_void = self as *mut _ as *mut _;
-        match self.context.take() {
-            Some(ctx) => {
-                self.mainloop.lock();
-                if let Ok(o) = ctx.drain(drain_complete, context_ptr) {
-                    self.operation_wait(None, &o);
-                }
-                ctx.clear_state_callback();
-                ctx.disconnect();
-                ctx.unref();
-                self.mainloop.unlock();
-            },
-            _ => {},
+        if let Some(ctx) = self.context.take() {
+            self.mainloop.lock();
+            if let Ok(o) = ctx.drain(drain_complete, context_ptr) {
+                self.operation_wait(None, &o);
+            }
+            ctx.clear_state_callback();
+            ctx.disconnect();
+            ctx.unref();
+            self.mainloop.unlock();
         }
     }
 

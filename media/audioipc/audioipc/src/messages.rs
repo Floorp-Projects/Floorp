@@ -122,7 +122,8 @@ pub struct StreamParams {
     pub format: u32,
     pub rate: u16,
     pub channels: u8,
-    pub layout: i32
+    pub layout: i32,
+    pub prefs: i32
 }
 
 impl<'a> From<&'a ffi::cubeb_stream_params> for StreamParams {
@@ -133,7 +134,8 @@ impl<'a> From<&'a ffi::cubeb_stream_params> for StreamParams {
             format: params.format,
             rate: params.rate as u16,
             channels: params.channels as u8,
-            layout: params.layout
+            layout: params.layout,
+            prefs: params.prefs
         }
     }
 }
@@ -144,7 +146,8 @@ impl<'a> From<&'a StreamParams> for ffi::cubeb_stream_params {
             format: params.format,
             rate: u32::from(params.rate),
             channels: u32::from(params.channels),
-            layout: params.layout
+            layout: params.layout,
+            prefs: params.prefs
         }
     }
 }

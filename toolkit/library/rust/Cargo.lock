@@ -45,7 +45,7 @@ dependencies = [
 
 [[package]]
 name = "audioipc"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bincode 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -68,7 +68,7 @@ dependencies = [
 name = "audioipc-client"
 version = "0.2.0"
 dependencies = [
- "audioipc 0.2.0",
+ "audioipc 0.2.1",
  "cubeb-backend 0.2.0",
  "cubeb-core 0.1.0",
  "futures 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -81,11 +81,11 @@ dependencies = [
 
 [[package]]
 name = "audioipc-server"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
- "audioipc 0.2.0",
+ "audioipc 0.2.1",
  "bytes 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb 0.3.1",
+ "cubeb 0.3.2",
  "cubeb-core 0.1.0",
  "error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -316,7 +316,7 @@ dependencies = [
 
 [[package]]
 name = "cubeb"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "cubeb-core 0.1.0",
  "libcubeb-sys 0.1.0",
@@ -580,9 +580,9 @@ name = "gkrust-shared"
 version = "0.1.0"
 dependencies = [
  "audioipc-client 0.2.0",
- "audioipc-server 0.2.0",
+ "audioipc-server 0.2.1",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb 0.3.1",
+ "cubeb 0.3.2",
  "cubeb-backend 0.2.0",
  "cubeb-core 0.1.0",
  "cubeb-pulse 0.0.2",

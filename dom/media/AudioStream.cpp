@@ -350,6 +350,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate)
   params.channels = mOutChannels;
   params.layout = CubebUtils::ConvertChannelMapToCubebLayout(aChannelMap);
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
+  params.prefs = CUBEB_STREAM_PREF_NONE;
 
   mAudioClock.Init(aRate);
 

@@ -123,6 +123,7 @@ int run_test(int num_channels, layout_info layout, int sampling_rate, int is_flo
   params.rate = sampling_rate;
   params.channels = num_channels;
   params.layout = layout.layout;
+  params.prefs = CUBEB_STREAM_PREF_NONE;
 
   synth_state synth(params.channels, params.rate);
 
@@ -171,6 +172,7 @@ int run_panning_volume_test(int is_float)
   params.rate = 44100;
   params.channels = 2;
   params.layout = CUBEB_LAYOUT_STEREO;
+  params.prefs = CUBEB_STREAM_PREF_NONE;
 
   synth_state synth(params.channels, params.rate);
 
