@@ -1628,9 +1628,7 @@ HTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode>parent;
-  nsresult rv = aElement->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> parent = element->GetParentNode();
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
   // Collapse selection to just after desired element,
   EditorRawDOMPoint afterElement(element);

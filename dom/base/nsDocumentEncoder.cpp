@@ -1550,11 +1550,11 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
   // loop for as long as we can promote both endpoints
   while (!done)
   {
-    rv = (*ioNode)->GetParentNode(getter_AddRefs(parent));
-    if ((NS_FAILED(rv)) || !parent)
+    node = do_QueryInterface(*ioNode);
+    parent = do_QueryInterface(node->GetParentNode());
+    if (!parent) {
       done = true;
-    else
-    {
+    } else {
       // passing parent as last param to GetPromotedPoint() allows it to promote only one level
       // up the hierarchy.
       rv = GetPromotedPoint( kStart, *ioNode, *ioStartOffset, address_of(frontNode), &frontOffset, parent);
@@ -1791,21 +1791,23 @@ nsHTMLCopyEncoder::GetNodeLocation(nsIDOMNode *inChild,
                                    int32_t *outOffset)
 {
   NS_ASSERTION((inChild && outParent && outOffset), "bad args");
-  nsresult result = NS_ERROR_NULL_POINTER;
   if (inChild && outParent && outOffset)
   {
-    result = inChild->GetParentNode(getter_AddRefs(*outParent));
-    if ((NS_SUCCEEDED(result)) && (*outParent))
-    {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(*outParent);
-      nsCOMPtr<nsIContent> cChild = do_QueryInterface(inChild);
-      if (!cChild || !content)
-        return NS_ERROR_NULL_POINTER;
-
-      *outOffset = content->ComputeIndexOf(cChild);
+    nsCOMPtr<nsIContent> child = do_QueryInterface(inChild);
+    if (!child) {
+      return NS_ERROR_NULL_POINTER;
     }
+
+    nsIContent* parent = child->GetParent();
+    if (!parent) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    *outParent = do_QueryInterface(parent);
+    *outOffset = parent->ComputeIndexOf(child);
+    return NS_OK;
   }
-  return result;
+  return NS_ERROR_NULL_POINTER;
 }
 
 bool

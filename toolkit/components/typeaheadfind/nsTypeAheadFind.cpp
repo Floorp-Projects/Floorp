@@ -569,8 +569,9 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
         // We may be inside an editable element, and therefore the selection
         // may be controlled by a different selection controller.  Walk up the
         // chain of parent nodes to see if we find one.
-        nsCOMPtr<nsIDOMNode> node;
-        returnRange->GetStartContainer(getter_AddRefs(node));
+        nsCOMPtr<nsIDOMNode> domNode;
+        returnRange->GetStartContainer(getter_AddRefs(domNode));
+        nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
         while (node) {
           nsCOMPtr<nsIDOMNSEditableElement> editable = do_QueryInterface(node);
           if (editable) {
@@ -599,8 +600,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
               fm->SetFocus(mFoundEditable, 0);
             break;
           }
-          nsIDOMNode* tmp = node;
-          tmp->GetParentNode(getter_AddRefs(node));
+          node = node->GetParentNode();
         }
 
         // If we reach here without setting mFoundEditable, then something

@@ -2864,18 +2864,17 @@ HTMLEditor::GetCellContext(Selection** aSelection,
     }
   }
   if (aCellParent) {
-    nsCOMPtr <nsIDOMNode> cellParent;
+    nsCOMPtr<nsINode> cellNode = do_QueryInterface(cell);
     // Get the immediate parent of the cell
-    rv = cell->GetParentNode(getter_AddRefs(cellParent));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsINode* cellParent = cellNode->GetParentNode();
     // Cell has to have a parent, so fail if not found
     NS_ENSURE_TRUE(cellParent, NS_ERROR_FAILURE);
 
-    *aCellParent = cellParent.get();
+    *aCellParent = cellParent->AsDOMNode();
     NS_ADDREF(*aCellParent);
 
     if (aCellOffset) {
-      *aCellOffset = GetChildOffset(cell, cellParent);
+      *aCellOffset = GetChildOffset(cell, cellParent->AsDOMNode());
     }
   }
 
@@ -3132,9 +3131,8 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
 
   // We didn't find a cell
   // Set selection to just before the table
-  nsCOMPtr<nsIDOMNode> tableParent;
-  nsresult rv = aTable->GetParentNode(getter_AddRefs(tableParent));
-  if (NS_SUCCEEDED(rv) && tableParent) {
+  nsCOMPtr<nsINode> table = do_QueryInterface(aTable);
+  if (table->GetParentNode()) {
     nsCOMPtr<nsIContent> table = do_QueryInterface(aTable);
     if (NS_WARN_IF(!table)) {
       return;

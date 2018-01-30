@@ -3560,9 +3560,9 @@ EditorBase::GetNodeLocation(nsIDOMNode* aChild,
   NS_ENSURE_TRUE(aChild && outOffset, nullptr);
   *outOffset = -1;
 
-  nsCOMPtr<nsIDOMNode> parent;
+  nsCOMPtr<nsINode> child = do_QueryInterface(aChild);
+  nsCOMPtr<nsIDOMNode> parent = do_QueryInterface(child->GetParentNode());
 
-  MOZ_ALWAYS_SUCCEEDS(aChild->GetParentNode(getter_AddRefs(parent)));
   if (parent) {
     *outOffset = GetChildOffset(aChild, parent);
   }
@@ -4983,16 +4983,15 @@ EditorBase::AppendNodeToSelectionAsRange(nsIDOMNode* aNode)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMNode> parentNode;
-  nsresult rv = aNode->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(node->GetParentNode());
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
 
   int32_t offset = GetChildOffset(aNode, parentNode);
 
   RefPtr<nsRange> range;
-  rv = CreateRange(parentNode, offset, parentNode, offset + 1,
-                   getter_AddRefs(range));
+  nsresult rv = CreateRange(parentNode, offset, parentNode, offset + 1,
+                            getter_AddRefs(range));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
