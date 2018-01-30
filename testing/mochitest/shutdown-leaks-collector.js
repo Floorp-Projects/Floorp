@@ -4,4 +4,4 @@
 
 // We run this code in a .jsm rather than here to avoid keeping the current
 // compartment alive.
-Components.utils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
+ChromeUtils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");

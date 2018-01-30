@@ -17,7 +17,7 @@ Services.prefs.getDefaultBranch("testing.allowed-prefs.").setCharPref("some-char
 Services.prefs.getDefaultBranch("testing.allowed-prefs.").setIntPref("some-int-pref", 0);
 
 async function runTest() {
-  let {AsyncPrefs} = Cu.import("resource://gre/modules/AsyncPrefs.jsm", {});
+  let {AsyncPrefs} = ChromeUtils.import("resource://gre/modules/AsyncPrefs.jsm", {});
   const kInChildProcess = Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
 
   // Need to define these again because when run in a content task we have no scope access.

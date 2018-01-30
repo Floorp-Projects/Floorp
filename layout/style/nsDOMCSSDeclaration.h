@@ -43,14 +43,28 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
 
-  NS_DECL_NSICSSDECLARATION
-  using nsICSSDeclaration::GetLength;
+  /**
+   * Method analogous to CSSStyleDeclaration::GetPropertyValue,
+   * which obeys all the same restrictions.
+   */
+  virtual nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
+                                    nsAString& aValue);
+
+  /**
+   * Method analogous to CSSStyleDeclaration::SetProperty.  This
+   * method does NOT allow setting a priority (the priority will
+   * always be set to default priority).
+   */
+  virtual nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
+                                    const nsAString& aValue,
+                                    nsIPrincipal* aSubjectPrincipal);
 
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
-  NS_IMETHOD GetCssText(nsAString & aCssText) override;
-  NS_IMETHOD SetCssText(const nsAString & aCssText,
-                        nsIPrincipal* aSubjectPrincipal) override;
+  void GetCssText(nsAString & aCssText) override;
+  void SetCssText(const nsAString & aCssText,
+                  nsIPrincipal* aSubjectPrincipal,
+                  mozilla::ErrorResult& aRv) override;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
                               nsAString & _retval) override;
   virtual already_AddRefed<mozilla::dom::CSSValue>
@@ -59,13 +73,13 @@ public:
   using nsICSSDeclaration::GetPropertyCSSValue;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
                             nsAString & _retval) override;
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
-                                 nsAString & _retval) override;
+  void GetPropertyPriority(const nsAString & propertyName,
+                           nsAString & aPriority) override;
   NS_IMETHOD SetProperty(const nsAString& propertyName,
                          const nsAString& value,
                          const nsAString& priority,
                          nsIPrincipal* aSubjectPrincipal) override;
-  NS_IMETHOD GetLength(uint32_t *aLength) override;
+  uint32_t Length() override;
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_

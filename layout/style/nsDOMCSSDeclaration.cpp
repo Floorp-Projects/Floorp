@@ -37,7 +37,7 @@ nsDOMCSSDeclaration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration,
                         nsICSSDeclaration)
 
-NS_IMETHODIMP
+nsresult
 nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
                                       nsAString& aValue)
 {
@@ -51,7 +51,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                       const nsAString& aValue,
                                       nsIPrincipal* aSubjectPrincipal)
@@ -90,7 +90,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
 }
 
 
-NS_IMETHODIMP
+void
 nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 {
   DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
@@ -99,19 +99,19 @@ nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
   if (decl) {
     decl->ToString(aCssText);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
-                                nsIPrincipal* aSubjectPrincipal)
+                                nsIPrincipal* aSubjectPrincipal,
+                                ErrorResult& aRv)
 {
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
   DeclarationBlock* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
-    return NS_ERROR_NOT_AVAILABLE;
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
@@ -126,7 +126,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
     ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
         aSubjectPrincipal);
     if (!servoEnv.mUrlExtraData) {
-      return NS_ERROR_NOT_AVAILABLE;
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
     }
 
     newdecl = ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
@@ -135,7 +136,8 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
     CSSParsingEnvironment geckoEnv;
     GetCSSParsingEnvironment(geckoEnv, aSubjectPrincipal);
     if (!geckoEnv.mPrincipal) {
-      return NS_ERROR_NOT_AVAILABLE;
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
     }
 
     RefPtr<css::Declaration> decl(new css::Declaration());
@@ -145,27 +147,30 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
     nsresult result = cssParser.ParseDeclarations(aCssText, geckoEnv.mSheetURI,
                                                   geckoEnv.mBaseURI, geckoEnv.mPrincipal,
                                                   decl, &changed);
-    if (NS_FAILED(result) || !changed) {
-      return result;
+    if (NS_FAILED(result)) {
+      aRv.Throw(result);
+      return;
+    }
+
+    if (!changed) {
+      return;
     }
     newdecl = decl.forget();
   }
 
-  return SetCSSDeclaration(newdecl);
+  aRv = SetCSSDeclaration(newdecl);
 }
 
-NS_IMETHODIMP
-nsDOMCSSDeclaration::GetLength(uint32_t* aLength)
+uint32_t
+nsDOMCSSDeclaration::Length()
 {
   DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
   if (decl) {
-    *aLength = decl->Count();
-  } else {
-    *aLength = 0;
+    return decl->Count();
   }
 
-  return NS_OK;
+  return 0;
 }
 
 already_AddRefed<dom::CSSValue>
@@ -194,18 +199,16 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
-                                         nsAString& aReturn)
+                                         nsAString& aPriority)
 {
   DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read);
 
-  aReturn.Truncate();
+  aPriority.Truncate();
   if (decl && decl->GetPropertyIsImportant(aPropertyName)) {
-    aReturn.AssignLiteral("important");
+    aPriority.AssignLiteral("important");
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

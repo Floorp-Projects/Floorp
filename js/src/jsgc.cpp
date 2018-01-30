@@ -7928,7 +7928,24 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
         script->setTypesGeneration(target->zone()->types.generation);
     }
 
+    GlobalObject* global = target->maybeGlobal();
+    MOZ_ASSERT(global);
+
     for (auto group = source->zone()->cellIter<ObjectGroup>(); !group.done(); group.next()) {
+        // Replace placeholder object prototypes with the correct prototype in
+        // the target compartment.
+        TaggedProto proto(group->proto());
+        if (proto.isObject()) {
+            JSObject* obj = proto.toObject();
+            if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
+                JSObject* targetProto = global->getPrototypeForOffThreadPlaceholder(obj);
+                MOZ_ASSERT(targetProto->isDelegate());
+                group->setProtoUnchecked(TaggedProto(targetProto));
+                if (targetProto->isNewGroupUnknown())
+                    group->markUnknown(cx);
+            }
+        }
+
         group->setGeneration(target->zone()->types.generation);
         group->compartment_ = target;
 

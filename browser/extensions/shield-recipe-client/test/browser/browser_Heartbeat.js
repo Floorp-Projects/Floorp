@@ -1,8 +1,8 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Heartbeat.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
 
 /**
  * Assert an array is in non-descending order, and that every element is a number

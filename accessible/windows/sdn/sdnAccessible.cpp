@@ -229,8 +229,7 @@ sdnAccessible::get_computedStyle(unsigned short aMaxStyleProperties,
     nsWinUtils::GetComputedStyleDeclaration(mNode->AsContent());
   NS_ENSURE_TRUE(cssDecl, E_FAIL);
 
-  uint32_t length = 0;
-  cssDecl->GetLength(&length);
+  uint32_t length = cssDecl->Length();
 
   uint32_t index = 0, realIndex = 0;
   for (index = realIndex = 0; index < length && realIndex < aMaxStyleProperties;

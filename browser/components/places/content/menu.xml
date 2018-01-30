@@ -27,7 +27,7 @@
     <implementation>
 
       <field name="AppConstants" readonly="true">
-        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
+        (ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
       </field>
 
       <field name="_indicatorBar">

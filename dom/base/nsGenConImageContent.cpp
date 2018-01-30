@@ -12,25 +12,31 @@
  */
 
 #include "nsContentCreatorFunctions.h"
-#include "nsXMLElement.h"
+#include "nsGenericHTMLElement.h"
+#include "nsGkAtoms.h"
+#include "nsIDocument.h"
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
+#include "nsNodeInfoManager.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 
 using namespace mozilla;
 
-class nsGenConImageContent final : public nsXMLElement,
+class nsGenConImageContent final : public nsGenericHTMLElement,
                                    public nsImageLoadingContent
 {
 public:
-  explicit nsGenConImageContent(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsXMLElement(aNodeInfo)
+  explicit nsGenConImageContent(already_AddRefed<dom::NodeInfo>& aNodeInfo)
+    : nsGenericHTMLElement(aNodeInfo)
   {
     // nsImageLoadingContent starts out broken, so we start out
     // suppressed to match it.
     AddStatesSilently(NS_EVENT_STATE_SUPPRESSED);
+    MOZ_ASSERT(IsInNamespace(kNameSpaceID_XHTML), "Someone messed up our nodeinfo");
   }
 
   nsresult Init(imgRequestProxy* aImageRequest)
@@ -54,11 +60,16 @@ public:
       // Don't propagate the events to the parent.
       return NS_OK;
     }
-    return nsXMLElement::GetEventTargetParent(aVisitor);
+    return nsGenericHTMLElement::GetEventTargetParent(aVisitor);
   }
 
 protected:
   nsIContent* AsContent() override { return this; }
+
+  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual nsresult Clone(dom::NodeInfo* aNodeInfo,
+                         nsINode** aResult,
+                         bool aPreallocateChildren) const override;
 
 private:
   virtual ~nsGenConImageContent();
@@ -68,22 +79,41 @@ public:
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(nsGenConImageContent,
-                            nsXMLElement,
+                            nsGenericHTMLElement,
                             nsIImageLoadingContent,
                             imgINotificationObserver)
 
-nsresult
-NS_NewGenConImageContent(nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                         imgRequestProxy* aImageRequest)
+NS_IMPL_ELEMENT_CLONE(nsGenConImageContent)
+
+namespace mozilla {
+namespace dom {
+
+already_AddRefed<nsIContent>
+CreateGenConImageContent(nsIDocument* aDocument, imgRequestProxy* aImageRequest)
 {
   NS_PRECONDITION(aImageRequest, "Must have request!");
-  nsGenConImageContent *it = new nsGenConImageContent(aNodeInfo);
-  NS_ADDREF(*aResult = it);
+  RefPtr<NodeInfo> nodeInfo =
+    aDocument->NodeInfoManager()->
+      GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage,
+                  nullptr,
+                  kNameSpaceID_XHTML,
+                  nsINode::ELEMENT_NODE);
+  // Work around not being able to bind a non-const lvalue reference
+  // to an rvalue of non-reference type by just creating an rvalue
+  // reference.  And we can't change the constructor signature,
+  // because then the macro-generated Clone() method fails to compile.
+  already_AddRefed<NodeInfo>&& rvalue = nodeInfo.forget();
+  RefPtr<nsGenConImageContent> it = new nsGenConImageContent(rvalue);
   nsresult rv = it->Init(aImageRequest);
-  if (NS_FAILED(rv))
-    NS_RELEASE(*aResult);
-  return rv;
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return it.forget();
 }
+
+} // namespace dom
+} // namespace mozilla
 
 nsGenConImageContent::~nsGenConImageContent()
 {
@@ -96,7 +126,7 @@ nsGenConImageContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                  bool aCompileEventHandlers)
 {
   nsresult rv;
-  rv = nsXMLElement::BindToTree(aDocument, aParent, aBindingParent,
+  rv = nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent,
                                 aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -109,13 +139,13 @@ void
 nsGenConImageContent::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  nsXMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 EventStates
 nsGenConImageContent::IntrinsicState() const
 {
-  EventStates state = nsXMLElement::IntrinsicState();
+  EventStates state = nsGenericHTMLElement::IntrinsicState();
 
   EventStates imageState = nsImageLoadingContent::ImageState();
   if (imageState.HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED)) {
@@ -127,3 +157,10 @@ nsGenConImageContent::IntrinsicState() const
   imageState &= ~NS_EVENT_STATE_LOADING;
   return state | imageState;
 }
+
+JSObject*
+nsGenConImageContent::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return dom::HTMLElementBinding::Wrap(aCx, this, aGivenProto);
+}
+

@@ -12,6 +12,7 @@ kind-dependencies:
    - build-signing
    - google-play-strings
    - push-apk-breakpoint
+   - beetmover-checksums
 
 jobs:
    push-apk/opt:

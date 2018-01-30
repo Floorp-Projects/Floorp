@@ -134,11 +134,10 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 }
 
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
 {
   GetCssTextImpl(aCssText);
-  return NS_OK;
 }
 
 void
@@ -163,11 +162,12 @@ nsCSSFontFaceStyleDecl::GetCssTextImpl(nsAString& aCssText) const
   }
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::SetCssText(const nsAString& aCssText,
-                                   nsIPrincipal* aSubjectPrincipal)
+                                   nsIPrincipal* aSubjectPrincipal,
+                                   ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED); // bug 443978
 }
 
 NS_IMETHODIMP
@@ -205,13 +205,12 @@ nsCSSFontFaceStyleDecl::RemoveProperty(const nsAString & propertyName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::GetPropertyPriority(const nsAString & propertyName,
                                             nsAString & aResult)
 {
   // font descriptors do not have priorities at present
   aResult.Truncate();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -226,18 +225,19 @@ nsCSSFontFaceStyleDecl::SetProperty(const nsAString& propertyName,
   return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetLength(uint32_t *aLength)
+uint32_t
+nsCSSFontFaceStyleDecl::Length()
 {
   uint32_t len = 0;
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
-       id = nsCSSFontDesc(id + 1))
-    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null)
+       id = nsCSSFontDesc(id + 1)) {
+    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null) {
       len++;
+    }
+  }
 
-  *aLength = len;
-  return NS_OK;
+  return len;
 }
 
 void
@@ -265,35 +265,10 @@ nsCSSFontFaceStyleDecl::GetParentRule()
   return ContainingRule();
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetPropertyValue(const nsCSSPropertyID aPropID,
-                                         nsAString& aValue)
-{
-  return
-    GetPropertyValue(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
-                     aValue);
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                         const nsAString& aValue,
-                                         nsIPrincipal* aSubjectPrincipal)
-{
-  return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
-                     aValue, EmptyString(), aSubjectPrincipal);
-}
-
 nsINode*
 nsCSSFontFaceStyleDecl::GetParentObject()
 {
   return ContainingRule()->GetDocument();
-}
-
-DocGroup*
-nsCSSFontFaceStyleDecl::GetDocGroup() const
-{
-  nsIDocument* document = ContainingRule()->GetDocument();
-  return document ? document->GetDocGroup() : nullptr;
 }
 
 JSObject*

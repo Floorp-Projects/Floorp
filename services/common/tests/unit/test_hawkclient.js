@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://services-common/hawkclient.js");
+ChromeUtils.import("resource://services-common/hawkclient.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;

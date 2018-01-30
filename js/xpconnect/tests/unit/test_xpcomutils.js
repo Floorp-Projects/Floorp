@@ -8,8 +8,8 @@
  * This file tests the methods on XPCOMUtils.jsm.
  */
 
-Components.utils.import("resource://gre/modules/Preferences.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -175,7 +175,7 @@ add_test(function test_categoryRegistration()
 
   // Create a fake app entry for our category registration apps filter.
   let tmp = {};
-  Components.utils.import("resource://testing-common/AppInfo.jsm", tmp);
+  ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
   let XULAppInfo = tmp.newAppInfo({
     name: "catRegTest",
     ID: "{adb42a9a-0d19-4849-bf4d-627614ca19be}",

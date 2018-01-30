@@ -8,7 +8,7 @@
 const PREF_LWTHEME_USED_THEMES = "lightweightThemes.usedThemes";
 const COMPACT_LIGHT_ID = "firefox-compact-light@mozilla.org";
 const COMPACT_DARK_ID = "firefox-compact-dark@mozilla.org";
-const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
 registerCleanupFunction(() => {
   // Set preferences back to their original values

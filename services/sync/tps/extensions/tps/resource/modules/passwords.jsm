@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = ["Password", "DumpPasswords"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://tps/logger.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://tps/logger.jsm");
 
 var nsLoginInfo = new Components.Constructor(
                       "@mozilla.org/login-manager/loginInfo;1",

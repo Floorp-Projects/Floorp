@@ -1,5 +1,5 @@
 _("Make sure notify sends out the right notifications");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 add_task(async function run_test() {
   let ret, rightThis, didCall;

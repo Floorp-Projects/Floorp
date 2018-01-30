@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 function run_test() {
   Assert.equal(Utils.encodeKeyBase32("foobarbafoobarba"), "mzxw6ytb9jrgcztpn5rgc4tcme");

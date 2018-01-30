@@ -6,11 +6,11 @@
 
 "use strict";
 
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const ChromeUtils = require("ChromeUtils");
 
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
+ChromeUtils.defineModuleGetter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
+ChromeUtils.defineModuleGetter(this, "VariablesViewController",
   "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 
 /**

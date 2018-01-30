@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource:///modules/experiments/Experiments.jsm");
+ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
 
 add_test(function test_experiments_activation() {
   do_get_profile();

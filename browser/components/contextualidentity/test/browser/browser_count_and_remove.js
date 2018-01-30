@@ -3,7 +3,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
+ChromeUtils.import("resource://gre/modules/ContextualIdentityService.jsm");
 
 function openTabInUserContext(userContextId) {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {userContextId});

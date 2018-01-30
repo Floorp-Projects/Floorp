@@ -40,7 +40,7 @@ function startTests()
   textbox.focus();
   testNum = 0;
   
-  Components.utils.import(
+  ChromeUtils.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm");
   onSpellCheck(textbox, function () {
     bringUpContextMenu(textbox);

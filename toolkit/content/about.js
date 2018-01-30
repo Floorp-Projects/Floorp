@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // get release notes and vendor URL from prefs
 var releaseNotesURL = Services.urlFormatter.formatURLPref("app.releaseNotesURL");

@@ -1,6 +1,6 @@
 /** Test for Bug 1305950 **/
 
-Cu.import("resource://testing-common/MockRegistrar.jsm", this);
+ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", this);
 
 // The mock idle service.
 var idleService = {

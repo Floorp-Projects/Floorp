@@ -17,7 +17,7 @@ add_task(async function test_setup() {
   Services.search.currentEngine = engine;
 
   // Move New Window button to nav bar, to make it possible to drag and drop.
-  let {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+  let {CustomizableUI} = ChromeUtils.import("resource:///modules/CustomizableUI.jsm", {});
   let origPlacement = CustomizableUI.getPlacementOfWidget("new-window-button");
   if (!origPlacement || origPlacement.area != CustomizableUI.AREA_NAVBAR) {
     CustomizableUI.addWidgetToArea("new-window-button",
@@ -83,7 +83,7 @@ async function drop(dragData, expectedWindowOpenCount = 0) {
   ok(newWindowButton, "New Window button exists");
 
   let tmp = {};
-  Cu.import("resource://testing-common/TestUtils.jsm", tmp);
+  ChromeUtils.import("resource://testing-common/TestUtils.jsm", tmp);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(newWindowButton, "drop");
   let actualWindowOpenCount = 0;

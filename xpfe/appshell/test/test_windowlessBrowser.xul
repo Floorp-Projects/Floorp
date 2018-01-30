@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815847
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 
-Cu.import('resource://gre/modules/Services.jsm');
+ChromeUtils.import('resource://gre/modules/Services.jsm');
 
 function testWindowlessBrowser(chromePrivileged) {
   var webNav = Services.appShell.createWindowlessBrowser(chromePrivileged);

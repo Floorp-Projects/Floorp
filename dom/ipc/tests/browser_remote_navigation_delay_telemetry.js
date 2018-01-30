@@ -1,6 +1,6 @@
 "use strict";
 
-var session = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
+var session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {});
 
 add_task(async function test_memory_distribution() {
   if (Services.prefs.getIntPref("dom.ipc.processCount", 1) < 2) {

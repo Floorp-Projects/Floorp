@@ -2119,7 +2119,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 }
 
-nsICSSDeclaration*
+nsDOMCSSAttributeDeclaration*
 Element::GetSMILOverrideStyle()
 {
   Element::nsExtendedDOMSlots* slots = ExtendedDOMSlots();

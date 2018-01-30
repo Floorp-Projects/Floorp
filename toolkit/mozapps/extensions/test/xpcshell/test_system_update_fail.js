@@ -1,6 +1,6 @@
 // Tests that system add-on upgrades fail to upgrade in expected cases.
 
-Components.utils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 BootstrapMonitor.init();
 

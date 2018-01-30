@@ -1,12 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://services-common/observers.js");
+ChromeUtils.import("resource://services-sync/engines.js");
+ChromeUtils.import("resource://services-sync/util.js");
 
 Svc.Prefs.set("registerEngines", "Tab,Bookmarks,Form,History");
-Cu.import("resource://services-sync/service.js");
+ChromeUtils.import("resource://services-sync/service.js");
 
 function run_test() {
   validate_all_future_pings();
@@ -21,7 +21,7 @@ function run_test() {
   Service.identity.username = "johndoe";
   Assert.ok(xps.enabled);
 
-  Cu.import("resource://services-sync/service.js");
+  ChromeUtils.import("resource://services-sync/service.js");
 
   _("Service is enabled.");
   Assert.equal(Service.enabled, true);

@@ -18,10 +18,10 @@ const TEST_THIRD_PARTY_PAGE =
 const THIRD_PARTY_FAVICON_URI =
   TEST_THIRD_PARTY_SITE + "/browser/browser/base/content/test/favicons/file_favicon.png";
 
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PromiseUtils",
+                               "resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
 
 let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 

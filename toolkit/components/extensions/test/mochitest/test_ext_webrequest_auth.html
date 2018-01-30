@@ -241,8 +241,8 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-    Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
     let observer = channel => {
       if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test")) {
@@ -302,8 +302,8 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
 
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-    Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
     let observer = channel => {
       if (!(channel instanceof Ci.nsIHttpChannel && channel.URI.host === "mochi.test")) {

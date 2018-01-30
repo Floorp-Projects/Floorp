@@ -33,13 +33,13 @@ const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
 
 const CHILD_SCRIPT = "resource://gre/modules/addons/Content.js";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var gSingleton = null;
 
 function amManager() {
-  Cu.import("resource://gre/modules/AddonManager.jsm");
+  ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
   /* globals AddonManagerPrivate*/
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true);

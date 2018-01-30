@@ -10,15 +10,15 @@
 // is used (from service.js).
 /* global Service */
 
-Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://testing-common/PlacesTestUtils.jsm");
-Cu.import("resource://services-sync/util.js");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
-Cu.import("resource://gre/modules/ObjectUtils.jsm");
-Cu.import("resource://testing-common/services/sync/utils.js");
+ChromeUtils.import("resource://services-common/async.js");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.import("resource://services-sync/util.js");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+ChromeUtils.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function head_setup() {
   // Initialize logging. This will sometimes be reset by a pref reset,
@@ -33,15 +33,15 @@ add_task(async function head_setup() {
 // ================================================
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
 /* globals sinon */
 // ================================================
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   let ns = {};
-  Cu.import("resource://gre/modules/FileUtils.jsm", ns);
-  Cu.import("resource://gre/modules/NetUtil.jsm", ns);
+  ChromeUtils.import("resource://gre/modules/FileUtils.jsm", ns);
+  ChromeUtils.import("resource://gre/modules/NetUtil.jsm", ns);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                .createInstance(Ci.nsIFileInputStream);
   let schema;
@@ -63,7 +63,7 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
   let ns = {};
-  Cu.import("resource://testing-common/ajv-4.1.1.js", ns);
+  ChromeUtils.import("resource://testing-common/ajv-4.1.1.js", ns);
   let ajv = new ns.Ajv({ async: "co*" });
   return ajv.compile(SyncPingSchema);
 });
@@ -272,7 +272,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 // engine names to its list of allowed engines.
 function get_sync_test_telemetry() {
   let ns = {};
-  Cu.import("resource://services-sync/telemetry.js", ns);
+  ChromeUtils.import("resource://services-sync/telemetry.js", ns);
   let testEngines = ["rotary", "steam", "sterling", "catapult"];
   for (let engineName of testEngines) {
     ns.SyncTelemetry.allowedEngines.add(engineName);
@@ -392,7 +392,7 @@ async function sync_engine_and_validate_telem(engine, allowErrorPings, onError) 
   // Clear out status, so failures from previous syncs won't show up in the
   // telemetry ping.
   let ns = {};
-  Cu.import("resource://services-sync/status.js", ns);
+  ChromeUtils.import("resource://services-sync/status.js", ns);
   ns.Status._engines = {};
   ns.Status.partial = false;
   // Ideally we'd clear these out like we do with engines, (probably via
@@ -501,7 +501,7 @@ Utils.getDefaultDeviceName = function() {
 
 async function registerRotaryEngine() {
   let {RotaryEngine} =
-    Cu.import("resource://testing-common/services/sync/rotaryengine.js", {});
+    ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js", {});
   Service.engineManager.clear();
 
   await Service.engineManager.register(RotaryEngine);

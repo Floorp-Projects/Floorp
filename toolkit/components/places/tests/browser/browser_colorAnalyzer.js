@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const CA = Cc["@mozilla.org/places/colorAnalyzer;1"].
            getService(Ci.mozIColorAnalyzer);

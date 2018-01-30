@@ -4,7 +4,7 @@ add_task(async function() {
   let uri = "data:text/html;charset=utf-8,<html/>"
 
   let eventPromise = ContentTask.spawn(tab.linkedBrowser, null, function() {
-    Cu.import("resource://gre/modules/PromiseUtils.jsm");
+    ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
     let deferred = PromiseUtils.defer();
 
     let listener = (event) => {

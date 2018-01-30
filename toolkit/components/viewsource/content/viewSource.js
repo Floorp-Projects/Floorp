@@ -11,14 +11,14 @@
 
 var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/ViewSourceBrowser.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ViewSourceBrowser.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
+ChromeUtils.defineModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+ChromeUtils.defineModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 
 /* global gBrowser, gViewSourceBundle, gContextMenu */

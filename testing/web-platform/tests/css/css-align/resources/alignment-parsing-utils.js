@@ -1,7 +1,21 @@
-var selfPositionValues = [ "start", "end", "self-start", "self-end", "center", "flex-start", "flex-end"];
-var contentPositionValues = [ "start", "end", "center", "flex-start", "flex-end"];
-var distributionValues = [ "stretch", "space-around", "space-between", "space-evenly"];
-var baselineValues = [ "baseline", "first baseline", "last baseline"];
+var selfPositionClasses = {"Start":"start", "End":"end", "SelfStart":"self-start", "SelfEnd":"self-end", "Center":"center", "FlexStart":"flex-start", "FlexEnd":"flex-end"};
+var contentPositionClasses = {"Start":"start", "End":"end", "Center":"center", "FlexStart":"flex-start", "FlexEnd":"flex-end"};
+var distributionClasses = {"Stretch":"stretch", "SpaceAround":"space-around", "SpaceBetween":"space-between", "SpaceEvenly":"space-evenly"};
+var baselineClasses = {"Baseline":"baseline", "FirstBaseline":"first baseline", "LastBaseline":"last baseline"};
+var overflowClasses = {"SafeFlexEnd":"safe flex-end", "UnsafeEnd":"unsafe end", "SafeEnd":"safe end", "UnsafeFlexStart":"unsafe flex-start", "SafeCenter":"safe center"};
+var legacyClasses = {"LegacyLeft":"legacy left", "LegacyCenter":"legacy center", "LegacyRight":"legacy right", "LeftLegacy":"left legacy", "CenterLegacy":"center legacy", "RightLegacy":"right legacy", "Legacy":"legacy"};
+
+var invalidPositionValues = ["auto safe", "auto left", "normal unsafe", "normal stretch", "baseline normal",
+                             "baseline center", "first baseline center", "last baseline center", "baseline last",
+                             "baseline first", "stretch unsafe", "stretch right", "unsafe unsafe", "unsafe safe",
+                             "center start", "unsafe stretch", "safe stretch", "baseline safe", "unsafe baseline",
+                             "unsafe safe left", "unsafe left safe", "left safe unsafe safe", "start safe", "safe"];
+var invalidLegacyValues = ["legacy start", "legacy end", "legacy right unsafe", "legacy auto", "legacy stretch",
+                           "legacy left right"];
+var invalidDistributionValues = ["space-between left", "space-around center", "space-evenly right",
+                                 "stretch safe start", "space-around unsafe", "space-evenly safe flex-start",
+                                 "space-between safe", "space-between stretch", "stretch start",
+                                 "stretch baseline", "first baseline space-around"];
 
 function checkPlaceShorhand(shorthand, alignValue, justifyValue)
 {
@@ -55,4 +69,61 @@ function checkPlaceShorthandInvalidValues(shorthand, alignLonghand, justifyLongh
                   "start", alignLonghand + " expanded value");
     assert_equals(div.style[justifyLonghand],
                   "end", justifyLonghand + " expanded value");
+}
+
+function checkValues(element, property, propertyID, value, computedValue)
+{
+    window.element = element;
+    var elementID = element.id || "element";
+    assert_equals(eval('element.style.' + property), value, propertyID + ' specified value is not what it should.');
+    assert_equals(eval("window.getComputedStyle(" + elementID + ", '').getPropertyValue('" + propertyID + "')"), computedValue, propertyID + " computed style is not what is should.");
+}
+
+function checkBadValues(element, property, propertyID, value)
+{
+    var elementID = element.id || "element";
+    element.style[property] = "";
+    var initialValue = eval("window.getComputedStyle(" + elementID + " , '').getPropertyValue('" + propertyID + "')");
+    element.style[property] = value;
+    checkValues(element, property, propertyID, "", initialValue);
+}
+
+function checkInitialValues(element, property, propertyID, value, initial)
+{
+    element.style[property] = value;
+    checkValues(element, property, propertyID, value, value);
+    element.style[property] = "initial";
+    checkValues(element, property, propertyID, "initial", initial);
+}
+
+function checkInheritValues(property, propertyID, value)
+{
+    var parentElement = document.createElement("div");
+    document.body.appendChild(parentElement);
+    parentElement.style[property] = value;
+    checkValues(parentElement, property, propertyID, value, value);
+
+    var element = document.createElement("div");
+    parentElement.appendChild(element);
+    element.style[property] = "inherit";
+    checkValues(element, property, propertyID, "inherit", value);
+}
+
+function checkLegacyValues(property, propertyID, value)
+{
+    var parentElement = document.createElement("div");
+    document.body.appendChild(parentElement);
+    parentElement.style[property] = value;
+    checkValues(parentElement, property, propertyID, value, value);
+
+    var element = document.createElement("div");
+    parentElement.appendChild(element);
+    checkValues(element, property, propertyID, "", value);
+}
+
+function checkSupportedValues(elementID, property)
+{
+    var value = eval("window.getComputedStyle(" + elementID + " , '').getPropertyValue('" + property + "')");
+    var value1 = eval("window.getComputedStyle(" + elementID + " , '')");
+    shouldBeTrue("CSS.supports('" + property + "', '" + value + "')");
 }

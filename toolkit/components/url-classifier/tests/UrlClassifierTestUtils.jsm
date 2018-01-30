@@ -9,7 +9,7 @@ const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const WHITELIST_TABLE_NAME = "mochitest-trackwhite-simple";
 const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 

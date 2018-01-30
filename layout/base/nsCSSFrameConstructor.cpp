@@ -1748,15 +1748,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       // Create an image content object and pass it the image request.
       // XXX Check if it's an image type we can handle...
 
-      RefPtr<NodeInfo> nodeInfo;
-      nodeInfo = mDocument->NodeInfoManager()->
-        GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nullptr,
-                    kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
-
-      nsCOMPtr<nsIContent> content;
-      NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo.forget(),
-                               image);
-      return content.forget();
+      return CreateGenConImageContent(mDocument, image);
     }
 
     case eStyleContentType_String:

@@ -1,10 +1,10 @@
-Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
-                                  "resource://testing-common/BrowserTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
+                               "resource://testing-common/BrowserTestUtils.jsm");
 
 const TRANSITION_LINK = PlacesUtils.history.TRANSITION_LINK;
 const TRANSITION_TYPED = PlacesUtils.history.TRANSITION_TYPED;
