@@ -597,12 +597,15 @@ private:
         return mParent->GetPersistFlags() & aFlag;
     }
 
-    nsresult GetNodeToFixup(nsIDOMNode* aNodeIn, nsIDOMNode** aNodeOut);
+    // Helper for XPCOM FixupNode.
+    nsresult FixupNode(nsINode *aNodeIn, bool *aSerializeCloneKids,
+                       nsINode **aNodeOut);
+    nsresult GetNodeToFixup(nsINode* aNodeIn, nsINode** aNodeOut);
     nsresult FixupURI(nsAString& aURI);
-    nsresult FixupAttribute(nsIDOMNode* aNode,
+    nsresult FixupAttribute(nsINode* aNode,
                             const char* aAttribute,
                             const char* aNamespaceURI = "");
-    nsresult FixupAnchor(nsIDOMNode* aNode);
+    nsresult FixupAnchor(nsINode* aNode);
     nsresult FixupXMLStyleSheetLink(nsIDOMProcessingInstruction* aPI,
                                     const nsAString& aHref);
 
@@ -637,7 +640,7 @@ PersistNodeFixup::PersistNodeFixup(WebBrowserPersistLocalDocument* aParent,
 }
 
 nsresult
-PersistNodeFixup::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
+PersistNodeFixup::GetNodeToFixup(nsINode *aNodeIn, nsINode **aNodeOut)
 {
     // Avoid mixups in FixupNode that could leak objects; this goes
     // against the usual out parameter convention, but it's a private
@@ -645,11 +648,12 @@ PersistNodeFixup::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
     MOZ_ASSERT(!*aNodeOut);
 
     if (!IsFlagSet(IWBP::PERSIST_FLAGS_FIXUP_ORIGINAL_DOM)) {
-        nsresult rv = aNodeIn->CloneNode(false, 1, aNodeOut);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        NS_ADDREF(*aNodeOut = aNodeIn);
+        ErrorResult rv;
+        *aNodeOut = aNodeIn->CloneNode(false, rv).take();
+        return rv.StealNSResult();
     }
+
+    NS_ADDREF(*aNodeOut = aNodeIn);
     return NS_OK;
 }
 
@@ -677,12 +681,12 @@ PersistNodeFixup::FixupURI(nsAString &aURI)
 }
 
 nsresult
-PersistNodeFixup::FixupAttribute(nsIDOMNode* aNode,
+PersistNodeFixup::FixupAttribute(nsINode* aNode,
                                  const char* aAttribute,
                                  const char* aNamespaceURI)
 {
-    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
-    MOZ_ASSERT(element);
+    MOZ_ASSERT(aNode->IsElement());
+    dom::Element* element = aNode->AsElement();
 
     RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
@@ -704,14 +708,14 @@ PersistNodeFixup::FixupAttribute(nsIDOMNode* aNode,
 }
 
 nsresult
-PersistNodeFixup::FixupAnchor(nsIDOMNode *aNode)
+PersistNodeFixup::FixupAnchor(nsINode *aNode)
 {
     if (IsFlagSet(IWBP::PERSIST_FLAGS_DONT_FIXUP_LINKS)) {
         return NS_OK;
     }
 
-    nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
-    MOZ_ASSERT(element);
+    MOZ_ASSERT(aNode->IsElement());
+    dom::Element* element = aNode->AsElement();
 
     RefPtr<nsDOMAttributeMap> attrMap = element->Attributes();
 
@@ -855,11 +859,30 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
                             bool *aSerializeCloneKids,
                             nsIDOMNode **aNodeOut)
 {
+    nsCOMPtr<nsINode> nodeIn = do_QueryInterface(aNodeIn);
+    nsCOMPtr<nsINode> nodeOut;
+    nsresult rv = FixupNode(nodeIn, aSerializeCloneKids,
+                            getter_AddRefs(nodeOut));
+    // FixupNode can return NS_OK and a null outparam, so check
+    // the actual value we got before dereferencing it.
+    if (nodeOut) {
+      NS_ADDREF(*aNodeOut = nodeOut->AsDOMNode());
+    } else {
+      *aNodeOut = nullptr;
+    }
+
+    return rv;
+}
+
+nsresult
+PersistNodeFixup::FixupNode(nsINode* aNodeIn,
+                            bool* aSerializeCloneKids,
+                            nsINode** aNodeOut)
+{
     *aNodeOut = nullptr;
     *aSerializeCloneKids = false;
 
-    nsCOMPtr<nsINode> nodeIn = do_QueryInterface(aNodeIn);
-    uint16_t type = nodeIn->NodeType();
+    uint16_t type = aNodeIn->NodeType();
     if (type != nsIDOMNode::ELEMENT_NODE &&
         type != nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
         return NS_OK;
@@ -1098,9 +1121,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             nsAutoString valueStr;
             NS_NAMED_LITERAL_STRING(valueAttr, "value");
             // Update element node attributes with user-entered form state
-            nsCOMPtr<nsIContent> content = do_QueryInterface(*aNodeOut);
             RefPtr<dom::HTMLInputElement> outElt =
-              dom::HTMLInputElement::FromContentOrNull(content);
+                dom::HTMLInputElement::FromContent((*aNodeOut)->AsContent());
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
             switch (formControl->ControlType()) {
                 case NS_FORM_INPUT_EMAIL:
@@ -1147,7 +1169,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             nsAutoString valueStr;
             nodeAsTextArea->GetValue(valueStr);
 
-            (*aNodeOut)->SetTextContent(valueStr);
+            IgnoredErrorResult err;
+            (*aNodeOut)->SetTextContent(valueStr, err);
         }
         return rv;
     }
@@ -1156,8 +1179,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     if (nodeAsOption) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
-            nsCOMPtr<nsIContent> outContent = do_QueryInterface(*aNodeOut);
-            dom::HTMLOptionElement* outElt = dom::HTMLOptionElement::FromContent(outContent);
+            dom::HTMLOptionElement* outElt =
+                dom::HTMLOptionElement::FromContent((*aNodeOut)->AsContent());
             bool selected = nodeAsOption->Selected();
             IgnoredErrorResult ignored;
             outElt->SetDefaultSelected(selected, ignored);
