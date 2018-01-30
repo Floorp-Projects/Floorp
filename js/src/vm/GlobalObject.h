@@ -120,6 +120,16 @@ class GlobalObject : public NativeObject
     static_assert(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS,
                   "global object slot counts are inconsistent");
 
+    static unsigned constructorSlot(JSProtoKey key) {
+        MOZ_ASSERT(key <= JSProto_LIMIT);
+        return APPLICATION_SLOTS + key;
+    }
+
+    static unsigned prototypeSlot(JSProtoKey key) {
+        MOZ_ASSERT(key <= JSProto_LIMIT);
+        return APPLICATION_SLOTS + JSProto_LIMIT + key;
+    }
+
   public:
     LexicalEnvironmentObject& lexicalEnvironment() const;
     GlobalScope& emptyGlobalScope() const;
@@ -130,8 +140,7 @@ class GlobalObject : public NativeObject
     }
 
     Value getConstructor(JSProtoKey key) const {
-        MOZ_ASSERT(key <= JSProto_LIMIT);
-        return getSlot(APPLICATION_SLOTS + key);
+        return getSlot(constructorSlot(key));
     }
     static bool skipDeselectedConstructor(JSContext* cx, JSProtoKey key);
     static bool initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global,
@@ -171,18 +180,15 @@ class GlobalObject : public NativeObject
     }
 
     void setConstructor(JSProtoKey key, const Value& v) {
-        MOZ_ASSERT(key <= JSProto_LIMIT);
-        setSlot(APPLICATION_SLOTS + key, v);
+        setSlot(constructorSlot(key), v);
     }
 
     Value getPrototype(JSProtoKey key) const {
-        MOZ_ASSERT(key <= JSProto_LIMIT);
-        return getSlot(APPLICATION_SLOTS + JSProto_LIMIT + key);
+        return getSlot(prototypeSlot(key));
     }
 
     void setPrototype(JSProtoKey key, const Value& value) {
-        MOZ_ASSERT(key <= JSProto_LIMIT);
-        setSlot(APPLICATION_SLOTS + JSProto_LIMIT + key, value);
+        setSlot(prototypeSlot(key), value);
     }
 
     bool classIsInitialized(JSProtoKey key) const {
@@ -209,9 +215,11 @@ class GlobalObject : public NativeObject
      */
     bool isStandardClassResolved(JSProtoKey key) const {
         // If the constructor is undefined, then it hasn't been initialized.
-        MOZ_ASSERT(getConstructor(key).isUndefined() ||
-                   getConstructor(key).isObject());
-        return !getConstructor(key).isUndefined();
+        Value value = getConstructor(key);
+        MOZ_ASSERT(value.isUndefined() ||
+                   value.isObject() ||
+                   value.isMagic(JS_OFF_THREAD_CONSTRUCTOR));
+        return !value.isUndefined();
     }
 
     /*
@@ -511,48 +519,24 @@ class GlobalObject : public NativeObject
 
     static bool ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*> global);
 
-    JSObject* maybeGetModulePrototype() {
-        Value value = getSlot(MODULE_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
+    static JSObject*
+    getOrCreateModulePrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateObject(cx, global, MODULE_PROTO, initModuleProto);
     }
 
-    JSObject* maybeGetImportEntryPrototype() {
-        Value value = getSlot(IMPORT_ENTRY_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
+    static JSObject*
+    getOrCreateImportEntryPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateObject(cx, global, IMPORT_ENTRY_PROTO, initImportEntryProto);
     }
 
-    JSObject* maybeGetExportEntryPrototype() {
-        Value value = getSlot(EXPORT_ENTRY_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
+    static JSObject*
+    getOrCreateExportEntryPrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateObject(cx, global, EXPORT_ENTRY_PROTO, initExportEntryProto);
     }
 
-    JSObject* maybeGetRequestedModulePrototype() {
-        Value value = getSlot(REQUESTED_MODULE_PROTO);
-        return value.isUndefined() ? nullptr : &value.toObject();
-    }
-
-    JSObject* getModulePrototype() {
-        JSObject* proto = maybeGetModulePrototype();
-        MOZ_ASSERT(proto);
-        return proto;
-    }
-
-    JSObject* getImportEntryPrototype() {
-        JSObject* proto = maybeGetImportEntryPrototype();
-        MOZ_ASSERT(proto);
-        return proto;
-    }
-
-    JSObject* getExportEntryPrototype() {
-        JSObject* proto = maybeGetExportEntryPrototype();
-        MOZ_ASSERT(proto);
-        return proto;
-    }
-
-    JSObject* getRequestedModulePrototype() {
-        JSObject* proto = maybeGetRequestedModulePrototype();
-        MOZ_ASSERT(proto);
-        return proto;
+    static JSObject*
+    getOrCreateRequestedModulePrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        return getOrCreateObject(cx, global, REQUESTED_MODULE_PROTO, initRequestedModuleProto);
     }
 
     static JSFunction*
@@ -579,10 +563,12 @@ class GlobalObject : public NativeObject
         Value v = global->getSlotRef(slot);
         if (v.isObject())
             return &v.toObject();
-        if (!init(cx, global))
-            return nullptr;
-        return &global->getSlot(slot).toObject();
+
+        return createObject(cx, global, slot, init);
     }
+
+    static JSObject*
+    createObject(JSContext* cx, Handle<GlobalObject*> global, unsigned slot, ObjectInitOp init);
 
   public:
     static NativeObject*
@@ -609,10 +595,9 @@ class GlobalObject : public NativeObject
                                                    initGenerators));
     }
 
-    static NativeObject*
+    static JSObject*
     getOrCreateGeneratorFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global) {
-        return MaybeNativeObject(getOrCreateObject(cx, global, GENERATOR_FUNCTION_PROTO,
-                                                   initGenerators));
+        return getOrCreateObject(cx, global, GENERATOR_FUNCTION_PROTO, initGenerators);
     }
 
     static JSObject*
@@ -863,10 +848,26 @@ class GlobalObject : public NativeObject
         return &value.toObject().as<JSFunction>();
     }
 
-    // Returns either this global's generator function prototype, or null if
-    // that object was never created.  Dodgy; for use only in also-dodgy
-    // GlobalHelperThreadState::mergeParseTaskCompartment().
-    JSObject* getGeneratorFunctionPrototype();
+    // A class used in place of a prototype during off-thread parsing.
+    struct OffThreadPlaceholderObject : public NativeObject
+    {
+        static const int32_t SlotIndexSlot = 0;
+        static const Class class_;
+        static OffThreadPlaceholderObject* New(JSContext* cx, unsigned slot);
+        inline int32_t getSlotIndex() const;
+    };
+
+    static bool isOffThreadPrototypePlaceholder(JSObject* obj) {
+        return obj->is<OffThreadPlaceholderObject>();
+    }
+
+    JSObject* getPrototypeForOffThreadPlaceholder(JSObject* placeholder);
+
+  private:
+     static bool resolveOffThreadConstructor(JSContext* cx, Handle<GlobalObject*> global,
+                                            JSProtoKey key);
+     static JSObject* createOffThreadObject(JSContext* cx, Handle<GlobalObject*> global,
+                                            unsigned slot);
 };
 
 /*
