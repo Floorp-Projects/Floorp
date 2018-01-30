@@ -17,6 +17,7 @@
  */
 
 class nsIContent;
+class nsIDocument;
 class imgRequestProxy;
 class nsGenericHTMLElement;
 
@@ -72,9 +73,11 @@ NS_NewSVGElement(mozilla::dom::Element** aResult,
                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                  mozilla::dom::FromParser aFromParser);
 
-nsresult
-NS_NewGenConImageContent(nsIContent** aResult,
-                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                         imgRequestProxy* aImageRequest);
+namespace mozilla {
+namespace dom {
+already_AddRefed<nsIContent>
+CreateGenConImageContent(nsIDocument* aDocument, imgRequestProxy* aImageRequest);
+} // namespace dom
+} // namespace mozilla
 
 #endif // nsContentCreatorFunctions_h__
