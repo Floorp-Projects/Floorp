@@ -514,16 +514,6 @@ nsINode::IsAnonymousContentInSVGUseSubtree() const
   return parent && parent->IsSVGElement(nsGkAtoms::use);
 }
 
-nsresult
-nsINode::GetParentNode(nsIDOMNode** aParentNode)
-{
-  *aParentNode = nullptr;
-
-  nsINode *parent = GetParentNode();
-
-  return parent ? CallQueryInterface(parent, aParentNode) : NS_OK;
-}
-
 void
 nsINode::GetNodeValueInternal(nsAString& aNodeValue)
 {

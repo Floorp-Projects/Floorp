@@ -726,7 +726,7 @@ protected:
   nsresult ParseCFHTML(nsCString& aCfhtml, char16_t** aStuffToPaste,
                        char16_t** aCfcontext);
 
-  bool IsInLink(nsIDOMNode* aNode, nsCOMPtr<nsIDOMNode>* outLink = nullptr);
+  bool IsInLink(nsINode* aNode, nsCOMPtr<nsINode>* outLink = nullptr);
   nsresult StripFormattingNodes(nsIContent& aNode, bool aOnlyList = false);
   nsresult CreateDOMFragmentFromPaste(const nsAString& aInputString,
                                       const nsAString& aContextStr,

@@ -31,6 +31,4 @@ interface nsIDOMNode : nsISupports
   const unsigned short      DOCUMENT_TYPE_NODE = 10;
   const unsigned short      DOCUMENT_FRAGMENT_NODE = 11;
   const unsigned short      NOTATION_NODE      = 12;
-
-  readonly attribute nsIDOMNode       parentNode;
 };

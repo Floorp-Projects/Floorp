@@ -899,17 +899,18 @@ nsFind::SkipNode(nsIContent* aContent)
 nsresult
 nsFind::GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent)
 {
-  while (aNode) {
-    nsCOMPtr<nsIDOMNode> parent;
-    nsresult rv = aNode->GetParentNode(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIContent> content(do_QueryInterface(parent));
-    if (content && IsBlockNode(content)) {
-      *aParent = parent;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  // non-nsCOMPtr temporary so we don't keep addrefing/releasing as we
+  // go up the tree.
+  nsINode* curNode = node;
+  while (curNode) {
+    nsIContent* parent = curNode->GetParent();
+    if (parent && IsBlockNode(parent)) {
+      *aParent = parent->AsDOMNode();
       NS_ADDREF(*aParent);
       return NS_OK;
     }
-    aNode = parent;
+    curNode = parent;
   }
   return NS_ERROR_FAILURE;
 }

@@ -2074,10 +2074,6 @@ protected:
   virtual void CheckNotNativeAnonymous() const;
 #endif
 
-  // These are just used to implement nsIDOMNode using
-  // NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER and for quickstubs.
-  nsresult GetParentNode(nsIDOMNode** aParentNode);
-
   void EnsurePreInsertionValidity1(nsINode& aNewChild, nsINode* aRefChild,
                                    mozilla::ErrorResult& aError);
   void EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
@@ -2262,16 +2258,8 @@ ToCanonicalSupports(nsINode* aPointer)
   return aPointer;
 }
 
-#define NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(...) \
-  NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) __VA_ARGS__ override \
-  { \
-    return nsINode::GetParentNode(aParentNode); \
-  }
+#define NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
-#define NS_FORWARD_NSIDOMNODE_TO_NSINODE \
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(final)
-
-#define NS_FORWARD_NSIDOMNODE_TO_NSINODE_OVERRIDABLE \
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER()
+#define NS_FORWARD_NSIDOMNODE_TO_NSINODE_OVERRIDABLE
 
 #endif /* nsINode_h___ */
