@@ -533,19 +533,6 @@ nsINode::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 nsresult
-nsINode::GetFirstChild(nsIDOMNode** aNode)
-{
-  nsIContent* child = GetFirstChild();
-  if (child) {
-    return CallQueryInterface(child, aNode);
-  }
-
-  *aNode = nullptr;
-
-  return NS_OK;
-}
-
-nsresult
 nsINode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
   *aPrevSibling = nullptr;
