@@ -34,7 +34,6 @@ interface nsIDOMNode : nsISupports
 
   readonly attribute nsIDOMNode       parentNode;
   readonly attribute nsIDOMNodeList   childNodes;
-  readonly attribute nsIDOMNode       firstChild;
   readonly attribute nsIDOMNode       previousSibling;
   readonly attribute nsIDOMNode       nextSibling;
   // Modified in DOM Level 2:
