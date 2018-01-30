@@ -32,6 +32,11 @@ var Authentication = {
     return !!(await this.getSignedInUser());
   },
 
+  async isReady() {
+    let user = await this.getSignedInUser();
+    return user && user.verified;
+  },
+
   _getRestmailUsername(user) {
     const restmailSuffix = "@restmail.net";
     if (user.toLowerCase().endsWith(restmailSuffix)) {
@@ -41,17 +46,20 @@ var Authentication = {
   },
 
   async shortWaitForVerification(ms) {
-    let userData = this.getSignedInUser();
+    let userData = await this.getSignedInUser();
+    let timeoutID;
+    let timeoutPromise = new Promise(resolve => {
+      timeoutID = setTimeout(() => {
+        Logger.logInfo(`Warning: no verification after ${ms}ms.`);
+        resolve();
+      }, ms);
+    });
     await Promise.race([
-      fxAccounts.whenVerified(userData),
-      new Promise(resolve => {
-        setTimeout(() => {
-          Logger.logInfo(`Warning: no verification after ${ms}ms.`);
-          resolve();
-        }, ms);
-      })
+      fxAccounts.whenVerified(userData)
+                .finally(() => clearTimeout(timeoutID)),
+      timeoutPromise,
     ]);
-    userData = this.getSignedInUser();
+    userData = await this.getSignedInUser();
     return userData && userData.verified;
   },
 
@@ -79,9 +87,6 @@ var Authentication = {
     const tries = 10;
     const normalWait = 2000;
     for (let i = 0; i < tries; ++i) {
-      if (await this.shortWaitForVerification(normalWait)) {
-        return true;
-      }
       let resp = await fetch(restmailURI);
       let messages = await resp.json();
       // Sort so that the most recent emails are first.
@@ -105,6 +110,9 @@ var Authentication = {
       if (i === 0) {
         // first time through after failing we'll do this.
         await fxAccounts.resendVerificationEmail();
+      }
+      if (await this.shortWaitForVerification(normalWait)) {
+        return true;
       }
     }
     // One last try.
