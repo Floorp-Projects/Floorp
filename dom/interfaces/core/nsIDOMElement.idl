@@ -27,5 +27,4 @@ interface nsIDOMMozNamedAttrMap;
 [uuid(6289999b-1008-4269-b42a-413ec5a9d3f4)]
 interface nsIDOMElement : nsIDOMNode
 {
-  DOMString          getAttribute(in DOMString name);
 };

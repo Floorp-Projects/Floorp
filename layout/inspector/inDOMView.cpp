@@ -383,11 +383,10 @@ inDOMView::GetCellText(int32_t row, nsITreeColumn* col, nsAString& _retval)
     domNode->GetNodeValue(_retval);
   else {
     if (StringBeginsWith(colID, NS_LITERAL_STRING("col@"))) {
-      nsCOMPtr<nsIDOMElement> el = do_QueryInterface(node->node);
-      if (el) {
+      if (domNode->IsElement()) {
         nsAutoString attr;
         colID.Right(attr, colID.Length()-4); // have to use this because Substring is crashing on me!
-        el->GetAttribute(attr, _retval);
+        domNode->AsElement()->GetAttribute(attr, _retval);
       }
     }
   }

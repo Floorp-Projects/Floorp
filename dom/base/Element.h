@@ -1116,7 +1116,7 @@ public:
 
   void GetAttributeNames(nsTArray<nsString>& aResult);
 
-  void GetAttribute(const nsAString& aName, nsString& aReturn)
+  void GetAttribute(const nsAString& aName, nsAString& aReturn)
   {
     DOMString str;
     GetAttribute(aName, str);
@@ -2195,14 +2195,5 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
   }
 
 #define NS_FORWARD_NSIDOMELEMENT_TO_GENERIC                                   \
-typedef mozilla::dom::Element Element;                                        \
-using Element::GetAttribute;                                                  \
-NS_IMETHOD GetAttribute(const nsAString& name, nsAString& _retval) final      \
-  override                                                                    \
-{                                                                             \
-  nsString attr;                                                              \
-  GetAttribute(name, attr);                                                   \
-  _retval = attr;                                                             \
-  return NS_OK;                                                               \
-}
+typedef mozilla::dom::Element Element;
 #endif // mozilla_dom_Element_h__

@@ -87,13 +87,14 @@ bool
 TextEditUtils::HasMozAttr(nsIDOMNode* aNode)
 {
   MOZ_ASSERT(aNode);
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
   if (!element) {
     return false;
   }
-  nsAutoString typeAttrVal;
-  nsresult rv = element->GetAttribute(NS_LITERAL_STRING("type"), typeAttrVal);
-  return NS_SUCCEEDED(rv) && typeAttrVal.LowerCaseEqualsLiteral("_moz");
+  return element->AttrValueIs(kNameSpaceID_None,
+                              nsGkAtoms::type,
+                              NS_LITERAL_STRING("_moz"),
+                              eIgnoreCase);
 }
 
 /******************************************************************************

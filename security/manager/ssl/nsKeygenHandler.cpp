@@ -11,6 +11,27 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+
+/* Disable the "base class should be explicitly initialized in the
+   copy constructor" warning that some bindings structs trigger while
+   including Element.h.  Looks like it's an inherent part of -Wextra,
+   so we can't just disable it in a targeted way in moz.build. */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wextra"
+#endif // __clang__ || __GNUC__
+
+#include "mozilla/dom/Element.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // __clang__ || __GNUC__
+
 #include "nsDependentString.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLElement.h"
@@ -29,6 +50,8 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "secdert.h"
+
+using mozilla::dom::Element;
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -677,24 +700,25 @@ nsKeygenFormProcessor::ExtractParams(nsIDOMHTMLElement* aElement,
                                      nsAString& keyTypeValue,
                                      nsAString& keyParamsValue)
 {
-    aElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
+    nsCOMPtr<Element> element = do_QueryInterface(aElement);
+    element->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);
     if (keyTypeValue.IsEmpty()) {
         // If this field is not present, we default to rsa.
         keyTypeValue.AssignLiteral("rsa");
     }
 
-    aElement->GetAttribute(NS_LITERAL_STRING("pqg"),
-                           keyParamsValue);
+    element->GetAttribute(NS_LITERAL_STRING("pqg"),
+                          keyParamsValue);
     /* XXX We can still support the pqg attribute in the keygen
      * tag for backward compatibility while introducing a more
      * general attribute named keyparams.
      */
     if (keyParamsValue.IsEmpty()) {
-        aElement->GetAttribute(NS_LITERAL_STRING("keyparams"),
-                               keyParamsValue);
+        element->GetAttribute(NS_LITERAL_STRING("keyparams"),
+                              keyParamsValue);
     }
 
-    aElement->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
+    element->GetAttribute(NS_LITERAL_STRING("challenge"), challengeValue);
 }
 
 nsresult
