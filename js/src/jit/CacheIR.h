@@ -1624,6 +1624,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator
     bool tryAttachInt32();
     bool tryAttachDouble();
     bool tryAttachString();
+    bool tryAttachSymbol();
     bool tryAttachNullOrUndefined();
     bool tryAttachObject();
 
