@@ -2270,11 +2270,6 @@ ToCanonicalSupports(nsINode* aPointer)
 }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(...) \
-  NS_IMETHOD GetNodeType(uint16_t* aNodeType) __VA_ARGS__ override \
-  { \
-    *aNodeType = nsINode::NodeType(); \
-    return NS_OK; \
-  } \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) __VA_ARGS__ override \
   { \
     return nsINode::GetParentNode(aParentNode); \
