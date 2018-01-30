@@ -9,6 +9,7 @@
 #ifndef mozilla_ServoUtils_h
 #define mozilla_ServoUtils_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 #include "MainThreadUtils.h"
 
