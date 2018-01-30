@@ -10116,12 +10116,15 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
   // Make document use different container during cloning.
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
-  nsCOMPtr<nsIDOMNode> clonedNode;
-  nsresult rv = thisAsDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
+  ErrorResult rv;
+  nsCOMPtr<nsINode> clonedNode = thisAsDoc->CloneNode(true, rv);
   SetContainer(originalShell);
 
   RefPtr<nsDocument> clonedDoc;
-  if (NS_SUCCEEDED(rv)) {
+  if (rv.Failed()) {
+    // Don't return yet; we need to reset mCreatingStaticClone
+    rv.SuppressException();
+  } else {
     nsCOMPtr<nsIDocument> tmp = do_QueryInterface(clonedNode);
     if (tmp) {
       clonedDoc = static_cast<nsDocument*>(tmp.get());
