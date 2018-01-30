@@ -75,7 +75,7 @@ public:
   nsresult SetMedia(nsMediaList* aMedia);
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final override;
@@ -131,7 +131,7 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final override;
@@ -171,7 +171,7 @@ public:
   already_AddRefed<mozilla::css::Rule> Clone() const final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetFontFamily(nsAString& aFamily) final override;
   void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final override;
   void GetValueText(nsAString& aValueText) final override;
@@ -259,7 +259,7 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetKeyText(nsAString& aKeyText) final override;
   void SetKeyText(const nsAString& aKeyText) final override;
   nsICSSDeclaration* Style() final override;
@@ -300,7 +300,7 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetName(nsAString& aName) const final override;
   void SetName(const nsAString& aName) final override;
   mozilla::dom::CSSRuleList* CssRules() final override { return GroupRule::CssRules(); }
@@ -373,7 +373,7 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interfaces
-  virtual void GetCssTextImpl(nsAString& aCssText) const override;
+  virtual void GetCssText(nsAString& aCssText) const override;
   virtual nsICSSDeclaration* Style() override;
 
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
@@ -408,7 +408,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
   void GetConditionText(nsAString& aConditionText) final override;
   void SetConditionText(const nsAString& aConditionText,
                         ErrorResult& aRv) final override;
