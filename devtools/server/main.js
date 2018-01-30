@@ -449,7 +449,7 @@ var DebuggerServer = {
       constructor: "WebConsoleActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/inspector", {
+    this.registerModule("devtools/server/actors/inspector/inspector-actor", {
       prefix: "inspector",
       constructor: "InspectorActor",
       type: { tab: true }

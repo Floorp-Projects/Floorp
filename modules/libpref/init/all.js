@@ -897,7 +897,7 @@ pref("gfx.webrender.program-binary", true);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", 2);
-pref("gfx.webrender.hit-test", false);
+pref("gfx.webrender.hit-test", true);
 
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);

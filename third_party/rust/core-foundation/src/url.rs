@@ -14,7 +14,7 @@ pub use core_foundation_sys::url::*;
 use base::{TCFType, CFIndex};
 use string::{CFString};
 
-use core_foundation_sys::base::{kCFAllocatorDefault, CFRelease, Boolean};
+use core_foundation_sys::base::{kCFAllocatorDefault, Boolean};
 use std::fmt;
 use std::ptr;
 use std::path::{Path, PathBuf};
@@ -27,16 +27,8 @@ use std::os::unix::ffi::OsStrExt;
 #[cfg(unix)]
 use std::ffi::OsStr;
 
-pub struct CFURL(CFURLRef);
 
-impl Drop for CFURL {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
-}
-
+declare_TCFType!(CFURL, CFURLRef);
 impl_TCFType!(CFURL, CFURLRef, CFURLGetTypeID);
 
 impl fmt::Debug for CFURL {

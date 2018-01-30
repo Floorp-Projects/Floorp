@@ -29,7 +29,8 @@ const TEXTURE_REGION_DIMENSIONS: u32 = 512;
 
 // Maintains a simple freelist of texture IDs that are mapped
 // to real API-specific texture IDs in the renderer.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheTextureIdList {
     free_lists: FastHashMap<ImageFormat, Vec<CacheTextureId>>,
     next_id: usize,
@@ -65,7 +66,8 @@ impl CacheTextureIdList {
 // Items in the texture cache can either be standalone textures,
 // or a sub-rect inside the shared cache.
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 enum EntryKind {
     Standalone,
     Cache {
@@ -82,7 +84,8 @@ enum EntryKind {
 // cache. This is stored for each item whether it's in the shared
 // cache or a standalone texture.
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CacheEntry {
     // Size the requested item, in device pixels.
     size: DeviceUintSize,
@@ -157,7 +160,8 @@ type WeakCacheEntryHandle = WeakFreeListHandle<CacheEntry>;
 // In this case, the cache handle needs to re-upload this item
 // to the texture cache (see request() below).
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Clone, Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Clone, Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheHandle {
     entry: Option<WeakCacheEntryHandle>,
 }
@@ -168,7 +172,8 @@ impl TextureCacheHandle {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCache {
     // A lazily allocated, fixed size, texture array for
     // each format the texture cache supports.
@@ -187,7 +192,7 @@ pub struct TextureCache {
 
     // A list of updates that need to be applied to the
     // texture cache in the rendering thread this frame.
-    #[cfg_attr(feature = "capture", serde(skip))]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pending_updates: TextureUpdateList,
 
     // The current frame ID. Used for cache eviction policies.
@@ -818,7 +823,8 @@ impl SlabSize {
 }
 
 // The x/y location within a texture region of an allocation.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureLocation(u8, u8);
 
 impl TextureLocation {
@@ -830,7 +836,8 @@ impl TextureLocation {
 
 // A region is a sub-rect of a texture array layer.
 // All allocations within a region are of the same size.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureRegion {
     layer_index: i32,
     region_size: u32,
@@ -913,7 +920,8 @@ impl TextureRegion {
 // A texture array contains a number of texture layers, where
 // each layer contains one or more regions that can act
 // as slab allocators.
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct TextureArray {
     filter: TextureFilter,
     layer_count: usize,

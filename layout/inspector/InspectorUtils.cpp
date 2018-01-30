@@ -454,6 +454,14 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
   }
   const nsCSSProps::KTableEntry* keywordTable =
     nsCSSProps::kKeywordTableTable[aProperty];
+
+  // Special cases where nsCSSPropList.h doesn't hold the table.
+  if (keywordTable == nullptr) {
+    if (aProperty == eCSSProperty_clip_path) {
+      keywordTable = nsCSSProps::kClipPathGeometryBoxKTable;
+    }
+  }
+
   if (keywordTable) {
     for (size_t i = 0; !keywordTable[i].IsSentinel(); ++i) {
       nsCSSKeyword word = keywordTable[i].mKeyword;
@@ -470,6 +478,16 @@ static void GetKeywordsForProperty(const nsCSSPropertyID aProperty,
                   NS_ConvertASCIItoUTF16(nsCSSKeywords::GetStringValue(word)));
       }
     }
+  }
+
+  // More special cases.
+  if (aProperty == eCSSProperty_clip_path) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("circle"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("ellipse"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("inset"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("polygon"));
+  } else if (aProperty == eCSSProperty_clip) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("rect"));
   }
 }
 
@@ -674,7 +692,6 @@ PropertySupportsVariant(nsCSSPropertyID aPropertyID, uint32_t aVariant)
 
       case eCSSProperty_content:
       case eCSSProperty_cursor:
-      case eCSSProperty_clip_path:
         supported |= VARIANT_URL;
         break;
 

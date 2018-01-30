@@ -45,7 +45,7 @@ pub struct CFDictionaryValueCallBacks {
 pub struct __CFDictionary(c_void);
 
 pub type CFDictionaryRef = *const __CFDictionary;
-pub type CFMutableDictionaryRef = *const __CFDictionary;
+pub type CFMutableDictionaryRef = *mut __CFDictionary;
 
 extern {
     /*
@@ -67,11 +67,25 @@ extern {
     pub fn CFDictionaryApplyFunction(theDict: CFDictionaryRef,
                                      applier: CFDictionaryApplierFunction,
                                      context: *mut c_void);
-    pub fn CFDictionarySetValue(theDict: CFMutableDictionaryRef,
-                                key: *const c_void,
-                                value: *const c_void);
     pub fn CFDictionaryGetKeysAndValues(theDict: CFDictionaryRef,
                                         keys: *mut *const c_void,
                                         values: *mut *const c_void);
 
+    pub fn CFDictionaryCreateMutable(allocator: CFAllocatorRef, capacity: CFIndex,
+                                     keyCallbacks: *const CFDictionaryKeyCallBacks,
+                                     valueCallbacks: *const CFDictionaryValueCallBacks) -> CFMutableDictionaryRef;
+    pub fn CFDictionaryCreateMutableCopy(allocator: CFAllocatorRef, capacity: CFIndex,
+                                         theDict: CFDictionaryRef) -> CFMutableDictionaryRef;
+    pub fn CFDictionaryAddValue(theDict: CFMutableDictionaryRef,
+                                key: *const c_void,
+                                value: *const c_void);
+    pub fn CFDictionarySetValue(theDict: CFMutableDictionaryRef,
+                                key: *const c_void,
+                                value: *const c_void);
+    pub fn CFDictionaryReplaceValue(theDict: CFMutableDictionaryRef,
+                                    key: *const c_void,
+                                    value: *const c_void);
+    pub fn CFDictionaryRemoveValue(theDict: CFMutableDictionaryRef,
+                                   key: *const c_void);
+    pub fn CFDictionaryRemoveAllValues(theDict: CFMutableDictionaryRef);
 }

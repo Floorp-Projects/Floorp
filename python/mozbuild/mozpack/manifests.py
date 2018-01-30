@@ -351,7 +351,15 @@ class InstallManifest(object):
 
         for dest in sorted(other._dests):
             new_dest = mozpath.join(base, dest) if base else dest
-            self._add_entry(new_dest, other._dests[dest])
+            entry = other._dests[dest]
+            if entry[0] in (self.PATTERN_LINK, self.PATTERN_COPY):
+                entry_type, entry_base, entry_pattern, entry_dest = entry
+                new_entry_dest = mozpath.join(base, entry_dest) if base else entry_dest
+                new_entry = (entry_type, entry_base, entry_pattern, new_entry_dest)
+            else:
+                new_entry = tuple(entry)
+
+            self._add_entry(new_dest, new_entry)
 
     def populate_registry(self, registry, defines_override={},
                           link_policy='symlink'):

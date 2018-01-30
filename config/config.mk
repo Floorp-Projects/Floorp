@@ -180,12 +180,6 @@ endif
 TAR_CREATE_FLAGS = -chf
 
 #
-# Personal makefile customizations go in these optional make include files.
-#
-MY_CONFIG	:= $(DEPTH)/config/myconfig.mk
-MY_RULES	:= $(DEPTH)/config/myrules.mk
-
-#
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC = $(CXX)
@@ -296,11 +290,7 @@ endif
 endif
 endif
 
-#
-# Include any personal overrides the user might think are needed.
-#
 -include $(topsrcdir)/$(MOZ_BUILD_APP)/app-config.mk
--include $(MY_CONFIG)
 
 ######################################################################
 

@@ -7,7 +7,7 @@
 // Test editing a node's text content
 
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
-const {DEFAULT_VALUE_SUMMARY_LENGTH} = require("devtools/server/actors/inspector");
+const {DEFAULT_VALUE_SUMMARY_LENGTH} = require("devtools/server/actors/inspector/walker-actor");
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);

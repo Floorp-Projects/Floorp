@@ -27,6 +27,8 @@ const Services = require("Services");
 const focusManager = Services.focus;
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 
+loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTENT_TYPES = {
   PLAIN_TEXT: 0,
@@ -1206,6 +1208,13 @@ InplaceEditor.prototype = {
    * Get the increment/decrement step to use for the provided key event.
    */
   _getIncrement: function (event) {
+    const getSmallIncrementKey = (evt) => {
+      if (system.constants.platform === "macosx") {
+        return evt.altKey;
+      }
+      return evt.ctrlKey;
+    };
+
     const largeIncrement = 100;
     const mediumIncrement = 10;
     const smallIncrement = 0.1;
@@ -1219,13 +1228,13 @@ InplaceEditor.prototype = {
       increment = -1 * this.defaultIncrement;
     }
 
-    if (event.shiftKey && !event.altKey) {
+    if (event.shiftKey && !getSmallIncrementKey(event)) {
       if (isKeyIn(key, "PAGE_UP", "PAGE_DOWN")) {
         increment *= largeIncrement;
       } else {
         increment *= mediumIncrement;
       }
-    } else if (event.altKey && !event.shiftKey) {
+    } else if (getSmallIncrementKey(event) && !event.shiftKey) {
       increment *= smallIncrement;
     }
 
