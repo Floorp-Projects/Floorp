@@ -366,21 +366,20 @@ inDOMView::GetCellText(int32_t row, nsITreeColumn* col, nsAString& _retval)
   RowToNode(row, &node);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsIDOMNode* domNode = node->node;
+  nsCOMPtr<nsINode> domNode = do_QueryInterface(node->node);
 
   nsAutoString colID;
   col->GetId(colID);
   if (colID.EqualsLiteral("colNodeName"))
-    domNode->GetNodeName(_retval);
+    _retval = domNode->NodeName();
   else if (colID.EqualsLiteral("colLocalName"))
-    domNode->GetLocalName(_retval);
+    _retval = domNode->LocalName();
   else if (colID.EqualsLiteral("colPrefix"))
     domNode->GetPrefix(_retval);
   else if (colID.EqualsLiteral("colNamespaceURI"))
     domNode->GetNamespaceURI(_retval);
   else if (colID.EqualsLiteral("colNodeType")) {
-    uint16_t nodeType;
-    domNode->GetNodeType(&nodeType);
+    uint16_t nodeType = domNode->NodeType();
     nsAutoString temp;
     temp.AppendInt(int32_t(nodeType));
     _retval = temp;
