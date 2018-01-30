@@ -10,10 +10,10 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNode.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsIPresShell.h"
@@ -204,7 +204,8 @@ HTMLEditor::RefreshInlineTableEditingUI()
    return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mInlineEditedCell);
+  RefPtr<nsGenericHTMLElement> htmlElement =
+    nsGenericHTMLElement::FromContent(mInlineEditedCell);
   if (!htmlElement) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -212,17 +213,15 @@ HTMLEditor::RefreshInlineTableEditingUI()
   int32_t xCell, yCell, wCell, hCell;
   GetElementOrigin(*mInlineEditedCell, xCell, yCell);
 
-  nsresult rv = htmlElement->GetOffsetWidth(&wCell);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = htmlElement->GetOffsetHeight(&hCell);
-  NS_ENSURE_SUCCESS(rv, rv);
+  wCell = htmlElement->OffsetWidth();
+  hCell = htmlElement->OffsetHeight();
 
   int32_t xHoriz = xCell + wCell/2;
   int32_t yVert  = yCell + hCell/2;
 
   RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
   int32_t rowCount, colCount;
-  rv = GetTableSize(tableElement, &rowCount, &colCount);
+  nsresult rv = GetTableSize(tableElement, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetAnonymousElementPosition(xHoriz-10, yCell-7,  mAddColumnBeforeButton);
