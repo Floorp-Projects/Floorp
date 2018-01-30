@@ -7,7 +7,10 @@
 #include "../contentproc/plugin-container.cpp"
 
 #include "mozilla/Bootstrap.h"
+
+#if defined(XP_WIN)
 #include "mozilla/WindowsDllBlocklist.h"
+#endif // defined(XP_WIN)
 
 using namespace mozilla;
 
