@@ -40,8 +40,6 @@ interface nsIDOMNode : nsISupports
   readonly attribute nsIDOMNode       nextSibling;
   // Modified in DOM Level 2:
   readonly attribute nsIDOMDocument   ownerDocument;
-  nsIDOMNode                removeChild(in nsIDOMNode oldChild)
-                                         raises(DOMException);
   boolean                   hasChildNodes();
   // Modified in DOM Level 4:
   [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
