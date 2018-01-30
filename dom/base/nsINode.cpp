@@ -525,14 +525,6 @@ nsINode::GetParentNode(nsIDOMNode** aParentNode)
 }
 
 nsresult
-nsINode::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  NS_ADDREF(*aChildNodes = ChildNodes());
-
-  return NS_OK;
-}
-
-nsresult
 nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   *aOwnerDocument = nullptr;

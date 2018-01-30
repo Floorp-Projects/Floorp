@@ -33,7 +33,6 @@ interface nsIDOMNode : nsISupports
   const unsigned short      NOTATION_NODE      = 12;
 
   readonly attribute nsIDOMNode       parentNode;
-  readonly attribute nsIDOMNodeList   childNodes;
   // Modified in DOM Level 2:
   readonly attribute nsIDOMDocument   ownerDocument;
   boolean                   hasChildNodes();

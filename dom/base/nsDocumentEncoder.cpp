@@ -1184,6 +1184,7 @@ protected:
                             nsCOMPtr<nsIDOMNode> *outNode, int32_t *outOffset, nsIDOMNode *aCommon);
   nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, int32_t aOffset);
   bool IsMozBR(nsIDOMNode* aNode);
+  bool IsMozBR(Element* aNode);
   nsresult GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, int32_t *outOffset);
   bool IsRoot(nsIDOMNode* aNode);
   bool IsFirstNode(nsIDOMNode *aNode);
@@ -1773,10 +1774,15 @@ nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
 {
   MOZ_ASSERT(aNode);
   nsCOMPtr<Element> element = do_QueryInterface(aNode);
-  return element &&
-         element->IsHTMLElement(nsGkAtoms::br) &&
-         element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                              NS_LITERAL_STRING("_moz"), eIgnoreCase);
+  return element && IsMozBR(element);
+}
+
+bool
+nsHTMLCopyEncoder::IsMozBR(Element* aElement)
+{
+  return aElement->IsHTMLElement(nsGkAtoms::br) &&
+         aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                               NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
 
 nsresult
@@ -1822,86 +1828,44 @@ nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
 bool
 nsHTMLCopyEncoder::IsFirstNode(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIDOMNode> parent;
-  int32_t offset, j=0;
-  nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
-  if (NS_FAILED(rv))
-  {
-    NS_NOTREACHED("failure in IsFirstNode");
-    return false;
-  }
-  if (offset == 0)  // easy case, we are first dom child
-    return true;
-  if (!parent)
-    return true;
-
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   // need to check if any nodes before us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,
   // but I don't think it's ready for use yet - revisit.
   // HACK: for now, simply consider all whitespace text nodes to be
   // invisible formatting nodes.
-  nsCOMPtr<nsIDOMNodeList> childList;
-  nsCOMPtr<nsIDOMNode> child;
-
-  rv = parent->GetChildNodes(getter_AddRefs(childList));
-  if (NS_FAILED(rv) || !childList)
-  {
-    NS_NOTREACHED("failure in IsFirstNode");
-    return true;
-  }
-  while (j < offset)
-  {
-    childList->Item(j, getter_AddRefs(child));
-    if (!IsEmptyTextContent(child))
+  for (nsIContent* sibling = node->GetPreviousSibling();
+       sibling;
+       sibling = sibling->GetPreviousSibling()) {
+    if (!sibling->TextIsOnlyWhitespace()) {
       return false;
-    j++;
+    }
   }
+
   return true;
 }
-
 
 bool
 nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIDOMNode> parent;
-  int32_t offset,j;
-  nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
-  if (NS_FAILED(rv))
-  {
-    NS_NOTREACHED("failure in IsLastNode");
-    return false;
-  }
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
-  if (!parentNode) {
-    return true;
-  }
-
-  uint32_t numChildren = parentNode->Length();
-  if (offset+1 == (int32_t)numChildren) // easy case, we are last dom child
-    return true;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   // need to check if any nodes after us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,
   // but I don't think it's ready for use yet - revisit.
   // HACK: for now, simply consider all whitespace text nodes to be
   // invisible formatting nodes.
-  j = (int32_t)numChildren-1;
-  nsCOMPtr<nsIDOMNodeList>childList;
-  nsCOMPtr<nsIDOMNode> child;
-  rv = parent->GetChildNodes(getter_AddRefs(childList));
-  if (NS_FAILED(rv) || !childList)
-  {
-    NS_NOTREACHED("failure in IsLastNode");
-    return true;
-  }
-  while (j > offset)
-  {
-    childList->Item(j, getter_AddRefs(child));
-    j--;
-    if (IsMozBR(child))  // we ignore trailing moz BRs.
+  for (nsIContent* sibling = node->GetNextSibling();
+       sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (sibling->IsElement() && IsMozBR(sibling->AsElement())) {
+      // we ignore trailing moz BRs.
       continue;
-    if (!IsEmptyTextContent(child))
+    }
+    if (!sibling->TextIsOnlyWhitespace()) {
       return false;
+    }
   }
+
   return true;
 }
 
