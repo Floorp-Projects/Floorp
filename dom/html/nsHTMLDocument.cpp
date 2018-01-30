@@ -55,7 +55,6 @@
 #include "nsIConsoleService.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/css/Loader.h"

@@ -32,7 +32,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsError.h"
 #include "nsURILoader.h"
 #include "nsIDocShell.h"

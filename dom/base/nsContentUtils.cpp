@@ -133,7 +133,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"

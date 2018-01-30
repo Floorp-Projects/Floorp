@@ -32,7 +32,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 #include "nsFrameManager.h"

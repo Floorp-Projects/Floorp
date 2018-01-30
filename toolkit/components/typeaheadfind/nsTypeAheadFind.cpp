@@ -29,7 +29,6 @@
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
