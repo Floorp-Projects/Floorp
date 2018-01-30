@@ -48,15 +48,6 @@ class nsICSSDeclaration : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSDECLARATION_IID)
 
-  /**
-   * Method analogous to CSSStyleDeclaration::SetProperty.  This
-   * method does NOT allow setting a priority (the priority will
-   * always be set to default priority).
-   */
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
-                              const nsAString& aValue,
-                              nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
-
   virtual nsINode *GetParentObject() = 0;
   mozilla::dom::DocGroup* GetDocGroup();
 
@@ -128,11 +119,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
-
-#define NS_DECL_NSICSSDECLARATION                                   \
-  NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,        \
-                              const nsAString& aValue,              \
-                              nsIPrincipal* aSubjectPrincipal = nullptr) override;
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
   NS_IMETHOD GetCssText(nsAString & aCssText) override; \

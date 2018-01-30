@@ -265,15 +265,6 @@ nsCSSFontFaceStyleDecl::GetParentRule()
   return ContainingRule();
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::SetPropertyValue(const nsCSSPropertyID aPropID,
-                                         const nsAString& aValue,
-                                         nsIPrincipal* aSubjectPrincipal)
-{
-  return SetProperty(NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aPropID)),
-                     aValue, EmptyString(), aSubjectPrincipal);
-}
-
 nsINode*
 nsCSSFontFaceStyleDecl::GetParentObject()
 {
