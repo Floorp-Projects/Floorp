@@ -20,7 +20,7 @@
 #include "nsIDOMText.h"
 #include "nsError.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMNodeList.h"
+#include "nsINodeList.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsGenericDOMDataNode.h"
@@ -2919,7 +2919,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   nsCOMPtr<nsINode> referenceParentNode = tStartContainer;
 
   nsCOMPtr<nsIDOMText> startTextNode(do_QueryInterface(tStartContainer));
-  nsCOMPtr<nsIDOMNodeList> tChildList;
+  nsCOMPtr<nsINodeList> tChildList;
   if (startTextNode) {
     referenceParentNode = tStartContainer->GetParentNode();
     if (!referenceParentNode) {
@@ -2941,18 +2941,10 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 
     referenceNode = do_QueryInterface(secondPart);
   } else {
-    aRv = tStartContainer->AsDOMNode()->GetChildNodes(getter_AddRefs(tChildList));
-    if (aRv.Failed()) {
-      return;
-    }
+    tChildList = tStartContainer->ChildNodes();
 
     // find the insertion point in the DOM and insert the Node
-    nsCOMPtr<nsIDOMNode> q;
-    aRv = tChildList->Item(tStartOffset, getter_AddRefs(q));
-    referenceNode = do_QueryInterface(q);
-    if (aRv.Failed()) {
-      return;
-    }
+    referenceNode = tChildList->Item(tStartOffset);
 
     tStartContainer->EnsurePreInsertionValidity(aNode, referenceNode, aRv);
     if (aRv.Failed()) {
@@ -2973,10 +2965,7 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
     }
     newOffset = static_cast<uint32_t>(indexInParent);
   } else {
-    aRv = tChildList->GetLength(&newOffset);
-    if (aRv.Failed()) {
-      return;
-    }
+    newOffset = tChildList->Length();
   }
 
   if (aNode.NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
