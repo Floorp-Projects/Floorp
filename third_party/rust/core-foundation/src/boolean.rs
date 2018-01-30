@@ -9,24 +9,17 @@
 
 //! A Boolean type.
 
-use core_foundation_sys::base::{CFRelease};
 pub use core_foundation_sys::number::{CFBooleanRef, CFBooleanGetTypeID, kCFBooleanTrue, kCFBooleanFalse};
 
 use base::TCFType;
 
-/// A Boolean type.
-///
-/// FIXME(pcwalton): Should be a newtype struct, but that fails due to a Rust compiler bug.
-pub struct CFBoolean(CFBooleanRef);
 
-impl Drop for CFBoolean {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// A Boolean type.
+    ///
+    /// FIXME(pcwalton): Should be a newtype struct, but that fails due to a Rust compiler bug.
+    CFBoolean, CFBooleanRef
 }
-
 impl_TCFType!(CFBoolean, CFBooleanRef, CFBooleanGetTypeID);
 impl_CFTypeDescription!(CFBoolean);
 

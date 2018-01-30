@@ -9,23 +9,17 @@
 
 //! Immutable numbers.
 
-use core_foundation_sys::base::{CFRelease, kCFAllocatorDefault};
+use core_foundation_sys::base::kCFAllocatorDefault;
 pub use core_foundation_sys::number::*;
 use std::mem;
 
-use base::{TCFType};
+use base::TCFType;
 
-/// An immutable numeric value.
-pub struct CFNumber(CFNumberRef);
 
-impl Drop for CFNumber {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// An immutable numeric value.
+    CFNumber, CFNumberRef
 }
-
 impl_TCFType!(CFNumber, CFNumberRef, CFNumberGetTypeID);
 impl_CFTypeDescription!(CFNumber);
 impl_CFComparison!(CFNumber, CFNumberCompare);
@@ -56,30 +50,6 @@ impl CFNumber {
             let ok = CFNumberGetValue(self.0, kCFNumberFloat64Type, mem::transmute(&mut value));
             if ok { Some(value) } else { None }
         }
-    }
-
-    #[deprecated(note = "please use `CFNumber::from` instead")]
-    #[inline]
-    pub fn from_i32(value: i32) -> CFNumber {
-        CFNumber::from(value)
-    }
-
-    #[deprecated(note = "please use `CFNumber::from` instead")]
-    #[inline]
-    pub fn from_i64(value: i64) -> CFNumber {
-        Self::from(value)
-    }
-
-    #[deprecated(note = "please use `CFNumber::from` instead")]
-    #[inline]
-    pub fn from_f32(value: f32) -> CFNumber {
-        Self::from(value)
-    }
-
-    #[deprecated(note = "please use `CFNumber::from` instead")]
-    #[inline]
-    pub fn from_f64(value: f64) -> CFNumber {
-        Self::from(value)
     }
 }
 
@@ -137,10 +107,4 @@ impl From<f64> for CFNumber {
             TCFType::wrap_under_create_rule(number_ref)
         }
     }
-}
-
-/// A convenience function to create CFNumbers.
-#[deprecated(note = "please use `CFNumber::from` instead")]
-pub fn number(value: i64) -> CFNumber {
-    CFNumber::from(value)
 }

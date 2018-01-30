@@ -10,22 +10,18 @@
 //! Core Foundation Bundle Type
 
 pub use core_foundation_sys::bundle::*;
-use core_foundation_sys::base::{CFRelease, kCFAllocatorDefault};
+use core_foundation_sys::base::kCFAllocatorDefault;
 
 use base::TCFType;
 use url::CFURL;
 use dictionary::CFDictionary;
 
-/// A Bundle type.
-pub struct CFBundle(CFBundleRef);
 
-impl Drop for CFBundle {
-    fn drop(&mut self) {
-        unsafe {
-            CFRelease(self.as_CFTypeRef())
-        }
-    }
+declare_TCFType!{
+    /// A Bundle type.
+    CFBundle, CFBundleRef
 }
+impl_TCFType!(CFBundle, CFBundleRef, CFBundleGetTypeID);
 
 impl CFBundle {
     pub fn new(bundleURL: CFURL) -> Option<CFBundle> {
@@ -76,7 +72,6 @@ impl CFBundle {
     }
 }
 
-impl_TCFType!(CFBundle, CFBundleRef, CFBundleGetTypeID);
 
 #[test]
 fn safari_executable_url() {
