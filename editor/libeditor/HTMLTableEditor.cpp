@@ -378,22 +378,17 @@ HTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode,
 
   *aCellNode = nullptr;
 
-  NS_ENSURE_TRUE(aRowNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> rowNode = do_QueryInterface(aRowNode);
+  NS_ENSURE_TRUE(rowNode, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> rowChild;
-  nsresult rv = aRowNode->GetLastChild(getter_AddRefs(rowChild));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> rowChild = rowNode->GetLastChild();
 
   while (rowChild && !HTMLEditUtils::IsTableCell(rowChild)) {
     // Skip over textnodes
-    nsCOMPtr<nsIDOMNode> previousChild;
-    rv = rowChild->GetPreviousSibling(getter_AddRefs(previousChild));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rowChild = previousChild;
+    rowChild = rowChild->GetPreviousSibling();
   }
   if (rowChild) {
-    *aCellNode = rowChild.get();
+    *aCellNode = rowChild->AsDOMNode();
     NS_ADDREF(*aCellNode);
     return NS_OK;
   }
@@ -990,20 +985,15 @@ HTMLEditor::DeleteTableCellContents()
 nsresult
 HTMLEditor::DeleteCellContents(nsIDOMElement* aCell)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<Element> cell = do_QueryInterface(aCell);
+  NS_ENSURE_TRUE(cell, NS_ERROR_NULL_POINTER);
 
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
-  nsCOMPtr<nsIDOMNode> child;
-  bool hasChild;
-  aCell->HasChildNodes(&hasChild);
-
-  while (hasChild) {
-    aCell->GetLastChild(getter_AddRefs(child));
+  while (nsCOMPtr<nsINode> child = cell->GetLastChild()) {
     nsresult rv = DeleteNode(child);
     NS_ENSURE_SUCCESS(rv, rv);
-    aCell->HasChildNodes(&hasChild);
   }
   return NS_OK;
 }
