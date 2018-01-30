@@ -1496,6 +1496,7 @@ this.UITour = {
 
   showNewTab(aWindow, aBrowser) {
     aWindow.openLinkIn("about:newtab", "current", {targetBrowser: aBrowser});
+    aWindow.gURLBar.focus();
   },
 
   _hideAnnotationsForPanel(aEvent, aShouldClosePanel, aTargetPositionCallback) {
