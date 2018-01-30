@@ -8,9 +8,9 @@ this.event = {};
 "use strict";
 /* global content, is */
 
-const {interfaces: Ci, classes: Cc} = Components;
+const {interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
-ChromeUtils.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/element.js");
 
 const dblclickTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 

@@ -40,17 +40,17 @@ const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["GestureSettings", "GestureTracker"]; // jshint ignore:line
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Utils", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Utils", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Logger", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Logger", // jshint ignore:line
   "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout", // jshint ignore:line
   "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout", // jshint ignore:line
   "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "PromiseUtils", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils", // jshint ignore:line
   "resource://gre/modules/PromiseUtils.jsm");
 
 // Default maximum duration of swipe

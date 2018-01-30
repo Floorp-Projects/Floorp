@@ -6,7 +6,7 @@ const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
                   "previewURL", "author", "description", "homepageURL",
                   "updateURL", "version"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function dummy(id) {
   return {
@@ -30,7 +30,7 @@ function run_test() {
 
   Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
-  let {LightweightThemeManager: ltm} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+  let {LightweightThemeManager: ltm} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
   Assert.equal(typeof ltm, "object");
   Assert.equal(typeof ltm.usedThemes, "object");

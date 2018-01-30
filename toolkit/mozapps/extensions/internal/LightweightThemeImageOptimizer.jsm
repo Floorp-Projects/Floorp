@@ -10,12 +10,12 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "Services",
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
 const ORIGIN_TOP_RIGHT = 1;

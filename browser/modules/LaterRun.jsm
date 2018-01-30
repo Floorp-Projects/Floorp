@@ -8,7 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 this.EXPORTED_SYMBOLS = ["LaterRun"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const kEnabledPref = "browser.laterrun.enabled";
 const kPagePrefRoot = "browser.laterrun.pages.";

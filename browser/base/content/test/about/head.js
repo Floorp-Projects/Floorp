@@ -91,7 +91,7 @@ function promiseTabLoadEvent(tab, url) {
 function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrowser, aStopFromProgressListener = true) {
   function content_script(contentStopFromProgressListener) {
     let { interfaces: Ci, utils: Cu } = Components;
-    ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
     let wp = docShell.QueryInterface(Ci.nsIWebProgress);
 
     function stopContent(now, uri) {

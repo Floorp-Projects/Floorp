@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm", this);
 
 const WINDOW_TYPE = "navigator:view-source";
 

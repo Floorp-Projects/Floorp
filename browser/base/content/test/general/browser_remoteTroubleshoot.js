@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {WebChannel} = ChromeUtils.import("resource://gre/modules/WebChannel.jsm", {});
+var {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
 
 const TEST_URL_TAIL = "example.com/browser/browser/base/content/test/general/test_remoteTroubleshoot.html";
 const TEST_URI_GOOD = Services.io.newURI("https://" + TEST_URL_TAIL);
@@ -64,7 +64,7 @@ add_task(async function() {
 
   let updateChannel = null;
   try {
-    updateChannel = ChromeUtils.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
+    updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
   } catch (ex) {}
   if (!updateChannel) {
     Assert.ok(!("updateChannel" in got.message.application),

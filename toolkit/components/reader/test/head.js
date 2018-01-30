@@ -1,4 +1,4 @@
-ChromeUtils.defineModuleGetter(this, "Promise",
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
 /* exported promiseTabLoadEvent, promiseWaitForCondition, is_element_visible, is_element_hidden */

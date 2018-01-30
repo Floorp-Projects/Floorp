@@ -1,7 +1,7 @@
 //Used by JSHint:
 /*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
-const { ManifestFinder } = ChromeUtils.import("resource://gre/modules/ManifestFinder.jsm", {});
+const { ManifestFinder } = Cu.import("resource://gre/modules/ManifestFinder.jsm", {});
 const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
 defaultURL.searchParams.set("Content-Type", "text/html; charset=utf-8");
 

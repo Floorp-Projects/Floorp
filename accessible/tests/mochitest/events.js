@@ -40,7 +40,7 @@ const kFromUserInput = 1;
 // //////////////////////////////////////////////////////////////////////////////
 // General
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Set up this variable to dump events into DOM.

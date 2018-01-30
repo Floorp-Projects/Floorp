@@ -44,12 +44,12 @@
 /* eslint-disable no-shadow */
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ReaderMode",
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
-ChromeUtils.defineModuleGetter(this, "pktApi",
+XPCOMUtils.defineLazyModuleGetter(this, "pktApi",
   "chrome://pocket/content/pktApi.jsm");
 
 var pktUI = (function() {

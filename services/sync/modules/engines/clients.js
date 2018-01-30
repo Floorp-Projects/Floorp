@@ -27,22 +27,22 @@ this.EXPORTED_SYMBOLS = [
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/resource.js");
-ChromeUtils.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
+Cu.import("resource://services-sync/util.js");
 
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 
-ChromeUtils.defineModuleGetter(this, "getRepairRequestor",
+XPCOMUtils.defineLazyModuleGetter(this, "getRepairRequestor",
   "resource://services-sync/collection_repair.js");
 
-ChromeUtils.defineModuleGetter(this, "getRepairResponder",
+XPCOMUtils.defineLazyModuleGetter(this, "getRepairResponder",
   "resource://services-sync/collection_repair.js");
 
 const CLIENTS_TTL = 1814400; // 21 days

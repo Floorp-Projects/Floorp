@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer;
 
 const profileDir = gProfD.clone();

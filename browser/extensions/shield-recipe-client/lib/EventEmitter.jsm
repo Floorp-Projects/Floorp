@@ -4,7 +4,7 @@
 "use strict";
 
 const {utils: Cu} = Components;
-ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 this.EXPORTED_SYMBOLS = ["EventEmitter"];
 

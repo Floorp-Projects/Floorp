@@ -5,7 +5,7 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that the zip cache can expire entries from nested jars
 var ios = Cc["@mozilla.org/network/io-service;1"].

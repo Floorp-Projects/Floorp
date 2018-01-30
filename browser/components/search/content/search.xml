@@ -142,7 +142,7 @@
           "anonid", "searchbar-textbox");</field>
       <field name="_engines">null</field>
       <field name="FormHistory" readonly="true">
-        (ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
+        (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
       </field>
 
       <property name="engines" readonly="true">

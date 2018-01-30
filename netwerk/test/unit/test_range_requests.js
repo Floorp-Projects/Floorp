@@ -18,8 +18,8 @@
 //  The test has one handler for each case and run_tests() fires one request
 //  for each. None of the handlers should see a Range-header.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = null;
 

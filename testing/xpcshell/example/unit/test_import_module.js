@@ -16,7 +16,7 @@ function run_test() {
   Assert.ok(typeof(this.MODULE_IMPORTED) == "undefined");
   Assert.ok(typeof(this.MODULE_URI) == "undefined");
   let uri = "resource://test/import_module.jsm";
-  ChromeUtils.import(uri);
+  Components.utils.import(uri);
   Assert.ok(MODULE_URI == uri);
   Assert.ok(MODULE_IMPORTED);
   Assert.ok(SUBMODULE_IMPORTED);

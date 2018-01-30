@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm");
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm");
 const {ExtensionAPI} = ExtensionCommon;
 
 Components.utils.importGlobalProperties(["Blob", "URL"]);

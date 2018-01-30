@@ -12,8 +12,8 @@ const PREF_APP_UPDATE_CHANNEL         = "app.update.channel";
 const CATEGORY_UPDATE_TIMER           = "update-timer";
 
 // Get the HTTP server.
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+Components.utils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 var testserver;
 var gOSVersion;
 var gBlocklist;

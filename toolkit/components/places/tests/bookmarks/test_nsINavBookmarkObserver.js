@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that each nsINavBookmarksObserver method gets the correct input.
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 const GUID_RE = /^[a-zA-Z0-9\-_]{12}$/;
 

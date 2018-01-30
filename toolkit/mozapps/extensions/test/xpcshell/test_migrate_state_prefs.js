@@ -7,7 +7,7 @@
 AM_Cu.import("resource://gre/modules/Preferences.jsm");
 
 function getXS() {
-  let XPI = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+  let XPI = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
   return XPI.XPIStates;
 }
 

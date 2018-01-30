@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-crypto/utils.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-crypto/utils.js");
 
 // Test vectors from RFC 5869
 

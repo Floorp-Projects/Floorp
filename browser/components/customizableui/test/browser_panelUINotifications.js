@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 /**
  * Tests that when we click on the main call-to-action of the doorhanger, the provided

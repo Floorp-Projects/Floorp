@@ -14,7 +14,7 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "FormValidationHandler" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var FormValidationHandler =
 {

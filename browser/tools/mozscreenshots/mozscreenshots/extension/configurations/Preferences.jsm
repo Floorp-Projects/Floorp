@@ -8,9 +8,9 @@ this.EXPORTED_SYMBOLS = ["Preferences"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
 
 this.Preferences = {
 

@@ -5,9 +5,9 @@
 "use strict";
 
 const {utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "UptakeTelemetry", "resource://services-common/uptake-telemetry.js");
 
 this.EXPORTED_SYMBOLS = ["Uptake"];

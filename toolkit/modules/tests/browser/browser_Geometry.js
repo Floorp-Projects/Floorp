@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var tempScope = {};
-ChromeUtils.import("resource://gre/modules/Geometry.jsm", tempScope);
+Components.utils.import("resource://gre/modules/Geometry.jsm", tempScope);
 var Point = tempScope.Point;
 var Rect = tempScope.Rect;
 

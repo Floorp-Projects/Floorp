@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 add_task(async function testFullscreen() {
   let doc = document;

@@ -3,7 +3,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * Test OS.File.open for reading:

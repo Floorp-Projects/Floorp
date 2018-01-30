@@ -4,10 +4,12 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {utils: Cu} = Components;
 
-const {UnknownError} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+
+const {UnknownError} = Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["addon"];
 

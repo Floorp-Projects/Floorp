@@ -1,9 +1,9 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "ExtensionPermissions",
-                               "resource://gre/modules/ExtensionPermissions.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPermissions",
+                                  "resource://gre/modules/ExtensionPermissions.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 var {
   ExtensionError,

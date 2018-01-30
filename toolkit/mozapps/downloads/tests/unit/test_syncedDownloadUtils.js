@@ -9,7 +9,7 @@
  */
 
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
+Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
 function run_test() {
   // Simulate having multiple downloads requesting time left

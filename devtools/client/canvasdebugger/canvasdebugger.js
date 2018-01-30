@@ -29,10 +29,10 @@ const CANVAS_ACTOR_RECORDING_ATTEMPT = flags.testing ? 500 : 5000;
 
 const { Task } = require("devtools/shared/task");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function () {

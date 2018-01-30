@@ -4,7 +4,7 @@
  
 function run_test() {
   var scope = {};
-  ChromeUtils.import("resource://test/recursive_importA.jsm", scope);
+  Components.utils.import("resource://test/recursive_importA.jsm", scope);
 
   // A imported correctly
   Assert.ok(scope.foo() == "foo");

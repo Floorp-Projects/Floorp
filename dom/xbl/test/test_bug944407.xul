@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944407
   /** Test for XBL bindings with script disabled. **/
   SimpleTest.waitForExplicitFinish();
   const Cu = Components.utils;
-  ChromeUtils.import('resource://gre/modules/Services.jsm');
+  Cu.import('resource://gre/modules/Services.jsm');
 
   function go() {
 

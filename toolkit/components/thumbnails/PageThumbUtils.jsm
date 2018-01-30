@@ -11,11 +11,11 @@ this.EXPORTED_SYMBOLS = ["PageThumbUtils"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 
 this.PageThumbUtils = {

@@ -10,7 +10,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const rph = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
 
@@ -72,7 +72,7 @@ function load_modules_under(spec, uri) {
   for (let entry of entries) {
     try {
       dump(spec + entry + "\n");
-      ChromeUtils.import(spec + entry, null);
+      Cu.import(spec + entry, null);
     } catch (e) {}
   }
 }

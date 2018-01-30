@@ -4,10 +4,10 @@
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
 const FRAME_SCRIPT = "chrome://talos-powers/content/talos-powers-content.js";
@@ -216,7 +216,7 @@ TalosPowersService.prototype = {
 
   forceQuit(messageData) {
     if (messageData && messageData.waitForSafeBrowsing) {
-      let SafeBrowsing = ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
+      let SafeBrowsing = Cu.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
 
       let whenDone = () => {
         this.forceQuit();

@@ -1,7 +1,7 @@
 'use strict';
 
 const {PushService, PushServiceWebSocket} = serviceExports;
-const {ForgetAboutSite} = ChromeUtils.import(
+const {ForgetAboutSite} = Cu.import(
   'resource://gre/modules/ForgetAboutSite.jsm', {});
 
 var db;

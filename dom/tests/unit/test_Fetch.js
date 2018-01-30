@@ -4,7 +4,7 @@
 const {utils: Cu, results: Cr} = Components;
 
 Cu.importGlobalProperties(['fetch']);
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
 const BinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");

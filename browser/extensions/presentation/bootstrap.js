@@ -5,7 +5,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PRESENTATION_DEVICE_PROMPT_PATH =
   "chrome://presentation/content/PresentationDevicePrompt.jsm";
@@ -58,7 +58,7 @@ var Presentation = {
   init() {
     log("init");
     // Register PresentationDevicePrompt into a XPCOM component.
-    let {PresentationDevicePrompt} = ChromeUtils.import(PRESENTATION_DEVICE_PROMPT_PATH, {});
+    let {PresentationDevicePrompt} = Cu.import(PRESENTATION_DEVICE_PROMPT_PATH, {});
     this.PresentationDevicePrompt = PresentationDevicePrompt;
     this._register();
   },

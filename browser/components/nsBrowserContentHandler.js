@@ -2,24 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
-ChromeUtils.defineModuleGetter(this, "HeadlessShell",
-                               "resource:///modules/HeadlessShell.jsm");
-ChromeUtils.defineModuleGetter(this, "LaterRun",
-                               "resource:///modules/LaterRun.jsm");
-ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
-                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RecentWindow",
-                               "resource:///modules/RecentWindow.jsm");
-ChromeUtils.defineModuleGetter(this, "ShellService",
-                               "resource:///modules/ShellService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "HeadlessShell",
+                                  "resource:///modules/HeadlessShell.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LaterRun",
+                                  "resource:///modules/LaterRun.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
+                                  "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
-ChromeUtils.defineModuleGetter(this, "UpdatePing",
-                               "resource://gre/modules/UpdatePing.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdatePing",
+                                  "resource://gre/modules/UpdatePing.jsm");
 
 const nsISupports            = Components.interfaces.nsISupports;
 

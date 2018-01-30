@@ -3,8 +3,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "https://127.0.0.1:9010/v1",

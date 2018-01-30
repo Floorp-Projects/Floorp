@@ -2,7 +2,7 @@
 
 /* eslint-disable mozilla/no-cpows-in-tests */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 const FHR_PREF = "datareporting.healthreport.uploadEnabled";

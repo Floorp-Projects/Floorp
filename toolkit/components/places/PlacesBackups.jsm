@@ -10,17 +10,17 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BookmarkJSONUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkJSONUtils",
   "resource://gre/modules/BookmarkJSONUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Deprecated",
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "localFileCtor",

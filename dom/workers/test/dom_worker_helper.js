@@ -5,9 +5,9 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
             getService(Ci.nsIWorkerDebuggerManager);

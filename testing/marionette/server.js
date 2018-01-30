@@ -4,31 +4,31 @@
 
 "use strict";
 
-const {Constructor: CC, interfaces: Ci} = Components;
+const {Constructor: CC, interfaces: Ci, utils: Cu} = Components;
 
 const ServerSocket = CC(
     "@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
     "initSpecialConnection");
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
-const {GeckoDriver} = ChromeUtils.import("chrome://marionette/content/driver.js", {});
-const {WebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
+Cu.import("chrome://marionette/content/assert.js");
+const {GeckoDriver} = Cu.import("chrome://marionette/content/driver.js", {});
+const {WebElement} = Cu.import("chrome://marionette/content/element.js", {});
 const {
   error,
   UnknownCommandError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+} = Cu.import("chrome://marionette/content/error.js", {});
 const {
   Command,
   Message,
   Response,
-} = ChromeUtils.import("chrome://marionette/content/message.js", {});
-const {DebuggerTransport} = ChromeUtils.import("chrome://marionette/content/transport.js", {});
+} = Cu.import("chrome://marionette/content/message.js", {});
+const {DebuggerTransport} = Cu.import("chrome://marionette/content/transport.js", {});
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");

@@ -5,7 +5,6 @@
 "use strict";
 
 /* import-globals-from ../../devtools/server/main.js */
-/* eslint "mozilla/use-chromeutils-import": ["error", {allowCu: true}] */
 
 const Cu = Components.utils;
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});

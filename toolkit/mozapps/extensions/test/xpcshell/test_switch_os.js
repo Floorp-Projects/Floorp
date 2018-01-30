@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 const ID = "bootstrap1@tests.mozilla.org";
 

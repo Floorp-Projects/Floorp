@@ -23,15 +23,15 @@
 this.EXPORTED_SYMBOLS = ["ExtensionPreferencesManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "defaultPreferences", function() {
   return new Preferences({defaultBranch: true});

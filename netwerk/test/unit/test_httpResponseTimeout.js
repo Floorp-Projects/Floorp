@@ -6,8 +6,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var baseURL;
 const kResponseTimeoutPref = "network.http.response.timeout";

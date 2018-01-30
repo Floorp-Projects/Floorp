@@ -6,12 +6,12 @@ var EXPORTED_SYMBOLS = ["LightweightThemeConsumer"];
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "EventDispatcher",
-                               "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
+                                  "resource://gre/modules/Messaging.jsm");
 
 function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;

@@ -9,7 +9,7 @@
 */
 var EXPORTED_SYMBOLS = ["goQuitApplication"];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function canQuitApplication() {
   try {

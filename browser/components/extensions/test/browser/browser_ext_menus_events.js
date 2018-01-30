@@ -8,8 +8,8 @@ const PAGE_BASE = PAGE.replace("context.html", "");
 const PAGE_HOST_PATTERN = "http://mochi.test/*";
 
 async function grantOptionalPermission(extension, permissions) {
-  const {GlobalManager} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
-  const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm", {});
+  const {GlobalManager} = Cu.import("resource://gre/modules/Extension.jsm", {});
+  const {ExtensionPermissions} = Cu.import("resource://gre/modules/ExtensionPermissions.jsm", {});
   let ext = GlobalManager.extensionMap.get(extension.id);
   return ExtensionPermissions.add(ext, permissions);
 }

@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const PING_TYPE_MAIN = "main";
 const REASON_GATHER_PAYLOAD = "gather-payload";

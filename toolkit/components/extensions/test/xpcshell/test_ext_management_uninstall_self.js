@@ -2,9 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://testing-common/AddonTestUtils.jsm");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 const id = "uninstall_self_test@tests.mozilla.com";
 

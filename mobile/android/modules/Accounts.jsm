@@ -8,10 +8,10 @@ this.EXPORTED_SYMBOLS = ["Accounts"];
 
 const { utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Deprecated.jsm"); /* global Deprecated */
-ChromeUtils.import("resource://gre/modules/Messaging.jsm"); /* global Messaging */
-ChromeUtils.import("resource://gre/modules/Promise.jsm"); /* global Promise */
-ChromeUtils.import("resource://gre/modules/Services.jsm"); /* global Services */
+Cu.import("resource://gre/modules/Deprecated.jsm"); /* global Deprecated */
+Cu.import("resource://gre/modules/Messaging.jsm"); /* global Messaging */
+Cu.import("resource://gre/modules/Promise.jsm"); /* global Promise */
+Cu.import("resource://gre/modules/Services.jsm"); /* global Services */
 
 /**
  * A promise-based API for querying the existence of Sync accounts,

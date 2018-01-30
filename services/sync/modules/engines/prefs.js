@@ -10,16 +10,16 @@ var Cu = Components.utils;
 
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
-ChromeUtils.import("resource://services-sync/engines.js");
-ChromeUtils.import("resource://services-sync/record.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://services-sync/engines.js");
+Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-common/utils.js");
 
-ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                           "resource://gre/modules/LightweightThemeManager.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "PREFS_GUID",

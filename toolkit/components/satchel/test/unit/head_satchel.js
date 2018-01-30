@@ -14,9 +14,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const CURRENT_SCHEMA = 4;
 const PR_HOURS = 60 * 60 * 1000000;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FormHistory.jsm");
 
 do_get_profile();
 

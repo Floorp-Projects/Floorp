@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-ChromeUtils.import("resource:///modules/experiments/Experiments.jsm");
+Cu.import("resource:///modules/experiments/Experiments.jsm");
 
 var cacheData = {
   _enabled: true,

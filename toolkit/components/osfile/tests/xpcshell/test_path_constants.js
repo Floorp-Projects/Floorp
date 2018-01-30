@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/ctypes.jsm", this);
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
+Cu.import("resource://gre/modules/ctypes.jsm", this);
+Cu.import("resource://testing-common/AppData.jsm", this);
 
 function compare_paths(ospath, key) {
   let file;

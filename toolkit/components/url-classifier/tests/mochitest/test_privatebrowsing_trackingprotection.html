@@ -27,9 +27,9 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIDOMWindow);
 var contentPage = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedPBFrame.html";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(aPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aPrivate});

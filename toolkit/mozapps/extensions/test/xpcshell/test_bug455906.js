@@ -10,8 +10,8 @@ var Cr = Components.results;
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 var gTestserver = new HttpServer();
 gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;

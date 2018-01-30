@@ -151,7 +151,7 @@
       <property name="PrivateBrowsingUtils" readonly="true">
         <getter><![CDATA[
           let module = {};
-          ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", module);
+          Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", module);
           Object.defineProperty(this, "PrivateBrowsingUtils", {
             configurable: true,
             enumerable: true,

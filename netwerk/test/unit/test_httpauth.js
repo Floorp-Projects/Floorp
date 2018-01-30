@@ -5,7 +5,7 @@
 // This test makes sure the HTTP authenticated sessions are correctly cleared
 // when entering and leaving the private browsing mode.
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   var am = Cc["@mozilla.org/network/http-auth-manager;1"].

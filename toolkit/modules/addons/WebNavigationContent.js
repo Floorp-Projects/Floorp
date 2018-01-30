@@ -4,11 +4,11 @@
 
 var Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
-                               "resource://gre/modules/WebNavigationFrames.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WebNavigationFrames",
+                                  "resource://gre/modules/WebNavigationFrames.jsm");
 
 function getDocShellOuterWindowId(docShell) {
   if (!docShell) {

@@ -7,7 +7,7 @@
 const TEST_URL = "data:text/html;charset=utf-8,<input%20id=txt>" +
                  "<input%20type=checkbox%20id=chk>";
 
-ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm");
+Cu.import("resource:///modules/sessionstore/SessionStore.jsm");
 
 /**
  * This test ensures that closing a window is a reversible action. We will

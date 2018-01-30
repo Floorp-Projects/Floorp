@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm");
+Cu.import("resource:///modules/BrowserUITelemetry.jsm");
 
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";

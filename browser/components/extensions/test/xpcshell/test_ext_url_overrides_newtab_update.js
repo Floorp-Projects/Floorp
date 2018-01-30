@@ -3,20 +3,20 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
   return Management;
 });
 
-ChromeUtils.defineModuleGetter(this, "AddonManager",
-                               "resource://gre/modules/AddonManager.jsm");
-ChromeUtils.defineModuleGetter(this, "Preferences",
-                               "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+Cu.import("resource://testing-common/AddonTestUtils.jsm");
 
 const {
   createAppInfo,

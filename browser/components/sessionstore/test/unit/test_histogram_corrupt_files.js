@@ -8,7 +8,7 @@
  */
 
 "use strict";
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
 
 const Telemetry = Services.telemetry;
 const Path = OS.Path;
@@ -16,7 +16,7 @@ const HistogramId = "FX_SESSION_RESTORE_ALL_FILES_CORRUPT";
 
 // Prepare the session file.
 var profd = do_get_profile();
-ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", this);
+Cu.import("resource:///modules/sessionstore/SessionFile.jsm", this);
 
 /**
  * A utility function for resetting the histogram and the contents
