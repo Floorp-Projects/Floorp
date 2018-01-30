@@ -13,13 +13,13 @@
 #include "nsComputedDOMStyle.h"
 #include "nsDebug.h"
 #include "nsError.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsID.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -522,16 +522,15 @@ HTMLEditor::GetPositionAndDimensions(Element& aElement,
     aH = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("height"));
   } else {
     mResizedObjectIsAbsolutelyPositioned = false;
-    nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(&aElement);
+    RefPtr<nsGenericHTMLElement> htmlElement =
+      nsGenericHTMLElement::FromContent(&aElement);
     if (!htmlElement) {
       return NS_ERROR_NULL_POINTER;
     }
     GetElementOrigin(aElement, aX, aY);
 
-    if (NS_WARN_IF(NS_FAILED(htmlElement->GetOffsetWidth(&aW))) ||
-        NS_WARN_IF(NS_FAILED(htmlElement->GetOffsetHeight(&aH)))) {
-      return NS_ERROR_FAILURE;
-    }
+    aW = htmlElement->OffsetWidth();
+    aH = htmlElement->OffsetHeight();
 
     aBorderLeft = 0;
     aBorderTop  = 0;

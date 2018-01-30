@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMElement.idl"
-#include "nsIVariant.idl"
-
-interface nsIDOMHTMLMenuElement;
 
 /**
  * The nsIDOMHTMLElement interface is the primary [X]HTML element
@@ -22,7 +19,4 @@ interface nsIDOMHTMLMenuElement;
 [uuid(b0c42392-d0e7-4f6a-beb5-a698ce648945)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
-  // CSSOM View
-  readonly attribute long             offsetWidth;
-  readonly attribute long             offsetHeight;
 };
