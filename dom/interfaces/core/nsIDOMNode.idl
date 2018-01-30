@@ -51,9 +51,4 @@ interface nsIDOMNode : nsISupports
   const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x08;
   const unsigned short      DOCUMENT_POSITION_CONTAINED_BY = 0x10;
   const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20;
-
-  // Introduced in DOM Level 3:
-           attribute DOMString       textContent;
-                                        // raises(DOMException) on setting
-                                        // raises(DOMException) on retrieval
 };
