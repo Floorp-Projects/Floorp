@@ -32,6 +32,7 @@ class nsDOMAttributeMap;
 class nsDOMTokenList;
 class nsIControllers;
 class nsICSSDeclaration;
+class nsDOMCSSAttributeDeclaration;
 class nsIDocument;
 class nsDOMStringMap;
 class nsIURI;
@@ -253,7 +254,7 @@ public:
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
      * @see Element::GetSMILOverrideStyle
      */
-    nsCOMPtr<nsICSSDeclaration> mSMILOverrideStyle;
+    RefPtr<nsDOMCSSAttributeDeclaration> mSMILOverrideStyle;
 
     /**
      * Holds any SMIL override style declaration for this element.
