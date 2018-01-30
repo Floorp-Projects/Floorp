@@ -18,7 +18,7 @@ ChromeUtils.defineModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
-ChromeUtils.defineModuleGetter(this, "fxAccounts",
+ChromeUtils.defineModuleGetter(this, "FxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
   "resource://gre/modules/LightweightThemeManager.jsm");
@@ -551,8 +551,8 @@ this.UITour = {
 
       case "showFirefoxAccounts": {
         Promise.resolve().then(() => {
-          return data.email ? fxAccounts.promiseAccountsEmailURI(data.email, "uitour") :
-                              fxAccounts.promiseAccountsSignUpURI("uitour");
+          return data.email ? FxAccounts.config.promiseEmailURI(data.email, "uitour") :
+                              FxAccounts.config.promiseSignUpURI("uitour");
         }).then(uri => {
           const url = new URL(uri);
           // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
@@ -568,16 +568,17 @@ this.UITour = {
       }
 
       case "showConnectAnotherDevice": {
-        const url = new URL(Services.prefs.getCharPref("identity.fxaccounts.remote.connectdevice.uri"));
-        url.searchParams.append("entrypoint", "uitour");
-        // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
-        if (!this._populateCampaignParams(url, data.extraURLCampaignParams)) {
-          log.warn("showConnectAnotherDevice: invalid campaign args specified");
-          return false;
-        }
+        FxAccounts.config.promiseConnectDeviceURI("uitour").then(uri => {
+          const url = new URL(uri);
+          // Call our helper to validate extraURLCampaignParams and populate URLSearchParams
+          if (!this._populateCampaignParams(url, data.extraURLCampaignParams)) {
+            log.warn("showConnectAnotherDevice: invalid campaign args specified");
+            return;
+          }
 
-        // We want to replace the current tab.
-        browser.loadURI(url.href);
+          // We want to replace the current tab.
+          browser.loadURI(url.href);
+        });
         break;
       }
 

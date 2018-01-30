@@ -59,16 +59,7 @@ var publicProperties = [
   "localtimeOffsetMsec",
   "notifyDevices",
   "now",
-  "promiseAccountsChangeProfileURI",
-  "promiseAccountsEmailURI",
-  "promiseAccountsForceSigninURI",
-  "promiseAccountsManageURI",
-  "promiseAccountsManageDevicesURI",
-  "promiseAccountsConnectDeviceURI",
-  "promiseAccountsSignUpURI",
-  "promiseAccountsSignInURI",
   "removeCachedOAuthToken",
-  "requiresHttps",
   "resendVerificationEmail",
   "resetCredentials",
   "sessionStatus",
@@ -363,6 +354,7 @@ this.FxAccounts = function(mockInternal) {
 
   return Object.freeze(external);
 };
+this.FxAccounts.config = FxAccountsConfig;
 
 /**
  * The internal API's constructor.
@@ -1391,105 +1383,6 @@ FxAccountsInternal.prototype = {
     delete currentState.whenVerifiedDeferred;
   },
 
-  requiresHttps() {
-    // Also used in FxAccountsOAuthGrantClient.jsm.
-    let allowHttp = Services.prefs.getBoolPref("identity.fxaccounts.allowHttp", false);
-    return allowHttp !== true;
-  },
-
-  async promiseAccountsSignUpURI(entrypoint) {
-    const url = new URL((await FxAccountsConfig.promiseAccountsSignUpURI()));
-    if (entrypoint) {
-      url.searchParams.append("entrypoint", entrypoint);
-    }
-    return url.href;
-  },
-
-  async promiseAccountsSignInURI(entrypoint) {
-    const url = new URL((await FxAccountsConfig.promiseAccountsSignInURI()));
-    if (entrypoint) {
-      url.searchParams.append("entrypoint", entrypoint);
-    }
-    return url.href;
-  },
-
-  async promiseAccountsEmailURI(email, entrypoint) {
-    const url = new URL((await FxAccountsConfig.promiseAccountsEmailURI()));
-    url.searchParams.append("email", email);
-    if (entrypoint) {
-      url.searchParams.append("entrypoint", entrypoint);
-    }
-    return url.href;
-  },
-
-  /**
-   * Pull an URL defined in the user preferences, add the current UID and email
-   * to the query string, add entrypoint and extra params to the query string if
-   * requested.
-   * @param {string} prefName The preference name from where to pull the URL to format.
-   * @param {string} [entrypoint] "entrypoint" searchParam value.
-   * @param {Object.<string, string>} [extraParams] Additionnal searchParam key and values.
-   * @returns {Promise.<string>} A promise that resolves to the formatted URL
-   */
-  async _formatPrefURL(prefName, entrypoint, extraParams) {
-    let url = new URL(Services.urlFormatter.formatURLPref(prefName));
-    if (this.requiresHttps() && url.protocol != "https:") {
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
-    let accountData = await this.getSignedInUser();
-    if (!accountData) {
-      return Promise.resolve(null);
-    }
-    url.searchParams.append("uid", accountData.uid);
-    url.searchParams.append("email", accountData.email);
-    if (entrypoint) {
-      url.searchParams.append("entrypoint", entrypoint);
-    }
-    if (extraParams) {
-      for (let [k, v] of Object.entries(extraParams)) {
-        url.searchParams.append(k, v);
-      }
-    }
-    return this.currentAccountState.resolve(url.href);
-  },
-
-  // Returns a promise that resolves with the URL to use to force a re-signin
-  // of the current account.
-  async promiseAccountsForceSigninURI(entrypoint) {
-    await FxAccountsConfig.ensureConfigured();
-    return this._formatPrefURL("identity.fxaccounts.remote.force_auth.uri", entrypoint);
-  },
-
-  // Returns a promise that resolves with the URL to use to change
-  // the current account's profile image.
-  // if settingToEdit is set, the profile page should hightlight that setting
-  // for the user to edit.
-  async promiseAccountsChangeProfileURI(entrypoint, settingToEdit = null) {
-    let extraParams;
-    if (settingToEdit) {
-      extraParams = { setting: settingToEdit };
-    }
-    return this._formatPrefURL("identity.fxaccounts.settings.uri", entrypoint, extraParams);
-  },
-
-  // Returns a promise that resolves with the URL to use to manage the current
-  // user's FxA acct.
-  async promiseAccountsManageURI(entrypoint) {
-    return this._formatPrefURL("identity.fxaccounts.settings.uri", entrypoint);
-  },
-
-  // Returns a promise that resolves with the URL to use to manage the devices in
-  // the current user's FxA acct.
-  async promiseAccountsManageDevicesURI(entrypoint) {
-    return this._formatPrefURL("identity.fxaccounts.settings.devices.uri", entrypoint);
-  },
-
-  // Returns a promise that resolves with the URL to use to connect a new
-  // device to the current user's FxA acct.
-  async promiseAccountsConnectDeviceURI(entrypoint) {
-    return this._formatPrefURL("identity.fxaccounts.remote.connectdevice.uri", entrypoint);
-  },
-
   /**
    * Get an OAuth token for the user
    *
@@ -1653,14 +1546,6 @@ FxAccountsInternal.prototype = {
    * in the background, after which a ON_PROFILE_CHANGE_NOTIFICATION
    * observer notification will be sent, at which time this can be called
    * again to obtain the most recent profile info.
-   *
-   * @param options
-   *        {
-   *          contentUrl: (string) Used by the FxAccountsWebChannel.
-   *            Defaults to pref identity.fxaccounts.settings.uri
-   *          profileServerUrl: (string) Used by the FxAccountsWebChannel.
-   *            Defaults to pref identity.fxaccounts.remote.profile.uri
-   *        }
    *
    * @return Promise.<object | Error>
    *        The promise resolves to an accountData object with extra profile
