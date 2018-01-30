@@ -2271,11 +2271,6 @@ ToCanonicalSupports(nsINode* aPointer)
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) __VA_ARGS__ override \
   { \
     return nsINode::GetOwnerDocument(aOwnerDocument); \
-  } \
-  NS_IMETHOD HasChildNodes(bool* aResult) __VA_ARGS__ override \
-  { \
-    *aResult = nsINode::HasChildNodes(); \
-    return NS_OK; \
   }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE \

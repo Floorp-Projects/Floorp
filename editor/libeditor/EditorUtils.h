@@ -544,8 +544,6 @@ public:
   static bool IsDescendantOf(const nsINode& aNode,
                              const nsINode& aParent,
                              EditorDOMPoint* aOutPoint);
-
-  static bool IsLeafNode(nsIDOMNode* aNode);
 };
 
 class EditorHookUtils final

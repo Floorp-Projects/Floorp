@@ -35,5 +35,4 @@ interface nsIDOMNode : nsISupports
   readonly attribute nsIDOMNode       parentNode;
   // Modified in DOM Level 2:
   readonly attribute nsIDOMDocument   ownerDocument;
-  boolean                   hasChildNodes();
 };
