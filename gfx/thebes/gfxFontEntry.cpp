@@ -935,6 +935,83 @@ gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag)
     return result;
 }
 
+void
+gfxFontEntry::GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo)
+{
+    // TODO: implement alternative code path for graphite fonts
+
+    hb_face_t* face = GetHBFace();
+
+    // Get the list of features for a specific <script,langSys> pair and
+    // append them to aFeatureInfo.
+    auto collectForLang =
+        [=,&aFeatureInfo](hb_tag_t aTableTag,
+                          unsigned int aScript, hb_tag_t aScriptTag,
+                          unsigned int aLang, hb_tag_t aLangTag) {
+        unsigned int featCount =
+            hb_ot_layout_language_get_feature_tags(face, aTableTag, aScript,
+                                                   aLang, 0, nullptr, nullptr);
+        AutoTArray<hb_tag_t,32> featTags;
+        featTags.SetLength(featCount);
+        hb_ot_layout_language_get_feature_tags(face, aTableTag, aScript,
+                                               aLang, 0, &featCount,
+                                               featTags.Elements());
+        MOZ_ASSERT(featCount <= featTags.Length());
+        // Just in case HB didn't fill featTags (i.e. in case it returned fewer
+        // tags than it promised), we truncate at the length it says it filled:
+        featTags.SetLength(featCount);
+        for (hb_tag_t t : featTags) {
+            aFeatureInfo.AppendElement(
+                gfxFontFeatureInfo{t, aScriptTag, aLangTag});
+        }
+    };
+
+    // Iterate over the language systems supported by a given script,
+    // and call collectForLang for each of them.
+    auto collectForScript = [=](hb_tag_t aTableTag,
+                                unsigned int aScript, hb_tag_t aScriptTag) {
+        collectForLang(aTableTag, aScript, aScriptTag,
+                       HB_OT_LAYOUT_DEFAULT_LANGUAGE_INDEX,
+                       HB_TAG('d','f','l','t'));
+        unsigned int langCount =
+            hb_ot_layout_script_get_language_tags(face, aTableTag, aScript, 0,
+                                                  nullptr, nullptr);
+        AutoTArray<hb_tag_t,32> langTags;
+        langTags.SetLength(langCount);
+        hb_ot_layout_script_get_language_tags(face, aTableTag, aScript, 0,
+                                              &langCount, langTags.Elements());
+        MOZ_ASSERT(langCount <= langTags.Length());
+        langTags.SetLength(langCount);
+        for (unsigned int lang = 0; lang < langCount; ++lang) {
+            collectForLang(aTableTag, aScript, aScriptTag, lang, langTags[lang]);
+        }
+    };
+
+    // Iterate over the scripts supported by a table (GSUB or GPOS), and call
+    // collectForScript for each of them.
+    auto collectForTable = [=](hb_tag_t aTableTag) {
+        unsigned int scriptCount =
+            hb_ot_layout_table_get_script_tags(face, aTableTag, 0, nullptr,
+                                               nullptr);
+        AutoTArray<hb_tag_t,32> scriptTags;
+        scriptTags.SetLength(scriptCount);
+        hb_ot_layout_table_get_script_tags(face, aTableTag, 0, &scriptCount,
+                                           scriptTags.Elements());
+        MOZ_ASSERT(scriptCount <= scriptTags.Length());
+        scriptTags.SetLength(scriptCount);
+        for (unsigned int script = 0; script < scriptCount; ++script) {
+            collectForScript(aTableTag, script, scriptTags[script]);
+        }
+    };
+
+    // Collect all OpenType Layout features, both substitution and positioning,
+    // supported by the font resource.
+    collectForTable(HB_TAG('G','S','U','B'));
+    collectForTable(HB_TAG('G','P','O','S'));
+
+    hb_face_destroy(face);
+}
+
 bool
 gfxFontEntry::GetColorLayersInfo(uint32_t aGlyphId,
                             const mozilla::gfx::Color& aDefaultColor,
