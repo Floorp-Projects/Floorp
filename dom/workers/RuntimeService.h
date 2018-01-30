@@ -22,6 +22,7 @@ class nsPIDOMWindowInner;
 BEGIN_WORKERS_NAMESPACE
 
 class SharedWorker;
+struct WorkerLoadInfo;
 class WorkerThread;
 
 class RuntimeService final : public nsIObserver
