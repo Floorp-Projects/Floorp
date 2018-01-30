@@ -1189,13 +1189,11 @@ nsComputedDOMStyle::RemoveProperty(const nsAString& aPropertyName,
 }
 
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::GetPropertyPriority(const nsAString& aPropertyName,
                                         nsAString& aReturn)
 {
   aReturn.Truncate();
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

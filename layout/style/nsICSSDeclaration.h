@@ -58,8 +58,6 @@ public:
                         mozilla::ErrorResult& aRv) = 0;
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
                             nsAString& aReturn) = 0;
-  NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,
-                                 nsAString& aReturn) = 0;
   NS_IMETHOD SetProperty(const nsAString& aPropertyName,
                          const nsAString& aValue,
                          const nsAString& aPriority,
@@ -95,9 +93,8 @@ public:
                         mozilla::ErrorResult& rv) {
     rv = GetPropertyValue(aPropName, aValue);
   }
-  void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
-    GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
-  }
+  virtual void GetPropertyPriority(const nsAString& aPropName,
+                                   nsAString& aPriority) = 0;
   void SetProperty(const nsAString& aPropName, const nsAString& aValue,
                    const nsAString& aPriority, nsIPrincipal* aSubjectPrincipal,
                    mozilla::ErrorResult& rv) {
@@ -119,7 +116,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
                   mozilla::ErrorResult& aRv) override;                  \
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) override; \
   NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) override; \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) override; \
+  void GetPropertyPriority(const nsAString & propertyName,              \
+                           nsAString & aPriority) override;             \
   NS_IMETHOD SetProperty(const nsAString& propertyName,                       \
                          const nsAString& value,                              \
                          const nsAString& priority,                           \
