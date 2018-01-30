@@ -1981,20 +1981,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean isStyledByServo;
 
   /**
-   * Add a domain to the existing stylo blocklist.
-   *
-   * This calls nsLayoutUtils::AddToStyloBlocklist().
-   */
-  void addToStyloBlocklist(in ACString aBlockedDomain);
-
-  /**
-   * Remove a domain from the existing stylo blocklist.
-   *
-   * This calls nsLayoutUtils::RemoveFromStyloBlocklist().
-   */
-  void removeFromStyloBlocklist(in ACString aBlockedDomain);
-
-  /**
    * Capture the contents of the current WebRender frame and
    * save them to a folder relative to the current working directory.
    */

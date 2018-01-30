@@ -18,11 +18,11 @@ impl Error {
 
     pub unsafe fn from_raw(code: ffi::cubeb_error_code) -> Error {
         let code = match code {
-            ffi::CUBEB_ERROR => ErrorCode::Error,
             ffi::CUBEB_ERROR_INVALID_FORMAT => ErrorCode::InvalidFormat,
             ffi::CUBEB_ERROR_INVALID_PARAMETER => ErrorCode::InvalidParameter,
             ffi::CUBEB_ERROR_NOT_SUPPORTED => ErrorCode::NotSupported,
             ffi::CUBEB_ERROR_DEVICE_UNAVAILABLE => ErrorCode::DeviceUnavailable,
+            // Everything else is just the generic error
             _ => ErrorCode::Error,
         };
 

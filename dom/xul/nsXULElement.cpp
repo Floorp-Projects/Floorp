@@ -2339,7 +2339,7 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
 
         RefPtr<DeclarationBlock> declaration;
         if (nsLayoutUtils::StyloEnabled() &&
-            nsLayoutUtils::ShouldUseStylo(aDocumentURI, principal)) {
+            nsLayoutUtils::ShouldUseStylo(principal)) {
           RefPtr<URLExtraData> data =
             new URLExtraData(aDocumentURI, aDocumentURI, principal);
           declaration = ServoDeclarationBlock::FromCssText(

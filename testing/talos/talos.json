@@ -3,11 +3,19 @@
         "chromez-e10s": {
             "tests": ["tresize"]
         },
+        "chromez-profiling-e10s": {
+            "talos_options": ["--geckoProfile"],
+            "tests": ["tresize"]
+        },
         "chromez-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
             "tests": ["tresize"]
         },
         "dromaeojs-e10s": {
+            "tests": ["dromaeo_css", "kraken"]
+        },
+        "dromaeojs-profiling-e10s": {
+            "talos_options": ["--geckoProfile"],
             "tests": ["dromaeo_css", "kraken"]
         },
         "dromaeojs-stylo-disabled-e10s": {
@@ -17,12 +25,21 @@
         "other-e10s": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
         },
+        "other-profiling-e10s": {
+            "talos_options": ["--geckoProfile"],
+            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
+        },
         "other-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup"]
         },
         "g1-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
+            "pagesets_name": "tp5n.zip"
+        },
+        "g1-profiling-e10s": {
+            "tests": ["tp5o_scroll", "glterrain"],
+            "talos_options": ["--geckoProfile"],
             "pagesets_name": "tp5n.zip"
         },
         "g1-stylo-disabled-e10s": {
@@ -34,6 +51,11 @@
             "tests": ["damp", "tps"],
             "pagesets_name": "tp5n.zip"
         },
+        "g2-profiling-e10s": {
+            "tests": ["damp", "tps"],
+            "talos_options": ["--geckoProfile"],
+            "pagesets_name": "tp5n.zip"
+        },
         "g2-stylo-disabled-e10s": {
             "tests": ["damp", "tps"],
             "talos_options": ["--disable-stylo"],
@@ -42,6 +64,10 @@
         "g3-e10s": {
             "tests": ["dromaeo_dom"]
         },
+        "g3-profiling-e10s": {
+            "tests": ["dromaeo_dom"],
+            "talos_options": ["--geckoProfile"]
+        },
         "g3-stylo-disabled-e10s": {
             "tests": ["dromaeo_dom"],
             "talos_options": ["--disable-stylo"]
@@ -49,12 +75,21 @@
         "g4-e10s": {
             "tests": ["basic_compositor_video", "glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
         },
+        "g4-profiling-e10s": {
+            "tests": ["basic_compositor_video", "glvideo"],
+            "talos_options": ["--geckoProfile"]
+        },
         "g4-stylo-disabled-e10s": {
             "tests": ["basic_compositor_video", "glvideo"],
             "talos_options": ["--disable-stylo"]
         },
         "g5-e10s": {
             "tests": ["ts_paint_webext", "tp5o_webext"],
+            "pagesets_name": "tp5n.zip"
+        },
+        "g5-profiling-e10s": {
+            "tests": ["ts_paint_webext", "tp5o_webext"],
+            "talos_options": ["--geckoProfile"],
             "pagesets_name": "tp5n.zip"
         },
         "g5-stylo-disabled-e10s": {
@@ -65,12 +100,20 @@
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]
         },
+        "svgr-profiling-e10s": {
+            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"],
+            "talos_options": ["--geckoProfile"]
+        },
         "svgr-stylo-disabled-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"],
             "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-e10s": {
             "tests": ["perf_reftest"]
+        },
+        "perf-reftest-profiling-e10s": {
+            "tests": ["perf_reftest"],
+            "talos_options": ["--geckoProfile"]
         },
         "perf-reftest-stylo-disabled-e10s": {
             "tests": ["perf_reftest"],
@@ -79,12 +122,20 @@
         "perf-reftest-singletons-e10s": {
             "tests": ["perf_reftest_singletons"]
         },
+        "perf-reftest-singletons-profiling-e10s": {
+            "tests": ["perf_reftest_singletons"],
+            "talos_options": ["--geckoProfile"]
+        },
         "perf-reftest-singletons-stylo-disabled-e10s": {
             "tests": ["perf_reftest_singletons"],
             "talos_options": ["--disable-stylo"]
         },
         "speedometer-e10s": {
             "tests": ["speedometer", "stylebench"]
+        },
+        "speedometer-profiling-e10s": {
+            "talos_options": ["--geckoProfile"],
+            "tests": ["speedometer"]
         },
         "speedometer-stylo-disabled-e10s": {
             "talos_options": ["--disable-stylo"],
@@ -93,6 +144,11 @@
         "tp5o-e10s": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"
+        },
+        "tp5o-profiling-e10s": {
+            "tests": ["tp5o"],
+            "pagesets_name": "tp5n.zip",
+            "talos_options": ["--geckoProfile"]
         },
         "tp5o-stylo-disabled-e10s": {
             "tests": ["tp5o"],
@@ -122,6 +178,18 @@
             "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
+                "--mitmproxy",
+                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
+                "--firstNonBlankPaint"
+            ]
+        },
+        "tp6-profiling-e10s": {
+            "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
+            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
+            "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
+            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
+            "talos_options": [
+                "--geckoProfile",
                 "--mitmproxy",
                 "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
                 "--firstNonBlankPaint"
