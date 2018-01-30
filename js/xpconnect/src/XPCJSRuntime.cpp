@@ -82,10 +82,6 @@ const char* const XPCJSRuntime::mStrings[] = {
     "value",                // IDX_VALUE
     "QueryInterface",       // IDX_QUERY_INTERFACE
     "Components",           // IDX_COMPONENTS
-    "Cc",                   // IDX_CC
-    "Ci",                   // IDX_CI
-    "Cr",                   // IDX_CR
-    "Cu",                   // IDX_CU
     "wrappedJSObject",      // IDX_WRAPPED_JSOBJECT
     "Object",               // IDX_OBJECT
     "Function",             // IDX_FUNCTION
