@@ -11,7 +11,12 @@
 #include "WorkerRunnable.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+
+class DOMEventTargetHelper;
+
+namespace dom {
+namespace workers {
 
 class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
@@ -32,6 +37,8 @@ private:
   DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
 };
 
-END_WORKERS_NAMESPACE
+} // workers namespace
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_MessageEventRunnable_h

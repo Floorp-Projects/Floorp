@@ -8,90 +8,48 @@
 #define mozilla_dom_workers_workerprivate_h__
 
 #include "WorkerCommon.h"
-#include "WorkerLoadInfo.h"
-
-#include "js/CharacterEncoding.h"
-#include "nsIContentPolicy.h"
-#include "nsIContentSecurityPolicy.h"
-#include "nsILoadGroup.h"
-#include "nsPIDOMWindow.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/Move.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "nsAutoPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "nsRefPtrHashtable.h"
-#include "nsString.h"
-#include "nsTArray.h"
+#include "nsDOMNavigationTiming.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
 #include "Queue.h"
 #include "WorkerHolder.h"
+#include "WorkerLoadInfo.h"
 
 #ifdef XP_WIN
 #undef PostMessage
 #endif
 
-class nsIChannel;
 class nsIConsoleReportCollector;
-class nsIDocument;
-class nsIEventTarget;
-class nsIPrincipal;
-class nsIScriptContext;
-class nsIScriptTimeoutHandler;
-class nsISerialEventTarget;
-class nsISerializable;
-class nsIThread;
 class nsIThreadInternal;
-class nsITimer;
-class nsIURI;
-template<class T> class nsMainThreadPtrHandle;
-
-namespace JS {
-struct RuntimeStats;
-} // namespace JS
 
 namespace mozilla {
-class ThrottledEventQueue;
 namespace dom {
+
 class ClientInfo;
 class ClientSource;
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
-class PromiseNativeHandler;
-class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
 class WorkerErrorReport;
 class WorkerGlobalScope;
 struct WorkerOptions;
-} // namespace dom
-namespace ipc {
-class PrincipalInfo;
-} // namespace ipc
-} // namespace mozilla
 
-struct PRThread;
+} // dom namespace
+} // mozilla namespace
 
 BEGIN_WORKERS_NAMESPACE
 
-class AutoSyncLoopHolder;
 class SharedWorker;
-class ServiceWorkerClientInfo;
-class WorkerEventTarget;
 class WorkerControlRunnable;
 class WorkerDebugger;
-class WorkerPrivate;
+class WorkerEventTarget;
 class WorkerRunnable;
 class WorkerThread;
 

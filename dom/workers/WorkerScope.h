@@ -14,6 +14,10 @@
 #include "nsWeakReference.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 namespace mozilla {
 namespace dom {
 
