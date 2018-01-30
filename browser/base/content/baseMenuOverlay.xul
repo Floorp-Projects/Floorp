@@ -9,6 +9,10 @@
 %brandDTD;
 <!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
 %baseMenuOverlayDTD;
+<!ENTITY % reportphishDTD SYSTEM "chrome://browser/locale/safebrowsing/report-phishing.dtd">
+%reportphishDTD;
+<!ENTITY % safebrowsingDTD SYSTEM "chrome://browser/locale/safebrowsing/phishing-afterload-warning-message.dtd">
+%safebrowsingDTD;
 ]>
 <overlay id="baseMenuOverlay"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -77,6 +81,20 @@
                   stopaccesskey="&helpSafeMode.stop.accesskey;"
                   stoplabel="&helpSafeMode.stop.label;"
                   oncommand="safeModeRestart();"/>
+        <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
+                  label="&reportDeceptiveSiteMenu.title;"
+                  accesskey="&reportDeceptiveSiteMenu.accesskey;"
+                  observes="reportPhishingBroadcaster"
+                  oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event);"
+                  onclick="checkForMiddleClick(this, event);"
+                  hidden="true"/>
+        <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
+                  label="&safeb.palm.notdeceptive.label;"
+                  accesskey="&safeb.palm.notdeceptive.accesskey;"
+                  observes="reportPhishingErrorBroadcaster"
+                  oncommand="ReportFalseDeceptiveSite();"
+                  onclick="checkForMiddleClick(this, event);"
+                  hidden="true"/>
         <menuseparator id="aboutSeparator"/>
         <menuitem id="aboutName"
                   accesskey="&aboutProduct2.accesskey;"
