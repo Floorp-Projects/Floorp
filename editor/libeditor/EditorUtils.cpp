@@ -183,15 +183,6 @@ EditorUtils::IsDescendantOf(const nsINode& aNode,
   return false;
 }
 
-bool
-EditorUtils::IsLeafNode(nsIDOMNode* aNode)
-{
-  bool hasChildren = false;
-  if (aNode)
-    aNode->HasChildNodes(&hasChildren);
-  return !hasChildren;
-}
-
 /******************************************************************************
  * utility methods for drag/drop/copy/paste hooks
  *****************************************************************************/
