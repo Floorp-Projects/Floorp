@@ -203,12 +203,6 @@ HTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
  * IsTable() returns true if aNode is an html table.
  */
 bool
-HTMLEditUtils::IsTable(nsIDOMNode* aNode)
-{
-  return EditorBase::NodeIsType(aNode, nsGkAtoms::table);
-}
-
-bool
 HTMLEditUtils::IsTable(nsINode* aNode)
 {
   return aNode && aNode->IsHTMLElement(nsGkAtoms::table);
@@ -352,13 +346,6 @@ HTMLEditUtils::IsLink(nsINode* aNode)
   nsAutoString tmpText;
   anchor->GetHref(tmpText);
   return !tmpText.IsEmpty();
-}
-
-bool
-HTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return node && IsNamedAnchor(node);
 }
 
 bool
