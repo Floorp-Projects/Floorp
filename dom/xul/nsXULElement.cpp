@@ -239,7 +239,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         mozilla::dom::NodeInfo* ni = aPrototype->mNodeInfo;
         nodeInfo = aDocument->NodeInfoManager()->
           GetNodeInfo(ni->NameAtom(), ni->GetPrefixAtom(), ni->NamespaceID(),
-                      nsIDOMNode::ELEMENT_NODE);
+                      ELEMENT_NODE);
     } else {
         nodeInfo = aPrototype->mNodeInfo;
     }
@@ -2086,8 +2086,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         if (mAttributes[i].mName.IsAtom()) {
             ni = mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(mAttributes[i].mName.Atom(), nullptr,
-                            kNameSpaceID_None,
-                            nsIDOMNode::ATTRIBUTE_NODE);
+                            kNameSpaceID_None, nsINode::ATTRIBUTE_NODE);
             NS_ASSERTION(ni, "the nodeinfo should already exist");
         } else {
             ni = mAttributes[i].mName.NodeInfo();

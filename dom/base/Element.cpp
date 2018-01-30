@@ -1252,7 +1252,7 @@ Element::AttachShadowInternal(bool aClosed, ErrorResult& aError)
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(
     nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
-    nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+    DOCUMENT_FRAGMENT_NODE);
 
   RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(OwnerDoc());
 
@@ -1433,7 +1433,7 @@ Element::SetAttributeNS(const nsAString& aNamespaceURI,
   aError =
     nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
                                          mNodeInfo->NodeInfoManager(),
-                                         nsIDOMNode::ATTRIBUTE_NODE,
+                                         ATTRIBUTE_NODE,
                                          getter_AddRefs(ni));
   if (aError.Failed()) {
     return;
@@ -2245,8 +2245,7 @@ Element::GetExistingAttrNameFromQName(const nsAString& aStr) const
   RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   if (name->IsAtom()) {
     nodeInfo = mNodeInfo->NodeInfoManager()->
-      GetNodeInfo(name->Atom(), nullptr, kNameSpaceID_None,
-                  nsIDOMNode::ATTRIBUTE_NODE);
+      GetNodeInfo(name->Atom(), nullptr, kNameSpaceID_None, ATTRIBUTE_NODE);
   }
   else {
     nodeInfo = name->NodeInfo();
@@ -2709,7 +2708,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     RefPtr<mozilla::dom::NodeInfo> ni;
     ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix,
                                                    aNamespaceID,
-                                                   nsIDOMNode::ATTRIBUTE_NODE);
+                                                   ATTRIBUTE_NODE);
 
     rv = mAttrsAndChildren.SetAndSwapAttr(ni, aParsedValue, &oldValueSet);
   }
@@ -3947,7 +3946,7 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
     return;
   }
 
-  if (parent->NodeType() == nsIDOMNode::DOCUMENT_NODE) {
+  if (parent->NodeType() == DOCUMENT_NODE) {
     aError.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
@@ -3959,7 +3958,7 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
       localName = parent->NodeInfo()->NameAtom();
       namespaceID = parent->NodeInfo()->NamespaceID();
     } else {
-      NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
+      NS_ASSERTION(parent->NodeType() == DOCUMENT_FRAGMENT_NODE,
         "How come the parent isn't a document, a fragment or an element?");
       localName = nsGkAtoms::body;
       namespaceID = kNameSpaceID_XHTML;
@@ -3981,13 +3980,13 @@ Element::SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError)
   if (parent->IsElement()) {
     context = parent;
   } else {
-    NS_ASSERTION(parent->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE,
+    NS_ASSERTION(parent->NodeType() == DOCUMENT_FRAGMENT_NODE,
       "How come the parent isn't a document, a fragment or an element?");
     RefPtr<mozilla::dom::NodeInfo> info =
       OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::body,
                                                  nullptr,
                                                  kNameSpaceID_XHTML,
-                                                 nsIDOMNode::ELEMENT_NODE);
+                                                 ELEMENT_NODE);
     context = NS_NewHTMLBodyElement(info.forget(), FROM_PARSER_FRAGMENT);
   }
 

@@ -146,7 +146,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   RefPtr<NodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::label, nullptr,
                                                  kNameSpaceID_XUL,
-                                                 nsIDOMNode::ELEMENT_NODE);
+                                                 nsINode::ELEMENT_NODE);
   NS_TrustedNewXULElement(getter_AddRefs(mTextContent), nodeInfo.forget());
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.

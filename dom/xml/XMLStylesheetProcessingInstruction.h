@@ -31,7 +31,7 @@ public:
     : ProcessingInstruction(aNodeInfoManager->GetNodeInfo(
                                        nsGkAtoms::processingInstructionTagName,
                                        nullptr, kNameSpaceID_None,
-                                       nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+                                       PROCESSING_INSTRUCTION_NODE,
                                        nsGkAtoms::xml_stylesheet), aData)
   {
   }

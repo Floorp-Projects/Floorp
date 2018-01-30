@@ -244,7 +244,7 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
     if (aAttr.NodeInfo()->Equals(nameAtom, attrNS)) {
       oldNi = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), aAttr.NodeInfo()->NamespaceID(),
-                    nsIDOMNode::ATTRIBUTE_NODE);
+                    nsINode::ATTRIBUTE_NODE);
       break;
     }
   }
@@ -331,7 +331,7 @@ nsDOMAttributeMap::IndexedGetter(uint32_t aIndex, bool& aFound)
   // owner document.
   RefPtr<mozilla::dom::NodeInfo> ni = mContent->NodeInfo()->NodeInfoManager()->
     GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
-                nsIDOMNode::ATTRIBUTE_NODE);
+                nsINode::ATTRIBUTE_NODE);
   return GetAttribute(ni);
 }
 
@@ -394,7 +394,7 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
       RefPtr<mozilla::dom::NodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
-                    nsIDOMNode::ATTRIBUTE_NODE);
+                    nsINode::ATTRIBUTE_NODE);
 
       return ni.forget();
     }

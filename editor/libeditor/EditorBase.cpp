@@ -1145,7 +1145,7 @@ EditorBase::BeginningOfDocument()
     return selection->Collapse(rootElement, 0);
   }
 
-  if (firstNode->NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (firstNode->NodeType() == nsINode::TEXT_NODE) {
     // If firstNode is text, set selection to beginning of the text node.
     return selection->Collapse(firstNode, 0);
   }
@@ -3852,8 +3852,8 @@ EditorBase::CanContain(nsINode& aParent,
                        nsIContent& aChild) const
 {
   switch (aParent.NodeType()) {
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsINode::ELEMENT_NODE:
+    case nsINode::DOCUMENT_FRAGMENT_NODE:
       return TagCanContain(*aParent.NodeInfo()->NameAtom(), aChild);
   }
   return false;
@@ -3864,8 +3864,8 @@ EditorBase::CanContainTag(nsINode& aParent,
                           nsAtom& aChildTag) const
 {
   switch (aParent.NodeType()) {
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsINode::ELEMENT_NODE:
+    case nsINode::DOCUMENT_FRAGMENT_NODE:
       return TagCanContainTag(*aParent.NodeInfo()->NameAtom(), aChildTag);
   }
   return false;
@@ -3876,9 +3876,9 @@ EditorBase::TagCanContain(nsAtom& aParentTag,
                           nsIContent& aChild) const
 {
   switch (aChild.NodeType()) {
-    case nsIDOMNode::TEXT_NODE:
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsINode::TEXT_NODE:
+    case nsINode::ELEMENT_NODE:
+    case nsINode::DOCUMENT_FRAGMENT_NODE:
       return TagCanContainTag(aParentTag, *aChild.NodeInfo()->NameAtom());
   }
   return false;
@@ -5163,7 +5163,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   }
 
   bool isTargetDoc =
-    targetNode->NodeType() == nsIDOMNode::DOCUMENT_NODE &&
+    targetNode->NodeType() == nsINode::DOCUMENT_NODE &&
     targetNode->HasFlag(NODE_IS_EDITABLE);
 
   RefPtr<Selection> selection = GetSelection();

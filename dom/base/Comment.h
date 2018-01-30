@@ -20,7 +20,7 @@ class Comment final : public nsGenericDOMDataNode,
 private:
   void Init()
   {
-    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::COMMENT_NODE,
+    MOZ_ASSERT(mNodeInfo->NodeType() == COMMENT_NODE,
                "Bad NodeType in aNodeInfo");
   }
 

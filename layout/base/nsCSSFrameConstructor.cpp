@@ -1752,7 +1752,7 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
       RefPtr<NodeInfo> nodeInfo;
       nodeInfo = mDocument->NodeInfoManager()->
         GetNodeInfo(nsGkAtoms::mozgeneratedcontentimage, nullptr,
-                    kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
+                    kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
       nsCOMPtr<nsIContent> content;
       NS_NewGenConImageContent(getter_AddRefs(content), nodeInfo.forget(),
@@ -1918,7 +1918,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
   nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nullptr,
                                                        kNameSpaceID_None,
-                                                       nsIDOMNode::ELEMENT_NODE);
+                                                       nsINode::ELEMENT_NODE);
   nsCOMPtr<Element> container;
   nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv))

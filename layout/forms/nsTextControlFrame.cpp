@@ -30,8 +30,8 @@
 #include <algorithm>
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
+#include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
-#include "nsIDOMNode.h"
 
 #include "nsIDOMText.h" //for multiline getselection
 #include "nsFocusManager.h"
@@ -345,7 +345,7 @@ CreateEmptyDiv(const nsTextControlFrame& aOwnerFrame)
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
                                         kNameSpaceID_XHTML,
-                                        nsIDOMNode::ELEMENT_NODE);
+                                        nsINode::ELEMENT_NODE);
 
   RefPtr<Element> element = NS_NewHTMLDivElement(nodeInfo.forget());
   return element.forget();
