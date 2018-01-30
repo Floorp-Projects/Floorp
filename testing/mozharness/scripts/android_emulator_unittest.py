@@ -830,9 +830,8 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
     @PostScriptAction('run-tests')
     def stop_emulator(self, action, success=None):
         '''
-        Report emulator health, then make sure that the emulator has been stopped
+        Make sure that the emulator has been stopped
         '''
-        self._verify_emulator()
         self._kill_processes(self.config["emulator_process_name"])
 
 
