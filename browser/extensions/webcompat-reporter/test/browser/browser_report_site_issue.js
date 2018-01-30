@@ -1,6 +1,6 @@
 /* Test that clicking on the Report Site Issue button opens a new tab
    and sends a postMessaged blob to it. */
-add_task(async function test_screenshot() {
+add_task(async function test_opened_page() {
   requestLongerTimeout(2);
 
   // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
@@ -30,6 +30,9 @@ add_task(async function test_screenshot() {
     let urlParam = doc.getElementById("url").innerText;
     let preview = doc.getElementById("screenshot-preview");
     is(urlParam, args.TEST_PAGE, "Reported page is correctly added to the url param");
+
+    let detailsParam = doc.getElementById("details").innerText;
+    ok(typeof JSON.parse(detailsParam) == "object", "Details param is a stringified JSON object.");
 
     is(preview.innerText, "Pass", "A Blob object was successfully transferred to the test page.");
     ok(preview.style.backgroundImage.startsWith("url(\"data:image/png;base64,iVBOR"), "A green screenshot was successfully postMessaged");
