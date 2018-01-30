@@ -35,31 +35,28 @@ class AddressOption extends ObservedPropertiesMixin(RichOption) {
     ]);
   }
 
-  connectedCallback() {
-    for (let child of this.children) {
-      child.remove();
+  constructor() {
+    super();
+
+    for (let name of ["name", "street-address", "email", "tel"]) {
+      this[`_${name}`] = document.createElement("span");
+      this[`_${name}`].classList.add(name);
     }
+  }
 
-    let fragment = document.createDocumentFragment();
-    RichOption._createElement(fragment, "name");
-    RichOption._createElement(fragment, "street-address");
-    RichOption._createElement(fragment, "email");
-    RichOption._createElement(fragment, "tel");
-    this.appendChild(fragment);
-
+  connectedCallback() {
+    for (let name of ["name", "street-address", "email", "tel"]) {
+      this.appendChild(this[`_${name}`]);
+    }
     super.connectedCallback();
   }
 
   render() {
-    if (!this.parentNode) {
-      return;
-    }
-
-    this.querySelector(".name").textContent = this.name;
-    this.querySelector(".street-address").textContent = `${this.streetAddress} ` +
+    this._name.textContent = this.name;
+    this["_street-address"].textContent = `${this.streetAddress} ` +
       `${this.addressLevel2} ${this.addressLevel1} ${this.postalCode} ${this.country}`;
-    this.querySelector(".email").textContent = this.email;
-    this.querySelector(".tel").textContent = this.tel;
+    this._email.textContent = this.email;
+    this._tel.textContent = this.tel;
   }
 }
 

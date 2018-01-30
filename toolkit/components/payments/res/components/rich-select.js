@@ -28,6 +28,9 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     this.addEventListener("click", this);
     this.addEventListener("keydown", this);
 
+    this.popupBox = document.createElement("div");
+    this.popupBox.classList.add("rich-select-popup-box");
+
     this._mutationObserver = new MutationObserver((mutations) => {
       for (let mutation of mutations) {
         for (let addedNode of mutation.addedNodes) {
@@ -46,12 +49,10 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   connectedCallback() {
-    this.setAttribute("tabindex", "0");
-    this.render();
-  }
+    this.tabIndex = 0;
+    this.appendChild(this.popupBox);
 
-  get popupBox() {
-    return this.querySelector(":scope > .rich-select-popup-box");
+    this.render();
   }
 
   get selectedOption() {
@@ -153,20 +154,13 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   render() {
-    let popupBox = this.popupBox;
-    if (!popupBox) {
-      popupBox = document.createElement("div");
-      popupBox.classList.add("rich-select-popup-box");
-      this.appendChild(popupBox);
-    }
-
     let options = this.querySelectorAll(":scope > .rich-option:not(.rich-select-selected-clone)");
     for (let option of options) {
-      popupBox.appendChild(option);
+      this.popupBox.appendChild(option);
     }
 
     let selectedChild;
-    for (let child of popupBox.children) {
+    for (let child of this.popupBox.children) {
       if (child.selected) {
         selectedChild = child;
         break;
@@ -174,22 +168,24 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
     }
 
     let selectedClone = this.querySelector(":scope > .rich-select-selected-clone");
-    if (!this._optionsAreEquivalent(selectedClone, selectedChild)) {
-      if (selectedClone) {
-        selectedClone.remove();
-      }
-
-      if (selectedChild) {
-        selectedClone = selectedChild.cloneNode(false);
-        selectedClone.removeAttribute("id");
-        selectedClone.removeAttribute("selected");
-      } else {
-        selectedClone = document.createElement("rich-option");
-        selectedClone.textContent = "(None selected)";
-      }
-      selectedClone.classList.add("rich-select-selected-clone");
-      selectedClone = this.appendChild(selectedClone);
+    if (this._optionsAreEquivalent(selectedClone, selectedChild)) {
+      return;
     }
+
+    if (selectedClone) {
+      selectedClone.remove();
+    }
+
+    if (selectedChild) {
+      selectedClone = selectedChild.cloneNode(false);
+      selectedClone.removeAttribute("id");
+      selectedClone.removeAttribute("selected");
+    } else {
+      selectedClone = document.createElement("rich-option");
+      selectedClone.textContent = "(None selected)";
+    }
+    selectedClone.classList.add("rich-select-selected-clone");
+    selectedClone = this.appendChild(selectedClone);
   }
 }
 
