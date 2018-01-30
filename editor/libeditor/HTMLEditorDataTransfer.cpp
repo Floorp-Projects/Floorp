@@ -217,7 +217,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   NS_ENSURE_STATE(selection);
 
   // create a dom document fragment that represents the structure to paste
-  nsCOMPtr<nsIDOMNode> fragmentAsNode, streamStartParent, streamEndParent;
+  nsCOMPtr<nsINode> fragmentAsNode, streamStartParent, streamEndParent;
   int32_t streamStartOffset = 0, streamEndOffset = 0;
 
   nsresult rv = CreateDOMFragmentFromPaste(aInputString, aContextStr, aInfoStr,
@@ -269,18 +269,10 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
   // make a list of what nodes in docFrag we need to move
   nsTArray<OwningNonNull<nsINode>> nodeList;
-  nsCOMPtr<nsINode> fragmentAsNodeNode = do_QueryInterface(fragmentAsNode);
-  NS_ENSURE_STATE(fragmentAsNodeNode || !fragmentAsNode);
-  nsCOMPtr<nsINode> streamStartParentNode =
-    do_QueryInterface(streamStartParent);
-  NS_ENSURE_STATE(streamStartParentNode || !streamStartParent);
-  nsCOMPtr<nsINode> streamEndParentNode =
-    do_QueryInterface(streamEndParent);
-  NS_ENSURE_STATE(streamEndParentNode || !streamEndParent);
-  CreateListOfNodesToPaste(*static_cast<DocumentFragment*>(fragmentAsNodeNode.get()),
+  CreateListOfNodesToPaste(*static_cast<DocumentFragment*>(fragmentAsNode.get()),
                            nodeList,
-                           streamStartParentNode, streamStartOffset,
-                           streamEndParentNode, streamEndOffset);
+                           streamStartParent, streamStartOffset,
+                           streamEndParent, streamEndOffset);
 
   if (nodeList.IsEmpty()) {
     // We aren't inserting anything, but if aDeleteSelection is set, we do want
@@ -435,7 +427,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     nsCOMPtr<nsIContent> lastInsertNode;
     nsCOMPtr<nsINode> insertedContextParent;
     for (OwningNonNull<nsINode>& curNode : nodeList) {
-      if (NS_WARN_IF(curNode == fragmentAsNodeNode) ||
+      if (NS_WARN_IF(curNode == fragmentAsNode) ||
           NS_WARN_IF(TextEditUtils::IsBody(curNode))) {
         return NS_ERROR_FAILURE;
       }
@@ -2050,9 +2042,9 @@ nsresult
 HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
                                        const nsAString& aContextStr,
                                        const nsAString& aInfoStr,
-                                       nsCOMPtr<nsIDOMNode>* outFragNode,
-                                       nsCOMPtr<nsIDOMNode>* outStartNode,
-                                       nsCOMPtr<nsIDOMNode>* outEndNode,
+                                       nsCOMPtr<nsINode>* outFragNode,
+                                       nsCOMPtr<nsINode>* outStartNode,
+                                       nsCOMPtr<nsINode>* outEndNode,
                                        int32_t* outStartOffset,
                                        int32_t* outEndOffset,
                                        bool aTrustedInput)
@@ -2118,7 +2110,7 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
   // If there was no context, then treat all of the data we did get as the
   // pasted data.
   if (contextLeaf) {
-    *outEndNode = *outStartNode = contextLeaf->AsDOMNode();
+    *outEndNode = *outStartNode = contextLeaf;
   } else {
     *outEndNode = *outStartNode = fragment;
   }
@@ -2135,24 +2127,21 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
     // Move the start and end children.
     nsresult err;
     int32_t num = numstr1.ToInteger(&err);
-
-    nsCOMPtr<nsIDOMNode> tmp;
     while (num--) {
-      (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
+      nsINode* tmp = (*outStartNode)->GetFirstChild();
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-      tmp.swap(*outStartNode);
+      *outStartNode = tmp;
     }
 
     num = numstr2.ToInteger(&err);
     while (num--) {
-      (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
+      nsINode* tmp = (*outEndNode)->GetLastChild();
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-      tmp.swap(*outEndNode);
+      *outEndNode = tmp;
     }
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(*outEndNode);
-  *outEndOffset = node->Length();
+  *outEndOffset = (*outEndNode)->Length();
   return NS_OK;
 }
 
