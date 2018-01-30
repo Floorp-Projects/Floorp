@@ -269,18 +269,6 @@ public:
   MOZ_CAN_RUN_SCRIPT
   nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
 
-  // XPIDL methods
-  NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) final override {
-    *aOffsetWidth = OffsetWidth();
-    return NS_OK;
-  }
-  NS_IMETHOD GetOffsetHeight(int32_t* aOffsetHeight) final override {
-    *aOffsetHeight = OffsetHeight();
-    return NS_OK;
-  }
-
-  using nsGenericHTMLElementBase::GetOwnerDocument;
-
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
 public:
