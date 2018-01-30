@@ -639,11 +639,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
     if (mode == XDR_DECODE) {
         RootedObject proto(cx);
         if (firstword & HasGeneratorProto) {
-            // If we are off thread, the generator meta-objects have
-            // already been created by js::StartOffThreadParseTask, so
-            // JSContext* will not be necessary.
-            JSContext* context = cx->helperThread() ? nullptr : cx;
-            proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(context, cx->global());
+            proto = GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
             if (!proto)
                 return false;
         }

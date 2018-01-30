@@ -216,6 +216,9 @@ typedef enum JSWhyMagic
     /** uninitialized lexical bindings that produce ReferenceError on touch. */
     JS_UNINITIALIZED_LEXICAL,
 
+    /** standard constructors are not created for off-thread parsing. */
+    JS_OFF_THREAD_CONSTRUCTOR,
+
     /** for local use */
     JS_GENERIC_MAGIC,
 
