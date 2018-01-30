@@ -618,22 +618,6 @@ nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError)
   return &aOldChild;
 }
 
-nsresult
-nsINode::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  nsCOMPtr<nsINode> oldChild = do_QueryInterface(aOldChild);
-  if (!oldChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  ErrorResult rv;
-  RemoveChild(*oldChild, rv);
-  if (!rv.Failed()) {
-    NS_ADDREF(*aReturn = aOldChild);
-  }
-  return rv.StealNSResult();
-}
-
 void
 nsINode::Normalize()
 {
