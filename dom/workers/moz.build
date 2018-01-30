@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     'SharedWorker.cpp',
     'WorkerDebugger.cpp',
     'WorkerDebuggerManager.cpp',
+    'WorkerError.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',
     'WorkerLoadInfo.cpp',
