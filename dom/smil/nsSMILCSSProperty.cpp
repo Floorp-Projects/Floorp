@@ -12,7 +12,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "nsICSSDeclaration.h"
+#include "nsDOMCSSAttrDeclaration.h"
 #include "nsSMILCSSValueType.h"
 #include "nsSMILValue.h"
 #include "nsCSSProps.h"
@@ -124,14 +124,14 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
   nsSMILCSSValueType::ValueToString(aValue, valStr);
 
   // Use string value to style the target element
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
+  nsDOMCSSAttributeDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
   if (overrideDecl) {
     nsAutoString oldValStr;
     overrideDecl->GetPropertyValue(mPropID, oldValStr);
     if (valStr.Equals(oldValStr)) {
       return NS_OK;
     }
-    overrideDecl->SetPropertyValue(mPropID, valStr);
+    overrideDecl->SetPropertyValue(mPropID, valStr, nullptr);
   }
   return NS_OK;
 }
@@ -140,9 +140,9 @@ void
 nsSMILCSSProperty::ClearAnimValue()
 {
   // Put empty string in override style for our property
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
+  nsDOMCSSAttributeDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
   if (overrideDecl) {
-    overrideDecl->SetPropertyValue(mPropID, EmptyString());
+    overrideDecl->SetPropertyValue(mPropID, EmptyString(), nullptr);
   }
 }
 
