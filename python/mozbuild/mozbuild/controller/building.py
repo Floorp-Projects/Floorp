@@ -1078,23 +1078,6 @@ class BuildDriver(MozbuildObject):
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
 
-            # Try to run the active build backend's post-build step, if possible.
-            try:
-                config = self.config_environment
-                active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
-                if active_backend:
-                    backend_cls = get_backend_class(active_backend)(config)
-                    new_status = backend_cls.post_build(self, output, jobs, verbose, status)
-                    status = new_status
-            except Exception as ex:
-                self.log(logging.DEBUG, 'post_build', {'ex': ex},
-                         "Unable to run active build backend's post-build step; " +
-                         "failing the build due to exception: {ex}.")
-                if not status:
-                    # If the underlying build provided a failing status, pass
-                    # it through; otherwise, fail.
-                    status = 1
-
             monitor.finish(record_usage=status == 0)
 
         # Print the collected compiler warnings. This is redundant with
