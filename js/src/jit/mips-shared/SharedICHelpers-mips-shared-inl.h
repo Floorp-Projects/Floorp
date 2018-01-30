@@ -80,17 +80,6 @@ EmitBaselineCallVM(TrampolinePtr target, MacroAssembler& masm)
     masm.call(target);
 }
 
-struct BaselineStubFrame {
-    uintptr_t savedFrame;
-    uintptr_t savedStub;
-    uintptr_t returnAddress;
-    uintptr_t descriptor;
-};
-
-// Size of values pushed by EmitBaselineEnterStubFrame.
-static const uint32_t STUB_FRAME_SIZE = sizeof(BaselineStubFrame);
-static const uint32_t STUB_FRAME_SAVED_STUB_OFFSET = offsetof(BaselineStubFrame, savedStub);
-
 inline void
 EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
 {
