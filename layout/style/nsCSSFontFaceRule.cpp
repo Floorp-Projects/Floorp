@@ -289,13 +289,6 @@ nsCSSFontFaceStyleDecl::GetParentObject()
   return ContainingRule()->GetDocument();
 }
 
-DocGroup*
-nsCSSFontFaceStyleDecl::GetDocGroup() const
-{
-  nsIDocument* document = ContainingRule()->GetDocument();
-  return document ? document->GetDocGroup() : nullptr;
-}
-
 JSObject*
 nsCSSFontFaceStyleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {

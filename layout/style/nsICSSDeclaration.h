@@ -65,7 +65,7 @@ public:
                               nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
 
   virtual nsINode *GetParentObject() = 0;
-  virtual mozilla::dom::DocGroup* GetDocGroup() const = 0;
+  mozilla::dom::DocGroup* GetDocGroup();
 
   NS_IMETHOD GetCssText(nsAString& aCssText) = 0;
   NS_IMETHOD SetCssText(const nsAString& aCssText,
