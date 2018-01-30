@@ -59,47 +59,45 @@ public:
 
   // Press caret on the given point. Return NS_OK if the point is actually on
   // one of the carets.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult PressCaret(const nsPoint& aPoint,
-                                                 EventClassID aEventClass);
+  virtual nsresult PressCaret(const nsPoint& aPoint, EventClassID aEventClass);
 
   // Drag caret to the given point. It's required to call PressCaret()
   // beforehand.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult DragCaret(const nsPoint& aPoint);
+  virtual nsresult DragCaret(const nsPoint& aPoint);
 
   // Release caret from he previous press action. It's required to call
   // PressCaret() beforehand.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult ReleaseCaret();
+  virtual nsresult ReleaseCaret();
 
   // A quick single tap on caret on given point without dragging.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult TapCaret(const nsPoint& aPoint);
+  virtual nsresult TapCaret(const nsPoint& aPoint);
 
   // Select a word or bring up paste shortcut (if Gaia is listening) under the
   // given point.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult SelectWordOrShortcut(
-    const nsPoint& aPoint);
+  virtual nsresult SelectWordOrShortcut(const nsPoint& aPoint);
 
   // Handle scroll-start event.
-  MOZ_CAN_RUN_SCRIPT virtual void OnScrollStart();
+  virtual void OnScrollStart();
 
   // Handle scroll-end event.
-  MOZ_CAN_RUN_SCRIPT virtual void OnScrollEnd();
+  virtual void OnScrollEnd();
 
   // Handle ScrollPositionChanged from nsIScrollObserver. This might be called
   // at anytime, not necessary between OnScrollStart and OnScrollEnd.
-  MOZ_CAN_RUN_SCRIPT virtual void OnScrollPositionChanged();
+  virtual void OnScrollPositionChanged();
 
   // Handle reflow event from nsIReflowObserver.
-  MOZ_CAN_RUN_SCRIPT virtual void OnReflow();
+  virtual void OnReflow();
 
   // Handle blur event from nsFocusManager.
-  MOZ_CAN_RUN_SCRIPT virtual void OnBlur();
+  virtual void OnBlur();
 
   // Handle NotifySelectionChanged event from nsISelectionListener.
-  MOZ_CAN_RUN_SCRIPT virtual nsresult OnSelectionChanged(nsIDOMDocument* aDoc,
-                                                         nsISelection* aSel,
-                                                         int16_t aReason);
+  virtual nsresult OnSelectionChanged(nsIDOMDocument* aDoc,
+                                      nsISelection* aSel,
+                                      int16_t aReason);
   // Handle key event.
-  MOZ_CAN_RUN_SCRIPT virtual void OnKeyboardEvent();
+  virtual void OnKeyboardEvent();
 
   // The canvas frame holding the accessible caret anonymous content elements
   // was reconstructed, resulting in the content elements getting cloned.
@@ -147,16 +145,13 @@ protected:
   // Update carets based on current selection status. This function will flush
   // layout, so caller must ensure the PresShell is still valid after calling
   // this method.
-  MOZ_CAN_RUN_SCRIPT void UpdateCarets(
-    const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
+  void UpdateCarets(const UpdateCaretsHintSet& aHints = UpdateCaretsHint::Default);
 
   // Force hiding all carets regardless of the current selection status.
-  MOZ_CAN_RUN_SCRIPT void HideCarets();
+  void HideCarets();
 
-  MOZ_CAN_RUN_SCRIPT void UpdateCaretsForCursorMode(
-    const UpdateCaretsHintSet& aHints);
-  MOZ_CAN_RUN_SCRIPT void UpdateCaretsForSelectionMode(
-    const UpdateCaretsHintSet& aHints);
+  void UpdateCaretsForCursorMode(const UpdateCaretsHintSet& aHints);
+  void UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& aHints);
 
   // Provide haptic / touch feedback, primarily for select on longpress.
   void ProvideHapticFeedback();
@@ -210,7 +205,7 @@ protected:
   // See the mRefCnt assertions in AccessibleCaretEventHub.
   //
   // Returns whether mPresShell we're holding is still valid.
-  MOZ_MUST_USE MOZ_CAN_RUN_SCRIPT bool FlushLayout();
+  MOZ_MUST_USE bool FlushLayout();
 
   dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
@@ -266,8 +261,7 @@ protected:
 
   // This function will flush layout, so caller must ensure the PresShell is
   // still valid after calling this method.
-  MOZ_CAN_RUN_SCRIPT virtual void DispatchCaretStateChangedEvent(
-    dom::CaretChangedReason aReason);
+  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason);
 
   // ---------------------------------------------------------------------------
   // Member variables
