@@ -3474,17 +3474,28 @@ nsContentUtils::SplitExpatName(const char16_t *aExpatName, nsAtom **aPrefix,
 }
 
 // static
+nsIPresShell*
+nsContentUtils::GetPresShellForContent(const nsIContent* aContent)
+{
+  nsIDocument* doc = aContent->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  return doc->GetShell();
+}
+
+// static
 nsPresContext*
 nsContentUtils::GetContextForContent(const nsIContent* aContent)
 {
-  nsIDocument* doc = aContent->GetComposedDoc();
-  if (doc) {
-    nsIPresShell *presShell = doc->GetShell();
-    if (presShell) {
-      return presShell->GetPresContext();
-    }
+  nsIPresShell* presShell = GetPresShellForContent(aContent);
+
+  if (!presShell) {
+    return nullptr;
   }
-  return nullptr;
+
+  return presShell->GetPresContext();
 }
 
 // static

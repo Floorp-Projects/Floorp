@@ -243,6 +243,7 @@ class GeckoInstance(object):
     @property
     def profile_args(self):
         args = {"preferences": deepcopy(self.required_prefs)}
+        args["preferences"]["marionette.port"] = self.marionette_port
         args["preferences"]["marionette.defaultPrefs.port"] = self.marionette_port
 
         if self.prefs:
@@ -250,6 +251,7 @@ class GeckoInstance(object):
 
         if self.verbose:
             level = "TRACE" if self.verbose >= 2 else "DEBUG"
+            args["preferences"]["marionette.log.level"] = level
             args["preferences"]["marionette.logging"] = level
 
         if "-jsdebugger" in self.app_args:

@@ -14,6 +14,7 @@
  * State of the payment request dialog.
  */
 let requestStore = new PaymentsStore({
+  orderDetailsShowing: false,
   request: {
     tabId: null,
     topLevelPrincipal: {URI: {displayHost: null}},

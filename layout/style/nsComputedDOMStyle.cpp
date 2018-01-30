@@ -503,7 +503,8 @@ nsComputedDOMStyle::GetStyleContext(Element* aElement,
   // set.  Using the pres shell from the content also means that any
   // content that's actually *in* a document will get the style from the
   // correct document.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShellForContent(aElement);
+  nsCOMPtr<nsIPresShell> presShell =
+    nsContentUtils::GetPresShellForContent(aElement);
   if (!presShell) {
     presShell = aPresShell;
     if (!presShell)
@@ -675,7 +676,8 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
   // set.  Using the pres shell from the content also means that any
   // content that's actually *in* a document will get the style from the
   // correct document.
-  nsIPresShell *presShell = GetPresShellForContent(aElement);
+  nsIPresShell *presShell =
+    nsContentUtils::GetPresShellForContent(aElement);
   bool inDocWithShell = true;
   if (!presShell) {
     inDocWithShell = false;
@@ -835,17 +837,6 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
   return adjustment;
 }
 
-/* static */
-nsIPresShell*
-nsComputedDOMStyle::GetPresShellForContent(const nsIContent* aContent)
-{
-  nsIDocument* composedDoc = aContent->GetComposedDoc();
-  if (!composedDoc)
-    return nullptr;
-
-  return composedDoc->GetShell();
-}
-
 // nsDOMCSSDeclaration abstract methods which should never be called
 // on a nsComputedDOMStyle object, but must be defined to avoid
 // compile errors.
@@ -963,7 +954,8 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   mFlushedPendingReflows = aNeedsLayoutFlush;
 #endif
 
-  nsCOMPtr<nsIPresShell> presShellForContent = GetPresShellForContent(mContent);
+  nsCOMPtr<nsIPresShell> presShellForContent =
+    nsContentUtils::GetPresShellForContent(mContent);
   if (presShellForContent && presShellForContent != document->GetShell()) {
     presShellForContent->FlushPendingNotifications(FlushType::Style);
   }

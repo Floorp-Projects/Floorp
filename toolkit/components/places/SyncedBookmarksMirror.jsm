@@ -1064,40 +1064,39 @@ class SyncedBookmarksMirror {
         JOIN guidsWithLevelsToDelete o ON o.guid = b.guid`,
         guids);
 
-      let guidsParams = new Array(guids.length).fill("?").join(",");
-
-      // Recalculate frecencies.
+      // Recalculate frecencies. The `isUntagging` check is a formality, since
+      // tags shouldn't have annos or tombstones, should not appear in local
+      // deletions, and should not affect frecency. This can go away with
+      // bug 1293445.
       await this.db.execute(`
         UPDATE moz_places SET
           frecency = -1
-        WHERE id IN (SELECT fk FROM moz_bookmarks
-                     WHERE guid IN (${guidsParams}))`,
-        guids);
+        WHERE id IN (SELECT placeId FROM itemsRemoved
+                     WHERE NOT isUntagging)`);
 
       // Remove annos for the deleted items.
       await this.db.execute(`
         DELETE FROM moz_items_annos
-        WHERE item_id = (SELECT id FROM moz_bookmarks
-                         WHERE guid IN (${guidsParams}))`,
-        guids);
+        WHERE item_id IN (SELECT itemId FROM itemsRemoved
+                          WHERE NOT isUntagging)`);
 
       // Remove any local tombstones for deleted items.
       await this.db.execute(`
         DELETE FROM moz_bookmarks_deleted
-        WHERE guid IN (${guidsParams})`,
-        guids);
+        WHERE guid IN (SELECT guid FROM itemsRemoved)`);
 
       await this.db.execute(`
-        DELETE FROM moz_bookmarks WHERE guid IN (${guidsParams})`,
-        guids);
+        DELETE FROM moz_bookmarks
+        WHERE id IN (SELECT itemId FROM itemsRemoved
+                     WHERE NOT isUntagging)`);
 
       // Flag locally deleted items as merged.
       await this.db.execute(`
         UPDATE items SET
           needsMerge = 0
         WHERE needsMerge AND
-              guid IN (${guidsParams})`,
-        guids);
+              guid IN (SELECT guid FROM itemsRemoved
+                       WHERE NOT isUntagging)`);
     }
 
     MirrorLog.debug("Flagging remotely deleted items as merged");
@@ -1797,11 +1796,6 @@ async function initializeMirrorDatabase(db) {
   )`);
 
   await db.execute(`CREATE INDEX mirror.urlHashes ON urls(hash)`);
-
-  await db.execute(`CREATE INDEX mirror.locations ON structure(
-    parentGuid,
-    position
-  )`);
 
   await createMirrorRoots(db);
 }
@@ -3073,17 +3067,36 @@ class BookmarkMerger {
     let remoteRoot = this.remoteTree.nodeForGuid(PlacesUtils.bookmarks.rootGuid);
     let mergedRoot = this.mergeNode(PlacesUtils.bookmarks.rootGuid, localRoot,
                                     remoteRoot);
+
+    // Any remaining deletions on one side should be deleted on the other side.
+    // This happens when the remote tree has tombstones for items that don't
+    // exist in Places, or Places has tombstones for items that aren't on the
+    // server.
+    for (let guid of this.localTree.deletedGuids) {
+      if (!this.mentions(guid)) {
+        this.deleteRemotely.add(guid);
+      }
+    }
+    for (let guid of this.remoteTree.deletedGuids) {
+      if (!this.mentions(guid)) {
+        this.deleteLocally.add(guid);
+      }
+    }
     return mergedRoot;
   }
 
   subsumes(tree) {
     for (let guid of tree.guids()) {
-      if (!this.mergedGuids.has(guid) && !this.deleteLocally.has(guid) &&
-          !this.deleteRemotely.has(guid)) {
+      if (!this.mentions(guid)) {
         return false;
       }
     }
     return true;
+  }
+
+  mentions(guid) {
+    return this.mergedGuids.has(guid) || this.deleteLocally.has(guid) ||
+           this.deleteRemotely.has(guid);
   }
 
   /**

@@ -661,7 +661,6 @@ win32-mingw32/debug:
             - builds/releng_base_windows_32_mingw_builds.py
         need-xvfb: false
     toolchains:
-        - linux64-gcc
         - mingw32-rust
         - linux64-upx
         - linux64-wine

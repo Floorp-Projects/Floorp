@@ -41,7 +41,7 @@ class ShellcheckProcess(ProcessHandlerMixin):
         try:
             data = json.loads(line)
         except JSONDecodeError as e:
-            print('Unable to load shellcheck output: {}'.format(e))
+            print('Unable to load shellcheck output ({}): {}'.format(e, line))
             return
 
         for entry in data:

@@ -1764,3 +1764,6 @@ pref("browser.onboarding.updatetour", "performance,library,screenshots,singlesea
 
 // Preference that allows individual users to disable Screenshots.
 pref("extensions.screenshots.disabled", false);
+// Preference that allows individual users to leave Screenshots enabled, but
+// disable uploading to the server.
+pref("extensions.screenshots.upload-disabled", false);

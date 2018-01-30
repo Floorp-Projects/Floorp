@@ -4,10 +4,63 @@
 
 html {
   background: -moz-dialog;
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 #debugging-console {
   float: right;
+}
+
+payment-dialog {
+  display: grid;
+  grid-template-rows: fit-content(10%) auto;
+  height: 100%;
+  margin: 0 10%;
+}
+
+payment-dialog > header {
+  display: flex;
+}
+
+#main-container {
+  display: flex;
+  position: relative;
+}
+
+#payment-summary {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: fit-content(10%) auto fit-content(10%);
+  position: relative;
+}
+
+#order-details-overlay {
+  background-color: -moz-dialog;
+  overflow: auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+payment-dialog > footer {
+  align-items: baseline;
+  display: flex;
+}
+
+#total {
+  flex: 1 1 auto;
+}
+#view-all {
+  flex: 0 1 auto;
 }
 
 #total {

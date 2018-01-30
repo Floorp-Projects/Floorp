@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
+import mozinfo
 import os
 import subprocess
 
@@ -130,12 +131,15 @@ class MachCommands(MachCommandBase):
             supps_file1 = os.path.join(supps_dir, 'cross-architecture.sup')
             valgrind_args.append('--suppressions=' + supps_file1)
 
-            # MACHTYPE is an odd bash-only environment variable that doesn't
-            # show up in os.environ, so we have to get it another way.
-            machtype = subprocess.check_output(['bash', '-c', 'echo $MACHTYPE']).rstrip()
-            supps_file2 = os.path.join(supps_dir, machtype + '.sup')
-            if os.path.isfile(supps_file2):
-                valgrind_args.append('--suppressions=' + supps_file2)
+            if mozinfo.os == 'linux':
+                machtype = {
+                    'x86_64': 'x86_64-pc-linux-gnu',
+                    'x86': 'i386-pc-linux-gnu',
+                }.get(mozinfo.processor)
+                if machtype:
+                    supps_file2 = os.path.join(supps_dir, machtype + '.sup')
+                    if os.path.isfile(supps_file2):
+                        valgrind_args.append('--suppressions=' + supps_file2)
 
             exitcode = None
             timeout = 1800

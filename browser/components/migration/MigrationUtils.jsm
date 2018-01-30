@@ -188,7 +188,7 @@ this.MigratorPrototype = {
    * OVERRIDE IF AND ONLY IF your migrator supports importing the homepage.
    * @see nsIBrowserProfileMigrator
    */
-  get sourceHomePageURL() {
+  getSourceHomePageURL() {
     return "";
   },
 

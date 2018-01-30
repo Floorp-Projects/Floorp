@@ -1,5 +1,5 @@
-var selfPositionValues = [ "start", "end", "self-start", "self-end", "left", "right", "center", "flex-start", "flex-end"];
-var contentPositionValues = [ "start", "end", "left", "right", "center", "flex-start", "flex-end"];
+var selfPositionValues = [ "start", "end", "self-start", "self-end", "center", "flex-start", "flex-end"];
+var contentPositionValues = [ "start", "end", "center", "flex-start", "flex-end"];
 var distributionValues = [ "stretch", "space-around", "space-between", "space-evenly"];
 var baselineValues = [ "baseline", "first baseline", "last baseline"];
 
@@ -33,6 +33,10 @@ function checkPlaceShorhandLonghands(shorthand, alignLonghand, justifyLonghand, 
     var div = document.createElement("div");
     div.setAttribute("style", shorthand + ": " + alignValue + " " + justifyValue);
     document.body.appendChild(div);
+    if (alignValue === "first baseline")
+        alignValue = "baseline";
+    if (justifyValue === "first baseline")
+        justifyValue = "baseline";
     if (justifyValue === "")
         justifyValue = alignValue;
     assert_equals(div.style[alignLonghand],
