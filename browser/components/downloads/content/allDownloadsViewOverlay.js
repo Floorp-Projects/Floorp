@@ -429,11 +429,15 @@ DownloadsPlacesView.prototype = {
       xblFields.set(key, value);
     }
 
+    let oldActiveElement = document.activeElement;
     let parentNode = this._richlistbox.parentNode;
     let nextSibling = this._richlistbox.nextSibling;
     parentNode.removeChild(this._richlistbox);
     this._richlistbox.prepend(this.batchFragment);
     parentNode.insertBefore(this._richlistbox, nextSibling);
+    if (oldActiveElement && oldActiveElement != document.activeElement) {
+      oldActiveElement.focus();
+    }
 
     for (let [key, value] of xblFields) {
       this._richlistbox[key] = value;
