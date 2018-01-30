@@ -56,8 +56,6 @@ runInParent(function addLogins() {
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const shiftModifier = SpecialPowers.Ci.nsIDOMEvent.SHIFT_MASK;
-
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 let iframeDoc;
 let uname;
@@ -100,7 +98,7 @@ add_task(async function test_empty_first_entry() {
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
   let shownPromise = promiseACShown();
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   let results = await shownPromise;
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
@@ -108,10 +106,10 @@ add_task(async function test_empty_first_entry() {
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await index0Promise;
   checkACForm("", ""); // value shouldn't update
-  doKey("return"); // not "enter"!
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   await promiseFormsProcessed();
   checkACForm("name", "pass");
 });
@@ -119,11 +117,11 @@ add_task(async function test_empty_first_entry() {
 add_task(async function test_empty_second_entry() {
   restoreForm();
   let shownPromise = promiseACShown();
-  doKey("down"); // open
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
   await shownPromise;
-  doKey("down"); // first
-  doKey("down"); // second
-  doKey("return"); // not "enter"!
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // second
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   await promiseFormsProcessed();
   checkACForm("name1", "pass1");
 });
@@ -136,11 +134,11 @@ add_task(async function test_search() {
   uname.value = "name";
   uname.focus();
   sendChar("1");
-  doKey("down"); // open
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // open
   let results = await shownPromise;
   checkArrayValues(results, ["name1"], "check result deduping for 'name1'");
-  doKey("down"); // first
-  doKey("return"); // not "enter"!
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"}); // first
+  synthesizeKey("KEY_Enter", {code: "Enter"});
   await promiseFormsProcessed();
   checkACForm("name1", "pass1");
 
@@ -152,17 +150,17 @@ add_task(async function test_delete_first_entry() {
   restoreForm();
   uname.focus();
   let shownPromise = promiseACShown();
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await shownPromise;
 
   let index0Promise = notifySelectedIndex(0);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await index0Promise;
 
   let deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-  doKey("delete", shiftModifier);
+  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
   await deletionPromise;
   checkACForm("", "");
 
@@ -171,7 +169,7 @@ add_task(async function test_delete_first_entry() {
   checkArrayValues(results, ["name1", "name2"], "two should remain after deleting the first");
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
-  doKey("escape");
+  synthesizeKey("KEY_Escape", {code: "Escape"});
   popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed upon ESC");
 });
@@ -180,17 +178,17 @@ add_task(async function test_delete_duplicate_entry() {
   restoreForm();
   uname.focus();
   let shownPromise = promiseACShown();
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await shownPromise;
 
   let index0Promise = notifySelectedIndex(0);
-  doKey("down");
+  synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
   await index0Promise;
 
   let deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-  doKey("delete", shiftModifier);
+  synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
   await deletionPromise;
   checkACForm("", "");
 
@@ -206,7 +204,7 @@ add_task(async function test_delete_duplicate_entry() {
   checkArrayValues(results, ["name2"], "one should remain after deleting the HTTPS name1");
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
-  doKey("escape");
+  synthesizeKey("KEY_Escape", {code: "Escape"});
   popupState = await getPopupState();
   is(popupState.open, false, "Check popup closed upon ESC");
 });

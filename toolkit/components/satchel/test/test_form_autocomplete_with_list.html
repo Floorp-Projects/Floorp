@@ -48,7 +48,6 @@ Form History test: form field autocomplete
 /** Test for Form History autocomplete **/
 
 var input = $_(1, "field1");
-const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 function setupFormHistory(aCallback) {
   updateFormHistory([
@@ -117,66 +116,66 @@ function runTest() {
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
     case 2:
       checkMenuEntries(["historyvalue", "PASS1", "PASS2", "final"], testNum);
       // Check first entry
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm(""); // value shouldn't update
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("historyvalue");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 3:
       // Check second entry
-      doKey("down");
-      doKey("down");
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 4:
       // Check third entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Reddit");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 5:
       // Check fourth entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("final");
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 6:
       // Delete the first entry (of 3)
-      doKey("down");
-      doKey("delete", shiftModifier);
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Delete", {code: "Delete", shiftKey: true});
       waitForMenuChange(3);
       break;
 
@@ -190,26 +189,26 @@ function runTest() {
       break;
 
     case 8:
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 9:
       // Test deletion
       checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
       // Check the new first entry (of 3)
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 10:
@@ -225,8 +224,8 @@ function runTest() {
       break;
 
     case 12:
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       // Trigger autocomplete popup
@@ -236,89 +235,89 @@ function runTest() {
       testNum = 99;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 100:
       checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
       // Check first entry
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm(""); // value shouldn't update
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 101:
       // Check second entry
-      doKey("down");
-      doKey("down");
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Reddit");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 102:
       // Check third entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("final");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 103:
       checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
       // Check first entry
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm(""); // value shouldn't update
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 104:
       // Check second entry
-      doKey("down");
-      doKey("down");
-      doKey("return"); // not "enter"!
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Reddit");
 
       // Trigger autocomplete popup
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 105:
       // Check third entry
-      doKey("down");
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("final");
 
       testNum = 199;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     // Test dynamic updates.
@@ -328,29 +327,29 @@ function runTest() {
     case 200:
       // Removing the second element while on the first then going down and
       // push enter. Value should be one from the third suggesion.
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       datalist = document.getElementById("suggest");
       let toRemove = datalist.children[1];
       datalist.removeChild(toRemove);
 
       SimpleTest.executeSoon(function() {
-        doKey("down");
-        doKey("down");
-        doKey("return");
+        synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+        synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+        synthesizeKey("KEY_Enter", {code: "Enter"});
         checkForm("final");
 
         // Restore the element.
         datalist.insertBefore(toRemove, datalist.children[1]);
         expectPopup();
         restoreForm();
-        doKey("down");
+        synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       });
       break;
 
     case 201:
       // Adding an attribute after the first one while on the first then going
       // down and push enter. Value should be the on from the new suggestion.
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       datalist = document.getElementById("suggest");
       let added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
@@ -358,9 +357,9 @@ function runTest() {
       break;
 
     case 202:
-      doKey("down");
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Foo");
 
       // Remove the element.
@@ -379,8 +378,8 @@ function runTest() {
       break;
 
     case 204:
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("foo");
 
       datalist = document.getElementById("suggest");
@@ -399,8 +398,8 @@ function runTest() {
       break;
 
     case 206:
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("foobar");
 
       datalist = document.getElementById("suggest");
@@ -413,53 +412,53 @@ function runTest() {
     case 300:
       // Filters with first letter of the word.
       restoreForm();
-      synthesizeKey("f", {});
+      synthesizeKey("f", {code: "KeyF"});
       expectPopup();
       break;
 
     case 301:
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("final");
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 302:
       // Filter with a letter in the middle of the word.
-      synthesizeKey("i", {});
-      synthesizeKey("n", {});
+      synthesizeKey("i", {code: "KeyI"});
+      synthesizeKey("n", {code: "KeyN"});
       waitForMenuChange(1);
       break;
 
     case 303:
       // Continuation of test 302.
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("final");
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 304:
       // Filter is disabled with mozNoFilter.
       input.setAttribute("mozNoFilter", "true");
-      synthesizeKey("f", {});
+      synthesizeKey("f", {code: "KeyF"});
       waitForMenuChange(3); // no change
       break;
 
     case 305:
       // Continuation of test 304.
-      doKey("down");
-      doKey("return");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       checkForm("Google");
       input.removeAttribute("mozNoFilter");
       testNum = 399;
       expectPopup();
       restoreForm();
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       break;
 
     case 400:
@@ -473,9 +472,9 @@ function runTest() {
         SimpleTest.finish();
       }, {once: true});
 
-      doKey("down");
+      synthesizeKey("KEY_ArrowDown", {code: "ArrowDown"});
       checkForm("");
-      doKey("return");
+      synthesizeKey("KEY_Enter", {code: "Enter"});
       break;
 
     default:
