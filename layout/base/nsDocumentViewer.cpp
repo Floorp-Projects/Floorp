@@ -2380,10 +2380,9 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
   }
   if (chromeHandler) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(chromeHandler));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
-    if (elt && content) {
-      nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+    nsCOMPtr<Element> elt(do_QueryInterface(chromeHandler));
+    if (elt) {
+      nsCOMPtr<nsIURI> baseURI = elt->GetBaseURI();
 
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);

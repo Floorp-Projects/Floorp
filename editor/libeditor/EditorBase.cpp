@@ -1327,14 +1327,14 @@ EditorBase::GetAttributeValue(nsIDOMElement* aElement,
   if (!aElement) {
     return NS_OK;
   }
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
   nsAutoString value;
-  nsresult rv = aElement->GetAttribute(aAttribute, value);
-  NS_ENSURE_SUCCESS(rv, rv);
+  element->GetAttribute(aAttribute, value);
   if (!DOMStringIsNull(value)) {
     *aResultIsSet = true;
     aResultValue = value;
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

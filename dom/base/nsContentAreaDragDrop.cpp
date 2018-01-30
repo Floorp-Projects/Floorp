@@ -542,9 +542,11 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
           CopyUTF8toUTF16(spec, mUrlString);
         }
 
-        nsCOMPtr<nsIDOMElement> imageElement(do_QueryInterface(image));
+        nsCOMPtr<Element> imageElement(do_QueryInterface(image));
         // XXXbz Shouldn't we use the "title" attr for title?  Using
         // "alt" seems very wrong....
+        // XXXbz Also, what if this is an nsIImageLoadingContent
+        // that's not an <html:img>?
         if (imageElement) {
           imageElement->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
         }
