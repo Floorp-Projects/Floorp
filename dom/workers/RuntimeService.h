@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_runtimeservice_h__
 #define mozilla_dom_workers_runtimeservice_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 
 #include "nsIObserver.h"
 
@@ -22,6 +22,7 @@ class nsPIDOMWindowInner;
 BEGIN_WORKERS_NAMESPACE
 
 class SharedWorker;
+struct WorkerLoadInfo;
 class WorkerThread;
 
 class RuntimeService final : public nsIObserver

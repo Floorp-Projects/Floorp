@@ -33,6 +33,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::workers;
 using mozilla::dom::Optional;
 using mozilla::dom::GlobalObject;
 

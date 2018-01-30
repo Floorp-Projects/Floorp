@@ -27,7 +27,7 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "ServiceWorkerManager.h"
-#include "Workers.h"
+#include "WorkerCommon.h"
 #include "nsStringStream.h"
 
 using mozilla::dom::cache::Cache;

@@ -59,6 +59,8 @@ public:
                         ErrorResult& aRV);
   void GetVariationInstances(nsTArray<InspectorVariationInstance>& aResult,
                              ErrorResult& aRV);
+  void GetFeatures(nsTArray<InspectorFontFeature>& aResult,
+                   ErrorResult& aRV);
 
   bool WrapObject(JSContext* aCx,
                   JS::Handle<JSObject*> aGivenProto,

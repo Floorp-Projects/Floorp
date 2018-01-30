@@ -4667,7 +4667,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     !parent->IsElement() ||
     !PropagateBits(parent->AsElement(), aBits, existingRoot);
 
-  uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
+  uint32_t existingBits = doc->GetServoRestyleRootDirtyBits();
   if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
       // make sure the bit we propagated is also registered on the root.

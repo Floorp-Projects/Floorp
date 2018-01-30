@@ -45,10 +45,10 @@
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
+#include "WorkerCommon.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
-#include "Workers.h"
 
 namespace mozilla {
 namespace dom {

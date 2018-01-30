@@ -1045,19 +1045,10 @@ nsAbsolutePositioningCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> container;
-  nsresult rv =
-    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(
-                   getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString outStateString;
-  if (container) {
-    outStateString.AssignLiteral("absolute");
-  }
-
-  aParams->SetBooleanValue(STATE_MIXED,false);
-  aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUTF16toUTF8(outStateString).get());
+  RefPtr<Element> container =
+    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
+  aParams->SetBooleanValue(STATE_MIXED,  false);
+  aParams->SetCStringValue(STATE_ATTRIBUTE, container ? "absolute" : "");
   return NS_OK;
 }
 
@@ -1068,12 +1059,8 @@ nsAbsolutePositioningCommand::ToggleState(mozilla::HTMLEditor* aHTMLEditor)
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsINode> container;
-  nsresult rv =
-    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer(
-                   getter_AddRefs(container));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  RefPtr<Element> container =
+    aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
   return aHTMLEditor->AbsolutePositionSelection(!container);
 }
 
