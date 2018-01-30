@@ -21,6 +21,7 @@ EXPORTS.mozilla.dom.workers += [
     'RuntimeService.h',
     'WorkerCommon.h',
     'WorkerDebuggerManager.h',
+    'WorkerLoadInfo.h',
 ]
 
 # Stuff needed for the bindings, not really public though.
@@ -49,6 +50,7 @@ UNIFIED_SOURCES += [
     'WorkerDebuggerManager.cpp',
     'WorkerHolder.cpp',
     'WorkerHolderToken.cpp',
+    'WorkerLoadInfo.cpp',
     'WorkerLocation.cpp',
     'WorkerNavigator.cpp',
     'WorkerPrivate.cpp',

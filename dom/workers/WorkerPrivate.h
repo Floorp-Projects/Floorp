@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_workerprivate_h__
 
 #include "WorkerCommon.h"
+#include "WorkerLoadInfo.h"
 
 #include "js/CharacterEncoding.h"
 #include "nsIContentPolicy.h"
