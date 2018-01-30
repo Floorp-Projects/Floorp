@@ -160,3 +160,28 @@ add_task(async function testDuplicatePinnedTab() {
   is(message.data.rect.top, top, `rect.top: - Expected: ${message.data.rect.top}, Actual: ${top}`);
   is(message.data.rect.left, left, `rect.left: - Expected: ${message.data.rect.left}, Actual: ${left}`);
 });
+
+add_task(async function testAboutFind() {
+  async function background() {
+    await browser.test.assertRejects(
+      browser.find.find("banana"),
+      /Unable to search:/,
+      "Should not be able to search about tabs");
+
+    browser.test.sendMessage("done");
+  }
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["find", "tabs"],
+    },
+    background,
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+  await BrowserTestUtils.removeTab(tab);
+});
