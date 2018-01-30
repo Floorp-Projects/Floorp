@@ -77,9 +77,6 @@ public:
                           mozilla::ErrorResult& rv) = 0;
   virtual void GetCssText(nsAString& aString) = 0;
   virtual uint32_t Length() = 0;
-  void Item(uint32_t aIndex, nsString& aPropName) {
-    Item(aIndex, static_cast<nsAString&>(aPropName));
-  }
 
   // The actual implementation of the Item method and the WebIDL indexed getter
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) = 0;
