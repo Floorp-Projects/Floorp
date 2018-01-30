@@ -23,6 +23,8 @@ test -n "$IMAGE_NAME" || raise_error "IMAGE_NAME must be provided."
 # proxy socket that the worker user can use.
 export DOCKER_SOCKET=/var/run/docker.proxy
 socat UNIX-LISTEN:$DOCKER_SOCKET,fork,group=worker,mode=0775 UNIX-CLIENT:/var/run/docker.sock </dev/null &
+# Disable check until new version is tested.
+# shellcheck disable=SC2064
 trap "kill $!" EXIT
 
 LOAD_COMMAND=

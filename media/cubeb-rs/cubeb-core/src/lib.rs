@@ -145,7 +145,6 @@ pub enum ChannelLayout {
 impl From<ffi::cubeb_channel_layout> for ChannelLayout {
     fn from(x: ffi::cubeb_channel_layout) -> ChannelLayout {
         match x {
-            ffi::CUBEB_LAYOUT_UNDEFINED => ChannelLayout::Undefined,
             ffi::CUBEB_LAYOUT_DUAL_MONO => ChannelLayout::DualMono,
             ffi::CUBEB_LAYOUT_DUAL_MONO_LFE => ChannelLayout::DualMonoLfe,
             ffi::CUBEB_LAYOUT_MONO => ChannelLayout::Mono,
@@ -165,8 +164,17 @@ impl From<ffi::cubeb_channel_layout> for ChannelLayout {
             ffi::CUBEB_LAYOUT_3F3R_LFE => ChannelLayout::Layout3F3RLfe,
             ffi::CUBEB_LAYOUT_3F4_LFE => ChannelLayout::Layout3F4Lfe,
             // TODO: Implement TryFrom
+            // Everything else is just undefined.
             _ => ChannelLayout::Undefined,
         }
+    }
+}
+
+/// Miscellaneous stream preferences.
+bitflags! {
+    pub struct StreamPrefs: ffi::cubeb_stream_prefs {
+        const STREAM_PREF_NONE = ffi::CUBEB_STREAM_PREF_NONE;
+        const STREAM_PREF_LOOPBACK = ffi::CUBEB_STREAM_PREF_LOOPBACK;
     }
 }
 
@@ -233,6 +241,10 @@ impl StreamParams {
                CUBEB_LAYOUT_3F3R_LFE => Layout3F3RLfe,
                CUBEB_LAYOUT_3F4_LFE => Layout3F4Lfe)
     }
+
+    pub fn prefs(&self) -> StreamPrefs {
+        StreamPrefs::from_bits(self.raw.prefs).unwrap()
+    }
 }
 
 impl Binding for StreamParams {
@@ -292,7 +304,7 @@ impl<'a> Binding for Device<'a> {
     }
 }
 
-/// Stream states signaled via state_callback.
+/// Stream states signaled via `state_callback`.
 #[derive(PartialEq, Eq, Clone, Debug, Copy)]
 pub enum State {
     /// Stream started.
@@ -594,4 +606,12 @@ mod tests {
         assert_eq!(params.rate(), 44100);
     }
 
+    #[test]
+    fn stream_params_raw_prefs() {
+        use STREAM_PREF_LOOPBACK;
+        let mut raw: super::ffi::cubeb_stream_params = unsafe { mem::zeroed() };
+        raw.prefs = STREAM_PREF_LOOPBACK.bits();
+        let params = unsafe { super::StreamParams::from_raw(&raw as *const _) };
+        assert_eq!(params.prefs(), STREAM_PREF_LOOPBACK);
+    }
 }

@@ -51,6 +51,16 @@ pub const LAYOUT_3F3R_LFE: ChannelLayout = 17;
 pub const LAYOUT_3F4_LFE: ChannelLayout = 18;
 pub const LAYOUT_MAX: ChannelLayout = 256;
 
+
+// These need to match cubeb_device_type
+bitflags! {
+    #[repr(C)]
+    pub struct StreamPrefs : u32 {
+        const STREAM_PREF_NONE = 0x00;
+        const STREAM_PREF_LOOPBACK = 0x01;
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct StreamParams {
@@ -58,6 +68,7 @@ pub struct StreamParams {
     pub rate: u32,
     pub channels: u32,
     pub layout: ChannelLayout,
+    pub prefs: StreamPrefs,
 }
 
 #[repr(C)]
@@ -308,7 +319,7 @@ extern "C" {
 #[test]
 fn bindgen_test_layout_stream_params() {
     assert_eq!(::std::mem::size_of::<StreamParams>(),
-               16usize,
+               20usize,
                concat!("Size of: ", stringify!(StreamParams)));
     assert_eq!(::std::mem::align_of::<StreamParams>(),
                4usize,
@@ -333,6 +344,12 @@ fn bindgen_test_layout_stream_params() {
                        stringify!(channels)));
     assert_eq!(unsafe { &(*(0 as *const StreamParams)).layout as *const _ as usize },
                12usize,
+               concat!("Alignment of field: ",
+                       stringify!(StreamParams),
+                       "::",
+                       stringify!(layout)));
+    assert_eq!(unsafe { &(*(0 as *const StreamParams)).prefs as *const _ as usize },
+               16usize,
                concat!("Alignment of field: ",
                        stringify!(StreamParams),
                        "::",

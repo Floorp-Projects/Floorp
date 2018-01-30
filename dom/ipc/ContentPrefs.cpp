@@ -178,10 +178,6 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "layout.css.servo.enabled",
 #endif
   "layout.css.shape-outside.enabled",
-#ifdef MOZ_STYLO
-  "layout.css.stylo-blocklist.blocked_domains",
-  "layout.css.stylo-blocklist.enabled",
-#endif
   "layout.css.text-align-unsafe-value.enabled",
   "layout.css.text-combine-upright-digits.enabled",
   "layout.css.text-combine-upright.enabled",

@@ -5,9 +5,7 @@
 
 cd /setup || exit
 
-# shellcheck source=taskcluster/docker/recipes/common.sh
 . /setup/common.sh
-# shellcheck source=taskcluster/docker/recipes/install-mercurial.sh
 . /setup/install-mercurial.sh
 
 rm -rf /setup

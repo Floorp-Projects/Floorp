@@ -135,8 +135,8 @@ struct cubeb_stream {
   cubeb_device_changed_callback device_changed_callback = nullptr;
   owned_critical_section device_changed_callback_lock;
   /* Stream creation parameters */
-  cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
-  cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED };
+  cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
+  cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
   device_info input_device;
   device_info output_device;
   /* User pointer of data_callback */
@@ -2359,6 +2359,12 @@ static int
 audiounit_setup_stream(cubeb_stream * stm)
 {
   stm->mutex.assert_current_thread_owns();
+
+  if ((stm->input_stream_params.prefs & CUBEB_STREAM_PREF_LOOPBACK) ||
+      (stm->output_stream_params.prefs & CUBEB_STREAM_PREF_LOOPBACK)) {
+    LOG("(%p) Loopback not supported for audiounit.", stm);
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
 
   int r = 0;
 

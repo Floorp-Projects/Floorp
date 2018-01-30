@@ -190,6 +190,7 @@ TEST(cubeb, enumerate_devices)
   input_params.rate = output_params.rate = 48000;
   input_params.channels = output_params.channels = 1;
   input_params.layout = output_params.layout = CUBEB_LAYOUT_MONO;
+  input_params.prefs = output_params.prefs = CUBEB_STREAM_PREF_NONE;
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
                         NULL, &input_params, NULL, &output_params,

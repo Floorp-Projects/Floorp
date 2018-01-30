@@ -174,7 +174,7 @@ pub unsafe extern "C" fn capi_stream_start<STM: Stream>(
 ) -> c_int {
     let stm = &*(s as *const STM);
 
-    let _ = _try!(stm.start());
+    _try!(stm.start());
     ffi::CUBEB_OK
 }
 
@@ -183,7 +183,7 @@ pub unsafe extern "C" fn capi_stream_stop<STM: Stream>(
 ) -> c_int {
     let stm = &*(s as *const STM);
 
-    let _ = _try!(stm.stop());
+    _try!(stm.stop());
     ffi::CUBEB_OK
 }
 
@@ -192,7 +192,7 @@ pub unsafe extern "C" fn capi_stream_reset_default_device<STM: Stream>(
 ) -> c_int {
     let stm = &mut *(s as *mut STM);
 
-    let _ = _try!(stm.reset_default_device());
+    _try!(stm.reset_default_device());
     ffi::CUBEB_OK
 }
 
@@ -222,7 +222,7 @@ pub unsafe extern "C" fn capi_stream_set_volume<STM: Stream>(
 ) -> c_int {
     let stm = &mut *(s as *mut STM);
 
-    let _ = _try!(stm.set_volume(volume));
+    _try!(stm.set_volume(volume));
     ffi::CUBEB_OK
 }
 
@@ -232,7 +232,7 @@ pub unsafe extern "C" fn capi_stream_set_panning<STM: Stream>(
 ) -> c_int {
     let stm = &mut *(s as *mut STM);
 
-    let _ = _try!(stm.set_panning(panning));
+    _try!(stm.set_panning(panning));
     ffi::CUBEB_OK
 }
 
@@ -263,7 +263,7 @@ pub unsafe extern "C" fn capi_register_device_collection_changed<CTX: Context>(
 ) -> i32 {
     let ctx = &*(c as *const CTX);
     let devtype = DeviceType::from_bits_truncate(devtype);
-    let _ = _try!(ctx.register_device_collection_changed(
+    _try!(ctx.register_device_collection_changed(
         devtype,
         collection_changed_callback,
         user_ptr
@@ -288,7 +288,7 @@ where
     }
 }
 
-fn opt_cstr<'a, T: 'a>(_anchor: &'a T, ptr: *const c_char) -> Option<&'a CStr> {
+fn opt_cstr<T>(_anchor: &T, ptr: *const c_char) -> Option<&CStr> {
     if ptr.is_null() {
         None
     } else {

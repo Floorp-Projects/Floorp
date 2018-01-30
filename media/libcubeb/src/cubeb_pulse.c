@@ -807,6 +807,9 @@ create_pa_stream(cubeb_stream * stm,
          (stream_params->layout == CUBEB_LAYOUT_UNDEFINED ||
          (stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
          CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels))));
+  if (stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
   *pa_stm = NULL;
   pa_sample_spec ss;
   ss.format = to_pulse_format(stream_params->format);
