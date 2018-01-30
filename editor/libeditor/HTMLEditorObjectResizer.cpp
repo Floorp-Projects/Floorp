@@ -254,7 +254,13 @@ HTMLEditor::ShowResizers(nsIDOMElement* aResizedElement)
   if (NS_WARN_IF(!element)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = ShowResizersInner(*element);
+  return ShowResizers(*element);
+}
+
+nsresult
+HTMLEditor::ShowResizers(Element& aResizedElement)
+{
+  nsresult rv = ShowResizersInner(aResizedElement);
   if (NS_FAILED(rv)) {
     HideResizers();
   }

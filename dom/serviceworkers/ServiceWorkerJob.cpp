@@ -8,7 +8,7 @@
 
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
-#include "Workers.h"
+#include "WorkerCommon.h"
 
 namespace mozilla {
 namespace dom {

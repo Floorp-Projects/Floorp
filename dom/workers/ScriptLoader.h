@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_scriptloader_h__
 #define mozilla_dom_workers_scriptloader_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
 
@@ -24,6 +24,8 @@ class ErrorResult;
 } // namespace mozilla
 
 BEGIN_WORKERS_NAMESPACE
+
+struct WorkerLoadInfo;
 
 enum WorkerScriptType {
   WorkerScript,

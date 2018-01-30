@@ -13,7 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 
 #include "WorkerPrivate.h"
 

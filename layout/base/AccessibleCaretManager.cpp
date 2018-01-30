@@ -122,6 +122,11 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   }
 }
 
+AccessibleCaretManager::~AccessibleCaretManager()
+{
+  MOZ_RELEASE_ASSERT(!mFlushingLayout, "Going away in FlushLayout? Bad!");
+}
+
 void
 AccessibleCaretManager::Terminate()
 {
@@ -217,8 +222,7 @@ AccessibleCaretManager::HideCarets()
 void
 AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint)
 {
-  FlushLayout();
-  if (IsTerminated()) {
+  if (!FlushLayout()) {
     return;
   }
 
@@ -385,8 +389,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& 
   if (firstCaretResult == PositionChangedResult::Changed ||
       secondCaretResult == PositionChangedResult::Changed) {
     // Flush layout to make the carets intersection correct.
-    FlushLayout();
-    if (IsTerminated()) {
+    if (!FlushLayout()) {
       return;
     }
   }
@@ -1025,16 +1028,19 @@ AccessibleCaretManager::ClearMaintainedSelection() const
   }
 }
 
-void
-AccessibleCaretManager::FlushLayout() const
+bool
+AccessibleCaretManager::FlushLayout()
 {
-  if (!mPresShell) {
-    return;
+  if (mPresShell) {
+    AutoRestore<bool> flushing(mFlushingLayout);
+    mFlushingLayout = true;
+
+    if (nsIDocument* doc = mPresShell->GetDocument()) {
+      doc->FlushPendingNotifications(FlushType::Layout);
+    }
   }
 
-  if (nsIDocument* doc = mPresShell->GetDocument()) {
-    doc->FlushPendingNotifications(FlushType::Layout);
-  }
+  return !IsTerminated();
 }
 
 nsIFrame*
@@ -1406,14 +1412,9 @@ AccessibleCaretManager::StopSelectionAutoScrollTimer() const
 }
 
 void
-AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason) const
+AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReason)
 {
-  if (!mPresShell) {
-    return;
-  }
-
-  FlushLayout();
-  if (IsTerminated()) {
+  if (!FlushLayout()) {
     return;
   }
 

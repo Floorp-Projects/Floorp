@@ -32,7 +32,7 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/PerformanceStorage.h"
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/Unused.h"

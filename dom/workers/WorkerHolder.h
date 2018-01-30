@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerHolder_h
 #define mozilla_dom_workers_WorkerHolder_h
 
-#include "mozilla/dom/workers/Workers.h"
+#include "mozilla/dom/workers/WorkerCommon.h"
 
 BEGIN_WORKERS_NAMESPACE
 
