@@ -299,13 +299,6 @@ this.webrtcUI = {
   }
 };
 
-function getBrowserForWindow(aContentWindow) {
-  return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShell)
-                       .chromeEventHandler;
-}
-
 function denyRequest(aBrowser, aRequest) {
   aBrowser.messageManager.sendAsyncMessage("webrtc:Deny",
                                            {callID: aRequest.callID,
