@@ -7,6 +7,7 @@
 #ifndef mozilla_glue_WindowsDllServices_h
 #define mozilla_glue_WindowsDllServices_h
 
+#include "mozilla/Authenticode.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
 #if defined(MOZILLA_INTERNAL_API)
@@ -25,7 +26,7 @@ namespace mozilla {
 namespace glue {
 namespace detail {
 
-class DllServicesBase
+class DllServicesBase : public Authenticode
 {
 public:
   /**
@@ -35,6 +36,20 @@ public:
    *          event loop so that it may be handled in a safe context.
    */
   virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) = 0;
+
+  void SetAuthenticodeImpl(Authenticode* aAuthenticode)
+  {
+    mAuthenticode = aAuthenticode;
+  }
+
+  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) override final
+  {
+    if (!mAuthenticode) {
+      return nullptr;
+    }
+
+    return mAuthenticode->GetBinaryOrgName(aFilePath);
+  }
 
   void Disable()
   {
@@ -47,13 +62,20 @@ public:
   DllServicesBase& operator=(DllServicesBase&&) = delete;
 
 protected:
-  DllServicesBase() = default;
+  DllServicesBase()
+    : mAuthenticode(nullptr)
+  {
+  }
+
   virtual ~DllServicesBase() = default;
 
   void Enable()
   {
     DllBlocklist_SetDllServices(this);
   }
+
+private:
+  Authenticode* mAuthenticode;
 };
 
 } // namespace detail
