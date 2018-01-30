@@ -24,7 +24,6 @@
 #pragma warning( pop )
 
 #include "nsAutoPtr.h"
-
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
@@ -33,7 +32,7 @@
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
 #include "mozilla/AutoProfilerLabel.h"
-#include "mozilla/WindowsDllServices.h"
+#include "mozilla/glue/WindowsDllServices.h"
 
 using namespace mozilla;
 
@@ -938,7 +937,7 @@ DllBlocklist_CheckStatus()
 
 
 static SRWLOCK gDllServicesLock = SRWLOCK_INIT;
-static mozilla::detail::DllServicesBase* gDllServices;
+static mozilla::glue::detail::DllServicesBase* gDllServices;
 
 class MOZ_RAII AutoSharedLock final
 {
@@ -1048,7 +1047,7 @@ DllLoadNotification(ULONG aReason, PCLDR_DLL_NOTIFICATION_DATA aNotificationData
 }
 
 MFBT_API void
-DllBlocklist_SetDllServices(mozilla::detail::DllServicesBase* aSvc)
+DllBlocklist_SetDllServices(mozilla::glue::detail::DllServicesBase* aSvc)
 {
   AutoExclusiveLock lock(gDllServicesLock);
 
