@@ -807,8 +807,8 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
   }
 
   // get the previous sibling of the inserted content
-  nsCOMPtr<nsIDOMNode> previous;
-  GetRealPreviousSibling(childDOMNode, parent, getter_AddRefs(previous));
+  // This should probably be done on the flattened tree instead.
+  nsCOMPtr<nsIDOMNode> previous = do_QueryInterface(aChild->GetPreviousSibling());
   inDOMViewNode* previousNode = nullptr;
 
   int32_t row = 0;
@@ -1188,15 +1188,6 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
     }
   }
 
-  return NS_OK;
-}
-
-nsresult
-inDOMView::GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling)
-{
-  // XXXjrh: This won't work for some cases during some situations where XBL insertion points
-  // are involved.  Fix me!
-  aNode->GetPreviousSibling(aSibling);
   return NS_OK;
 }
 
