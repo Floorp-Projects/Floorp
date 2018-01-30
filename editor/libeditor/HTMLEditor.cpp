@@ -3545,7 +3545,7 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 {
   NS_ENSURE_TRUE(aInRange, NS_ERROR_NULL_POINTER);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
-  nsTArray<nsCOMPtr<nsIDOMNode> > textNodes;
+  nsTArray<nsCOMPtr<nsINode>> textNodes;
   // we can't actually do anything during iteration, so store the text nodes in an array
   // don't bother ref counting them because we know we can hold them for the
   // lifetime of this method
@@ -3562,9 +3562,8 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
   while (!iter->IsDone()) {
     nsINode* node = iter->GetCurrentNode();
     if (node->NodeType() == nsIDOMNode::TEXT_NODE &&
-        IsEditable(static_cast<nsIContent*>(node))) {
-      nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
-      textNodes.AppendElement(domNode);
+        IsEditable(node->AsContent())) {
+      textNodes.AppendElement(node);
     }
 
     iter->Next();
@@ -3574,20 +3573,17 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
   // NOTE: assumption that JoinNodes keeps the righthand node
   while (textNodes.Length() > 1) {
     // we assume a textNodes entry can't be nullptr
-    nsIDOMNode *leftTextNode = textNodes[0];
-    nsIDOMNode *rightTextNode = textNodes[1];
+    nsINode* leftTextNode = textNodes[0];
+    nsINode* rightTextNode = textNodes[1];
     NS_ASSERTION(leftTextNode && rightTextNode,"left or rightTextNode null in CollapseAdjacentTextNodes");
 
     // get the prev sibling of the right node, and see if its leftTextNode
-    nsCOMPtr<nsIDOMNode> prevSibOfRightNode;
-    rv = rightTextNode->GetPreviousSibling(getter_AddRefs(prevSibOfRightNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> prevSibOfRightNode = rightTextNode->GetPreviousSibling();
     if (prevSibOfRightNode && prevSibOfRightNode == leftTextNode) {
-      nsCOMPtr<nsIDOMNode> parent;
-      rv = rightTextNode->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> parent = rightTextNode->GetParentNode();
       NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-      rv = JoinNodes(leftTextNode, rightTextNode, parent);
+      rv = JoinNodes(leftTextNode->AsDOMNode(), rightTextNode->AsDOMNode(),
+                     parent->AsDOMNode());
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
