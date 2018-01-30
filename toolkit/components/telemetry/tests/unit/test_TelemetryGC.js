@@ -28,36 +28,46 @@ function run_test() {
 
   // Add an entry
   GCTelemetry.observeRaw(make_gc());
-
   // Get it back.
   assert_num_entries(1, false);
-  let entries1 = GCTelemetry.entries("main", false);
-  Assert.ok(entries1, "Got entries object");
-  Assert.ok(entries1.random, "Has random property");
-  Assert.ok(entries1.worst, "Has worst property");
-  let entry1 = entries1.worst[0];
-  Assert.ok(entry1, "Got worst entry");
-
+  Assert.equal(20, Object.keys(get_entry()).length);
   // "true" will cause the entry to be clared.
   assert_num_entries(1, true);
   // There are currently no entries.
   assert_num_entries(0, false);
-  Assert.equal(20, Object.keys(entry1).length);
 
   // Test too many fields
-  let my_gc = make_gc();
+  let my_big_gc = make_gc();
   for (let i = 0; i < 100; i++) {
-      my_gc["new_property_" + i] = "Data";
+      my_big_gc["new_property_" + i] = "Data";
   }
-
-  GCTelemetry.observeRaw(my_gc);
+  GCTelemetry.observeRaw(my_big_gc);
   // Assert that it was recorded but has only 7 fields.
-  assert_num_entries(1, false);
-  let entries2 = GCTelemetry.entries("main", false);
-  Assert.ok(entries2, "Got entries object");
-  let entry2 = entries2.worst[0];
-  Assert.ok(entry2, "Got worst entry");
-  Assert.equal(7, Object.keys(entry2).length);
+  Assert.equal(7, Object.keys(get_entry()).length);
+  assert_num_entries(1, true);
+  assert_num_entries(0, false);
+
+  // Exactly the limit of fields.
+  let my_gc_24 = make_gc();
+  for (let i = 0; i < 4; i++) {
+      my_gc_24["new_property_" + i] = "Data";
+  }
+  GCTelemetry.observeRaw(my_gc_24);
+  // Assert that it was recorded but has only 7 fields.
+  Assert.equal(24, Object.keys(get_entry()).length);
+  assert_num_entries(1, true);
+  assert_num_entries(0, false);
+
+  // Exactly too many fields.
+  let my_gc_25 = make_gc();
+  for (let i = 0; i < 5; i++) {
+      my_gc_25["new_property_" + i] = "Data";
+  }
+  GCTelemetry.observeRaw(my_gc_25);
+  // Assert that it was recorded but has only 7 fields.
+  Assert.equal(7, Object.keys(get_entry()).length);
+  assert_num_entries(1, true);
+  assert_num_entries(0, false);
 }
 
 function assert_num_entries(expect, clear) {
@@ -65,6 +75,16 @@ function assert_num_entries(expect, clear) {
   Assert.equal(expect, entries.worst.length, expect + " worst entries");
   // Randomly sampled GCs are only recorded for content processes
   Assert.equal(0, entries.random.length, expect + " random entries");
+}
+
+function get_entry() {
+  let entries = GCTelemetry.entries("main", false);
+  Assert.ok(entries, "Got entries object");
+  Assert.ok(entries.random, "Has random property");
+  Assert.ok(entries.worst, "Has worst property");
+  let entry = entries.worst[0];
+  Assert.ok(entry, "Got worst entry");
+  return entry;
 }
 
 /*

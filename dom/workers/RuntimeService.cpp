@@ -69,11 +69,14 @@
 #include "Principal.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
+#include "WorkerLoadInfo.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "WorkerThread.h"
 #include "prsystem.h"
+
+#define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
 using namespace mozilla;
 using namespace mozilla::dom;

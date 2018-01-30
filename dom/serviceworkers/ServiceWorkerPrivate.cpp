@@ -22,6 +22,7 @@
 #include "nsQueryObject.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "WorkerDebugger.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "mozilla/Assertions.h"
