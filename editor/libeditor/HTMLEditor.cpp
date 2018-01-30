@@ -2383,7 +2383,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   }
 
   bool bNodeFound = false;
-  nsCOMPtr<nsIDOMElement> selectedElement;
+  nsCOMPtr<Element> selectedElement;
   if (isLinkTag) {
     // Link tag is a special case - we return the anchor node
     //  found for any selection that is totally within a link,
@@ -2469,11 +2469,10 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
 
           // The "A" tag is a pain,
           //  used for both link(href is set) and "Named Anchor"
-          nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(selectedElement);
           if ((isLinkTag &&
-               HTMLEditUtils::IsLink(selectedNode)) ||
+               HTMLEditUtils::IsLink(selectedElement)) ||
               (isNamedAnchorTag &&
-               HTMLEditUtils::IsNamedAnchor(selectedNode))) {
+               HTMLEditUtils::IsNamedAnchor(selectedElement))) {
             bNodeFound = true;
           } else if (TagName == domTagName) { // All other tag names are handled here
             bNodeFound = true;
@@ -2492,11 +2491,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     }
   }
 
-  *aReturn = selectedElement;
-  if (selectedElement) {
-    // Getters must addref
-    NS_ADDREF(*aReturn);
-  }
+  selectedElement.forget(aReturn);
   return NS_OK;
 }
 
