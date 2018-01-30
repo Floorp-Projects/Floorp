@@ -2341,21 +2341,6 @@ ToCanonicalSupports(nsINode* aPointer)
     *aResult = clone.forget().take()->AsDOMNode(); \
     return NS_OK; \
   } \
-  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) __VA_ARGS__ override \
-  { \
-    nsINode::GetNamespaceURI(aNamespaceURI); \
-    return NS_OK; \
-  } \
-  NS_IMETHOD GetPrefix(nsAString& aPrefix) __VA_ARGS__ override \
-  { \
-    nsINode::GetPrefix(aPrefix); \
-    return NS_OK; \
-  } \
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) __VA_ARGS__ override \
-  { \
-    aLocalName = nsINode::LocalName(); \
-    return NS_OK; \
-  } \
   NS_IMETHOD GetTextContent(nsAString& aTextContent) __VA_ARGS__ override \
   { \
     mozilla::ErrorResult rv; \

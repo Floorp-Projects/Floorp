@@ -50,13 +50,6 @@ interface nsIDOMNode : nsISupports
   boolean                   hasChildNodes();
   // Modified in DOM Level 4:
   [optional_argc] nsIDOMNode                cloneNode([optional] in boolean deep);
-  // Introduced in DOM Level 2:
-  readonly attribute DOMString        namespaceURI;
-  // Modified in DOM Core
-  readonly attribute DOMString        prefix;
-
-  // Introduced in DOM Level 2:
-  readonly attribute DOMString        localName;
 
   // DocumentPosition
   const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x01;
