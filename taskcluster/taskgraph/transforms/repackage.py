@@ -69,6 +69,14 @@ packaging_description_schema = Schema({
     Required('mozharness'): {
         # Config files passed to the mozharness script
         Required('config'): _by_platform([basestring]),
+
+        # Additional paths to look for mozharness configs in. These should be
+        # relative to the base of the source checkout
+        Optional('config-paths'): [basestring],
+
+        # if true, perform a checkout of a comm-central based branch inside the
+        # gecko checkout
+        Required('comm-checkout', default=False): bool,
     }
 })
 
