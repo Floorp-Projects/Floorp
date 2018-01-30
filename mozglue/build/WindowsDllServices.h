@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_WindowsDllServices_h
-#define mozilla_WindowsDllServices_h
+#ifndef mozilla_glue_WindowsDllServices_h
+#define mozilla_glue_WindowsDllServices_h
 
 #include "mozilla/WindowsDllBlocklist.h"
 
@@ -22,6 +22,7 @@
 #include <winternl.h>
 
 namespace mozilla {
+namespace glue {
 namespace detail {
 
 class DllServicesBase
@@ -86,6 +87,7 @@ protected:
 
 #endif // defined(MOZILLA_INTERNAL_API)
 
+} // namespace glue
 } // namespace mozilla
 
-#endif // mozilla_WindowsDllServices_h
+#endif // mozilla_glue_WindowsDllServices_h
