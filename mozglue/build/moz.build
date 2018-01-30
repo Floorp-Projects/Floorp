@@ -63,14 +63,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         OS_LIBS += [
             'version',
         ]
+        EXPORTS.mozilla += [
+            'WindowsDllBlocklist.h',
+        ]
+        EXPORTS.mozilla.glue += [
+            'WindowsDllServices.h',
+        ]
 
     EXPORTS.mozilla += [
         'arm.h',
         'mips.h',
         'SSE.h',
         'WindowsCFGStatus.h',
-        'WindowsDllBlocklist.h',
-        'WindowsDllServices.h',
     ]
 
     if CONFIG['CPU_ARCH'].startswith('x86'):
