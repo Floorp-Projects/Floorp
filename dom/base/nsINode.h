@@ -2270,17 +2270,6 @@ ToCanonicalSupports(nsINode* aPointer)
 }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(...) \
-  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) __VA_ARGS__ override \
-  { \
-    nsINode::GetNodeValue(aNodeValue); \
-    return NS_OK; \
-  } \
-  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) __VA_ARGS__ override \
-  { \
-    mozilla::ErrorResult rv; \
-    nsINode::SetNodeValue(aNodeValue, rv); \
-    return rv.StealNSResult(); \
-  } \
   NS_IMETHOD GetNodeType(uint16_t* aNodeType) __VA_ARGS__ override \
   { \
     *aNodeType = nsINode::NodeType(); \
