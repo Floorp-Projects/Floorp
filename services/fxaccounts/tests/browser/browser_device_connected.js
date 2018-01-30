@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"]
@@ -13,13 +14,14 @@ const DEVICES_URL = "http://localhost/devices";
 let expectedBody;
 
 add_task(async function setup() {
-  let fxAccounts = {
-    promiseAccountsManageDevicesURI() {
-      return Promise.resolve(DEVICES_URL);
-    }
-  };
-  gBrowserGlue.observe({wrappedJSObject: fxAccounts}, "browser-glue-test", "mock-fxaccounts");
+  const origManageDevicesURI = FxAccounts.config.promiseManageDevicesURI;
+  FxAccounts.config.promiseManageDevicesURI = () => Promise.resolve(DEVICES_URL);
   setupMockAlertsService();
+
+  registerCleanupFunction(function() {
+    FxAccounts.config.promiseManageDevicesURI = origManageDevicesURI;
+    delete window.FxAccounts;
+  });
 });
 
 async function testDeviceConnected(deviceName) {

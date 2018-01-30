@@ -7,6 +7,8 @@
 
 ChromeUtils.import("resource://services-sync/UIState.jsm");
 
+ChromeUtils.defineModuleGetter(this, "FxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.defineModuleGetter(this, "EnsureFxAccountsWebChannel",
   "resource://gre/modules/FxAccountsWebChannel.jsm");
 ChromeUtils.defineModuleGetter(this, "Weave",
@@ -91,8 +93,6 @@ var gSync = {
             return null;
           }
         });
-    XPCOMUtils.defineLazyPreferenceGetter(this, "FXA_CONNECT_DEVICE_URI",
-        "identity.fxaccounts.remote.connectdevice.uri");
     XPCOMUtils.defineLazyPreferenceGetter(this, "PRODUCT_INFO_BASE_URL",
         "app.productInfo.baseURL");
   },
@@ -287,7 +287,7 @@ var gSync = {
   },
 
   async openSignInAgainPage(entryPoint) {
-    const url = await fxAccounts.promiseAccountsForceSigninURI(entryPoint);
+    const url = await FxAccounts.config.promiseForceSigninURI(entryPoint);
     switchToTabHavingURI(url, true, {
       replaceQueryString: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -295,17 +295,16 @@ var gSync = {
   },
 
   async openDevicesManagementPage(entryPoint) {
-    let url = await fxAccounts.promiseAccountsManageDevicesURI(entryPoint);
+    let url = await FxAccounts.config.promiseManageDevicesURI(entryPoint);
     switchToTabHavingURI(url, true, {
       replaceQueryString: true,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
 
-  openConnectAnotherDevice(entryPoint) {
-    let url = new URL(this.FXA_CONNECT_DEVICE_URI);
-    url.searchParams.append("entrypoint", entryPoint);
-    openUILinkIn(url.href, "tab");
+  async openConnectAnotherDevice(entryPoint) {
+    const url = await FxAccounts.config.promiseConnectDeviceURI(entryPoint);
+    openUILinkIn(url, "tab");
   },
 
   openSendToDevicePromo() {
