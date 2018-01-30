@@ -2270,11 +2270,6 @@ ToCanonicalSupports(nsINode* aPointer)
 }
 
 #define NS_FORWARD_NSIDOMNODE_TO_NSINODE_HELPER(...) \
-  NS_IMETHOD GetNodeName(nsAString& aNodeName) __VA_ARGS__ override \
-  { \
-    aNodeName = nsINode::NodeName(); \
-    return NS_OK; \
-  } \
   NS_IMETHOD GetNodeValue(nsAString& aNodeValue) __VA_ARGS__ override \
   { \
     nsINode::GetNodeValue(aNodeValue); \

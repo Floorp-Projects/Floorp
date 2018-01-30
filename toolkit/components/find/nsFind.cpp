@@ -487,8 +487,8 @@ DumpNode(nsIDOMNode* aNode)
     printf(">>>> Node: NULL\n");
     return;
   }
-  nsAutoString nodeName;
-  aNode->GetNodeName(nodeName);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  nsString nodeName = node->NodeName();
   nsCOMPtr<nsIContent> textContent(do_QueryInterface(aNode));
   if (textContent && textContent->IsNodeOfType(nsINode::eTEXT)) {
     nsAutoString newText;
