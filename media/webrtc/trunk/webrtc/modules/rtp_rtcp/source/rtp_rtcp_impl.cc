@@ -51,6 +51,15 @@ RTPExtensionType StringToRtpExtensionType(const std::string& extension) {
     return kRtpExtensionVideoContentType;
   if (extension == RtpExtension::kVideoTimingUri)
     return kRtpExtensionVideoTiming;
+  if (extension == RtpExtension::kRtpStreamIdUri)
+    return kRtpExtensionRtpStreamId;
+  if (extension == RtpExtension::kRepairedRtpStreamIdUri)
+    return kRtpExtensionRepairedRtpStreamId;
+  if (extension == RtpExtension::kMIdUri)
+    return kRtpExtensionMid;
+  if (extension == RtpExtension::kCsrcAudioLevelUri)
+    return kRtpExtensionCsrcAudioLevel;
+
   RTC_NOTREACHED() << "Looking up unsupported RTP extension.";
   return kRtpExtensionNone;
 }
@@ -348,6 +357,15 @@ void ModuleRtpRtcpImpl::SetSSRC(const uint32_t ssrc) {
 void ModuleRtpRtcpImpl::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   rtcp_sender_.SetCsrcs(csrcs);
   rtp_sender_->SetCsrcs(csrcs);
+}
+
+int32_t ModuleRtpRtcpImpl::SetRID(const char *rid) {
+  //XXX rtcp_sender_.SetRID(rid);
+  return rtp_sender_->SetRID(rid);
+}
+
+int32_t ModuleRtpRtcpImpl::SetMID(const char *mid) {
+  return rtp_sender_->SetMId(mid);
 }
 
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP
@@ -829,6 +847,16 @@ void ModuleRtpRtcpImpl::BitrateSent(uint32_t* total_rate,
 
 void ModuleRtpRtcpImpl::OnRequestSendReport() {
   SendRTCP(kRtcpSr);
+}
+
+bool ModuleRtpRtcpImpl::GetSendReportMetadata(const uint32_t send_report,
+                                              uint64_t *time_of_send,
+                                              uint32_t *packet_count,
+                                              uint64_t *octet_count) {
+  return rtcp_sender_.GetSendReportMetadata(send_report,
+                                            time_of_send,
+                                            packet_count,
+                                            octet_count);
 }
 
 void ModuleRtpRtcpImpl::OnReceivedNack(

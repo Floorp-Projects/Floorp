@@ -228,6 +228,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   bool StorePackets() const override;
 
+  bool GetSendReportMetadata(const uint32_t send_report,
+                             uint64_t *time_of_send,
+                             uint32_t *packet_count,
+                             uint64_t *octet_count) override;
+
   // Called on receipt of RTCP report block from remote side.
   void RegisterRtcpStatisticsCallback(
       RtcpStatisticsCallback* callback) override;
