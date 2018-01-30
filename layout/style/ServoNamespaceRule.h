@@ -33,7 +33,7 @@ public:
   void GetURLSpec(nsString& aURLSpec) const final override;
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const final override;
+  void GetCssText(nsAString& aCssText) const final override;
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final override;
 
