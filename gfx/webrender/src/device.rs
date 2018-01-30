@@ -23,7 +23,8 @@ use std::thread;
 
 
 #[derive(Debug, Copy, Clone, PartialEq, Ord, Eq, PartialOrd)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameId(usize);
 
 impl FrameId {
@@ -64,7 +65,8 @@ pub enum DepthFunction {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum TextureFilter {
     Nearest,
     Linear,
@@ -404,7 +406,7 @@ impl<T> Drop for VBO<T> {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Clone))]
+#[cfg_attr(feature = "replay", derive(Clone))]
 pub struct ExternalTexture {
     id: gl::GLuint,
     target: gl::GLuint,
@@ -418,7 +420,7 @@ impl ExternalTexture {
         }
     }
 
-    #[cfg(feature = "capture")]
+    #[cfg(feature = "replay")]
     pub fn internal_id(&self) -> gl::GLuint {
         self.id
     }
@@ -470,7 +472,7 @@ impl Texture {
         self.render_target.as_ref()
     }
 
-    #[cfg(feature = "capture")]
+    #[cfg(feature = "replay")]
     pub fn into_external(mut self) -> ExternalTexture {
         let ext = ExternalTexture {
             id: self.id,
@@ -1265,7 +1267,7 @@ impl Device {
         texture.id = 0;
     }
 
-    #[cfg(feature = "capture")]
+    #[cfg(feature = "replay")]
     pub fn delete_external_texture(&mut self, mut external: ExternalTexture) {
         self.bind_external_texture(DEFAULT_TEXTURE, &external);
         //Note: the format descriptor here doesn't really matter

@@ -7,7 +7,7 @@ use api::{ColorU, GlyphDimensions, GlyphKey, SubpixelDirection};
 use dwrote;
 use gamma_lut::{ColorLut, GammaLut};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphFormat, RasterizedGlyph};
-use internal_types::FastHashMap;
+use internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
@@ -90,19 +90,19 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
 const OBLIQUE_SKEW_FACTOR: f32 = 0.3;
 
 impl FontContext {
-    pub fn new() -> FontContext {
+    pub fn new() -> Result<FontContext, ResourceCacheError> {
         // These are the default values we use in Gecko.
         // We use a gamma value of 2.3 for gdi fonts
         // TODO: Fetch this data from Gecko itself.
         let contrast = 1.0;
         let gamma = 1.8;
         let gdi_gamma = 2.3;
-        FontContext {
+        Ok(FontContext {
             fonts: FastHashMap::default(),
             simulations: FastHashMap::default(),
             gamma_lut: GammaLut::new(contrast, gamma, gamma),
             gdi_gamma_lut: GammaLut::new(contrast, gdi_gamma, gdi_gamma),
-        }
+        })
     }
 
     pub fn has_font(&self, font_key: &FontKey) -> bool {

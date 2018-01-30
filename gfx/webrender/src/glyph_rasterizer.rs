@@ -13,7 +13,7 @@ use app_units::Au;
 use device::TextureFilter;
 use glyph_cache::{CachedGlyphInfo, GlyphCache};
 use gpu_cache::GpuCache;
-use internal_types::FastHashSet;
+use internal_types::{FastHashSet, ResourceCacheError};
 use platform::font::FontContext;
 use profiler::TextureCacheProfileCounters;
 use rayon::ThreadPool;
@@ -29,7 +29,8 @@ use texture_cache::{TextureCache, TextureCacheHandle};
 use thread_profiler::register_thread_with_profiler;
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FontTransform {
     pub scale_x: f32,
     pub skew_x: f32,
@@ -135,7 +136,8 @@ impl<'a> From<&'a LayerToWorldTransform> for FontTransform {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
-#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FontInstance {
     pub font_key: FontKey,
     // The font size is in *device* pixels, not logical pixels.
@@ -219,7 +221,8 @@ impl FontInstance {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[allow(dead_code)]
 pub enum GlyphFormat {
     Alpha,
@@ -320,20 +323,22 @@ pub struct GlyphRasterizer {
 }
 
 impl GlyphRasterizer {
-    pub fn new(workers: Arc<ThreadPool>) -> Self {
+    pub fn new(workers: Arc<ThreadPool>) -> Result<Self, ResourceCacheError> {
         let (glyph_tx, glyph_rx) = channel();
 
         let num_workers = workers.current_num_threads();
         let mut contexts = Vec::with_capacity(num_workers);
 
+        let shared_context = FontContext::new()?;
+
         for _ in 0 .. num_workers {
-            contexts.push(Mutex::new(FontContext::new()));
+            contexts.push(Mutex::new(FontContext::new()?));
         }
 
-        GlyphRasterizer {
+        Ok(GlyphRasterizer {
             font_contexts: Arc::new(FontContexts {
                 worker_contexts: contexts,
-                shared_context: Mutex::new(FontContext::new()),
+                shared_context: Mutex::new(shared_context),
                 workers: Arc::clone(&workers),
             }),
             pending_glyphs: FastHashSet::default(),
@@ -341,7 +346,7 @@ impl GlyphRasterizer {
             glyph_tx,
             workers,
             fonts_to_remove: Vec::new(),
-        }
+        })
     }
 
     pub fn add_font(&mut self, font_key: FontKey, template: FontTemplate) {
@@ -575,7 +580,7 @@ impl GlyphRasterizer {
         }
     }
 
-    #[cfg(feature = "capture")]
+    #[cfg(feature = "replay")]
     pub fn reset(&mut self) {
         //TODO: any signals need to be sent to the workers?
         self.pending_glyphs.clear();
@@ -597,7 +602,8 @@ impl FontContext {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GlyphRequest {
     pub key: GlyphKey,
     pub font: FontInstance,
@@ -632,7 +638,7 @@ fn rasterize_200_glyphs() {
             register_thread_with_profiler(format!("WRWorker#{}", idx));
         });
     let workers = Arc::new(ThreadPool::new(worker_config).unwrap());
-    let mut glyph_rasterizer = GlyphRasterizer::new(workers);
+    let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
     let mut glyph_cache = GlyphCache::new();
     let mut gpu_cache = GpuCache::new();
     let mut texture_cache = TextureCache::new(2048);
