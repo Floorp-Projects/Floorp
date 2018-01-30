@@ -641,9 +641,6 @@ private:
   void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
 public:
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE_OVERRIDABLE
-
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
 

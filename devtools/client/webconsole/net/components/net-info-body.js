@@ -98,6 +98,7 @@ class NetInfoBody extends Component {
     // Headers tab
     panels.push(
       TabPanel({
+        id: "headers",
         className: "headers",
         key: "headers",
         title: Locale.$STR("netRequest.headers")},
@@ -109,6 +110,7 @@ class NetInfoBody extends Component {
     if (hasParams) {
       panels.push(
         TabPanel({
+          id: "params",
           className: "params",
           key: "params",
           title: Locale.$STR("netRequest.params")},
@@ -121,6 +123,7 @@ class NetInfoBody extends Component {
     if (hasPostData) {
       panels.push(
         TabPanel({
+          id: "post",
           className: "post",
           key: "post",
           title: Locale.$STR("netRequest.post")},
@@ -131,7 +134,10 @@ class NetInfoBody extends Component {
 
     // Response tab
     panels.push(
-      TabPanel({className: "response", key: "response",
+      TabPanel({
+        id: "response",
+        className: "response",
+        key: "response",
         title: Locale.$STR("netRequest.response")},
         ResponseTab({data: data, actions: actions})
       )
@@ -141,6 +147,7 @@ class NetInfoBody extends Component {
     if (this.hasCookies()) {
       panels.push(
         TabPanel({
+          id: "cookies",
           className: "cookies",
           key: "cookies",
           title: Locale.$STR("netRequest.cookies")},
@@ -156,6 +163,7 @@ class NetInfoBody extends Component {
     if (this.hasStackTrace()) {
       panels.push(
         TabPanel({
+          id: "stacktrace-tab",
           className: "stacktrace-tab",
           key: "stacktrace",
           title: Locale.$STR("netRequest.callstack")},

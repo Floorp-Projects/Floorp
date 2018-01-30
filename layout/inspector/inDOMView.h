@@ -84,7 +84,6 @@ protected:
   nsresult AppendAttrsToArray(nsDOMAttributeMap* aKids, nsCOMArray<nsIDOMNode>& aArray);
   nsresult GetFirstDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
   nsresult GetLastDescendantOf(inDOMViewNode* aNode, int32_t aRow, int32_t* aResult);
-  nsresult GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, nsIDOMNode** aSibling);
 };
 
 // {FB5C1775-1BBD-4b9c-ABB0-AE7ACD29E87E}

@@ -735,7 +735,7 @@ HTMLImageElement::Image(const GlobalObject& aGlobal,
   already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::img, nullptr,
                                         kNameSpaceID_XHTML,
-                                        nsIDOMNode::ELEMENT_NODE);
+                                        ELEMENT_NODE);
 
   RefPtr<HTMLImageElement> img = new HTMLImageElement(nodeInfo);
 

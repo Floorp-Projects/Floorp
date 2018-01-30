@@ -333,7 +333,7 @@ nsDateTimeControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     mContent->GetComposedDoc()->NodeInfoManager();
   RefPtr<NodeInfo> nodeInfo =
     nodeInfoManager->GetNodeInfo(nsGkAtoms::datetimebox, nullptr,
-                                 kNameSpaceID_XUL, nsIDOMNode::ELEMENT_NODE);
+                                 kNameSpaceID_XUL, nsINode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   NS_TrustedNewXULElement(getter_AddRefs(mInputAreaContent), nodeInfo.forget());

@@ -15,13 +15,12 @@
 #include "nsDependentSubstring.h"       // for Substring
 #include "nsError.h"                    // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsFilteredContentIterator.h"  // for nsFilteredContentIterator
+#include "nsGenericHTMLElement.h"       // for nsGenericHTMLElement
 #include "nsIContent.h"                 // for nsIContent, etc
 #include "nsIContentIterator.h"         // for nsIContentIterator
 #include "nsID.h"                       // for NS_GET_IID
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMElement.h"              // for nsIDOMElement
-#include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
-#include "nsIDOMHTMLElement.h"          // for nsIDOMHTMLElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
@@ -659,7 +658,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
     // Now walk through the range till we find a text node.
 
     while (!iter->IsDone()) {
-      if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
         // We found a text node, so position the document's
         // iterator at the beginning of the block, then get
         // the selection in terms of the string offset.
@@ -744,7 +743,7 @@ TextServicesDocument::LastSelectedBlock(BlockSelectionStatus* aSelStatus,
   iter->First();
 
   while (!iter->IsDone()) {
-    if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (iter->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       // We found a text node! Adjust the document's iterator to point
       // to the beginning of its text block, then get the current selection.
       rv = mIterator->PositionAt(iter->GetCurrentNode());
@@ -1654,31 +1653,16 @@ TextServicesDocument::GetDocumentContentRootNode()
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDOMDocument);
 
-  if (htmlDoc) {
+  if (doc->IsHTMLOrXHTML()) {
     // For HTML documents, the content root node is the body.
-
-    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-
-    nsresult rv = htmlDoc->GetBody(getter_AddRefs(bodyElement));
-    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!bodyElement)) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(bodyElement);
+    nsCOMPtr<nsINode> node = doc->GetBody();
     return node.forget();
   }
+
   // For non-HTML documents, the content root node will be the document element.
-
-  nsCOMPtr<nsIDOMElement> docElement;
-
-  nsresult rv = mDOMDocument->GetDocumentElement(getter_AddRefs(docElement));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-   return nullptr;
-  }
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(docElement);
+  nsCOMPtr<nsINode> node = doc->GetDocumentElement();
   return node.forget();
 }
 
@@ -1955,7 +1939,7 @@ bool
 TextServicesDocument::IsTextNode(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, false);
-  return nsIDOMNode::TEXT_NODE == aContent->NodeType();
+  return nsINode::TEXT_NODE == aContent->NodeType();
 }
 
 // static
@@ -2201,7 +2185,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
     return NS_OK;
   }
 
-  if (parent->NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (parent->NodeType() == nsINode::TEXT_NODE) {
     // Good news, the caret is in a text node. Look
     // through the offset table for the entry that
     // matches its parent and offset.
@@ -2279,7 +2263,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
   nsIContent* node = nullptr;
   while (!iter->IsDone()) {
     nsINode* current = iter->GetCurrentNode();
-    if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (current->NodeType() == nsINode::TEXT_NODE) {
       node = current->AsContent();
       break;
     }
@@ -2305,7 +2289,7 @@ TextServicesDocument::GetCollapsedSelection(BlockSelectionStatus* aSelStatus,
     while (!iter->IsDone()) {
       nsINode* current = iter->GetCurrentNode();
 
-      if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (current->NodeType() == nsINode::TEXT_NODE) {
         node = current->AsContent();
         break;
       }
@@ -2628,7 +2612,7 @@ TextServicesDocument::FirstTextNode(nsIContentIterator* aIterator,
   aIterator->First();
 
   while (!aIterator->IsDone()) {
-    if (aIterator->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }
@@ -2652,7 +2636,7 @@ TextServicesDocument::LastTextNode(nsIContentIterator* aIterator,
   aIterator->Last();
 
   while (!aIterator->IsDone()) {
-    if (aIterator->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
+    if (aIterator->GetCurrentNode()->NodeType() == nsINode::TEXT_NODE) {
       if (aIteratorStatus) {
         *aIteratorStatus = IteratorStatus::eValid;
       }
@@ -2896,9 +2880,7 @@ TextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable,
       }
 
       nsString str;
-      rv = content->AsDOMNode()->GetNodeValue(str);
-
-      NS_ENSURE_SUCCESS(rv, rv);
+      content->GetNodeValue(str);
 
       // Add an entry for this text node into the offset table:
 

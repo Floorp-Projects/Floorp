@@ -276,7 +276,8 @@ protected:
     nsTextControlFrame* mFrame;
   };
 
-  nsresult OffsetToDOMPoint(uint32_t aOffset, nsIDOMNode** aResult, uint32_t* aPosition);
+  nsresult OffsetToDOMPoint(uint32_t aOffset, nsINode** aResult,
+                            uint32_t* aPosition);
 
   /**
    * Update the textnode under our anonymous div to show the new
@@ -319,8 +320,8 @@ protected:
 
 private:
   //helper methods
-  nsresult SetSelectionInternal(nsIDOMNode *aStartNode, uint32_t aStartOffset,
-                                nsIDOMNode *aEndNode, uint32_t aEndOffset,
+  nsresult SetSelectionInternal(nsINode* aStartNode, uint32_t aStartOffset,
+                                nsINode* aEndNode, uint32_t aEndOffset,
                                 SelectionDirection aDirection = eNone);
   nsresult SelectAllOrCollapseToEndOfText(bool aSelect);
   nsresult SetSelectionEndPoints(uint32_t aSelStart, uint32_t aSelEnd,

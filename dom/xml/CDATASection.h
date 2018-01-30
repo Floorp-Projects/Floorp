@@ -19,7 +19,7 @@ class CDATASection final : public Text,
 private:
   void Init()
   {
-    MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::CDATA_SECTION_NODE,
+    MOZ_ASSERT(mNodeInfo->NodeType() == CDATA_SECTION_NODE,
                "Bad NodeType in aNodeInfo");
   }
 
@@ -35,16 +35,13 @@ public:
   explicit CDATASection(nsNodeInfoManager* aNodeInfoManager)
     : Text(aNodeInfoManager->GetNodeInfo(nsGkAtoms::cdataTagName,
                                          nullptr, kNameSpaceID_None,
-                                         nsIDOMNode::CDATA_SECTION_NODE))
+                                         CDATA_SECTION_NODE))
   {
     Init();
   }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
   // nsIDOMCharacterData
   NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)

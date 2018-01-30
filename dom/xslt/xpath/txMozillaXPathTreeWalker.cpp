@@ -7,9 +7,9 @@
 #include "nsAtom.h"
 #include "nsIAttribute.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMProcessingInstruction.h"
+#include "nsINode.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -307,11 +307,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
         }
 
         if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-            nsAutoString target;
-            node->GetNodeName(target);
-
-            return NS_Atomize(target);
+            return NS_Atomize(aNode.mNode->NodeName());
         }
 
         return nullptr;
@@ -359,9 +355,9 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
         if (aNode.mNode->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
             // PIs don't have a nodeinfo but do have a name
-            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode.mNode);
-            node->GetNodeName(aLocalName);
-
+            // XXXbz Not actually true, but this function looks like it wants
+            // different things from elements and PIs for "local name"...
+            aLocalName = aNode.mNode->NodeName();
             return;
         }
 
@@ -393,8 +389,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     if (aNode.isContent()) {
         // Elements and PIs have a name
         if (aNode.mNode->IsElement() ||
-            aNode.mNode->NodeType() ==
-            nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+            aNode.mNode->NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE) {
             aName = aNode.Content()->NodeName();
             return;
         }
@@ -643,7 +638,7 @@ txXPathNode*
 txXPathNativeNode::createXPathNode(nsINode* aNode, bool aKeepRootAlive)
 {
     uint16_t nodeType = aNode->NodeType();
-    if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+    if (nodeType == nsINode::ATTRIBUTE_NODE) {
         nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
         NS_ASSERTION(attr, "doesn't implement nsIAttribute");
 
@@ -672,7 +667,7 @@ txXPathNativeNode::createXPathNode(nsINode* aNode, bool aKeepRootAlive)
     uint32_t index;
     nsINode* root = aKeepRootAlive ? aNode : nullptr;
 
-    if (nodeType == nsIDOMNode::DOCUMENT_NODE) {
+    if (nodeType == nsINode::DOCUMENT_NODE) {
         index = txXPathNode::eDocument;
     }
     else {

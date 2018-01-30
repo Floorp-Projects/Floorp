@@ -85,17 +85,16 @@ HTMLEditUtils::IsFormatNode(nsINode* aNode)
  * blockquote.
  */
 bool
-HTMLEditUtils::IsNodeThatCanOutdent(nsIDOMNode* aNode)
+HTMLEditUtils::IsNodeThatCanOutdent(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
-  RefPtr<nsAtom> nodeAtom = EditorBase::GetTag(aNode);
-  return (nodeAtom == nsGkAtoms::ul)
-      || (nodeAtom == nsGkAtoms::ol)
-      || (nodeAtom == nsGkAtoms::dl)
-      || (nodeAtom == nsGkAtoms::li)
-      || (nodeAtom == nsGkAtoms::dd)
-      || (nodeAtom == nsGkAtoms::dt)
-      || (nodeAtom == nsGkAtoms::blockquote);
+  return aNode->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                    nsGkAtoms::ol,
+                                    nsGkAtoms::dl,
+                                    nsGkAtoms::li,
+                                    nsGkAtoms::dd,
+                                    nsGkAtoms::dt,
+                                    nsGkAtoms::blockquote);
 }
 
 /**
@@ -203,12 +202,6 @@ HTMLEditUtils::IsTableElementButNotTable(nsINode* aNode)
 /**
  * IsTable() returns true if aNode is an html table.
  */
-bool
-HTMLEditUtils::IsTable(nsIDOMNode* aNode)
-{
-  return EditorBase::NodeIsType(aNode, nsGkAtoms::table);
-}
-
 bool
 HTMLEditUtils::IsTable(nsINode* aNode)
 {
@@ -337,13 +330,6 @@ HTMLEditUtils::IsImage(nsIDOMNode* aNode)
 }
 
 bool
-HTMLEditUtils::IsLink(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return node && IsLink(node);
-}
-
-bool
 HTMLEditUtils::IsLink(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -360,13 +346,6 @@ HTMLEditUtils::IsLink(nsINode* aNode)
   nsAutoString tmpText;
   anchor->GetHref(tmpText);
   return !tmpText.IsEmpty();
-}
-
-bool
-HTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return node && IsNamedAnchor(node);
 }
 
 bool

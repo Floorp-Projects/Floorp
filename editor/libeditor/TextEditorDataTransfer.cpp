@@ -176,13 +176,11 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   NS_ASSERTION(dragSession, "No drag session");
 
-  nsCOMPtr<nsIDOMNode> sourceNode;
-  dataTransfer->GetMozSourceNode(getter_AddRefs(sourceNode));
+  nsCOMPtr<nsINode> sourceNode = dataTransfer->GetMozSourceNode();
 
   nsCOMPtr<nsIDOMDocument> srcdomdoc;
   if (sourceNode) {
-    sourceNode->GetOwnerDocument(getter_AddRefs(srcdomdoc));
-    NS_ENSURE_TRUE(sourceNode, NS_ERROR_FAILURE);
+    srcdomdoc = do_QueryInterface(sourceNode->OwnerDoc());
   }
 
   if (nsContentUtils::CheckForSubFrameDrop(dragSession,

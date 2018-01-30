@@ -34,9 +34,6 @@ public:
     : nsGenericDOMDataNode(aNodeInfo)
   {
   }
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
 };
 
 class DocumentType final : public DocumentTypeForward

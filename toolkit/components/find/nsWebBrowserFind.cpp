@@ -26,8 +26,6 @@
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIContent.h"
 #include "nsContentCID.h"
 #include "nsIServiceManager.h"
@@ -40,6 +38,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsISimpleEnumerator.h"
 #include "nsContentUtils.h"
+#include "nsGenericHTMLElement.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -421,32 +420,27 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
   }
 }
 
-// Adapted from nsTextServicesDocument::GetDocumentContentRootNode
+// Adapted from TextServicesDocument::GetDocumentContentRootNode
 nsresult
 nsWebBrowserFind::GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode)
 {
-  nsresult rv;
-
   NS_ENSURE_ARG_POINTER(aNode);
   *aNode = 0;
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(aDomDoc);
-  if (htmlDoc) {
-    // For HTML documents, the content root node is the body.
-    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-    rv = htmlDoc->GetBody(getter_AddRefs(bodyElement));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_ARG_POINTER(bodyElement);
-    bodyElement.forget(aNode);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDomDoc);
+  NS_ENSURE_ARG_POINTER(doc);
+
+  if (doc->IsHTMLOrXHTML()) {
+    Element* body = doc->GetBody();
+    NS_ENSURE_ARG_POINTER(body);
+    NS_ADDREF(*aNode = body->AsDOMNode());
     return NS_OK;
   }
 
   // For non-HTML documents, the content root node will be the doc element.
-  nsCOMPtr<nsIDOMElement> docElement;
-  rv = aDomDoc->GetDocumentElement(getter_AddRefs(docElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_ARG_POINTER(docElement);
-  docElement.forget(aNode);
+  Element* root = doc->GetDocumentElement();
+  NS_ENSURE_ARG_POINTER(root);
+  NS_ADDREF(*aNode = root->AsDOMNode());
   return NS_OK;
 }
 

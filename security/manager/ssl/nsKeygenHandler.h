@@ -35,7 +35,7 @@ public:
   nsKeygenFormProcessor();
   nsresult Init();
 
-  virtual nsresult ProcessValue(nsIDOMHTMLElement* aElement,
+  virtual nsresult ProcessValue(mozilla::dom::Element* aElement,
                                 const nsAString& aName,
                                 nsAString& aValue) override;
 
@@ -52,7 +52,7 @@ public:
 
   static nsresult Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
-  static void ExtractParams(nsIDOMHTMLElement* aElement,
+  static void ExtractParams(mozilla::dom::Element* aElement,
                             nsAString& challengeValue,
                             nsAString& keyTypeValue,
                             nsAString& keyParamsValue);
