@@ -4879,11 +4879,20 @@
   "URLCLASSIFIER_VLPS_LOAD_CORRUPT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "63",
+    "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "boolean",
     "bug_numbers": [1305581],
     "description": "Whether or not a variable-length prefix set loaded from disk is corrupted (true = file corrupted)."
+  },
+  "URLCLASSIFIER_VLPS_METADATA_CORRUPT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "boolean",
+    "bug_numbers": [1433636],
+    "description": "Whether or not the metadata for a variable-length prefix set loaded from disk is corrupted (true = file corrupted)."
   },
   "URLCLASSIFIER_VLPS_LONG_PREFIXES": {
     "record_in_processes": ["main", "content"],
