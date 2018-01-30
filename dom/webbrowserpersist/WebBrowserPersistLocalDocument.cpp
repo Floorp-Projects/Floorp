@@ -858,9 +858,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     *aNodeOut = nullptr;
     *aSerializeCloneKids = false;
 
-    uint16_t type;
-    nsresult rv = aNodeIn->GetNodeType(&type);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> nodeIn = do_QueryInterface(aNodeIn);
+    uint16_t type = nodeIn->NodeType();
     if (type != nsIDOMNode::ELEMENT_NODE &&
         type != nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
         return NS_OK;
@@ -873,7 +872,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
         nodeAsPI->GetTarget(target);
         if (target.EqualsLiteral("xml-stylesheet"))
         {
-            rv = GetNodeToFixup(aNodeIn, aNodeOut);
+            nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
             if (NS_SUCCEEDED(rv) && *aNodeOut) {
                 nsCOMPtr<nsIDOMProcessingInstruction> outNode =
                     do_QueryInterface(*aNodeOut);
@@ -912,8 +911,8 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
                 commentText += NS_LITERAL_STRING("href=\"") + href
                     + NS_LITERAL_STRING("\" ");
             }
-            rv = ownerDocument->CreateComment(commentText,
-                                              getter_AddRefs(comment));
+            ownerDocument->CreateComment(commentText,
+                                         getter_AddRefs(comment));
             if (comment) {
                 return CallQueryInterface(comment, aNodeOut);
             }
@@ -924,7 +923,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     // Fix up href and file links in the elements
     RefPtr<dom::HTMLAnchorElement> nodeAsAnchor = dom::HTMLAnchorElement::FromContent(content);
     if (nodeAsAnchor) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAnchor(*aNodeOut);
         }
@@ -933,7 +932,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
 
     RefPtr<dom::HTMLAreaElement> nodeAsArea = dom::HTMLAreaElement::FromContent(content);
     if (nodeAsArea) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAnchor(*aNodeOut);
         }
@@ -941,7 +940,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::body)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "background");
         }
@@ -949,7 +948,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::table)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "background");
         }
@@ -957,7 +956,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::tr)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "background");
         }
@@ -965,7 +964,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "background");
         }
@@ -973,7 +972,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::img)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // Disable image loads
             nsCOMPtr<nsIImageLoadingContent> imgCon =
@@ -989,7 +988,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
 
     nsCOMPtr<nsIDOMHTMLMediaElement> nodeAsMedia = do_QueryInterface(aNodeIn);
     if (nodeAsMedia) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -997,7 +996,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::source)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -1005,7 +1004,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsSVGElement(nsGkAtoms::img)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // Disable image loads
             nsCOMPtr<nsIImageLoadingContent> imgCon =
@@ -1020,7 +1019,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::script)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -1028,7 +1027,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsSVGElement(nsGkAtoms::script)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "href", "http://www.w3.org/1999/xlink");
         }
@@ -1036,7 +1035,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::embed)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -1044,7 +1043,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::object)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "data");
         }
@@ -1052,7 +1051,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::link)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // First see if the link represents linked content
             rv = FixupAttribute(*aNodeOut, "href");
@@ -1067,7 +1066,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::frame)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -1075,7 +1074,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     }
 
     if (content->IsHTMLElement(nsGkAtoms::iframe)) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             FixupAttribute(*aNodeOut, "src");
         }
@@ -1085,7 +1084,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
     RefPtr<dom::HTMLInputElement> nodeAsInput =
         dom::HTMLInputElement::FromContentOrNull(content);
     if (nodeAsInput) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // Disable image loads
             nsCOMPtr<nsIImageLoadingContent> imgCon =
@@ -1140,7 +1139,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
 
     dom::HTMLTextAreaElement* nodeAsTextArea = dom::HTMLTextAreaElement::FromContent(content);
     if (nodeAsTextArea) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             // Tell the document encoder to serialize the text child we create below
             *aSerializeCloneKids = true;
@@ -1155,7 +1154,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
 
     dom::HTMLOptionElement* nodeAsOption = dom::HTMLOptionElement::FromContent(content);
     if (nodeAsOption) {
-        rv = GetNodeToFixup(aNodeIn, aNodeOut);
+        nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             nsCOMPtr<nsIContent> outContent = do_QueryInterface(*aNodeOut);
             dom::HTMLOptionElement* outElt = dom::HTMLOptionElement::FromContent(outContent);

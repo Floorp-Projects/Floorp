@@ -839,16 +839,6 @@ nsFind::IsBlockNode(nsIContent* aContent)
 }
 
 bool
-nsFind::IsTextNode(nsIDOMNode* aNode)
-{
-  uint16_t nodeType;
-  aNode->GetNodeType(&nodeType);
-
-  return nodeType == nsIDOMNode::TEXT_NODE ||
-         nodeType == nsIDOMNode::CDATA_SECTION_NODE;
-}
-
-bool
 nsFind::IsVisibleNode(nsIDOMNode* aDOMNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));

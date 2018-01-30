@@ -4059,9 +4059,8 @@ EditorBase::IsTextNode(nsIDOMNode* aNode)
     return false;
   }
 
-  uint16_t nodeType;
-  aNode->GetNodeType(&nodeType);
-  return (nodeType == nsIDOMNode::TEXT_NODE);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  return IsTextNode(node);
 }
 
 // static

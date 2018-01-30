@@ -282,13 +282,12 @@ inDOMView::GetCellProperties(int32_t row, nsITreeColumn* col,
   RowToNode(row, &node);
   if (!node) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node->node);
-  if (content && content->IsInAnonymousSubtree()) {
+  nsCOMPtr<nsINode> domNode = do_QueryInterface(node->node);
+  if (domNode->IsInAnonymousSubtree()) {
     aProps.AppendLiteral("anonymous ");
   }
 
-  uint16_t nodeType;
-  node->node->GetNodeType(&nodeType);
+  uint16_t nodeType = domNode->NodeType();
   switch (nodeType) {
     case nsIDOMNode::ELEMENT_NODE:
       aProps.AppendLiteral("ELEMENT_NODE");
