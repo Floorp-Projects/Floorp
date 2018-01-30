@@ -4,25 +4,25 @@
 "use strict";
 
 const {utils: Cu, interfaces: Ci} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LogManager",
+ChromeUtils.defineModuleGetter(this, "LogManager",
   "resource://shield-recipe-client/lib/LogManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RecipeRunner",
+ChromeUtils.defineModuleGetter(this, "RecipeRunner",
   "resource://shield-recipe-client/lib/RecipeRunner.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CleanupManager",
+ChromeUtils.defineModuleGetter(this, "CleanupManager",
   "resource://shield-recipe-client/lib/CleanupManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PreferenceExperiments",
+ChromeUtils.defineModuleGetter(this, "PreferenceExperiments",
   "resource://shield-recipe-client/lib/PreferenceExperiments.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AboutPages",
+ChromeUtils.defineModuleGetter(this, "AboutPages",
   "resource://shield-recipe-client-content/AboutPages.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ShieldPreferences",
+ChromeUtils.defineModuleGetter(this, "ShieldPreferences",
   "resource://shield-recipe-client/lib/ShieldPreferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonStudies",
+ChromeUtils.defineModuleGetter(this, "AddonStudies",
   "resource://shield-recipe-client/lib/AddonStudies.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEvents",
+ChromeUtils.defineModuleGetter(this, "TelemetryEvents",
   "resource://shield-recipe-client/lib/TelemetryEvents.jsm");
 
 this.EXPORTED_SYMBOLS = ["ShieldRecipeClient"];

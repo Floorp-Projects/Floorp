@@ -4,8 +4,8 @@ var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-var {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
-var {PromiseUtils} = Cu.import("resource://gre/modules/PromiseUtils.jsm", {});
+var {WebRequest} = ChromeUtils.import("resource://gre/modules/WebRequest.jsm", {});
+var {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", {});
 
 add_task(async function test_ancestors_exist() {
   let deferred = PromiseUtils.defer();

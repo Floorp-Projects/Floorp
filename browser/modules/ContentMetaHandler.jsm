@@ -5,7 +5,7 @@
 "use strict";
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 Cu.importGlobalProperties(["URL"]);
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Debounce time in milliseconds - this should be long enough to account for
 // sync script tags that could appear between desired meta tags

@@ -10,12 +10,12 @@ this.EXPORTED_SYMBOLS = ['DNSPacket'];
 
 const { utils: Cu } = Components;
 
-Cu.import('resource://gre/modules/Services.jsm');
+ChromeUtils.import('resource://gre/modules/Services.jsm');
 
-Cu.import('resource://gre/modules/DataReader.jsm');
-Cu.import('resource://gre/modules/DataWriter.jsm');
-Cu.import('resource://gre/modules/DNSRecord.jsm');
-Cu.import('resource://gre/modules/DNSResourceRecord.jsm');
+ChromeUtils.import('resource://gre/modules/DataReader.jsm');
+ChromeUtils.import('resource://gre/modules/DataWriter.jsm');
+ChromeUtils.import('resource://gre/modules/DNSRecord.jsm');
+ChromeUtils.import('resource://gre/modules/DNSResourceRecord.jsm');
 
 const DEBUG = true;
 

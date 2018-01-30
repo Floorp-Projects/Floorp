@@ -1,8 +1,8 @@
 // This file tests authentication prompt callbacks
 // TODO NIT use do_check_eq(expected, actual) consistently, not sometimes eq(actual, expected)
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // Turn off the authentication dialog blocking for this test.
 var prefs = Cc["@mozilla.org/preferences-service;1"].

@@ -8,7 +8,7 @@
 /* import-globals-from specialpowersAPI.js */
 /* globals addMessageListener, removeMessageListener, sendSyncMessage, sendAsyncMessage */
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function SpecialPowers(window) {
   this.window = Components.utils.getWeakReference(window);

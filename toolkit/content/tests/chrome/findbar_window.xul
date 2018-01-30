@@ -21,9 +21,9 @@
 
   <script type="application/javascript"><![CDATA[
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
-    Cu.import("resource://gre/modules/AppConstants.jsm");
-    Cu.import("resource://testing-common/BrowserTestUtils.jsm");
-    Cu.import("resource://testing-common/ContentTask.jsm");
+    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    ChromeUtils.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);

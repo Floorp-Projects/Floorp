@@ -4,11 +4,9 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
-
-Cu.import("chrome://marionette/content/assert.js");
-Cu.import("chrome://marionette/content/error.js");
-const {truncate} = Cu.import("chrome://marionette/content/format.js", {});
+ChromeUtils.import("chrome://marionette/content/assert.js");
+ChromeUtils.import("chrome://marionette/content/error.js");
+const {truncate} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = [
   "Command",

@@ -3,7 +3,7 @@
 
 _("Make sure sha1 digests works with various messages");
 
-Cu.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://services-crypto/utils.js");
 
 function run_test() {
   let mes1 = "hello";

@@ -6,17 +6,17 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
-Cu.import("chrome://marionette/content/assert.js");
-const {element} = Cu.import("chrome://marionette/content/element.js", {});
+ChromeUtils.import("chrome://marionette/content/assert.js");
+const {element} = ChromeUtils.import("chrome://marionette/content/element.js", {});
 const {
   InvalidArgumentError,
   MoveTargetOutOfBoundsError,
   UnsupportedOperationError,
-} = Cu.import("chrome://marionette/content/error.js", {});
-Cu.import("chrome://marionette/content/event.js");
-const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
+} = ChromeUtils.import("chrome://marionette/content/error.js", {});
+ChromeUtils.import("chrome://marionette/content/event.js");
+const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["action"];
 

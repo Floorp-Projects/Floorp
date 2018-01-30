@@ -5,8 +5,8 @@
 "use strict";
 
 const { DevToolsShim } =
-    Components.utils.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
-const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+    ChromeUtils.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 // Test the DevToolsShim
 

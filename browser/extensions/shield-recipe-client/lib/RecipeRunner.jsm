@@ -5,34 +5,34 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "timerManager",
                                    "@mozilla.org/updates/timer-manager;1",
                                    "nsIUpdateTimerManager");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Storage",
-                                  "resource://shield-recipe-client/lib/Storage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NormandyDriver",
-                                  "resource://shield-recipe-client/lib/NormandyDriver.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FilterExpressions",
-                                  "resource://shield-recipe-client/lib/FilterExpressions.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NormandyApi",
-                                  "resource://shield-recipe-client/lib/NormandyApi.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SandboxManager",
-                                  "resource://shield-recipe-client/lib/SandboxManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ClientEnvironment",
-                                  "resource://shield-recipe-client/lib/ClientEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CleanupManager",
-                                  "resource://shield-recipe-client/lib/CleanupManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ActionSandboxManager",
-                                  "resource://shield-recipe-client/lib/ActionSandboxManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonStudies",
-                                  "resource://shield-recipe-client/lib/AddonStudies.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Uptake",
-                                  "resource://shield-recipe-client/lib/Uptake.jsm");
+ChromeUtils.defineModuleGetter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
+ChromeUtils.defineModuleGetter(this, "Storage",
+                               "resource://shield-recipe-client/lib/Storage.jsm");
+ChromeUtils.defineModuleGetter(this, "NormandyDriver",
+                               "resource://shield-recipe-client/lib/NormandyDriver.jsm");
+ChromeUtils.defineModuleGetter(this, "FilterExpressions",
+                               "resource://shield-recipe-client/lib/FilterExpressions.jsm");
+ChromeUtils.defineModuleGetter(this, "NormandyApi",
+                               "resource://shield-recipe-client/lib/NormandyApi.jsm");
+ChromeUtils.defineModuleGetter(this, "SandboxManager",
+                               "resource://shield-recipe-client/lib/SandboxManager.jsm");
+ChromeUtils.defineModuleGetter(this, "ClientEnvironment",
+                               "resource://shield-recipe-client/lib/ClientEnvironment.jsm");
+ChromeUtils.defineModuleGetter(this, "CleanupManager",
+                               "resource://shield-recipe-client/lib/CleanupManager.jsm");
+ChromeUtils.defineModuleGetter(this, "ActionSandboxManager",
+                               "resource://shield-recipe-client/lib/ActionSandboxManager.jsm");
+ChromeUtils.defineModuleGetter(this, "AddonStudies",
+                               "resource://shield-recipe-client/lib/AddonStudies.jsm");
+ChromeUtils.defineModuleGetter(this, "Uptake",
+                               "resource://shield-recipe-client/lib/Uptake.jsm");
 
 Cu.importGlobalProperties(["fetch"]);
 

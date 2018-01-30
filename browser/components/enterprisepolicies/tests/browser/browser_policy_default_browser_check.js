@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const { ShellService } = Cu.import("resource:///modules/ShellService.jsm", {});
+const { ShellService } = ChromeUtils.import("resource:///modules/ShellService.jsm", {});
 
 add_task(async function test_default_browser_check() {
   ShellService._checkedThisSession = false;

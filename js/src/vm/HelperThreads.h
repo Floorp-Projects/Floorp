@@ -639,7 +639,7 @@ struct ParseTask
 
     LifoAlloc alloc;
 
-    // Rooted pointer to the global object to use while parsing.
+    // The global object to use while parsing.
     JSObject* parseGlobal;
 
     // Callback invoked off thread when the parse finishes.

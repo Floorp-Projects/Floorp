@@ -27,7 +27,7 @@ function promiseNoCacheEntry(filename) {
     };
     function Visitor() {}
 
-    let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", null);
+    let {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", null);
     let storage = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
     storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   });

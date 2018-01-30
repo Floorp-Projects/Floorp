@@ -1,8 +1,8 @@
 const {utils: Cu} = Components;
 
 let tgt = {};
-const a = Components.utils.import("resource://test/environment_script.js", tgt);
-const b = Components.utils.import("resource://test/environment_checkscript.jsm", tgt);
+const a = ChromeUtils.import("resource://test/environment_script.js", tgt);
+const b = ChromeUtils.import("resource://test/environment_checkscript.jsm", tgt);
 
 const isShared = Cu.getGlobalForObject(a) === Cu.getGlobalForObject(b);
 

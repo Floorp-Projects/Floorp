@@ -6,14 +6,14 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-utils.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
 
 // Import the android PageActions module.
-XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
-                                  "resource://gre/modules/PageActions.jsm");
+ChromeUtils.defineModuleGetter(this, "PageActions",
+                               "resource://gre/modules/PageActions.jsm");
 
-Cu.import("resource://gre/modules/ExtensionParent.jsm");
+ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

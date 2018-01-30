@@ -58,13 +58,6 @@ ServoPageRuleDeclaration::GetParentObject()
   return Rule()->GetDocument();
 }
 
-DocGroup*
-ServoPageRuleDeclaration::GetDocGroup() const
-{
-  nsIDocument* document = Rule()->GetDocument();
-  return document ? document->GetDocGroup() : nullptr;
-}
-
 DeclarationBlock*
 ServoPageRuleDeclaration::GetCSSDeclaration(Operation aOperation)
 {

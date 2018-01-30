@@ -17,17 +17,17 @@
  * browser/base/content/test/general/browser_sanitize-timespans.js.
  */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-var {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
-                                  "resource://gre/modules/FormHistory.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
-                                  "resource://gre/modules/Downloads.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Timer",
-                                  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "FormHistory",
+                               "resource://gre/modules/FormHistory.jsm");
+ChromeUtils.defineModuleGetter(this, "Downloads",
+                               "resource://gre/modules/Downloads.jsm");
+ChromeUtils.defineModuleGetter(this, "Timer",
+                               "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
 
 var tempScope = {};
 Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);

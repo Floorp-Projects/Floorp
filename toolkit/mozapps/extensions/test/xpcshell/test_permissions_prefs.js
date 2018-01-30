@@ -24,7 +24,7 @@ function do_check_permission_prefs(preferences) {
 }
 
 function clear_imported_preferences_cache() {
-  let scope = Components.utils.import("resource://gre/modules/PermissionsUtils.jsm", {});
+  let scope = ChromeUtils.import("resource://gre/modules/PermissionsUtils.jsm", {});
   scope.gImportedPrefBranches.clear();
 }
 

@@ -6,7 +6,7 @@
 // downloaded, and allows the trust of the cert to be specified.
 
 const { MockRegistrar } =
-  Cu.import("resource://testing-common/MockRegistrar.jsm", {});
+  ChromeUtils.import("resource://testing-common/MockRegistrar.jsm", {});
 
 /**
  * @typedef {TestCase}

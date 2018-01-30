@@ -52,7 +52,7 @@ const nsIComponentRegistrar     = Components.interfaces.nsIComponentRegistrar;
 const nsISupportsString         = Components.interfaces.nsISupportsString;
 const nsIWindowWatcher          = Components.interfaces.nsIWindowWatcher;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function PageLoaderCmdLineHandler() {}
 PageLoaderCmdLineHandler.prototype =

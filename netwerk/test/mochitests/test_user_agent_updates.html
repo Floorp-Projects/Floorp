@@ -218,10 +218,10 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 
   var _notifyOnUpdate = false;
 
-  Components.utils.import("resource://gre/modules/FileUtils.jsm");
+  ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
   var FU = FileUtils;
 
-  const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm");
+  const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   var OSF = OS.File;
 
   const KEY_PREFDIR = "PrefD";
@@ -235,7 +235,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
   const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
   const PREF_UPDATES_LASTUPDATED = PREF_UPDATES + "lastupdated";
 
-  let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+  let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
   Services.prefs.addObserver(PREF_UPDATES_LASTUPDATED, () => {
     if (_notifyOnUpdate) {
       _notifyOnUpdate = false; // Only notify once, for the first update.

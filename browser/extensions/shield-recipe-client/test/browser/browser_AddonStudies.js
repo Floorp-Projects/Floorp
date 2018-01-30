@@ -1,11 +1,11 @@
 "use strict";
 
-Cu.import("resource://gre/modules/IndexedDB.jsm", this);
-Cu.import("resource://testing-common/TestUtils.jsm", this);
-Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/Addons.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
+ChromeUtils.import("resource://gre/modules/IndexedDB.jsm", this);
+ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
+ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Addons.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/TelemetryEvents.jsm", this);
 
 // Initialize test utils
 AddonTestUtils.initMochitest(this);

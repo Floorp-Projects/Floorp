@@ -8,10 +8,10 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/FormHistory.jsm");
-Cu.import("resource://gre/modules/SearchSuggestionController.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.import("resource://gre/modules/FormHistory.jsm");
+ChromeUtils.import("resource://gre/modules/SearchSuggestionController.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
 // We must make sure the FormHistoryStartup component is
 // initialized in order for it to respond to FormHistory

@@ -31,7 +31,6 @@ public:
 
   css::Rule* GetParentRule() final override;
   nsINode* GetParentObject() final override;
-  mozilla::dom::DocGroup* GetDocGroup() const final override;
 
 protected:
   DeclarationBlock* GetCSSDeclaration(Operation aOperation) final override;

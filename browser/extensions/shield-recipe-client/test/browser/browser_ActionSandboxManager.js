@@ -1,7 +1,7 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/ActionSandboxManager.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
 
 async function withManager(script, testFunction) {
   const manager = new ActionSandboxManager(script);

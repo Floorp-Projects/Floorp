@@ -3,8 +3,8 @@
 
 "use strict";
 
-Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1", "nsIBinaryInputStream",

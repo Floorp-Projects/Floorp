@@ -31,13 +31,13 @@ if (typeof Components == "undefined") {
 } else {
   let Cu = Components.utils;
   let Scope = {};
-  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", Scope);
+  ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", Scope);
 
   let Path = {};
   if (Scope.OS.Constants.Win) {
-    Cu.import("resource://gre/modules/osfile/ospath_win.jsm", Path);
+    ChromeUtils.import("resource://gre/modules/osfile/ospath_win.jsm", Path);
   } else {
-    Cu.import("resource://gre/modules/osfile/ospath_unix.jsm", Path);
+    ChromeUtils.import("resource://gre/modules/osfile/ospath_unix.jsm", Path);
   }
 
   this.EXPORTED_SYMBOLS = [];

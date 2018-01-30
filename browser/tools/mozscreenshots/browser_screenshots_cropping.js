@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Geometry.jsm", this);
+ChromeUtils.import("resource://gre/modules/Geometry.jsm", this);
 
 async function draw(window, src) {
   const { document, Image } = window;

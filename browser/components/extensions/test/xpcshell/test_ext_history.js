@@ -2,14 +2,14 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
-                                  "resource://testing-common/PlacesTestUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PlacesUtils",
+                               "resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
+                               "resource://gre/modules/ExtensionUtils.jsm");
 
-Cu.import("resource://testing-common/PromiseTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 

@@ -7086,7 +7086,8 @@ static void
 DrawTextRun(const gfxTextRun* aTextRun,
             const gfx::Point& aTextBaselinePt,
             gfxTextRun::Range aRange,
-            const nsTextFrame::DrawTextRunParams& aParams)
+            const nsTextFrame::DrawTextRunParams& aParams,
+            nsTextFrame* aFrame)
 {
   gfxTextRun::DrawParams params(aParams.context);
   params.provider = aParams.provider;
@@ -7112,8 +7113,30 @@ DrawTextRun(const gfxTextRun* aTextRun,
         textDrawer->FoundUnsupportedFeature();
         return;
       }
-      StrokeOptions strokeOpts;
       params.drawMode |= DrawMode::GLYPH_STROKE;
+      if (gfxPrefs::PaintOrderEnabled()) {
+        // Check the paint-order property; if we find stroke before fill,
+        // then change mode to GLYPH_STROKE_UNDERNEATH.
+        uint32_t paintOrder = aFrame->StyleSVG()->mPaintOrder;
+        if (paintOrder != NS_STYLE_PAINT_ORDER_NORMAL) {
+          while (paintOrder) {
+            uint32_t component =
+              paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+            switch (component) {
+            case NS_STYLE_PAINT_ORDER_FILL:
+              // Just break the loop, no need to check further
+              paintOrder = 0;
+              break;
+            case NS_STYLE_PAINT_ORDER_STROKE:
+              params.drawMode |= DrawMode::GLYPH_STROKE_UNDERNEATH;
+              paintOrder = 0;
+              break;
+            }
+            paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+          }
+        }
+      }
+      StrokeOptions strokeOpts;
       params.textStrokeColor = aParams.textStrokeColor;
       strokeOpts.mLineWidth = aParams.textStrokeWidth;
       params.strokeOpts = &strokeOpts;
@@ -7130,7 +7153,7 @@ nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
 {
   MOZ_ASSERT(aParams.advanceWidth, "Must provide advanceWidth");
 
-  ::DrawTextRun(mTextRun, aTextBaselinePt, aRange, aParams);
+  ::DrawTextRun(mTextRun, aTextBaselinePt, aRange, aParams, this);
 
   if (aParams.drawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
@@ -7148,7 +7171,7 @@ nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
       params.advanceWidth = nullptr;
       ::DrawTextRun(hyphenTextRun.get(),
                     gfx::Point(hyphenBaselineX, aTextBaselinePt.y),
-                    Range(hyphenTextRun.get()), params);
+                    Range(hyphenTextRun.get()), params, this);
     }
   }
 }

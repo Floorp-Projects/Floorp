@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-common/utils.js");
 
 function run_test() {
     Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(null));
