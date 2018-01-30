@@ -23,6 +23,7 @@
 #include <map>
 #pragma warning( pop )
 
+#include "Authenticode.h"
 #include "nsAutoPtr.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/Sprintf.h"
@@ -1046,22 +1047,30 @@ DllLoadNotification(ULONG aReason, PCLDR_DLL_NOTIFICATION_DATA aNotificationData
   gDllServices->DispatchDllLoadNotification(fullDllName);
 }
 
+namespace mozilla {
+Authenticode* GetAuthenticode();
+} // namespace mozilla
+
 MFBT_API void
 DllBlocklist_SetDllServices(mozilla::glue::detail::DllServicesBase* aSvc)
 {
   AutoExclusiveLock lock(gDllServicesLock);
 
-  if (aSvc && !gNotificationCookie) {
-    auto pLdrRegisterDllNotification =
-      reinterpret_cast<decltype(&::LdrRegisterDllNotification)>(
-        ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
-                         "LdrRegisterDllNotification"));
+  if (aSvc) {
+    aSvc->SetAuthenticodeImpl(GetAuthenticode());
 
-    MOZ_DIAGNOSTIC_ASSERT(pLdrRegisterDllNotification);
+    if (!gNotificationCookie) {
+      auto pLdrRegisterDllNotification =
+        reinterpret_cast<decltype(&::LdrRegisterDllNotification)>(
+          ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
+                           "LdrRegisterDllNotification"));
 
-    NTSTATUS ntStatus = pLdrRegisterDllNotification(0, &DllLoadNotification,
-                                                    nullptr, &gNotificationCookie);
-    MOZ_DIAGNOSTIC_ASSERT(NT_SUCCESS(ntStatus));
+      MOZ_DIAGNOSTIC_ASSERT(pLdrRegisterDllNotification);
+
+      NTSTATUS ntStatus = pLdrRegisterDllNotification(0, &DllLoadNotification,
+                                                      nullptr, &gNotificationCookie);
+      MOZ_DIAGNOSTIC_ASSERT(NT_SUCCESS(ntStatus));
+    }
   }
 
   gDllServices = aSvc;
