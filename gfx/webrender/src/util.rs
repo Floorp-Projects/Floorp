@@ -216,7 +216,8 @@ pub fn _subtract_rect<U>(
 
 #[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum TransformedRectKind {
     AxisAligned = 0,
     Complex = 1,

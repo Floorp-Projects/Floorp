@@ -11,7 +11,8 @@ use render_task::RenderTaskAddress;
 
 #[repr(i32)]
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum BlurDirection {
     Horizontal = 0,
     Vertical,
@@ -19,7 +20,8 @@ pub enum BlurDirection {
 
 #[derive(Debug)]
 #[repr(C)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct BlurInstance {
     pub task_address: RenderTaskAddress,
     pub src_task_address: RenderTaskAddress,
@@ -30,7 +32,8 @@ pub struct BlurInstance {
 /// Could be an image or a rectangle, which defines the
 /// way `address` is treated.
 #[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipMaskInstance {
     pub render_task_address: RenderTaskAddress,
@@ -42,7 +45,8 @@ pub struct ClipMaskInstance {
 
 // 32 bytes per instance should be enough for anyone!
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimitiveInstance {
     data: [i32; 8],
 }
@@ -193,12 +197,14 @@ pub enum BrushImageKind {
 }
 
 #[derive(Copy, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipScrollNodeIndex(pub u32);
 
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipScrollNodeData {
     pub transform: LayerToWorldTransform,
@@ -221,7 +227,8 @@ impl ClipScrollNodeData {
 pub struct ClipChainRectIndex(pub usize);
 
 #[derive(Copy, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub enum PictureType {
     Image = 1,

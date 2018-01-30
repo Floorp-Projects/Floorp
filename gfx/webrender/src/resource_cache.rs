@@ -11,19 +11,23 @@ use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, GlyphKey, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize};
-#[cfg(feature = "capture")]
-use api::{NativeFontHandle};
 use app_units::Au;
 #[cfg(feature = "capture")]
-use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
+use capture::ExternalCaptureImage;
+#[cfg(feature = "replay")]
+use capture::PlainExternalImage;
+#[cfg(any(feature = "replay", feature = "png"))]
+use capture::CaptureConfig;
 use device::TextureFilter;
 use frame::FrameId;
 use glyph_cache::GlyphCache;
 #[cfg(feature = "capture")]
-use glyph_cache::{CachedGlyphInfo, PlainGlyphCacheOwn, PlainGlyphCacheRef, PlainCachedGlyphInfo};
+use glyph_cache::{PlainGlyphCacheRef, PlainCachedGlyphInfo};
+#[cfg(feature = "replay")]
+use glyph_cache::{CachedGlyphInfo, PlainGlyphCacheOwn};
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterizer, GlyphRequest};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
+use internal_types::{FastHashMap, FastHashSet, ResourceCacheError, SourceTexture, TextureUpdateList};
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use rayon::ThreadPool;
 use render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId, RenderTaskTree};
@@ -32,7 +36,7 @@ use std::cmp;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::mem;
-#[cfg(feature = "capture")]
+#[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use texture_cache::{TextureCache, TextureCacheHandle};
@@ -40,7 +44,8 @@ use texture_cache::{TextureCache, TextureCacheHandle};
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GlyphFetchResult {
     pub index_in_text_run: i32,
     pub uv_rect_address: GpuCacheAddress,
@@ -75,7 +80,8 @@ impl CacheItem {
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ImageProperties {
     pub descriptor: ImageDescriptor,
     pub external_image: Option<ExternalImageData>,
@@ -135,21 +141,24 @@ impl ImageTemplates {
     }
 }
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct CachedImageInfo {
     texture_cache_handle: TextureCacheHandle,
     epoch: Epoch,
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Clone, Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Clone, Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum ResourceClassCacheError {
     OverLimitSize,
 }
 
 pub type ResourceCacheResult<V> = Result<V, ResourceClassCacheError>;
 
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ResourceClassCache<K: Hash + Eq, V> {
     resources: FastHashMap<K, ResourceCacheResult<V>>,
 }
@@ -203,7 +212,8 @@ where
 
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "capture", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct ImageRequest {
     key: ImageKey,
     rendering: ImageRendering,
@@ -269,8 +279,10 @@ impl ResourceCache {
         texture_cache: TextureCache,
         workers: Arc<ThreadPool>,
         blob_image_renderer: Option<Box<BlobImageRenderer>>,
-    ) -> Self {
-        ResourceCache {
+    ) -> Result<Self, ResourceCacheError> {
+        let glyph_rasterizer = GlyphRasterizer::new(workers)?;
+
+        Ok(ResourceCache {
             cached_glyphs: GlyphCache::new(),
             cached_images: ResourceClassCache::new(),
             cached_render_tasks: RenderTaskCache::new(),
@@ -284,9 +296,9 @@ impl ResourceCache {
             state: State::Idle,
             current_frame_id: FrameId(0),
             pending_image_requests: FastHashSet::default(),
-            glyph_rasterizer: GlyphRasterizer::new(workers),
+            glyph_rasterizer,
             blob_image_renderer,
-        }
+        })
     }
 
     pub fn max_texture_size(&self) -> u32 {
@@ -986,18 +998,20 @@ pub fn compute_tile_size(
     (actual_width, actual_height)
 }
 
-#[cfg(feature = "capture")]
-#[derive(Serialize, Deserialize)]
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 enum PlainFontTemplate {
     Raw {
         data: String,
         index: u32,
     },
-    Native(NativeFontHandle),
+    Native,
 }
 
-#[cfg(feature = "capture")]
-#[derive(Serialize, Deserialize)]
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainImageTemplate {
     data: String,
     descriptor: ImageDescriptor,
@@ -1005,8 +1019,9 @@ struct PlainImageTemplate {
     tiling: Option<TileSize>,
 }
 
-#[cfg(feature = "capture")]
-#[derive(Serialize, Deserialize)]
+#[cfg(any(feature = "capture", feature = "replay"))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PlainResources {
     font_templates: FastHashMap<FontKey, PlainFontTemplate>,
     font_instances: FastHashMap<FontInstanceKey, FontInstance>,
@@ -1023,7 +1038,7 @@ pub struct PlainCacheRef<'a> {
     textures: &'a TextureCache,
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
 #[derive(Deserialize)]
 pub struct PlainCacheOwn {
     current_frame_id: FrameId,
@@ -1033,8 +1048,11 @@ pub struct PlainCacheOwn {
     textures: TextureCache,
 }
 
-#[cfg(feature = "capture")]
+#[cfg(feature = "replay")]
+const NATIVE_FONT: &'static [u8] = include_bytes!("../res/Proggy.ttf");
+
 impl ResourceCache {
+    #[cfg(feature = "capture")]
     pub fn save_capture(
         &mut self, root: &PathBuf
     ) -> (PlainResources, Vec<ExternalCaptureImage>) {
@@ -1181,8 +1199,8 @@ impl ResourceCache {
                                 index,
                             }
                         }
-                        FontTemplate::Native(ref native) => {
-                            PlainFontTemplate::Native(native.clone())
+                        FontTemplate::Native(_) => {
+                            PlainFontTemplate::Native
                         }
                     })
                 })
@@ -1207,6 +1225,7 @@ impl ResourceCache {
         (resources, external_images)
     }
 
+    #[cfg(feature = "capture")]
     pub fn save_caches(&self, root: &PathBuf) -> PlainCacheRef {
         use std::io::Write;
         use std::fs;
@@ -1271,6 +1290,7 @@ impl ResourceCache {
         }
     }
 
+    #[cfg(feature = "replay")]
     pub fn load_capture(
         &mut self,
         resources: PlainResources,
@@ -1352,6 +1372,7 @@ impl ResourceCache {
         res.image_templates.images.clear();
 
         info!("\tfont templates...");
+        let native_font_replacement = Arc::new(NATIVE_FONT.to_vec());
         for (key, plain_template) in resources.font_templates {
             let template = match plain_template {
                 PlainFontTemplate::Raw { data, index } => {
@@ -1371,8 +1392,8 @@ impl ResourceCache {
                     };
                     FontTemplate::Raw(arc, index)
                 }
-                PlainFontTemplate::Native(native) => {
-                    FontTemplate::Native(native)
+                PlainFontTemplate::Native => {
+                    FontTemplate::Raw(native_font_replacement.clone(), 0)
                 }
             };
 

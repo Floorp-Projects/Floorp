@@ -58,7 +58,8 @@ pub fn font_to_data(font: CGFont) -> Result<Vec<u8>, std::io::Error> {
     let mut offset: u32 = 0;
     offset += 4 * 3;
     offset += 4 * 4 * (count as u32);
-    for tag in tags.iter() {
+    for tag_ref in tags.iter() {
+        let tag = *tag_ref;
         if tag == CFF_TAG {
             cff = true;
         }
