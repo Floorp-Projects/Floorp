@@ -394,9 +394,6 @@ public:
                                                 int32_t aModType) const override;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-    // nsIDOMElement
-    NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
 

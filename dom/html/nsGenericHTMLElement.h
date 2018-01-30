@@ -270,8 +270,6 @@ public:
   nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
 
   // XPIDL methods
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck) final override {
     *aSpellcheck = Spellcheck();
     return NS_OK;

@@ -2194,6 +2194,4 @@ _elementName::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,   \
     return SetBoolAttr(nsGkAtoms::_atom, aValue);                     \
   }
 
-#define NS_FORWARD_NSIDOMELEMENT_TO_GENERIC                                   \
-typedef mozilla::dom::Element Element;
 #endif // mozilla_dom_Element_h__
