@@ -1017,6 +1017,7 @@ img.file {
 
 img.arrow {
   mask: url("chrome://devtools/skin/images/debugger/arrow.svg");
+  margin-inline-end: 5px;
   margin-top: 3px;
   width: 9px;
   height: 9px;
@@ -1029,13 +1030,11 @@ img.arrow {
   transition: transform 0.18s ease;
 }
 
-html:not([dir="rtl"]) .arrow svg {
-  margin-right: 5px;
+html[dir="ltr"] img.arrow {
   transform: rotate(-90deg);
 }
 
-html[dir="rtl"] .arrow svg {
-  margin-left: 5px;
+html[dir="rtl"] img.arrow {
   transform: rotate(90deg);
 }
 
@@ -1485,32 +1484,28 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .source-outline-tabs .tab {
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid transparent;
+  border-color: var(--theme-splitter-color);
+  color: var(--theme-body-color);
+  cursor: default;
+  display: inline-flex;
   flex: 1;
   justify-content: center;
-  border-bottom: 1px solid transparent;
-  border-left: 1px solid transparent;
-  display: inline-flex;
-  position: relative;
-  transition: all 0.25s ease;
-  overflow: hidden;
-  padding: 8px 8px 7px 8px;
   margin-bottom: 0px;
   margin-top: -1px;
-  cursor: default;
+  overflow: hidden;
+  padding: 8px 8px 7px 8px;
+  position: relative;
+  transition: all 0.25s ease;
 }
 
 .source-outline-tabs .tab:first-child {
-  border-left: 0;
+  border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
 .source-outline-tabs .tab:hover {
   background-color: var(--theme-toolbar-background-alt);
-  border-color: var(--theme-splitter-color);
-}
-
-.source-outline-tabs .tab {
-  color: var(--theme-body-color);
-  background-color: var(--theme-toolbar-background);
   border-color: var(--theme-splitter-color);
 }
 
@@ -3616,7 +3611,7 @@ img.ignore-exceptions {
 }
 
 .scopes-list {
-  padding-left: 4px;
+  padding-inline-start: 4px;
 }
 
 .scopes-list .function-signature {

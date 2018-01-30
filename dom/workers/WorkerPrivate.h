@@ -7,93 +7,49 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
-#include "Workers.h"
-
-#include "js/CharacterEncoding.h"
-#include "nsIContentPolicy.h"
-#include "nsIContentSecurityPolicy.h"
-#include "nsILoadGroup.h"
-#include "nsIWorkerDebugger.h"
-#include "nsPIDOMWindow.h"
-
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
+#include "WorkerCommon.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/Move.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "nsAutoPtr.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
-#include "nsRefPtrHashtable.h"
-#include "nsString.h"
-#include "nsTArray.h"
+#include "nsDOMNavigationTiming.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 
 #include "Queue.h"
 #include "WorkerHolder.h"
+#include "WorkerLoadInfo.h"
 
 #ifdef XP_WIN
 #undef PostMessage
 #endif
 
-class nsIChannel;
 class nsIConsoleReportCollector;
-class nsIDocument;
-class nsIEventTarget;
-class nsIPrincipal;
-class nsIScriptContext;
-class nsIScriptTimeoutHandler;
-class nsISerialEventTarget;
-class nsISerializable;
-class nsIThread;
 class nsIThreadInternal;
-class nsITimer;
-class nsIURI;
-template<class T> class nsMainThreadPtrHandle;
-
-namespace JS {
-struct RuntimeStats;
-} // namespace JS
 
 namespace mozilla {
-class ThrottledEventQueue;
 namespace dom {
+
 class ClientInfo;
 class ClientSource;
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class PerformanceStorage;
-class PromiseNativeHandler;
-class StructuredCloneHolder;
 class WorkerDebuggerGlobalScope;
+class WorkerErrorReport;
 class WorkerGlobalScope;
 struct WorkerOptions;
-} // namespace dom
-namespace ipc {
-class PrincipalInfo;
-} // namespace ipc
-} // namespace mozilla
 
-struct PRThread;
-
-class ReportDebuggerErrorRunnable;
-class PostDebuggerMessageRunnable;
+} // dom namespace
+} // mozilla namespace
 
 BEGIN_WORKERS_NAMESPACE
 
-class AutoSyncLoopHolder;
 class SharedWorker;
-class ServiceWorkerClientInfo;
-class WorkerEventTarget;
 class WorkerControlRunnable;
 class WorkerDebugger;
-class WorkerPrivate;
+class WorkerEventTarget;
 class WorkerRunnable;
 class WorkerThread;
 
@@ -144,45 +100,6 @@ public:
   {
     mMutex->AssertCurrentThreadOwns();
   }
-};
-
-class WorkerErrorBase {
-public:
-  nsString mMessage;
-  nsString mFilename;
-  uint32_t mLineNumber;
-  uint32_t mColumnNumber;
-  uint32_t mErrorNumber;
-
-  WorkerErrorBase()
-  : mLineNumber(0),
-    mColumnNumber(0),
-    mErrorNumber(0)
-  { }
-
-  void AssignErrorBase(JSErrorBase* aReport);
-};
-
-class WorkerErrorNote : public WorkerErrorBase {
-public:
-  void AssignErrorNote(JSErrorNotes::Note* aNote);
-};
-
-class WorkerErrorReport : public WorkerErrorBase {
-public:
-  nsString mLine;
-  uint32_t mFlags;
-  JSExnType mExnType;
-  bool mMutedError;
-  nsTArray<WorkerErrorNote> mNotes;
-
-  WorkerErrorReport()
-  : mFlags(0),
-    mExnType(JSEXN_ERR),
-    mMutedError(false)
-  { }
-
-  void AssignErrorReport(JSErrorReport* aReport);
 };
 
 template <class Derived>
@@ -952,46 +869,6 @@ public:
   {
     return mBusyCount;
   }
-};
-
-class WorkerDebugger : public nsIWorkerDebugger {
-  friend class ::ReportDebuggerErrorRunnable;
-  friend class ::PostDebuggerMessageRunnable;
-
-  WorkerPrivate* mWorkerPrivate;
-  bool mIsInitialized;
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
-
-public:
-  explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWORKERDEBUGGER
-
-  void
-  AssertIsOnParentThread();
-
-  void
-  Close();
-
-  void
-  PostMessageToDebugger(const nsAString& aMessage);
-
-  void
-  ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
-                        const nsAString& aMessage);
-
-private:
-  virtual
-  ~WorkerDebugger();
-
-  void
-  PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
-
-  void
-  ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
-                                    uint32_t aLineno,
-                                    const nsAString& aMessage);
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workernavigator_h__
 #define mozilla_dom_workernavigator_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 #include "RuntimeService.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"

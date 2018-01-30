@@ -4,26 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_workers_h__
-#define mozilla_dom_workers_workers_h__
+#ifndef mozilla_dom_workers_WorkerCommon_h
+#define mozilla_dom_workers_WorkerCommon_h
 
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include <stdint.h>
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDebug.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
-#include "nsILoadContext.h"
-#include "nsIWeakReferenceUtils.h"
-#include "nsIInterfaceRequestor.h"
-#include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 #define BEGIN_WORKERS_NAMESPACE \
   namespace mozilla { namespace dom { namespace workers {
@@ -32,25 +25,12 @@
 #define USING_WORKERS_NAMESPACE \
   using namespace mozilla::dom::workers;
 
-#define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
-
-class nsIContentSecurityPolicy;
-class nsIScriptContext;
 class nsIGlobalObject;
 class nsPIDOMWindowInner;
-class nsIPrincipal;
-class nsILoadGroup;
-class nsITabChild;
-class nsIChannel;
-class nsIRunnable;
-class nsIURI;
 
 namespace mozilla {
-namespace ipc {
-class PrincipalInfo;
-} // namespace ipc
-
 namespace dom {
+
 // If you change this, the corresponding list in nsIWorkerDebugger.idl needs to
 // be updated too.
 enum WorkerType
@@ -185,117 +165,6 @@ struct JSSettings
   }
 };
 
-// Implemented in WorkerPrivate.cpp
-
-struct WorkerLoadInfo
-{
-  // All of these should be released in WorkerPrivateParent::ForgetMainThreadObjects.
-  nsCOMPtr<nsIURI> mBaseURI;
-  nsCOMPtr<nsIURI> mResolvedScriptURI;
-
-  // This is the principal of the global (parent worker or a window) loading
-  // the worker. It can be null if we are executing a ServiceWorker, otherwise,
-  // except for data: URL, it must subsumes the worker principal.
-  // If we load a data: URL, mPrincipal will be a null principal.
-  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-
-  nsCOMPtr<nsIScriptContext> mScriptContext;
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
-  nsCOMPtr<nsIChannel> mChannel;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
-
-  // mLoadFailedAsyncRunnable will execute on main thread if script loading
-  // fails during script loading.  If script loading is never started due to
-  // a synchronous error, then the runnable is never executed.  The runnable
-  // is guaranteed to be released on the main thread.
-  nsCOMPtr<nsIRunnable> mLoadFailedAsyncRunnable;
-
-  class InterfaceRequestor final : public nsIInterfaceRequestor
-  {
-    NS_DECL_ISUPPORTS
-
-  public:
-    InterfaceRequestor(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
-    void MaybeAddTabChild(nsILoadGroup* aLoadGroup);
-    NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink) override;
-
-  private:
-    ~InterfaceRequestor() { }
-
-    already_AddRefed<nsITabChild> GetAnyLiveTabChild();
-
-    nsCOMPtr<nsILoadContext> mLoadContext;
-    nsCOMPtr<nsIInterfaceRequestor> mOuterRequestor;
-
-    // Array of weak references to nsITabChild.  We do not want to keep TabChild
-    // actors alive for long after their ActorDestroy() methods are called.
-    nsTArray<nsWeakPtr> mTabChildList;
-  };
-
-  // Only set if we have a custom overriden load group
-  RefPtr<InterfaceRequestor> mInterfaceRequestor;
-
-  nsAutoPtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
-  nsCString mDomain;
-  nsString mOrigin; // Derived from mPrincipal; can be used on worker thread.
-
-  nsString mServiceWorkerCacheName;
-  Maybe<ServiceWorkerDescriptor> mServiceWorkerDescriptor;
-
-  Maybe<ServiceWorkerDescriptor> mParentController;
-
-  ChannelInfo mChannelInfo;
-  nsLoadFlags mLoadFlags;
-
-  uint64_t mWindowID;
-
-  net::ReferrerPolicy mReferrerPolicy;
-  bool mFromWindow;
-  bool mEvalAllowed;
-  bool mReportCSPViolations;
-  bool mXHRParamsAllowed;
-  bool mPrincipalIsSystem;
-  bool mStorageAllowed;
-  bool mServiceWorkersTestingInWindow;
-  OriginAttributes mOriginAttributes;
-
-  WorkerLoadInfo();
-  ~WorkerLoadInfo();
-
-  void StealFrom(WorkerLoadInfo& aOther);
-
-  nsresult
-  SetPrincipalOnMainThread(nsIPrincipal* aPrincipal, nsILoadGroup* aLoadGroup);
-
-  nsresult
-  GetPrincipalAndLoadGroupFromChannel(nsIChannel* aChannel,
-                                      nsIPrincipal** aPrincipalOut,
-                                      nsILoadGroup** aLoadGroupOut);
-
-  nsresult
-  SetPrincipalFromChannel(nsIChannel* aChannel);
-
-  bool
-  FinalChannelPrincipalIsValid(nsIChannel* aChannel);
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  bool
-  PrincipalIsValid() const;
-
-  bool
-  PrincipalURIMatchesScriptURL();
-#endif
-
-  bool
-  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate);
-
-  bool
-  ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
-                                nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel);
-};
-
 // All of these are implemented in RuntimeService.cpp
 
 void
@@ -379,4 +248,4 @@ IsDebuggerSandbox(JSObject* object);
 
 END_WORKERS_NAMESPACE
 
-#endif // mozilla_dom_workers_workers_h__
+#endif // mozilla_dom_workers_WorkerCommon_h

@@ -30,7 +30,7 @@
 #include "nsContentUtils.h"
 
 #include "WorkerPrivate.h"
-#include "Workers.h"
+#include "WorkerCommon.h"
 #include "WorkerScope.h"
 
 using namespace mozilla::dom::workers;
