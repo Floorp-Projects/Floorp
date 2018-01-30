@@ -277,13 +277,12 @@ static const unsigned SetFP = 0;
 static const unsigned PoppedFP = 0;
 static const unsigned PoppedTLSReg = 0;
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-static const unsigned BeforePushRetAddr = 0;
 static const unsigned PushedRetAddr = 8;
-static const unsigned PushedTLS = 16;
-static const unsigned PushedFP = 24;
-static const unsigned SetFP = 28;
-static const unsigned PoppedFP = 16;
-static const unsigned PoppedTLSReg = 8;
+static const unsigned PushedTLS = 12;
+static const unsigned PushedFP = 16;
+static const unsigned SetFP = 20;
+static const unsigned PoppedFP = 8;
+static const unsigned PoppedTLSReg = 4;
 #elif defined(JS_CODEGEN_NONE)
 // Synthetic values to satisfy asserts and avoid compiler warnings.
 static const unsigned PushedRetAddr = 0;
@@ -296,19 +295,6 @@ static const unsigned PoppedTLSReg = 5;
 # error "Unknown architecture!"
 #endif
 
-static void
-PushRetAddr(MacroAssembler& masm, unsigned entry)
-{
-#if defined(JS_CODEGEN_ARM)
-    MOZ_ASSERT(masm.currentOffset() - entry == BeforePushRetAddr);
-    masm.push(lr);
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    MOZ_ASSERT(masm.currentOffset() - entry == BeforePushRetAddr);
-    masm.push(ra);
-#else
-    // The x86/x64 call instruction pushes the return address.
-#endif
-}
 
 static void
 LoadActivation(MacroAssembler& masm, const Register& dest)
@@ -350,13 +336,32 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     // constants and assert that they match the actual codegen below. On ARM,
     // this requires AutoForbidPools to prevent a constant pool from being
     // randomly inserted between two instructions.
-    {
-#if defined(JS_CODEGEN_ARM)
-        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
-#endif
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         *entry = masm.currentOffset();
 
-        PushRetAddr(masm, *entry);
+        masm.subFromStackPtr(Imm32(sizeof(Frame)));
+        masm.storePtr(ra, Address(StackPointer, offsetof(Frame, returnAddress)));
+        MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
+        masm.storePtr(WasmTlsReg, Address(StackPointer, offsetof(Frame, tls)));
+        MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
+        masm.storePtr(FramePointer, Address(StackPointer, offsetof(Frame, callerFP)));
+        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
+        masm.moveStackPtrTo(FramePointer);
+        MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
+#else
+    {
+# if defined(JS_CODEGEN_ARM)
+        AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
+
+        *entry = masm.currentOffset();
+
+        MOZ_ASSERT(BeforePushRetAddr == 0);
+        masm.push(lr);
+# else
+        *entry = masm.currentOffset();
+        // The x86/x64 call instruction pushes the return address.
+# endif
+
         MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - *entry);
         masm.push(WasmTlsReg);
         MOZ_ASSERT_IF(!masm.oom(), PushedTLS == masm.currentOffset() - *entry);
@@ -365,7 +370,7 @@ GenerateCallablePrologue(MacroAssembler& masm, unsigned framePushed, ExitReason 
         masm.moveStackPtrTo(FramePointer);
         MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
     }
-
+#endif
     // Tiering works as follows.  The Code owns a jumpTable, which has one
     // pointer-sized element for each function up to the largest funcIndex in
     // the module.  Each table element is an address into the Tier-1 or the
@@ -409,10 +414,26 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     if (!reason.isNone())
         ClearExitFP(masm, ABINonArgReturnVolatileReg);
 
+    DebugOnly<uint32_t> poppedFP;
+    DebugOnly<uint32_t> poppedTlsReg;
+
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+
+    masm.loadPtr(Address(StackPointer, offsetof(Frame, callerFP)), FramePointer);
+    poppedFP = masm.currentOffset();
+    masm.loadPtr(Address(StackPointer, offsetof(Frame, tls)), WasmTlsReg);
+    poppedTlsReg = masm.currentOffset();
+    masm.loadPtr(Address(StackPointer, offsetof(Frame, returnAddress)), ra);
+
+    *ret = masm.currentOffset();
+    masm.as_jr(ra);
+    masm.addToStackPtr(Imm32(sizeof(Frame)));
+
+#else
     // Forbid pools for the same reason as described in GenerateCallablePrologue.
-#if defined(JS_CODEGEN_ARM)
+# if defined(JS_CODEGEN_ARM)
     AutoForbidPools afp(&masm, /* number of instructions in scope = */ 7);
-#endif
+# endif
 
     // There is an important ordering constraint here: fp must be repointed to
     // the caller's frame before any field of the frame currently pointed to by
@@ -422,18 +443,14 @@ GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason 
     // *also* done asynchronously).
 
     masm.pop(FramePointer);
-    DebugOnly<uint32_t> poppedFP = masm.currentOffset();
+    poppedFP = masm.currentOffset();
 
     masm.pop(WasmTlsReg);
-    DebugOnly<uint32_t> poppedTlsReg = masm.currentOffset();
+    poppedTlsReg = masm.currentOffset();
 
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-    masm.pop(ra);
-    *ret = masm.currentOffset();
-    masm.branch(ra);
-#else
     *ret = masm.currentOffset();
     masm.ret();
+
 #endif
 
     MOZ_ASSERT_IF(!masm.oom(), PoppedFP == *ret - poppedFP);
@@ -725,13 +742,9 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
       case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        if ((offsetFromEntry >= BeforePushRetAddr && offsetFromEntry < PushedFP) || codeRange->isThunk()) {
-            // See BUG 1407986.
-            // On MIPS push is emulated by two instructions: adjusting the sp
-            // and storing the value to sp.
-            // Execution might be interrupted in between the two operation so we
-            // have to relay on register state instead of state saved on stack
-            // until the wasm::Frame is completely built.
+        if (offsetFromEntry < PushedFP || codeRange->isThunk()) {
+            // On MIPS we relay on register state instead of state saved on
+            // stack until the wasm::Frame is completely built.
             // On entry the return address is in ra (registers.lr) and
             // fp holds the caller's fp.
             fixedPC = (uint8_t*) registers.lr;
@@ -764,6 +777,19 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
             fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
             fixedFP = fp;
             AssertMatchesCallSite(fixedPC, fixedFP);
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+        } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
+                   offsetInCode <= codeRange->ret())
+        {
+            (void)PoppedTLSReg;
+            // The fixedFP field of the Frame has been loaded into fp.
+            // The ra and TLS might also be loaded, but the Frame structure is
+            // still on stack, so we can acess the ra form there.
+            MOZ_ASSERT(fp == reinterpret_cast<Frame*>(sp)->callerFP);
+            fixedPC = reinterpret_cast<Frame*>(sp)->returnAddress;
+            fixedFP = fp;
+            AssertMatchesCallSite(fixedPC, fixedFP);
+#else
         } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
                    offsetInCode < codeRange->ret() - PoppedTLSReg)
         {
@@ -771,22 +797,6 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
             fixedPC = sp[1];
             fixedFP = fp;
             AssertMatchesCallSite(fixedPC, fixedFP);
-#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        } else if (offsetInCode >= codeRange->ret() - PoppedTLSReg &&
-                   offsetInCode < codeRange->ret())
-        {
-            // The fixedFP field of the Frame has been popped into fp, but the
-            // exit reason hasn't been popped yet.
-            fixedPC = sp[0];
-            fixedFP = fp;
-            AssertMatchesCallSite(fixedPC, fixedFP);
-        } else if (offsetInCode == codeRange->ret()) {
-            // Both the TLS, fixedFP and ra have been popped and fp now
-            // points to the caller's frame.
-            fixedPC = (uint8_t*) registers.lr;
-            fixedFP = fp;
-            AssertMatchesCallSite(fixedPC, fixedFP);
-#else
         } else if (offsetInCode == codeRange->ret()) {
             // Both the TLS and fixedFP fields have been popped and fp now
             // points to the caller's frame.
