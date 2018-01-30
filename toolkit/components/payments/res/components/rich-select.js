@@ -101,10 +101,16 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
   }
 
   onClick(event) {
-    if (!this.disabled &&
-        event.button == 0) {
-      this.open = !this.open;
+    if (event.button != 0) {
+      return;
     }
+
+    let option = event.target.closest(".rich-option");
+    if (this.open && option && !option.matches(".rich-select-selected-clone") && !option.selected) {
+      this.selectedOption = option;
+      this._dispatchChangeEvent();
+    }
+    this.open = !this.open;
   }
 
   onKeyDown(event) {
@@ -116,6 +122,7 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       if (next) {
         next.selected = true;
         selectedOption.selected = false;
+        this._dispatchChangeEvent();
       }
     } else if (event.key == "ArrowUp") {
       let selectedOption = this.selectedOption;
@@ -123,11 +130,21 @@ class RichSelect extends ObservedPropertiesMixin(HTMLElement) {
       if (next) {
         next.selected = true;
         selectedOption.selected = false;
+        this._dispatchChangeEvent();
       }
     } else if (event.key == "Enter" ||
                event.key == "Escape") {
       this.open = false;
     }
+  }
+
+  /**
+   * Only dispatched upon a user-initiated change.
+   */
+  _dispatchChangeEvent() {
+    let changeEvent = document.createEvent("UIEvent");
+    changeEvent.initEvent("change", true, true);
+    this.dispatchEvent(changeEvent);
   }
 
   _optionsAreEquivalent(a, b) {
