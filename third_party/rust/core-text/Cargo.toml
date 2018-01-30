@@ -12,22 +12,22 @@
 
 [package]
 name = "core-text"
-version = "8.0.0"
+version = "9.0.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to the Core Text framework."
 license = "MIT/Apache-2.0"
 repository = "https://github.com/servo/core-text-rs"
-[dependencies.core-graphics]
-version = "0.12.1"
-
 [dependencies.core-foundation]
-version = "0.4"
+version = "0.5"
 
-[dependencies.libc]
-version = "0.2"
+[dependencies.core-graphics]
+version = "0.13"
 
 [dependencies.foreign-types]
 version = "0.3"
+
+[dependencies.libc]
+version = "0.2"
 
 [features]
 default = ["mountainlion"]
