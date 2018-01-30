@@ -30,5 +30,4 @@ interface nsIDOMElement : nsIDOMNode
   DOMString          getAttribute(in DOMString name);
   void               setAttribute(in DOMString name, 
                                   in DOMString value);
-  boolean            hasAttribute(in DOMString name);
 };
