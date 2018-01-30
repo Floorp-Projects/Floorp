@@ -85,8 +85,7 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         self.installer_url = self.config.get("installer_url")
         self.tests = None
 
-        abs_work_dir = self.query_abs_dirs()['abs_work_dir']
-        self.testdir = os.path.join(abs_work_dir, 'tests')
+        self.testdir = self.query_abs_dirs()['abs_test_install_dir']
         self.awsy_path = os.path.join(self.testdir, 'awsy')
         self.awsy_libdir = os.path.join(self.awsy_path, 'awsy')
         self.webroot_dir = os.path.join(self.testdir, 'html')
@@ -100,6 +99,7 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
 
         dirs = {}
         dirs['abs_blob_upload_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'blobber_upload_dir')
+        dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         abs_dirs.update(dirs)
         self.abs_dirs = abs_dirs
         return self.abs_dirs
