@@ -134,11 +134,10 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 }
 
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
 {
   GetCssTextImpl(aCssText);
-  return NS_OK;
 }
 
 void
@@ -163,11 +162,12 @@ nsCSSFontFaceStyleDecl::GetCssTextImpl(nsAString& aCssText) const
   }
 }
 
-NS_IMETHODIMP
+void
 nsCSSFontFaceStyleDecl::SetCssText(const nsAString& aCssText,
-                                   nsIPrincipal* aSubjectPrincipal)
+                                   nsIPrincipal* aSubjectPrincipal,
+                                   ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED); // bug 443978
 }
 
 NS_IMETHODIMP

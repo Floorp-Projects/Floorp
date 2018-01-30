@@ -425,19 +425,18 @@ nsComputedDOMStyle::SetPropertyValue(const nsCSSPropertyID aPropID,
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::GetCssText(nsAString& aCssText)
 {
   aCssText.Truncate();
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
-                               nsIPrincipal* aSubjectPrincipal)
+                               nsIPrincipal* aSubjectPrincipal,
+                               ErrorResult& aRv)
 {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
 }
 
 NS_IMETHODIMP
