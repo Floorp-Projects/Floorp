@@ -12,6 +12,10 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
+#ifdef XP_WIN
+#undef PostMessage
+#endif
+
 class nsIDOMEvent;
 class nsPIDOMWindowInner;
 

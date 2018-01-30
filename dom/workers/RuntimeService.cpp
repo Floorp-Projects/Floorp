@@ -76,6 +76,8 @@
 #include "WorkerThread.h"
 #include "prsystem.h"
 
+#define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;

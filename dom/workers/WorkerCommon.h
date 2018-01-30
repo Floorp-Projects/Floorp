@@ -11,18 +11,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
-#include <stdint.h>
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDebug.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
-#include "nsILoadContext.h"
-#include "nsIWeakReferenceUtils.h"
-#include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
-#include "mozilla/net/ReferrerPolicy.h"
 
 #define BEGIN_WORKERS_NAMESPACE \
   namespace mozilla { namespace dom { namespace workers {
@@ -30,8 +24,6 @@
   } /* namespace workers */ } /* namespace dom */ } /* namespace mozilla */
 #define USING_WORKERS_NAMESPACE \
   using namespace mozilla::dom::workers;
-
-#define WORKERS_SHUTDOWN_TOPIC "web-workers-shutdown"
 
 class nsIGlobalObject;
 class nsPIDOMWindowInner;
