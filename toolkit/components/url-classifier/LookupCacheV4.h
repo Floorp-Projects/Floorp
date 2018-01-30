@@ -47,6 +47,7 @@ public:
   nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
 
   static const int VER;
+  static const uint32_t MAX_METADATA_VALUE_LENGTH;
 
 protected:
   virtual nsresult ClearPrefixes() override;
