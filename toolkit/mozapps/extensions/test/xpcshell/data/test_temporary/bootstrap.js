@@ -1,1 +1,1 @@
-ChromeUtils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
+Components.utils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);

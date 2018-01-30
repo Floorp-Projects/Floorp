@@ -9,10 +9,10 @@ this.EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
 /* globals AddonManagerPrivate*/
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const ID_SUFFIX              = "@personas.mozilla.org";
 const PREF_LWTHEME_TO_SELECT = "extensions.lwThemeToSelect";
@@ -39,9 +39,9 @@ const PERSIST_FILES = {
   footerURL: "lightweighttheme-footer"
 };
 
-ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
-ChromeUtils.defineModuleGetter(this, "ServiceRequest",
+XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
   "resource://gre/modules/ServiceRequest.jsm");
 
 

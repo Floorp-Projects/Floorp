@@ -2,7 +2,7 @@
 /*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
 
-const { Manifests } = ChromeUtils.import("resource://gre/modules/Manifest.jsm", {});
+const { Manifests } = Cu.import("resource://gre/modules/Manifest.jsm", {});
 
 const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
 defaultURL.searchParams.set("Content-Type", "application/manifest+json");

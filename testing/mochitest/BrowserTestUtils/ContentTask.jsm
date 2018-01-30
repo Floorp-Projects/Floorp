@@ -11,8 +11,8 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-ChromeUtils.import("resource://gre/modules/Promise.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT = "resource://testing-common/content-task.js";
 

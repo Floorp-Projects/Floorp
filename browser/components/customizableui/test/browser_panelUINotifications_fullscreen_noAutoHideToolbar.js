@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
+Cu.import("resource://gre/modules/AppMenuNotifications.jsm");
 
 function waitForDocshellActivated() {
   return ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {

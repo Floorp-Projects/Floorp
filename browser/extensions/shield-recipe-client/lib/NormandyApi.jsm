@@ -5,11 +5,11 @@
 "use strict";
 
 const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://shield-recipe-client/lib/LogManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "CanonicalJSON", "resource://gre/modules/CanonicalJSON.jsm");
 
 Cu.importGlobalProperties(["fetch", "URL"]); /* globals fetch, URL */

@@ -14,7 +14,7 @@ const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 
-var { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+var { NetUtil } = Components.utils.import("resource://gre/modules/NetUtil.jsm", {});
 
 var key;
 

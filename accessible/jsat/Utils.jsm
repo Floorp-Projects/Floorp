@@ -8,20 +8,20 @@
 
 const {classes: Cc, utils: Cu, interfaces: Ci} = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Services", // jshint ignore:line
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services", // jshint ignore:line
   "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(this, "Rect", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Rect", // jshint ignore:line
   "resource://gre/modules/Geometry.jsm");
-ChromeUtils.defineModuleGetter(this, "Roles", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Roles", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "Events", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Events", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "Relations", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "Relations", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "States", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "States", // jshint ignore:line
   "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "PluralForm", // jshint ignore:line
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", // jshint ignore:line
   "resource://gre/modules/PluralForm.jsm");
 
 this.EXPORTED_SYMBOLS = ["Utils", "Logger", "PivotContext", "PrefCache"]; // jshint ignore:line

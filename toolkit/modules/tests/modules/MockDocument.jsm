@@ -9,9 +9,9 @@ this.EXPORTED_SYMBOLS = ["MockDocument"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.importGlobalProperties(["URL"]);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 const MockDocument = {
   /**

@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 /* globals findCssSelector */
-ChromeUtils.import("resource://gre/modules/css-selector.js", this);
+Cu.import("resource://gre/modules/css-selector.js", this);
 
 var _tests = [];
 function addTest(test) {

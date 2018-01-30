@@ -12,9 +12,9 @@
   <script type="application/javascript">
   <![CDATA[
   const { DOMLocalization } =
-    ChromeUtils.import("resource://gre/modules/DOMLocalization.jsm", {});
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
   const { MessageContext } =
-    ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+    Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
 
   async function * generateMessages(locales, resourceIds) {
     const mc = new MessageContext(locales);

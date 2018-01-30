@@ -8,9 +8,9 @@ var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties(["Blob", "FileReader"]);
 
-ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PageThumbUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 // Let the page settle for this amount of milliseconds before capturing to allow
 // for any in-page changes or redirects.

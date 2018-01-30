@@ -3,15 +3,15 @@
 
 // Tests the bookmark repair requestor and responder end-to-end (ie, without
 // many mocks)
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
-ChromeUtils.import("resource://services-sync/bookmark_repair.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/doctor.js");
-ChromeUtils.import("resource://services-sync/service.js");
-ChromeUtils.import("resource://services-sync/engines/clients.js");
-ChromeUtils.import("resource://services-sync/engines/bookmarks.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+Cu.import("resource://services-sync/bookmark_repair.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/doctor.js");
+Cu.import("resource://services-sync/service.js");
+Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/engines/bookmarks.js");
 
 const BOOKMARK_REPAIR_STATE_PREFS = [
   "client.GUID",

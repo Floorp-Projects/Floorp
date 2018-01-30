@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://testing-common/ContentTask.jsm", {});
+Components.utils.import("resource://testing-common/ContentTask.jsm", {});
 
 // Wrapper to run a test that consists of:
 //  1. opening the add-ons manager viewing the list of extensions
@@ -53,7 +53,7 @@ async function runTest(installer) {
 }
 
 function promiseWebExtensionStartup() {
-  const {Management} = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
+  const {Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
   return new Promise(resolve => {
     let listener = (event, extension) => {

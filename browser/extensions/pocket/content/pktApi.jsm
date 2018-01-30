@@ -45,8 +45,8 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 this.EXPORTED_SYMBOLS = ["pktApi"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 
 var pktApi = (function() {

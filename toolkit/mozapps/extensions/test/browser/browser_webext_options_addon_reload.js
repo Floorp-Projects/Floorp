@@ -2,8 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", {});
-const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
+const {AddonTestUtils} = Cu.import("resource://testing-common/AddonTestUtils.jsm", {});
+const {ExtensionParent} = Cu.import("resource://gre/modules/ExtensionParent.jsm", {});
 
 // This test function helps to detect when an addon options browser have been inserted
 // in the about:addons page.

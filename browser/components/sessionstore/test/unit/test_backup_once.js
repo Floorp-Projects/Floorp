@@ -3,15 +3,15 @@
 
 "use strict";
 
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
-var {SessionWorker} = ChromeUtils.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
+var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+var {SessionWorker} = Cu.import("resource:///modules/sessionstore/SessionWorker.jsm", {});
 
 var File = OS.File;
 var Paths;
 var SessionFile;
 
 // We need a XULAppInfo to initialize SessionFile
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+Cu.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "SessionRestoreTest",
   ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",
@@ -22,7 +22,7 @@ updateAppInfo({
 add_task(async function init() {
   // Make sure that we have a profile before initializing SessionFile
   let profd = do_get_profile();
-  SessionFile = ChromeUtils.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
+  SessionFile = Cu.import("resource:///modules/sessionstore/SessionFile.jsm", {}).SessionFile;
   Paths = SessionFile.Paths;
 
   let source = do_get_file("data/sessionstore_valid.js");

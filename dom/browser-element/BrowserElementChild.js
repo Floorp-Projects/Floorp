@@ -5,7 +5,7 @@
 "use strict";
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu }  = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function debug(msg) {
   //dump("BrowserElementChild - " + msg + "\n");

@@ -4,7 +4,7 @@
 
 const nsIQuotaManagerService = Components.interfaces.nsIQuotaManagerService;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var gURI = Services.io.newURI("http://localhost");
 

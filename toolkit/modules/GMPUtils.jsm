@@ -13,8 +13,8 @@ this.EXPORTED_SYMBOLS = [ "GMP_PLUGIN_IDS",
                           "OPEN_H264_ID",
                           "WIDEVINE_ID" ];
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 // GMP IDs
 const OPEN_H264_ID  = "gmp-gmpopenh264";

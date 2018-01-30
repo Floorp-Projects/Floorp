@@ -15,9 +15,9 @@ const Cr = Components.results;
 
 Cu.importGlobalProperties(["TextEncoder"]);
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,

@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function getString(clipboard) {
   var str = "";

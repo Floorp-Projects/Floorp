@@ -4,16 +4,16 @@
 
 "use strict";
 
-const {interfaces: Ci, results: Cr} = Components;
+const {interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.import("chrome://marionette/content/assert.js");
+Cu.import("chrome://marionette/content/assert.js");
 const {
   InvalidCookieDomainError,
   UnableToSetCookieError,
-} = ChromeUtils.import("chrome://marionette/content/error.js", {});
-const {pprint} = ChromeUtils.import("chrome://marionette/content/format.js", {});
+} = Cu.import("chrome://marionette/content/error.js", {});
+const {pprint} = Cu.import("chrome://marionette/content/format.js", {});
 
 this.EXPORTED_SYMBOLS = ["cookie"];
 

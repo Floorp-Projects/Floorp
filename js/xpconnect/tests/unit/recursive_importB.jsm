@@ -9,5 +9,5 @@ function baz() {
 }
 
 var qux = {}
-ChromeUtils.import("resource://test/recursive_importA.jsm", qux);
+Components.utils.import("resource://test/recursive_importA.jsm", qux);
 

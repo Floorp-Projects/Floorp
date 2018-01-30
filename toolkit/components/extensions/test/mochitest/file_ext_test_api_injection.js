@@ -4,7 +4,7 @@
 
 var {interfaces: Ci} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 Services.console.registerListener(function listener(message) {
   if (/WebExt Privilege Escalation/.test(message.message)) {

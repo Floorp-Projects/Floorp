@@ -1,7 +1,7 @@
 "use strict";
 
 let scope = {};
-ChromeUtils.import("resource:///modules/AutoMigrate.jsm", scope);
+Cu.import("resource:///modules/AutoMigrate.jsm", scope);
 let oldCanUndo = scope.AutoMigrate.canUndo;
 let oldUndo = scope.AutoMigrate.undo;
 registerCleanupFunction(function() {

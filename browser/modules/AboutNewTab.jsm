@@ -10,14 +10,14 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "AboutNewTab" ];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AutoMigrate",
+XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
   "resource:///modules/AutoMigrate.jsm");
-ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "RemotePages",
+XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
   "resource://gre/modules/RemotePageManager.jsm");
 
 var AboutNewTab = {

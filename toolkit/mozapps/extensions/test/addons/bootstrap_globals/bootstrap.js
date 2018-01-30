@@ -1,5 +1,5 @@
 /* exported startup, shutdown, install, uninstall */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 var seenGlobals = new Set();
 var scope = this;

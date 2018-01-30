@@ -14,37 +14,37 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 var module = this;
 
 // Global modules
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://services-common/async.js");
-ChromeUtils.import("resource://services-common/utils.js");
-ChromeUtils.import("resource://services-sync/constants.js");
-ChromeUtils.import("resource://services-sync/main.js");
-ChromeUtils.import("resource://services-sync/util.js");
-ChromeUtils.import("resource://services-sync/telemetry.js");
-ChromeUtils.import("resource://services-sync/bookmark_validator.js");
-ChromeUtils.import("resource://services-sync/engines/passwords.js");
-ChromeUtils.import("resource://services-sync/engines/forms.js");
-ChromeUtils.import("resource://services-sync/engines/addons.js");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/telemetry.js");
+Cu.import("resource://services-sync/bookmark_validator.js");
+Cu.import("resource://services-sync/engines/passwords.js");
+Cu.import("resource://services-sync/engines/forms.js");
+Cu.import("resource://services-sync/engines/addons.js");
 // TPS modules
-ChromeUtils.import("resource://tps/logger.jsm");
+Cu.import("resource://tps/logger.jsm");
 
 // Module wrappers for tests
-ChromeUtils.import("resource://tps/modules/addons.jsm");
-ChromeUtils.import("resource://tps/modules/bookmarks.jsm");
-ChromeUtils.import("resource://tps/modules/forms.jsm");
-ChromeUtils.import("resource://tps/modules/history.jsm");
-ChromeUtils.import("resource://tps/modules/passwords.jsm");
-ChromeUtils.import("resource://tps/modules/prefs.jsm");
-ChromeUtils.import("resource://tps/modules/tabs.jsm");
-ChromeUtils.import("resource://tps/modules/windows.jsm");
+Cu.import("resource://tps/modules/addons.jsm");
+Cu.import("resource://tps/modules/bookmarks.jsm");
+Cu.import("resource://tps/modules/forms.jsm");
+Cu.import("resource://tps/modules/history.jsm");
+Cu.import("resource://tps/modules/passwords.jsm");
+Cu.import("resource://tps/modules/prefs.jsm");
+Cu.import("resource://tps/modules/tabs.jsm");
+Cu.import("resource://tps/modules/windows.jsm");
 
 var hh = Cc["@mozilla.org/network/protocol;1?name=http"]
          .getService(Ci.nsIHttpProtocolHandler);
@@ -58,8 +58,8 @@ XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();
 });
 
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 // Options for wiping data during a sync
 const SYNC_RESET_CLIENT = "resetClient";
@@ -146,7 +146,7 @@ var TPS = {
     }, this);
 
     /* global Authentication */
-    ChromeUtils.import("resource://tps/auth/fxaccounts.jsm", module);
+    Cu.import("resource://tps/auth/fxaccounts.jsm", module);
   },
 
   DumpError(msg, exc = null) {
@@ -814,7 +814,7 @@ var TPS = {
       let ajvFile = this._getFileRelativeToSourceRoot(testFile, "testing/modules/ajv-4.1.1.js");
       let ajvURL = fileProtocolHandler.getURLSpecFromFile(ajvFile);
       let ns = {};
-      ChromeUtils.import(ajvURL, ns);
+      Cu.import(ajvURL, ns);
       let ajv = new ns.Ajv({ async: "co*" });
       this.pingValidator = ajv.compile(schema);
     } catch (e) {

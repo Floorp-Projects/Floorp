@@ -7,9 +7,9 @@ function test() {
   waitForExplicitFinish();
 
   let FileUtils =
-    ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
+    Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
   let DownloadLastDir =
-    ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm", {}).DownloadLastDir;
+    Cu.import("resource://gre/modules/DownloadLastDir.jsm", {}).DownloadLastDir;
   let MockFilePicker = SpecialPowers.MockFilePicker;
   let launcher = {
     source: Services.io.newURI("http://test1.com/file")

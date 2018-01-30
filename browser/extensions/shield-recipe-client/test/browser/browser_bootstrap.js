@@ -1,15 +1,15 @@
 "use strict";
 
-ChromeUtils.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/ShieldRecipeClient.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 // We can't import bootstrap.js directly since it isn't in the jar manifest, but
 // we can use Addon.getResourceURI to get a path to the file and import using
 // that instead.
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
+Cu.import("resource://gre/modules/AddonManager.jsm", this);
 const bootstrapPromise = AddonManager.getAddonByID("shield-recipe-client@mozilla.org").then(addon => {
   const bootstrapUri = addon.getResourceURI("bootstrap.js");
-  const {Bootstrap} = ChromeUtils.import(bootstrapUri.spec, {});
+  const {Bootstrap} = Cu.import(bootstrapUri.spec, {});
   return Bootstrap;
 });
 

@@ -13,8 +13,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-ChromeUtils.import("resource://gre/modules/PromiseWorker.jsm", this);
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/PromiseWorker.jsm", this);
+Cu.import("resource://gre/modules/osfile.jsm", this);
 
 this.EXPORTED_SYMBOLS = ["SessionWorker"];
 

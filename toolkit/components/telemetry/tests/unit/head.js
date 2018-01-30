@@ -3,25 +3,25 @@
 
 var { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/httpd.js", this);
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://gre/modules/FileUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://testing-common/httpd.js", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonTestUtils",
-                               "resource://testing-common/AddonTestUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetrySend",
-                               "resource://gre/modules/TelemetrySend.jsm");
-ChromeUtils.defineModuleGetter(this, "Log",
-                               "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonTestUtils",
+                                  "resource://testing-common/AddonTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
+                                  "resource://gre/modules/TelemetrySend.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+                                  "resource://gre/modules/Log.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -209,7 +209,7 @@ function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",
 
 // Fake the timeout functions for the TelemetryScheduler.
 function fakeSchedulerTimer(set, clear) {
-  let session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {});
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   session.Policy.setSchedulerTickTimeout = set;
   session.Policy.clearSchedulerTickTimeout = clear;
 }
@@ -228,12 +228,12 @@ function fakeSchedulerTimer(set, clear) {
 function fakeNow(...args) {
   const date = new Date(...args);
   const modules = [
-    ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm"),
-    ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm"),
-    ChromeUtils.import("resource://gre/modules/TelemetryController.jsm"),
-    ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm"),
-    ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm"),
-    ChromeUtils.import("resource://gre/modules/TelemetryReportingPolicy.jsm"),
+    Cu.import("resource://gre/modules/TelemetrySession.jsm"),
+    Cu.import("resource://gre/modules/TelemetryEnvironment.jsm"),
+    Cu.import("resource://gre/modules/TelemetryController.jsm"),
+    Cu.import("resource://gre/modules/TelemetryStorage.jsm"),
+    Cu.import("resource://gre/modules/TelemetrySend.jsm"),
+    Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm"),
   ];
 
   for (let m of modules) {
@@ -244,31 +244,31 @@ function fakeNow(...args) {
 }
 
 function fakeMonotonicNow(ms) {
-  const m = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", {});
+  const m = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   m.Policy.monotonicNow = () => ms;
   return ms;
 }
 
 // Fake the timeout functions for TelemetryController sending.
 function fakePingSendTimer(set, clear) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", {});
+  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
   let obj = Cu.cloneInto({set, clear}, module, {cloneFunctions: true});
   module.Policy.setSchedulerTickTimeout = obj.set;
   module.Policy.clearSchedulerTickTimeout = obj.clear;
 }
 
 function fakeMidnightPingFuzzingDelay(delayMs) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetrySend.jsm", {});
+  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
   module.Policy.midnightPingFuzzingDelay = () => delayMs;
 }
 
 function fakeGeneratePingId(func) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", {});
+  let module = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
   module.Policy.generatePingId = func;
 }
 
 function fakeCachedClientId(uuid) {
-  let module = ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", {});
+  let module = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
   module.Policy.getCachedClientID = () => uuid;
 }
 
@@ -311,7 +311,7 @@ function getSnapshot(histogramId) {
 // Helper for setting an empty list of Environment preferences to watch.
 function setEmptyPrefWatchlist() {
   let TelemetryEnvironment =
-    ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm").TelemetryEnvironment;
+    Cu.import("resource://gre/modules/TelemetryEnvironment.jsm").TelemetryEnvironment;
   return TelemetryEnvironment.onInitialized().then(() => {
     TelemetryEnvironment.testWatchPreferences(new Map());
 

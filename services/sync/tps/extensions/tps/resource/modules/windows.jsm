@@ -12,8 +12,8 @@ const EXPORTED_SYMBOLS = ["BrowserWindows"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://services-sync/main.js");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-sync/main.js");
 
 var BrowserWindows = {
   /**

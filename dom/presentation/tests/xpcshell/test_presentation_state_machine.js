@@ -9,11 +9,11 @@
 const { utils: Cu, results: Cr } = Components;
 
 /* globals ControllerStateMachine */
-ChromeUtils.import('resource://gre/modules/presentation/ControllerStateMachine.jsm');
+Cu.import('resource://gre/modules/presentation/ControllerStateMachine.jsm');
 /* globals ReceiverStateMachine */
-ChromeUtils.import('resource://gre/modules/presentation/ReceiverStateMachine.jsm');
+Cu.import('resource://gre/modules/presentation/ReceiverStateMachine.jsm');
 /* globals State */
-ChromeUtils.import('resource://gre/modules/presentation/StateMachineHelper.jsm');
+Cu.import('resource://gre/modules/presentation/StateMachineHelper.jsm');
 
 const testControllerId = 'test-controller-id';
 const testPresentationId = 'test-presentation-id';

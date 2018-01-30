@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://onboarding/modules/OnboardingTourType.jsm");
+Cu.import("resource://onboarding/modules/OnboardingTourType.jsm");
 
 add_task(async function() {
   info("Starting testcase: When New user open the browser first time");

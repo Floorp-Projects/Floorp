@@ -51,7 +51,7 @@ add_task(async function() {
     /* eslint-env mozilla/frame-script */
     const {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
     Cm.QueryInterface(Ci.nsIServiceManager);
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+    Cu.import("resource://gre/modules/AppConstants.jsm");
     let collectStacks = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG;
     let loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
     let components = {};

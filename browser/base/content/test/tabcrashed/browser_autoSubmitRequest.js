@@ -4,7 +4,7 @@ const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20pag
 const AUTOSUBMIT_PREF = "browser.crashReports.unsubmittedCheck.autoSubmit2";
 
 const {TabStateFlusher} =
-  ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+  Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
 
 // On debug builds, crashing tabs results in much thinking, which
 // slows down the test and results in intermittent test timeouts,

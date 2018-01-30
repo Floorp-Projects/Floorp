@@ -4,8 +4,8 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var gSyncProfile;
 
@@ -31,7 +31,7 @@ function getOS() {
   }
 }
 
-ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
+Cu.import("resource://testing-common/AppInfo.jsm", this);
 updateAppInfo({
   name: "XPCShell",
   ID: "xpcshell@tests.mozilla.org",

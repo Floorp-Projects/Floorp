@@ -6,7 +6,7 @@
 const {
   utils: Cu
 } = Components;
-ChromeUtils.import("resource://gre/modules/PromiseMessage.jsm");
+Cu.import("resource://gre/modules/PromiseMessage.jsm");
 
 this.ManifestFinder = {// jshint ignore:line
   /**

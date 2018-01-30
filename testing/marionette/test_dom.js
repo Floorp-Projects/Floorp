@@ -3,7 +3,7 @@ const {utils: Cu} = Components;
 const {
   ContentEventObserverService,
   WebElementEventTarget,
-} = ChromeUtils.import("chrome://marionette/content/dom.js", {});
+} = Cu.import("chrome://marionette/content/dom.js", {});
 
 class MessageSender {
   constructor() {

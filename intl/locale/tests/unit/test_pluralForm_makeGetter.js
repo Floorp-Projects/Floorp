@@ -8,7 +8,7 @@
  * development), English.
  */
 
-ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
+Components.utils.import("resource://gre/modules/PluralForm.jsm");
 
 function run_test()
 {

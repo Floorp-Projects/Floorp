@@ -13,8 +13,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 /* globals Debugger */
-const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm",
-                                                 {});
+const {addDebuggerToGlobal} = Cu.import("resource://gre/modules/jsdebugger.jsm",
+                                        {});
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
 
 /**
@@ -179,7 +179,7 @@ Object.prototype[Symbol.iterator] = function* () {
  */
 CoverageCollector.prototype.recordTestCoverage = function(testName) {
   let ccov_scope = {};
-  const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", ccov_scope);
+  const {OS} = Cu.import("resource://gre/modules/osfile.jsm", ccov_scope);
 
   dump("Collecting coverage for: " + testName + "\n");
   let rawLines = this._getLinesCovered(testName);

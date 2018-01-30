@@ -21,7 +21,7 @@
 
 const NUM_MESSAGES = 4000;
 const NUM_STREAMING = 100;
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 const Services = browserRequire("Services");
 Services.prefs.setIntPref("devtools.hud.loglimit", NUM_MESSAGES);
 const NewConsoleOutputWrapper = browserRequire(

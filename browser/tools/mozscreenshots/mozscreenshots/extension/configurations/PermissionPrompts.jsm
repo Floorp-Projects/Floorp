@@ -8,10 +8,10 @@ this.EXPORTED_SYMBOLS = ["PermissionPrompts"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.import("resource://testing-common/ContentTask.jsm");
-ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/E10SUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
 const URL = "https://test1.example.com/browser/browser/tools/mozscreenshots/mozscreenshots/extension/mozscreenshots/browser/chrome/mozscreenshots/lib/permissionPrompts.html";
 let lastTab = null;

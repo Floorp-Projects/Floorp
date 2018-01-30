@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 
 var content = "line 1\nline 2\nline 3";
 

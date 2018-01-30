@@ -11,7 +11,7 @@
 /* exported init, loadHomepage */
 
 var Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
 
 function init() {
   var addon = window.arguments[0];

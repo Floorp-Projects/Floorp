@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+Cu.import("resource://gre/modules/BrowserUtils.jsm");
 
 function makeInputStream(aString) {
   let stream = Cc["@mozilla.org/io/string-input-stream;1"]
@@ -13,8 +13,8 @@ function makeInputStream(aString) {
 
 add_task(async function test_remoteWebNavigation_postdata() {
   let obj = {};
-  ChromeUtils.import("resource://testing-common/httpd.js", obj);
-  ChromeUtils.import("resource://services-common/utils.js", obj);
+  Cu.import("resource://testing-common/httpd.js", obj);
+  Cu.import("resource://services-common/utils.js", obj);
 
   let server = new obj.HttpServer();
   server.start(-1);

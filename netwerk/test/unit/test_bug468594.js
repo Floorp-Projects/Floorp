@@ -13,8 +13,8 @@
 // Please see RFC 2616 section 13.2.1 6th paragraph for the
 // definition of "explicit expiration time" being used here.
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 var index = 0;

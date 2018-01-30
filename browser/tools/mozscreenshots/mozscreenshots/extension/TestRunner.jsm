@@ -11,18 +11,18 @@ const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironmen
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
 const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/osfile.jsm");
-ChromeUtils.import("resource://gre/modules/Geometry.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Geometry.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserTestUtils",
-                               "resource://testing-common/BrowserTestUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserTestUtils",
+                                  "resource://testing-common/BrowserTestUtils.jsm");
 // Screenshot.jsm must be imported this way for xpcshell tests to work
-ChromeUtils.defineModuleGetter(this, "Screenshot", "chrome://mozscreenshots/content/Screenshot.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshot", "chrome://mozscreenshots/content/Screenshot.jsm");
 
 this.TestRunner = {
   combos: null,
@@ -174,8 +174,8 @@ this.TestRunner = {
         restrictions = filteredData.restrictions;
       }
       let imported = {};
-      ChromeUtils.import("chrome://mozscreenshots/content/configurations/" + setName + ".jsm",
-                         imported);
+      Cu.import("chrome://mozscreenshots/content/configurations/" + setName + ".jsm",
+                imported);
       imported[setName].init(this._libDir);
       let configurationNames = Object.keys(imported[setName].configurations);
       if (!configurationNames.length) {

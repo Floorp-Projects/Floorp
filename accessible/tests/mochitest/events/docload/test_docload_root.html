@@ -17,7 +17,7 @@
   <script type="application/javascript">
     // Front end stuff sometimes likes to stuff things in the hidden window(s)
     // in which case there's accessibles for that content.
-    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    Components.utils.import("resource://gre/modules/Services.jsm");
 
     // Force the creation of an accessible for the hidden window's document.
     let doc = Services.appShell.hiddenDOMWindow.document;

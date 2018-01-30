@@ -4,20 +4,20 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const logger = Log.repository.getLogger("Marionette");
 
 const {ElementNotAccessibleError} =
-    ChromeUtils.import("chrome://marionette/content/error.js", {});
+    Cu.import("chrome://marionette/content/error.js", {});
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
     this, "setInterval", "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
     this, "clearInterval", "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "service", () => {

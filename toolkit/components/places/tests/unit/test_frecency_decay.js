@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 const PREF_FREC_DECAY_RATE_DEF = 0.975;
 

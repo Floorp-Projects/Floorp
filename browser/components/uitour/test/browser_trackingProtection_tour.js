@@ -4,7 +4,7 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-const { UrlClassifierTestUtils } = ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
+const { UrlClassifierTestUtils } = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
 const TP_ENABLED_PREF = "privacy.trackingprotection.enabled";
 

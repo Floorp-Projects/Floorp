@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
@@ -543,7 +543,7 @@ SpecialPowersObserverAPI.prototype = {
       case "SPImportInMainProcess": {
         var message = { hadError: false, errorMessage: null };
         try {
-          ChromeUtils.import(aMessage.data);
+          Components.utils.import(aMessage.data);
         } catch (e) {
           message.hadError = true;
           message.errorMessage = e.toString();

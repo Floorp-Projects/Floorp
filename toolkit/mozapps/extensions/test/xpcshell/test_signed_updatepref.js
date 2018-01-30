@@ -5,7 +5,7 @@ gUseRealCertChecks = true;
 const DATA = "data/signing_checks/";
 const ID = "test@tests.mozilla.org";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/httpd.js");
 var gServer = new HttpServer();
 gServer.start();
 
@@ -36,7 +36,7 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
     info("Verifying signatures");
-    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    let XPIscope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
     XPIscope.XPIProvider.verifySignatures();
   });
 }

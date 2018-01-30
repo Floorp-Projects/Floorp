@@ -19,8 +19,8 @@ this.EXPORTED_SYMBOLS = ["ExtensionCommon"];
 
 Cu.importGlobalProperties(["fetch"]);
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ConsoleAPI: "resource://gre/modules/Console.jsm",
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
 
 const global = Cu.getGlobalForObject(this);
 
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
   DefaultMap,
@@ -1348,7 +1348,7 @@ class SchemaAPIManager extends EventEmitter {
       global,
     });
 
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm", global);
+    Cu.import("resource://gre/modules/AppConstants.jsm", global);
 
     XPCOMUtils.defineLazyGetter(global, "console", getConsole);
 

@@ -4,10 +4,10 @@
  
 function run_test() {
   var scope1 = {};
-  var global1 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope1);
+  var global1 = Components.utils.import("resource://gre/modules/NetUtil.jsm", scope1);
 
   var scope2 = {};
-  var global2 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope2);
+  var global2 = Components.utils.import("resource://gre/modules/NetUtil.jsm", scope2);
 
   Assert.ok(global1 === global2);
   Assert.ok(scope1.NetUtil === scope2.NetUtil);
@@ -15,7 +15,7 @@ function run_test() {
   Components.utils.unload("resource://gre/modules/NetUtil.jsm");
 
   var scope3 = {};
-  var global3 = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", scope3);
+  var global3 = Components.utils.import("resource://gre/modules/NetUtil.jsm", scope3);
 
   Assert.equal(false, global1 === global3);
   Assert.equal(false, scope1.NetUtil === scope3.NetUtil);

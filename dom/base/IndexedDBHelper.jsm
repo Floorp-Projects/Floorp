@@ -18,10 +18,10 @@ const Ci = Components.interfaces;
 
 this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
-ChromeUtils.defineModuleGetter(this, 'Services',
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
   'resource://gre/modules/Services.jsm');
 
 function getErrorName(err) {

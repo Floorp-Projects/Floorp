@@ -13,8 +13,8 @@ this.EXPORTED_SYMBOLS = ["PlacesRemoteTabsAutocompleteProvider"];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
   try {
@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
 
 XPCOMUtils.defineLazyGetter(this, "Weave", () => {
   try {
-    let {Weave} = ChromeUtils.import("resource://services-sync/main.js", {});
+    let {Weave} = Cu.import("resource://services-sync/main.js", {});
     return Weave;
   } catch (ex) {
     // The app didn't build Sync.

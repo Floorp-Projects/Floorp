@@ -10,21 +10,21 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "OS", "resource://gre/modules/osfile.jsm");
 
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyModuleGetter(
   this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(

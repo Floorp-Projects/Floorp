@@ -1,5 +1,5 @@
 
-ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+Components.utils.import("resource://gre/modules/KeyValueParser.jsm");
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;

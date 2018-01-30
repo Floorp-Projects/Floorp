@@ -18,8 +18,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
-  ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 
   // The chrome window
   let chromeWin;

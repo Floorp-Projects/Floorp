@@ -4,8 +4,8 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/LoginManagerContextMenu.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LoginManagerContextMenu.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "_stringBundle", function() {
   return Services.strings.

@@ -91,7 +91,7 @@ var PointerlockFsWarning = {
       let hostElem = this._element.querySelector(".pointerlockfswarning-domain");
       // Document's principal's URI has a host. Display a warning including it.
       let utils = {};
-      ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm", utils);
+      Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
       hostElem.textContent = utils.DownloadUtils.getURIHost(uri.spec)[0];
     }
 
