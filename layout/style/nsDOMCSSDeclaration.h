@@ -46,6 +46,13 @@ public:
   NS_DECL_NSICSSDECLARATION
   using nsICSSDeclaration::GetLength;
 
+  /**
+   * Method analogous to CSSStyleDeclaration::GetPropertyValue,
+   * which obeys all the same restrictions.
+   */
+  virtual nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
+                                    nsAString& aValue);
+
   // Require subclasses to implement |GetParentRule|.
   //NS_DECL_NSIDOMCSSSTYLEDECLARATION
   NS_IMETHOD GetCssText(nsAString & aCssText) override;

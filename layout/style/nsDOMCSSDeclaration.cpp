@@ -37,7 +37,7 @@ nsDOMCSSDeclaration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration,
                         nsICSSDeclaration)
 
-NS_IMETHODIMP
+nsresult
 nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
                                       nsAString& aValue)
 {

@@ -405,7 +405,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsComputedDOMStyle)
 
-NS_IMETHODIMP
+nsresult
 nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
                                      nsAString& aValue)
 {
