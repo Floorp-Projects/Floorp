@@ -2896,9 +2896,7 @@ TextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*>* aOffsetTable,
       }
 
       nsString str;
-      rv = content->AsDOMNode()->GetNodeValue(str);
-
-      NS_ENSURE_SUCCESS(rv, rv);
+      content->GetNodeValue(str);
 
       // Add an entry for this text node into the offset table:
 
