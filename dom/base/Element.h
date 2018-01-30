@@ -2211,12 +2211,5 @@ NS_IMETHOD SetAttribute(const nsAString& name,                                \
   mozilla::ErrorResult rv;                                                    \
   Element::SetAttribute(name, value, nullptr, rv);                            \
   return rv.StealNSResult();                                                  \
-}                                                                             \
-using Element::HasAttribute;                                                  \
-NS_IMETHOD HasAttribute(const nsAString& name,                                \
-                           bool* _retval) final override                      \
-{                                                                             \
-  *_retval = HasAttribute(name);                                              \
-  return NS_OK;                                                               \
 }
 #endif // mozilla_dom_Element_h__
