@@ -554,7 +554,7 @@ nsINode::Normalize()
   for (nsIContent* node = this->GetFirstChild();
        node;
        node = node->GetNextNode(this)) {
-    if (node->NodeType() != nsIDOMNode::TEXT_NODE) {
+    if (node->NodeType() != TEXT_NODE) {
       canMerge = false;
       continue;
     }
@@ -607,12 +607,12 @@ nsINode::Normalize()
     const nsTextFragment* text = node->GetText();
     if (text->GetLength()) {
       nsIContent* target = node->GetPreviousSibling();
-      NS_ASSERTION((target && target->NodeType() == nsIDOMNode::TEXT_NODE) ||
+      NS_ASSERTION((target && target->NodeType() == TEXT_NODE) ||
                    hasRemoveListeners,
                    "Should always have a previous text sibling unless "
                    "mutation events messed us up");
       if (!hasRemoveListeners ||
-          (target && target->NodeType() == nsIDOMNode::TEXT_NODE)) {
+          (target && target->NodeType() == TEXT_NODE)) {
         nsTextNode* t = static_cast<nsTextNode*>(target);
         if (text->Is2b()) {
           t->AppendTextForNormalize(text->Get2b(), text->GetLength(), true, node);
@@ -965,7 +965,7 @@ nsINode::IsEqualNode(nsINode* aOther)
     }
 
     switch(nodeType) {
-      case nsIDOMNode::ELEMENT_NODE:
+      case ELEMENT_NODE:
       {
         // Both are elements (we checked that their nodeinfos are equal). Do the
         // check on attributes.
@@ -995,10 +995,10 @@ nsINode::IsEqualNode(nsINode* aOther)
         }
         break;
       }
-      case nsIDOMNode::TEXT_NODE:
-      case nsIDOMNode::COMMENT_NODE:
-      case nsIDOMNode::CDATA_SECTION_NODE:
-      case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+      case TEXT_NODE:
+      case COMMENT_NODE:
+      case CDATA_SECTION_NODE:
+      case PROCESSING_INSTRUCTION_NODE:
       {
         string1.Truncate();
         static_cast<nsIContent*>(node1)->AppendTextTo(string1);
@@ -1011,10 +1011,10 @@ nsINode::IsEqualNode(nsINode* aOther)
 
         break;
       }
-      case nsIDOMNode::DOCUMENT_NODE:
-      case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+      case DOCUMENT_NODE:
+      case DOCUMENT_FRAGMENT_NODE:
         break;
-      case nsIDOMNode::ATTRIBUTE_NODE:
+      case ATTRIBUTE_NODE:
       {
         NS_ASSERTION(node1 == this && node2 == aOther,
                      "Did we come upon an attribute node while walking a "
@@ -1027,7 +1027,7 @@ nsINode::IsEqualNode(nsINode* aOther)
         // attribute nodes doesn't appear in subtrees.
         return string1.Equals(string2);
       }
-      case nsIDOMNode::DOCUMENT_TYPE_NODE:
+      case DOCUMENT_TYPE_NODE:
       {
         nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(node1);
         nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(node2);
@@ -1351,7 +1351,7 @@ nsINode::UnoptimizableCCNode() const
                                       NODE_MAY_BE_IN_BINDING_MNGR |
                                       NODE_IS_IN_SHADOW_TREE);
   return HasFlag(problematicFlags) ||
-         NodeType() == nsIDOMNode::ATTRIBUTE_NODE ||
+         NodeType() == ATTRIBUTE_NODE ||
          // For strange cases like xbl:content/xbl:children
          (IsElement() &&
           AsElement()->IsInNamespace(kNameSpaceID_XBL));
@@ -1410,7 +1410,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
     }
   }
 
-  if (tmp->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
+  if (tmp->NodeType() != DOCUMENT_NODE &&
       tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
     nsContentUtils::TraverseListenerManager(tmp, cb);
   }
@@ -1429,7 +1429,7 @@ nsINode::Unlink(nsINode* tmp)
     slots->Unlink();
   }
 
-  if (tmp->NodeType() != nsIDOMNode::DOCUMENT_NODE &&
+  if (tmp->NodeType() != DOCUMENT_NODE &&
       tmp->HasFlag(NODE_HAS_LISTENERMANAGER)) {
     nsContentUtils::RemoveListenerManager(tmp);
     tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);
@@ -1898,16 +1898,16 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
 
   // The allowed child nodes differ for documents and elements
   switch (aNewChild->NodeType()) {
-  case nsIDOMNode::COMMENT_NODE :
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
+  case nsINode::COMMENT_NODE :
+  case nsINode::PROCESSING_INSTRUCTION_NODE :
     // OK in both cases
     return true;
-  case nsIDOMNode::TEXT_NODE :
-  case nsIDOMNode::CDATA_SECTION_NODE :
-  case nsIDOMNode::ENTITY_REFERENCE_NODE :
+  case nsINode::TEXT_NODE :
+  case nsINode::CDATA_SECTION_NODE :
+  case nsINode::ENTITY_REFERENCE_NODE :
     // Allowed under Elements and DocumentFragments
-    return aParent->NodeType() != nsIDOMNode::DOCUMENT_NODE;
-  case nsIDOMNode::ELEMENT_NODE :
+    return aParent->NodeType() != nsINode::DOCUMENT_NODE;
+  case nsINode::ELEMENT_NODE :
     {
       if (!aParent->IsNodeOfType(nsINode::eDOCUMENT)) {
         // Always ok to have elements under other elements or document fragments
@@ -1944,7 +1944,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       return aIsReplace ? (insertIndex >= doctypeIndex) :
         insertIndex > doctypeIndex;
     }
-  case nsIDOMNode::DOCUMENT_TYPE_NODE :
+  case nsINode::DOCUMENT_TYPE_NODE :
     {
       if (!aParent->IsNodeOfType(nsINode::eDOCUMENT)) {
         // doctypes only allowed under documents
@@ -1979,7 +1979,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
       // ok as long as aRefChild is not after rootElement.
       return insertIndex <= rootIndex;
     }
-  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
+  case nsINode::DOCUMENT_FRAGMENT_NODE :
     {
       // Note that for now we only allow nodes inside document fragments if
       // they're allowed inside elements.  If we ever change this to allow
@@ -2117,7 +2117,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     // If we're inserting a fragment, fire for all the children of the
     // fragment
-    if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    if (nodeType == DOCUMENT_FRAGMENT_NODE) {
       static_cast<FragmentOrElement*>(aNewChild)->FireNodeRemovedForChildren();
     }
     // Verify that our aRefChild is still sensible
@@ -2218,7 +2218,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
         }
       }
     }
-  } else if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+  } else if (nodeType == DOCUMENT_FRAGMENT_NODE) {
     // Make sure to remove all the fragment's kids.  We need to do this before
     // we start inserting anything, so we will run out XBL destructors and
     // binding teardown (GOD, I HATE THESE THINGS) before we insert anything
@@ -2377,7 +2377,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
    * actual document fragment).
    */
   nsINode* result = aReplace ? aRefChild : aNewChild;
-  if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+  if (nodeType == DOCUMENT_FRAGMENT_NODE) {
     if (!aReplace) {
       mb.Init(this, true, true);
     }
@@ -2580,13 +2580,13 @@ uint32_t
 nsINode::Length() const
 {
   switch (NodeType()) {
-  case nsIDOMNode::DOCUMENT_TYPE_NODE:
+  case DOCUMENT_TYPE_NODE:
     return 0;
 
-  case nsIDOMNode::TEXT_NODE:
-  case nsIDOMNode::CDATA_SECTION_NODE:
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-  case nsIDOMNode::COMMENT_NODE:
+  case TEXT_NODE:
+  case CDATA_SECTION_NODE:
+  case PROCESSING_INSTRUCTION_NODE:
+  case COMMENT_NODE:
     MOZ_ASSERT(IsContent());
     return AsContent()->TextLength();
 

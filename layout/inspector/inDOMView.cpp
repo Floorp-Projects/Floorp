@@ -286,40 +286,40 @@ inDOMView::GetCellProperties(int32_t row, nsITreeColumn* col,
 
   uint16_t nodeType = domNode->NodeType();
   switch (nodeType) {
-    case nsIDOMNode::ELEMENT_NODE:
+    case nsINode::ELEMENT_NODE:
       aProps.AppendLiteral("ELEMENT_NODE");
       break;
-    case nsIDOMNode::ATTRIBUTE_NODE:
+    case nsINode::ATTRIBUTE_NODE:
       aProps.AppendLiteral("ATTRIBUTE_NODE");
       break;
-    case nsIDOMNode::TEXT_NODE:
+    case nsINode::TEXT_NODE:
       aProps.AppendLiteral("TEXT_NODE");
       break;
-    case nsIDOMNode::CDATA_SECTION_NODE:
+    case nsINode::CDATA_SECTION_NODE:
       aProps.AppendLiteral("CDATA_SECTION_NODE");
       break;
-    case nsIDOMNode::ENTITY_REFERENCE_NODE:
+    case nsINode::ENTITY_REFERENCE_NODE:
       aProps.AppendLiteral("ENTITY_REFERENCE_NODE");
       break;
-    case nsIDOMNode::ENTITY_NODE:
+    case nsINode::ENTITY_NODE:
       aProps.AppendLiteral("ENTITY_NODE");
       break;
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+    case nsINode::PROCESSING_INSTRUCTION_NODE:
       aProps.AppendLiteral("PROCESSING_INSTRUCTION_NODE");
       break;
-    case nsIDOMNode::COMMENT_NODE:
+    case nsINode::COMMENT_NODE:
       aProps.AppendLiteral("COMMENT_NODE");
       break;
-    case nsIDOMNode::DOCUMENT_NODE:
+    case nsINode::DOCUMENT_NODE:
       aProps.AppendLiteral("DOCUMENT_NODE");
       break;
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsINode::DOCUMENT_TYPE_NODE:
       aProps.AppendLiteral("DOCUMENT_TYPE_NODE");
       break;
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsINode::DOCUMENT_FRAGMENT_NODE:
       aProps.AppendLiteral("DOCUMENT_FRAGMENT_NODE");
       break;
-    case nsIDOMNode::NOTATION_NODE:
+    case nsINode::NOTATION_NODE:
       aProps.AppendLiteral("NOTATION_NODE");
       break;
   }
@@ -1196,7 +1196,7 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
     nsIContent* kid = aKids->Item(i);
     uint16_t nodeType = kid->NodeType();
 
-    NS_ASSERTION(nodeType && nodeType <= nsIDOMNode::NOTATION_NODE,
+    NS_ASSERTION(nodeType && nodeType <= nsINode::NOTATION_NODE,
                  "Unknown node type. "
                  "Were new types added to the spec?");
     // As of DOM Level 2 Core and Traversal, each NodeFilter constant
@@ -1207,8 +1207,8 @@ inDOMView::AppendKidsToArray(nsINodeList* aKids,
     uint32_t filterForNodeType = 1 << (nodeType - 1);
 
     if (mWhatToShow & filterForNodeType) {
-      if ((nodeType == nsIDOMNode::TEXT_NODE ||
-           nodeType == nsIDOMNode::COMMENT_NODE) &&
+      if ((nodeType == nsINode::TEXT_NODE ||
+           nodeType == nsINode::COMMENT_NODE) &&
           !mShowWhitespaceNodes) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(kid);
         auto data = static_cast<nsGenericDOMDataNode*>(content.get());

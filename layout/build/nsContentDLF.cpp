@@ -291,19 +291,19 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup* aLoadGroup,
 
   // generate an html html element
   htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_XHTML,
-                                  nsIDOMNode::ELEMENT_NODE);
+                                  nsINode::ELEMENT_NODE);
   nsCOMPtr<nsIContent> htmlElement =
     NS_NewHTMLHtmlElement(htmlNodeInfo.forget());
 
   // generate an html head element
   htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::head, 0, kNameSpaceID_XHTML,
-                                  nsIDOMNode::ELEMENT_NODE);
+                                  nsINode::ELEMENT_NODE);
   nsCOMPtr<nsIContent> headElement =
     NS_NewHTMLHeadElement(htmlNodeInfo.forget());
 
   // generate an html body elemment
   htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::body, 0, kNameSpaceID_XHTML,
-                                  nsIDOMNode::ELEMENT_NODE);
+                                  nsINode::ELEMENT_NODE);
   nsCOMPtr<nsIContent> bodyElement =
     NS_NewHTMLBodyElement(htmlNodeInfo.forget());
 

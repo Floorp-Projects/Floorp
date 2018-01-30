@@ -7,6 +7,7 @@
 #include "nsHtml5TreeOperation.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
+#include "nsINode.h"
 #include "nsNodeUtils.h"
 #include "nsAttrName.h"
 #include "nsHtml5TreeBuilder.h"
@@ -221,7 +222,7 @@ IsElementOrTemplateContent(nsINode* aNode) {
   if (aNode) {
     if (aNode->IsElement()) {
       return true;
-    } else if (aNode->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    } else if (aNode->NodeType() == nsINode::DOCUMENT_FRAGMENT_NODE) {
       // Check if the node is a template content.
       mozilla::dom::DocumentFragment* frag =
         static_cast<mozilla::dom::DocumentFragment*>(aNode);
@@ -382,7 +383,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
   }
 
   RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
-    aName, nullptr, kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
+    aName, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
 
   dom::Element* newContent = nullptr;
@@ -494,7 +495,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
                           false);
 
       RefPtr<dom::NodeInfo> optionNodeInfo = aNodeInfoManager->GetNodeInfo(
-        nsGkAtoms::option, nullptr, kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
+        nsGkAtoms::option, nullptr, kNameSpaceID_XHTML, nsINode::ELEMENT_NODE);
 
       for (uint32_t i = 0; i < theContent.Length(); ++i) {
         RefPtr<dom::NodeInfo> ni = optionNodeInfo;
@@ -530,7 +531,7 @@ nsHtml5TreeOperation::CreateSVGElement(
   nsCOMPtr<nsIContent> newElement;
   if (MOZ_LIKELY(aNodeInfoManager->SVGEnabled())) {
     RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
-      aName, nullptr, kNameSpaceID_SVG, nsIDOMNode::ELEMENT_NODE);
+      aName, nullptr, kNameSpaceID_SVG, nsINode::ELEMENT_NODE);
     MOZ_ASSERT(nodeInfo, "Got null nodeinfo.");
 
     mozilla::DebugOnly<nsresult> rv =
@@ -538,7 +539,7 @@ nsHtml5TreeOperation::CreateSVGElement(
     MOZ_ASSERT(NS_SUCCEEDED(rv) && newElement);
   } else {
     RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
-      aName, nullptr, kNameSpaceID_disabled_SVG, nsIDOMNode::ELEMENT_NODE);
+      aName, nullptr, kNameSpaceID_disabled_SVG, nsINode::ELEMENT_NODE);
     MOZ_ASSERT(nodeInfo, "Got null nodeinfo.");
 
     // The mismatch between NS_NewXMLElement and SVGContentCreatorFunction
@@ -596,7 +597,7 @@ nsHtml5TreeOperation::CreateMathMLElement(nsAtom* aName,
   nsCOMPtr<dom::Element> newElement;
   if (MOZ_LIKELY(aNodeInfoManager->MathMLEnabled())) {
     RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
-      aName, nullptr, kNameSpaceID_MathML, nsIDOMNode::ELEMENT_NODE);
+      aName, nullptr, kNameSpaceID_MathML, nsINode::ELEMENT_NODE);
     NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
 
     mozilla::DebugOnly<nsresult> rv =
@@ -604,7 +605,7 @@ nsHtml5TreeOperation::CreateMathMLElement(nsAtom* aName,
     MOZ_ASSERT(NS_SUCCEEDED(rv) && newElement);
   } else {
     RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->GetNodeInfo(
-      aName, nullptr, kNameSpaceID_disabled_MathML, nsIDOMNode::ELEMENT_NODE);
+      aName, nullptr, kNameSpaceID_disabled_MathML, nsINode::ELEMENT_NODE);
     NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
 
     mozilla::DebugOnly<nsresult> rv =

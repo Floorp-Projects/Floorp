@@ -49,8 +49,7 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
   already_AddRefed<mozilla::dom::NodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
                                   kNameSpaceID_None,
-                                  nsIDOMNode::DOCUMENT_TYPE_NODE,
-                                  aName);
+                                  nsINode::DOCUMENT_TYPE_NODE, aName);
 
   RefPtr<mozilla::dom::DocumentType> docType =
     new mozilla::dom::DocumentType(ni, aPublicId, aSystemId, aInternalSubset);
@@ -75,7 +74,7 @@ DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE,
+  MOZ_ASSERT(mNodeInfo->NodeType() == DOCUMENT_TYPE_NODE,
              "Bad NodeType in aNodeInfo");
 }
 

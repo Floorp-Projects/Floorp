@@ -4944,7 +4944,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
       frame->BuildDisplayListForStackingContext(&info->mBuilder, &info->mList);
     }
   };
-  if (startContainer->NodeType() == nsIDOMNode::TEXT_NODE) {
+  if (startContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(startContainer);
   }
   for (; !iter->IsDone(); iter->Next()) {
@@ -4952,7 +4952,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     BuildDisplayListForNode(node);
   }
   if (endContainer != startContainer &&
-      endContainer->NodeType() == nsIDOMNode::TEXT_NODE) {
+      endContainer->NodeType() == nsINode::TEXT_NODE) {
     BuildDisplayListForNode(endContainer);
   }
 

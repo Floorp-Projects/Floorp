@@ -8,7 +8,7 @@
 #define mozilla_dom_NodeInfoInlines_h___
 
 #include "nsAtom.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsDOMString.h"
 #include "nsGkAtoms.h"
 
@@ -75,40 +75,40 @@ inline void
 CheckValidNodeInfo(uint16_t aNodeType, nsAtom *aName, int32_t aNamespaceID,
                    nsAtom* aExtraName)
 {
-  MOZ_ASSERT(aNodeType == nsIDOMNode::ELEMENT_NODE ||
-             aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
-             aNodeType == nsIDOMNode::TEXT_NODE ||
-             aNodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-             aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-             aNodeType == nsIDOMNode::COMMENT_NODE ||
-             aNodeType == nsIDOMNode::DOCUMENT_NODE ||
-             aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
-             aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE ||
+  MOZ_ASSERT(aNodeType == nsINode::ELEMENT_NODE ||
+             aNodeType == nsINode::ATTRIBUTE_NODE ||
+             aNodeType == nsINode::TEXT_NODE ||
+             aNodeType == nsINode::CDATA_SECTION_NODE ||
+             aNodeType == nsINode::PROCESSING_INSTRUCTION_NODE ||
+             aNodeType == nsINode::COMMENT_NODE ||
+             aNodeType == nsINode::DOCUMENT_NODE ||
+             aNodeType == nsINode::DOCUMENT_TYPE_NODE ||
+             aNodeType == nsINode::DOCUMENT_FRAGMENT_NODE ||
              aNodeType == UINT16_MAX,
              "Invalid nodeType");
-  MOZ_ASSERT((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE ||
-              aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+  MOZ_ASSERT((aNodeType == nsINode::PROCESSING_INSTRUCTION_NODE ||
+              aNodeType == nsINode::DOCUMENT_TYPE_NODE) ==
              !!aExtraName,
              "Supply aExtraName for and only for PIs and doctypes");
-  MOZ_ASSERT(aNodeType == nsIDOMNode::ELEMENT_NODE ||
-             aNodeType == nsIDOMNode::ATTRIBUTE_NODE ||
+  MOZ_ASSERT(aNodeType == nsINode::ELEMENT_NODE ||
+             aNodeType == nsINode::ATTRIBUTE_NODE ||
              aNodeType == UINT16_MAX ||
              aNamespaceID == kNameSpaceID_None,
              "Only attributes and elements can be in a namespace");
   MOZ_ASSERT(aName && aName != nsGkAtoms::_empty, "Invalid localName");
-  MOZ_ASSERT(((aNodeType == nsIDOMNode::TEXT_NODE) ==
+  MOZ_ASSERT(((aNodeType == nsINode::TEXT_NODE) ==
               (aName == nsGkAtoms::textTagName)) &&
-             ((aNodeType == nsIDOMNode::CDATA_SECTION_NODE) ==
+             ((aNodeType == nsINode::CDATA_SECTION_NODE) ==
               (aName == nsGkAtoms::cdataTagName)) &&
-             ((aNodeType == nsIDOMNode::COMMENT_NODE) ==
+             ((aNodeType == nsINode::COMMENT_NODE) ==
               (aName == nsGkAtoms::commentTagName)) &&
-             ((aNodeType == nsIDOMNode::DOCUMENT_NODE) ==
+             ((aNodeType == nsINode::DOCUMENT_NODE) ==
               (aName == nsGkAtoms::documentNodeName)) &&
-             ((aNodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) ==
+             ((aNodeType == nsINode::DOCUMENT_FRAGMENT_NODE) ==
               (aName == nsGkAtoms::documentFragmentNodeName)) &&
-             ((aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) ==
+             ((aNodeType == nsINode::DOCUMENT_TYPE_NODE) ==
               (aName == nsGkAtoms::documentTypeNodeName)) &&
-             ((aNodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) ==
+             ((aNodeType == nsINode::PROCESSING_INSTRUCTION_NODE) ==
               (aName == nsGkAtoms::processingInstructionTagName)),
              "Wrong localName for nodeType");
 }

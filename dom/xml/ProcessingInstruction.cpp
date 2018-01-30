@@ -34,7 +34,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
   RefPtr<mozilla::dom::NodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nullptr, kNameSpaceID_None,
-                                     nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+                                     nsINode::PROCESSING_INSTRUCTION_NODE,
                                      target);
 
   RefPtr<ProcessingInstruction> instance =
@@ -50,7 +50,7 @@ ProcessingInstruction::ProcessingInstruction(already_AddRefed<mozilla::dom::Node
                                              const nsAString& aData)
   : nsGenericDOMDataNode(Move(aNodeInfo))
 {
-  MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
+  MOZ_ASSERT(mNodeInfo->NodeType() == nsINode::PROCESSING_INSTRUCTION_NODE,
              "Bad NodeType in aNodeInfo");
 
   SetTextInternal(0, mText.GetLength(),

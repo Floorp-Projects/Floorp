@@ -2593,7 +2593,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
       // logical frame's primary node - so for this case we need to
       // change caretContent to that node.
 
-      if (startContent->NodeType() == nsIDOMNode::TEXT_NODE) {
+      if (startContent->NodeType() == nsINode::TEXT_NODE) {
         nsAutoString nodeValue;
         startContent->AppendTextTo(nodeValue);
 

@@ -527,7 +527,7 @@ txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
     // Create the element
     RefPtr<NodeInfo> ni =
         mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
-                                      nsIDOMNode::ELEMENT_NODE);
+                                      nsINode::ELEMENT_NODE);
 
     NS_NewElement(getter_AddRefs(mOpenedElement), ni.forget(),
                   mCreatingNewDocument ?
@@ -923,7 +923,7 @@ txMozillaXMLOutput::createHTMLElement(nsAtom* aName, Element** aResult)
     RefPtr<NodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(aName, nullptr,
                                        kNameSpaceID_XHTML,
-                                       nsIDOMNode::ELEMENT_NODE);
+                                       nsINode::ELEMENT_NODE);
 
     nsCOMPtr<Element> el;
     nsresult rv =

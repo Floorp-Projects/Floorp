@@ -389,7 +389,7 @@ txMozillaXSLTProcessor::SetSourceContentModel(nsIDocument* aDocument,
     ErrorResult rv;
     for (nsIContent* child : aSource) {
         // XPath data model doesn't have DocumentType nodes.
-        if (child->NodeType() != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+        if (child->NodeType() != nsINode::DOCUMENT_TYPE_NODE) {
             mSource->AppendChild(*child, rv);
             if (rv.Failed()) {
                 return rv.StealNSResult();

@@ -884,8 +884,8 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
     *aSerializeCloneKids = false;
 
     uint16_t type = aNodeIn->NodeType();
-    if (type != nsIDOMNode::ELEMENT_NODE &&
-        type != nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
+    if (type != nsINode::ELEMENT_NODE &&
+        type != nsINode::PROCESSING_INSTRUCTION_NODE) {
         return NS_OK;
     }
 
