@@ -146,6 +146,18 @@ class VideoTimingExtension {
   static bool Write(uint8_t* data, uint16_t time_delta_ms, uint8_t idx);
 };
 
+class CsrcAudioLevel {
+ public:
+  static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
+  static constexpr const char* kUri =
+      "urn:ietf:params:rtp-hdrext:csrc-audio-level";
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    CsrcAudioLevelList* csrcAudioLevels);
+  static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
+  static bool Write(uint8_t* data, const CsrcAudioLevelList& csrcAudioLevels);
+};
+
 // Base extension class for RTP header extensions which are strings.
 // Subclasses must defined kId and kUri static constexpr members.
 class BaseRtpStringExtension {

@@ -158,6 +158,15 @@ int32_t RtpReceiverImpl::CSRCs(uint32_t array_of_csrcs[kRtpCsrcSize]) const {
   return num_csrcs_;
 }
 
+void RtpReceiverImpl::GetRID(char rtp_stream_id[256]) const {
+  rtc::CritScope lock(&critical_section_rtp_receiver_);
+  if (!rtp_stream_id_.empty()) {
+    strncpy(rtp_stream_id, rtp_stream_id_.data(), 256);
+  } else {
+    rtp_stream_id[0] = '\0';
+  }
+}
+
 int32_t RtpReceiverImpl::Energy(
     uint8_t array_of_energy[kRtpCsrcSize]) const {
   return rtp_media_receiver_->Energy(array_of_energy);
@@ -214,6 +223,13 @@ bool RtpReceiverImpl::IncomingRtpPacket(const RTPHeader& rtp_header,
       last_received_sequence_number_.emplace(rtp_header.sequenceNumber);
       last_received_timestamp_ = rtp_header.timestamp;
       last_received_frame_time_ms_ = clock_->TimeInMilliseconds();
+
+      // RID rarely if ever changes
+      if (!rtp_header.extension.stream_id.empty() &&
+          (rtp_header.extension.stream_id != rtp_stream_id_)) {
+        rtp_stream_id_ = rtp_header.extension.stream_id;
+        RTC_LOG(LS_INFO) << "Received new RID value: " << rtp_stream_id_.data();
+      }
     }
   }
 

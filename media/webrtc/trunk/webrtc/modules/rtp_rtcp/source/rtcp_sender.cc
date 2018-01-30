@@ -154,7 +154,7 @@ RTCPSender::RTCPSender(
       transport_(outgoing_transport),
       using_nack_(false),
       sending_(false),
-      next_time_to_send_rtcp_(0),
+      next_time_to_send_rtcp_(clock->TimeInMilliseconds()),
       timestamp_offset_(0),
       last_rtp_timestamp_(0),
       last_frame_capture_time_ms_(-1),

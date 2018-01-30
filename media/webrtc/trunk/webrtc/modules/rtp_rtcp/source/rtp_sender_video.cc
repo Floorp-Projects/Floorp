@@ -294,7 +294,9 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
                                size_t payload_size,
                                const RTPFragmentationHeader* fragmentation,
                                const RTPVideoHeader* video_header,
-                               int64_t expected_retransmission_time_ms) {
+                               int64_t expected_retransmission_time_ms,
+                               const StreamId* rtpStreamId,
+                               const StreamId* mId) {
   if (payload_size == 0)
     return false;
 
@@ -303,6 +305,14 @@ bool RTPSenderVideo::SendVideo(RtpVideoCodecTypes video_type,
   rtp_header->SetPayloadType(payload_type);
   rtp_header->SetTimestamp(rtp_timestamp);
   rtp_header->set_capture_time_ms(capture_time_ms);
+
+  if (rtpStreamId && !rtpStreamId->empty()) {
+     rtp_header->SetExtension<RtpStreamId>(*rtpStreamId);
+  }
+  if (mId && !mId->empty()) {
+     rtp_header->SetExtension<RtpMid>(*mId);
+  }
+
   auto last_packet = rtc::MakeUnique<RtpPacketToSend>(*rtp_header);
 
   size_t fec_packet_overhead;
