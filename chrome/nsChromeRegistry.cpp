@@ -235,6 +235,12 @@ nsChromeRegistry::Canonify(nsIURL* aChromeURL)
     // path is already unescaped once, but uris can get unescaped twice
     const char* pos = path.BeginReading();
     const char* end = path.EndReading();
+    // Must start with [a-zA-Z0-9].
+    if (!('a' <= *pos && *pos <= 'z') &&
+        !('A' <= *pos && *pos <= 'Z') &&
+        !('0' <= *pos && *pos <= '9')) {
+      return NS_ERROR_DOM_BAD_URI;
+    }
     while (pos < end) {
       switch (*pos) {
         case ':':
