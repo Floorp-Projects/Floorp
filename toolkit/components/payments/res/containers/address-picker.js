@@ -16,6 +16,7 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
   constructor() {
     super();
     this.dropdown = document.createElement("rich-select");
+    this.dropdown.addEventListener("change", this);
   }
 
   connectedCallback() {
@@ -58,6 +59,25 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
 
   get selectedStateKey() {
     return this.getAttribute("selected-state-key");
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "change": {
+        this.onChange(event);
+        break;
+      }
+    }
+  }
+
+  onChange(event) {
+    let select = event.target;
+    let selectedKey = this.selectedStateKey;
+    if (selectedKey) {
+      this.requestStore.setState({
+        [selectedKey]: select.selectedOption && select.selectedOption.guid,
+      });
+    }
   }
 }
 
