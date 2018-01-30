@@ -239,60 +239,43 @@ HTMLEditor::GetFirstRow(nsIDOMElement* aTableElement,
 
   *aRowNode = nullptr;
 
-  NS_ENSURE_TRUE(aTableElement, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIDOMElement> tableElement;
-  nsresult rv = GetElementOrParentByTagName(NS_LITERAL_STRING("table"),
-                                            aTableElement,
-                                            getter_AddRefs(tableElement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> tableElement = do_QueryInterface(aTableElement);
   NS_ENSURE_TRUE(tableElement, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> tableChild;
-  rv = tableElement->GetFirstChild(getter_AddRefs(tableChild));
-  NS_ENSURE_SUCCESS(rv, rv);
+  tableElement = GetElementOrParentByTagName(NS_LITERAL_STRING("table"),
+                                             tableElement);
+  NS_ENSURE_TRUE(tableElement, NS_ERROR_NULL_POINTER);
 
+  nsCOMPtr<nsIContent> tableChild = tableElement->GetFirstChild();
   while (tableChild) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(tableChild);
-    if (content) {
-      if (content->IsHTMLElement(nsGkAtoms::tr)) {
-        // Found a row directly under <table>
-        *aRowNode = tableChild;
+    if (tableChild->IsHTMLElement(nsGkAtoms::tr)) {
+      // Found a row directly under <table>
+      *aRowNode = tableChild->AsDOMNode();
+      NS_ADDREF(*aRowNode);
+      return NS_OK;
+    }
+    // Look for row in one of the row container elements
+    if (tableChild->IsAnyOfHTMLElements(nsGkAtoms::tbody,
+                                        nsGkAtoms::thead,
+                                        nsGkAtoms::tfoot)) {
+      nsCOMPtr<nsIContent> rowNode = tableChild->GetFirstChild();
+
+      // We can encounter textnodes here -- must find a row
+      while (rowNode && !HTMLEditUtils::IsTableRow(rowNode)) {
+        rowNode = rowNode->GetNextSibling();
+      }
+
+      if (rowNode) {
+        *aRowNode = rowNode->AsDOMNode();
         NS_ADDREF(*aRowNode);
         return NS_OK;
-      }
-      // Look for row in one of the row container elements
-      if (content->IsAnyOfHTMLElements(nsGkAtoms::tbody,
-                                       nsGkAtoms::thead,
-                                       nsGkAtoms::tfoot)) {
-        nsCOMPtr<nsIDOMNode> rowNode;
-        rv = tableChild->GetFirstChild(getter_AddRefs(rowNode));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // We can encounter textnodes here -- must find a row
-        while (rowNode && !HTMLEditUtils::IsTableRow(rowNode)) {
-          nsCOMPtr<nsIDOMNode> nextNode;
-          rv = rowNode->GetNextSibling(getter_AddRefs(nextNode));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          rowNode = nextNode;
-        }
-        if (rowNode) {
-          *aRowNode = rowNode.get();
-          NS_ADDREF(*aRowNode);
-          return NS_OK;
-        }
       }
     }
     // Here if table child was a CAPTION or COLGROUP
     //  or child of a row parent wasn't a row (bad HTML?),
     //  or first child was a textnode
     // Look in next table child
-    nsCOMPtr<nsIDOMNode> nextChild;
-    rv = tableChild->GetNextSibling(getter_AddRefs(nextChild));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    tableChild = nextChild;
+    tableChild = tableChild->GetNextSibling();
   }
   // If here, row was not found
   return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
@@ -306,54 +289,40 @@ HTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode,
 
   *aRowNode = nullptr;
 
-  NS_ENSURE_TRUE(aCurrentRowNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> currentRowNode = do_QueryInterface(aCurrentRowNode);
+  NS_ENSURE_TRUE(currentRowNode, NS_ERROR_NULL_POINTER);
 
-  if (!HTMLEditUtils::IsTableRow(aCurrentRowNode)) {
+  if (!HTMLEditUtils::IsTableRow(currentRowNode)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> nextRow;
-  nsresult rv = aCurrentRowNode->GetNextSibling(getter_AddRefs(nextRow));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> nextNode;
+  nsIContent* nextRow = currentRowNode->GetNextSibling();
 
   // Skip over any textnodes here
   while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
-    rv = nextRow->GetNextSibling(getter_AddRefs(nextNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nextRow = nextNode;
+    nextRow = nextRow->GetNextSibling();
   }
   if (nextRow) {
-    *aRowNode = nextRow.get();
+    *aRowNode = nextRow->AsDOMNode();
     NS_ADDREF(*aRowNode);
     return NS_OK;
   }
 
   // No row found, search for rows in other table sections
-  nsCOMPtr<nsIDOMNode> rowParent;
-  rv = aCurrentRowNode->GetParentNode(getter_AddRefs(rowParent));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsINode* rowParent = currentRowNode->GetParentNode();
   NS_ENSURE_TRUE(rowParent, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> parentSibling;
-  rv = rowParent->GetNextSibling(getter_AddRefs(parentSibling));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIContent* parentSibling = rowParent->GetNextSibling();
 
   while (parentSibling) {
-    rv = parentSibling->GetFirstChild(getter_AddRefs(nextRow));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nextRow = parentSibling->GetFirstChild();
 
     // We can encounter textnodes here -- must find a row
     while (nextRow && !HTMLEditUtils::IsTableRow(nextRow)) {
-      rv = nextRow->GetNextSibling(getter_AddRefs(nextNode));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nextRow = nextNode;
+      nextRow = nextRow->GetNextSibling();
     }
     if (nextRow) {
-      *aRowNode = nextRow.get();
+      *aRowNode = nextRow->AsDOMNode();
       NS_ADDREF(*aRowNode);
       return NS_OK;
     }
@@ -361,10 +330,7 @@ HTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode,
     // We arrive here only if a table section has no children
     //  or first child of section is not a row (bad HTML or more "_moz_text" nodes!)
     // So look for another section sibling
-    rv = parentSibling->GetNextSibling(getter_AddRefs(nextNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    parentSibling = nextNode;
+    parentSibling = parentSibling->GetNextSibling();
   }
   // If here, row was not found
   return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
@@ -378,22 +344,17 @@ HTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode,
 
   *aCellNode = nullptr;
 
-  NS_ENSURE_TRUE(aRowNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> rowNode = do_QueryInterface(aRowNode);
+  NS_ENSURE_TRUE(rowNode, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> rowChild;
-  nsresult rv = aRowNode->GetLastChild(getter_AddRefs(rowChild));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> rowChild = rowNode->GetLastChild();
 
   while (rowChild && !HTMLEditUtils::IsTableCell(rowChild)) {
     // Skip over textnodes
-    nsCOMPtr<nsIDOMNode> previousChild;
-    rv = rowChild->GetPreviousSibling(getter_AddRefs(previousChild));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rowChild = previousChild;
+    rowChild = rowChild->GetPreviousSibling();
   }
   if (rowChild) {
-    *aCellNode = rowChild.get();
+    *aCellNode = rowChild->AsDOMNode();
     NS_ADDREF(*aCellNode);
     return NS_OK;
   }
@@ -990,20 +951,15 @@ HTMLEditor::DeleteTableCellContents()
 nsresult
 HTMLEditor::DeleteCellContents(nsIDOMElement* aCell)
 {
-  NS_ENSURE_TRUE(aCell, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<Element> cell = do_QueryInterface(aCell);
+  NS_ENSURE_TRUE(cell, NS_ERROR_NULL_POINTER);
 
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
-  nsCOMPtr<nsIDOMNode> child;
-  bool hasChild;
-  aCell->HasChildNodes(&hasChild);
-
-  while (hasChild) {
-    aCell->GetLastChild(getter_AddRefs(child));
+  while (nsCOMPtr<nsINode> child = cell->GetLastChild()) {
     nsresult rv = DeleteNode(child);
     NS_ENSURE_SUCCESS(rv, rv);
-    aCell->HasChildNodes(&hasChild);
   }
   return NS_OK;
 }
@@ -2908,18 +2864,17 @@ HTMLEditor::GetCellContext(Selection** aSelection,
     }
   }
   if (aCellParent) {
-    nsCOMPtr <nsIDOMNode> cellParent;
+    nsCOMPtr<nsINode> cellNode = do_QueryInterface(cell);
     // Get the immediate parent of the cell
-    rv = cell->GetParentNode(getter_AddRefs(cellParent));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsINode* cellParent = cellNode->GetParentNode();
     // Cell has to have a parent, so fail if not found
     NS_ENSURE_TRUE(cellParent, NS_ERROR_FAILURE);
 
-    *aCellParent = cellParent.get();
+    *aCellParent = cellParent->AsDOMNode();
     NS_ADDREF(*aCellParent);
 
     if (aCellOffset) {
-      *aCellOffset = GetChildOffset(cell, cellParent);
+      *aCellOffset = GetChildOffset(cell, cellParent->AsDOMNode());
     }
   }
 
@@ -3176,9 +3131,8 @@ HTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable,
 
   // We didn't find a cell
   // Set selection to just before the table
-  nsCOMPtr<nsIDOMNode> tableParent;
-  nsresult rv = aTable->GetParentNode(getter_AddRefs(tableParent));
-  if (NS_SUCCEEDED(rv) && tableParent) {
+  nsCOMPtr<nsINode> table = do_QueryInterface(aTable);
+  if (table->GetParentNode()) {
     nsCOMPtr<nsIContent> table = do_QueryInterface(aTable);
     if (NS_WARN_IF(!table)) {
       return;

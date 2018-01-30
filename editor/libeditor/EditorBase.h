@@ -935,11 +935,11 @@ public:
     }
 
     switch (aNode->NodeType()) {
-      case nsIDOMNode::ELEMENT_NODE:
+      case nsINode::ELEMENT_NODE:
         // In HTML editors, if we're dealing with an element, then ask it
         // whether it's editable.
         return mIsHTMLEditorClass ? aNode->IsEditable() : true;
-      case nsIDOMNode::TEXT_NODE:
+      case nsINode::TEXT_NODE:
         // Text nodes are considered to be editable by both typed of editors.
         return true;
       default:
@@ -1009,7 +1009,7 @@ public:
   static bool IsTextNode(nsIDOMNode* aNode);
   static bool IsTextNode(nsINode* aNode)
   {
-    return aNode->NodeType() == nsIDOMNode::TEXT_NODE;
+    return aNode->NodeType() == nsINode::TEXT_NODE;
   }
 
   /**
@@ -1042,9 +1042,6 @@ public:
   static nsresult GetEndChildNode(Selection* aSelection,
                                   nsIContent** aEndNode);
 
-#if DEBUG_JOE
-  static void DumpNode(nsIDOMNode* aNode, int32_t indent = 0);
-#endif
   Selection* GetSelection(SelectionType aSelectionType =
                                           SelectionType::eNormal)
   {

@@ -22,6 +22,7 @@
 #include "nsAtom.h"
 #include "nsDOMString.h"
 #include "nsCRT.h"
+#include "nsINode.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "mozilla/Sprintf.h"
@@ -70,16 +71,16 @@ NodeInfo::NodeInfo(nsAtom *aName, nsAtom *aPrefix, int32_t aNamespaceID,
     mInner.mName->ToString(mQualifiedName);
   }
 
-  MOZ_ASSERT_IF(aNodeType != nsIDOMNode::ELEMENT_NODE &&
-                aNodeType != nsIDOMNode::ATTRIBUTE_NODE &&
+  MOZ_ASSERT_IF(aNodeType != nsINode::ELEMENT_NODE &&
+                aNodeType != nsINode::ATTRIBUTE_NODE &&
                 aNodeType != UINT16_MAX,
                 aNamespaceID == kNameSpaceID_None && !aPrefix);
 
   switch (aNodeType) {
-    case nsIDOMNode::ELEMENT_NODE:
-    case nsIDOMNode::ATTRIBUTE_NODE:
+    case nsINode::ELEMENT_NODE:
+    case nsINode::ATTRIBUTE_NODE:
       // Correct the case for HTML
-      if (aNodeType == nsIDOMNode::ELEMENT_NODE &&
+      if (aNodeType == nsINode::ELEMENT_NODE &&
           aNamespaceID == kNameSpaceID_XHTML && GetDocument() &&
           GetDocument()->IsHTMLDocument()) {
         nsContentUtils::ASCIIToUpper(mQualifiedName, mNodeName);
@@ -88,16 +89,16 @@ NodeInfo::NodeInfo(nsAtom *aName, nsAtom *aPrefix, int32_t aNamespaceID,
       }
       mInner.mName->ToString(mLocalName);
       break;
-    case nsIDOMNode::TEXT_NODE:
-    case nsIDOMNode::CDATA_SECTION_NODE:
-    case nsIDOMNode::COMMENT_NODE:
-    case nsIDOMNode::DOCUMENT_NODE:
-    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+    case nsINode::TEXT_NODE:
+    case nsINode::CDATA_SECTION_NODE:
+    case nsINode::COMMENT_NODE:
+    case nsINode::DOCUMENT_NODE:
+    case nsINode::DOCUMENT_FRAGMENT_NODE:
       mInner.mName->ToString(mNodeName);
       SetDOMStringToNull(mLocalName);
       break;
-    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
-    case nsIDOMNode::DOCUMENT_TYPE_NODE:
+    case nsINode::PROCESSING_INSTRUCTION_NODE:
+    case nsINode::DOCUMENT_TYPE_NODE:
       mInner.mExtraName->ToString(mNodeName);
       SetDOMStringToNull(mLocalName);
       break;

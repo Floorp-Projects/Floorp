@@ -48,7 +48,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
@@ -1102,15 +1101,14 @@ mozInlineSpellChecker::MakeSpellCheckRange(
   }
 
   if (aEndOffset == -1) {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    rv = aEndNode->GetChildNodes(getter_AddRefs(childNodes));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t childCount;
-    rv = childNodes->GetLength(&childCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aEndOffset = childCount;
+    // It's hard to say whether it's better to just do nsINode::GetChildCount or
+    // get the ChildNodes() and then its length.  The latter is faster if we
+    // keep going through this code for the same nodes (because it caches the
+    // length).  The former is faster if we keep getting different nodes here...
+    //
+    // Let's do the thing which can't end up with bad O(N^2) behavior.
+    nsCOMPtr<nsINode> endNode = do_QueryInterface(aEndNode);
+    aEndOffset = endNode->ChildNodes()->Length();
   }
 
   // sometimes we are are requested to check an empty range (possibly an empty

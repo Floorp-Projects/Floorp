@@ -203,7 +203,7 @@ function editableTextTest(aID) {
     if (elm instanceof Components.interfaces.nsIDOMNSEditableElement)
       return elm.value;
 
-    if (elm instanceof Components.interfaces.nsIDOMHTMLDocument)
+    if (ChromeUtils.getClassName(elm) == "HTMLDocument")
       return elm.body.textContent;
 
     return elm.textContent;

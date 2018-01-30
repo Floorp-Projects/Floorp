@@ -53,6 +53,7 @@
 #include "nsIDOMNode.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
+#include "nsGkAtoms.h"
 
 namespace mozilla {
 
@@ -63,6 +64,7 @@ namespace mozilla {
 HTMLURIRefObject::HTMLURIRefObject()
   : mCurAttrIndex(0)
   , mAttributeCnt(0)
+  , mAttrsInited(false)
 {
 }
 
@@ -85,121 +87,135 @@ HTMLURIRefObject::GetNextURI(nsAString& aURI)
 {
   NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
 
-  // XXX Why don't you use nsAtom for comparing the tag name a lot?
-  nsAutoString tagName;
-  nsresult rv = mNode->GetNodeName(tagName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(mNode);
+  NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
 
   // Loop over attribute list:
-  if (!mAttributes) {
-    nsCOMPtr<dom::Element> element(do_QueryInterface(mNode));
-    NS_ENSURE_TRUE(element, NS_ERROR_INVALID_ARG);
-
-    mAttributes = element->Attributes();
-    mAttributeCnt = mAttributes->Length();
+  if (!mAttrsInited) {
+    mAttrsInited = true;
+    mAttributeCnt = element->GetAttrCount();
     NS_ENSURE_TRUE(mAttributeCnt, NS_ERROR_FAILURE);
     mCurAttrIndex = 0;
   }
 
   while (mCurAttrIndex < mAttributeCnt) {
-    RefPtr<dom::Attr> attrNode = mAttributes->Item(mCurAttrIndex++);
-    NS_ENSURE_ARG_POINTER(attrNode);
-    nsString curAttr;
-    attrNode->GetName(curAttr);
+    BorrowedAttrInfo attrInfo = element->GetAttrInfoAt(mCurAttrIndex++);
+    NS_ENSURE_ARG_POINTER(attrInfo.mName);
 
     // href >> A, AREA, BASE, LINK
-    if (MATCHES(curAttr, "href")) {
-      if (!MATCHES(tagName, "a") && !MATCHES(tagName, "area") &&
-          !MATCHES(tagName, "base") && !MATCHES(tagName, "link")) {
+    if (attrInfo.mName->Equals(nsGkAtoms::href)) {
+      if (!element->IsAnyOfHTMLElements(nsGkAtoms::a,
+                                        nsGkAtoms::area,
+                                        nsGkAtoms::base,
+                                        nsGkAtoms::link)) {
         continue;
       }
-      attrNode->GetValue(aURI);
-      nsString uri (aURI);
+
+      attrInfo.mValue->ToString(aURI);
       // href pointing to a named anchor doesn't count
-      if (aURI.First() != char16_t('#')) {
-        return NS_OK;
+      if (StringBeginsWith(aURI, NS_LITERAL_STRING("#"))) {
+        aURI.Truncate();
+        return NS_ERROR_INVALID_ARG;
       }
-      aURI.Truncate();
-      return NS_ERROR_INVALID_ARG;
+
+      return NS_OK;
     }
     // src >> FRAME, IFRAME, IMG, INPUT, SCRIPT
-    else if (MATCHES(curAttr, "src")) {
-      if (!MATCHES(tagName, "img") &&
-          !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe") &&
-          !MATCHES(tagName, "input") && !MATCHES(tagName, "script")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::src)) {
+      if (!element->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                        nsGkAtoms::frame,
+                                        nsGkAtoms::iframe,
+                                        nsGkAtoms::input,
+                                        nsGkAtoms::script)) {
         continue;
       }
-      attrNode->GetValue(aURI);
+      attrInfo.mValue->ToString(aURI);
       return NS_OK;
     }
     //<META http-equiv="refresh" content="3,http://www.acme.com/intro.html">
-    else if (MATCHES(curAttr, "content")) {
-      if (!MATCHES(tagName, "meta")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::content)) {
+      if (!element->IsHTMLElement(nsGkAtoms::meta)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // longdesc >> FRAME, IFRAME, IMG
-    else if (MATCHES(curAttr, "longdesc")) {
-      if (!MATCHES(tagName, "img") &&
-          !MATCHES(tagName, "frame") && !MATCHES(tagName, "iframe")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::longdesc)) {
+      if (!element->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                        nsGkAtoms::frame,
+                                        nsGkAtoms::iframe)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // usemap >> IMG, INPUT, OBJECT
-    else if (MATCHES(curAttr, "usemap")) {
-      if (!MATCHES(tagName, "img") &&
-          !MATCHES(tagName, "input") && !MATCHES(tagName, "object")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::usemap)) {
+      if (!element->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                        nsGkAtoms::input,
+                                        nsGkAtoms::object)) {
         continue;
       }
     }
     // action >> FORM
-    else if (MATCHES(curAttr, "action")) {
-      if (!MATCHES(tagName, "form")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::action)) {
+      if (!element->IsHTMLElement(nsGkAtoms::form)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // background >> BODY
-    else if (MATCHES(curAttr, "background")) {
-      if (!MATCHES(tagName, "body")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::background)) {
+      if (!element->IsHTMLElement(nsGkAtoms::body)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
-    // codebase >> OBJECT, APPLET
-    else if (MATCHES(curAttr, "codebase")) {
-      if (!MATCHES(tagName, "meta")) {
+    // codebase >> OBJECT
+    else if (attrInfo.mName->Equals(nsGkAtoms::codebase)) {
+      if (!element->IsHTMLElement(nsGkAtoms::object)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // classid >> OBJECT
-    else if (MATCHES(curAttr, "classid")) {
-      if (!MATCHES(tagName, "object")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::classid)) {
+      if (!element->IsHTMLElement(nsGkAtoms::object)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // data >> OBJECT
-    else if (MATCHES(curAttr, "data")) {
-      if (!MATCHES(tagName, "object")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::data)) {
+      if (!element->IsHTMLElement(nsGkAtoms::object)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // cite >> BLOCKQUOTE, DEL, INS, Q
-    else if (MATCHES(curAttr, "cite")) {
-      if (!MATCHES(tagName, "blockquote") && !MATCHES(tagName, "q") &&
-          !MATCHES(tagName, "del") && !MATCHES(tagName, "ins")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::cite)) {
+      if (!element->IsAnyOfHTMLElements(nsGkAtoms::blockquote,
+                                        nsGkAtoms::q,
+                                        nsGkAtoms::del,
+                                        nsGkAtoms::ins)) {
         continue;
       }
+
+      // XXXbz And if it is?
     }
     // profile >> HEAD
-    else if (MATCHES(curAttr, "profile")) {
-      if (!MATCHES(tagName, "head")) {
+    else if (attrInfo.mName->Equals(nsGkAtoms::profile)) {
+      if (!element->IsHTMLElement(nsGkAtoms::head)) {
         continue;
       }
-    }
-    // archive attribute on APPLET; warning, it contains a list of URIs.
-    else if (MATCHES(curAttr, "archive")) {
-      if (!MATCHES(tagName, "applet")) {
-        continue;
-      }
+
+      // XXXbz And if it is?
     }
   }
   // Return a code to indicate that there are no more,

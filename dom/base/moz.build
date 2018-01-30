@@ -426,7 +426,6 @@ LOCAL_INCLUDES += [
     '../events',
     '../media',
     '../network',
-    '../time',
     '/caps',
     '/docshell/base',
     '/dom/base',

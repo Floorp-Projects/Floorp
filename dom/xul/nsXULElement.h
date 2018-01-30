@@ -394,15 +394,6 @@ public:
                                                 int32_t aModType) const override;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-    // nsIDOMNode
-    NS_FORWARD_NSIDOMNODE_TO_NSINODE
-    // And since that shadowed GetParentElement with the XPCOM
-    // signature, pull in the one we care about.
-    using nsStyledElement::GetParentElement;
-
-    // nsIDOMElement
-    NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
 

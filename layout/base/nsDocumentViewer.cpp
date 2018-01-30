@@ -27,13 +27,12 @@
 #include "nsIFrame.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsSubDocumentFrame.h"
+#include "nsGenericHTMLElement.h"
 
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionListener.h"
 #include "mozilla/dom/Selection.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
 #ifdef ACCESSIBILITY
@@ -41,6 +40,7 @@
 #endif
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/StyleSheet.h"
@@ -2380,10 +2380,9 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
   }
   if (chromeHandler) {
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(chromeHandler));
-    nsCOMPtr<nsIContent> content(do_QueryInterface(elt));
-    if (elt && content) {
-      nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+    nsCOMPtr<Element> elt(do_QueryInterface(chromeHandler));
+    if (elt) {
+      nsCOMPtr<nsIURI> baseURI = elt->GetBaseURI();
 
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
@@ -2731,30 +2730,28 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmldoc = do_QueryInterface(mDocument);
-  nsCOMPtr<nsIDOMNode> bodyNode;
-
-  nsresult rv;
-  if (htmldoc)
-  {
-    nsCOMPtr<nsIDOMHTMLElement>bodyElement;
-    rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
-    if (NS_FAILED(rv) || !bodyElement) return rv;
-
-    bodyNode = do_QueryInterface(bodyElement);
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
   }
-  else if (mDocument)
-  {
-    bodyNode = do_QueryInterface(mDocument->GetRootElement());
+
+  nsCOMPtr<nsINode> bodyNode;
+  if (mDocument->IsHTMLOrXHTML()) {
+    // XXXbz why not just do GetBody() for all documents, then GetRootElement()
+    // if GetBody() is null?
+    bodyNode = mDocument->GetBody();
+  }
+  else {
+    bodyNode = mDocument->GetRootElement();
   }
   if (!bodyNode) return NS_ERROR_FAILURE;
 
-  rv = selection->RemoveAllRanges();
+  nsresult rv = selection->RemoveAllRanges();
   if (NS_FAILED(rv)) return rv;
 
   mozilla::dom::Selection::AutoUserInitiated userSelection(selection);
-  rv = selection->SelectAllChildren(bodyNode);
-  return rv;
+  ErrorResult err;
+  selection->SelectAllChildren(*bodyNode, err);
+  return err.StealNSResult();
 }
 
 NS_IMETHODIMP nsDocumentViewer::CopySelection()
@@ -3668,27 +3665,26 @@ nsDocumentViewer::GetPopupLinkNode(nsIDOMNode** aNode)
   *aNode = nullptr;
 
   // find popup node
-  nsCOMPtr<nsIDOMNode> node;
-  nsresult rv = GetPopupNode(getter_AddRefs(node));
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsresult rv = GetPopupNode(getter_AddRefs(domNode));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
 
   // find out if we have a link in our ancestry
   while (node) {
-
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
     if (content) {
       nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
       if (hrefURI) {
-        *aNode = node;
+        *aNode = node->AsDOMNode();
         NS_IF_ADDREF(*aNode); // addref
         return NS_OK;
       }
     }
 
     // get our parent and keep trying...
-    nsCOMPtr<nsIDOMNode> parentNode;
-    node->GetParentNode(getter_AddRefs(parentNode));
-    node = parentNode;
+    node = node->GetParentNode();
   }
 
   // if we have no node, fail

@@ -831,9 +831,9 @@ EventListenerManager::SetEventHandler(nsAtom* aName,
       // the script sample in aContent.
       nsAutoString scriptSample, attr, tagName(NS_LITERAL_STRING("UNKNOWN"));
       aName->ToString(attr);
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTarget));
+      nsCOMPtr<nsINode> domNode(do_QueryInterface(mTarget));
       if (domNode) {
-        domNode->GetNodeName(tagName);
+        tagName = domNode->NodeName();
       }
       // build a "script sample" based on what we know about this element
       scriptSample.Assign(attr);

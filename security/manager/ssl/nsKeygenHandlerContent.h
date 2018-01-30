@@ -13,13 +13,17 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-class nsIDOMHTMLElement;
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 class nsKeygenFormProcessorContent final : public nsIFormProcessor {
 public:
   nsKeygenFormProcessorContent();
 
-  virtual nsresult ProcessValue(nsIDOMHTMLElement* aElement,
+  virtual nsresult ProcessValue(mozilla::dom::Element* aElement,
                                 const nsAString& aName,
                                 nsAString& aValue) override;
 

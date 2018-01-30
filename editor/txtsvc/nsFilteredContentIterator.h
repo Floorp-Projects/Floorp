@@ -60,8 +60,8 @@ protected:
 
   // enum to give us the direction
   typedef enum {eDirNotSet, eForward, eBackward} eDirectionType;
-  nsresult AdvanceNode(nsIDOMNode* aNode, nsIDOMNode*& aNewNode, eDirectionType aDir);
-  void CheckAdvNode(nsIDOMNode* aNode, bool& aDidSkip, eDirectionType aDir);
+  nsresult AdvanceNode(nsINode* aNode, nsINode*& aNewNode, eDirectionType aDir);
+  void CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirectionType aDir);
   nsresult SwitchDirections(bool aChangeToForward);
 
   nsCOMPtr<nsIContentIterator> mCurrentIterator;

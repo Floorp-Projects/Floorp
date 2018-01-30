@@ -8,7 +8,6 @@
 #define mozilla_dom_HTMLSpanElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"

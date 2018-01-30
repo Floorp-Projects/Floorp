@@ -18,7 +18,11 @@
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
-class nsIDOMHTMLElement;
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 
 // {0ae53c0f-8ea2-4916-bedc-717443c3e185}
 #define NS_FORMPROCESSOR_CID \
@@ -53,7 +57,7 @@ public:
    *                   On exit it contains the value which will actually be submitted for aName.
    *
    */
-  virtual nsresult ProcessValue(nsIDOMHTMLElement* aElement,
+  virtual nsresult ProcessValue(mozilla::dom::Element* aElement,
                                 const nsAString& aName,
                                 nsAString& aValue) = 0;
 

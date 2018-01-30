@@ -1742,7 +1742,7 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
     nsIScrollableFrame* sf = do_QueryFrame(parent);
     if (sf->GetScrolledFrame() == aFrame) {
       if (sf->IsScrollingActive(this)) {
-        aIsAsync = aIsAsync || sf->MayBeAsynchronouslyScrolled();
+        aIsAsync = aIsAsync || sf->IsMaybeAsynchronouslyScrolled();
         result = AGR_YES;
       } else {
         result = AGR_MAYBE;
@@ -2949,6 +2949,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   , mForceNotVisible(aBuilder->IsBuildingInvisibleItems())
   , mDisableSubpixelAA(false)
   , mReusedItem(false)
+  , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
 #endif
@@ -4493,7 +4494,7 @@ nsDisplayImageContainer::ConfigureLayer(ImageLayer* aLayer,
   if (imageWidth > 0 && imageHeight > 0) {
     // We're actually using the ImageContainer. Let our frame know that it
     // should consider itself to have painted successfully.
-    nsDisplayBackgroundGeometry::UpdateDrawResult(this, ImgDrawResult::SUCCESS);
+    UpdateDrawResult(ImgDrawResult::SUCCESS);
   }
 
   // XXX(seth): Right now we ignore aParameters.Scale() and
@@ -7526,7 +7527,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
     // will never be asynchronously scrolled. Instead we will always position
     // the sticky items correctly on the gecko side and WR will never need to
     // adjust their position itself.
-    if (!stickyScrollContainer->ScrollFrame()->MayBeAsynchronouslyScrolled()) {
+    if (!stickyScrollContainer->ScrollFrame()->IsMaybeAsynchronouslyScrolled()) {
       stickyScrollContainer = nullptr;
     }
   }

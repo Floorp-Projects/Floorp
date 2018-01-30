@@ -11,9 +11,29 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+
+/* Disable the "base class should be explicitly initialized in the
+   copy constructor" warning that some bindings structs trigger while
+   including Element.h.  Looks like it's an inherent part of -Wextra,
+   so we can't just disable it in a targeted way in moz.build. */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wextra"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wextra"
+#endif // __clang__ || __GNUC__
+
+#include "mozilla/dom/Element.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // __clang__ || __GNUC__
+
 #include "nsDependentString.h"
 #include "nsIContent.h"
-#include "nsIDOMHTMLElement.h"
 #include "nsIGenKeypairInfoDlg.h"
 #include "nsIServiceManager.h"
 #include "nsITokenDialogs.h"
@@ -29,6 +49,8 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "secdert.h"
+
+using mozilla::dom::Element;
 
 //These defines are taken from the PKCS#11 spec
 #define CKM_RSA_PKCS_KEY_PAIR_GEN     0x00000000
@@ -672,7 +694,7 @@ loser:
 
 // static
 void
-nsKeygenFormProcessor::ExtractParams(nsIDOMHTMLElement* aElement,
+nsKeygenFormProcessor::ExtractParams(Element* aElement,
                                      nsAString& challengeValue,
                                      nsAString& keyTypeValue,
                                      nsAString& keyParamsValue)
@@ -698,7 +720,7 @@ nsKeygenFormProcessor::ExtractParams(nsIDOMHTMLElement* aElement,
 }
 
 nsresult
-nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement* aElement,
+nsKeygenFormProcessor::ProcessValue(Element* aElement,
                                     const nsAString& aName,
                                     nsAString& aValue)
 {

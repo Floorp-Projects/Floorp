@@ -217,7 +217,8 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   // stash the document of the dom node
-  aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
+  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
+  mSourceDocument = do_QueryInterface(node->OwnerDoc());
   mSourceNode = aDOMNode;
   mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
@@ -662,32 +663,21 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     }
 
     if (renderFlags) {
-      nsCOMPtr<nsIDOMNode> child;
-      nsCOMPtr<nsIDOMNodeList> childList;
-      uint32_t length;
-      uint32_t count = 0;
-      nsAutoString childNodeName;
-
+      nsCOMPtr<nsINode> dragINode = do_QueryInterface(dragNode);
       // check if the dragged node itself is an img element
-      if (NS_SUCCEEDED(dragNode->GetNodeName(childNodeName)) &&
-          childNodeName.LowerCaseEqualsLiteral("img")) {
+      if (dragINode->NodeName().LowerCaseEqualsLiteral("img")) {
         renderFlags = renderFlags | nsIPresShell::RENDER_IS_IMAGE;
-      } else if (
-          NS_SUCCEEDED(dragNode->GetChildNodes(getter_AddRefs(childList))) &&
-          NS_SUCCEEDED(childList->GetLength(&length))) {
+      } else {
+        nsINodeList* childList = dragINode->ChildNodes();
+        uint32_t length = childList->Length();
         // check every childnode for being an img element
-        while (count < length) {
-          if (NS_FAILED(childList->Item(count, getter_AddRefs(child))) ||
-              NS_FAILED(child->GetNodeName(childNodeName))) {
-            break;
-          }
-          // here the node is checked for being an img element
-          if (childNodeName.LowerCaseEqualsLiteral("img")) {
+        // XXXbz why don't we need to check descendants recursively?
+        for (uint32_t count = 0; count < length; ++count) {
+          if (childList->Item(count)->NodeName().LowerCaseEqualsLiteral("img")) {
             // if the dragnode contains an image, set RENDER_IS_IMAGE flag
             renderFlags = renderFlags | nsIPresShell::RENDER_IS_IMAGE;
             break;
           }
-          count++;
         }
       }
     }

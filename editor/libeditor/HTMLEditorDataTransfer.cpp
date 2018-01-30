@@ -11,6 +11,7 @@
 #include "HTMLEditUtils.h"
 #include "TextEditUtils.h"
 #include "WSRunObject.h"
+#include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -87,8 +88,8 @@ static bool FindIntegerAfterString(const char* aLeadingString,
                                    nsCString& aCStr, int32_t& foundNumber);
 static nsresult RemoveFragComments(nsCString& theStr);
 static void RemoveBodyAndHead(nsINode& aNode);
-static nsresult FindTargetNode(nsIDOMNode* aStart,
-                               nsCOMPtr<nsIDOMNode>& aResult);
+static nsresult FindTargetNode(nsINode* aStart,
+                               nsCOMPtr<nsINode>& aResult);
 
 nsresult
 HTMLEditor::LoadHTML(const nsAString& aInputString)
@@ -216,7 +217,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   NS_ENSURE_STATE(selection);
 
   // create a dom document fragment that represents the structure to paste
-  nsCOMPtr<nsIDOMNode> fragmentAsNode, streamStartParent, streamEndParent;
+  nsCOMPtr<nsINode> fragmentAsNode, streamStartParent, streamEndParent;
   int32_t streamStartOffset = 0, streamEndOffset = 0;
 
   nsresult rv = CreateDOMFragmentFromPaste(aInputString, aContextStr, aInfoStr,
@@ -268,18 +269,10 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 
   // make a list of what nodes in docFrag we need to move
   nsTArray<OwningNonNull<nsINode>> nodeList;
-  nsCOMPtr<nsINode> fragmentAsNodeNode = do_QueryInterface(fragmentAsNode);
-  NS_ENSURE_STATE(fragmentAsNodeNode || !fragmentAsNode);
-  nsCOMPtr<nsINode> streamStartParentNode =
-    do_QueryInterface(streamStartParent);
-  NS_ENSURE_STATE(streamStartParentNode || !streamStartParent);
-  nsCOMPtr<nsINode> streamEndParentNode =
-    do_QueryInterface(streamEndParent);
-  NS_ENSURE_STATE(streamEndParentNode || !streamEndParent);
-  CreateListOfNodesToPaste(*static_cast<DocumentFragment*>(fragmentAsNodeNode.get()),
+  CreateListOfNodesToPaste(*static_cast<DocumentFragment*>(fragmentAsNode.get()),
                            nodeList,
-                           streamStartParentNode, streamStartOffset,
-                           streamEndParentNode, streamEndOffset);
+                           streamStartParent, streamStartOffset,
+                           streamEndParent, streamEndOffset);
 
   if (nodeList.IsEmpty()) {
     // We aren't inserting anything, but if aDeleteSelection is set, we do want
@@ -367,7 +360,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     }
 
     // Remember if we are in a link.
-    bool bStartedInLink = IsInLink(pointToInsert.GetContainerAsDOMNode());
+    bool bStartedInLink = IsInLink(pointToInsert.GetContainer());
 
     // Are we in a text node? If so, split it.
     if (pointToInsert.IsInTextNode()) {
@@ -434,7 +427,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     nsCOMPtr<nsIContent> lastInsertNode;
     nsCOMPtr<nsINode> insertedContextParent;
     for (OwningNonNull<nsINode>& curNode : nodeList) {
-      if (NS_WARN_IF(curNode == fragmentAsNodeNode) ||
+      if (NS_WARN_IF(curNode == fragmentAsNode) ||
           NS_WARN_IF(TextEditUtils::IsBody(curNode))) {
         return NS_ERROR_FAILURE;
       }
@@ -665,9 +658,9 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       selection->Collapse(selNode, selOffset);
 
       // if we just pasted a link, discontinue link style
-      nsCOMPtr<nsIDOMNode> link;
+      nsCOMPtr<nsINode> link;
       if (!bStartedInLink &&
-          IsInLink(GetAsDOMNode(selNode), address_of(link))) {
+          IsInLink(selNode, address_of(link))) {
         // so, if we just pasted a link, I split it.  Why do that instead of just
         // nudging selection point beyond it?  Because it might have ended in a BR
         // that is not visible.  If so, the code above just placed selection
@@ -693,14 +686,14 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
 }
 
 bool
-HTMLEditor::IsInLink(nsIDOMNode* aNode,
-                     nsCOMPtr<nsIDOMNode>* outLink)
+HTMLEditor::IsInLink(nsINode* aNode,
+                     nsCOMPtr<nsINode>* outLink)
 {
   NS_ENSURE_TRUE(aNode, false);
   if (outLink) {
     *outLink = nullptr;
   }
-  nsCOMPtr<nsIDOMNode> tmp, node = aNode;
+  nsINode* node = aNode;
   while (node) {
     if (HTMLEditUtils::IsLink(node)) {
       if (outLink) {
@@ -708,8 +701,7 @@ HTMLEditor::IsInLink(nsIDOMNode* aNode,
       }
       return true;
     }
-    tmp = node;
-    tmp->GetParentNode(getter_AddRefs(node));
+    node = node->GetParentNode();
   }
   return false;
 }
@@ -1999,14 +1991,11 @@ void RemoveBodyAndHead(nsINode& aNode)
  * the magical comment node containing kInsertCookie or, failing that, the
  * firstChild of the firstChild (until we reach a leaf).
  */
-nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
+nsresult FindTargetNode(nsINode *aStart, nsCOMPtr<nsINode> &aResult)
 {
   NS_ENSURE_TRUE(aStart, NS_OK);
 
-  nsCOMPtr<nsIDOMNode> child, tmp;
-
-  nsresult rv = aStart->GetFirstChild(getter_AddRefs(child));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> child = aStart->GetFirstChild();
 
   if (!child) {
     // If the current result is nullptr, then aStart is a leaf, and is the
@@ -2019,10 +2008,9 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
 
   do {
     // Is this child the magical cookie?
-    nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(child);
-    if (comment) {
+    if (child->IsNodeOfType(nsINode::eCOMMENT)) {
       nsAutoString data;
-      rv = comment->GetData(data);
+      nsresult rv = static_cast<Comment*>(child.get())->GetData(data);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (data.EqualsLiteral(kInsertCookie)) {
@@ -2030,24 +2018,20 @@ nsresult FindTargetNode(nsIDOMNode *aStart, nsCOMPtr<nsIDOMNode> &aResult)
         // search.
         aResult = aStart;
 
-        // Note: it doesn't matter if this fails.
-        aStart->RemoveChild(child, getter_AddRefs(tmp));
+        child->Remove();
 
         return NS_SUCCESS_EDITOR_FOUND_TARGET;
       }
     }
 
-    rv = FindTargetNode(child, aResult);
+    nsresult rv = FindTargetNode(child, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (rv == NS_SUCCESS_EDITOR_FOUND_TARGET) {
       return NS_SUCCESS_EDITOR_FOUND_TARGET;
     }
 
-    rv = child->GetNextSibling(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    child = tmp;
+    child = child->GetNextSibling();
   } while (child);
 
   return NS_OK;
@@ -2057,9 +2041,9 @@ nsresult
 HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
                                        const nsAString& aContextStr,
                                        const nsAString& aInfoStr,
-                                       nsCOMPtr<nsIDOMNode>* outFragNode,
-                                       nsCOMPtr<nsIDOMNode>* outStartNode,
-                                       nsCOMPtr<nsIDOMNode>* outEndNode,
+                                       nsCOMPtr<nsINode>* outFragNode,
+                                       nsCOMPtr<nsINode>* outStartNode,
+                                       nsCOMPtr<nsINode>* outEndNode,
                                        int32_t* outStartOffset,
                                        int32_t* outEndOffset,
                                        bool aTrustedInput)
@@ -2071,7 +2055,7 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
 
   // if we have context info, create a fragment for that
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> contextLeaf;
+  nsCOMPtr<nsINode> contextLeaf;
   RefPtr<DocumentFragment> contextAsNode;
   if (!aContextStr.IsEmpty()) {
     rv = ParseFragment(aContextStr, nullptr, doc, getter_AddRefs(contextAsNode),
@@ -2142,24 +2126,21 @@ HTMLEditor::CreateDOMFragmentFromPaste(const nsAString& aInputString,
     // Move the start and end children.
     nsresult err;
     int32_t num = numstr1.ToInteger(&err);
-
-    nsCOMPtr<nsIDOMNode> tmp;
     while (num--) {
-      (*outStartNode)->GetFirstChild(getter_AddRefs(tmp));
+      nsINode* tmp = (*outStartNode)->GetFirstChild();
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-      tmp.swap(*outStartNode);
+      *outStartNode = tmp;
     }
 
     num = numstr2.ToInteger(&err);
     while (num--) {
-      (*outEndNode)->GetLastChild(getter_AddRefs(tmp));
+      nsINode* tmp = (*outEndNode)->GetLastChild();
       NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-      tmp.swap(*outEndNode);
+      *outEndNode = tmp;
     }
   }
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(*outEndNode);
-  *outEndOffset = node->Length();
+  *outEndOffset = (*outEndNode)->Length();
   return NS_OK;
 }
 

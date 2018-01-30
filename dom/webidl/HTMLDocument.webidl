@@ -13,8 +13,6 @@ interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
-  [CEReactions, Pure, SetterThrows]
-           attribute HTMLElement? body;
   [Pure]
   readonly attribute HTMLHeadElement? head;
   [Pure]
