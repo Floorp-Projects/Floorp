@@ -888,17 +888,6 @@ nsCSSKeyframeStyleDeclaration::GetParentObject()
   return mRule ? mRule->GetDocument() : nullptr;
 }
 
-DocGroup*
-nsCSSKeyframeStyleDeclaration::GetDocGroup() const
-{
-  if (!mRule) {
-    return nullptr;
-  }
-
-  nsIDocument* document = mRule->GetDocument();
-  return document ? document->GetDocGroup() : nullptr;
-}
-
 // -------------------------------------------
 // nsCSSKeyframeRule
 //
@@ -1310,17 +1299,6 @@ nsINode*
 nsCSSPageStyleDeclaration::GetParentObject()
 {
   return mRule ? mRule->GetDocument() : nullptr;
-}
-
-DocGroup*
-nsCSSPageStyleDeclaration::GetDocGroup() const
-{
-  if (!mRule) {
-    return nullptr;
-  }
-
-  nsIDocument* document = mRule->GetDocument();
-  return document ? document->GetDocGroup() : nullptr;
 }
 
 // -------------------------------------------

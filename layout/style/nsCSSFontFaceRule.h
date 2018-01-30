@@ -46,7 +46,6 @@ public:
   using nsICSSDeclaration::GetPropertyCSSValue;
 
   virtual nsINode *GetParentObject() override;
-  virtual mozilla::dom::DocGroup* GetDocGroup() const override;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,
