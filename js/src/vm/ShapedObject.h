@@ -12,28 +12,28 @@
 namespace js {
 
 /*
- * Shaped objects extend the base implementation of an object with a shape
- * field.  Subclasses of ShapedObject ascribe meaning to this field.
+ * Shaped objects are a variant of JSObject that use a GCPtrShape for their
+ * |shapeOrExpando_| field. All objects that point to a js::Shape as their
+ * |shapeOrExpando_| field should use this as their subclass.
  *
- * ShapedObject is only created as the base class of some other class.  It's
- * never created as a most-derived class.
+ * NOTE: shape()->getObjectClass() must equal getClass().
  */
 class ShapedObject : public JSObject
 {
   protected:
-    // Property layout description and other state.
-    GCPtrShape shape_;
-
+    // ShapedObjects treat the |shapeOrExpando_| field as a GCPtrShape to
+    // ensure barriers are called. Use these instead of accessing
+    // |shapeOrExpando_| directly.
     MOZ_ALWAYS_INLINE const GCPtrShape& shapeRef() const {
-        return shape_;
+        return *reinterpret_cast<const GCPtrShape*>(&(this->shapeOrExpando_));
     }
     MOZ_ALWAYS_INLINE GCPtrShape& shapeRef() {
-        return shape_;
+        return *reinterpret_cast<GCPtrShape*>(&(this->shapeOrExpando_));
     }
 
     // Used for GC tracing and Shape::listp
     MOZ_ALWAYS_INLINE GCPtrShape* shapePtr() {
-        return &shape_;
+        return reinterpret_cast<GCPtrShape*>(&(this->shapeOrExpando_));
     }
 
   public:
@@ -50,12 +50,10 @@ class ShapedObject : public JSObject
         TraceEdge(trc, shapePtr(), "shape");
     }
 
-    static size_t offsetOfShape() { return offsetof(ShapedObject, shape_); }
-
-  private:
-    static void staticAsserts() {
-        static_assert(offsetof(ShapedObject, shape_) == offsetof(shadow::Object, shape),
+    static constexpr size_t offsetOfShape() {
+        static_assert(offsetOfShapeOrExpando() == offsetof(shadow::Object, shape),
                       "shadow shape must match actual shape");
+        return offsetOfShapeOrExpando();
     }
 };
 
