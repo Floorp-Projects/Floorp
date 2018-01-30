@@ -90,10 +90,7 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mNode));
-
-  uint16_t nodeType = 0;
-  DOMNode->GetNodeType(&nodeType);
+  uint16_t nodeType = mNode->NodeType();
   *aNodeType = static_cast<unsigned short>(nodeType);
 
   if (*aNodeType !=  NODETYPE_TEXT) {
