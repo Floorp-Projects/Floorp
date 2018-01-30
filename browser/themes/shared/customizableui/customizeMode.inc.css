@@ -119,13 +119,13 @@
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
 }
 
-.customizationmode-button:-moz-any(:focus,:active,:hover):not([disabled]),
+.customizationmode-button:-moz-any(:active,:hover):not([disabled]),
 .customizationmode-button[open],
 .customizationmode-button[checked] {
   background-color: #e1e1e5;
 }
 
-#customization-done-button:-moz-any(:focus,:active,:hover):not([disabled]) {
+#customization-done-button:-moz-any(:active,:hover):not([disabled]) {
   background-color: #0060df;
 }
 
