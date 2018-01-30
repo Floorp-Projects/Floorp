@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
-#include "Workers.h"
+#include "WorkerCommon.h"
 
 #include "js/CharacterEncoding.h"
 #include "nsIContentPolicy.h"
