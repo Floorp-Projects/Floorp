@@ -79,8 +79,8 @@ add_task(async function test_crash_in_previous_frameloader() {
     // and then immediately swap out the browser for a non-remote one.
     await ContentTask.spawn(browser, null, function() {
       const Cu = Components.utils;
-      ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-      ChromeUtils.import("resource://gre/modules/Timer.jsm");
+      Cu.import("resource://gre/modules/ctypes.jsm");
+      Cu.import("resource://gre/modules/Timer.jsm");
 
       let dies = function() {
         privateNoteIntentionalCrash();

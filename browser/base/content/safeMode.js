@@ -11,7 +11,7 @@ var Cu = Components.utils;
 
 const appStartup = Services.startup;
 
-ChromeUtils.import("resource://gre/modules/ResetProfile.jsm");
+Cu.import("resource://gre/modules/ResetProfile.jsm");
 
 var defaultToReset = false;
 

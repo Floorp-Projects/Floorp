@@ -20,7 +20,7 @@ const global = this;
 
 Cu.importGlobalProperties(["atob", "btoa"]);
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 const KINTO_PROD_SERVER_URL = "https://webextensions.settings.services.mozilla.com/v1";
 const KINTO_DEFAULT_SERVER_URL = KINTO_PROD_SERVER_URL;
 
@@ -42,10 +42,10 @@ const SCALAR_STORAGE_CONSUMED = "storage.sync.api.usage.storage_consumed";
 // Default is 5sec, which seems a bit aggressive on the open internet
 const KINTO_REQUEST_TIMEOUT = 30000;
 
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BulkKeyBundle: "resource://services-sync/keys.js",
@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
                                       STORAGE_SYNC_SERVER_URL_PREF,
                                       KINTO_DEFAULT_SERVER_URL);
 XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
-  let {WeaveCrypto} = ChromeUtils.import("resource://services-crypto/WeaveCrypto.js", {});
+  let {WeaveCrypto} = Cu.import("resource://services-crypto/WeaveCrypto.js", {});
   return new WeaveCrypto();
 });
 

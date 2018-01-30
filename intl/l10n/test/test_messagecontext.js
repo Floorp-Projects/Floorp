@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function run_test() {
-  const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
+  const { MessageContext } = Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
 
   test_methods_presence(MessageContext);
   test_methods_calling(MessageContext);

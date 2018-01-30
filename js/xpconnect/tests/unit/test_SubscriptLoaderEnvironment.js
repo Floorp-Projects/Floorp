@@ -1,4 +1,4 @@
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 let tgt = {};
 Services.scriptloader.loadSubScript("resource://test/environment_script.js", tgt);

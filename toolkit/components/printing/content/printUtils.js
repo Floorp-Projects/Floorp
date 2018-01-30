@@ -162,7 +162,7 @@ var PrintUtils = {
     let windowID = ifReq.getInterface(Components.interfaces.nsIDOMWindowUtils)
                         .outerWindowID;
 
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
+    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let msg = "PrintUtils.print is now deprecated. Please use PrintUtils.printWindow.";
     let url = "https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Printing";
     Deprecated.warning(msg, url);
@@ -283,7 +283,7 @@ var PrintUtils = {
    * @return nsIWebBrowserPrint
    */
   getWebBrowserPrint(aWindow) {
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
+    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let text = "getWebBrowserPrint is now deprecated, and fully unsupported for " +
                "multi-process browsers. Please use a frame script to get " +
                "access to nsIWebBrowserPrint from content.";
@@ -307,7 +307,7 @@ var PrintUtils = {
    * @return nsIWebBrowserPrint
    */
   getPrintPreview() {
-    let Deprecated = ChromeUtils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
+    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let text = "getPrintPreview is now deprecated, and fully unsupported for " +
                "multi-process browsers. Please use a frame script to get " +
                "access to nsIWebBrowserPrint from content.";

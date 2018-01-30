@@ -15,7 +15,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   "use strict";
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   // Let's exercise the interface. Even if the network is not up, we can make sure nothing blows up.
   let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);

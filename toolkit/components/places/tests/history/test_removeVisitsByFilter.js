@@ -7,7 +7,7 @@
 
 Cu.importGlobalProperties(["URL"]);
 
-ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 
 add_task(async function test_removeVisitsByFilter() {
   let referenceDate = new Date(1999, 9, 9, 9, 9);

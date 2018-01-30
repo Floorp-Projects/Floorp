@@ -6,8 +6,8 @@
 
 /* exported withSyncContext */
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm", this);
+Components.utils.import("resource://gre/modules/Services.jsm", this);
+Components.utils.import("resource://gre/modules/ExtensionCommon.jsm", this);
 
 var {
   BaseContext,

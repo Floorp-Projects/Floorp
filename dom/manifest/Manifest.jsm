@@ -15,17 +15,17 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const { ManifestObtainer } =
-  ChromeUtils.import("resource://gre/modules/ManifestObtainer.jsm", {});
+  Cu.import("resource://gre/modules/ManifestObtainer.jsm", {});
 const { ManifestIcons } =
-  ChromeUtils.import("resource://gre/modules/ManifestIcons.jsm", {});
+  Cu.import("resource://gre/modules/ManifestIcons.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "OS",
-                               "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(this, "JSONFile",
-                               "resource://gre/modules/JSONFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
+                                  "resource://gre/modules/JSONFile.jsm");
 
 /**
  * Generates an hash for the given string.

@@ -17,7 +17,7 @@ var chromeScript = runChecksAfterCommonInit();
 
 var setupScript = runInParent(function setup() {
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-  ChromeUtils.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
 
   // Create some logins just for this form, since we'll be deleting them.
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",

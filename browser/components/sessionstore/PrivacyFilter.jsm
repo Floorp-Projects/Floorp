@@ -8,9 +8,9 @@ this.EXPORTED_SYMBOLS = ["PrivacyFilter"];
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-ChromeUtils.defineModuleGetter(this, "PrivacyLevel",
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource://gre/modules/sessionstore/PrivacyLevel.jsm");
 
 /**

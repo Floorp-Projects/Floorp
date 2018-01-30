@@ -12,17 +12,17 @@ this.EXPORTED_SYMBOLS = ["read"];
 
 var {results: Cr, utils: Cu, interfaces: Ci} = Components;
 
-var SharedAll = ChromeUtils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
+var SharedAll = Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", {});
 
 var SysAll = {};
 if (SharedAll.Constants.Win) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
+  Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
 } else if (SharedAll.Constants.libc) {
-  ChromeUtils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
+  Cu.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+var {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 /**
  * The native service holding the implementation of the functions.

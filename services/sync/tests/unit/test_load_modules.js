@@ -39,12 +39,12 @@ function run_test() {
   for (let m of modules) {
     let res = "resource://services-sync/" + m;
     _("Attempting to load " + res);
-    ChromeUtils.import(res, {});
+    Cu.import(res, {});
   }
 
   for (let m of testingModules) {
     let res = "resource://testing-common/services/sync/" + m;
     _("Attempting to load " + res);
-    ChromeUtils.import(res, {});
+    Cu.import(res, {});
   }
 }

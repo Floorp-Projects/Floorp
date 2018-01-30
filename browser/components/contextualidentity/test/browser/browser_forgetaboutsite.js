@@ -4,9 +4,9 @@
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-let {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
+Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
 
 const USER_CONTEXTS = [
   "default",

@@ -42,7 +42,7 @@
 if (typeof Components != "undefined") {
   // Specify exported symbols for JSM module loader.
   this.EXPORTED_SYMBOLS = ["AndroidLog"];
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
 }
 
 // From <https://android.googlesource.com/platform/system/core/+/master/include/android/log.h>.

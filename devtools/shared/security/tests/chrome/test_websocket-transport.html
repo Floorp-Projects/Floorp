@@ -12,7 +12,7 @@
 "use strict";
 
 window.onload = function () {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   const Services = require("Services");
   const {DebuggerClient} = require("devtools/shared/client/debugger-client");
   const {DebuggerServer} = require("devtools/server/main");

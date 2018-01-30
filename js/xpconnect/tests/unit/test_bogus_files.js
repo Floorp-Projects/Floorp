@@ -5,7 +5,7 @@
 function test_BrokenFile(path, shouldThrow, expectedName) {
   var didThrow = false;
   try {
-    ChromeUtils.import(path);
+    Components.utils.import(path);
   } catch (ex) {
     var exceptionName = ex.name;
     print("ex: " + ex + "; name = " + ex.name);
@@ -32,11 +32,11 @@ function run_test() {
 
   // check that we can access modules' global objects even if
   // EXPORTED_SYMBOLS is missing or ill-formed:
-  Assert.equal(typeof(ChromeUtils.import("resource://test/bogus_exports_type.jsm",
-                                         null)),
+  Assert.equal(typeof(Components.utils.import("resource://test/bogus_exports_type.jsm",
+                                              null)),
                "object");
 
-  Assert.equal(typeof(ChromeUtils.import("resource://test/bogus_element_type.jsm",
-                                         null)),
+  Assert.equal(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
+                                              null)),
                "object");
 }

@@ -1,5 +1,5 @@
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/httpd.js");
 
 var httpserver = new HttpServer();
 var testpath = "/simple";

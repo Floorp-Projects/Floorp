@@ -4,7 +4,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/GCTelemetry.jsm", this);
+Cu.import("resource://gre/modules/GCTelemetry.jsm", this);
 
 function do_register_cleanup() {
     GCTelemetry.shutdown();

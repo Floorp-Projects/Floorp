@@ -7,7 +7,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const EVENT_TEST1 = "_test_event_1.1";
 const EVENT_TEST2 = "_test_event_2.1";

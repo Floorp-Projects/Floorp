@@ -4,7 +4,7 @@
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-let {LoadContextInfo} = ChromeUtils.import("resource://gre/modules/LoadContextInfo.jsm", {});
+let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 
 const TEST_DOMAIN = "http://example.net/";
 

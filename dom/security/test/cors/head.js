@@ -3,7 +3,7 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 function scopedCuImport(path) {
   const scope = {};
-  ChromeUtils.import(path, scope);
+  Cu.import(path, scope);
   return scope;
 }
 const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");

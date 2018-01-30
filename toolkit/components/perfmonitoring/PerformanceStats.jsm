@@ -24,14 +24,14 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
  * you should favor PerformanceWatcher.
  */
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm", this);
-ChromeUtils.defineModuleGetter(this, "PromiseUtils",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/ObjectUtils.jsm", this);
+XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "setTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
-ChromeUtils.defineModuleGetter(this, "clearTimeout",
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
 
 // The nsIPerformanceStatsService provides lower-level

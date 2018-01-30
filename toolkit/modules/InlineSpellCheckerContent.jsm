@@ -8,7 +8,7 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 var { InlineSpellChecker, SpellCheckHelper } =
-  ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", {});
+  Cu.import("resource://gre/modules/InlineSpellChecker.jsm", {});
 
 this.EXPORTED_SYMBOLS = [ "InlineSpellCheckerContent" ];
 

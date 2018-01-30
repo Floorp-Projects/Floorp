@@ -4,7 +4,7 @@
 
 var { interfaces: Ci, classes: Cc, results: Cr, utils: Cu } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var cps;
 var asyncRunner;
@@ -27,7 +27,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
         getService(Ci.nsIContentPrefService2);
 
   let s = {};
-  ChromeUtils.import("resource://test/AsyncRunner.jsm", s);
+  Cu.import("resource://test/AsyncRunner.jsm", s);
   asyncRunner = new s.AsyncRunner({
     done: do_test_finished,
     error(err) {

@@ -13,10 +13,10 @@ this.EXPORTED_SYMBOLS = [
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/Log.jsm");
-ChromeUtils.import("resource://services-common/rest.js");
-ChromeUtils.import("resource://services-common/observers.js");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/observers.js");
 
 const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 

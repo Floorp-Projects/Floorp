@@ -1,5 +1,5 @@
 const Cu = Components.utils;
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var ns = {};
 Services.scriptloader.loadSubScript("resource://gre/modules/NetUtil.jsm", ns);

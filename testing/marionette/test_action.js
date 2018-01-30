@@ -6,9 +6,9 @@
 
 const {utils: Cu} = Components;
 
-ChromeUtils.import("chrome://marionette/content/action.js");
-const {ContentWebElement} = ChromeUtils.import("chrome://marionette/content/element.js", {});
-ChromeUtils.import("chrome://marionette/content/error.js");
+Cu.import("chrome://marionette/content/action.js");
+const {ContentWebElement} = Cu.import("chrome://marionette/content/element.js", {});
+Cu.import("chrome://marionette/content/error.js");
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
 

@@ -527,7 +527,7 @@
               return null;
 
             try {
-              ChromeUtils.import("resource://gre/modules/InlineSpellChecker.jsm", this);
+              Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm", this);
               this.InlineSpellCheckerUI = new this.InlineSpellChecker(textbox.editor);
             } catch (ex) { }
           }

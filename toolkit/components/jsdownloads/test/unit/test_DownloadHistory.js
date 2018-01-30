@@ -7,7 +7,7 @@
 
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/DownloadHistory.jsm");
+Cu.import("resource://gre/modules/DownloadHistory.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDownloadHistory",
            "@mozilla.org/browser/download-history;1",

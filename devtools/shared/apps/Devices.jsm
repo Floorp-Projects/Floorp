@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const EventEmitter = require("devtools/shared/old-event-emitter");
 
 /* exported EXPORTED_SYMBOLS */

@@ -6,7 +6,7 @@
 
 const {utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 this.EXPORTED_SYMBOLS = ["PreferenceFilters"];
 

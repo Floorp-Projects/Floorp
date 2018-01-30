@@ -5,12 +5,12 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/Timer.jsm");
-ChromeUtils.import("resource://testing-common/AppData.jsm", this);
-ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
-var bsp = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", {});
+Cu.import("resource://gre/modules/osfile.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://testing-common/AppData.jsm", this);
+Cu.import("resource://testing-common/CrashManagerTest.jsm", this);
+var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 
 add_task(async function test_instantiation() {
   Assert.ok(!bsp.gCrashManager, "CrashManager global instance not initially defined.");

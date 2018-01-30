@@ -3,7 +3,7 @@ const SAVE_PER_SITE_PREF = "browser.download.lastDir.savePerSite";
 function test_deleted_iframe(perSitePref, windowOptions = {}) {
   return async function() {
     await SpecialPowers.pushPrefEnv({ set: [[ SAVE_PER_SITE_PREF, perSitePref ]] });
-    let {DownloadLastDir} = ChromeUtils.import("resource://gre/modules/DownloadLastDir.jsm", {});
+    let {DownloadLastDir} = Cu.import("resource://gre/modules/DownloadLastDir.jsm", {});
 
     let win = await BrowserTestUtils.openNewBrowserWindow(windowOptions);
     let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:mozilla");

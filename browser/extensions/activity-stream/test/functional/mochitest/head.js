@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
 function popPrefs() {

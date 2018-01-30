@@ -5,8 +5,8 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ../../../toolkit/components/extensions/ext-c-toolkit.js */
 
-ChromeUtils.defineModuleGetter(this, "ExtensionChildDevToolsUtils",
-                               "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionChildDevToolsUtils",
+                                  "resource://gre/modules/ExtensionChildDevToolsUtils.jsm");
 
 var {
   promiseDocumentLoaded,

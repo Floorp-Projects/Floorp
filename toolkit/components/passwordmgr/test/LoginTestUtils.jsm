@@ -13,11 +13,11 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.import("resource://testing-common/Assert.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/Assert.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
 
 const LoginInfo =
       Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
@@ -232,7 +232,7 @@ this.LoginTestUtils.testData = {
 
 this.LoginTestUtils.recipes = {
   getRecipeParent() {
-    let { LoginManagerParent } = ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm", {});
+    let { LoginManagerParent } = Cu.import("resource://gre/modules/LoginManagerParent.jsm", {});
     if (!LoginManagerParent.recipeParentPromise) {
       return null;
     }

@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+Cu.import("resource://shield-recipe-client-content/AboutPages.jsm", this);
 
 function withAboutStudies(testFunc) {
   return async (...args) => (

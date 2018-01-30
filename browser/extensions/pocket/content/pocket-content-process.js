@@ -7,9 +7,9 @@
 // process as well as all content processes.
 
 const { utils: Cu } = Components;
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("chrome://pocket/content/AboutPocket.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("chrome://pocket/content/AboutPocket.jsm");
 
 function AboutPocketChildListener() {
 }

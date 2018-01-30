@@ -1,6 +1,6 @@
 "use strict";
 
-ChromeUtils.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this); /* global CleanupManagerClass */
+Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm", this); /* global CleanupManagerClass */
 
 add_task(async function testCleanupManager() {
   const spy1 = sinon.spy();

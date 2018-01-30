@@ -5,9 +5,9 @@
 // Tests the list view
 
 var tempScope = {};
-ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", tempScope);
 var LightweightThemeManager = tempScope.LightweightThemeManager;
- ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+ Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
 var gProvider;
 var gManagerWindow;

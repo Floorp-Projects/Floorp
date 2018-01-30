@@ -4,8 +4,8 @@ var gTestTab;
 var gContentAPI;
 var gContentWindow;
 
-ChromeUtils.import("resource://gre/modules/UITelemetry.jsm");
-ChromeUtils.import("resource:///modules/BrowserUITelemetry.jsm");
+Components.utils.import("resource://gre/modules/UITelemetry.jsm");
+Components.utils.import("resource:///modules/BrowserUITelemetry.jsm");
 
 add_task(async function setup_telemetry() {
   UITelemetry._enabled = true;

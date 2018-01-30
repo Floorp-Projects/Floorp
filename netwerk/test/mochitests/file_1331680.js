@@ -1,6 +1,6 @@
 let {utils: Cu, classes: Cc, interfaces: Ci } = Components;
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 
 var observer = {

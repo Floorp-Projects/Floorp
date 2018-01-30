@@ -8,8 +8,8 @@ this.EXPORTED_SYMBOLS = ["SchedulePressure"];
 
 const Cu = Components.utils;
 
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "TelemetryStopwatch",
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "SCHEDULE_PRESSURE_ENABLED",
   "browser.schedulePressure.enabled", true);

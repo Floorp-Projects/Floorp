@@ -1,7 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
 
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 

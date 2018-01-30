@@ -1,11 +1,11 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
-ChromeUtils.import("resource://gre/modules/AddonManager.jsm", this);
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
+Cu.import("resource://gre/modules/AddonManager.jsm", this);
+Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 
 add_task(async function testTelemetry() {

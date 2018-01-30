@@ -28,9 +28,9 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 var contentPage1 = "http://www.itisatrap.org/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 var contentPage2 = "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/whitelistFrame.html";
 
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
-ChromeUtils.import("resource://testing-common/TestUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+Components.utils.import("resource://testing-common/TestUtils.jsm");
 
 function testOnWindow(contentPage, aCallback) {
   var win = mainWindow.OpenBrowserWindow();

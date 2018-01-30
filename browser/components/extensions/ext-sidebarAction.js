@@ -6,7 +6,7 @@
 /* import-globals-from ext-browser.js */
 /* globals WINDOW_ID_CURRENT */
 
-ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+Cu.import("resource://gre/modules/ExtensionParent.jsm");
 
 var {
   IconDetails,

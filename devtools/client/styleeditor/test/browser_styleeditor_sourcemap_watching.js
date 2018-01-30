@@ -16,8 +16,8 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
-const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
+const {FileUtils} = Components.utils.import("resource://gre/modules/FileUtils.jsm", {});
+const {NetUtil} = Components.utils.import("resource://gre/modules/NetUtil.jsm", {});
 
 add_task(function* () {
   yield new Promise(resolve => {

@@ -1,10 +1,10 @@
 "use strict";
 
-ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
-ChromeUtils.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 add_task(withDriver(Assert, async function uuids(driver) {
   // Test that it is a UUID
