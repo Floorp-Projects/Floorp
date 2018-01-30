@@ -12,7 +12,12 @@
 /* exported RichOption */
 
 class RichOption extends ObservedPropertiesMixin(HTMLElement) {
-  static get observedAttributes() { return ["selected", "hidden"]; }
+  static get observedAttributes() {
+    return [
+      "selected",
+      "value",
+    ];
+  }
 
   connectedCallback() {
     this.render();
@@ -55,27 +60,6 @@ class RichOption extends ObservedPropertiesMixin(HTMLElement) {
         option.selected = option == this;
       }
     }
-  }
-
-  get selected() {
-    return this.hasAttribute("selected");
-  }
-
-  set selected(value) {
-    if (value) {
-      let oldSelectedOptions = this.parentNode.querySelectorAll("[selected]");
-      for (let option of oldSelectedOptions) {
-        option.removeAttribute("selected");
-      }
-      this.setAttribute("selected", value);
-    } else {
-      this.removeAttribute("selected");
-    }
-    let richSelect = this.closest("rich-select");
-    if (richSelect && richSelect.render) {
-      richSelect.render();
-    }
-    return value;
   }
 
   static _createElement(fragment, className) {
