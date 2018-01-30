@@ -200,7 +200,7 @@ nsDOMCSSAttributeDeclaration::GetParentObject()
   return mElement;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                                const nsAString& aValue,
                                                nsIPrincipal* aSubjectPrincipal)

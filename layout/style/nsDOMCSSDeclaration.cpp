@@ -51,7 +51,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
                                       const nsAString& aValue,
                                       nsIPrincipal* aSubjectPrincipal)
