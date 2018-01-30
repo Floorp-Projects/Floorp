@@ -4733,6 +4733,8 @@ ToBoolIRGenerator::tryAttachStub()
         return true;
     if (tryAttachObject())
         return true;
+    if (tryAttachSymbol())
+        return true;
 
     trackNotAttached();
     return false;
@@ -4763,6 +4765,20 @@ ToBoolIRGenerator::tryAttachDouble()
     writer.loadDoubleTruthyResult(valId);
     writer.returnFromIC();
     trackAttached("ToBoolDouble");
+    return true;
+}
+
+bool
+ToBoolIRGenerator::tryAttachSymbol()
+{
+    if (!val_.isSymbol())
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    writer.guardType(valId, JSVAL_TYPE_SYMBOL);
+    writer.loadBooleanResult(true);
+    writer.returnFromIC();
+    trackAttached("ToBoolSymbol");
     return true;
 }
 
