@@ -242,6 +242,11 @@ public:
   {
   }
 
+  InternalTransitionEvent(const InternalTransitionEvent& aOther) = delete;
+  InternalTransitionEvent& operator=(const InternalTransitionEvent& aOther) = delete;
+  InternalTransitionEvent(InternalTransitionEvent&& aOther) = default;
+  InternalTransitionEvent& operator=(InternalTransitionEvent&& aOther) = default;
+
   virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eTransitionEventClass,
@@ -285,6 +290,11 @@ public:
     , mElapsedTime(0.0)
   {
   }
+
+  InternalAnimationEvent(const InternalAnimationEvent& aOther) = delete;
+  InternalAnimationEvent& operator=(const InternalAnimationEvent& aOther) = delete;
+  InternalAnimationEvent(InternalAnimationEvent&& aOther) = default;
+  InternalAnimationEvent& operator=(InternalAnimationEvent&& aOther) = default;
 
   virtual WidgetEvent* Duplicate() const override
   {
