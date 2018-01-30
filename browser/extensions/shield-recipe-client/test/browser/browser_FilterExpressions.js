@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/FilterExpressions.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/FilterExpressions.jsm", this);
 
 // Basic JEXL tests
 add_task(async function() {

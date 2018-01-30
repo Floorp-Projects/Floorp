@@ -6,20 +6,20 @@ this.EXPORTED_SYMBOLS = ["Utils", "Svc", "SerializableSet"];
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://services-common/observers.js");
+ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://services-sync/constants.js");
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "OS",
+                               "resource://gre/modules/osfile.jsm");
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
   let FxAccountsCommon = {};
-  Cu.import("resource://gre/modules/FxAccountsCommon.js", FxAccountsCommon);
+  ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js", FxAccountsCommon);
   return FxAccountsCommon;
 });
 

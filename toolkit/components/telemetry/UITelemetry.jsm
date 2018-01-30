@@ -10,8 +10,8 @@ this.EXPORTED_SYMBOLS = [
   "UITelemetry",
 ];
 
-Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 /**
  * UITelemetry is a helper JSM used to record UI specific telemetry events.

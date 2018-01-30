@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.import("resource://shield-recipe-client/lib/Sampling.jsm", this);
+ChromeUtils.import("resource://shield-recipe-client/lib/Sampling.jsm", this);
 
 add_task(async function testStableSample() {
   // Absolute samples

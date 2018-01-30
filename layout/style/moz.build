@@ -233,6 +233,7 @@ UNIFIED_SOURCES += [
     'nsFontFaceUtils.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
+    'nsICSSDeclaration.cpp',
     'nsMediaFeatures.cpp',
     'nsMediaList.cpp',
     'nsNthIndexCache.cpp',

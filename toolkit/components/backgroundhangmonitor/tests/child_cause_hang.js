@@ -3,7 +3,7 @@
 
 let { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function ensureProfilerInitialized() {
   // Starting and stopping the profiler with the "stackwalk" flag will cause the

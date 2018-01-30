@@ -8,13 +8,13 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "TestRunner",
-                                  "chrome://mozscreenshots/content/TestRunner.jsm");
+ChromeUtils.defineModuleGetter(this, "TestRunner",
+                               "chrome://mozscreenshots/content/TestRunner.jsm");
 
 function install(data, reason) {
   if (!isAppSupported()) {

@@ -2,8 +2,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const THUMBNAIL_DIRECTORY = "thumbnails";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/osfile.jsm", this);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);

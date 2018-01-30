@@ -15,7 +15,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var {FormHistory} = Cu.import("resource://gre/modules/FormHistory.jsm", {});
+var {FormHistory} = ChromeUtils.import("resource://gre/modules/FormHistory.jsm", {});
 
 const REFERENCE_DATE = Date.now();
 

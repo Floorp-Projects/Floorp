@@ -9,7 +9,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 // only new OS versions.
 // Uses test_gfxBlacklist_OS.xml
 
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 var gTestserver = new HttpServer();
 gTestserver.start(-1);

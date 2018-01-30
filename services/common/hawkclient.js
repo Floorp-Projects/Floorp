@@ -28,13 +28,13 @@ this.EXPORTED_SYMBOLS = ["HawkClient"];
 
 var {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-common/hawkrequest.js");
-Cu.import("resource://services-common/observers.js");
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://services-crypto/utils.js");
+ChromeUtils.import("resource://services-common/hawkrequest.js");
+ChromeUtils.import("resource://services-common/observers.js");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // log.appender.dump should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Error" will be used by

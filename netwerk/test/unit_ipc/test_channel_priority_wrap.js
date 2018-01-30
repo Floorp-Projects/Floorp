@@ -8,7 +8,7 @@
 'use strict';
 
 /* globals HttpServer */
-Cu.import('resource://testing-common/httpd.js');
+ChromeUtils.import('resource://testing-common/httpd.js');
 
 let httpserver;
 let port;

@@ -4,12 +4,12 @@
 "use strict";
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "setInterval", "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearInterval", "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "setInterval", "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "clearInterval", "resource://gre/modules/Timer.jsm");
 
 // Frequency at which SYSTEM_TICK events are fired
 const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;

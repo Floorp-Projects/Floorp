@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
+ChromeUtils.defineModuleGetter(this, "HttpServer",
   "resource://testing-common/httpd.js");
 
 registerCleanupFunction(async function() {

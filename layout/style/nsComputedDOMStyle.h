@@ -63,9 +63,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsComputedDOMStyle,
                                                                    nsICSSDeclaration)
 
-  NS_DECL_NSICSSDECLARATION
-
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
+  nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
+                            nsAString& aValue) override;
+  nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
+                            const nsAString& aValue,
+                            nsIPrincipal* aSubjectPrincipal) override;
   virtual already_AddRefed<CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
     override;
@@ -91,11 +94,6 @@ public:
   virtual nsINode *GetParentObject() override
   {
     return mContent;
-  }
-
-  virtual mozilla::dom::DocGroup* GetDocGroup() const override
-  {
-    return mContent ? mContent->GetDocGroup() : nullptr;
   }
 
   static already_AddRefed<nsStyleContext>

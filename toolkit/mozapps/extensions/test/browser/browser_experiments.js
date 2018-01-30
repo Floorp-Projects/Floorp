@@ -2,10 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
+ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 
-var {AddonManagerTesting} = Components.utils.import("resource://testing-common/AddonManagerTesting.jsm", {});
-var {HttpServer} = Components.utils.import("resource://testing-common/httpd.js", {});
+var {AddonManagerTesting} = ChromeUtils.import("resource://testing-common/AddonManagerTesting.jsm", {});
+var {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js", {});
 
 var gManagerWindow;
 var gCategoryUtilities;
@@ -90,7 +90,7 @@ add_task(async function initializeState() {
     }
     if (gExperiments) {
       let tmp = {};
-      Cu.import("resource:///modules/experiments/Experiments.jsm", tmp);
+      ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", tmp);
       gExperiments._policy = new tmp.Experiments.Policy();
     }
   });
@@ -103,7 +103,7 @@ add_task(async function initializeState() {
   // not the superset Experiments Manager has imposed.
   if ("@mozilla.org/browser/experiments-service;1" in Components.classes) {
     let tmp = {};
-    Cu.import("resource:///modules/experiments/Experiments.jsm", tmp);
+    ChromeUtils.import("resource:///modules/experiments/Experiments.jsm", tmp);
     // There is a race condition between XPCOM service initialization and
     // this test running. We have to initialize the instance first, then
     // uninitialize it to prevent this.

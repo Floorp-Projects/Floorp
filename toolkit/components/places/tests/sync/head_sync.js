@@ -1,16 +1,16 @@
 const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/ObjectUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Log.jsm");
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+ChromeUtils.import("resource://gre/modules/PlacesSyncUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/SyncedBookmarksMirror.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://testing-common/PlacesTestUtils.jsm");
-Cu.import("resource://testing-common/httpd.js");
+ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 function run_test() {
   let bufLog = Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror");

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 let urlUtils = Cc["@mozilla.org/url-classifier/utils;1"]
                  .getService(Ci.nsIUrlClassifierUtils);

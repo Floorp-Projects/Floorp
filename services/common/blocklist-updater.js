@@ -6,11 +6,11 @@ this.EXPORTED_SYMBOLS = ["checkVersions", "addTestBlocklistClient"];
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["fetch"]);
-XPCOMUtils.defineLazyModuleGetter(this, "UptakeTelemetry",
-                                  "resource://services-common/uptake-telemetry.js");
+ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
+                               "resource://services-common/uptake-telemetry.js");
 
 const PREF_SETTINGS_SERVER              = "services.settings.server";
 const PREF_SETTINGS_SERVER_BACKOFF      = "services.settings.server.backoff";
@@ -25,7 +25,7 @@ const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
 
 XPCOMUtils.defineLazyGetter(this, "gBlocklistClients", function() {
-  const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
+  const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
   return {
     [BlocklistClients.OneCRLBlocklistClient.collectionName]: BlocklistClients.OneCRLBlocklistClient,
     [BlocklistClients.AddonBlocklistClient.collectionName]: BlocklistClients.AddonBlocklistClient,

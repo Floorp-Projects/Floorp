@@ -10,11 +10,11 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 // globals XPCOMUtils
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 // globals Services
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 // globals EventDispatcher
-Cu.import("resource://gre/modules/Messaging.jsm");
+ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
 function log(str) {
   // dump("-*- AndroidCastDeviceProvider -*-: " + str + "\n");

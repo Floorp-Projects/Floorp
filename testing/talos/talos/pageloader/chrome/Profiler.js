@@ -43,6 +43,7 @@ var Profiler;
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   } catch (e) {}
 
+  /* eslint-disable mozilla/use-chromeutils-import */
   try {
     _profiler = Components.classes["@mozilla.org/tools/profiler;1"].getService(Components.interfaces.nsIProfiler);
   } catch (ex) { (typeof(dumpLog) == "undefined" ? dump : dumpLog)(ex + "\n"); }

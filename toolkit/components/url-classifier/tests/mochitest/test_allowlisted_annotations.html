@@ -17,7 +17,7 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-Components.utils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/UrlClassifierTestUtils.jsm");
 
 // Add https://allowlisted.example.com to the permissions manager
 SpecialPowers.addPermission("trackingprotection",

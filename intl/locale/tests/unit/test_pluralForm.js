@@ -7,7 +7,7 @@
  * match up in functionality.
  */
 
-Components.utils.import("resource://gre/modules/PluralForm.jsm");
+ChromeUtils.import("resource://gre/modules/PluralForm.jsm");
 
 function run_test()
 {

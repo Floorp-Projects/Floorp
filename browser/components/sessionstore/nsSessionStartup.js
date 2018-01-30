@@ -35,18 +35,18 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "console",
+ChromeUtils.defineModuleGetter(this, "console",
   "resource://gre/modules/Console.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
+ChromeUtils.defineModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "StartupPerformance",
+ChromeUtils.defineModuleGetter(this, "StartupPerformance",
   "resource:///modules/sessionstore/StartupPerformance.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CrashMonitor",
+ChromeUtils.defineModuleGetter(this, "CrashMonitor",
   "resource://gre/modules/CrashMonitor.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 const STATE_RUNNING_STR = "running";

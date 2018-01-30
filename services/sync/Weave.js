@@ -6,12 +6,12 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "Utils", () => {
-  return Cu.import("resource://services-sync/util.js", {}).Utils;
+  return ChromeUtils.import("resource://services-sync/util.js", {}).Utils;
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsername", "services.sync.username");
@@ -73,7 +73,7 @@ WeaveService.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   ensureLoaded() {
-    Components.utils.import("resource://services-sync/main.js");
+    ChromeUtils.import("resource://services-sync/main.js");
 
     // Side-effect of accessing the service is that it is instantiated.
     Weave.Service;
@@ -106,7 +106,7 @@ WeaveService.prototype = {
           // accordingly. We could potentially copy code performed by
           // this check into this file if our above code is yielding too
           // many false positives.
-          Components.utils.import("resource://services-sync/main.js");
+          ChromeUtils.import("resource://services-sync/main.js");
           isConfigured = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
         }
         let getHistogramById = Services.telemetry.getHistogramById;

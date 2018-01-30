@@ -1,5 +1,5 @@
-var {OS} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
-var {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
+var {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 /**
  * Test optional duration reporting that can be used for telemetry.

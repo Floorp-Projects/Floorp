@@ -1325,7 +1325,7 @@ CSSEditUtils::GetInlineStyles(Element* aElement,
   MOZ_ASSERT(cssDecl);
 
   cssDecl.forget(aCssDecl);
-  (*aCssDecl)->GetLength(aLength);
+  *aLength = (*aCssDecl)->Length();
   return NS_OK;
 }
 

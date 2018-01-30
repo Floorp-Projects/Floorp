@@ -6,17 +6,17 @@
 this.EXPORTED_SYMBOLS = ["Screenshots"];
 
 const {utils: Cu} = Components;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
+ChromeUtils.defineModuleGetter(this, "BackgroundPageThumbs",
   "resource://gre/modules/BackgroundPageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+ChromeUtils.defineModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+ChromeUtils.defineModuleGetter(this, "FileUtils",
     "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "MIMEService",
   "@mozilla.org/mime;1", "nsIMIMEService");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
+ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");

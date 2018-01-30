@@ -5,7 +5,7 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 function GlobalObjectsComponent() {

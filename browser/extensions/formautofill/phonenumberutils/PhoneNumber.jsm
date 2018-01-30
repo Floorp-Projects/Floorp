@@ -11,11 +11,11 @@ this.EXPORTED_SYMBOLS = ["PhoneNumber"];
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PHONE_NUMBER_META_DATA",
-                                  "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumberNormalizer",
-                                  "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PHONE_NUMBER_META_DATA",
+                               "resource://formautofill/phonenumberutils/PhoneNumberMetaData.jsm");
+ChromeUtils.defineModuleGetter(this, "PhoneNumberNormalizer",
+                               "resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
 this.PhoneNumber = (function(dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;

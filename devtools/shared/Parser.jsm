@@ -12,7 +12,7 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { console } = require("resource://gre/modules/Console.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-XPCOMUtils.defineLazyModuleGetter(this,
+ChromeUtils.defineModuleGetter(this,
   "Reflect", "resource://gre/modules/reflect.jsm");
 
 this.EXPORTED_SYMBOLS = ["Parser", "ParserHelpers", "SyntaxTreeVisitor"];

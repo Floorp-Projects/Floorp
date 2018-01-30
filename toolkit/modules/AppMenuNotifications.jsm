@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["AppMenuNotifications"];
 
 const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function AppMenuNotification(id, mainAction, secondaryAction, options = {}) {
   this.id = id;

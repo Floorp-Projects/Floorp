@@ -2,7 +2,7 @@
 
 info("starting tests");
 
-Components.utils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 /**
  * A test to check that the |append| mode flag is correctly implemented.

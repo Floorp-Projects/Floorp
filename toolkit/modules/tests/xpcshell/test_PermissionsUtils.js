@@ -11,8 +11,8 @@
 const PREF_ROOT = "testpermissions.";
 const TEST_PERM = "test-permission";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PermissionsUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/PermissionsUtils.jsm");
 
 function run_test() {
   test_importfromPrefs();

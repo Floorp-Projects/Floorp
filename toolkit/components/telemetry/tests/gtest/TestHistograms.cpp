@@ -638,3 +638,62 @@ TEST_F(TelemetryTestFixture, AccumulateCategoricalHistogram_MultipleEnumValues)
   ASSERT_EQ(uValue, kExpectedValue) << "The histogram is not returning expected value";
 }
 
+TEST_F(TelemetryTestFixture, AccumulateKeyedCategoricalHistogram_MultipleEnumValues)
+{
+  const uint32_t kExpectedCommonLabel = 2;
+  const uint32_t kExpectedLabel2 = 1;
+  const nsTArray<Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL> enumLabels({
+                  Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::CommonLabel,
+                  Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::CommonLabel,
+                  Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::Label2});
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_CATEGORICAL"), true);
+
+  // Accumulate the array into the categorical keyed histogram
+  Telemetry::AccumulateCategoricalKeyed(NS_LITERAL_CSTRING("sampleKey"), enumLabels);
+
+  // Get a snapshot for all the histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_CATEGORICAL", &snapshot, true);
+
+  // Get the histogram from the snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_CATEGORICAL", snapshot, &histogram);
+
+  // Check that the sampleKey histogram contains correct number of CommonLabel samples
+  JS::RootedValue sample(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sampleKey", histogram,  &sample);
+
+  // Get counts array from the sample. Each entry in the array maps to a label in the histogram.
+  JS::RootedValue sampleKeyCounts(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "counts", sample,  &sampleKeyCounts);
+
+  // Get the count of CommonLabel
+  JS::RootedValue commonLabelValue(cx.GetJSContext());
+  GetElement(cx.GetJSContext(),
+             static_cast<uint32_t>(Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::CommonLabel),
+             sampleKeyCounts, &commonLabelValue);
+
+  // Check that the value stored in the histogram matches with |kExpectedCommonLabel|
+  uint32_t uCommonLabelValue = 0;
+  JS::ToUint32(cx.GetJSContext(), commonLabelValue, &uCommonLabelValue);
+  ASSERT_EQ(uCommonLabelValue, kExpectedCommonLabel)
+        << "The sampleKey histogram did not accumulate the correct number of CommonLabel samples";
+
+  // Check that the sampleKey histogram contains the correct number of Label2 values
+  // Get the count of Label2
+  JS::RootedValue label2Value(cx.GetJSContext());
+  GetElement(cx.GetJSContext(),
+             static_cast<uint32_t>(Telemetry::LABELS_TELEMETRY_TEST_KEYED_CATEGORICAL::Label2),
+             sampleKeyCounts, &label2Value);
+
+  // Check that the value stored in the histogram matches with |kExpectedLabel2|
+  uint32_t uLabel2Value = 0;
+  JS::ToUint32(cx.GetJSContext(), label2Value, &uLabel2Value);
+  ASSERT_EQ(uLabel2Value, kExpectedLabel2)
+        << "The sampleKey histogram did not accumulate the correct number of Label2 samples";
+}
+

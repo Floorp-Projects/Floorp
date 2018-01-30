@@ -7,15 +7,15 @@
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties(["URL"]);
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AutoCompletePopup",
-                                  "resource://gre/modules/AutoCompletePopup.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-                                  "resource://gre/modules/DeferredTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
-                                  "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
+                               "resource://gre/modules/AutoCompletePopup.jsm");
+ChromeUtils.defineModuleGetter(this, "DeferredTask",
+                               "resource://gre/modules/DeferredTask.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginHelper",
+                               "resource://gre/modules/LoginHelper.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerParent");
@@ -478,7 +478,7 @@ var LoginManagerParent = {
 };
 
 XPCOMUtils.defineLazyGetter(LoginManagerParent, "recipeParentPromise", function() {
-  const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
+  const { LoginRecipesParent } = ChromeUtils.import("resource://gre/modules/LoginRecipes.jsm", {});
   this._recipeManager = new LoginRecipesParent({
     defaults: Services.prefs.getStringPref("signon.recipes.path"),
   });

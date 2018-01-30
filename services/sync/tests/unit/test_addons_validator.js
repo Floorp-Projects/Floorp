@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://services-sync/engines/addons.js");
+ChromeUtils.import("resource://services-sync/engines/addons.js");
 
 function getDummyServerAndClient() {
   return {

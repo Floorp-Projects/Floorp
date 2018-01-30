@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/LoginManagerParent.jsm", this);
+ChromeUtils.import("resource://gre/modules/LoginManagerParent.jsm", this);
 
 const testUrlPath =
       "://example.com/browser/toolkit/components/passwordmgr/test/browser/";

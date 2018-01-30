@@ -9,8 +9,8 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const {utils: Cu} = Components;
-const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
 
 // Maximum number of rows to display in the select dropdown.
 const MAX_ROWS = 20;

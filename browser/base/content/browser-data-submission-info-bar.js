@@ -21,7 +21,7 @@ var gDataNotificationInfoBar = {
   },
 
   get _log() {
-    let Log = Cu.import("resource://gre/modules/Log.jsm", {}).Log;
+    let Log = ChromeUtils.import("resource://gre/modules/Log.jsm", {}).Log;
     delete this._log;
     return this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
   },

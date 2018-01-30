@@ -3,8 +3,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
-                                  "resource://services-crypto/jwcrypto.jsm");
+ChromeUtils.defineModuleGetter(this, "jwcrypto",
+                               "resource://services-crypto/jwcrypto.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "CryptoService",

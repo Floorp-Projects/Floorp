@@ -10,26 +10,26 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/ObjectUtils.jsm");
-Cu.import("resource://gre/modules/FormLikeFactory.jsm");
-Cu.import("resource://testing-common/FileTestUtils.jsm");
-Cu.import("resource://testing-common/MockDocument.jsm");
-Cu.import("resource://testing-common/TestUtils.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
+ChromeUtils.import("resource://gre/modules/FormLikeFactory.jsm");
+ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.import("resource://testing-common/MockDocument.jsm");
+ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
-                                  "resource://gre/modules/DownloadPaths.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "DownloadPaths",
+                               "resource://gre/modules/DownloadPaths.jsm");
+ChromeUtils.defineModuleGetter(this, "FileUtils",
+                               "resource://gre/modules/FileUtils.jsm");
 
 do_get_profile();
 
 // ================================================
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/releases/v2.3.2/
-Cu.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/Timer.jsm");
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
 /* globals sinon */
 // ================================================
@@ -59,7 +59,7 @@ function getTempFile(leafName) {
 }
 
 async function initProfileStorage(fileName, records, collectionName = "addresses") {
-  let {ProfileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {});
+  let {ProfileStorage} = ChromeUtils.import("resource://formautofill/ProfileStorage.jsm", {});
   let path = getTempFile(fileName).path;
   let profileStorage = new ProfileStorage(path);
   await profileStorage.initialize();
@@ -100,8 +100,8 @@ function verifySectionFieldDetails(sections, expectedResults) {
 }
 
 function runHeuristicsTest(patterns, fixturePathPrefix) {
-  Cu.import("resource://formautofill/FormAutofillHeuristics.jsm");
-  Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+  ChromeUtils.import("resource://formautofill/FormAutofillHeuristics.jsm");
+  ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
   patterns.forEach(testPattern => {
     add_task(async function() {

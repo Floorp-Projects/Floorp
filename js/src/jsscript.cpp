@@ -542,16 +542,15 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
                 return false;
 
             sourceObject = ScriptSourceObject::create(cx, ss);
+            if (!sourceObject)
+                return false;
+
             if (xdr->hasScriptSourceObjectOut()) {
                 // When the ScriptSourceObjectOut is provided by ParseTask, it
                 // is stored in a location which is traced by the GC.
                 *xdr->scriptSourceObjectOut() = sourceObject;
-            } else {
-                if (!sourceObject ||
-                    !ScriptSourceObject::initFromOptions(cx, sourceObject, *options))
-                {
-                    return false;
-                }
+            } else if (!ScriptSourceObject::initFromOptions(cx, sourceObject, *options)) {
+                return false;
             }
         }
 

@@ -1,4 +1,4 @@
-const { FinderIterator } = Cu.import("resource://gre/modules/FinderIterator.jsm", {});
+const { FinderIterator } = ChromeUtils.import("resource://gre/modules/FinderIterator.jsm", {});
 
 var gFindResults = [];
 // Stub the method that instantiates nsIFind and does all the interaction with

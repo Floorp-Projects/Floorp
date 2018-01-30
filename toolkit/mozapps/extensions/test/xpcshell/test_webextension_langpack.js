@@ -2,10 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
-const { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
-const { L10nRegistry } = Components.utils.import("resource://gre/modules/L10nRegistry.jsm", {});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+const { L10nRegistry } = ChromeUtils.import("resource://gre/modules/L10nRegistry.jsm", {});
 
 const ID = "langpack-und@test.mozilla.org";
 

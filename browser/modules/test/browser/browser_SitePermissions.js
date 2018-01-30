@@ -4,7 +4,7 @@
 
 "use strict";
 
-Cu.import("resource:///modules/SitePermissions.jsm", this);
+ChromeUtils.import("resource:///modules/SitePermissions.jsm", this);
 
 // This asserts that SitePermissions.set can not save ALLOW permissions
 // temporarily on a tab.

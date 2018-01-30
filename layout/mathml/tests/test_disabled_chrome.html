@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     const initialPrefValue = SpecialPowers.getBoolPref("mathml.disabled");
     SpecialPowers.setBoolPref("mathml.disabled", true);
     const Cu = SpecialPowers.Components.utils;
-    const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+    const { ContentTaskUtils } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
     let t = document.getElementById('testnodes');
 
     let url = 'chrome://mochitests/content/chrome/layout/mathml/tests/mathml_example_test.html'

@@ -5,7 +5,7 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const gIsWindows = mozinfo.os == "win";
 const gIsOSX = mozinfo.os == "mac";
@@ -120,7 +120,7 @@ function get_test_plugin_no_symlink() {
 var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
-  Cu.import("resource://gre/modules/Services.jsm", ns);
+  ChromeUtils.import("resource://gre/modules/Services.jsm", ns);
   let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
   let file = do_get_file(head);
   let uri = ns.Services.io.newFileURI(file);

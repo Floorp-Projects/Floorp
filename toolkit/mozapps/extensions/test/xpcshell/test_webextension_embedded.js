@@ -14,11 +14,11 @@ startupManager();
 // or it will fail Extension.jsm internally imports AddonManager.jsm and
 // AddonManager will raise a ReferenceError exception because it tried to
 // access an undefined `Services.appinfo` object.
-const { Management } = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+const { Management } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
 const {
   EmbeddedExtensionManager,
-} = Components.utils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
+} = ChromeUtils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
 function promiseWebExtensionShutdown() {
   return new Promise(resolve => {

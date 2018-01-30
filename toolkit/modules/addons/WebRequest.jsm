@@ -17,15 +17,15 @@ const Cr = Components.results;
 
 const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
-                                  "resource://gre/modules/ExtensionUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
-                                  "resource://gre/modules/WebRequestCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebRequestUpload",
-                                  "resource://gre/modules/WebRequestUpload.jsm");
+ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
+                               "resource://gre/modules/ExtensionUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "WebRequestCommon",
+                               "resource://gre/modules/WebRequestCommon.jsm");
+ChromeUtils.defineModuleGetter(this, "WebRequestUpload",
+                               "resource://gre/modules/WebRequestUpload.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
 
