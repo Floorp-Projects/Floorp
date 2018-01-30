@@ -51,9 +51,6 @@ public:
   virtual nsINode *GetParentObject() = 0;
   mozilla::dom::DocGroup* GetDocGroup();
 
-  NS_IMETHOD GetCssText(nsAString& aCssText) = 0;
-  NS_IMETHOD SetCssText(const nsAString& aCssText,
-                        nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
   NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
                               nsAString& aValue) = 0;
   virtual already_AddRefed<mozilla::dom::CSSValue>
@@ -78,15 +75,10 @@ public:
   }
 
   // WebIDL interface for CSSStyleDeclaration
-  void SetCssText(const nsAString& aString, nsIPrincipal* aSubjectPrincipal,
-                  mozilla::ErrorResult& rv) {
-    rv = SetCssText(aString, aSubjectPrincipal);
-  }
-  void GetCssText(nsString& aString) {
-    // Cast to nsAString& so we end up calling our virtual
-    // |GetCssText(nsAString& aCssText)| overload, which does the real work.
-    GetCssText(static_cast<nsAString&>(aString));
-  }
+  virtual void SetCssText(const nsAString& aString,
+                          nsIPrincipal* aSubjectPrincipal,
+                          mozilla::ErrorResult& rv) = 0;
+  virtual void GetCssText(nsAString& aString) = 0;
   uint32_t Length() {
     uint32_t length;
     GetLength(&length);
@@ -120,10 +112,11 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
-#define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
-  NS_IMETHOD GetCssText(nsAString & aCssText) override; \
-  NS_IMETHOD SetCssText(const nsAString& aCssText,                 \
-                        nsIPrincipal* aSubjectPrincipal) override; \
+#define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER                        \
+  void GetCssText(nsAString& aCssText) override;                        \
+  void SetCssText(const nsAString& aCssText,                            \
+                  nsIPrincipal* aSubjectPrincipal,                      \
+                  mozilla::ErrorResult& aRv) override;                  \
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) override; \
   NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) override; \
   NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) override; \
