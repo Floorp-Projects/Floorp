@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "ScriptLoader.h"
 #include "WorkerCommon.h"
+#include "WorkerError.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"

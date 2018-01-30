@@ -55,7 +55,7 @@ private:
   } mState;
 
   // Touched on worker-thread only.
-  UniquePtr<WorkerHolder> mWorkerHolder;
+  UniquePtr<workers::WorkerHolder> mWorkerHolder;
 };
 
 } // namespace dom
