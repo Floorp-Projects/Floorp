@@ -993,6 +993,12 @@ protected:
                                   int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
 
+  /**
+   * A more C++-friendly version of nsIHTMLEditor::GetSelectedElement
+   * that just returns null on errors.
+   */
+  already_AddRefed<dom::Element> GetSelectedElement(const nsAString& aTagName);
+
 protected:
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
