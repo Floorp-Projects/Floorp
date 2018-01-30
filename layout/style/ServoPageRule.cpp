@@ -193,7 +193,7 @@ ServoPageRule::List(FILE* out, int32_t aIndent) const
 /* CSSRule implementation */
 
 void
-ServoPageRule::GetCssTextImpl(nsAString& aCssText) const
+ServoPageRule::GetCssText(nsAString& aCssText) const
 {
   Servo_PageRule_GetCssText(mRawRule, &aCssText);
 }

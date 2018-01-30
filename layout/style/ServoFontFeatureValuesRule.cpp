@@ -59,7 +59,7 @@ ServoFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
 /* CSSRule implementation */
 
 void
-ServoFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
+ServoFontFeatureValuesRule::GetCssText(nsAString& aCssText) const
 {
   Servo_FontFeatureValuesRule_GetCssText(mRawRule, &aCssText);
 }

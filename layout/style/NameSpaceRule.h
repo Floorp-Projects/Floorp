@@ -46,7 +46,7 @@ public:
   void GetURLSpec(nsString& aURLSpec) const final override { aURLSpec = mURLSpec; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
+  void GetCssText(nsAString& aCssText) const override;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final override;
 
